@@ -1,0 +1,46 @@
+package com.theminespirit.core.planner;
+
+import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.PlanParser;
+import com.theminespirit.core.plan.PlanValidationException;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.ScriptSpec;
+import java.util.Objects;
+
+public final class LlmPlanner implements Planner {
+    private final LlmClient client;
+    private final ScriptCatalog catalog;
+    private final Planner fallback;
+
+    public LlmPlanner(LlmClient client, ScriptCatalog catalog, Planner fallback) {
+        this.client = Objects.requireNonNull(client, "client не может быть null: без клиента ИИ некому строить план");
+        this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу скриптов");
+        this.fallback = Objects.requireNonNull(fallback,
+                "fallback не может быть null: невалидный ответ ИИ должен передаваться в запасной планировщик");
+    }
+
+    @Override
+    public TaskNode plan(Goal goal, WorldObservation observation) {
+        String prompt = buildPrompt(goal, observation);
+        try {
+            String text = client.complete(prompt);
+            return PlanParser.parse(text, catalog);
+        } catch (LlmException | PlanValidationException error) {
+            return fallback.plan(goal, observation);
+        }
+    }
+
+    public String buildPrompt(Goal goal, WorldObservation observation) {
+        Objects.requireNonNull(goal, "goal не может быть null: в промпте нужен текст цели");
+        Objects.requireNonNull(observation, "observation не может быть null: в промпте нужен слепок мира");
+        StringBuilder prompt = new StringBuilder("Цель: ");
+        prompt.append(goal.text()).append('\n');
+        prompt.append("Наблюдение: ").append(observation.hash()).append('\n');
+        prompt.append("Скрипты: ");
+        for (ScriptSpec spec : catalog.all()) {
+            prompt.append(spec.id()).append(' ');
+        }
+        return prompt.toString();
+    }
+}

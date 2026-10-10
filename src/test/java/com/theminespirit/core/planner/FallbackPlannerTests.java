@@ -1,0 +1,161 @@
+package com.theminespirit.core.planner;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+class FallbackPlannerTests {
+    private static final FallbackPlanner PLANNER = new FallbackPlanner();
+    private static final WorldObservation OBSERVATION = Observations.empty("spirit_1");
+
+    @Test
+    void plan_ChopGoal_ReturnsScanAndChopSequence() {
+        TaskNode plan = PLANNER.plan(new Goal("срубить деревья возле дома", Map.of()), OBSERVATION);
+
+        assertEquals(chopPlan(32, "any", 1), plan,
+                "Цель со словом 'сруб' обязана дать scan с фильтром брёвен и chop_tree: иначе дух рубит "
+                        + "без предварительного скана и не находит деревья");
+    }
+
+    @Test
+    void plan_TreeWordGoal_ReturnsScanAndChopSequence() {
+        TaskNode plan = PLANNER.plan(new Goal("валить деревья", Map.of()), OBSERVATION);
+
+        assertEquals(chopPlan(32, "any", 1), plan,
+                "Слово 'дерев' обязано распознаваться как рубка: иначе синоним формулировки уводит в fallback "
+                        + "и дух не рубит то, что игрок просил");
+    }
+
+    @Test
+    void plan_MineGoal_ReturnsScanAndMineSequence() {
+        TaskNode plan = PLANNER.plan(new Goal("добыть руду из шахты", Map.of()), OBSERVATION);
+
+        assertEquals(minePlan(32, "any", 1), plan,
+                "Цель со словом 'руд' обязана дать scan с фильтром руды и mine_vein: иначе дух копает "
+                        + "вслепую и не находит жилу");
+    }
+
+    @Test
+    void plan_MineShaftGoal_ReturnsScanAndMineSequence() {
+        TaskNode plan = PLANNER.plan(new Goal("спустись в шахту", Map.of()), OBSERVATION);
+
+        assertEquals(minePlan(32, "any", 1), plan,
+                "Слово 'шахт' обязано распознаваться как добыча: иначе дух дойдёт до шахты и встанет, "
+                        + "не начав добычу ради которой пришёл");
+    }
+
+    @Test
+    void plan_FollowGoal_ReturnsFollowCall() {
+        TaskNode plan = PLANNER.plan(new Goal("следуй за мной", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+                "Цель со словом 'следу' обязана дать follow на игрока: иначе дух не сопровождает игрока "
+                        + "и цель сопровождения не исполняется");
+    }
+
+    @Test
+    void plan_FollowBehindPhrase_ReturnsFollowCall() {
+        TaskNode plan = PLANNER.plan(new Goal("держись за мной", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+                "Фраза 'за мной' обязана распознаваться как сопровождение: иначе естественная формулировка "
+                        + "остаётся непонятой и дух теряет игрока");
+    }
+
+    @Test
+    void plan_HomeGoal_ReturnsReturnHomeCall() {
+        TaskNode plan = PLANNER.plan(new Goal("вернись домой", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("return_home", Map.of()), plan,
+                "Цель со словом 'домой' обязана дать return_home: иначе дух остаётся в шахте на ночь "
+                        + "и теряет точку возрождения");
+    }
+
+    @Test
+    void plan_ComeBackGoal_ReturnsReturnHomeCall() {
+        TaskNode plan = PLANNER.plan(new Goal("вернись ко мне", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("return_home", Map.of()), plan,
+                "Слово 'верни' обязано распознаваться как возвращение домой: иначе приказ отступить "
+                        + "не исполняется и дух остаётся в опасной зоне");
+    }
+
+    @Test
+    void plan_AttackGoal_ReturnsAttackCall() {
+        TaskNode plan = PLANNER.plan(new Goal("атакуй монстра", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
+                "Цель со словом 'атак' обязана дать attack на враждебную цель: иначе дух мирно стоит "
+                        + "перед зомби и погибает без защиты игрока");
+    }
+
+    @Test
+    void plan_KillGoal_ReturnsAttackCall() {
+        TaskNode plan = PLANNER.plan(new Goal("убей крипера", Map.of()), OBSERVATION);
+
+        assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
+                "Слово 'убей' обязано распознаваться как атака: иначе боевая команда трактуется как мирная "
+                        + "и дух не отгоняет угрозу");
+    }
+
+    @Test
+    void plan_ChopGoalWithParams_OverridesDefaults() {
+        TaskNode plan = PLANNER.plan(new Goal("срубить дерево",
+                Map.of("radius", 16, "species", "oak", "count", 3)), OBSERVATION);
+
+        assertEquals(chopPlan(16, "oak", 3), plan,
+                "Параметры цели обязаны переопределять значения по умолчанию: иначе дух рубит любой вид "
+                        + "в полном радиусе, а игрок просил только дубы рядом");
+    }
+
+    @Test
+    void plan_FollowGoalWithParams_OverridesDefaults() {
+        TaskNode plan = PLANNER.plan(new Goal("следуй за мной",
+                Map.of("target", "villager", "radius", 5)), OBSERVATION);
+
+        assertEquals(new ScriptCall("follow", Map.of("target", "villager", "radius", 5)), plan,
+                "Параметры цели обязаны переопределять цель и дистанцию сопровождения: иначе дух сопровождает "
+                        + "игрока, а не торговца, которому нужна защита");
+    }
+
+    @Test
+    void plan_UppercaseGoalWithSpaces_IsNormalizedBeforeMatch() {
+        TaskNode plan = PLANNER.plan(new Goal("   СРУБИТЬ ДУБ  ", Map.of()), OBSERVATION);
+
+        assertEquals(chopPlan(32, "any", 1), plan,
+                "Текст цели обязан нормализоваться (trim и нижний регистр) до поиска ключевых слов: иначе "
+                        + "одна и та же цель с лишними пробелами или заглавными буквами исполняется по-разному");
+    }
+
+    @Test
+    void plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal() {
+        UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
+                () -> PLANNER.plan(new Goal("полететь на луну", Map.of()), OBSERVATION),
+                "Незнакомая цель обязана давать UnplannableGoalException: молчаливый план-заглушка уронит "
+                        + "ожидания игрока и спрячет непонятые формулировки");
+
+        assertTrue(error.getMessage().contains("полететь на луну"),
+                "Сообщение обязано называть нераспознанную цель: по нему игрок видит, что планировщик не понял "
+                        + "его просьбу. Фактическое: " + error.getMessage());
+    }
+
+    private static TaskNode chopPlan(int radius, String species, int count) {
+        return new SequenceNode(List.of(
+                new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_log"))),
+                new ScriptCall("chop_tree", Map.of("species", species, "count", count))));
+    }
+
+    private static TaskNode minePlan(int radius, String ore, int count) {
+        return new SequenceNode(List.of(
+                new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_ore"))),
+                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count))));
+    }
+}
