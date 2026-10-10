@@ -116,6 +116,32 @@ class PlanParserTests {
     }
 
     @Test
+    void parse_ScanWithFilterString_Throws() {
+        String json = "{\"type\":\"script\",\"script\":\"scan\",\"params\":{\"filter\":\"*_log\"}}";
+
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(json, CATALOG),
+                "scan.filter объявлен как string[] и обязан принимать только массив: одиночная строка молча "
+                        + "превратилась бы в список из символов и фильтр блоков перестал бы работать");
+
+        assertTrue(error.getMessage().contains("filter"),
+                "Сообщение обязано называть параметр 'filter' с неверным типом. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void parse_StringParamWithArray_Throws() {
+        String json = "{\"type\":\"script\",\"script\":\"say\",\"params\":{\"text\":[\"привет\",\"мир\"]}}";
+
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(json, CATALOG),
+                "Параметр типа string обязан принимать только JSON-строку: приём массива маскировал бы ошибку "
+                        + "типа в плане и ломал контракт string-параметров");
+
+        assertTrue(error.getMessage().contains("text"),
+                "Сообщение обязано называть параметр 'text' с неверным типом. Фактическое: " + error.getMessage());
+    }
+
+    @Test
     void parse_UnknownScript_ThrowsNamingScript() {
         String json = "{\"type\":\"script\",\"script\":\"fly_to_moon\"}";
 

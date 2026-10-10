@@ -177,7 +177,13 @@ public final class PlanParser {
                 }
                 yield node.doubleValue();
             }
-            case ParamSpec.TYPE_STRING -> convertText(node, param, scriptId);
+            case ParamSpec.TYPE_STRING -> {
+                if (!node.isTextual()) {
+                    throw typeError(param, scriptId, "строку");
+                }
+                yield node.textValue();
+            }
+            case ParamSpec.TYPE_STRING_LIST -> convertStringList(node, param, scriptId);
             case ParamSpec.TYPE_BOOL -> {
                 if (!node.isBoolean()) {
                     throw typeError(param, scriptId, "true или false");
@@ -192,25 +198,22 @@ public final class PlanParser {
             }
             default -> throw new PlanValidationException("Тип параметра '" + param.name() + "' скрипта '" + scriptId
                     + "' не поддерживается: допустимы " + List.of(ParamSpec.TYPE_INT, ParamSpec.TYPE_DOUBLE,
-                            ParamSpec.TYPE_STRING, ParamSpec.TYPE_BOOL, ParamSpec.TYPE_ENUM));
+                            ParamSpec.TYPE_STRING, ParamSpec.TYPE_STRING_LIST, ParamSpec.TYPE_BOOL, ParamSpec.TYPE_ENUM));
         };
     }
 
-    private static Object convertText(JsonNode node, ParamSpec param, String scriptId) {
-        if (node.isTextual()) {
-            return node.textValue();
+    private static List<String> convertStringList(JsonNode node, ParamSpec param, String scriptId) {
+        if (!node.isArray()) {
+            throw typeError(param, scriptId, "массив строк");
         }
-        if (node.isArray()) {
-            List<String> values = new ArrayList<>();
-            for (JsonNode element : node) {
-                if (!element.isTextual()) {
-                    throw typeError(param, scriptId, "строку или массив строк");
-                }
-                values.add(element.textValue());
+        List<String> values = new ArrayList<>();
+        for (JsonNode element : node) {
+            if (!element.isTextual()) {
+                throw typeError(param, scriptId, "массив строк");
             }
-            return List.copyOf(values);
+            values.add(element.textValue());
         }
-        throw typeError(param, scriptId, "строку или массив строк");
+        return List.copyOf(values);
     }
 
     private static PlanValidationException typeError(ParamSpec param, String scriptId, String expected) {

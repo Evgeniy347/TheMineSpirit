@@ -9,7 +9,7 @@ public final class CoreScripts {
     public static ScriptCatalog defaultCatalog() {
         return ScriptCatalog.of(List.of(
                 spec("scan", "просканировать мир вокруг духа",
-                        List.of(p("radius", ParamSpec.TYPE_INT, false), p("filter", ParamSpec.TYPE_STRING, false)),
+                        List.of(p("radius", ParamSpec.TYPE_INT, false), p("filter", ParamSpec.TYPE_STRING_LIST, false)),
                         List.of(), List.of("обновлена карта блоков, сущностей и контейнеров")),
                 spec("goto", "пройти к заданной точке",
                         List.of(ip("x"), ip("y"), ip("z")),
