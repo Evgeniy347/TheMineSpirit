@@ -98,12 +98,19 @@
 
 ## P1 — первый дух в игре
 
-- [ ] Сущность духа (адаптер NeoForge).
-- [ ] Скан мира → наблюдение (адаптер).
-- [ ] Скрипты `goto`, `follow`.
-- [ ] Команда `/spirit` (спавн, цель, статус).
-- [ ] GameTest: спавн, движение, сопровождение игрока.
+- [x] Сущность духа (адаптер NeoForge).
+- [x] Скан мира → наблюдение (адаптер).
+- [x] Скрипты `goto`, `follow`.
+- [x] Команда `/spirit` (спавн, цель, статус).
+- [x] GameTest: спавн, движение, сопровождение игрока.
 - [ ] Демонстрация: дух следует за игроком.
+
+Замечания по проделанному:
+- Runtime-зависимости мода для dev-запусков (и GameTest-сервера) подключаются через конфигурацию
+  `additionalRuntimeClasspath`, а не через `implementation`/`runtimeOnly` (см. docs Neoforge «Non-Minecraft
+  Dependencies», раздел 1.21.8 и ниже). Jackson объявлен: `implementation` (компиляция),
+  `additionalRuntimeClasspath` (dev-раны) и `jarJar` (упаковка в jar). Версии — в `gradle.properties`
+  (`jackson_version`, `jackson_version_range`).
 
 ## P2 — добыча ресурсов
 
