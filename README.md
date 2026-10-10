@@ -31,6 +31,7 @@
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | соглашения кода |
 | [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
 | [docs/GIT.md](docs/GIT.md) | коммиты и работа с git |
+| [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
 
 ## Скрипты
 
