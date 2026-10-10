@@ -46,3 +46,6 @@ TestResults/
 
 # Локальный индекс codegraph
 .codegraph/
+
+# База jqwik: seed упавших прогонов, коммитить не нужно (docs/TESTING.md)
+.jqwik-database
