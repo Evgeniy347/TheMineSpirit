@@ -41,6 +41,61 @@
 - [ ] Теги `fast`/`slow`: `./gradlew test` — быстрый тир, тяжёлое и GameTest — отдельными задачами.
 - [ ] Покрытие (JaCoCo) — индикатор и отчёт, не гейт сборки (гейт — сторожа и тесты).
 
+## Карта действий духа (справочник, без деталей; отмечать по мере реализации)
+
+Действия — то, что запускает план. Политики — всегда включённые правила, не задачи.
+
+### Движение и навигация
+- [ ] `goto`, `goto_block`, `follow`, `escort`, `meet`, `come_to_player`
+- [ ] `return_home`, `patrol`, `wander`, `explore`, `keep_distance`
+- [ ] `flee_from` (опасность: лава, враг, крипер)
+- [ ] `walk_careful` (не сходить с края выше 2), `bridge`, `pillar_up`, `descend`
+- [ ] `swim`, `cross_water`, `climb`
+
+### Восприятие
+- [ ] `scan`, `scan_blocks`, `scan_entities`
+- [ ] `locate_block`, `locate_tree`, `locate_container`, `look_at`
+- [ ] `remember` / `recall` (запомнить точку)
+
+### Добыча
+- [ ] `chop_tree`, `chop_target` (конкретное дерево)
+- [ ] `mine_block`, `mine_vein`, `dig_area`, `gather`, `collect_drops`
+- [ ] `harvest_crop`, `plant_crop`, `shear`, `milk`, `fish`
+
+### Бой и охота
+- [ ] `attack`, `set_combat_mode` (aggressive / defensive / protect / passive)
+- [ ] `defend`, `guard_area` (защита территории)
+- [ ] `hunt` (охота на животных), `hunt_hostile`, `shoot`
+- [ ] `retreat`, `disengage`
+
+### Инвентарь и крафт
+- [ ] `craft`, `smelt`, `equip`, `swap_tool`, `repair`
+- [ ] `acquire`, `pick_up`, `deposit`, `withdraw`, `sort_chest`
+- [ ] `eat`, `drink_potion`
+
+### Стройка, ферма, база
+- [ ] `place_block`, `fill`, `clear_area`, `build_schematic`
+- [ ] `build_farm`, `build_shelter`, `build_fence`
+- [ ] `light_area`, `secure_area` (факелы против спавна)
+- [ ] `use_block` (рычаг, кнопка, дверь)
+
+### Социум и мета
+- [ ] `say`, `report`, `deliver`, `give`, `take`
+- [ ] `wait`, `stop`, `set_priority`
+- [ ] композиция: `sequence`, `repeat`, `retry`, `fallback`, `parallel`, `condition`
+
+### Политики (всегда включены)
+- [ ] не ломать защищённые блоки (белый/чёрный список)
+- [ ] не трогать постройки игрока и чужие регионы
+- [ ] не ставить и не ломать в защищённой зоне
+- [ ] избегать лавы; сторониться воды (кроме задачи плавания)
+- [ ] не падать с высоты (край выше 2)
+- [ ] есть при голоде, отбегать от крипера
+- [ ] не входить в портал; не выходить за границы зоны
+- [ ] не выкидывать предметы; менять сломанный инструмент
+- [ ] ночной режим (домой / факелы)
+- [ ] приоритет и защита игрока
+
 ## P1 — первый дух в игре
 
 - [ ] Сущность духа (адаптер NeoForge).
