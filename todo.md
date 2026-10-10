@@ -43,58 +43,57 @@
 
 ## Карта действий духа (справочник, без деталей; отмечать по мере реализации)
 
-Действия — то, что запускает план. Политики — всегда включённые правила, не задачи.
+Действие конкретно: одна цель, без «углубления» (цепочки/ресурсы — дело ядра и ИИ). Политики — всегда включённые правила, не задачи.
 
 ### Движение и навигация
-- [ ] `goto`, `goto_block`, `follow`, `escort`, `meet`, `come_to_player`
+- [ ] `goto`, `goto_block`, `come_to_player`, `follow`, `escort`, `meet`
 - [ ] `return_home`, `patrol`, `wander`, `explore`, `keep_distance`
-- [ ] `flee_from` (опасность: лава, враг, крипер)
-- [ ] `walk_careful` (не сходить с края выше 2), `bridge`, `pillar_up`, `descend`
-- [ ] `swim`, `cross_water`, `climb`
+- [ ] `flee_from` (опасность: лава, враг, крипер), `retreat`, `disengage`
+- [ ] `walk_careful` (не сходить с края выше 2), `bridge`, `pillar_up`, `descend`, `climb`
+- [ ] `swim`, `cross_water`, `step_over`, `approach` (выбор стороны подхода)
 
 ### Восприятие
-- [ ] `scan`, `scan_blocks`, `scan_entities`
+- [ ] `scan`, `scan_blocks`, `scan_entities`, `sense_hazard` (лава/вода/обрыв)
 - [ ] `locate_block`, `locate_tree`, `locate_container`, `look_at`
 - [ ] `remember` / `recall` (запомнить точку)
 
 ### Добыча
-- [ ] `chop_tree`, `chop_target` (конкретное дерево)
+- [ ] `chop_tree` (по виду), `chop_target` (конкретное дерево/координата)
 - [ ] `mine_block`, `mine_vein`, `dig_area`, `gather`, `collect_drops`
-- [ ] `harvest_crop`, `plant_crop`, `shear`, `milk`, `fish`
+- [ ] `harvest_crop`, `plant_crop`, `till`, `bone_meal`, `shear`, `milk`, `fish`
 
 ### Бой и охота
-- [ ] `attack`, `set_combat_mode` (aggressive / defensive / protect / passive)
-- [ ] `defend`, `guard_area` (защита территории)
-- [ ] `hunt` (охота на животных), `hunt_hostile`, `shoot`
-- [ ] `retreat`, `disengage`
+- [ ] `attack` (цель), `shoot`
+- [ ] `set_combat_mode` (aggressive / defensive / protect / passive)
+- [ ] `defend` (себя), `guard_area` (территория), `hunt` (животные), `hunt_hostile`
 
 ### Инвентарь и крафт
 - [ ] `craft`, `smelt`, `equip`, `swap_tool`, `repair`
-- [ ] `acquire`, `pick_up`, `deposit`, `withdraw`, `sort_chest`
+- [ ] `acquire`, `pick_up`, `deposit`, `withdraw`, `sort_chest`, `drop_to_player`
 - [ ] `eat`, `drink_potion`
 
 ### Стройка, ферма, база
 - [ ] `place_block`, `fill`, `clear_area`, `build_schematic`
 - [ ] `build_farm`, `build_shelter`, `build_fence`
 - [ ] `light_area`, `secure_area` (факелы против спавна)
-- [ ] `use_block` (рычаг, кнопка, дверь)
+- [ ] `use_block` (рычаг, кнопка, дверь), `open` / `close`
 
 ### Социум и мета
 - [ ] `say`, `report`, `deliver`, `give`, `take`
-- [ ] `wait`, `stop`, `set_priority`
+- [ ] `wait`, `stop`, `cancel`, `set_priority`
 - [ ] композиция: `sequence`, `repeat`, `retry`, `fallback`, `parallel`, `condition`
 
-### Политики (всегда включены)
-- [ ] не ломать защищённые блоки (белый/чёрный список)
+### Политики (включены всегда)
+- [ ] не ломать и не ставить защищённые блоки (белый/чёрный список)
 - [ ] не трогать постройки игрока и чужие регионы
 - [ ] не ставить и не ломать в защищённой зоне
-- [ ] избегать лавы; сторониться воды (кроме задачи плавания)
-- [ ] не падать с высоты (край выше 2)
-- [ ] есть при голоде, отбегать от крипера
-- [ ] не входить в портал; не выходить за границы зоны
-- [ ] не выкидывать предметы; менять сломанный инструмент
-- [ ] ночной режим (домой / факелы)
-- [ ] приоритет и защита игрока
+- [ ] избегать лавы и огня (`flee_from lava`); сторониться воды (кроме задач `swim`/`cross_water`)
+- [ ] не падать с высоты: край выше 2 → `walk_careful`; не копать вниз под опасностью
+- [ ] следить за воздухом (не тонуть); не входить в портал
+- [ ] есть при голоде; менять сломанный инструмент; не выкидывать предметы
+- [ ] отбегать от крипера/взрыва, держать дистанцию
+- [ ] ночной режим (домой / факелы); приоритет и защита игрока
+- [ ] не выходить за границы зоны
 
 ## P1 — первый дух в игре
 
