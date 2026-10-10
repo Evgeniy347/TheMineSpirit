@@ -43,3 +43,6 @@ repo/
 # Одноразовые скрипты и результаты тестов (docs/CONVENTIONS.md → «Временные файлы»)
 temp-scripts/
 TestResults/
+
+# Локальный индекс codegraph
+.codegraph/
