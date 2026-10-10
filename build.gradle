@@ -117,6 +117,25 @@ configurations {
 
 dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
+    jarJar("com.fasterxml.jackson.core:jackson-core:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
+    jarJar("com.fasterxml.jackson.core:jackson-annotations:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
 
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
