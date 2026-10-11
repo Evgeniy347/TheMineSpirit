@@ -10,7 +10,7 @@ import java.util.Objects;
 public final class FarmPlanner {
     public static final int MAX_SAFETY_READS_PER_TARGET = FarmStandSpots.MAX_SAFETY_READS;
 
-    private static final int STAND_RADIUS = 3;
+    private static final int MAX_STAND_OFFSET_SQUARED = 11;
 
     private FarmPlanner() {
     }
@@ -58,10 +58,10 @@ public final class FarmPlanner {
 
     private static boolean cannotBeat(BlockCoord from, BlockCoord target, long bestStandSquared) {
         long targetSquared = distanceSquared(from, target);
-        if (targetSquared <= (long) STAND_RADIUS * STAND_RADIUS) {
+        if (targetSquared <= MAX_STAND_OFFSET_SQUARED) {
             return false;
         }
-        double gap = Math.sqrt(targetSquared) - STAND_RADIUS;
+        double gap = Math.sqrt(targetSquared) - Math.sqrt(MAX_STAND_OFFSET_SQUARED);
         return gap * gap > bestStandSquared;
     }
 

@@ -162,6 +162,24 @@ class FarmPlannerTests {
     }
 
     @Test
+    void next_StandAtMaxOffsetBeyondThree_BeatsCloserTarget() {
+        MapFarmView farm = new MapFarmView()
+                .set(2, 0, 5, DIRT_AIR)
+                .set(1, 0, 5, DIRT_AIR);
+        CountingSafety safety = new CountingSafety().set(4, 0, 6, Cell.SOLID);
+        BlockCoord from = new BlockCoord(6, 1, 7);
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from,
+                List.of(new BlockCoord(2, 0, 5), new BlockCoord(1, 0, 5), new BlockCoord(4, 0, 2),
+                        new BlockCoord(-2, 0, -3)),
+                farm, safety, Hydration.of(Set.of(new BlockCoord(2, 0, 5))));
+
+        assertEquals(new FarmPlanner.Next(new BlockCoord(1, 0, 5), new BlockCoord(4, 1, 6)), outcome,
+                "Дальняя цель со стоянкой на смещении √11 обязана побеждать: ранний выход вычитает наибольшее "
+                        + "смещение стоянки √11 ≈ 3.32, а не радиус перебора 3. Итог: " + outcome);
+    }
+
+    @Test
     void next_LineOf256Targets_ReadsStayWithinEightPerTarget() {
         MapFarmView farm = new MapFarmView();
         CountingSafety safety = new CountingSafety().fillFloor(2, -5, -5, 260, 5);
@@ -180,7 +198,7 @@ class FarmPlannerTests {
                 "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
         assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L,
                 "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
-                        + "(dist(from,target) − 3), и дальше перебирать незачем. Чтений: " + safety.reads()
+                        + "(dist(from,target) − √11), и дальше перебирать незачем. Чтений: " + safety.reads()
                         + ", предел: " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L);
     }
 }

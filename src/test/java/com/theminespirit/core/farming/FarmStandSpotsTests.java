@@ -81,6 +81,22 @@ class FarmStandSpotsTests {
     }
 
     @Test
+    void of_OpenGround_MaxStandOffsetIsSqrtEleven() {
+        List<BlockCoord> stands = FarmStandSpots.of(TARGET, FROM, flatFloor(), dirtPlane());
+
+        long maxOffset = stands.stream()
+                .mapToLong(stand -> (long) stand.x() * stand.x() + (long) stand.y() * stand.y()
+                        + (long) stand.z() * stand.z())
+                .max()
+                .orElseThrow();
+
+        assertEquals(11, maxOffset,
+                "Наибольшее смещение стоянки обязано равняться 11 = 3²+1²+1² (по земле 3 и 1, вверх 1 — предел "
+                        + "досягаемости глаз 4.0): по нему планировщик вычитает √11 в раннем выходе, а не радиус 3. "
+                        + "Стоянок: " + stands.size());
+    }
+
+    @Test
     void of_WalledTarget_ReturnsEmpty() {
         CountingSafety safety = new CountingSafety()
                 .fillFloor(0, -5, -5, 5, 5)

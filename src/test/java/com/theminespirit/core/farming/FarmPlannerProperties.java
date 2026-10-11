@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +63,124 @@ class FarmPlannerProperties {
         assertEquals(ordered, reordered,
                 "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
                         + "работа непредсказуемо выбирает разные клетки");
+    }
+
+    @Property(tries = 200)
+    void next_DenseTillWorld_MatchesFullScanWithoutEarlyExit(
+            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        Random random = new Random(seed);
+        MapFarmView farm = tillableFarm(random);
+        CountingSafety safety = standableSafety(random);
+        Hydration hydration = fullHydration();
+        List<BlockCoord> candidates = wideTargets(random);
+        BlockCoord from = new BlockCoord(random.nextInt(WIDE), 1, random.nextInt(WIDE));
+
+        FarmPlanner.Outcome actual = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from, candidates, farm,
+                safety, hydration);
+        FarmPlanner.Outcome expected = referenceNext(FarmJob.TILL, CropKind.ANY, from, candidates, farm,
+                safety, hydration);
+
+        assertEquals(expected, actual,
+                "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
+                        + "со стоянкой на смещении до √11. Цели: " + candidates);
+    }
+
+    private static final int WIDE = 8;
+
+    private static MapFarmView tillableFarm(Random random) {
+        MapFarmView farm = new MapFarmView();
+        for (int x = 0; x < WIDE; x++) {
+            for (int z = 0; z < WIDE; z++) {
+                Above above = random.nextBoolean() ? Above.AIR : Above.WEED;
+                farm.set(x, 0, z, new FarmTile(random.nextBoolean() ? Ground.DIRT : Ground.GRASS, above,
+                        Optional.empty()));
+            }
+        }
+        return farm;
+    }
+
+    private static CountingSafety standableSafety(Random random) {
+        CountingSafety safety = new CountingSafety().fillFloor(0, -4, -4, WIDE + 3, WIDE + 3);
+        for (int x = -4; x < WIDE + 4; x++) {
+            for (int y = 1; y <= 3; y++) {
+                for (int z = -4; z < WIDE + 4; z++) {
+                    if (random.nextInt(10) == 0) {
+                        safety.set(x, y, z, Cell.SOLID);
+                    }
+                }
+            }
+        }
+        return safety;
+    }
+
+    private static Hydration fullHydration() {
+        Set<BlockCoord> water = new HashSet<>();
+        for (int x = 0; x < WIDE; x++) {
+            for (int z = 0; z < WIDE; z++) {
+                water.add(new BlockCoord(x, 0, z));
+            }
+        }
+        return Hydration.of(water);
+    }
+
+    private static List<BlockCoord> wideTargets(Random random) {
+        int count = random.nextInt(3, 11);
+        List<BlockCoord> targets = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            targets.add(new BlockCoord(random.nextInt(WIDE), 0, random.nextInt(WIDE)));
+        }
+        return targets;
+    }
+
+    private static FarmPlanner.Outcome referenceNext(FarmJob job, CropKind filter, BlockCoord from,
+            List<BlockCoord> candidates, MapFarmView farm, SafetyView safety, Hydration hydration) {
+        List<BlockCoord> ordered = new ArrayList<>(candidates);
+        ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
+                .thenComparing(Comparator.naturalOrder()));
+        CachedSafetyView cached = new CachedSafetyView(safety);
+        FarmPlanner.Next best = null;
+        long bestStandSquared = Long.MAX_VALUE;
+        int ineligible = 0;
+        int noStand = 0;
+        for (BlockCoord target : ordered) {
+            FarmTile tile = farm.tileAt(target);
+            boolean watered = job == FarmJob.TILL && hydration.watered(target);
+            if (!job.eligible(tile, filter, watered)) {
+                ineligible++;
+                continue;
+            }
+            List<BlockCoord> stands = FarmStandSpots.of(target, from, cached, farm);
+            if (stands.isEmpty()) {
+                noStand++;
+                continue;
+            }
+            FarmPlanner.Next candidate = new FarmPlanner.Next(target, stands.get(0));
+            if (best == null || closer(candidate, best, from)) {
+                best = candidate;
+                bestStandSquared = distanceSquared(from, candidate.stand());
+            }
+        }
+        return best == null ? new FarmPlanner.Exhausted(ineligible, noStand) : best;
+    }
+
+    private static boolean closer(FarmPlanner.Next candidate, FarmPlanner.Next current, BlockCoord from) {
+        long candidateDistance = distanceSquared(from, candidate.stand());
+        long currentDistance = distanceSquared(from, current.stand());
+        if (candidateDistance != currentDistance) {
+            return candidateDistance < currentDistance;
+        }
+        int byTarget = candidate.target().compareTo(current.target());
+        if (byTarget != 0) {
+            return byTarget < 0;
+        }
+        return candidate.stand().compareTo(current.stand()) < 0;
+    }
+
+    private static long distanceSquared(BlockCoord from, BlockCoord to) {
+        long dx = (long) to.x() - from.x();
+        long dy = (long) to.y() - from.y();
+        long dz = (long) to.z() - from.z();
+        return dx * dx + dy * dy + dz * dz;
     }
 
     @Property(tries = 200)
