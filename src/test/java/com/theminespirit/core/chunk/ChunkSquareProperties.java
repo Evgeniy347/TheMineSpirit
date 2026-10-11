@@ -2,6 +2,7 @@ package com.theminespirit.core.chunk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.HashSet;
 import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -11,6 +12,8 @@ import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.Tuple;
 import net.jqwik.api.constraints.IntRange;
+import net.jqwik.api.statistics.Statistics;
+import net.jqwik.api.statistics.StatisticsReport;
 
 class ChunkSquareProperties {
     @Property
@@ -34,7 +37,14 @@ class ChunkSquareProperties {
 
         assertEquals(ChunkSquare.chunks(newCenter, radius), applied,
                 "Применённый diff обязан переводить старый квадрат в новый при любых центрах: билеты после "
-                        + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше");
+                        + "сдвига должны совпадать с зоне вокруг духа, ни больше ни меньше");
+
+        Set<ChunkCoord> intersection = new HashSet<>(ChunkSquare.chunks(oldCenter, radius));
+        intersection.retainAll(ChunkSquare.chunks(newCenter, radius));
+        boolean overlaps = !intersection.isEmpty();
+        Statistics.label("пересекаются").collect(overlaps);
+        Statistics.collect(overlaps);
+        Statistics.coverage(coverage -> coverage.check(true).percentage(p -> p >= 30.0));
     }
 
     // Центры почти всегда рядом (на один-два квадрата), а не случайные: diff проверяет пересечение квадратов,
@@ -44,16 +54,17 @@ class ChunkSquareProperties {
     Arbitrary<Tuple.Tuple3<ChunkCoord, ChunkCoord, Integer>> diffCases() {
         return Arbitraries.integers().between(0, 16).flatMap(radius -> {
             int span = 2 * radius + 1;
-            Arbitrary<ChunkCoord> anyCenter = anyCenter();
-            Arbitrary<ChunkCoord> nearbyCenter = anyCenter.flatMap(old -> Combinators
-                    .combine(Arbitraries.integers().between(-span, span),
-                            Arbitraries.integers().between(-span, span))
-                    .as((dx, dz) -> new ChunkCoord(old.x() + dx, old.z() + dz)));
-            Arbitrary<ChunkCoord> newCenter = Arbitraries.frequencyOf(
-                    Tuple.of(9, nearbyCenter),
-                    Tuple.of(1, anyCenter));
-            return Combinators.combine(anyCenter, newCenter)
-                    .as((old, fresh) -> Tuple.of(old, fresh, radius));
+            return anyCenter().flatMap(old -> {
+                Arbitrary<ChunkCoord> nearbyCenter = Combinators
+                        .combine(Arbitraries.integers().between(-span, span),
+                                Arbitraries.integers().between(-span, span))
+                        .as((dx, dz) -> new ChunkCoord(old.x() + dx, old.z() + dz));
+                Arbitrary<ChunkCoord> newCenter = Arbitraries.frequencyOf(
+                        Tuple.of(9, nearbyCenter),
+                        Tuple.of(1, anyCenter()));
+                return Combinators.combine(Arbitraries.just(old), newCenter)
+                        .as((fixed, fresh) -> Tuple.of(fixed, fresh, radius));
+            });
         });
     }
 
