@@ -153,6 +153,49 @@ class FallbackPlannerTests {
     }
 
     @Test
+    void plan_TurnLeftGoal_ThrowsUnplannableGoal() {
+        assertThrows(UnplannableGoalException.class,
+                () -> plan(new Goal("поверни налево", Map.of())),
+                "Слово 'поверни' не содержит отдельного слова 'верни': подстрочный поиск ошибочно гнал "
+                        + "разворот на месте в return_home, и дух шёл домой вместо поворота");
+    }
+
+    @Test
+    void plan_HardTaskGoal_ThrowsUnplannableGoal() {
+        assertThrows(UnplannableGoalException.class,
+                () -> plan(new Goal("трудная задача", Map.of())),
+                "Слово 'трудная' начинается на 'труд', а не на отдельное слово 'руд': подстрочный поиск "
+                        + "ошибочно отправлял дух добывать руду вместо отказа");
+    }
+
+    @Test
+    void plan_ChopWordGoal_ReturnsScanAndChopSequence() {
+        TaskNode plan = plan(new Goal("руби дерево", Map.of()));
+
+        assertEquals(chopPlan(32, "any", 1), plan,
+                "Слово 'дерево' обязано распознаваться как рубка по началу слова: иначе живая формулировка "
+                        + "игрока не превращается в план и дух бездельничает");
+    }
+
+    @Test
+    void plan_FollowWordGoal_ReturnsFollowCall() {
+        TaskNode plan = plan(new Goal("иди за мной", Map.of()));
+
+        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+                "Фраза 'за мной' по словам обязана распознаваться как сопровождение: иначе игрок идёт один "
+                        + "и дух теряет его");
+    }
+
+    @Test
+    void plan_AttackWithTreeMentioned_AttackWins() {
+        TaskNode plan = plan(new Goal("убей зомби у дерева", Map.of()));
+
+        assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
+                "При нескольких совпадениях побеждает правило, чьё слово раньше в тексте: иначе упоминание "
+                        + "дерева уводит боевую команду в рубку и дух не защищает игрока");
+    }
+
+    @Test
     void plan_ChopGoalWithInvalidCountType_ThrowsValidationException() {
         assertThrows(PlanValidationException.class,
                 () -> plan(new Goal("срубить деревья", Map.of("count", "пять"))),
