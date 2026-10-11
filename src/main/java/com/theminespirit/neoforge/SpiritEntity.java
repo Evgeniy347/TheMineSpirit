@@ -29,6 +29,7 @@ public final class SpiritEntity extends PathfinderMob {
     private WorldObservation perception;
     private int pathBuilds;
     private int snapshotBuilds;
+    private String pendingTaskJson;
     private TaskSnapshot pendingSnapshot;
     private String pendingRestoreFailure;
 
@@ -63,12 +64,26 @@ public final class SpiritEntity extends PathfinderMob {
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.put("SpiritInventory", inventory.createTag(registryAccess()));
+        SpiritTaskStore.write(compound, taskJsonForSave());
+    }
+
+    private String taskJsonForSave() {
         if (brain != null) {
-            brain.snapshot().ifPresent(snapshot -> {
-                String json = TaskSnapshotCodec.encode(snapshot);
-                SpiritTaskStore.write(compound, json);
-            });
+            String json = brain.snapshot().map(this::encodeForSave).orElse(null);
+            if (json != null) {
+                return json;
+            }
         }
+        return pendingTaskJson;
+    }
+
+    private String encodeForSave(TaskSnapshot snapshot) {
+        snapshotBuilds++;
+        TaskSnapshotCodec.SaveEncoded encoded = TaskSnapshotCodec.encodeForSave(snapshot);
+        if (encoded.failureReason() != null) {
+            LOGGER.warn("Дух {} не сохранил задачу: {}", getUUID(), encoded.failureReason());
+        }
+        return encoded.json();
     }
 
     @Override
@@ -78,6 +93,7 @@ public final class SpiritEntity extends PathfinderMob {
             inventory.fromTag(compound.getList("SpiritInventory", Tag.TAG_COMPOUND), registryAccess());
         }
         SpiritTaskStore.read(compound).ifPresent(json -> {
+            pendingTaskJson = json;
             try {
                 pendingSnapshot = TaskSnapshotCodec.decode(json);
             } catch (RuntimeException e) {
@@ -111,7 +127,6 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<String> taskSnapshot() {
-        snapshotBuilds++;
         if (brain == null) {
             return Optional.empty();
         }
@@ -150,12 +165,14 @@ public final class SpiritEntity extends PathfinderMob {
         if (pendingSnapshot != null) {
             TaskSnapshot snapshot = pendingSnapshot;
             pendingSnapshot = null;
+            pendingTaskJson = null;
             restoreSnapshot(snapshot);
             return;
         }
         if (pendingRestoreFailure != null) {
             String reason = pendingRestoreFailure;
             pendingRestoreFailure = null;
+            pendingTaskJson = null;
             brain().failRestore(reason);
             LOGGER.warn("Дух {} не восстановил задачу: {}", getUUID(), reason);
         }
