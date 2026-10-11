@@ -12,7 +12,7 @@
 - Ошибки — единый объект:
 
 ```json
-{ "error": { "code": "invalid_plan", "message": "У скрипта 'wait' не задан обязательный параметр 'ticks' (INT)", "details": {} } }
+{"error":{"code":"invalid_plan","message":"У скрипта 'wait' не задан обязательный параметр 'ticks' (INT)","details":{}}}
 ```
 
 Коды: `invalid_request`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `invalid_plan`,
