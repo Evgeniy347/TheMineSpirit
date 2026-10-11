@@ -12,6 +12,10 @@ final class Assessments {
         return TacticsConfig.loadDefault().modes().of(situation.orders().mode()).initiates();
     }
 
+    private static double ratio(Situation situation, EnemyMetrics metrics) {
+        return metrics.speedRatio(situation.self().speed(), Scales.defaults().speedRatioCap());
+    }
+
     static EnemyProfiles profiles() {
         return PROFILES;
     }
@@ -19,14 +23,14 @@ final class Assessments {
     static Assessment of(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
         return new Assessment(metrics, 0, 0, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
-                Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
+                Assessment.UNBOUNDED, ratio(situation, metrics), TacticalState.CALM, 0, 1000);
     }
 
     static Assessment full(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
         double margin = WinMargin.of(situation.self(), metrics, Scales.defaults());
         return new Assessment(metrics, margin, 1, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
-                Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
+                Assessment.UNBOUNDED, ratio(situation, metrics), TacticalState.CALM, 0, 1000);
     }
 
     static Assessment custom(Situation situation, int routes, double leashLeft, double engageLeft,

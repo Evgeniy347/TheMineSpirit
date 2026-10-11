@@ -11,6 +11,10 @@ public record EnemyMetrics(int count, int visibleCount, double nearest, double n
         return sum.result();
     }
 
+    public double speedRatio(double selfSpeed, double cap) {
+        return fastest <= 0 ? cap : Math.min(cap, selfSpeed / fastest);
+    }
+
     private static final class Accumulator {
         private int count;
         private int visible;
