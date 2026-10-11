@@ -8,18 +8,18 @@ final class FactChecks {
 
     static double range(String field, double value, double min, double max) {
         if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException(field + " = " + value
+            throw new InvalidFieldException(field, field + " = " + value
                     + ": число должно быть конечным (не NaN и не бесконечность), допустимо от " + min + " до " + max);
         }
         if (value < min || value > max) {
-            throw new IllegalArgumentException(field + " = " + value + ": допустимо от " + min + " до " + max);
+            throw new InvalidFieldException(field, field + " = " + value + ": допустимо от " + min + " до " + max);
         }
         return value;
     }
 
     static int range(String field, int value, int min, int max) {
         if (value < min || value > max) {
-            throw new IllegalArgumentException(field + " = " + value + ": допустимо от " + min + " до " + max);
+            throw new InvalidFieldException(field, field + " = " + value + ": допустимо от " + min + " до " + max);
         }
         return value;
     }

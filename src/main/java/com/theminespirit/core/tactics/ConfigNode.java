@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 
 final class ConfigNode {
     private static final ObjectMapper MAPPER = new ObjectMapper(
@@ -128,10 +129,7 @@ final class ConfigNode {
     }
 
     double number(double min, double max) {
-        if (!node.isNumber()) {
-            throw fail("ожидалось число, получено " + describe(), "число пишется без кавычек");
-        }
-        double value = node.asDouble();
+        double value = number();
         if (value < min || value > max) {
             throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
                     "допустимо от " + min + " до " + max);
@@ -139,16 +137,42 @@ final class ConfigNode {
         return value;
     }
 
-    int integer(int min, int max) {
+    double number() {
+        if (!node.isNumber()) {
+            throw fail("ожидалось число, получено " + describe(), "число пишется без кавычек");
+        }
+        return node.asDouble();
+    }
+
+    int integer() {
         if (!node.isIntegralNumber() || !node.canConvertToInt()) {
             throw fail("ожидалось целое число, получено " + describe(), "приоритеты и тики — целые числа без дробной части");
         }
-        int value = node.asInt();
+        return node.asInt();
+    }
+
+    int integer(int min, int max) {
+        int value = integer();
         if (value < min || value > max) {
             throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
                     "допустимо от " + min + " до " + max);
         }
         return value;
+    }
+
+    <T> T build(Supplier<T> constructor) {
+        return build("", constructor);
+    }
+
+    <T> T build(String fieldPrefix, Supplier<T> constructor) {
+        try {
+            return constructor.get();
+        } catch (InvalidFieldException e) {
+            String json = fieldPrefix.isEmpty() ? e.fieldName()
+                    : fieldPrefix + Character.toUpperCase(e.fieldName().charAt(0)) + e.fieldName().substring(1);
+            ConfigNode target = has(json) ? child(json) : this;
+            throw target.fail(e.getMessage(), "значение в границах " + e.owner() + " (их задаёт конструктор, не этот файл)");
+        }
     }
 
     <E extends Enum<E>> E enumValue(Class<E> type) {

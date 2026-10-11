@@ -25,16 +25,16 @@ final class ModesParser {
                 throw modes.fail("не описан режим " + mode.id(), "в modes.json описаны все режимы боя без пропусков");
             }
         }
-        return new Modes(params, root.get("returnTolerance").number(0, 64));
+        return root.build(() -> new Modes(params, root.get("returnTolerance").number()));
     }
 
     private static ModeParams modeParams(ConfigNode node) {
-        return new ModeParams(node.get("initiates").bool(),
+        return node.build(() -> new ModeParams(node.get("initiates").bool(),
                 node.get("radiusBase").enumValue(RadiusBase.class),
-                node.get("engageRadius").number(0, ModeParams.MAX_RADIUS),
-                node.get("pursuitRadius").number(0, ModeParams.MAX_RADIUS),
+                node.get("engageRadius").number(),
+                node.get("pursuitRadius").number(),
                 node.get("anchor").enumValue(AnchorKind.class),
                 node.get("leash").bool(),
-                node.get("returnToAnchor").bool());
+                node.get("returnToAnchor").bool()));
     }
 }

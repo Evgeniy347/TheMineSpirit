@@ -18,11 +18,11 @@ final class WeightsParser {
         root.fields(FIELDS);
         FactorScales scales = FactorScalesParser.parse(root.get("scales"));
         Map<Factor, Map<TacticalOption, Double>> matrix = matrix(root.get("weights"));
-        return new ScoreWeights(matrix, tieBreak(root.get("tieBreak")),
-                root.get("stickiness").number(0, 2),
-                root.get("holdTicks").integer(0, 2400),
-                root.get("hpDropRelease").number(0.001, 1),
-                scales);
+        return root.build(() -> new ScoreWeights(matrix, tieBreak(root.get("tieBreak")),
+                root.get("stickiness").number(),
+                root.get("holdTicks").integer(),
+                root.get("hpDropRelease").number(),
+                scales));
     }
 
     private static Map<Factor, Map<TacticalOption, Double>> matrix(ConfigNode weights) {

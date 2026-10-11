@@ -46,14 +46,14 @@ final class EnemyProfilesParser {
             throw type.fail("ключ '" + key + "' не подходит под шаблон minecraft:[a-z_]+ или default",
                     "тип врага — id сущности вида minecraft:zombie");
         }
-        return new EnemyProfile(key,
-                item.get("hp").number(1, EnemyProfile.MAX_HP),
-                item.get("dps").number(0, EnemyProfile.MAX_DPS),
-                item.get("speed").number(0.01, EnemyProfile.MAX_SPEED),
+        return item.build(() -> new EnemyProfile(key,
+                item.get("hp").number(),
+                item.get("dps").number(),
+                item.get("speed").number(),
                 item.get("ranged").bool(),
                 item.get("explosive").bool(),
                 item.get("swims").bool(),
                 item.get("flies").bool(),
-                item.get("tier").integer(0, EnemyProfile.MAX_TIER));
+                item.get("tier").integer()));
     }
 }

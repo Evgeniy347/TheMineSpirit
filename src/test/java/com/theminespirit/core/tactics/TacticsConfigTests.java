@@ -98,6 +98,14 @@ class TacticsConfigTests {
                         "[\"RETREAT\", \"FIGHT\", \"IGNORE\"]", "[\"RETREAT\", \"RETREAT\", \"IGNORE\"]"), "tieBreak[1]"),
                 broken("неполный tieBreak", "weights.json", TacticsTexts.mutate(weights,
                         "[\"RETREAT\", \"FIGHT\", \"IGNORE\"]", "[\"RETREAT\", \"FIGHT\"]"), "tieBreak"),
+                broken("предел дальности за границей", "weights.json", TacticsTexts.mutate(weights, "\"dropRange\": 9",
+                        "\"dropRange\": 500"), "scales.dropRange"),
+                broken("предел скорости ниже границы", "weights.json", TacticsTexts.mutate(weights,
+                        "\"speedRatioCap\": 10", "\"speedRatioCap\": 0.5"), "scales.speedRatioCap"),
+                broken("липкость за границей", "weights.json", TacticsTexts.mutate(weights, "\"stickiness\": 0.25",
+                        "\"stickiness\": 5"), "stickiness"),
+                broken("окно удержания за границей", "weights.json", TacticsTexts.mutate(weights, "\"holdTicks\": 40",
+                        "\"holdTicks\": 5000"), "holdTicks"),
                 broken("порог 1.5", "weights.json", TacticsTexts.mutate(weights, "\"hpDropRelease\": 0.3",
                         "\"hpDropRelease\": 1.5"), "hpDropRelease"),
                 broken("holdTicks дробью", "weights.json", TacticsTexts.mutate(weights, "\"holdTicks\": 40",
@@ -141,10 +149,26 @@ class TacticsConfigTests {
                         "\"guard_zone\": {"), "modes.guard_zone"),
                 broken("отрицательный радиус", "modes.json", TacticsTexts.mutate(modes, "\"engageRadius\": 6",
                         "\"engageRadius\": -6"), "modes.defensive.engageRadius"),
+                broken("радиус за границей", "modes.json", TacticsTexts.mutate(modes, "\"engageRadius\": 6",
+                        "\"engageRadius\": 999"), "modes.defensive.engageRadius"),
+                broken("допуск возврата за границей", "modes.json", TacticsTexts.mutateRegex(modes,
+                        "\"returnTolerance\": [0-9.]+", "\"returnTolerance\": 100"), "returnTolerance"),
                 broken("опечатка в якоре", "modes.json", TacticsTexts.mutate(modes, "\"anchor\": \"protected\"",
                         "\"anchor\": \"protecte\""), "modes.protect.anchor"),
                 broken("булево строкой", "modes.json", TacticsTexts.mutateFirst(modes, "\"initiates\": false",
                         "\"initiates\": \"no\""), "modes.passive.initiates"));
+    }
+
+    @Test
+    void fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath() {
+        String weights = TacticsTexts.mutate(TacticsTexts.read("weights.json"), "\"armorCap\": 0.8", "\"armorCap\": 0.99");
+
+        IllegalStateException error = assertThrows(IllegalStateException.class, () -> load("weights.json", weights),
+                "Предел брони 0.99 выше границы конструктора ArmorModel (0.95): загрузка обязана отклонить файл");
+
+        assertTrue(error.getMessage().contains("weights.json → scales.armorCap"),
+                "Границы чисел держит конструктор, а ошибку с путём в файле строит ConfigNode.build: сообщение называет "
+                        + "weights.json → scales.armorCap; получили: " + error.getMessage());
     }
 
     private static Arguments broken(String name, String file, String text, String path) {
