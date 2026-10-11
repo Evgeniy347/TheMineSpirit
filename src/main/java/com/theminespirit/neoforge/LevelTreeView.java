@@ -38,7 +38,7 @@ public final class LevelTreeView implements TreeView {
         return state.is(BlockTags.DIRT) || state.is(Blocks.MANGROVE_ROOTS);
     }
 
-    long blockReads() {
+    public long blockReads() {
         return blockReads;
     }
 

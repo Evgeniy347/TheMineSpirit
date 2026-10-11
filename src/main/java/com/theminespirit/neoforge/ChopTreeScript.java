@@ -117,6 +117,7 @@ final class ChopTreeScript implements ScriptInstance {
 
     private List<BlockCoord> locate() {
         List<BlockCoord> found = new ArrayList<>();
+        pruneCandidates();
         if (candidates.size() >= ChopTuning.SEARCH_MAX_LOGS) {
             return found;
         }
@@ -124,6 +125,17 @@ final class ChopTreeScript implements ScriptInstance {
             found.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }
         return found;
+    }
+
+    private void pruneCandidates() {
+        if (candidates.isEmpty()) {
+            return;
+        }
+        boolean removed = candidates.removeIf(known::contains);
+        if (removed) {
+            candidateCoords.clear();
+            candidateCoords.addAll(candidates);
+        }
     }
 
     private void remember(BlockCoord coord) {
@@ -157,10 +169,25 @@ final class ChopTreeScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> {
-                phase = Phase.CHOP;
+                if (distanceRetried) {
+                    distanceRetried = false;
+                    planIndex++;
+                    phase = Phase.CHOP;
+                } else {
+                    phase = Phase.CHOP;
+                }
                 yield ScriptStatus.RUNNING;
             }
-            case STUCK, TIMEOUT -> unreachableTree();
+            case STUCK, TIMEOUT -> {
+                if (distanceRetried) {
+                    distanceRetried = false;
+                    planIndex++;
+                    phase = Phase.CHOP;
+                } else {
+                    unreachableTree();
+                }
+                yield ScriptStatus.RUNNING;
+            }
         };
     }
 
@@ -195,10 +222,12 @@ final class ChopTreeScript implements ScriptInstance {
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
-            String reason = ((BlockBreaker.Refused) begin).reason();
-            if (reason.contains("дальше") && !distanceRetried) {
+            BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
+            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !distanceRetried) {
                 distanceRetried = true;
-                approach.begin(Vec3.atCenterOf(pos), ChopTuning.STAND_DISTANCE);
+                BlockCoord base = tree.base();
+                BlockPos groundPos = new BlockPos(base.x(), base.y(), base.z());
+                approach.begin(Vec3.atCenterOf(groundPos), ChopTuning.STAND_DISTANCE);
                 phase = Phase.APPROACH;
                 return ScriptStatus.RUNNING;
             }

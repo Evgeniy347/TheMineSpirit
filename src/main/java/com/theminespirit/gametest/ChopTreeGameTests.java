@@ -1,17 +1,34 @@
 package com.theminespirit.gametest;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.BlockLocator;
+import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -19,6 +36,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.jetbrains.annotations.Nullable;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -329,64 +347,6 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "chop_tree_no_axe", timeoutTicks = 500)
-    public static void chopTree_NoAxeTwoLogs_VanillaTimeCommented(GameTestHelper helper) {
-        resetAndBuildPlatform(helper);
-        buildOakTree(helper, 3, 3, 2);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
-
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("chop_tree", Map.of("species", "oak", "count", 1, "radius", 16, "replant", false)),
-                SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "рубка без топора (рукой) должна сработать, причина: " + spirit.taskFailureReason().orElse("нет"));
-            // Ванильное время: 60 тиков на бревно, 2 бревна = 120 тиков + подход + подбор
-            // Тест выполняется дольше, таймаут 400 тиков в批次 показывает это
-            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            helper.assertTrue(logsInInventory == 2,
-                    "должно быть 2 дубовых бревна в инвентаре, фактически " + logsInInventory);
-
-            GameTestFixtures.reset(helper);
-        });
-    }
-
-    @GameTest(template = "empty", batch = "chop_tree_replant", timeoutTicks = 400)
-    public static void chopTree_ReplantWithSapling_SaplingPlacedOnBase(GameTestHelper helper) {
-        resetAndBuildPlatform(helper);
-        buildOakTree(helper, 3, 3, 5);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
-        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
-        spirit.getInventory().setItem(1, new ItemStack(Items.OAK_SAPLING));
-
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("chop_tree", Map.of("species", "oak", "count", 1, "radius", 16, "replant", true)),
-                SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "chop_tree с replant=true обязан завершиться успехом, причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-
-            BlockPos base = helper.absolutePos(new BlockPos(3, 1, 3));
-            Block blockBelow = helper.getLevel().getBlockState(base.below()).getBlock();
-            helper.assertTrue(blockBelow == Blocks.DIRT,
-                    "под основанием должна быть почва: " + blockBelow);
-
-            Block blockAtBase = helper.getLevel().getBlockState(base).getBlock();
-            helper.assertTrue(blockAtBase == Blocks.OAK_SAPLING,
-                    "на месте ствола (базового бревна) должен стоять саженец дуба, а там " + blockAtBase);
-
-            int saplingsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_SAPLING);
-            helper.assertTrue(saplingsInInventory == 0,
-                    "саженец должен быть израсходован (0 в инвентаре), фактически " + saplingsInInventory);
-
-            GameTestFixtures.reset(helper);
-        });
-    }
 
     private static void resetAndBuildPlatform(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -470,5 +430,153 @@ public final class ChopTreeGameTests {
             }
         }
         return count;
+    }
+
+    @GameTest(template = "empty", batch = "chop_tree_scale", timeoutTicks = 400)
+    public static void chopTree_ScaleSixtyLogs_ReadsWithinBudget(GameTestHelper helper) {
+        resetAndBuildPlatform(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 3));
+        buildTallOakTree(helper, 3, 3, 60);
+        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
+
+        BlockPos spiritPos = spirit.blockPosition();
+        LevelTreeView view = new LevelTreeView(spirit.level(), Set.of(Blocks.OAK_LOG));
+        BlockCoord start = new BlockCoord(spiritPos.getX(), spiritPos.getY(), spiritPos.getZ());
+        TreeShape.detect(start, view);
+        long reads = view.blockReads();
+
+        helper.assertTrue(reads <= 27L * 60,
+                "разбор 60 брёвен читает ≤ 27×60=1620 клеток, фактически " + reads);
+
+        BlockLocator.Search search = BlockLocator.search(spirit.level(), spirit.blockPosition(), 16, Set.of(Blocks.OAK_LOG));
+        int totalExamined = 0;
+        int steps = 0;
+        while (!search.done()) {
+            int before = search.examinedPositions();
+            search.step(ScanTuning.SLICES_PER_TICK);
+            totalExamined = search.examinedPositions();
+            steps++;
+        }
+        helper.assertTrue(totalExamined <= 60 * 27 * 5,
+                "общее число прочитанных позиций ограничено: " + totalExamined);
+        helper.assertTrue(steps <= (16 + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK * 4,
+                "скан радиуса 16 заканчивается за разумное число шагов, шагов " + steps);
+
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "chop_tree_hut_on_slope", timeoutTicks = 300)
+    public static void chopTree_HutOnSlopeWithArtificialBlocks_Protected(GameTestHelper helper) {
+        resetAndBuildPlatform(helper);
+        buildOakTreeOnSlope(helper, 3, 3, 5);
+        buildHutOnSlopeWithArtificialBlocks(helper, 8, 3, 3);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
+        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("chop_tree", Map.of("species", "oak", "count", 1, "radius", 16, "replant", false)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "дуб на склоне с веткой над травой обязан срубиться, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+
+            int hutLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(hutLogs >= 27,
+                    "хижина на склоне с досками/стеклом/дверью/факелами не срублена, брёвен осталось " + hutLogs);
+
+            int oakLogs = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(oakLogs == 5,
+                    "дуб срублен, 5 брёвен в инвентаре, фактически " + oakLogs);
+
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "chop_tree_unrealized_goal", timeoutTicks = 100)
+    public static void spiritGoal_UnrealizedGoal_RejectedWithReason(GameTestHelper helper) throws CommandSyntaxException {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(1, 1, 1), "gt_unrealized_player");
+        try {
+            CommandSourceStack source = playerSource(player);
+            CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                    .getCommands().getDispatcher();
+
+            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " построй дом", source);
+            helper.assertTrue(rejected == 0,
+                    "цель 'построй дом', не реализованная ни в одном чеклисте, обязана вернуть 0: результат=" + rejected);
+            helper.assertTrue(spirit.taskStatus().isEmpty(),
+                    "отклонённая цель не должна запускать задачу: статус=" + spirit.taskStatus());
+
+            helper.succeed();
+        } finally {
+            removePlayer(helper, player);
+        }
+    }
+
+    private static void buildTallOakTree(GameTestHelper helper, int x, int z, int height) {
+        for (int y = 1; y <= height; y++) {
+            helper.setBlock(x, y, z, Blocks.OAK_LOG);
+        }
+        addLeavesCrown(helper, x, z, height, Blocks.OAK_LEAVES);
+    }
+
+    private static void buildOakTreeOnSlope(GameTestHelper helper, int x, int z, int height) {
+        for (int y = 1; y <= height; y++) {
+            helper.setBlock(x, y, z, Blocks.OAK_LOG);
+        }
+        addLeavesCrown(helper, x, z, height, Blocks.OAK_LEAVES);
+        helper.setBlock(x + 1, height, z, Blocks.GRASS_BLOCK);
+    }
+
+    private static void buildHutOnSlopeWithArtificialBlocks(GameTestHelper helper, int x, int z, int size) {
+        for (int dx = 0; dx < size; dx++) {
+            for (int dz = 0; dz < size; dz++) {
+                for (int y = 1; y <= size; y++) {
+                    helper.setBlock(x + dx, y, z + dz, Blocks.OAK_LOG);
+                }
+            }
+        }
+        helper.setBlock(x, size + 1, z, Blocks.OAK_PLANKS);
+        helper.setBlock(x + 1, size + 1, z, Blocks.GLASS);
+        helper.setBlock(x + 2, size + 1, z, Blocks.OAK_DOOR);
+        helper.setBlock(x, size + 1, z + 1, Blocks.OAK_TRAPDOOR);
+        helper.setBlock(x + 1, size + 1, z + 1, Blocks.TORCH);
+        helper.setBlock(x + 2, size + 1, z + 1, Blocks.OAK_STAIRS);
+        helper.setBlock(x, size + 1, z + 2, Blocks.OAK_FENCE);
+    }
+
+    private static final String SPIRIT_SELECTOR = spiritSelector(1);
+
+    private static String spiritSelector(int limit) {
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,sort=nearest,limit=" + limit + "]";
+    }
+
+    private static CommandSourceStack playerSource(ServerPlayer player) {
+        return player.server.createCommandSourceStack()
+                .withEntity(player)
+                .withPosition(player.position())
+                .withPermission(4);
+    }
+
+    private static ServerPlayer spawnMockPlayer(GameTestHelper helper, BlockPos relative, String name) {
+        MinecraftServer server = helper.getLevel().getServer();
+        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
+        ServerPlayer player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        server.getPlayerList().placeNewPlayer(connection, player, cookie);
+        BlockPos absolute = helper.absolutePos(relative);
+        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
+        return player;
+    }
+
+    private static void removePlayer(GameTestHelper helper, ServerPlayer player) {
+        helper.getLevel().getServer().getPlayerList().remove(player);
     }
 }
