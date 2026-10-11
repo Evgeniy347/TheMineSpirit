@@ -6,7 +6,9 @@ import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.FollowParams;
+import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.Map;
@@ -20,7 +22,9 @@ public final class SpiritScripts {
                 "scan", params -> new ScanScript(spirit, ScanParams.from(params)),
                 "collect_drops", params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)),
                 "goto", params -> new GotoScript(spirit, GotoParams.from(params)),
-                "follow", params -> new FollowScript(spirit, FollowParams.from(params))));
+                "follow", params -> new FollowScript(spirit, FollowParams.from(params)),
+                "mine_vein", params -> new MineVeinScript(spirit, MineVeinParams.from(params)),
+                "gather", params -> new GatherScript(spirit, GatherParams.from(params))));
     }
 
     public static ConditionRegistry conditions() {

@@ -6,6 +6,7 @@ import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
@@ -117,6 +118,11 @@ public final class BlockBreaker {
 
     public Choice choice() {
         return choice;
+    }
+
+    public boolean dropsAllowedFor(BlockState targetState) {
+        Objects.requireNonNull(targetState, "Состояние блока не может быть null: по нему выбирается инструмент");
+        return ToolChoice.best(toolOptions(targetState)).dropsAllowed();
     }
 
     private List<ToolOption> toolOptions(BlockState targetState) {
