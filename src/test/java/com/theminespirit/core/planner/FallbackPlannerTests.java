@@ -10,6 +10,7 @@ import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -243,6 +244,7 @@ class FallbackPlannerTests {
     private static TaskNode minePlan(int radius, String ore, int count) {
         return new SequenceNode(List.of(
                 new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_ore"))),
-                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count))));
+                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count,
+                        "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT))));
     }
 }

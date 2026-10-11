@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Size;
+import org.junit.jupiter.api.Tag;
 
 class ResourceResolverProperties {
     private static final int MAX_ITEMS = 12;
@@ -63,7 +65,8 @@ class ResourceResolverProperties {
         if (knowledge.isSmeltable(item)) {
             return new ScriptCall("smelt", Map.of("item", item, "count", count));
         }
-        return new ScriptCall("gather", Map.of("block", item, "count", count));
+        return new ScriptCall("gather", Map.of("block", item, "count", count,
+                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
     }
 
     private static boolean isObtainable(String item, ResourceKnowledge knowledge) {
