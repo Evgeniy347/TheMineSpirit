@@ -63,6 +63,7 @@ scripts/publish.sh -y --no-restart
 - **Упал `stop.sh`/`start.sh`** — смотри `logs/latest.log` сервера и консоль
   `server/scripts/console.sh`.
 - **Откат мода** — положи в `$SERVER_DIR/mods/` прежний jar (удалив текущий
-  `theminespirit-*.jar`) и перезапусти сервер. Мир откатывается из git сервера:
-  `git log`/`git checkout` в `/opt/minecraft/server` (по правилам сервера).
+  `theminespirit-*.jar`) и перезапусти сервер. Мир откатывается только по правилам сервера
+  (`/opt/minecraft/server/README.md` → «Правила»): `git checkout` там запрещён, откат — новым коммитом
+  или через клон в другой каталог, и только по согласованию с пользователем.
 - **Любой сбой** — повторная публикация после починки безопасна: скрипт сам удаляет старые jar.
