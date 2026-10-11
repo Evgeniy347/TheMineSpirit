@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.mining.OreKind;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -101,8 +102,10 @@ class ScriptCatalogTests {
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[]{1, 256})),
                 spec("collect_drops", List.of(), Map.of()),
-                spec("harvest_crop", List.of("crop"), Map.of()),
-                spec("plant_crop", List.of("crop"), Map.of()),
+                spec("harvest_crop", List.of(), Map.of("radius", new long[]{1, 16})),
+                spec("plant_crop", List.of("crop"), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
+                spec("till", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
+                spec("bone_meal", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
                 spec("craft", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
                 spec("smelt", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
                 spec("equip", List.of("item"), Map.of()),
@@ -248,6 +251,73 @@ class ScriptCatalogTests {
         assertEquals(ParamType.STRING_LIST, param(scan, "filter").type(),
                 "filter в scan — список шаблонов id блоков");
         assertEquals(false, param(scan, "filter").required(), "filter в scan необязателен: без него видны все блоки");
+    }
+
+    @Test
+    void defaultCatalog_HarvestCrop_CropEnumDefaultsToAnyWithReplant() {
+        ScriptSpec harvestCrop = CoreScripts.defaultCatalog().find("harvest_crop").orElseThrow();
+
+        ParamSpec crop = param(harvestCrop, "crop");
+        ParamSpec radius = param(harvestCrop, "radius");
+        ParamSpec replant = param(harvestCrop, "replant");
+
+        assertEquals(ParamType.ENUM, crop.type(),
+                "crop в harvest_crop — enum: валидатор обязан ловить опечатку до запуска, а не искать чужой посев");
+        assertEquals(CropKind.names(), crop.values(),
+                "Список допустимых crop обязан совпадать с видами CropKind: иначе каталог обещает один набор, "
+                        + "а ядро знает другой");
+        assertEquals(false, crop.required(),
+                "crop в harvest_crop необязателен: без него собирается любой зрелый посев");
+        assertEquals("any", crop.defaultValue(),
+                "crop по умолчанию 'any': умолчание живёт в каталоге, а не в маппинге");
+        assertEquals(false, radius.required(),
+                "radius в harvest_crop необязателен: по умолчанию поиск идёт в радиусе из каталога");
+        assertEquals(CatalogLimits.FARM_RADIUS_DEFAULT, radius.defaultValue(),
+                "radius в harvest_crop по умолчанию " + CatalogLimits.FARM_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы адаптер не дублировал умолчание");
+        assertEquals(ParamType.BOOL, replant.type(),
+                "replant в harvest_crop — bool: пересадка либо есть, либо нет");
+        assertEquals(false, replant.required(),
+                "replant в harvest_crop необязателен: самоподдерживающаяся грядка — поведение по умолчанию");
+        assertEquals(true, replant.defaultValue(),
+                "replant по умолчанию true: каждая собранная клетка тут же засаживается заново");
+    }
+
+    @Test
+    void defaultCatalog_PlantCrop_CropRequiredWithoutAny() {
+        ScriptSpec plantCrop = CoreScripts.defaultCatalog().find("plant_crop").orElseThrow();
+
+        ParamSpec crop = param(plantCrop, "crop");
+        ParamSpec count = param(plantCrop, "count");
+
+        assertEquals(ParamType.ENUM, crop.type(),
+                "crop в plant_crop — enum: опечатка в виде обязана отклоняться валидатором до запуска");
+        assertEquals(CropKind.plantableNames(), crop.values(),
+                "Список допустимых crop обязан совпадать с сажаемыми видами без any: план «посади что-нибудь» "
+                        + "не говорит, какие семена тратить");
+        assertEquals(true, crop.required(),
+                "crop в plant_crop обязателен: без вида скрипт не знает, какие семена брать из инвентаря");
+        assertEquals(CatalogLimits.PLANT_COUNT_DEFAULT, count.defaultValue(),
+                "count в plant_crop по умолчанию " + CatalogLimits.PLANT_COUNT_DEFAULT
+                        + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_TillAndBoneMeal_RadiusAndCountDefaults() {
+        ScriptSpec till = CoreScripts.defaultCatalog().find("till").orElseThrow();
+        ScriptSpec boneMeal = CoreScripts.defaultCatalog().find("bone_meal").orElseThrow();
+
+        assertEquals(CatalogLimits.FARM_RADIUS_DEFAULT, param(till, "radius").defaultValue(),
+                "radius в till по умолчанию " + CatalogLimits.FARM_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы адаптер не дублировал умолчание");
+        assertEquals(CatalogLimits.TILL_COUNT_DEFAULT, param(till, "count").defaultValue(),
+                "count в till по умолчанию " + CatalogLimits.TILL_COUNT_DEFAULT);
+        assertEquals("any", param(boneMeal, "crop").defaultValue(),
+                "crop в bone_meal по умолчанию 'any': без вида подкармливается любой растущий посев");
+        assertEquals(CatalogLimits.BONE_MEAL_COUNT_DEFAULT, param(boneMeal, "count").defaultValue(),
+                "count в bone_meal по умолчанию " + CatalogLimits.BONE_MEAL_COUNT_DEFAULT);
+        assertEquals(2, till.params().size(),
+                "У till ровно два параметра, radius и count: лишний параметр попал бы в capabilities");
     }
 
     private static ParamSpec param(ScriptSpec spec, String name) {
