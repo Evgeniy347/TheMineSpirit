@@ -34,10 +34,10 @@ public final class LlmPlanner implements Planner {
         String prompt = buildPrompt(goal, observation);
         try {
             TaskNode plan = PlanParser.parse(client.complete(prompt), catalog, conditions);
-            return new PlanResult(plan, PlanResult.SOURCE_LLM, Optional.empty());
+            return new PlanResult(plan, PlanSource.LLM, Optional.empty());
         } catch (LlmException | PlanValidationException error) {
             PlanResult fallbackResult = fallback.plan(goal, observation);
-            return new PlanResult(fallbackResult.plan(), PlanResult.SOURCE_FALLBACK, Optional.of(error.getMessage()));
+            return new PlanResult(fallbackResult.plan(), PlanSource.FALLBACK, Optional.of(error.getMessage()));
         }
     }
 

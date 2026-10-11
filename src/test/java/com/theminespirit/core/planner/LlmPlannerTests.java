@@ -29,7 +29,7 @@ class LlmPlannerTests {
         assertEquals(new ScriptCall("wait", Map.of("ticks", 5)), result.plan(),
                 "Валидный JSON-план от клиента обязан исполняться, а не заменяться шаблоном: иначе качество "
                         + "решения ИИ выбрасывается и дух всегда делает одно и то же");
-        assertEquals(PlanResult.SOURCE_LLM, result.source(),
+        assertEquals(PlanSource.LLM, result.source(),
                 "План от ИИ обязан помечаться источником 'llm': иначе не отличить решение ИИ от шаблона");
         assertTrue(result.fallbackReason().isEmpty(),
                 "Успешный план ИИ не несёт причины fallback: причина появляется только при сбое");
@@ -52,7 +52,7 @@ class LlmPlannerTests {
         assertEquals(FALLBACK_PLAN, result.plan(),
                 "Невалидный план ИИ обязан уходить в fallback: иначе неизвестный скрипт дойдёт до движка "
                         + "и задача сорвётся в тике вместо аккуратного плана по шаблону");
-        assertEquals(PlanResult.SOURCE_FALLBACK, result.source(),
+        assertEquals(PlanSource.FALLBACK, result.source(),
                 "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
                         + "останется незамеченным");
         assertTrue(result.fallbackReason().orElseThrow().contains("no_such_script"),
@@ -76,7 +76,7 @@ class LlmPlannerTests {
         assertEquals(FALLBACK_PLAN, result.plan(),
                 "Сбой клиента ИИ обязан уходить в fallback: иначе дух останется без плана при недоступном "
                         + "сервисе и простоит тик за тиком");
-        assertEquals(PlanResult.SOURCE_FALLBACK, result.source(),
+        assertEquals(PlanSource.FALLBACK, result.source(),
                 "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
                         + "останется незамеченным");
         assertTrue(result.fallbackReason().orElseThrow().contains("сеть недоступна"),

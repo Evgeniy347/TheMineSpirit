@@ -50,7 +50,7 @@ public final class FallbackPlanner implements Planner {
         Rule rule = match(goal.text()).orElseThrow(() -> new UnplannableGoalException("Цель '" + goal.text()
                 + "' не распознана: измените формулировку или передайте её ИИ-планировщику"));
         TaskNode validated = PlanValidator.validate(build(rule, goal), scripts, conditions);
-        return new PlanResult(validated, PlanResult.SOURCE_FALLBACK, Optional.empty());
+        return new PlanResult(validated, PlanSource.FALLBACK, Optional.empty());
     }
 
     private static TaskNode build(Rule rule, Goal goal) {

@@ -23,7 +23,7 @@ final class RecordingPlanner implements Planner {
     public PlanResult plan(Goal goal, WorldObservation observation) {
         goals.add(goal);
         observations.add(observation);
-        return new PlanResult(response, PlanResult.SOURCE_FALLBACK, Optional.empty());
+        return new PlanResult(response, PlanSource.FALLBACK, Optional.empty());
     }
 
     boolean isEmpty() {
