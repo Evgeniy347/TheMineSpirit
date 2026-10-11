@@ -151,6 +151,15 @@ public final class TaskRunner {
         String currentScript() {
             return instance == null ? null : scriptId;
         }
+
+        @Override
+        void cancel() {
+            if (instance != null) {
+                ScriptInstance live = instance;
+                instance = null;
+                live.cancel();
+            }
+        }
     }
 
     private static final class SequenceExecutor extends NodeExecutor {
@@ -406,6 +415,11 @@ public final class TaskRunner {
             for (NodeExecutor child : children) {
                 child.cancel();
             }
+        }
+
+        @Override
+        void cancel() {
+            cancelAll();
         }
 
         @Override

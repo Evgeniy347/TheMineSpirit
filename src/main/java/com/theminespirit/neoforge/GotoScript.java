@@ -22,15 +22,27 @@ final class GotoScript implements ScriptInstance {
     @Override
     public ScriptStatus tick() {
         if (spirit.isRemoved()) {
+            stopNavigation();
             return ScriptStatus.FAILED;
         }
         if (spirit.position().distanceTo(target) <= ARRIVAL_TOLERANCE) {
+            stopNavigation();
             return ScriptStatus.SUCCEEDED;
         }
         if (elapsed++ >= MAX_TICKS) {
+            stopNavigation();
             return ScriptStatus.FAILED;
         }
         spirit.getNavigation().moveTo(target.x, target.y, target.z, MOVE_SPEED);
         return ScriptStatus.RUNNING;
+    }
+
+    @Override
+    public void cancel() {
+        stopNavigation();
+    }
+
+    private void stopNavigation() {
+        spirit.getNavigation().stop();
     }
 }

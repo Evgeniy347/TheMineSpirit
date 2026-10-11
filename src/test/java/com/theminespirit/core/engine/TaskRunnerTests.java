@@ -287,6 +287,72 @@ class TaskRunnerTests {
     }
 
     @Test
+    void cancel_RunningScript_CallsScriptCancelExactlyOnce() {
+        AtomicInteger cancels = new AtomicInteger();
+        ScriptFactory factory = params -> new ScriptInstance() {
+            @Override
+            public ScriptStatus tick() {
+                return ScriptStatus.RUNNING;
+            }
+
+            @Override
+            public void cancel() {
+                cancels.incrementAndGet();
+            }
+        };
+        TaskRunner runner = TaskRunner.start(script(SCRIPT), ScriptRegistry.of(Map.of(SCRIPT, factory)),
+                TestScripts.condition(CHECK, true));
+        assertEquals(RunStatus.RUNNING, runner.tick(), "перед отменой скрипт обязан быть в работе");
+
+        runner.cancel();
+        runner.cancel();
+
+        assertEquals(1, cancels.get(),
+                "отмена задачи обязана донести cancel до живого скрипта ровно один раз: без этого скрипт не освободит "
+                        + "занятый блок, предмет в руке или резерв на складе");
+    }
+
+    @Test
+    void cancel_AfterFirstStepCompleted_CancelsOnlyLiveScript() {
+        AtomicInteger completedCancels = new AtomicInteger();
+        AtomicInteger runningCancels = new AtomicInteger();
+        ScriptRegistry registry = ScriptRegistry.of(Map.of(
+                "first", params -> new ScriptInstance() {
+                    @Override
+                    public ScriptStatus tick() {
+                        return ScriptStatus.SUCCEEDED;
+                    }
+
+                    @Override
+                    public void cancel() {
+                        completedCancels.incrementAndGet();
+                    }
+                },
+                "second", params -> new ScriptInstance() {
+                    @Override
+                    public ScriptStatus tick() {
+                        return ScriptStatus.RUNNING;
+                    }
+
+                    @Override
+                    public void cancel() {
+                        runningCancels.incrementAndGet();
+                    }
+                }));
+        TaskRunner runner = TaskRunner.start(sequence(script("first"), script("second")), registry,
+                TestScripts.condition(CHECK, true));
+        assertEquals(RunStatus.RUNNING, runner.tick(), "после успеха первого шага sequence продолжает второй");
+        assertEquals(RunStatus.RUNNING, runner.tick(), "второй шаг обязан встать в работу и держать узел живым");
+
+        runner.cancel();
+
+        assertEquals(0, completedCancels.get(),
+                "завершённый скрипт не получает cancel: иначе он освободил бы ресурсы, уже переданные дальше");
+        assertEquals(1, runningCancels.get(),
+                "cancel обязан дойти до работающего второго шага ровно один раз");
+    }
+
+    @Test
     void cancel_RunningRun_TransitionsToCancelledAndFreezesStatus() {
         TaskRunner runner = TaskRunner.start(script(SCRIPT), TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(5)),
                 TestScripts.condition(CHECK, true));

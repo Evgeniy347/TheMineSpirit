@@ -24,12 +24,22 @@ final class FollowScript implements ScriptInstance {
         }
         ServerPlayer target = findTarget();
         if (target == null) {
+            stopNavigation();
             return ScriptStatus.FAILED;
         }
         if (spirit.position().distanceTo(target.position()) > params.radius()) {
             spirit.getNavigation().moveTo(target, MOVE_SPEED);
         }
         return ScriptStatus.RUNNING;
+    }
+
+    @Override
+    public void cancel() {
+        stopNavigation();
+    }
+
+    private void stopNavigation() {
+        spirit.getNavigation().stop();
     }
 
     private ServerPlayer findTarget() {

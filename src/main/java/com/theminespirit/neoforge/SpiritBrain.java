@@ -14,7 +14,9 @@ public final class SpiritBrain {
     }
 
     public void start(TaskNode plan) {
-        stopNavigation();
+        if (runner != null) {
+            runner.cancel();
+        }
         runner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
     }
 
@@ -23,7 +25,6 @@ public final class SpiritBrain {
             runner.cancel();
             runner = null;
         }
-        stopNavigation();
     }
 
     public Optional<RunStatus> status() {
@@ -41,11 +42,6 @@ public final class SpiritBrain {
         RunStatus status = runner.tick();
         if (status != RunStatus.RUNNING) {
             runner = null;
-            stopNavigation();
         }
-    }
-
-    private void stopNavigation() {
-        spirit.getNavigation().stop();
     }
 }
