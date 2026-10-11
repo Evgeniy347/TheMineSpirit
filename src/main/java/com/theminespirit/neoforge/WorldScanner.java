@@ -30,7 +30,7 @@ public final class WorldScanner {
     private WorldScanner() {
     }
 
-    public record Scan(WorldObservation observation, int scannedPositions) {
+    public record Scan(WorldObservation observation, int scannedPositions, int skippedChunks) {
     }
 
     public static Scan observe(Level level, String botId, BlockCoord center, ScanRadius radius,
@@ -47,10 +47,12 @@ public final class WorldScanner {
         List<ContainerRef> containers = new ArrayList<>();
         Map<String, Integer> blockCounts = new LinkedHashMap<>();
         int scannedPositions = 0;
+        int skippedChunks = 0;
 
         for (int chunkX = SectionPos.blockToSectionCoord(minX); chunkX <= SectionPos.blockToSectionCoord(maxX); chunkX++) {
             for (int chunkZ = SectionPos.blockToSectionCoord(minZ); chunkZ <= SectionPos.blockToSectionCoord(maxZ); chunkZ++) {
                 if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk chunk)) {
+                    skippedChunks++;
                     continue;
                 }
                 int scanMinX = Math.max(chunkX * 16, minX);
@@ -89,7 +91,7 @@ public final class WorldScanner {
 
         WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
                 inventoryEntries(inventory), blocks, entities, containers, r);
-        return new Scan(observation, scannedPositions);
+        return new Scan(observation, scannedPositions, skippedChunks);
     }
 
     private static void scanContainers(LevelChunk chunk, int minX, int maxX, int minY, int maxY, int minZ, int maxZ,

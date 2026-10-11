@@ -81,14 +81,32 @@ public final class SpiritGameTests {
     public static void scan_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
+        int structureChunkX = base.getX() >> 4;
+        int structureChunkZ = base.getZ() >> 4;
+        int firstUnloaded = Integer.MIN_VALUE;
+        for (int k = 1; k <= 256; k++) {
+            if (!helper.getLevel().hasChunk(structureChunkX + k, structureChunkZ)) {
+                firstUnloaded = structureChunkX + k;
+                break;
+            }
+        }
+        helper.assertTrue(firstUnloaded != Integer.MIN_VALUE,
+                "В пределах 256 чанков к востоку обязана найтись незагруженная область: иначе мир загружен "
+                        + "целиком и тест не может проверить пропуск незагруженных чанков");
+        // Центр ставится так, чтобы крайний восточный чанк радиуса совпал с найденным незагруженным: тогда
+        // в окно попадают и загруженные чанки, и гарантированно незагруженный.
+        int centerX = firstUnloaded * 16 - 24;
+        BlockPos center = new BlockPos(centerX, base.getY(), base.getZ());
         int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
         WorldScanner.Scan scan = WorldScanner.observe(helper.getLevel(), "spirit_1",
-                new BlockCoord(
-                        absolute.getX(), absolute.getY(), absolute.getZ()),
+                new BlockCoord(center.getX(), center.getY(), center.getZ()),
                 ScanRadius.of(32), spirit.getInventory());
         int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
 
+        helper.assertTrue(scan.skippedChunks() > 0,
+                "Скан радиусом 32 обязан встретить незагруженные чанки у края загруженной области, иначе тест "
+                        + "доказывает неработу загрузки на пустом множестве: пропущено " + scan.skippedChunks());
         helper.assertTrue(after == before,
                 "Скан у края загруженной области обязан не грузить чанки: было " + before
                         + " загруженных чанков, стало " + after + ". Обращение к getBlockState незагруженного "
