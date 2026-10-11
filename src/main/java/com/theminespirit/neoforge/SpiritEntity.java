@@ -20,6 +20,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
+import com.theminespirit.core.script.ConditionCatalog;
 
 public final class SpiritEntity extends PathfinderMob {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -116,13 +117,7 @@ public final class SpiritEntity extends PathfinderMob {
         if (brain == null) {
             return Optional.empty();
         }
-        return brain.snapshot().map(snapshot -> {
-            try {
-                return TaskSnapshotCodec.encode(snapshot);
-            } catch (RuntimeException e) {
-                throw e;
-            }
-        });
+        return brain.snapshot().map(snapshot -> TaskSnapshotCodec.encode(snapshot));
     }
 
     public int snapshotBuilds() {
@@ -164,7 +159,7 @@ public final class SpiritEntity extends PathfinderMob {
             if (snapshot.status() == RunStatus.RUNNING) {
                 TaskNode plan = snapshot.plan();
                 if (plan != null) {
-                    PlanValidator.validate(plan, SpiritScripts.catalogFor(this), com.theminespirit.core.script.ConditionCatalog.empty());
+                    PlanValidator.validate(plan, SpiritScripts.catalogFor(this), ConditionCatalog.empty());
                 }
             }
             brain().restore(snapshot);
