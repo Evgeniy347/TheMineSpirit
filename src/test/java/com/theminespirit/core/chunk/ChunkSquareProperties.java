@@ -6,7 +6,6 @@ import java.util.Set;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
-import org.junit.jupiter.api.Tag;
 
 class ChunkSquareProperties {
     @Property
@@ -18,7 +17,6 @@ class ChunkSquareProperties {
                         + "не ту зону, а на границе чанк либо теряется, либо грузится лишний");
     }
 
-    @Tag("slow")
     @Property
     void diff_AnyCenters_RemovesAndAddsToReachNewSquare(
             @ForAll @IntRange(min = -1000, max = 1000) int oldX,
