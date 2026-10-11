@@ -2,7 +2,7 @@ package com.theminespirit.core.movement;
 
 public final class PathRefreshPolicy {
     public static final double TARGET_MOVE_TOLERANCE = 1.0;
-    public static final int RETRY_COOLDOWN_CALLS = 60;
+    public static final int RETRY_COOLDOWN_CALLS = 20;
 
     private final double moveToleranceSq;
     private double targetX;
