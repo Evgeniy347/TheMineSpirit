@@ -37,6 +37,7 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("прошли plan_check: 7 из 10 (70 %)", text)
         self.assertIn("валидных ответов (план или skip): 8 из 10 (80 %)", text)
         self.assertIn("Время ответа", text)
+        self.assertRegex(text, r"\| forest \| 1 \| plan_ok \| [\d.]+ \| chop_tree \|", "строка таблицы: место, прогон, исход, время, скрипты")
 
     def test_smoke_ValidShareBelow80_ReportSuggestsEnglishPromptForMainAgent(self):
         script = [{"json": PLAN}] * 6 + [{"text": "проза"}] * 4
