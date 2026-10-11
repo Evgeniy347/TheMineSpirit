@@ -61,9 +61,11 @@ class PlanParserTests {
         TaskNode node = PlanParser.parse(json, CATALOG);
 
         assertEquals(new FallbackNode(List.of(
-                new ScriptCall("sort_chest", Map.of()),
+                new ScriptCall("sort_chest", Map.of("container", "nearest", "radius", 8)),
                 new ScriptCall("return_home", Map.of()))), node,
-                "Узел fallback обязан нести шаги по порядку: потеря порядка ломает стратегию 'первый успешный'");
+                "Узел fallback обязан нести шаги по порядку: потеря порядка ломает стратегию 'первый успешный'. "
+                        + "Заодно видны подставленные умолчания sort_chest: без них скрипт контейнера не понял бы, "
+                        + "куда идти");
     }
 
     @Test
