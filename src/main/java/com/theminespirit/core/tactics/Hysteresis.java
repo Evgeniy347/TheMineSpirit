@@ -24,11 +24,13 @@ public final class Hysteresis {
                 : HoldStatus.HELD;
     }
 
-    public TacticsMemory remember(TacticsMemory memory, TacticalOption chosen, long now, double hpFraction) {
+    public TacticsMemory remember(TacticsMemory memory, Decision decision, long now, double hpFraction) {
+        TacticalOption chosen = decision.option();
         boolean changed = memory.previous().map(option -> option != chosen).orElse(true);
         boolean windowOver = now - memory.hpWindowStart() >= weights.holdTicks();
-        return new TacticsMemory(Optional.of(chosen), changed ? now : memory.decidedAt(), memory.state(),
-                memory.stateSince(), memory.mode(), memory.orderedMode(), memory.anchor(), memory.lastSeenTick(),
-                windowOver ? hpFraction : memory.hpWindowRef(), windowOver ? now : memory.hpWindowStart());
+        return new TacticsMemory(Optional.of(chosen), decision.source(), changed ? now : memory.decidedAt(),
+                memory.state(), memory.stateSince(), memory.mode(), memory.orderedMode(), memory.anchor(),
+                memory.lastSeenTick(), windowOver ? hpFraction : memory.hpWindowRef(),
+                windowOver ? now : memory.hpWindowStart());
     }
 }

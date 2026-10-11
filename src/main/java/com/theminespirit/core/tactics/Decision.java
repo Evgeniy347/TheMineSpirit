@@ -14,4 +14,8 @@ public record Decision(TacticalOption option, String rule, Set<TacticalOption> e
         excluded = Set.copyOf(excluded);
         excludingRules = List.copyOf(excludingRules);
     }
+
+    public DecisionSource source() {
+        return rule.equals(BY_SCORE) || rule.equals(HELD) ? DecisionSource.SCORE : DecisionSource.RULE;
+    }
 }

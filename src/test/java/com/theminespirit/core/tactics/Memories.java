@@ -12,7 +12,7 @@ final class Memories {
 
     static TacticsMemory holding(Situation situation, TacticalOption previous, long decidedAt) {
         TacticsMemory base = fresh(situation);
-        return new TacticsMemory(Optional.of(previous), decidedAt, base.state(), base.stateSince(), base.mode(),
+        return new TacticsMemory(Optional.of(previous), DecisionSource.SCORE, decidedAt, base.state(), base.stateSince(), base.mode(),
                 base.orderedMode(), base.anchor(), base.lastSeenTick(), base.hpWindowRef(), base.hpWindowStart());
     }
 }

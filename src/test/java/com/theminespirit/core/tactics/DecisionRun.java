@@ -18,7 +18,7 @@ final class DecisionRun {
         Assessment assessment = Assessments.full(situation).withEscapeRoutes(escapeRoutes);
         Scores scores = scorer.score(situation, assessment, config.weights());
         Decision decision = decider.decide(FactMap.from(situation, assessment), scores, escapeRoutes, memory, tick);
-        memory = decider.hysteresis().remember(memory, decision.option(), tick, situation.self().hpFraction());
+        memory = decider.hysteresis().remember(memory, decision, tick, situation.self().hpFraction());
         return decision;
     }
 

@@ -72,7 +72,7 @@ class TacticsProperties {
         CombatMode mode = degraded && ordered != CombatMode.PASSIVE ? CombatMode.DEFENSIVE : ordered;
         Optional<Point> anchor = anchored && state != TacticalState.CALM ? Optional.of(situation.self().pos())
                 : Optional.empty();
-        return new TacticsMemory(previous, 1000 - decidedAgo, state, 1000 - inState, mode, ordered, anchor, 900,
+        return new TacticsMemory(previous, DecisionSource.SCORE, 1000 - decidedAgo, state, 1000 - inState, mode, ordered, anchor, 900,
                 situation.self().hpFraction(), 1000);
     }
 

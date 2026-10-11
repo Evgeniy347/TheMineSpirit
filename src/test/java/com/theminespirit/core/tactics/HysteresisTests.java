@@ -6,11 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class HysteresisTests {
     private static final TacticsConfig CONFIG = TacticsConfig.loadDefault();
     private static final int INTERVAL = 10;
+
+    private static Decision scored(TacticalOption option) {
+        return new Decision(option, Decision.BY_SCORE, Set.of(), List.of(), HoldStatus.NONE);
+    }
 
     private static SituationBuilder zombies(int count, double hpFraction) {
         return SituationBuilder.create().hpFraction(hpFraction).enemies("zombie", 8, count);
@@ -173,10 +178,10 @@ class HysteresisTests {
         TacticsMemory memory = TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1.0);
         Hysteresis hysteresis = new Hysteresis(CONFIG.weights());
 
-        TacticsMemory first = hysteresis.remember(memory, TacticalOption.FIGHT, 10, 0.9);
-        TacticsMemory same = hysteresis.remember(first, TacticalOption.FIGHT, 30, 0.8);
-        TacticsMemory rolled = hysteresis.remember(same, TacticalOption.FIGHT, 40, 0.7);
-        TacticsMemory changed = hysteresis.remember(rolled, TacticalOption.RETREAT, 50, 0.7);
+        TacticsMemory first = hysteresis.remember(memory, scored(TacticalOption.FIGHT), 10, 0.9);
+        TacticsMemory same = hysteresis.remember(first, scored(TacticalOption.FIGHT), 30, 0.8);
+        TacticsMemory rolled = hysteresis.remember(same, scored(TacticalOption.FIGHT), 40, 0.7);
+        TacticsMemory changed = hysteresis.remember(rolled, scored(TacticalOption.RETREAT), 50, 0.7);
 
         assertEquals(List.of(Optional.of(TacticalOption.FIGHT), 10L, 1.0, 0L, 0.7, 40L, 50L),
                 List.of(first.previous(), same.decidedAt(), same.hpWindowRef(), same.hpWindowStart(),

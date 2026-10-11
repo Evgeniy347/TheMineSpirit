@@ -189,7 +189,7 @@ public final class ScenarioFile {
         long decidedAgo = node.has("decidedAgo") ? node.get("decidedAgo").integer(0, (int) tick) : 0;
         CombatMode mode = node.has("mode") ? node.get("mode").enumValue(CombatMode.class) : base.mode();
         Optional<Point> anchor = state == TacticalState.CALM ? Optional.empty() : Optional.of(situation.self().pos());
-        return new TacticsMemory(previous, tick - decidedAgo, state, tick - inState, mode, base.orderedMode(), anchor,
+        return new TacticsMemory(previous, DecisionSource.SCORE, tick - decidedAgo, state, tick - inState, mode, base.orderedMode(), anchor,
                 tick - sinceSeen, base.hpWindowRef(), tick);
     }
 

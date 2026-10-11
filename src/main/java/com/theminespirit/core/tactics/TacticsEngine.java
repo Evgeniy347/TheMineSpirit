@@ -79,13 +79,13 @@ public final class TacticsEngine {
     private TacticsMemory nextMemory(Frame frame, Decision decision, StateStep state, CombatMode mode) {
         Situation situation = frame.situation();
         TacticsMemory memory = frame.memory();
-        TacticsMemory remembered = decider.hysteresis().remember(memory, decision.option(), frame.nowTick(),
+        TacticsMemory remembered = decider.hysteresis().remember(memory, decision, frame.nowTick(),
                 situation.self().hpFraction());
         boolean stateChanged = state.state() != memory.state();
         Optional<Point> anchor = anchorAfter(situation, memory, state.state());
-        return new TacticsMemory(remembered.previous(), remembered.decidedAt(), state.state(),
-                stateChanged ? frame.nowTick() : memory.stateSince(), mode, situation.orders().mode(), anchor,
-                frame.lastSeen(), remembered.hpWindowRef(), remembered.hpWindowStart());
+        return new TacticsMemory(remembered.previous(), remembered.previousSource(), remembered.decidedAt(),
+                state.state(), stateChanged ? frame.nowTick() : memory.stateSince(), mode, situation.orders().mode(),
+                anchor, frame.lastSeen(), remembered.hpWindowRef(), remembered.hpWindowStart());
     }
 
     private static Optional<Point> anchorAfter(Situation situation, TacticsMemory memory, TacticalState next) {
