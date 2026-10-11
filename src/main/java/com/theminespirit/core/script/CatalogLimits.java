@@ -13,6 +13,10 @@ public final class CatalogLimits {
     public static final int SCAN_RADIUS_MIN = ScanRadius.MIN;
     public static final int SCAN_RADIUS_MAX = ScanRadius.MAX;
 
+    public static final int DROP_RADIUS_MIN = 1;
+    public static final int DROP_RADIUS_MAX = 16;
+    public static final int DROP_RADIUS_DEFAULT = 8;
+
     // AGENTS.md: лимиты плана (repeat.times 1..64)
     public static final int REPEAT_TIMES_MIN = 1;
     public static final int REPEAT_TIMES_MAX = 64;
