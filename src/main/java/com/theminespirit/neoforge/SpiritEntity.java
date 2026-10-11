@@ -37,7 +37,9 @@ public final class SpiritEntity extends PathfinderMob {
 
     @Override
     public void remove(Entity.RemovalReason reason) {
-        chunkLoader.release();
+        if (reason.shouldDestroy() || reason == Entity.RemovalReason.CHANGED_DIMENSION) {
+            chunkLoader.release();
+        }
         super.remove(reason);
     }
 

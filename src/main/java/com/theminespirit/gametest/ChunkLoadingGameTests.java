@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -63,6 +64,34 @@ public final class ChunkLoadingGameTests {
                                 + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
                 helper.succeed();
             });
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void chunkLoading_UnloadedToChunk_KeepsTickets(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        int radius = SpiritConfig.radiusFor(level);
+        SpiritEntity spirit = spawnFloating(helper);
+
+        helper.runAfterDelay(3, () -> {
+            long ticketsBeforeUnload = ticketCount(level);
+            spirit.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+
+            helper.assertTrue(!spirit.trackedChunks().isEmpty(),
+                    "remove(UNLOADED_TO_CHUNK) — это выгрузка, а не смерть: дух обязан сохранить свои чанки, "
+                            + "иначе перед снятием с мира снимутся билеты и он потеряет тикающие чанки");
+            helper.assertTrue(ticketCount(level) == ticketsBeforeUnload,
+                    "remove(UNLOADED_TO_CHUNK) не должен снимать билеты: было " + ticketsBeforeUnload
+                            + ", стало " + ticketCount(level));
+
+            spirit.remove(Entity.RemovalReason.DISCARDED);
+            helper.assertTrue(spirit.trackedChunks().isEmpty(),
+                    "Смерть (discard) поверх выгрузки обязана освободить чанки: осталось "
+                            + spirit.trackedChunks().size());
+            helper.assertTrue(ticketsBeforeUnload - ticketCount(level) == squareSize(radius),
+                    "Смерть обязана снять ровно все билеты духа, что не сняла выгрузка: ожидалось "
+                            + squareSize(radius) + ", снялось " + (ticketsBeforeUnload - ticketCount(level)));
+            helper.succeed();
         });
     }
 
