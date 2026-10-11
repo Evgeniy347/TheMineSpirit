@@ -25,7 +25,7 @@ public final class RestScaleGameTests {
     private RestScaleGameTests() {
     }
 
-    @GameTest(template = "empty", timeoutTicks = 300)
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
     public static void concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -49,7 +49,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
     public static void index_ThirtySpirits_SnapshotReadsExactlyThirtyEntries(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
         SpiritIndex index = new SpiritIndex(minecraft);

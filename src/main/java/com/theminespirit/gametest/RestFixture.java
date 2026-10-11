@@ -2,6 +2,8 @@ package com.theminespirit.gametest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.RestRouter;
 import com.theminespirit.neoforge.rest.RestServer;
 import com.theminespirit.neoforge.rest.SpiritBotGateway;
@@ -17,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
@@ -52,6 +55,7 @@ final class RestFixture {
     private final SpiritBotGateway gateway;
     private final RestServer server;
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+    private final List<SpiritEntity> spirits = new ArrayList<>();
 
     private RestFixture(SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
         this.index = index;
@@ -103,7 +107,14 @@ final class RestFixture {
         return send(HttpRequest.newBuilder(uri(path)).POST(HttpRequest.BodyPublishers.ofByteArray(body)).build());
     }
 
+    SpiritEntity spawn(GameTestHelper helper, BlockPos relative) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
+        spirits.add(spirit);
+        return spirit;
+    }
+
     void close() {
+        spirits.forEach(SpiritEntity::discard);
         index.unregister(NeoForge.EVENT_BUS);
         server.stop();
         client.shutdown();

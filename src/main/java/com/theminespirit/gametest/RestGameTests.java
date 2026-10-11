@@ -3,7 +3,6 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.SpiritIndex;
 import java.io.IOException;
@@ -29,6 +28,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RestGameTests {
     private static final int FLOOR_SIZE = 3;
     private static final int OVERSIZED_BODY_BYTES = 2 * 1024 * 1024;
+    private static final int HUGE_BODY_BYTES = 12 * 1024 * 1024;
+    private static final int HUGE_PARALLEL_REQUESTS = 4;
     private static final int FAR_TARGET_BLOCKS = 40;
     private static final String UNKNOWN_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -67,7 +68,7 @@ public final class RestGameTests {
     public static void bots_SpawnedThenDiscardedSpirit_ListedThenAbsent(GameTestHelper helper) throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String id = spirit.getStringUUID();
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.get("/v1/bots")
@@ -90,7 +91,7 @@ public final class RestGameTests {
         MinecraftServer minecraft = helper.getLevel().getServer();
         buildFloor(helper);
         RestFixture rest = RestFixture.start(minecraft);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         BlockPos spawned = spirit.blockPosition();
         BlockPos far = helper.absolutePos(new BlockPos(FAR_TARGET_BLOCKS, 1, 1));
         String path = "/v1/bots/" + spirit.getStringUUID();
@@ -144,7 +145,7 @@ public final class RestGameTests {
             throws IOException {
         buildFloor(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String id = spirit.getStringUUID();
         String path = "/v1/bots/" + id + "/observe";
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -178,7 +179,7 @@ public final class RestGameTests {
     public static void threads_ForeignThreadAccess_IndexRejectsWhileGatewayAndHttpWork(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String id = spirit.getStringUUID();
         SpiritIndex index = rest.index();
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -245,6 +246,29 @@ public final class RestGameTests {
                                     && wrongMethod.join().headers().firstValue("Allow").orElse("").equals("GET"),
                             "POST на /v1/bots обязан давать 405 с Allow: GET: " + wrongMethod.join().body()
                                     + " " + wrongMethod.join().headers());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
+    public static void oversizedBodies_FourParallelTwelveMebibyteRequests_AllGet400WithoutConnectionDrop(
+            GameTestHelper helper) throws IOException {
+        RestFixture rest = RestFixture.start(helper.getLevel().getServer());
+        String observe = "/v1/bots/" + UNKNOWN_ID + "/observe";
+        List<CompletableFuture<RestFixture.Reply>> replies = new ArrayList<>();
+        for (int i = 0; i < HUGE_PARALLEL_REQUESTS; i++) {
+            replies.add(rest.post(observe, new byte[HUGE_BODY_BYTES]));
+        }
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = CompletableFuture.allOf(replies.toArray(new CompletableFuture<?>[0]))
+                .thenApply(done -> {
+                    for (CompletableFuture<RestFixture.Reply> reply : replies) {
+                        problems.expect(reply.join().status() == 400
+                                        && reply.join().json().path("error").path("code").asText().equals("invalid_request"),
+                                "Тело 12 МиБ обязано дочитываться и давать 400 invalid_request, а не обрыв соединения: "
+                                        + reply.join().body());
+                    }
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);

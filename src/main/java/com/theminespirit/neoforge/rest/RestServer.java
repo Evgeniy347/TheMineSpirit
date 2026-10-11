@@ -35,6 +35,7 @@ public final class RestServer {
     private static final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
     private static final int STOP_DELAY_SECONDS = 1;
     private static final int POOL_TERMINATION_SECONDS = 2;
+    private static final int DRAIN_CHUNK_BYTES = 8192;
 
     private final HttpServer httpServer;
     private final ExecutorService pool;
@@ -116,9 +117,21 @@ public final class RestServer {
         byte[] body;
         try (InputStream in = exchange.getRequestBody()) {
             body = in.readNBytes(RestTuning.MAX_BODY_BYTES + 1);
+            if (body.length > RestTuning.MAX_BODY_BYTES) {
+                discardRest(in);
+            }
         }
         return new RestRequest(exchange.getRequestMethod(), exchange.getRequestURI().getRawPath(),
                 QueryString.parse(exchange.getRequestURI().getRawQuery()), headers, body);
+    }
+
+    private static void discardRest(InputStream in) throws IOException {
+        byte[] buffer = new byte[DRAIN_CHUNK_BYTES];
+        long drained = 0;
+        int read;
+        while (drained < RestTuning.MAX_DRAIN_BYTES && (read = in.read(buffer)) >= 0) {
+            drained += read;
+        }
     }
 
     private static void write(HttpExchange exchange, RestResponse response) throws IOException {
