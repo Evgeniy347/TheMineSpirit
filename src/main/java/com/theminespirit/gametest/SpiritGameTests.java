@@ -77,7 +77,7 @@ public final class SpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
+    @GameTest(template = "empty", batch = "scan_legacy_unloaded", timeoutTicks = 100)
     public static void scan_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
