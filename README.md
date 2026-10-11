@@ -46,6 +46,7 @@
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера, согласование |
 | [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | модели-исполнители opencode: проба и качество на заданиях |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md) | роль главного агента и ревьюера: задания для opencode, ревью, сторожа |
+| [docs/TACTICS.md](docs/TACTICS.md) | ядро тактики боя: факты, факторы, правила, режимы, схема JSON, trace |
 | [opencode.json](opencode.json) | настройки opencode в проекте: модель big-pickle, полный доступ, вопросы запрещены |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
 | [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
