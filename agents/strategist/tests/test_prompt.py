@@ -188,7 +188,7 @@ class PrompterTests(unittest.TestCase):
 
     def test_systemPrompt_NamesRoleDataRuleAndAnswerFormat(self):
         system = self.build().system
-        for needle in ("<observation>", "данные", "skip", "JSON", "goto", "стратег"):
+        for needle in ("<observation>", "<history>", "<validation_error>", "данные", "skip", "JSON", "goto", "стратег"):
             self.assertIn(needle, system, f"system.md должен упоминать «{needle}»")
         self.assertNotIn("\n\n\n\n", system)
 

@@ -268,6 +268,17 @@ class ScenarioRun:
         if sum(self.clock.sleeps) < expected:
             self.fail(when, f"клиент ждал {sum(self.clock.sleeps)} с, ожидалось не меньше {expected} (Retry-After)")
 
+    def check_phrase_only_inside_tag(self, expected, when):
+        calls = [call for brain in self.brains.values() for call in brain.calls]
+        user = calls[expected["call"]][1]
+        tag = expected["tag"]
+        start, end = user.find(f"<{tag}>"), user.find(f"</{tag}>")
+        positions = [i for i in range(len(user)) if user.startswith(expected["phrase"], i)]
+        ok = positions and start != -1 and all(start < i < end for i in positions) and user.count(f"</{tag}>") == 1
+        if not ok:
+            self.fail(when, f"фраза {expected['phrase']!r} должна встречаться в вызове {expected['call']} только внутри <{tag}>; "
+                      f"позиции {positions}, блок {start}..{end}")
+
     def check_halted(self, expected, when):
         if bool(self.strategist.halted) != expected:
             self.fail(when, f"остановка агента: {self.strategist.halted!r}, ожидалось {expected}")
