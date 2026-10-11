@@ -32,7 +32,7 @@ public final class BlockBreakerGameTests {
         SpiritEntity spirit = prepare(helper, Blocks.DIRT);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(!breaker.begin(helper.absolutePos(TARGET)).isRefused(), "земля рядом с духом обязана ломаться");
+        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "земля рядом с духом обязана ломаться");
         int expected = BreakTiming.ticks(0.5, 1.0, true);
         helper.assertTrue(breaker.requiredTicks() == expected,
                 "рука на земле: срок ломки " + expected + " тиков по формуле игрока, а выбран " + breaker.requiredTicks());
@@ -55,7 +55,7 @@ public final class BlockBreakerGameTests {
         spirit.getInventory().setItem(TOOL_SLOT + 1, new ItemStack(Items.WOODEN_AXE));
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(!breaker.begin(helper.absolutePos(TARGET)).isRefused(), "камень рядом с духом обязан ломаться");
+        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "камень рядом с духом обязан ломаться");
         helper.assertTrue(breaker.choice().slot() == TOOL_SLOT && breaker.choice().dropsAllowed(),
                 "для камня обязана выбраться кирка из слота " + TOOL_SLOT + ", а выбрано " + breaker.choice());
         int expected = BreakTiming.ticks(1.5, new ItemStack(Items.IRON_PICKAXE).getDestroySpeed(Blocks.STONE.defaultBlockState()), true);
@@ -79,7 +79,7 @@ public final class BlockBreakerGameTests {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(!breaker.begin(helper.absolutePos(TARGET)).isRefused(), "камень обязан ломаться и рукой");
+        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "камень обязан ломаться и рукой");
         helper.assertTrue(breaker.choice().slot() == ToolChoice.HAND && !breaker.choice().dropsAllowed(),
                 "без кирки обязана выбраться рука без дропа, а выбрано " + breaker.choice());
         helper.assertTrue(breaker.requiredTicks() == 150,
@@ -119,21 +119,21 @@ public final class BlockBreakerGameTests {
         BlockBreaker breaker = new BlockBreaker(spirit);
 
         BlockBreaker.Begin bedrock = breaker.begin(helper.absolutePos(TARGET));
-        helper.assertTrue(bedrock.isRefused() && bedrock.refusal().contains("неразрушим"),
+        helper.assertTrue(refusedWith(bedrock, "неразрушим"),
                 "бедрок обязан отвергаться как неразрушимый, получено " + bedrock);
         BlockBreaker.Begin air = breaker.begin(helper.absolutePos(new BlockPos(2, 3, 2)));
-        helper.assertTrue(air.isRefused() && air.refusal().contains("воздух"),
+        helper.assertTrue(refusedWith(air, "воздух"),
                 "воздух обязан отвергаться, получено " + air);
         helper.setBlock(8, 1, 2, Blocks.DIRT);
         BlockBreaker.Begin far = breaker.begin(helper.absolutePos(new BlockPos(8, 1, 2)));
-        helper.assertTrue(far.isRefused() && far.refusal().contains("дальше"),
+        helper.assertTrue(refusedWith(far, "дальше"),
                 "блок дальше досягаемости " + BlockBreaker.REACH + " обязан отвергаться, получено " + far);
         BlockPos base = helper.absolutePos(SPIRIT_START);
         BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
         helper.assertTrue(unloaded != null, "рядом должна найтись незагруженная область для проверки отказа");
         int loadedBefore = helper.getLevel().getChunkSource().getLoadedChunksCount();
         BlockBreaker.Begin notLoaded = breaker.begin(unloaded);
-        helper.assertTrue(notLoaded.isRefused() && notLoaded.refusal().contains("не загружен"),
+        helper.assertTrue(refusedWith(notLoaded, "не загружен"),
                 "блок в незагруженном чанке обязан отвергаться, получено " + notLoaded);
         helper.assertTrue(helper.getLevel().getChunkSource().getLoadedChunksCount() == loadedBefore,
                 "проверка блока в незагруженном чанке не должна грузить чанк");
@@ -167,6 +167,10 @@ public final class BlockBreakerGameTests {
         helper.assertTrue(breaker.crackStage() == -1, "GONE обязан снять трещину, стадия " + breaker.crackStage());
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    private static boolean refusedWith(BlockBreaker.Begin begin, String fragment) {
+        return begin instanceof BlockBreaker.Refused refused && refused.reason().contains(fragment);
     }
 
     private static SpiritEntity prepare(GameTestHelper helper, Block target) {

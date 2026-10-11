@@ -29,16 +29,13 @@ public final class BlockBreaker {
         GONE
     }
 
-    public record Begin(boolean started, String refusal) {
-        public static final Begin STARTED = new Begin(true, null);
+    public sealed interface Begin permits Started, Refused {
+    }
 
-        public static Begin refused(String reason) {
-            return new Begin(false, reason);
-        }
+    public record Started() implements Begin {
+    }
 
-        public boolean isRefused() {
-            return !started;
-        }
+    public record Refused(String reason) implements Begin {
     }
 
     private final SpiritEntity spirit;
@@ -59,20 +56,20 @@ public final class BlockBreaker {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
-            return Begin.refused("чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
+            return new Refused("чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
         }
         BlockState targetState = level.getBlockState(target);
         if (targetState.isAir()) {
-            return Begin.refused("в " + target.toShortString() + " воздух: ломать нечего");
+            return new Refused("в " + target.toShortString() + " воздух: ломать нечего");
         }
         double hardness = targetState.getDestroySpeed(level, target);
         if (hardness < 0) {
-            return Begin.refused("блок " + blockId(targetState) + " в " + target.toShortString()
+            return new Refused("блок " + blockId(targetState) + " в " + target.toShortString()
                     + " неразрушим: твёрдость " + hardness);
         }
         double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
         if (distance > REACH) {
-            return Begin.refused("блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
+            return new Refused("блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
                     + distance + "): сначала подойти");
         }
         pos = target.immutable();
@@ -82,7 +79,7 @@ public final class BlockBreaker {
         requiredTicks = BreakTiming.ticks(hardness, choice.speed(), choice.dropsAllowed());
         elapsed = 0;
         active = true;
-        return Begin.STARTED;
+        return new Started();
     }
 
     public Progress tick() {
