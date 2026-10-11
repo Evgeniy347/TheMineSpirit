@@ -25,10 +25,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritCommandGameTests {
-    private static final String SPIRIT_SELECTOR =
-            "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,limit=1]";
+    private static final String SPIRIT_SELECTOR = spiritSelector(1);
 
     private SpiritCommandGameTests() {
+    }
+
+    private static String spiritSelector(int limit) {
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,limit=" + limit + "]";
     }
 
     @GameTest(template = "empty", timeoutTicks = 200)
@@ -95,6 +98,37 @@ public final class SpiritCommandGameTests {
                 "Команда cancel обязана вернуть число духов с отменённой задачей: результат=" + cancelled);
         helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.CANCELLED).isPresent(),
                 "После /spirit cancel задача духа обязана считаться отменённой: команда не остановила задачу");
+
+        removePlayer(helper, player);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void commandGoal_OnTwoSpirits_AppliesToAllOrNone(GameTestHelper helper)
+            throws CommandSyntaxException {
+        buildFloor(helper);
+        SpiritEntity first = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
+        SpiritEntity second = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 2));
+        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(4, 1, 1), "gt_pair_player");
+        CommandSourceStack source = playerSource(player);
+        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                .getCommands().getDispatcher();
+        String both = spiritSelector(2);
+
+        int rejected = dispatcher.execute("spirit goal " + both + " сруби дерево", source);
+        helper.assertTrue(rejected == 0,
+                "Цель, не реализуемая в каталоге духов, обязана вернуть 0: результат=" + rejected);
+        helper.assertTrue(first.taskStatus().isEmpty() && second.taskStatus().isEmpty(),
+                "При отказе планирования ни один дух не должен получить задачу: первый=" + first.taskStatus()
+                        + ", второй=" + second.taskStatus());
+
+        int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
+        helper.assertTrue(accepted == 2,
+                "Выполнимая цель обязана стать задачей обоим духам: результат=" + accepted);
+        helper.assertTrue(first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
+                        && second.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+                "После /spirit goal оба духа обязаны быть в состоянии «выполняется»: первый=" + first.taskStatus()
+                        + ", второй=" + second.taskStatus());
 
         removePlayer(helper, player);
         helper.succeed();

@@ -57,18 +57,21 @@ final class SpiritTaskCommands {
             return 0;
         }
         Map<String, Object> goalParams = playerTargetParams(source);
-        List<String> assigned = new ArrayList<>();
+        List<TaskNode> plans = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
             try {
-                TaskNode plan = new FallbackPlanner(SpiritScripts.catalogFor(spirit), ConditionCatalog.empty())
-                        .plan(new Goal(text, goalParams), emptyObservation(spirit)).plan();
-                spirit.startTask(plan);
-                assigned.add(spirit.getStringUUID());
+                plans.add(new FallbackPlanner(SpiritScripts.catalogFor(spirit), ConditionCatalog.empty())
+                        .plan(new Goal(text, goalParams), emptyObservation(spirit)).plan());
             } catch (UnplannableGoalException | PlanValidationException e) {
-                source.sendFailure(Component.literal("Духу '" + spirit.getStringUUID() + "' цель '" + text
-                        + "' не поставлена: " + e.getMessage()));
+                source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: дух '"
+                        + spirit.getStringUUID() + "' не смог её принять: " + e.getMessage()));
                 return 0;
             }
+        }
+        List<String> assigned = new ArrayList<>(spirits.size());
+        for (int i = 0; i < spirits.size(); i++) {
+            spirits.get(i).startTask(plans.get(i));
+            assigned.add(spirits.get(i).getStringUUID());
         }
         source.sendSuccess(() -> Component.literal("Цель '" + text + "' поставлена духам: "
                 + String.join(", ", assigned) + ". Состояние — /spirit status"), true);
