@@ -61,12 +61,90 @@ class ScriptCatalogTests {
         ScriptCatalog catalog = CoreScripts.defaultCatalog();
         List<String> expected = List.of("scan", "goto", "follow", "return_home", "patrol", "flee", "chop_tree",
                 "mine_vein", "dig_area", "gather", "collect_drops", "harvest_crop", "plant_crop", "craft", "smelt",
-                "equip", "deposit", "withdraw", "sort_chest", "acquire", "attack", "defend", "retreat", "place_block",
+                "equip", "deposit", "withdraw", "sort_chest", "unload", "acquire", "attack", "defend", "retreat",
+                "place_block",
                 "fill", "clear_area", "build_schematic", "deliver", "meet", "say", "wait");
 
         assertEquals(expected, catalog.all().stream().map(ScriptSpec::id).toList(),
                 "Каталог по умолчанию обязан содержать ровно оговорённый набор скриптов: пропущенный скрипт "
                         + "планировщик не найдёт, лишний — разойдётся с /v1/capabilities");
+    }
+
+    @Test
+    void defaultCatalog_DepositAndWithdraw_ContainerIsOptionalNearest() {
+        ScriptSpec deposit = CoreScripts.defaultCatalog().find("deposit").orElseThrow();
+        ParamSpec container = param(deposit, "container");
+
+        assertEquals(false, container.required(),
+                "container в deposit необязателен: по умолчанию дух берёт ближайший подходящий контейнер, "
+                        + "и план не обязан каждый раз называть координаты");
+        assertEquals("nearest", container.defaultValue(),
+                "Значение по умолчанию container определяет, какой контейнер использовать, если план "
+                        + "молчит: 'nearest' — ближайший в радиусе");
+    }
+
+    @Test
+    void defaultCatalog_ContainerScripts_RadiusWithinContainerLimits() {
+        ScriptCatalog catalog = CoreScripts.defaultCatalog();
+        for (String id : List.of("deposit", "withdraw", "sort_chest", "unload")) {
+            ScriptSpec script = catalog.find(id).orElseThrow();
+            ParamSpec radius = param(script, "radius");
+
+            assertEquals(false, radius.required(),
+                    "radius у скрипта '" + id + "' необязателен: без него действует радиус по умолчанию "
+                            + CatalogLimits.CONTAINER_RADIUS_DEFAULT);
+            assertEquals(CatalogLimits.CONTAINER_RADIUS_DEFAULT, radius.defaultValue(),
+                    "Радиус поиска контейнера у '" + id + "' по умолчанию "
+                            + CatalogLimits.CONTAINER_RADIUS_DEFAULT + ": ближайший контейнер обычно "
+                            + "рядом с духом");
+            assertTrue(ParamType.INT == radius.type() && CatalogLimits.CONTAINER_RADIUS_MIN <=
+                            CatalogLimits.CONTAINER_RADIUS_DEFAULT
+                            && CatalogLimits.CONTAINER_RADIUS_DEFAULT <= CatalogLimits.CONTAINER_RADIUS_MAX,
+                    "Радиус поиска контейнера у '" + id + "' — целое в [" + CatalogLimits.CONTAINER_RADIUS_MIN
+                            + ", " + CatalogLimits.CONTAINER_RADIUS_MAX + "] и лежит внутри: иначе "
+                            + "валидатор отверг бы значение по умолчанию");
+        }
+    }
+
+    @Test
+    void defaultCatalog_Unload_ForceDefaultsToFalseAndTriggerSlotsDefined() {
+        ScriptSpec unload = CoreScripts.defaultCatalog().find("unload").orElseThrow();
+        ParamSpec force = param(unload, "force");
+
+        assertEquals(false, force.required(),
+                "force у unload необязателен: без него разгрузка срабатывает только при заполненном "
+                        + "инвентаре, а не по каждой мелочи");
+        assertEquals(false, force.defaultValue(),
+                "force по умолчанию false: разгрузка «без фанатизма» не трогает инвентарь, "
+                        + "пока занято меньше " + CatalogLimits.UNLOAD_TRIGGER_SLOTS + " слотов");
+        assertEquals(24, CatalogLimits.UNLOAD_TRIGGER_SLOTS,
+                "Порог разгрузки — 24 слота из 36: дух тащит добро домой, только когда в инвентаре "
+                        + "дейсно не осталось места");
+    }
+
+    @Test
+    void defaultCatalog_CollectDrops_OverflowDefaultsToByValue() {
+        ScriptSpec collectDrops = CoreScripts.defaultCatalog().find("collect_drops").orElseThrow();
+        ParamSpec overflow = param(collectDrops, "overflow");
+
+        assertEquals(false, overflow.required(),
+                "overflow у collect_drops необязателен: по умолчанию действует поведение «берём ценное, "
+                        + "дешёвое оставляем»");
+        assertEquals(List.of("fail", "by_value"), overflow.values(),
+                "У overflow два режима: fail — прежний отказ при полном инвентаре, by_value — подмена "
+                        + "по ценности");
+        assertEquals("by_value", overflow.defaultValue(),
+                "По умолчанию collect_drops работает по ценности: дешёвое оставляется, ценное берётся, "
+                        + "а не полный отказ");
+    }
+
+    @Test
+    void defaultCatalog_Equip_TakesOnlyItemPattern() {
+        ScriptSpec equip = CoreScripts.defaultCatalog().find("equip").orElseThrow();
+
+        assertEquals(List.of("item"), equip.params().stream().map(ParamSpec::name).toList(),
+                "У equip один обязательный параметр item: по нему шаблону ('*_pickaxe') дух выбирает, "
+                        + "что надевать, и берёт самый ценный подходящий");
     }
 
     private static ParamSpec param(ScriptSpec spec, String name) {
