@@ -67,3 +67,7 @@
       Любой битый JSON → `IllegalArgumentException` с понятной причиной; тест на `pos` из двух и четырёх чисел
       и на `pos` не массивом. (в) Убери неиспользуемое `disable(WRITE_DATES_AS_TIMESTAMPS)` и полные имена
       `com.fasterxml.jackson.core.JsonGenerator` / `SerializerProvider` — импорты.
+- [ ] R8. В b8736b4 нет тестов на разбор битого `pos` (пункт (б) из R7): коммит затронул только `ObservationJson`.
+      Тесты: `pos` из двух и из четырёх чисел, `pos` строкой, `pos` с нечисловым элементом → `IllegalArgumentException`
+      с понятной причиной, а не `ArrayIndexOutOfBounds`/`NullPointerException`. Коммит `test:`.
+      Новый хук: коммит `fix:`/`feat:` с production-кодом теперь отклоняется без теста в том же коммите.
