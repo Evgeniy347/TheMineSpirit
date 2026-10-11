@@ -25,7 +25,7 @@ class FallbackPlannerTests {
     void plan_ChopGoal_ReturnsScanAndChopSequence() {
         TaskNode plan = plan(new Goal("срубить деревья возле дома", Map.of()));
 
-        assertEquals(chopPlan(32, "any", 1), plan,
+        assertEquals(chopPlan(8, "any", 1), plan,
                 "Цель со словом 'сруб' обязана дать scan с фильтром брёвен и chop_tree: иначе дух рубит "
                         + "без предварительного скана и не находит деревья");
     }
@@ -34,7 +34,7 @@ class FallbackPlannerTests {
     void plan_TreeWordGoal_ReturnsScanAndChopSequence() {
         TaskNode plan = plan(new Goal("валить деревья", Map.of()));
 
-        assertEquals(chopPlan(32, "any", 1), plan,
+        assertEquals(chopPlan(8, "any", 1), plan,
                 "Слово 'дерев' обязано распознаваться как рубка: иначе синоним формулировки уводит в fallback "
                         + "и дух не рубит то, что игрок просил");
     }
@@ -43,7 +43,7 @@ class FallbackPlannerTests {
     void plan_MineGoal_ReturnsScanAndMineSequence() {
         TaskNode plan = plan(new Goal("добыть руду из шахты", Map.of()));
 
-        assertEquals(minePlan(32, "any", 1), plan,
+        assertEquals(minePlan(8, "any", 1), plan,
                 "Цель со словом 'руд' обязана дать scan с фильтром руды и mine_vein: иначе дух копает "
                         + "вслепую и не находит жилу");
     }
@@ -52,7 +52,7 @@ class FallbackPlannerTests {
     void plan_MineShaftGoal_ReturnsScanAndMineSequence() {
         TaskNode plan = plan(new Goal("спустись в шахту", Map.of()));
 
-        assertEquals(minePlan(32, "any", 1), plan,
+        assertEquals(minePlan(8, "any", 1), plan,
                 "Слово 'шахт' обязано распознаваться как добыча: иначе дух дойдёт до шахты и встанет, "
                         + "не начав добычу ради которой пришёл");
     }
@@ -135,7 +135,7 @@ class FallbackPlannerTests {
     void plan_UppercaseGoalWithSpaces_IsNormalizedBeforeMatch() {
         TaskNode plan = plan(new Goal("   СРУБИТЬ ДУБ  ", Map.of()));
 
-        assertEquals(chopPlan(32, "any", 1), plan,
+        assertEquals(chopPlan(8, "any", 1), plan,
                 "Текст цели обязан нормализоваться (trim и нижний регистр) до поиска ключевых слов: иначе "
                         + "одна и та же цель с лишними пробелами или заглавными буквами исполняется по-разному");
     }
@@ -172,7 +172,7 @@ class FallbackPlannerTests {
     void plan_ChopWordGoal_ReturnsScanAndChopSequence() {
         TaskNode plan = plan(new Goal("руби дерево", Map.of()));
 
-        assertEquals(chopPlan(32, "any", 1), plan,
+        assertEquals(chopPlan(8, "any", 1), plan,
                 "Слово 'дерево' обязано распознаваться как рубка по началу слова: иначе живая формулировка "
                         + "игрока не превращается в план и дух бездельничает");
     }

@@ -16,19 +16,6 @@ final class ScriptArgs {
         return integer;
     }
 
-    static int optionalInt(Map<String, Object> params, String name, int fallback) {
-        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        Object value = params.get(name);
-        if (value == null) {
-            return fallback;
-        }
-        if (!(value instanceof Integer integer)) {
-            throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть целым числом, а получено "
-                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
-        }
-        return integer;
-    }
-
     static String requireString(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof String text)) {

@@ -99,33 +99,36 @@ public final class FallbackPlanner implements Planner {
     }
 
     private static TaskNode chopPlan(Goal goal) {
-        Map<String, Object> params = goal.params();
         Map<String, Object> scan = new LinkedHashMap<>();
-        scan.put("radius", params.getOrDefault("radius", 32));
+        copyFromGoal(scan, goal, "radius");
         scan.put("filter", List.of("*_log"));
         Map<String, Object> chop = new LinkedHashMap<>();
-        chop.put("species", params.getOrDefault("species", "any"));
-        chop.put("count", params.getOrDefault("count", 1));
+        copyFromGoal(chop, goal, "species");
+        chop.put("count", goal.params().getOrDefault("count", 1));
         return new SequenceNode(List.of(new ScriptCall("scan", scan), new ScriptCall("chop_tree", chop)));
     }
 
     private static TaskNode minePlan(Goal goal) {
-        Map<String, Object> params = goal.params();
         Map<String, Object> scan = new LinkedHashMap<>();
-        scan.put("radius", params.getOrDefault("radius", 32));
+        copyFromGoal(scan, goal, "radius");
         scan.put("filter", List.of("*_ore"));
         Map<String, Object> mine = new LinkedHashMap<>();
-        mine.put("ore", params.getOrDefault("ore", "any"));
-        mine.put("count", params.getOrDefault("count", 1));
+        copyFromGoal(mine, goal, "ore");
+        mine.put("count", goal.params().getOrDefault("count", 1));
         return new SequenceNode(List.of(new ScriptCall("scan", scan), new ScriptCall("mine_vein", mine)));
     }
 
     private static TaskNode followPlan(Goal goal) {
-        Map<String, Object> params = goal.params();
         Map<String, Object> follow = new LinkedHashMap<>();
-        follow.put("target", params.getOrDefault("target", "player"));
-        follow.put("radius", params.getOrDefault("radius", 3));
+        follow.put("target", goal.params().getOrDefault("target", "player"));
+        copyFromGoal(follow, goal, "radius");
         return new ScriptCall("follow", follow);
+    }
+
+    private static void copyFromGoal(Map<String, Object> target, Goal goal, String name) {
+        if (goal.params().containsKey(name)) {
+            target.put(name, goal.params().get(name));
+        }
     }
 
     private static TaskNode homePlan(Goal goal) {

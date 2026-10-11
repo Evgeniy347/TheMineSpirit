@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 
 public record FollowParams(String target, int radius) {
-    public static final int DEFAULT_RADIUS = 3;
-
     public FollowParams {
         if (target == null || target.isBlank()) {
             throw new IllegalArgumentException(
@@ -22,6 +20,6 @@ public record FollowParams(String target, int radius) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new FollowParams(
                 ScriptArgs.requireString(params, "target"),
-                ScriptArgs.optionalInt(params, "radius", DEFAULT_RADIUS));
+                ScriptArgs.requireInt(params, "radius"));
     }
 }

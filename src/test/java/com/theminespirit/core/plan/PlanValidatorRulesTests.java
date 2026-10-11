@@ -1,6 +1,7 @@
 package com.theminespirit.core.plan;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,6 +72,16 @@ class PlanValidatorRulesTests {
         assertThrows(PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 description + ": план должен быть отклонён валидатором");
+    }
+
+    @Test
+    void followWithoutRadius_Plan_ContainsCatalogDefault() {
+        TaskNode plan = PlanParser.parse(
+                "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"target\":\"player\"}}", CATALOG);
+
+        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+                "Валидатор обязан подставлять default из каталога для отсутствующего необязательного параметра: "
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а скрипт получает неполный план");
     }
 
     @Test

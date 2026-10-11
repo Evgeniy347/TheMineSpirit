@@ -17,11 +17,14 @@ class FollowParamsTests {
     }
 
     @Test
-    void radius_Missing_DefaultsToThree() {
-        FollowParams params = FollowParams.from(Map.of("target", "Steve"));
+    void radius_Missing_IsRejected() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> FollowParams.from(Map.of("target", "Steve")),
+                "follow без радиуса обязан отказывать: валидатор плана подставляет значение по умолчанию "
+                        + "из каталога до запуска, а без него скрипт не знает дистанцию");
 
-        assertEquals(FollowParams.DEFAULT_RADIUS, params.radius(),
-                "радиус follow необязателен и обязан иметь значение по умолчанию: без него скрипт не знает дистанцию");
+        assertTrue(error.getMessage().contains("radius"),
+                "отказ обязан называть недостающий радиус 'radius'. Фактическое: " + error.getMessage());
     }
 
     @Test

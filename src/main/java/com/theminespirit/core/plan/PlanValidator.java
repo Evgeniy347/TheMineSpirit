@@ -91,6 +91,11 @@ public final class PlanValidator {
                         + param.name() + "' (" + param.type() + ")");
             }
         }
+        for (ParamSpec param : schema) {
+            if (!param.required() && param.defaultValue() != null && !result.containsKey(param.name())) {
+                result.put(param.name(), normalize(owner, param, param.defaultValue()));
+            }
+        }
         return result;
     }
 
