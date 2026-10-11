@@ -15,6 +15,10 @@ public final class SectionCursor {
         this.slices = slices;
     }
 
+    public static SectionCursor empty() {
+        return new SectionCursor(List.of());
+    }
+
     public static SectionCursor of(BlockBox box, BlockCoord center) {
         Objects.requireNonNull(box, "box не может быть null: курсору нужен куб, который резать на срезы");
         Objects.requireNonNull(center, "center не может быть null: по нему срезы сортируются от ближних к дальним");
@@ -39,7 +43,7 @@ public final class SectionCursor {
             throw new IllegalArgumentException("Размер порции " + maxSlices
                     + " меньше единицы: порция без срезов не двигает курсор, и скан никогда не закончится");
         }
-        int end = Math.min(slices.size(), position + maxSlices);
+        int end = (int) Math.min(slices.size(), (long) position + maxSlices);
         List<SectionSlice> portion = slices.subList(position, end);
         position = end;
         return portion;

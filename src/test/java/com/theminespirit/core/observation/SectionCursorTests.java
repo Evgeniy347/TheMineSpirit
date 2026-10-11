@@ -74,12 +74,31 @@ class SectionCursorTests {
     }
 
     @Test
+    void next_HugePortionAfterPartialRead_ReturnsRemainderWithoutOverflow() {
+        BlockBox box = new BlockBox(new BlockCoord(0, 0, 0), new BlockCoord(47, 0, 15));
+        SectionCursor cursor = SectionCursor.of(box, new BlockCoord(0, 0, 0));
+        cursor.next(1);
+
+        assertEquals(2, cursor.next(Integer.MAX_VALUE).size(),
+                "Порция Integer.MAX_VALUE после частичного чтения обязана отдать остаток: переполнение int "
+                        + "сломало бы WorldScanner.observe, который шагает до конца одной порцией");
+    }
+
+    @Test
     void next_ZeroPortionSize_IsRejected() {
         SectionCursor cursor = SectionCursor.of(new BlockBox(new BlockCoord(0, 0, 0), new BlockCoord(1, 1, 1)),
                 new BlockCoord(0, 0, 0));
 
         assertThrows(IllegalArgumentException.class, () -> cursor.next(0),
                 "Порция в 0 срезов обязана отвергаться: цикл скана с ней не закончился бы никогда");
+    }
+
+    @Test
+    void empty_Cursor_IsDoneAndReturnsNoSlices() {
+        SectionCursor cursor = SectionCursor.empty();
+
+        assertTrue(cursor.isDone() && cursor.next(4).isEmpty() && cursor.total() == 0,
+                "Пустой курсор нужен для центра вне высоты мира: скан обязан закончиться сразу, а не упасть");
     }
 
     @Test
