@@ -118,12 +118,12 @@ class WorldObservationTests {
                 32);
         String json = obs.toJson();
         String hash = obs.hash();
-        String expected = "{\"bot\":\"spirit_1\",\"tick\":123456,\"pos\":{\"x\":10,\"y\":64,\"z\":-3},\"radius\":32,"
+        String expected = "{\"bot\":\"spirit_1\",\"tick\":123456,\"pos\":[10,64,-3],\"radius\":32,"
                 + "\"inventory\":[{\"item\":\"iron_pickaxe\",\"count\":1},{\"item\":\"oak_log\",\"count\":5}],"
                 + "\"blocks\":[{\"item\":\"grass_block\",\"count\":340},{\"item\":\"oak_log\",\"count\":12}],"
-                + "\"entities\":[{\"type\":\"minecraft:cow\",\"pos\":{\"x\":14,\"y\":64,\"z\":-1},\"id\":null,\"distance\":5.0},"
-                + "{\"type\":\"minecraft:sheep\",\"pos\":{\"x\":2,\"y\":64,\"z\":1},\"id\":null,\"distance\":9.0}],"
-                + "\"containers\":[{\"type\":\"minecraft:chest\",\"pos\":{\"x\":8,\"y\":63,\"z\":-5},\"id\":null}],"
+                + "\"entities\":[{\"type\":\"minecraft:cow\",\"pos\":[14,64,-1],\"distance\":5.0},"
+                + "{\"type\":\"minecraft:sheep\",\"pos\":[2,64,1],\"distance\":9.0}],"
+                + "\"containers\":[{\"type\":\"minecraft:chest\",\"pos\":[8,63,-5]}],"
                 + "\"hash\":\"" + hash + "\"}";
         assertEquals(expected, json,
                 "JSON наблюдения обязан строго совпадать с контрактом API: имена полей, порядок, структура, включая hash");
