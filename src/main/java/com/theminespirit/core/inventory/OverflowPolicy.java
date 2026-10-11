@@ -1,6 +1,5 @@
 package com.theminespirit.core.inventory;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,31 +9,37 @@ public final class OverflowPolicy {
     private OverflowPolicy() {
     }
 
-    public static Decision decide(List<Stack> inventory, Stack incoming, ValueTable values, Protected protection) {
+    public static Decision decide(List<Stack> inventory, Stack incoming, ValueTable values, List<String> planNeeds,
+            BaseKit kit) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: решение принимают по слотам инвентаря");
         Objects.requireNonNull(incoming, "Новая кучка не может быть null: без неё нечем пополнять инвентарь");
         Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
                 + "по ней решают, что дороже — новая кучка или то, что уже лежит");
-        Objects.requireNonNull(protection, "Защита не может быть null: без неё дух выбрасывал бы базовый набор");
+        Objects.requireNonNull(planNeeds, "Список нужного плану не может быть null: "
+                + "пустой список нужного задаётся пустым списком");
+        Objects.requireNonNull(kit, "Базовый набор не может быть null: "
+                + "без него дух считал бы излишком и последний хлеб");
         if (hasRoomFor(inventory, incoming)) {
             return new Decision(Action.TAKE_INTO_FREE_SLOT, -1, 0, null);
         }
+        Protected protection = Protected.of(planNeeds, inventory, kit, values);
         int cheapest = cheapestDroppable(inventory, values, protection);
         if (cheapest < 0) {
-            return new Decision(Action.REFUSE, -1, 0, "инвентарь полон: все " + INVENTORY_SLOTS
-                    + " слотов заняты защищёнными предметами, выбрасывать нечего");
+            return new Decision(Action.REFUSE, -1, 0, "инвентарь полон: выбрасывать нечего, всё лежащее "
+                    + "защищено базовым набором или нужно плану");
         }
         Stack slot = inventory.get(cheapest);
+        int give = protection.giveAway(cheapest);
         int incomingValue = values.stackValue(incoming);
-        int slotValue = values.stackValue(slot);
-        if (incomingValue <= slotValue) {
+        int giveawayValue = values.valueOf(slot.item()) * give;
+        if (incomingValue <= giveawayValue) {
             return new Decision(Action.REFUSE, -1, 0, "инвентарь полон: новая кучка '" + incoming.item() + "' × "
-                    + incoming.count() + " ценностью " + incomingValue + " не дороже самой дешёвой стопки '"
-                    + slot.item() + "' ценностью " + slotValue + " в слоте " + cheapest);
+                    + incoming.count() + " ценностью " + incomingValue + " не дороже лишнего в слоте " + cheapest
+                    + " ('" + slot.item() + "' × " + give + " ценностью " + giveawayValue + ")");
         }
-        return new Decision(Action.DROP, cheapest, slot.count(), "в слоте " + cheapest + " лежит '" + slot.item()
-                + "' × " + slot.count() + " ценностью " + slotValue + ", новая кучка дороже (" + incomingValue
-                + ")");
+        return new Decision(Action.DROP, cheapest, give, "в слоте " + cheapest + " лежит '" + slot.item()
+                + "' × " + slot.count() + ", из них лишние " + give + " ценностью " + giveawayValue
+                + ": новая кучка дороже (" + incomingValue + ")");
     }
 
     private static boolean hasRoomFor(List<Stack> inventory, Stack incoming) {
@@ -50,20 +55,33 @@ public final class OverflowPolicy {
     }
 
     private static int cheapestDroppable(List<Stack> inventory, ValueTable values, Protected protection) {
-        Comparator<Stack> cheapest = Comparator
-                .comparingInt(values::stackValue)
-                .thenComparingInt(stack -> values.valueOf(stack.item()));
         int found = -1;
         for (int slot = 0; slot < inventory.size(); slot++) {
             Stack stack = inventory.get(slot);
-            if (stack == null || protection.shieldsSlot(slot)) {
+            int give = protection.giveAway(slot);
+            if (give <= 0) {
                 continue;
             }
-            if (found < 0 || cheapest.compare(stack, inventory.get(found)) <= 0) {
+            if (found < 0 || cheaperThan(values, stack, give, inventory.get(found), protection.giveAway(found),
+                    slot, found)) {
                 found = slot;
             }
         }
         return found;
+    }
+
+    private static boolean cheaperThan(ValueTable values, Stack candidate, int candidateGive, Stack kept,
+            int keptGive, int candidateSlot, int keptSlot) {
+        int byDropped = Integer.compare(values.valueOf(candidate.item()) * candidateGive,
+                values.valueOf(kept.item()) * keptGive);
+        if (byDropped != 0) {
+            return byDropped < 0;
+        }
+        int byUnit = Integer.compare(values.valueOf(candidate.item()), values.valueOf(kept.item()));
+        if (byUnit != 0) {
+            return byUnit < 0;
+        }
+        return candidateSlot > keptSlot;
     }
 
     public enum Action {
