@@ -102,6 +102,9 @@ class ResourceResolverTests {
         assertTrue(error.getMessage().contains("diamond"),
                 "Сообщение обязано называть недостижимый предмет 'diamond': по нему правят знания. "
                         + "Фактическое: " + error.getMessage());
+        assertEquals("diamond", error.item(),
+                "Исключение обязано нести предмет 'diamond' отдельным полем: разбор кавычек из текста ломается "
+                        + "от любой правки формулировки");
     }
 
     @Test
@@ -120,6 +123,8 @@ class ResourceResolverTests {
         assertTrue(error.getMessage().contains("a"),
                 "Сообщение о цикле обязано называть предмет 'a', на котором замкнулась цепочка. "
                         + "Фактическое: " + error.getMessage());
+        assertEquals("a", error.item(),
+                "Исключение о цикле обязано нести предмет 'a' отдельным полем: цикл привязан к конкретному предмету");
     }
 
     @Test

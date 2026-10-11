@@ -1,8 +1,8 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -41,18 +41,11 @@ class ResourceResolverProperties {
                     "Для предмета без способа добычи в графе резолвер обязан бросить UnplannableGoalException: "
                             + "молчаливый план без предмета выглядит исполненной целью. Предмет=" + root);
 
-            String named = namedItem(error.getMessage());
-            assertFalse(isObtainable(named, knowledge),
-                    "Сообщение обязано называть предмет, у которого в графе действительно нет способа добычи: "
-                            + "иначе отказ маскирует дефект резолвера, а не пробел в знаниях. Сообщение: "
-                            + error.getMessage());
+            String named = error.item();
+            assertTrue(named != null && !isObtainable(named, knowledge),
+                    "Поле item обязано называть предмет, у которого в графе нет способа добычи: "
+                            + "иначе отказ маскирует дефект резолвера, а не пробел в знаниях. Предмет: " + named);
         }
-    }
-
-    private static String namedItem(String message) {
-        int start = message.indexOf('\'');
-        int end = message.indexOf('\'', start + 1);
-        return message.substring(start + 1, end);
     }
 
     private static TaskNode finalStep(TaskNode plan) {

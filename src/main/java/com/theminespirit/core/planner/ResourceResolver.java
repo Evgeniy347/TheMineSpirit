@@ -40,7 +40,7 @@ public final class ResourceResolver {
 
     private static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, Set<String> path) {
         if (!path.add(item)) {
-            throw new UnplannableGoalException("Зацикленный способ добычи предмета '" + item
+            throw new UnplannableGoalException(item, "Зацикленный способ добычи предмета '" + item
                     + "': предмет снова встретился на цепочке рецептов");
         }
         try {
@@ -53,7 +53,7 @@ public final class ResourceResolver {
             if (knowledge.isGatherable(item)) {
                 return new ScriptCall("gather", Map.of("block", item, "count", count));
             }
-            throw new UnplannableGoalException("Для предмета '" + item
+            throw new UnplannableGoalException(item, "Для предмета '" + item
                     + "' не найден способ добычи: добавьте его в знания как gatherable, smeltable или craftable");
         } finally {
             path.remove(item);
