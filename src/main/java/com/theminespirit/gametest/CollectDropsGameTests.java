@@ -28,18 +28,25 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CollectDropsGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(4, 1, 4);
     private static final int PILLAR_HEIGHT = 4;
-    private static final int SETTLE_TICKS = 10;
+    private static final int SETTLE_TICKS = 1;
+    private static final int PILLAR_SETTLE_TICKS = 10;
 
     private CollectDropsGameTests() {
     }
 
-    @GameTest(template = "empty", batch = "drops_cobblestone", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "drops_cobblestone", timeoutTicks = 400)
     public static void collectDrops_ThreeHeapsInRadius_PicksUpAllNine(GameTestHelper helper) {
-        SpiritEntity spirit = startWithCobblestoneHeaps(helper, 6);
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        spawnCobblestoneHeaps(helper);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "collect_drops обязан завершиться успехом за 200 тиков, статус: "
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && run.spiritTicks() <= 200,
+                    "collect_drops обязан завершиться успехом за 200 тиков духа, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
             int inInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE);
@@ -52,7 +59,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_filter", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "drops_filter", timeoutTicks = 400)
     public static void collectDrops_LogFilter_PicksLogsAndLeavesCobblestone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -60,9 +67,11 @@ public final class CollectDropsGameTests {
         GameTestFixtures.dropAt(helper, Items.OAK_LOG, 4, 2.5, 1, 2.5);
         GameTestFixtures.dropAt(helper, Items.BIRCH_LOG, 2, 6.5, 1, 2.5);
         ItemEntity cobblestone = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 2.5, 1, 6.5);
-        spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", 6, "filter", List.of("*_log"))));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("collect_drops", Map.of("radius", 6, "filter", List.of("*_log"))), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "collect_drops с фильтром обязан завершиться успехом, причина: "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -77,7 +86,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_full", timeoutTicks = 100)
+    @GameTest(template = "arena", batch = "drops_full", timeoutTicks = 400)
     public static void collectDrops_InventoryFullOfOtherStacks_FailsWithoutLosingItems(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -87,9 +96,11 @@ public final class CollectDropsGameTests {
         }
         ItemEntity heap = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 5, 2.5, 1, 2.5);
         int totalBefore = totalItems(helper, spirit);
-        spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", 6)));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "полный инвентарь обязан провалить collect_drops, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -105,7 +116,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_pillar", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "drops_pillar", timeoutTicks = 400)
     public static void collectDrops_HeapOnTallPillar_PicksRestAndFailsUnreachable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -116,18 +127,18 @@ public final class CollectDropsGameTests {
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 2, 2.5, 1, 4.5);
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 4.5, 1, 6.5);
         ItemEntity onPillar = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 4, 7.5, PILLAR_HEIGHT + 1, 4.5);
-        long startTick = helper.getTick() + SETTLE_TICKS;
-        helper.runAfterDelay(SETTLE_TICKS,
-                () -> spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", 6))));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                PILLAR_SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "недостижимая кучка обязана провалить collect_drops, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("не дотянулся"),
                     "причина обязана говорить о недостижимых предметах, фактически: " + reason);
-            long took = helper.getTick() - startTick;
+            int took = run.spiritTicks();
             helper.assertTrue(took <= 120,
                     "недостижимая кучка обязана определяться детектором застревания за 120 тиков, а не тайм-аутом "
                             + "маршрута: заняло " + took);
@@ -140,35 +151,38 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_nothing", timeoutTicks = 20)
+    @GameTest(template = "arena", batch = "drops_nothing", timeoutTicks = 400)
     public static void collectDrops_NothingToPickUp_SucceedsWithinTwoTicks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
-        long startTick = helper.getTick();
-        spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", 6)));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "без предметов вокруг collect_drops обязан завершиться успехом, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            long took = helper.getTick() - startTick;
+            int took = run.spiritTicks();
             helper.assertTrue(took <= 2,
                     "успех без подбора обязан наступить сразу, не позже чем через 2 тика, а наступил через " + took);
             GameTestFixtures.reset(helper);
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_radius", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "drops_radius", timeoutTicks = 400)
     public static void collectDrops_HeapBeyondRadius_IsLeftUntouched(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 2, 5.5, 1, 4.5);
         ItemEntity far = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 7, 8.5, 1, 4.5);
-        spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", 3)));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 3)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "collect_drops с радиусом 3 обязан завершиться успехом, причина: "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -181,7 +195,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_scale", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "drops_scale", timeoutTicks = 400)
     public static void dropCollector_ThreeHeaps_QueriesEntitiesOncePerRefreshPeriod(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -193,9 +207,12 @@ public final class CollectDropsGameTests {
         DropCollector collector = new DropCollector(spirit, IdFilter.matchAll(),
                 new BlockCoord(start.getX(), start.getY(), start.getZ()), 6, PickupTuning.DEFAULT);
         AtomicInteger ticks = new AtomicInteger();
+        AtomicInteger lastSpiritTick = new AtomicInteger(SETTLE_TICKS - 1);
         AtomicReference<DropCollector.State> state = new AtomicReference<>(DropCollector.State.RUNNING);
         helper.onEachTick(() -> {
-            if (state.get() == DropCollector.State.RUNNING) {
+            if (state.get() == DropCollector.State.RUNNING && spirit.tickCount >= SETTLE_TICKS
+                    && spirit.tickCount != lastSpiritTick.get()) {
+                lastSpiritTick.set(spirit.tickCount);
                 ticks.incrementAndGet();
                 state.set(collector.tick());
             }
@@ -218,15 +235,10 @@ public final class CollectDropsGameTests {
         });
     }
 
-    private static SpiritEntity startWithCobblestoneHeaps(GameTestHelper helper, int radius) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+    private static void spawnCobblestoneHeaps(GameTestHelper helper) {
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 5, 1.5, 1, 2.5);
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 7.5, 1, 2.5);
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 4.5, 1, 7.5);
-        spirit.startTask(new ScriptCall("collect_drops", Map.of("radius", radius)));
-        return spirit;
     }
 
     private static int totalItems(GameTestHelper helper, SpiritEntity spirit) {

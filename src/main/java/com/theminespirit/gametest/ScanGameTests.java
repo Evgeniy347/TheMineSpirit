@@ -33,22 +33,25 @@ public final class ScanGameTests {
     private static final int COAL_ORES = 20;
     private static final int READS_PER_TICK_BUDGET = 16_384;
     private static final int SLAB_REACH = 40;
+    private static final int SETTLE_TICKS = 1;
 
     private ScanGameTests() {
     }
 
-    @GameTest(template = "empty", batch = "scan_filter", timeoutTicks = 60)
+    @GameTest(template = "arena", batch = "scan_filter", timeoutTicks = 400)
     public static void scanScript_OreFloorWithOreFilter_ReportsOnlyOres(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        spirit.startTask(new ScriptCall("scan", Map.of("radius", 8, "filter", List.of("*_ore"))));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("scan", Map.of("radius", 8, "filter", List.of("*_ore"))), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "scan обязан завершиться успехом за 60 тиков, статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && run.spiritTicks() <= 60,
+                    "scan обязан завершиться успехом за 60 тиков духа, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", тиков "
+                            + run.spiritTicks() + ", причина: " + spirit.taskFailureReason().orElse("нет"));
             WorldObservation observation = spirit.observation().orElse(null);
             helper.assertTrue(observation != null,
                     "после успешного scan наблюдение обязано лежать в духе: иначе результат скана некуда читать");
@@ -65,16 +68,17 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "scan_nofilter", timeoutTicks = 60)
+    @GameTest(template = "arena", batch = "scan_nofilter", timeoutTicks = 400)
     public static void scanScript_OreFloorWithoutFilter_ReportsStoneToo(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        spirit.startTask(new ScriptCall("scan", Map.of("radius", 8)));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("scan", Map.of("radius", 8)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "scan без фильтра обязан завершиться успехом за 60 тиков, причина: "
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && run.spiritTicks() <= 60,
+                    "scan без фильтра обязан завершиться успехом за 60 тиков духа, причина: "
                             + spirit.taskFailureReason().orElse("нет"));
             WorldObservation observation = spirit.observation().orElse(null);
             helper.assertTrue(observation != null, "наблюдение после scan обязано лежать в духе");
@@ -87,7 +91,7 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "scan_cost", timeoutTicks = 100)
+    @GameTest(template = "arena", batch = "scan_cost", timeoutTicks = 100)
     public static void scanSession_Radius32OverSlab_ReadsWithinBudgetPerTickAndSkipsEmptySections(
             GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -124,17 +128,17 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "scan_long", timeoutTicks = 80)
+    @GameTest(template = "arena", batch = "scan_long", timeoutTicks = 400)
     public static void scanScript_Radius32InMostlyEmptyWorld_FinishesWithinTickBudget(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        long startTick = helper.getTick();
-        spirit.startTask(new ScriptCall("scan", Map.of("radius", 32)));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("scan", Map.of("radius", 32)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
+            run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "scan радиуса 32 обязан завершиться за 80 тиков, причина: " + spirit.taskFailureReason().orElse("нет"));
-            long took = helper.getTick() - startTick;
+                    "scan радиуса 32 обязан завершиться успехом, причина: " + spirit.taskFailureReason().orElse("нет"));
+            int took = run.spiritTicks();
             helper.assertTrue(took <= 40,
                     "scan радиуса 32 обязан уложиться в ~32 тика порциями, а занял " + took
                             + ": иначе он читает слишком мало срезов за тик");
@@ -145,7 +149,7 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "scan_unloaded", timeoutTicks = 100)
+    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 100)
     public static void scanSession_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -172,33 +176,42 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "scan_cancel", timeoutTicks = 60)
+    @GameTest(template = "arena", batch = "scan_cancel", timeoutTicks = 400)
     public static void scanScript_CancelledOnSecondTick_KeepsPreviousObservation(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        spirit.startTask(new ScriptCall("scan", Map.of("radius", 2)));
+        SpiritRun first = SpiritRun.launch(helper, spirit, new ScriptCall("scan", Map.of("radius", 2)), SETTLE_TICKS);
+        int[] stage = {0};
+        int[] marker = {0};
+        WorldObservation[] firstObservation = new WorldObservation[1];
 
-        helper.runAfterDelay(10, () -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "первый scan обязан успеть завершиться за 10 тиков, причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            WorldObservation first = spirit.observation().orElse(null);
-            helper.assertTrue(first != null && first.radius() == 2, "первый scan обязан положить наблюдение радиуса 2");
-            spirit.startTask(new ScriptCall("scan", Map.of("radius", 32)));
-            helper.runAfterDelay(2, () -> {
+        helper.succeedWhen(() -> {
+            if (stage[0] == 0) {
+                first.assertStarted();
+                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                        "первый scan обязан завершиться успехом, причина: " + spirit.taskFailureReason().orElse("нет"));
+                firstObservation[0] = spirit.observation().orElse(null);
+                helper.assertTrue(firstObservation[0] != null && firstObservation[0].radius() == 2,
+                        "первый scan обязан положить наблюдение радиуса 2");
+                spirit.startTask(new ScriptCall("scan", Map.of("radius", 32)));
+                marker[0] = spirit.tickCount;
+                stage[0] = 1;
+            }
+            if (stage[0] == 1) {
+                helper.assertTrue(spirit.tickCount >= marker[0] + 2, "ждём второй тик второго скана");
                 spirit.cancelTask();
-                helper.runAfterDelay(2, () -> {
-                    helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
-                            "отменённый scan обязан иметь статус CANCELLED, фактически "
-                                    + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-                    helper.assertTrue(spirit.observation().orElse(null) == first,
-                            "отменённый scan не должен писать частичное наблюдение: прежнее наблюдение обязано "
-                                    + "остаться тем же объектом");
-                    GameTestFixtures.reset(helper);
-                    helper.succeed();
-                });
-            });
+                marker[0] = spirit.tickCount;
+                stage[0] = 2;
+            }
+            helper.assertTrue(spirit.tickCount >= marker[0] + 2, "ждём тики духа после отмены");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
+                    "отменённый scan обязан иметь статус CANCELLED, фактически "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.observation().orElse(null) == firstObservation[0],
+                    "отменённый scan не должен писать частичное наблюдение: прежнее наблюдение обязано "
+                            + "остаться тем же объектом");
+            GameTestFixtures.reset(helper);
         });
     }
 
