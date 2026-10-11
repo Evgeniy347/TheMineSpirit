@@ -195,7 +195,7 @@
       нет стоянки под целью, стоянка сбоку есть; свойство «ни одна стоянка не лежит в столбце под целью с `FALLING`
       над ней».
 - [ ] R3. **Правило, повтор (06 п. 4а, 08 п. 9): умолчание `ore` вне каталога.** `CoreScripts.java:42` —
-      `enumeration("ore", false, …)` без умолчания, а `MineVeinParams.java:24` подставляет `OreKind.ANY` через
+      `enumeration("ore", false, …)` без умолчания, а `MineVeinParams.java:25` подставляет `OreKind.ANY` через
       `orElse` — тихое умолчание, которого не видят `/v1/capabilities` и валидатор. Перегрузка
       `ParamSpec.enumeration(name, required, values, defaultValue)` уже есть на ветке `task/11-chop` (`d098d88`) —
       добавь её **буквально так же** (слияние сойдётся без конфликта), `ore` → умолчание `OreKind.ANY`, в
