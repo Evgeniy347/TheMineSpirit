@@ -105,7 +105,7 @@ class Guard:
         else:
             self.last_hash[bot] = obs_hash
 
-    def allow_post(self, now: float, bot: str, plan_fingerprint: str) -> Verdict:
+    def allow_new_task(self, now: float, bot: str) -> Verdict:
         paused = self._paused(now, bot)
         if paused:
             return paused
@@ -116,6 +116,12 @@ class Guard:
         if recent and now - max(recent) < self.config.task_gap:
             return Verdict(False, f"с прошлой задачи духа {bot} прошло {int(now - max(recent))} с, нужно не меньше "
                            f"{int(self.config.task_gap)}", "task_gap")
+        return Verdict(True)
+
+    def allow_post(self, now: float, bot: str, plan_fingerprint: str) -> Verdict:
+        allowed = self.allow_new_task(now, bot)
+        if not allowed.ok:
+            return allowed
         until = self.cooldowns.get(bot, {}).get(plan_fingerprint)
         if until is not None and now < until:
             return Verdict(False, f"этот же план провалился недавно, повтор через {int(until - now)} с", "plan_cooldown")

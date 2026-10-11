@@ -1,5 +1,5 @@
 {
- "description": "шесть задач в час: седьмой POST не уходит",
+ "description": "шесть задач в час: седьмой цикл отсекается до observe и до вызова модели (лимит вызовов не тратится впустую)",
  "brain": {
   "default": {
    "json": {
@@ -50,17 +50,18 @@
    "posts": 6
   },
   {
-   "brain_calls": 7
+   "brain_calls": 6
   },
   {
    "journal": {
-    "posted": 6
+    "posted": 6,
+    "observed": 6
    }
   },
   {
    "journal_has": {
-    "event": "rejected",
-    "stage": "guard",
+    "event": "bot_skipped",
+    "code": "tasks_hourly",
     "reason_contains": "6"
    }
   },

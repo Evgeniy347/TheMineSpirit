@@ -64,6 +64,26 @@ class TaskRateTests(unittest.TestCase):
         self.assertFalse(guard.allow_post(T0 + 59.9, "b", "fp2").ok, "раньше 60 с нельзя")
         self.assertTrue(guard.allow_post(T0 + 60, "b", "fp2").ok, "ровно 60 с можно")
 
+    def test_allowNewTask_ChecksRateAndGapWithoutFingerprint(self):
+        guard = make_guard()
+        self.assertTrue(guard.allow_new_task(T0, "b").ok)
+        for i in range(6):
+            guard.record_post(T0 + i * 60, "b", f"fp{i}")
+        verdict = guard.allow_new_task(T0 + 360, "b")
+        self.assertFalse(verdict.ok, "лимит часа проверяется до наблюдения и модели, без плана")
+        self.assertEqual("tasks_hourly", verdict.code)
+        self.assertTrue(guard.allow_new_task(T0 + HOUR, "b").ok, "на границе часа лимит снят")
+        other = make_guard()
+        other.record_post(T0, "b", "fp")
+        self.assertEqual("task_gap", other.allow_new_task(T0 + 59, "b").code)
+        self.assertTrue(other.allow_new_task(T0 + 60, "b").ok)
+
+    def test_allowNewTask_PausedBot_Denied(self):
+        guard = make_guard()
+        for i in range(3):
+            guard.record_outcome(T0 + i, "b", f"f{i}", "failed")
+        self.assertEqual("paused", guard.allow_new_task(T0 + 10, "b").code)
+
     def test_limits_FollowConfig(self):
         guard = make_guard(STRATEGIST_TASKS_PER_HOUR=2, STRATEGIST_TASK_GAP=0)
         guard.record_post(T0, "b", "a")

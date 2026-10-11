@@ -159,6 +159,9 @@ class CycleRunner:
         verdict = rt.guard.allow_brain_call(rt.clock.now(), bot_id)
         if not verdict.ok:
             return self._skip(summary, cycle, bot_id, verdict.reason, verdict.code)
+        verdict = rt.guard.allow_new_task(rt.clock.now(), bot_id)
+        if not verdict.ok:
+            return self._skip(summary, cycle, bot_id, verdict.reason, verdict.code)
         try:
             observation = rt.client.post(f"/v1/bots/{bot_id}/observe",
                                          {"radius": rt.config.observe_radius, "include_entities": True})
