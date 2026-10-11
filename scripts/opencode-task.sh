@@ -56,6 +56,27 @@ capture_session_id() {
     grep -m1 -o '"sessionID":"ses_[A-Za-z0-9]*"' "$1" 2>/dev/null | head -n 1 | cut -d'"' -f4
 }
 
+quota_failure_seen() {
+    local out="$1" err="$2"
+    grep -qiE "$QUOTA_PATTERN" "$err" && return 0
+    grep -qiE "$QUOTA_PATTERN" "$out" || return 1
+    python3 -I -c '
+import json, re, sys
+pattern = re.compile(sys.argv[2], re.IGNORECASE)
+for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
+    try:
+        event = json.loads(line)
+    except ValueError:
+        continue
+    if not isinstance(event, dict):
+        continue
+    if event.get("type") == "error" or "error" in event:
+        if pattern.search(json.dumps(event.get("error", event), ensure_ascii=False)):
+            sys.exit(0)
+sys.exit(1)
+' "$out" "$QUOTA_PATTERN"
+}
+
 stop_attempt() {
     kill -TERM -- "-$1" 2>/dev/null || kill -TERM "$1" 2>/dev/null
     wait "$1" 2>/dev/null
@@ -72,7 +93,7 @@ run_attempt() {
     while kill -0 "$pid" 2>/dev/null; do
         sleep "$POLL_SECONDS"
         [ -z "$session" ] && session="$(capture_session_id "$out")"
-        if grep -qiE "$QUOTA_PATTERN" "$out" "$err"; then
+        if quota_failure_seen "$out" "$err"; then
             stop_attempt "$pid"
             return "$ATTEMPT_QUOTA"
         fi
@@ -84,7 +105,7 @@ run_attempt() {
     wait "$pid"
     local code=$?
     [ -z "$session" ] && session="$(capture_session_id "$out")"
-    grep -qiE "$QUOTA_PATTERN" "$out" "$err" && return "$ATTEMPT_QUOTA"
+    quota_failure_seen "$out" "$err" && return "$ATTEMPT_QUOTA"
     return "$code"
 }
 
