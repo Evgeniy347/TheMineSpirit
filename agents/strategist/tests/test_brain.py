@@ -15,6 +15,7 @@ from brain import BrainError, BrainUnavailable, CommandBrain, FallbackBrain, Ope
 APP = Path(__file__).resolve().parent.parent
 FAKE = APP / "tests" / "fake_opencode.sh"
 SKIP_REPLY = '{"reason":"нечего делать","skip":true}'
+FORBIDDEN_FLAGS = ("--auto", "--yolo", "--dangerously-skip-permissions")
 TOOLS_FROM_CHECKLIST = ("read", "edit", "bash", "webfetch", "websearch", "task", "skill", "external_directory", "question")
 
 
@@ -64,8 +65,11 @@ class OpencodeBrainTests(BrainTestCase):
 
     def test_complete_NeverPassesAutoApproveFlag(self):
         self.brain().complete("с", "п")
-        self.assertNotIn(" --auto", self.args_log(), "флаг автоодобрения превращает prompt injection в выполнение команд")
-        self.assertNotIn(" --auto", " " + " ".join(self.brain().build_args("п")))
+        built = " " + " ".join(self.brain().build_args("п")) + " "
+        for flag in FORBIDDEN_FLAGS:
+            self.assertNotIn(f" {flag}", self.args_log(), f"{flag} превращает prompt injection в выполнение команд")
+            self.assertNotIn(f" {flag} ", built, f"{flag} в build_args отключает отказ на ask")
+            self.assertNotIn(f" {flag}", " " + " ".join(self.brain().build_args("п", agent=False)))
 
     def test_complete_LastTextEventWins(self):
         reply = self.brain(FAKE_REPLY='{"reason":"второй","skip":true}').complete("с", "п")
@@ -338,8 +342,9 @@ class BrainGuardTests(unittest.TestCase):
 
     def test_source_HasNoAutoApproveFlag(self):
         source = (APP / "brain.py").read_text(encoding="utf-8")
-        self.assertNotIn("--auto", source, "в brain.py не должно быть флага автоодобрения: песочница держится на отказе")
-        self.assertIsNotNone(re.search(r"--auto", 'args = ["run", "--auto"]'), "сторож не слеп: находит флаг в образце")
+        for flag in FORBIDDEN_FLAGS:
+            self.assertNotIn(flag, source, f"в brain.py не должно быть {flag}: песочница держится на автоматическом отказе ask")
+            self.assertIsNotNone(re.search(re.escape(flag), f'args = ["run", "{flag}"]'), f"сторож не слеп: находит {flag} в образце")
 
     def test_defaultModels_AreListedAsWorkingInExecutorModelsAndNotPaid(self):
         table = (config.REPO_ROOT / "docs" / "EXECUTOR-MODELS.md").read_text(encoding="utf-8")
