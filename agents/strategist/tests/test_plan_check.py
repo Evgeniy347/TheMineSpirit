@@ -1,0 +1,333 @@
+import copy
+import json
+import random
+import unittest
+from pathlib import Path
+
+from plan_check import Catalog, CatalogError, PlanError, PlanLimits, check_plan, load_policy
+from tests.fake_rest import default_capabilities
+
+APP = Path(__file__).resolve().parent.parent
+
+
+def script(name, **params):
+    return {"type": "script", "script": name, "params": params}
+
+
+def many(count, node_factory):
+    return [node_factory(i) for i in range(count)]
+
+
+def deep(levels):
+    node = script("scan")
+    for _ in range(levels):
+        node = {"type": "sequence", "steps": [node]}
+    return node
+
+
+VALID = [
+    ("goto с координатами", script("goto", x=10, y=64, z=-3)),
+    ("scan без params", {"type": "script", "script": "scan"}),
+    ("sequence goto + chop_tree", {"type": "sequence", "steps": [script("goto", x=1, y=64, z=1), script("chop_tree", count=5)]}),
+    ("fallback из двух", {"type": "fallback", "steps": [script("mine_vein", ore="iron"), script("gather", block="stone", count=8)]}),
+    ("repeat 3", {"type": "repeat", "times": 3, "step": script("chop_tree", count=2)}),
+    ("repeat границы 1 и 64", {"type": "sequence", "steps": [
+        {"type": "repeat", "times": 1, "step": script("scan")}, {"type": "repeat", "times": 64, "step": script("scan")}]}),
+    ("parallel all", {"type": "parallel", "mode": "all", "steps": [script("scan"), script("wait", ticks=20)]}),
+    ("wait 6000", script("wait", ticks=6000)),
+    ("wait 1", script("wait", ticks=1)),
+    ("chop_tree с пустыми params", script("chop_tree")),
+    ("mine_vein enum", script("mine_vein", ore="diamond", count=2, radius=32)),
+    ("harvest_crop replant=false", script("harvest_crop", crop="wheat", replant=False)),
+    ("вложенные sequence в fallback", {"type": "fallback", "steps": [
+        {"type": "sequence", "steps": [script("goto", x=0, y=70, z=0), script("collect_drops", radius=16)]},
+        script("wait", ticks=100)]}),
+    ("scan с filter", script("scan", radius=16, filter=["*_log", "*_ore"])),
+    ("глубина ровно 16", deep(15)),
+    ("8 шагов в корне", {"type": "sequence", "steps": many(8, lambda i: script("scan"))}),
+    ("32 узла ровно", {"type": "sequence", "steps": [
+        {"type": "sequence", "steps": many(7, lambda i: script("scan"))},
+        {"type": "sequence", "steps": many(7, lambda i: script("scan"))},
+        {"type": "sequence", "steps": many(7, lambda i: script("scan"))},
+        {"type": "sequence", "steps": many(6, lambda i: script("scan"))}]}),
+]
+
+INVALID = [
+    ("план — массив", [script("scan")], "план"),
+    ("план — null", None, "план"),
+    ("нет type", {"script": "scan"}, "type"),
+    ("неизвестный type", {"type": "loop", "steps": []}, "loop"),
+    ("script без имени", {"type": "script", "params": {}}, "script"),
+    ("скрипта нет в каталоге", script("teleport"), "teleport"),
+    ("скрипт есть в каталоге, но вне белого списка", script("fill", block="stone", x=1, y=1, z=1), "белого списка"),
+    ("say вне белого списка", script("say", text="привет"), "say"),
+    ("params не объект", {"type": "script", "script": "scan", "params": [1]}, "params"),
+    ("лишний параметр", script("scan", foo=1), "foo"),
+    ("нет обязательного z", script("goto", x=1, y=64), "plan.params.z"),
+    ("count ниже минимума", script("chop_tree", count=0), "plan.params.count"),
+    ("count выше максимума во вложенном шаге", {"type": "sequence", "steps": [script("scan"), script("chop_tree", count=257)]},
+     "plan.steps[1].params.count"),
+    ("дробное вместо целого", script("chop_tree", count=2.5), "count"),
+    ("bool вместо целого", script("chop_tree", count=True), "count"),
+    ("строка вместо целого", script("chop_tree", count="5"), "count"),
+    ("enum вне перечня", script("mine_vein", ore="adamantium"), "adamantium"),
+    ("wait.ticks выше границы", script("wait", ticks=6001), "plan.params.ticks"),
+    ("wait.ticks ниже границы", script("wait", ticks=0), "ticks"),
+    ("wait без ticks", script("wait"), "ticks"),
+    ("repeat times 0", {"type": "repeat", "times": 0, "step": script("scan")}, "times"),
+    ("repeat times 65", {"type": "repeat", "times": 65, "step": script("scan")}, "times"),
+    ("repeat times bool", {"type": "repeat", "times": True, "step": script("scan")}, "times"),
+    ("repeat без step", {"type": "repeat", "times": 2}, "step"),
+    ("sequence пустой", {"type": "sequence", "steps": []}, "steps"),
+    ("steps не список", {"type": "sequence", "steps": script("scan")}, "steps"),
+    ("parallel с неверным mode", {"type": "parallel", "mode": "some", "steps": [script("scan")]}, "mode"),
+    ("condition без каталога проверок", {"type": "condition", "check": "has_item", "params": {}, "then": script("scan")},
+     "condition"),
+    ("больше 32 узлов", {"type": "sequence", "steps": [
+        {"type": "sequence", "steps": many(7, lambda i: script("scan"))} for _ in range(5)]}, "узлов"),
+    ("9 шагов в корне", {"type": "sequence", "steps": many(9, lambda i: script("scan"))}, "шагов"),
+    ("глубина 17", deep(16), "глубина"),
+    ("300 узлов", {"type": "sequence", "steps": [
+        {"type": "sequence", "steps": many(30, lambda i: script("scan"))} for _ in range(10)]}, "узлов"),
+    ("лишнее поле узла", {"type": "script", "script": "scan", "comment": "привет"}, "comment"),
+    ("слишком длинная строка", script("chop_tree", species="a" * 201), "species"),
+    ("не строка в списке", script("scan", filter=["ok", 3]), "filter"),
+    ("строка вместо списка", script("scan", filter="*_log"), "filter"),
+    ("NaN вместо числа", script("wait", ticks=float("nan")), "ticks"),
+    ("null в параметре", script("chop_tree", count=None), "count"),
+    ("список слишком длинный", script("scan", filter=["a"] * 33), "filter"),
+]
+
+
+class PlanCheckTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog.from_capabilities(default_capabilities())
+        cls.policy = load_policy(APP / "policy.json")
+        cls.limits = PlanLimits()
+
+    def check(self, plan):
+        return check_plan(plan, self.catalog, self.policy, self.limits)
+
+    def test_validPlans_Table_Accepted(self):
+        for name, plan in VALID:
+            with self.subTest(plan=name):
+                try:
+                    self.check(plan)
+                except PlanError as error:
+                    self.fail(f"допустимый план «{name}» отвергнут: {error}. Проверь plan_check против docs/API.md и каталога")
+
+    def test_invalidPlans_Table_RejectedWithRussianTextNamingNode(self):
+        self.assertGreaterEqual(len(VALID) + len(INVALID), 30, "в таблице не меньше 30 планов")
+        for name, plan, fragment in INVALID:
+            with self.subTest(plan=name):
+                with self.assertRaises(PlanError, msg=f"недопустимый план «{name}» должен отвергаться до отправки") as ctx:
+                    self.check(plan)
+                text = str(ctx.exception)
+                self.assertIn(fragment.lower(), text.lower(), f"сообщение «{text}» должно называть «{fragment}»")
+                self.assertTrue(any("а" <= ch.lower() <= "я" for ch in text), "текст ошибки по-русски")
+
+    def test_error_NestedParam_NamesFullPath(self):
+        plan = {"type": "fallback", "steps": [script("scan"), {"type": "sequence", "steps": [
+            script("scan"), script("scan"), script("chop_tree", count=999)]}]}
+        with self.assertRaises(PlanError) as ctx:
+            self.check(plan)
+        self.assertIn("plan.steps[1].steps[2].params.count", str(ctx.exception))
+
+    def test_error_SeveralProblems_AllReported(self):
+        plan = {"type": "sequence", "steps": [script("chop_tree", count=0), script("teleport"), script("wait")]}
+        with self.assertRaises(PlanError) as ctx:
+            self.check(plan)
+        self.assertGreaterEqual(len(ctx.exception.errors), 3, "модель получает все проблемы плана разом")
+
+    def test_whitelist_ScriptOutsideList_RejectedEvenIfCatalogHasIt(self):
+        policy = load_policy(APP / "policy.json")
+        self.assertIn("fill", {s["id"] for s in default_capabilities()["scripts"]}, "для теста fill должен быть в каталоге")
+        self.assertNotIn("fill", policy.allowed_scripts)
+        with self.assertRaises(PlanError):
+            check_plan(script("fill", block="stone", x=1, y=1, z=1), self.catalog, policy, self.limits)
+
+    def test_policy_StartingWhitelist_MatchesChecklist(self):
+        expected = {"goto", "scan", "collect_drops", "chop_tree", "mine_vein", "gather", "till", "plant_crop",
+                    "harvest_crop", "bone_meal", "wait"}
+        self.assertEqual(expected, set(self.policy.allowed_scripts), "стартовый белый список из чеклиста 22")
+
+    def test_limits_Configurable(self):
+        plan = {"type": "sequence", "steps": many(3, lambda i: script("scan"))}
+        check_plan(plan, self.catalog, self.policy, PlanLimits(max_nodes=4, max_root_steps=3))
+        with self.assertRaises(PlanError):
+            check_plan(plan, self.catalog, self.policy, PlanLimits(max_nodes=3, max_root_steps=3))
+        with self.assertRaises(PlanError):
+            check_plan(plan, self.catalog, self.policy, PlanLimits(max_nodes=32, max_root_steps=2))
+
+    def test_condition_WithCatalogCheck_Accepted(self):
+        capabilities = default_capabilities()
+        capabilities["conditions"] = [{"id": "has_item", "params": {"type": "object", "properties": {
+            "item": {"type": "string"}}, "required": ["item"]}}]
+        catalog = Catalog.from_capabilities(capabilities)
+        plan = {"type": "condition", "check": "has_item", "params": {"item": "minecraft:stick"},
+                "then": script("scan"), "else": script("wait", ticks=10)}
+        check_plan(plan, catalog, self.policy, self.limits)
+        plan["params"] = {}
+        with self.assertRaises(PlanError):
+            check_plan(plan, catalog, self.policy, self.limits)
+
+    def test_numberParam_NonFiniteAndWrongTypes_Rejected(self):
+        capabilities = {"scripts": [{"id": "wait", "params": {"type": "object", "properties": {
+            "factor": {"type": "number", "minimum": 0, "maximum": 2}}, "required": []}}]}
+        catalog = Catalog.from_capabilities(capabilities)
+        policy = load_policy(APP / "policy.json")
+        for value in (0.5, 1, 2.0):
+            check_plan(script("wait", factor=value), catalog, policy, self.limits)
+        for value in (float("nan"), float("inf"), 2.5, -0.1, True, "1"):
+            with self.subTest(value=value):
+                with self.assertRaises(PlanError, msg=f"number-параметр со значением {value!r} должен отвергаться"):
+                    check_plan(script("wait", factor=value), catalog, policy, self.limits)
+
+    def test_catalog_Malformed_RaisesCatalogError(self):
+        for bad in ({}, {"scripts": "x"}, {"scripts": [{"summary": "нет id"}]}, {"scripts": [{"id": "a", "params": 5}]}):
+            with self.subTest(bad=bad):
+                with self.assertRaises(CatalogError):
+                    Catalog.from_capabilities(bad)
+
+    def test_check_Deterministic(self):
+        for name, plan, _ in INVALID:
+            with self.subTest(plan=name):
+                results = []
+                for _ in range(3):
+                    try:
+                        self.check(plan)
+                        results.append(None)
+                    except PlanError as error:
+                        results.append(tuple(error.errors))
+                self.assertEqual(1, len(set(results)), "одна и та же проверка даёт один и тот же ответ")
+
+    def test_check_DoesNotMutatePlan(self):
+        for name, plan in VALID:
+            before = copy.deepcopy(plan)
+            self.check(plan)
+            self.assertEqual(before, plan, f"check_plan не должен менять план «{name}»")
+
+    def test_examples_AllPassPlanCheck(self):
+        files = sorted((APP / "prompt" / "examples").glob("*.json"))
+        self.assertGreaterEqual(len(files), 3, "в prompt/examples нужно 3–4 образца")
+        for path in files:
+            with self.subTest(example=path.name):
+                example = json.loads(path.read_text(encoding="utf-8"))
+                self.assertIn("reason", example)
+                if example.get("skip"):
+                    self.assertNotIn("plan", example)
+                    continue
+                try:
+                    self.check(example["plan"])
+                except PlanError as error:
+                    self.fail(f"образец {path.name} не проходит plan_check: {error}")
+
+
+def random_json(rng, depth=0):
+    kinds = ["str", "int", "float", "bool", "none", "list", "dict"] if depth < 24 else ["str", "int", "none"]
+    kind = rng.choice(kinds)
+    if kind == "str":
+        return rng.choice(["scan", "goto", "script", "sequence", "x", "", "минус", "any", "iron", "*_log"])
+    if kind == "int":
+        return rng.choice([0, 1, -1, 5, 64, 65, 6000, 6001, 10 ** 12, -10 ** 12])
+    if kind == "float":
+        return rng.choice([0.5, 1.0, float("nan"), float("inf"), -0.0, 1e300])
+    if kind == "bool":
+        return rng.choice([True, False])
+    if kind == "none":
+        return None
+    if kind == "list":
+        return [random_json(rng, depth + 1) for _ in range(rng.randint(0, 4))]
+    keys = ["type", "script", "params", "steps", "times", "step", "mode", "check", "then", "else", "count", "ticks", "x"]
+    return {rng.choice(keys): random_json(rng, depth + 1) for _ in range(rng.randint(0, 5))}
+
+
+def random_planish(rng, depth=0):
+    kind = rng.choice(["script", "sequence", "repeat", "fallback", "parallel", "garbage"])
+    if depth > 30:
+        return script("scan")
+    if kind == "script":
+        return {"type": "script", "script": rng.choice(["scan", "goto", "wait", "chop_tree", "nope"]),
+                "params": {rng.choice(["x", "ticks", "count", "radius", "foo"]): random_json(rng, 20)}}
+    if kind in ("sequence", "fallback"):
+        return {"type": kind, "steps": [random_planish(rng, depth + 1) for _ in range(rng.randint(0, 3))]}
+    if kind == "parallel":
+        return {"type": "parallel", "mode": rng.choice(["all", "any", 5]),
+                "steps": [random_planish(rng, depth + 1) for _ in range(rng.randint(0, 3))]}
+    if kind == "repeat":
+        return {"type": "repeat", "times": rng.choice([0, 1, 3, 64, 65, True, "2"]), "step": random_planish(rng, depth + 1)}
+    return random_json(rng)
+
+
+class PlanCheckPropertyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog.from_capabilities(default_capabilities())
+        cls.policy = load_policy(APP / "policy.json")
+        cls.limits = PlanLimits()
+
+    def test_property_RandomJsonTrees_NeverRaiseAnythingButPlanError(self):
+        rng = random.Random(22)
+        for i in range(1000):
+            plan = random_json(rng) if i % 2 else random_planish(rng)
+            try:
+                check_plan(plan, self.catalog, self.policy, self.limits)
+            except PlanError:
+                pass
+            except Exception as error:
+                self.fail(f"итерация {i}: check_plan бросил {type(error).__name__}: {error} на плане {str(plan)[:200]}. "
+                          "Любой мусор должен давать PlanError с текстом для модели")
+
+    def test_property_TypeMutationOfValidPlan_AlwaysRejected(self):
+        mutations = [None, True, {"x": 1}, [1, 2], "строка-вместо-значения", 3.5]
+        checked = 0
+        for name, plan in VALID:
+            for path, container, key in param_slots(plan):
+                for mutated in mutations:
+                    if type_fits(container[key], mutated):
+                        continue
+                    broken = copy.deepcopy(plan)
+                    slot_container = resolve(broken, path)
+                    slot_container[key] = mutated
+                    checked += 1
+                    with self.assertRaises(PlanError, msg=f"«{name}»: параметр {path}.{key} заменён на {mutated!r} — "
+                                                          "проверка обязана отвергнуть другой тип"):
+                        check_plan(broken, self.catalog, self.policy, self.limits)
+        self.assertGreater(checked, 40, "мутаций должно быть достаточно, иначе свойство проверяет пустоту")
+
+
+def param_slots(node, path=()):
+    if not isinstance(node, dict):
+        return
+    if node.get("type") == "script":
+        for key in node.get("params", {}):
+            yield path, node["params"], key
+    for field in ("steps",):
+        for i, child in enumerate(node.get(field, [])):
+            yield from param_slots(child, path + ((field, i),))
+    if "step" in node:
+        yield from param_slots(node["step"], path + (("step", None),))
+
+
+def resolve(plan, path):
+    node = plan
+    for field, index in path:
+        node = node[field] if index is None else node[field][index]
+    return node["params"]
+
+
+def type_fits(original, mutated):
+    if isinstance(original, bool):
+        return isinstance(mutated, bool)
+    if isinstance(original, int):
+        return isinstance(mutated, int) and not isinstance(mutated, bool)
+    if isinstance(original, str):
+        return isinstance(mutated, str)
+    if isinstance(original, list):
+        return isinstance(mutated, list) and all(isinstance(i, str) for i in mutated)
+    return False
+
+
+if __name__ == "__main__":
+    unittest.main()

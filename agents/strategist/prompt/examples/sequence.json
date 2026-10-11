@@ -1,0 +1,32 @@
+{
+  "reason": "В инвентаре нет брёвен; лес виден в 20 блоках к востоку.",
+  "goal": "заготовить 8 брёвен",
+  "plan": {
+    "type": "sequence",
+    "steps": [
+      {
+        "type": "script",
+        "script": "goto",
+        "params": {
+          "x": 112,
+          "y": 70,
+          "z": -35
+        }
+      },
+      {
+        "type": "script",
+        "script": "chop_tree",
+        "params": {
+          "count": 8
+        }
+      },
+      {
+        "type": "script",
+        "script": "collect_drops",
+        "params": {
+          "radius": 8
+        }
+      }
+    ]
+  }
+}

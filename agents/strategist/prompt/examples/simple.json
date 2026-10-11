@@ -1,0 +1,12 @@
+{
+  "reason": "Рядом созревшая пшеница, собрать урожай дешевле всего.",
+  "goal": "собрать урожай пшеницы",
+  "plan": {
+    "type": "script",
+    "script": "harvest_crop",
+    "params": {
+      "crop": "wheat",
+      "radius": 8
+    }
+  }
+}
