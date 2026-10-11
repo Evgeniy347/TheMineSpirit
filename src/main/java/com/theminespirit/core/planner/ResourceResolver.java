@@ -35,11 +35,7 @@ public final class ResourceResolver {
                     "Количество предмета должно быть больше 0, а получено " + count + ": нулевая цель не имеет смысла");
         }
         TaskNode plan = resolve(item, count, knowledge, new HashSet<>());
-        try {
-            return PlanValidator.validate(plan, scripts, conditions);
-        } catch (PlanValidationException error) {
-            throw error;
-        }
+        return PlanValidator.validate(plan, scripts, conditions);
     }
 
     private static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, Set<String> path) {
