@@ -27,6 +27,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RestGameTests {
     private static final int FLOOR_SIZE = 3;
+    private static final int ORE_FLOOR_IRON = 3;
+    private static final int ORE_FLOOR_COAL = 20;
     private static final int OVERSIZED_BODY_BYTES = 2 * 1024 * 1024;
     private static final int HUGE_BODY_BYTES = 12 * 1024 * 1024;
     private static final int HUGE_PARALLEL_REQUESTS = 4;
@@ -175,6 +177,33 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = 300)
+    public static void observe_OreFloorWithOreFilter_KeepsOnlyOreInBlocks(GameTestHelper helper) throws IOException {
+        GameTestFixtures.reset(helper);
+        buildOreFloor(helper);
+        RestFixture rest = RestFixture.start(helper.getLevel().getServer());
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(4, 1, 4));
+        String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest.post(path,
+                "{\"radius\":8,\"filter\":[\"*_ore\"]}".getBytes(StandardCharsets.UTF_8)).thenApply(reply -> {
+            problems.expect(reply.status() == 200, "observe с фильтром *_ore обязан отвечать 200: " + reply.body());
+            int iron = blockCount(reply.json(), "minecraft:iron_ore");
+            int coal = blockCount(reply.json(), "minecraft:coal_ore");
+            int stone = blockCount(reply.json(), "minecraft:stone");
+            problems.expect(iron == ORE_FLOOR_IRON && coal == ORE_FLOOR_COAL,
+                    "Фильтр *_ore обязан оставить руду пола: iron_ore " + iron + " из " + ORE_FLOOR_IRON
+                            + ", coal_ore " + coal + " из " + ORE_FLOOR_COAL + ": " + reply.body());
+            problems.expect(stone == 0,
+                    "Фильтр *_ore обязан убрать stone из blocks, а камень " + stone + " из "
+                            + (GameTestFixtures.FLOOR_SIZE * GameTestFixtures.FLOOR_SIZE - ORE_FLOOR_IRON - ORE_FLOOR_COAL)
+                            + " пола остался: " + reply.body());
+            GameTestFixtures.reset(helper);
+            return problems.found();
+        });
+        RestFixture.await(helper, rest, scenario);
+    }
+
     @GameTest(template = "empty", timeoutTicks = 200)
     public static void threads_ForeignThreadAccess_IndexRejectsWhileGatewayAndHttpWork(GameTestHelper helper)
             throws IOException {
@@ -292,6 +321,16 @@ public final class RestGameTests {
         return false;
     }
 
+    private static int blockCount(JsonNode observation, String item) {
+        int total = 0;
+        for (JsonNode block : observation.path("blocks")) {
+            if (block.path("item").asText().equals(item)) {
+                total += block.path("count").asInt();
+            }
+        }
+        return total;
+    }
+
     private static boolean connectionRefused(int port) {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(RestFixture.loopback(), port), 1000);
@@ -315,6 +354,22 @@ public final class RestGameTests {
         for (int x = 0; x < FLOOR_SIZE; x++) {
             for (int z = 0; z < FLOOR_SIZE; z++) {
                 helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
+    }
+
+    private static void buildOreFloor(GameTestHelper helper) {
+        int index = 0;
+        for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
+            for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
+                if (index < ORE_FLOOR_IRON) {
+                    helper.setBlock(x, 0, z, Blocks.IRON_ORE);
+                } else if (index < ORE_FLOOR_IRON + ORE_FLOOR_COAL) {
+                    helper.setBlock(x, 0, z, Blocks.COAL_ORE);
+                } else {
+                    helper.setBlock(x, 0, z, Blocks.STONE);
+                }
+                index++;
             }
         }
     }

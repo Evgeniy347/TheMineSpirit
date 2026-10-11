@@ -70,7 +70,7 @@ final class RestFixture {
     static RestFixture start(MinecraftServer minecraft) throws IOException {
         SpiritIndex index = new SpiritIndex(minecraft);
         index.register(NeoForge.EVENT_BUS);
-        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index);
+        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS);
         RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway), gateway::stop);
         return new RestFixture(index, gateway, server);
     }

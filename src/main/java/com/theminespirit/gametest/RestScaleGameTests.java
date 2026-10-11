@@ -1,10 +1,12 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.SpiritIndex;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +23,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RestScaleGameTests {
     private static final int PARALLEL_REQUESTS = 20;
     private static final int SPIRITS = 30;
+    private static final int FIVE_OBSERVES = 5;
+    private static final int MAX_CONCURRENT_OBSERVES = 4;
+    private static final int OBSERVE_READS_PER_SLICE = 4096;
 
     private RestScaleGameTests() {
     }
@@ -44,6 +49,57 @@ public final class RestScaleGameTests {
                             "На запрос приходится ровно один переход на серверный поток: ожидалось " + PARALLEL_REQUESTS
                                     + ", перешли " + hops + ". Лишние переходы нагружают тик, недостающие значат, что "
                                     + "часть запросов трогает мир с HTTP-потока");
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
+    public static void observe_Radius32_ReadsWithinPerTickBudget(GameTestHelper helper) throws IOException {
+        RestFixture rest = RestFixture.start(helper.getLevel().getServer());
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
+        String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
+        RestFixture.Problems problems = new RestFixture.Problems();
+        int budget = ScanTuning.SLICES_PER_TICK * OBSERVE_READS_PER_SLICE;
+        CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
+                .thenApply(reply -> {
+                    problems.expect(reply.status() == 200, "observe радиуса 32 обязан отвечать 200: " + reply.body());
+                    int reads = rest.gateway().maxObserveReadsPerTick();
+                    problems.expect(reads > 0 && reads <= budget,
+                            "observe обязан читать не больше " + budget + " позиций за тик (по "
+                                    + OBSERVE_READS_PER_SLICE + " на срез из " + ScanTuning.SLICES_PER_TICK
+                                    + " срезов), прочитано максимум " + reads
+                                    + ": иначе одно наблюдение уронит тик сервера");
+                            return problems.found();
+                        });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
+    public static void observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent(GameTestHelper helper)
+            throws IOException {
+        RestFixture rest = RestFixture.start(helper.getLevel().getServer());
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
+        String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
+        List<CompletableFuture<RestFixture.Reply>> replies = new ArrayList<>();
+        for (int i = 0; i < FIVE_OBSERVES; i++) {
+            replies.add(rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8)));
+        }
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = CompletableFuture.allOf(replies.toArray(new CompletableFuture<?>[0]))
+                .thenApply(done -> {
+                    long ok = replies.stream().filter(reply -> reply.join().status() == 200).count();
+                    long limited = replies.stream()
+                            .filter(reply -> reply.join().status() == 429
+                                    && reply.join().json().path("error").path("code").asText().equals("rate_limited"))
+                            .count();
+                    problems.expect(ok >= 1 && limited >= 1,
+                            "Первые наблюдения обязаны получить 200, пятое — 429 rate_limited: ok " + ok
+                                    + ", rate_limited " + limited);
+                    int peak = rest.gateway().peakObserveJobs();
+                    problems.expect(peak <= MAX_CONCURRENT_OBSERVES,
+                            "Одновременно обязаны крутиться не больше " + MAX_CONCURRENT_OBSERVES + " наблюдений, пик "
+                                    + peak);
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);
