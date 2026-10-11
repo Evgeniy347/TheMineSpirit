@@ -72,7 +72,7 @@
 ### API-мосты и примитивы (mineflayer, MCP)
 - Mineflayer — паритет примитивов: blockAt/findBlock(s), dig/place, inventory/equip/toss, chest/furnace, craft/recipesFor, nearestEntity/attack, health/food/oxygen, chat, bed; отдельные модули pathfinder/pvp/auto-eat/tool/collectblock/armor-manager.
 - MCP-протокол: JSON-RPC 2.0 + Bearer + discovery (`server.json`) + `timeoutMs`/`request_id`; `tools/list` строить из `/v1/capabilities`.
-- Наш `docs/API.md` (REST `/v1`) — первичен; MCP — вторичный адаптер (P6); ядро `core` не знает про HTTP/MCP/Jackson.
+- Наш `docs/API.md` (REST `/v1`) — первичен; MCP — вторичный адаптер (P6); ядро `core` не знает про HTTP и MCP; формат JSON плана и наблюдения (Jackson) — часть контракта ядра.
 
 ### Деревни, экономика, квесты (Millénaire)
 - **Данные решают всё**: культуры/работы/магазины/товары/квесты/цели — декларативны, не код.

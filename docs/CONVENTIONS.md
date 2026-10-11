@@ -70,6 +70,10 @@
 - Версии зависимостей — только в `gradle.properties`, не по месту в `build.gradle`.
   Менять версии — решение пользователя (см. AGENTS.md).
 - Файлы в `src/generated/` создаются datagen (`./gradlew runData`) и руками не правятся.
+- Сторонняя библиотека мода (не Minecraft) объявляется трижды: `implementation` (компиляция),
+  `additionalRuntimeClasspath` (dev-запуски и GameTest-сервер) и `jarJar` (упаковка в jar мода).
+  Без `additionalRuntimeClasspath` dev-запуск падает с `NoClassDefFoundError`, без `jarJar` — сервер игрока.
+  Образец — Jackson в `build.gradle`.
 
 ## Производительность
 
