@@ -69,7 +69,7 @@
   "blocks":    [ { "item": "grass_block", "count": 340 }, { "item": "oak_log", "count": 12 } ],
   "entities":  [ { "type": "minecraft:cow", "pos": [14, 64, -1], "distance": 5.0 } ],
   "containers":[ { "type": "minecraft:chest", "pos": [8, 63, -5] } ],
-  "hash": "sha256:..." }
+  "hash": "<64 hex-символа SHA-256 от картины мира: без tick и distance>" }
 ```
 
 ### POST /v1/bots/{id}/tasks
