@@ -8,7 +8,6 @@
 
 Ревью кода от 2026-10-11 (HEAD `0ec3bd9`), выполняются по порядку:
 
-- [ ] [tasks/01-guards-and-tests.md](tasks/01-guards-and-tests.md) — сторожа имён тестов, слабых проверок, пустых catch
 - [ ] [tasks/02-engine-robustness.md](tasks/02-engine-robustness.md) — исключение скрипта роняет сервер, отмена до скрипта, дубли исполнителей
 - [ ] [tasks/03-plan-validation.md](tasks/03-plan-validation.md) — enum и диапазоны параметров, repeat, белый список условий, каталог только реализованного
 - [ ] [tasks/04-observation.md](tasks/04-observation.md) — hash зависит от порядка слотов и тика, JSON не по контракту API
