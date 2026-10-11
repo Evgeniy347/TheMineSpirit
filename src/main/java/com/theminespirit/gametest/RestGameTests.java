@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.rest.ObserveJobs;
+import com.theminespirit.neoforge.rest.RestLifecycle;
+import com.theminespirit.neoforge.rest.RestServer;
 import com.theminespirit.neoforge.rest.SpiritIndex;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -14,12 +17,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Blocks;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -245,6 +250,26 @@ public final class RestGameTests {
             return problems.found();
         });
         RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "restlifecycle", template = "empty", timeoutTicks = 100)
+    public static void lifecycle_TryStartOnBusyPort_StopsGatewayWithoutLeavingObserveSubscription(
+            GameTestHelper helper) throws IOException {
+        MinecraftServer minecraft = helper.getLevel().getServer();
+        SpiritIndex index = new SpiritIndex(minecraft);
+        index.register(NeoForge.EVENT_BUS);
+        int before = ObserveJobs.liveCount();
+        Optional<RestServer> started;
+        try (ServerSocket busy = new ServerSocket(0, 1, RestFixture.loopback())) {
+            started = RestLifecycle.tryStart(minecraft, index, "127.0.0.1", busy.getLocalPort());
+        }
+        index.unregister(NeoForge.EVENT_BUS);
+        helper.assertTrue(started.isEmpty(),
+                "Занятый порт обязан давать Optional.empty(), мост ответил " + started);
+        helper.assertTrue(ObserveJobs.liveCount() == before,
+                "Неудачный tryStart не должен оставлять подписку ObserveJobs на тике: живых подписок "
+                        + ObserveJobs.liveCount() + " вместо " + before + ": утечка подписки после BindException");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 300)

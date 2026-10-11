@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.observation.ScanTuning;
+import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.SpiritIndex;
@@ -24,7 +25,6 @@ public final class RestScaleGameTests {
     private static final int PARALLEL_REQUESTS = 20;
     private static final int SPIRITS = 30;
     private static final int FIVE_OBSERVES = 5;
-    private static final int MAX_CONCURRENT_OBSERVES = 4;
     private static final int OBSERVE_READS_PER_SLICE = 4096;
 
     private RestScaleGameTests() {
@@ -97,8 +97,8 @@ public final class RestScaleGameTests {
                             "Пять запросов в один тик обязаны дать ровно четыре 200 и один 429 rate_limited, "
                                     + "получили ok " + ok + ", rate_limited " + limited);
                     int peak = rest.gateway().peakObserveJobs();
-                    problems.expect(peak == MAX_CONCURRENT_OBSERVES,
-                            "Пик одновременных наблюдений обязан быть ровно " + MAX_CONCURRENT_OBSERVES
+                    problems.expect(peak == RestTuning.MAX_OBSERVES,
+                            "Пик одновременных наблюдений обязан быть ровно " + RestTuning.MAX_OBSERVES
                                     + ", вырос до " + peak);
                     return problems.found();
                 });

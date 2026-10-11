@@ -6,6 +6,7 @@ public final class RestTuning {
     public static final int HTTP_THREADS = 8;
     public static final int MAX_BODY_BYTES = 1024 * 1024;
     public static final int MAX_DRAIN_BYTES = 16 * 1024 * 1024;
+    public static final int MAX_OBSERVES = 4;
     public static final Duration SERVER_CALL_TIMEOUT = Duration.ofSeconds(5);
     public static final Duration OBSERVE_TIMEOUT = Duration.ofSeconds(15);
 

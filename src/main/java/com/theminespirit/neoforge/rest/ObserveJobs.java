@@ -6,23 +6,27 @@ import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ObserveRequest;
+import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.WorldScanner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 public final class ObserveJobs {
-    private static final int MAX_CONCURRENT = 4;
+    private static final AtomicInteger LIVE = new AtomicInteger();
 
     private final IEventBus bus;
     private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
     private final List<Job> active = new ArrayList<>();
+    private final AtomicBoolean closed = new AtomicBoolean();
     private volatile int activeCount;
     private volatile int peakActive;
     private volatile int maxReadsPerTick;
@@ -30,13 +34,19 @@ public final class ObserveJobs {
     public ObserveJobs(IEventBus bus) {
         this.bus = bus;
         bus.addListener(tickListener);
+        LIVE.incrementAndGet();
+    }
+
+    public static int liveCount() {
+        return LIVE.get();
     }
 
     public CompletableFuture<WorldObservation> submit(SpiritEntity spirit, String botId, ObserveRequest request) {
-        if (active.size() >= MAX_CONCURRENT) {
+        if (active.size() >= RestTuning.MAX_OBSERVES) {
             throw new ApiException(ErrorCode.RATE_LIMITED,
-                    "Слишком много снимков одновременно: занято " + active.size() + " из " + MAX_CONCURRENT
-                            + ", повторите запрос позже", Map.of("active", active.size(), "max", MAX_CONCURRENT));
+                    "Слишком много снимков одновременно: занято " + active.size() + " из " + RestTuning.MAX_OBSERVES
+                            + ", повторите запрос позже",
+                    Map.of("active", active.size(), "max", RestTuning.MAX_OBSERVES));
         }
         active.add(new Job(spirit, botId, request));
         activeCount = active.size();
@@ -48,6 +58,10 @@ public final class ObserveJobs {
         return activeCount;
     }
 
+    public int liveSubscriptions() {
+        return closed.get() ? 0 : 1;
+    }
+
     public int peakActive() {
         return peakActive;
     }
@@ -57,6 +71,10 @@ public final class ObserveJobs {
     }
 
     public void close() {
+        if (!closed.compareAndSet(false, true)) {
+            return;
+        }
+        LIVE.decrementAndGet();
         bus.unregister(tickListener);
         for (Job job : List.copyOf(active)) {
             job.fail(new ApiException(ErrorCode.INTERNAL,

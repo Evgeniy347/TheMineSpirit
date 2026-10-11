@@ -41,13 +41,14 @@ public final class RestLifecycle {
                     + "этого компьютера, 0.0.0.0 или 127.0.0.1", bindAddress, RestConfig.FILE_NAME, e.toString());
             return Optional.empty();
         }
+        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus);
         try {
-            SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus);
             RestServer started = RestServer.start(address, port, RestRouter.create(gateway), gateway::stop);
             LOGGER.info("REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",
                     address.getHostAddress(), started.port());
             return Optional.of(started);
         } catch (IOException | RuntimeException e) {
+            gateway.stop();
             LOGGER.error("REST-мост не запущен: не удалось занять {}:{} ({}). Проверьте, что порт свободен "
                     + "(ss -ltn) и адрес принадлежит этому компьютеру, либо измените port и bindAddress в {}",
                     address.getHostAddress(), port, e.toString(), RestConfig.FILE_NAME);

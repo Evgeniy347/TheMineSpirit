@@ -41,6 +41,14 @@ public final class SpiritBotGateway implements BotGateway {
         return jobs.peakActive();
     }
 
+    public int observeActiveCount() {
+        return jobs.activeCount();
+    }
+
+    public int observeLiveSubscriptions() {
+        return jobs.liveSubscriptions();
+    }
+
     public int maxObserveReadsPerTick() {
         return jobs.maxReadsPerTick();
     }
