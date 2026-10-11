@@ -12,8 +12,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class ValueTable {
     public static final int VALUE_LIMIT = 100_000;
@@ -28,6 +31,9 @@ public final class ValueTable {
     private final List<ValueRule> rules;
     private final List<Category> categories;
     private final int defaultValue;
+    private final Map<String, Integer> valueCache = new ConcurrentHashMap<>();
+    private final Map<String, Integer> rankCache = new ConcurrentHashMap<>();
+    private final AtomicLong categoryLookups = new AtomicLong();
 
     private ValueTable(String origin, List<ValueRule> rules, List<Category> categories, int defaultValue) {
         this.origin = origin;
@@ -72,6 +78,20 @@ public final class ValueTable {
 
     public int valueOf(String item) {
         Objects.requireNonNull(item, "Предмет не назван: ценность считается по id");
+        return valueCache.computeIfAbsent(item, this::matchRuleValue);
+    }
+
+    public int categoryRank(String item) {
+        Objects.requireNonNull(item, "Предмет не назван: категория определяется по id");
+        categoryLookups.incrementAndGet();
+        return rankCache.computeIfAbsent(item, this::matchCategoryRank);
+    }
+
+    public long categoryLookups() {
+        return categoryLookups.get();
+    }
+
+    private int matchRuleValue(String item) {
         for (ValueRule rule : rules) {
             if (rule.covers(item)) {
                 return rule.value();
@@ -80,20 +100,23 @@ public final class ValueTable {
         return defaultValue;
     }
 
+    private int matchCategoryRank(String item) {
+        for (int index = 0; index < categories.size(); index++) {
+            if (categories.get(index).covers(item)) {
+                return index;
+            }
+        }
+        throw new IllegalStateException("Предмет '" + item + "' не попал ни в одну категорию файла '" + origin
+                + "': последняя категория обязана содержать шаблон '*', проверьте файл ценностей");
+    }
+
     public int stackValue(Stack stack) {
         Objects.requireNonNull(stack, "Стопка не может быть null: ценность считается по стопке");
         return valueOf(stack.item()) * stack.count();
     }
 
     public String categoryOf(String item) {
-        Objects.requireNonNull(item, "Предмет не назван: категория определяется по id");
-        for (Category category : categories) {
-            if (category.covers(item)) {
-                return category.name();
-            }
-        }
-        throw new IllegalStateException("Предмет '" + item + "' не попал ни в одну категорию файла '" + origin
-                + "': последняя категория обязана содержать шаблон '*', проверьте файл ценностей");
+        return categories.get(categoryRank(item)).name();
     }
 
     public String origin() {

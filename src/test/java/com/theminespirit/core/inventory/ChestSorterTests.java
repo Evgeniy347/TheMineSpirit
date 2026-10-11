@@ -146,6 +146,26 @@ class ChestSorterTests {
     }
 
     @Test
+    void sort_NinetySlots_AsksCategoryOncePerSlot() {
+        List<Stack> slots = new ArrayList<>();
+        String[] items = {"cobblestone", "oak_log", "iron_ingot", "bread", "iron_pickaxe", "diamond_chestplate",
+                "bucket", "torch", "crafting_table", "stick"};
+        for (int index = 0; index < 90; index++) {
+            slots.add(new Stack(items[index % items.length], 0, 7, 64));
+        }
+        long before = VALUES.categoryLookups();
+
+        ChestSorter.sort(slots, VALUES);
+
+        long asked = VALUES.categoryLookups() - before;
+        assertTrue(asked <= slots.size(),
+                "Сортировка 90 слотов спрашивает категорию не больше 90 раз, а спросила " + asked + ": "
+                        + "вызов categoryOf внутри компаратора даёт O(n log n) обращений к шаблонам "
+                        + "на серверном тике при каждом обращении к сундуку. Подлог для проверки: "
+                        + "верните ranks.get(values.categoryOf(...)) в компаратор — тест покраснеет");
+    }
+
+    @Test
     void sort_NinetySlots_UsesMinimalSlotCount() {
         List<Stack> slots = new ArrayList<>();
         for (int index = 0; index < 30; index++) {

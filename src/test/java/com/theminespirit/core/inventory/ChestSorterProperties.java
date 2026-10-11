@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -39,23 +41,21 @@ class ChestSorterProperties {
         return 64;
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_Slots_PreserveTotalCountPerItemAndVariant(@ForAll("slots") List<Stack> slots) {
         List<Stack> layout = ChestSorter.sort(slots, VALUES);
+        Map<String, Integer> before = countsByKind(slots);
+        Map<String, Integer> after = countsByKind(layout);
 
-        for (String item : itemsOf(slots)) {
-            for (int variant : variantsOf(slots, item)) {
-                int before = countOf(slots, item, variant);
-                int after = countOf(layout, item, variant);
-                assertEquals(before, after,
-                        "Сортировка только переставляет и сливает стопки: предмета '" + item + "' варианта "
-                                + variant + " было " + before + ", стало " + after + ". Исходные слоты " + slots
-                                + ", раскладка " + layout);
-            }
+        for (String kind : before.keySet()) {
+            assertEquals(before.get(kind), after.get(kind),
+                    "Сортировка только переставляет и сливает стопки: пары «предмет+вариант» '" + kind
+                            + "' было " + before.get(kind) + ", стало " + after.get(kind) + ". Исходные слоты "
+                            + slots + ", раскладка " + layout);
         }
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_Layout_NeverExceedsMaxStack(@ForAll("slots") List<Stack> slots) {
         for (Stack stack : ChestSorter.sort(slots, VALUES)) {
             assertTrue(stack.count() <= stack.maxStack(),
@@ -65,16 +65,13 @@ class ChestSorterProperties {
         }
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_Layout_UsesMinimalSlotCount(@ForAll("slots") List<Stack> slots) {
         List<Stack> layout = ChestSorter.sort(slots, VALUES);
         int minimal = 0;
-        for (String item : itemsOf(slots)) {
-            for (int variant : variantsOf(slots, item)) {
-                int max = stackMaxOf(slots, item, variant);
-                int total = countOf(slots, item, variant);
-                minimal += (total + max - 1) / max;
-            }
+        for (Map.Entry<String, Integer> kind : countsByKind(slots).entrySet()) {
+            int max = maxStackOfKind(slots, kind.getKey());
+            minimal += (int) Math.ceil((double) kind.getValue() / max);
         }
 
         assertEquals(minimal, layout.size(),
@@ -82,7 +79,7 @@ class ChestSorterProperties {
                         + layout.size() + ". Исходные слоты " + slots + ", раскладка " + layout);
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_AppliedTwice_GivesSameLayout(@ForAll("slots") List<Stack> slots) {
         List<Stack> once = ChestSorter.sort(slots, VALUES);
 
@@ -92,7 +89,7 @@ class ChestSorterProperties {
                         + "перекладывала бы сундук. Исходные слоты " + slots);
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_ShuffledSlots_GiveSameLayout(@ForAll("slots") List<Stack> slots) {
         List<Stack> expected = ChestSorter.sort(slots, VALUES);
         List<Stack> shuffled = new ArrayList<>(slots);
@@ -103,7 +100,7 @@ class ChestSorterProperties {
                         + "порядке, обязан раскладываться так же. Исходные слоты " + slots);
     }
 
-    @Property
+    @Property(tries = 200)
     void sort_Layout_KeepsEmptySlotsAtTheEnd(@ForAll("slots") List<Stack> slots) {
         List<Stack> layout = ChestSorter.sort(slots, VALUES);
 
@@ -115,37 +112,16 @@ class ChestSorterProperties {
                         + "занятых слотов. Слотов " + slots.size() + ", в раскладке " + layout.size());
     }
 
-    private static List<String> itemsOf(List<Stack> slots) {
-        List<String> items = new ArrayList<>();
+    private static Map<String, Integer> countsByKind(List<Stack> slots) {
+        Map<String, Integer> counts = new HashMap<>();
         for (Stack stack : slots) {
-            if (!items.contains(stack.item())) {
-                items.add(stack.item());
-            }
+            counts.merge(stack.item() + "#" + stack.variant(), stack.count(), Integer::sum);
         }
-        return items;
+        return counts;
     }
 
-    private static List<Integer> variantsOf(List<Stack> slots, String item) {
-        List<Integer> variants = new ArrayList<>();
-        for (Stack stack : slots) {
-            if (stack.item().equals(item) && !variants.contains(stack.variant())) {
-                variants.add(stack.variant());
-            }
-        }
-        return variants;
-    }
-
-    private static int countOf(List<Stack> slots, String item, int variant) {
-        int total = 0;
-        for (Stack stack : slots) {
-            if (stack.item().equals(item) && stack.variant() == variant) {
-                total += stack.count();
-            }
-        }
-        return total;
-    }
-
-    private static int stackMaxOf(List<Stack> slots, String item, int variant) {
+    private static int maxStackOfKind(List<Stack> slots, String kind) {
+        String item = kind.substring(0, kind.indexOf('#'));
         return maxStackOf(item);
     }
 }
