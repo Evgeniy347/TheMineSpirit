@@ -71,7 +71,7 @@ final class RestFixture {
         SpiritIndex index = new SpiritIndex(minecraft);
         index.register(NeoForge.EVENT_BUS);
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index);
-        RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway));
+        RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway), gateway::stop);
         return new RestFixture(index, gateway, server);
     }
 

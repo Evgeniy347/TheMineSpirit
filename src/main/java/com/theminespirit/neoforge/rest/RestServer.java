@@ -40,19 +40,21 @@ public final class RestServer {
     private final HttpServer httpServer;
     private final ExecutorService pool;
     private final Router router;
+    private final Runnable onStop;
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private RestServer(HttpServer httpServer, ExecutorService pool, Router router) {
+    private RestServer(HttpServer httpServer, ExecutorService pool, Router router, Runnable onStop) {
         this.httpServer = httpServer;
         this.pool = pool;
         this.router = router;
+        this.onStop = onStop;
     }
 
-    public static RestServer start(InetAddress address, int port, Router router) throws IOException {
+    public static RestServer start(InetAddress address, int port, Router router, Runnable onStop) throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(RestTuning.HTTP_THREADS, new RestThreadFactory());
         try {
             HttpServer httpServer = HttpServer.create(new InetSocketAddress(address, port), 0);
-            RestServer server = new RestServer(httpServer, pool, router);
+            RestServer server = new RestServer(httpServer, pool, router, onStop);
             httpServer.setExecutor(pool);
             httpServer.createContext("/", server::handle);
             httpServer.start();
@@ -71,6 +73,7 @@ public final class RestServer {
         if (!stopped.compareAndSet(false, true)) {
             return;
         }
+        onStop.run();
         httpServer.stop(STOP_DELAY_SECONDS);
         pool.shutdown();
         try {

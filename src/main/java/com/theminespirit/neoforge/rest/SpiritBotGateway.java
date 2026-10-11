@@ -35,6 +35,10 @@ public final class SpiritBotGateway implements BotGateway {
         return serverCall;
     }
 
+    public void stop() {
+        serverCall.stop();
+    }
+
     @Override
     public List<BotInfo> bots() {
         return serverCall.call(() -> index.snapshot().stream().map(SpiritBotGateway::info).toList(),

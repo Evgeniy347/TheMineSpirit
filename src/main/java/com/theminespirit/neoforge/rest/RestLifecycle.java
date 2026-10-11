@@ -42,7 +42,8 @@ public final class RestLifecycle {
             return Optional.empty();
         }
         try {
-            RestServer started = RestServer.start(address, port, RestRouter.create(new SpiritBotGateway(minecraft, spirits)));
+            SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits);
+            RestServer started = RestServer.start(address, port, RestRouter.create(gateway), gateway::stop);
             LOGGER.info("REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",
                     address.getHostAddress(), started.port());
             return Optional.of(started);

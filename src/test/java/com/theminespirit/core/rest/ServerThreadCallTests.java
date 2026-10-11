@@ -14,6 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -108,7 +109,7 @@ class ServerThreadCallTests {
         });
         executor.runAll();
 
-        ApiException error = assertThrows(ApiException.class, () -> ServerThreadCall.await(future, LONG_ENOUGH),
+        ApiException error = assertThrows(ApiException.class, () -> call.await(future, LONG_ENOUGH),
                 "Исключение задачи не должно пропадать молча: клиент обязан получить internal");
 
         assertEquals(ErrorCode.INTERNAL, error.error().code(), "Падение задачи — internal (500)");
@@ -150,6 +151,50 @@ class ServerThreadCallTests {
                 "Остановленный сервер не принимает задачи: клиент обязан получить внятную ошибку");
 
         assertEquals(ErrorCode.INTERNAL, error.error().code(), "Отказ исполнителя — internal (500)");
+    }
+
+    @Test
+    void await_StopWhileTaskNeverRuns_ThrowsWithinHundredMillisNamingShutdown() throws Exception {
+        ServerThreadCall call = new ServerThreadCall(new QueuedExecutor());
+        CompletableFuture<Integer> future = call.submit(() -> 1);
+        ExecutorService stopper = Executors.newSingleThreadExecutor();
+        long started = System.nanoTime();
+        try {
+            stopper.submit(() -> {
+                try {
+                    Thread.sleep(30);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                call.stop();
+            });
+
+            ApiException error = assertThrows(ApiException.class, () -> call.await(future, LONG_ENOUGH),
+                    "Остановка сервера не должна держать запрос весь тайм-аут: серверный поток занят в stop() и "
+                            + "никогда не выполнит задачу");
+
+            long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            assertTrue(millis <= 100,
+                    "Ждущий запрос обязан оборваться остановкой почти сразу, а ждал " + millis + " мс из "
+                            + LONG_ENOUGH.toMillis() + ": иначе stop() висит на каждом запросе в полёте");
+            assertTrue(error.getMessage().contains("останавливается"),
+                    "Сообщение обязано называть остановку сервера, а не истечение тайм-аута: " + error.getMessage());
+        } finally {
+            stopper.shutdownNow();
+        }
+    }
+
+    @Test
+    void submit_AfterStop_ThrowsImmediatelyNamingShutdown() {
+        ServerThreadCall call = new ServerThreadCall(new QueuedExecutor());
+        call.stop();
+
+        ApiException error = assertThrows(ApiException.class, () -> call.submit(() -> 1),
+                "После остановки новые задачи не принимаются: иначе HTTP-поток снова начнёт читать мир");
+
+        assertEquals(ErrorCode.INTERNAL, error.error().code(), "Отказ после остановки — internal (500)");
+        assertTrue(error.getMessage().contains("останавливается"),
+                "Сообщение обязано называть остановку сервера: " + error.getMessage());
     }
 
     @Test
