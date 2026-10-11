@@ -6,6 +6,7 @@ import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.FollowParams;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ public final class SpiritScripts {
 
     public static ScriptRegistry registryFor(SpiritEntity spirit) {
         return ScriptRegistry.of(Map.of(
+                "scan", params -> new ScanScript(spirit, ScanParams.from(params)),
                 "goto", params -> new GotoScript(spirit, GotoParams.from(params)),
                 "follow", params -> new FollowScript(spirit, FollowParams.from(params))));
     }
