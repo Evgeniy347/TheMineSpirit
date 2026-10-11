@@ -15,7 +15,8 @@ public final class ScenarioFile {
     private ScenarioFile() {
     }
 
-    public record Scenario(String name, Situation situation, TacticsMemory memory, long tick, Expectation expect) {
+    public record Scenario(String name, Situation situation, TacticsMemory memory, long tick, Expectation expect,
+            Optional<String> why, boolean boundary, Optional<String> pair) {
     }
 
     public record Expectation(Optional<TacticalOption> decision, Optional<TacticalAction> action,
@@ -43,7 +44,7 @@ public final class ScenarioFile {
         List<Scenario> scenarios = new ArrayList<>();
         for (ConfigNode item : root.get("scenarios").nonEmptyItems()) {
             item.fields(new String[] {"name", "expect"}, "self", "enemies", "env", "orders", "memory", "sinceHit",
-                    "tick");
+                    "tick", "why", "boundary", "pair");
             scenarios.add(scenario(item));
         }
         return scenarios;
@@ -73,7 +74,10 @@ public final class ScenarioFile {
         long tick = item.has("tick") ? item.get("tick").integer(0, Integer.MAX_VALUE) : DEFAULT_TICK;
         TacticsMemory memory = item.has("memory") ? memory(item.get("memory"), situation, tick)
                 : TacticsMemory.initial(situation.orders().mode(), tick, situation.self().hpFraction());
-        return new Scenario(item.get("name").text(), situation, memory, tick, expectation(item.get("expect")));
+        return new Scenario(item.get("name").text(), situation, memory, tick, expectation(item.get("expect")),
+                item.has("why") ? Optional.of(item.get("why").text()) : Optional.empty(),
+                item.has("boundary") && item.get("boundary").bool(),
+                item.has("pair") ? Optional.of(item.get("pair").text()) : Optional.empty());
     }
 
     private static void self(ConfigNode node, SituationBuilder builder) {
