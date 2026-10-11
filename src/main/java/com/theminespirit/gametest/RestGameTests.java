@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.ObserveJobs;
 import com.theminespirit.neoforge.rest.RestLifecycle;
@@ -19,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -205,6 +208,74 @@ public final class RestGameTests {
                             + " пола остался: " + reply.body());
             return problems.found();
         });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
+    public static void observe_SpiritDiscardedMidScan_Returns404WithId(GameTestHelper helper) throws IOException {
+        MinecraftServer minecraft = helper.getLevel().getServer();
+        RestFixture rest = RestFixture.start(minecraft);
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
+        String id = spirit.getStringUUID();
+        String path = "/v1/bots/" + id + "/observe";
+        AtomicBoolean discarded = new AtomicBoolean();
+        helper.onEachTick(() -> {
+            if (!discarded.get() && rest.gateway().observeActiveCount() > 0) {
+                discarded.set(true);
+                CompletableFuture.runAsync(spirit::discard, minecraft);
+            }
+        });
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
+                .thenApply(reply -> {
+                    problems.expect(discarded.get(),
+                            "дух должен быть удалён посреди скана, иначе ветка isRemoved не проверяется");
+                    problems.expect(reply.status() == 404,
+                            "Наблюдение исчезнувшего духа обязано отвечать 404, получен " + reply.status()
+                                    + ": " + reply.body());
+                    JsonNode error = reply.json().path("error");
+                    problems.expect(error.path("code").asText().equals("not_found"),
+                            "Код ошибки обязан быть not_found: " + reply.body());
+                    problems.expect(error.path("details").path("id").asText().equals(id),
+                            "details.id обязан называть исчезнувшего духа " + id + ": " + reply.body());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 300)
+    public static void observe_MidScanServerStop_ReturnsStoppingErrorFasterThanTimeout(GameTestHelper helper)
+            throws IOException {
+        MinecraftServer minecraft = helper.getLevel().getServer();
+        RestFixture rest = RestFixture.start(minecraft);
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
+        String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
+        AtomicBoolean stopped = new AtomicBoolean();
+        long startedAt = System.nanoTime();
+        helper.onEachTick(() -> {
+            if (!stopped.get() && rest.gateway().observeActiveCount() > 0) {
+                stopped.set(true);
+                rest.server().stop();
+            }
+        });
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
+                .thenCompose(reply -> CompletableFuture.runAsync(() -> {
+                    problems.expect(stopped.get(),
+                            "сервер должен быть остановлен посреди скана, иначе ветка остановки не проверяется");
+                    problems.expect(reply.status() == 500,
+                            "Остановленный мост обязан отвечать 500 на ждущий observe, получен " + reply.status()
+                                    + ": " + reply.body());
+                    problems.expect(reply.json().path("error").path("message").asText().contains("останавливается"),
+                            "Сообщение обязано называть остановку сервера: " + reply.body());
+                    problems.expect(rest.gateway().observeLiveSubscriptions() == 0,
+                            "Остановка моста обязана снять подписку ObserveJobs с тика, осталось "
+                                    + rest.gateway().observeLiveSubscriptions());
+                    long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt);
+                    problems.expect(millis < RestTuning.OBSERVE_TIMEOUT.toMillis(),
+                            "Ответ обязан прийти быстрее OBSERVE_TIMEOUT (" + RestTuning.OBSERVE_TIMEOUT.toMillis()
+                                    + " мс), пришёл через " + millis + " мс");
+                }, minecraft).thenApply(done -> problems.found()));
         RestFixture.await(helper, rest, scenario);
     }
 
