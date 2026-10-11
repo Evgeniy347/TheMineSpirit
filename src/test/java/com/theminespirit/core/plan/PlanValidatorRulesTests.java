@@ -47,7 +47,21 @@ class PlanValidatorRulesTests {
                 Arguments.of("неизвестная проверка условия",
                         "{\"type\":\"condition\",\"check\":\"unknown_check\",\"then\":{\"type\":\"script\",\"script\":\"return_home\"}}"),
                 Arguments.of("count верхняя граница: > 256",
-                        "{\"type\":\"script\",\"script\":\"chop_tree\",\"params\":{\"species\":\"any\",\"count\":257}}")
+                        "{\"type\":\"script\",\"script\":\"chop_tree\",\"params\":{\"species\":\"any\",\"count\":257}}"),
+                Arguments.of("y ниже минимума: < -64",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":0,\"y\":-65,\"z\":0}}"),
+                Arguments.of("y выше максимума: > 319",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":0,\"y\":320,\"z\":0}}"),
+                Arguments.of("x ниже минимума: < -30000000",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":-30000001,\"y\":0,\"z\":0}}"),
+                Arguments.of("x выше максимума: > 30000000",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":30000001,\"y\":0,\"z\":0}}"),
+                Arguments.of("z ниже минимума: < -30000000",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":0,\"y\":0,\"z\":-30000001}}"),
+                Arguments.of("z выше максимума: > 30000000",
+                        "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":0,\"y\":0,\"z\":30000001}}"),
+                Arguments.of("follow radius выше максимума: > 16",
+                        "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"radius\":17}}")
         );
     }
 
