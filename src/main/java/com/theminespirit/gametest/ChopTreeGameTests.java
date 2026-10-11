@@ -444,15 +444,15 @@ public final class ChopTreeGameTests {
     }
 
     private static void buildMoat(GameTestHelper helper, int centerX, int centerZ, int width) {
-        int innerX = centerX - width;
-        int innerZ = centerZ - width;
-        int outerX = centerX + width;
-        int outerZ = centerZ + width;
-        for (int x = innerX; x <= outerX; x++) {
-            for (int z = innerZ; z <= outerZ; z++) {
-                if (x < innerX + 1 || x > outerX - 1 || z < innerZ + 1 || z > outerZ - 1) {
+        for (int x = 0; x < PLATFORM; x++) {
+            for (int z = 0; z < PLATFORM; z++) {
+                int dx = Math.abs(x - centerX);
+                int dz = Math.abs(z - centerZ);
+                int dist = Math.max(dx, dz);
+                if (dist > 0 && dist <= width) {
                     helper.setBlock(x, 0, z, Blocks.AIR);
                     helper.setBlock(x, 1, z, Blocks.AIR);
+                    helper.setBlock(x, 2, z, Blocks.AIR);
                 }
             }
         }
