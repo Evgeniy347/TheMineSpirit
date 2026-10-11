@@ -5,4 +5,8 @@ public interface ScriptInstance {
 
     default void cancel() {
     }
+
+    default String failureReason() {
+        return null;
+    }
 }

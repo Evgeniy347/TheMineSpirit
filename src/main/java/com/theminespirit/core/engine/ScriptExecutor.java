@@ -21,12 +21,16 @@ final class ScriptExecutor extends NodeExecutor {
             if (instance == null) {
                 instance = createInstance();
             }
-            ScriptStatus result = instance.tick();
+            ScriptInstance live = instance;
+            ScriptStatus result = live.tick();
             if (result != ScriptStatus.RUNNING) {
                 instance = null;
             }
-            if (result == ScriptStatus.FAILED && failureReason() == null) {
-                fail("скрипт '" + scriptId + "' завершился с ошибкой");
+            if (result == ScriptStatus.FAILED) {
+                String scriptReason = live.failureReason();
+                fail(scriptReason == null || scriptReason.isBlank()
+                        ? "скрипт '" + scriptId + "' завершился с ошибкой"
+                        : scriptReason);
             }
             return result;
         } catch (UnknownScriptException error) {

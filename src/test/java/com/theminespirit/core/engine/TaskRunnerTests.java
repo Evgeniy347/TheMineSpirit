@@ -267,6 +267,42 @@ class TaskRunnerTests {
     }
 
     @Test
+    void tick_ScriptFailsWithOwnReason_ReportsThatReason() {
+        ScriptFactory factory = params -> new ScriptInstance() {
+            @Override
+            public ScriptStatus tick() {
+                return ScriptStatus.FAILED;
+            }
+
+            @Override
+            public String failureReason() {
+                return "не дошёл до (1, 2, 3) за 40 тиков";
+            }
+        };
+        TaskRunner runner = TaskRunner.start(script("goto"), ScriptRegistry.of(Map.of("goto", factory)),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.FAILED, runner.tick(),
+                "скрипт, назвавший причину провала, обязан провалить узел");
+        assertEquals("не дошёл до (1, 2, 3) за 40 тиков", runner.failureReason().orElse(null),
+                "причина провала обязана быть текстом самого скрипта: общее «завершился с ошибкой» скрывает, "
+                        + "почему goto не дошёл, и игрок не знает, что чинить");
+    }
+
+    @Test
+    void tick_ScriptFailsWithoutReason_ReportsGenericScriptReason() {
+        ScriptFactory factory = params -> () -> ScriptStatus.FAILED;
+        TaskRunner runner = TaskRunner.start(script("goto"), ScriptRegistry.of(Map.of("goto", factory)),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.FAILED, runner.tick(),
+                "скрипт без причины, вернувший FAILED, обязан провалить узел");
+        assertEquals("скрипт 'goto' завершился с ошибкой", runner.failureReason().orElse(null),
+                "скрипт без собственной причины провала обязан дать общий текст с именем скрипта: пустая причина "
+                        + "оставила бы в логе задачу без объяснения");
+    }
+
+    @Test
     void tick_ScriptInstanceThrows_CancelsLiveInstanceExactlyOnce() {
         AtomicInteger cancels = new AtomicInteger();
         ScriptFactory factory = params -> new ScriptInstance() {
