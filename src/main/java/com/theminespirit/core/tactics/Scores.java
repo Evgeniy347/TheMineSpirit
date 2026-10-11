@@ -2,6 +2,7 @@ package com.theminespirit.core.tactics;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public record Scores(Map<Factor, Double> factors, Map<TacticalOption, Map<Factor, Double>> contributions,
@@ -27,9 +28,16 @@ public record Scores(Map<Factor, Double> factors, Map<TacticalOption, Map<Factor
     }
 
     public TacticalOption best(Set<TacticalOption> candidates, ScoreWeights weights) {
+        return best(candidates, weights, Optional.empty());
+    }
+
+    public TacticalOption best(Set<TacticalOption> candidates, ScoreWeights weights, Optional<TacticalOption> sticky) {
         TacticalOption best = null;
         for (TacticalOption option : weights.tieBreak()) {
-            if (candidates.contains(option) && (best == null || total(option) > total(best) + TIE_EPSILON)) {
+            if (!candidates.contains(option)) {
+                continue;
+            }
+            if (best == null || adjusted(option, sticky, weights) > adjusted(best, sticky, weights) + TIE_EPSILON) {
                 best = option;
             }
         }
@@ -37,6 +45,10 @@ public record Scores(Map<Factor, Double> factors, Map<TacticalOption, Map<Factor
             throw new IllegalArgumentException("Нет кандидатов для выбора решения: " + candidates);
         }
         return best;
+    }
+
+    private double adjusted(TacticalOption option, Optional<TacticalOption> sticky, ScoreWeights weights) {
+        return total(option) + (sticky.filter(held -> held == option).isPresent() ? weights.stickiness() : 0);
     }
 
     static Scores of(Map<Factor, Double> values, ScoreWeights weights) {

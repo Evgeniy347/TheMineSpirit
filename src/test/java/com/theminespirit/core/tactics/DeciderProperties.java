@@ -42,14 +42,14 @@ class DeciderProperties {
 
     @Property(tries = 200)
     void decide_DecisiveHardRule_CannotBeOutbidByAnyWeights(@ForAll("situations") Situation situation,
-            @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered) {
+            @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
         Assessment assessment = Assessments.full(situation).withEscapeRoutes(cornered ? 0 : 2);
         FactMap facts = FactMap.from(situation, assessment);
         Scores scores = new Scorer().score(situation, assessment, weights);
         HardRules hardRules = new HardRules(CONFIG.rules().hard(), new RuleCounter());
 
-        Decision decision = new Decider(hardRules, weights).decide(facts, scores, assessment.escapeRoutes());
+        Decision decision = new Decider(hardRules, weights).decide(facts, scores, assessment.escapeRoutes(), Memories.holding(situation, previous, 0), 1);
 
         HardVerdict verdict = hardRules.evaluate(facts);
         verdict.decisive().ifPresent(rule -> assertEquals(rule.decision().get(), decision.option(),

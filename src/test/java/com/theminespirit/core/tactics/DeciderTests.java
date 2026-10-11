@@ -13,7 +13,7 @@ class DeciderTests {
         Assessment assessment = Assessments.full(situation).withEscapeRoutes(routes);
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
-        return decider.decide(FactMap.from(situation, assessment), scores, routes);
+        return decider.decide(FactMap.from(situation, assessment), scores, routes, Memories.fresh(situation), 0);
     }
 
     private static TacticsConfig lavaExcluding(String options) {
