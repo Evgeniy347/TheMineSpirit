@@ -1,0 +1,10 @@
+{
+  "returnTolerance": 2.0,
+  "modes": {
+    "passive": {"initiates": false, "radiusBase": "fixed", "engageRadius": 0, "pursuitRadius": 0, "anchor": "self", "leash": false, "returnToAnchor": false},
+    "defensive": {"initiates": false, "radiusBase": "fixed", "engageRadius": 6, "pursuitRadius": 8, "anchor": "self", "leash": true, "returnToAnchor": false},
+    "protect": {"initiates": true, "radiusBase": "fixed", "engageRadius": 16, "pursuitRadius": 12, "anchor": "protected", "leash": true, "returnToAnchor": true},
+    "guard_area": {"initiates": true, "radiusBase": "zone", "engageRadius": 0, "pursuitRadius": 4, "anchor": "zone", "leash": true, "returnToAnchor": true},
+    "aggressive": {"initiates": true, "radiusBase": "fixed", "engageRadius": 24, "pursuitRadius": 32, "anchor": "self", "leash": true, "returnToAnchor": false}
+  }
+}

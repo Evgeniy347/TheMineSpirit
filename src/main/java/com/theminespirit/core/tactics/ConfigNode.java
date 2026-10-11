@@ -162,6 +162,16 @@ final class ConfigNode {
                 "допустимы " + Arrays.toString(type.getEnumConstants()) + ", опечатка в имени");
     }
 
+    <E extends Enum<E>> E enumValueOf(Class<E> type, String name, String label) {
+        for (E constant : type.getEnumConstants()) {
+            if (constant.name().equalsIgnoreCase(name)) {
+                return constant;
+            }
+        }
+        throw fail("неизвестный " + label + " '" + name + "'",
+                "допустимы " + Arrays.toString(type.getEnumConstants()) + ", опечатка в имени");
+    }
+
     private ConfigNode child(String name) {
         String childPath = path.isEmpty() ? name : path + "." + name;
         return new ConfigNode(file, childPath, node.get(name));
