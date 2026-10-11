@@ -71,6 +71,10 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // C1, SerialGC и потолок памяти: замер (docs/research/test-performance.md) дал wall 72–124 → 37–48 с,
+            // CPU −60 %. -Xmx1536m — запас над замеренным RSS 0,65 ГБ, чтобы OOM не выглядел падением сервера;
+            // ExitOnOutOfMemoryError превращает OOM в понятный выход, а не в зависание.
+            jvmArguments.addAll '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-Xmx1536m', '-XX:+ExitOnOutOfMemoryError'
         }
 
         data {
