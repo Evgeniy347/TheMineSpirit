@@ -16,4 +16,19 @@ final class SequenceExecutor extends StepExecutor {
     TaskNode stepAt(int index) {
         return index < steps.size() ? steps.get(index) : null;
     }
+
+    @Override
+    TaskProgress buildProgress() {
+        return new TaskProgress.SequenceAt(index(), current() == null ? null : current().snapshot());
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.SequenceAt at = (TaskProgress.SequenceAt) progress;
+        index(at.index());
+        if (at.child() != null) {
+            current(spawn(stepAt(at.index())));
+            current().restore(at.child());
+        }
+    }
 }

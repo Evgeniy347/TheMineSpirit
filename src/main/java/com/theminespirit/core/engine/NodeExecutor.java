@@ -15,6 +15,7 @@ abstract class NodeExecutor {
     private Throwable cause;
 
     static NodeExecutor create(TaskNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
+        EngineCounters.executorCreations++;
         return switch (node) {
             case ScriptCall call -> new ScriptExecutor(call, scripts);
             case SequenceNode sequence -> new SequenceExecutor(sequence, scripts, conditions);
@@ -23,6 +24,25 @@ abstract class NodeExecutor {
             case ParallelNode parallel -> new ParallelExecutor(parallel, scripts, conditions);
             case ConditionNode condition -> new ConditionExecutor(condition, scripts, conditions);
         };
+    }
+
+    final TaskProgress snapshot() {
+        EngineCounters.snapshotVisits++;
+        return buildProgress();
+    }
+
+    abstract TaskProgress buildProgress();
+
+    final void restore(TaskProgress progress) {
+        applyRestore(progress);
+    }
+
+    abstract void applyRestore(TaskProgress progress);
+
+    final void forceTerminal(ScriptStatus terminal, String reason) {
+        status = terminal;
+        this.reason = reason;
+        this.cause = null;
     }
 
     final ScriptStatus tick() {

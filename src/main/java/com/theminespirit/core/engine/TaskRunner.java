@@ -5,12 +5,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class TaskRunner {
+    private final TaskNode plan;
     private final NodeExecutor root;
     private RunStatus status = RunStatus.RUNNING;
     private String reason;
     private Throwable cause;
 
-    private TaskRunner(NodeExecutor root) {
+    private TaskRunner(TaskNode plan, NodeExecutor root) {
+        this.plan = plan;
         this.root = root;
     }
 
@@ -18,7 +20,29 @@ public final class TaskRunner {
         Objects.requireNonNull(plan, "plan не может быть null: без дерева задач исполнять нечего");
         Objects.requireNonNull(scripts, "scripts не может быть null: без реестра движок не создаст скрипты");
         Objects.requireNonNull(conditions, "conditions не может быть null: без реестра условие не выберет ветку");
-        return new TaskRunner(NodeExecutor.create(plan, scripts, conditions));
+        return new TaskRunner(plan, NodeExecutor.create(plan, scripts, conditions));
+    }
+
+    public static TaskRunner restore(TaskSnapshot snapshot, ScriptRegistry scripts, ConditionRegistry conditions) {
+        Objects.requireNonNull(snapshot, "snapshot не может быть null: восстанавливать нечего");
+        Objects.requireNonNull(scripts, "scripts не может быть null: без реестра движок не создаст скрипты");
+        Objects.requireNonNull(conditions, "conditions не может быть null: без реестра условие не выберет ветку");
+        TaskRunner runner = new TaskRunner(snapshot.plan(), null);
+        runner.status = snapshot.status();
+        runner.reason = snapshot.reason();
+        if (snapshot.status() == RunStatus.RUNNING) {
+            NodeExecutor restored = NodeExecutor.create(snapshot.plan(), scripts, conditions);
+            restored.restore(snapshot.progress());
+            return new TaskRunner(snapshot.plan(), restored);
+        }
+        return runner;
+    }
+
+    public Optional<TaskSnapshot> snapshot() {
+        if (status != RunStatus.RUNNING) {
+            return Optional.empty();
+        }
+        return Optional.of(new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, reason, plan, root.snapshot()));
     }
 
     public RunStatus tick() {
