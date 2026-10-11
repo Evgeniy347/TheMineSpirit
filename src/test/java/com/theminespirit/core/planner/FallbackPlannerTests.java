@@ -59,18 +59,26 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowGoal_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("следуй за мной", Map.of()));
+        TaskNode plan = plan(new Goal("следуй за мной", Map.of("target", "Steve")));
 
-        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
-                "Цель со словом 'следу' обязана дать follow на игрока: иначе дух не сопровождает игрока "
-                        + "и цель сопровождения не исполняется");
+        assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
+                "Цель со словом 'следу' обязана дать follow на названного игрока: иначе дух не сопровождает "
+                        + "игрока и цель сопровождения не исполняется");
+    }
+
+    @Test
+    void plan_FollowGoalWithoutTarget_ThrowsValidationException() {
+        assertThrows(PlanValidationException.class,
+                () -> plan(new Goal("следуй за мной", Map.of())),
+                "Сопровождение без игрока-источника обязано отклоняться: заглушка 'player' в правилах fallback "
+                        + "указывала на несуществующего игрока и роняла задачу на первом тике");
     }
 
     @Test
     void plan_FollowBehindPhrase_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("держись за мной", Map.of()));
+        TaskNode plan = plan(new Goal("держись за мной", Map.of("target", "Steve")));
 
-        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+        assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
                 "Фраза 'за мной' обязана распознаваться как сопровождение: иначе естественная формулировка "
                         + "остаётся непонятой и дух теряет игрока");
     }
@@ -179,9 +187,9 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowWordGoal_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("иди за мной", Map.of()));
+        TaskNode plan = plan(new Goal("иди за мной", Map.of("target", "Steve")));
 
-        assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
+        assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
                 "Фраза 'за мной' по словам обязана распознаваться как сопровождение: иначе игрок идёт один "
                         + "и дух теряет его");
     }

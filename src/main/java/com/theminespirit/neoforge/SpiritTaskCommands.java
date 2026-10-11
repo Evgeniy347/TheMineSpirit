@@ -26,6 +26,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 
 final class SpiritTaskCommands {
@@ -55,11 +56,12 @@ final class SpiritTaskCommands {
                     "Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
+        Map<String, Object> goalParams = playerTargetParams(source);
         List<String> assigned = new ArrayList<>();
         for (SpiritEntity spirit : spirits) {
             try {
                 TaskNode plan = new FallbackPlanner(SpiritScripts.catalogFor(spirit), ConditionCatalog.empty())
-                        .plan(new Goal(text, Map.of()), emptyObservation(spirit)).plan();
+                        .plan(new Goal(text, goalParams), emptyObservation(spirit)).plan();
                 spirit.startTask(plan);
                 assigned.add(spirit.getStringUUID());
             } catch (UnplannableGoalException | PlanValidationException e) {
@@ -120,6 +122,11 @@ final class SpiritTaskCommands {
         source.sendSuccess(() -> Component.literal("Задача духов отменена: " + String.join(", ", cancelled)
                 + (idle.isEmpty() ? "" : ". Без выполняемой задачи: " + String.join(", ", idle))), true);
         return cancelled.size();
+    }
+
+    private static Map<String, Object> playerTargetParams(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        return player == null ? Map.of() : Map.of("target", player.getName().getString());
     }
 
     private static List<SpiritEntity> filterSpirits(Collection<? extends Entity> selected) {
