@@ -17,11 +17,11 @@ class GotoParamsTests {
     }
 
     @Test
-    void from_LongNumbersWithinIntRange_AreAccepted() {
-        GotoParams params = GotoParams.from(Map.of("x", 10L, "y", 64L, "z", -3L));
-
-        assertEquals(new GotoParams(10, 64, -3), params,
-                "маппинг обязан принимать long в диапазоне int: планировщик присылает числа JSON и не различает int/long");
+    void from_LongNumbers_AreRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> GotoParams.from(Map.of("x", 10L, "y", 64L, "z", -3L)),
+                "маппинг обязан принимать только Integer: валидатор плана приводит тип INT к Integer, "
+                        + "а long означает, что значение не прошло валидатор");
     }
 
     @Test

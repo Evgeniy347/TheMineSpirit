@@ -9,12 +9,11 @@ final class ScriptArgs {
 
     static int requireInt(Map<String, Object> params, String name) {
         Object value = require(params, name);
-        Integer parsed = toInt(value);
-        if (parsed == null) {
+        if (!(value instanceof Integer integer)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть целым числом, а получено "
-                    + describe(value) + ": маппинг обязан отсечь несовместимый тип до мира");
+                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
         }
-        return parsed;
+        return integer;
     }
 
     static int optionalInt(Map<String, Object> params, String name, int fallback) {
@@ -23,19 +22,18 @@ final class ScriptArgs {
         if (value == null) {
             return fallback;
         }
-        Integer parsed = toInt(value);
-        if (parsed == null) {
+        if (!(value instanceof Integer integer)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть целым числом, а получено "
-                    + describe(value) + ": маппинг обязан отсечь несовместимый тип до мира");
+                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
         }
-        return parsed;
+        return integer;
     }
 
     static String requireString(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof String text)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть строкой, а получено "
-                    + describe(value) + ": маппинг обязан отсечь несовместимый тип до мира");
+                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
         }
         return text;
     }
@@ -48,16 +46,6 @@ final class ScriptArgs {
                     "Не задан обязательный параметр '" + name + "': без него скрипт не знает, что делать");
         }
         return value;
-    }
-
-    private static Integer toInt(Object value) {
-        if (value instanceof Integer integer) {
-            return integer;
-        }
-        if (value instanceof Long longValue && longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
-            return longValue.intValue();
-        }
-        return null;
     }
 
     private static String describe(Object value) {

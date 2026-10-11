@@ -1,25 +1,36 @@
 package com.theminespirit.core.script;
 
-import java.util.Set;
+import java.util.Objects;
 
-public record ParamSpec(String name, String type, boolean required) {
-    public static final String TYPE_INT = "int";
-    public static final String TYPE_DOUBLE = "double";
-    public static final String TYPE_STRING = "string";
-    public static final String TYPE_STRING_LIST = "string[]";
-    public static final String TYPE_BOOL = "bool";
-    public static final String TYPE_ENUM = "enum";
-
-    private static final Set<String> TYPES =
-            Set.of(TYPE_INT, TYPE_DOUBLE, TYPE_STRING, TYPE_STRING_LIST, TYPE_BOOL, TYPE_ENUM);
-
+public record ParamSpec(String name, ParamType type, boolean required) {
     public ParamSpec {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Имя параметра пустое: параметр без имени нельзя передать в план");
         }
-        if (type == null || !TYPES.contains(type)) {
-            throw new IllegalArgumentException(
-                    "Неизвестный тип параметра '" + name + "': допустимы " + TYPES + ", а получено " + type);
-        }
+        Objects.requireNonNull(type, "Тип параметра не может быть null: по нему валидатор проверяет значение");
+    }
+
+    public static ParamSpec integer(String name, boolean required) {
+        return new ParamSpec(name, ParamType.INT, required);
+    }
+
+    public static ParamSpec number(String name, boolean required) {
+        return new ParamSpec(name, ParamType.DOUBLE, required);
+    }
+
+    public static ParamSpec text(String name, boolean required) {
+        return new ParamSpec(name, ParamType.STRING, required);
+    }
+
+    public static ParamSpec textList(String name, boolean required) {
+        return new ParamSpec(name, ParamType.STRING_LIST, required);
+    }
+
+    public static ParamSpec bool(String name, boolean required) {
+        return new ParamSpec(name, ParamType.BOOL, required);
+    }
+
+    public static ParamSpec enumeration(String name, boolean required) {
+        return new ParamSpec(name, ParamType.ENUM, required);
     }
 }

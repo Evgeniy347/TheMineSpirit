@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.script.ParamSpec;
+import com.theminespirit.core.script.ParamType;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.ArrayList;
@@ -165,40 +166,37 @@ public final class PlanParser {
 
     private static Object convertParam(JsonNode node, ParamSpec param, String scriptId) {
         return switch (param.type()) {
-            case ParamSpec.TYPE_INT -> {
-                if (!node.isIntegralNumber()) {
-                    throw typeError(param, scriptId, "целое число");
+            case INT -> {
+                if (!node.isIntegralNumber() || !node.canConvertToInt()) {
+                    throw typeError(param, scriptId, "целое число в диапазоне int");
                 }
-                yield node.isInt() ? (Object) node.intValue() : (Object) node.longValue();
+                yield node.intValue();
             }
-            case ParamSpec.TYPE_DOUBLE -> {
+            case DOUBLE -> {
                 if (!node.isNumber()) {
                     throw typeError(param, scriptId, "число");
                 }
                 yield node.doubleValue();
             }
-            case ParamSpec.TYPE_STRING -> {
+            case STRING -> {
                 if (!node.isTextual()) {
                     throw typeError(param, scriptId, "строку");
                 }
                 yield node.textValue();
             }
-            case ParamSpec.TYPE_STRING_LIST -> convertStringList(node, param, scriptId);
-            case ParamSpec.TYPE_BOOL -> {
+            case STRING_LIST -> convertStringList(node, param, scriptId);
+            case BOOL -> {
                 if (!node.isBoolean()) {
                     throw typeError(param, scriptId, "true или false");
                 }
                 yield node.booleanValue();
             }
-            case ParamSpec.TYPE_ENUM -> {
+            case ENUM -> {
                 if (!node.isTextual()) {
                     throw typeError(param, scriptId, "строку с допустимым значением");
                 }
                 yield node.textValue();
             }
-            default -> throw new PlanValidationException("Тип параметра '" + param.name() + "' скрипта '" + scriptId
-                    + "' не поддерживается: допустимы " + List.of(ParamSpec.TYPE_INT, ParamSpec.TYPE_DOUBLE,
-                            ParamSpec.TYPE_STRING, ParamSpec.TYPE_STRING_LIST, ParamSpec.TYPE_BOOL, ParamSpec.TYPE_ENUM));
         };
     }
 

@@ -47,7 +47,7 @@ class ScriptCatalogTests {
 
         assertTrue(count.required(),
                 "count в chop_tree обязателен: рубка без числа деревьев не имеет границы и дух уйдёт рубить лес бесконечно");
-        assertEquals(ParamSpec.TYPE_INT, count.type(),
+        assertEquals(ParamType.INT, count.type(),
                 "count в chop_tree — целое: дробное число деревьев невозможно");
         assertEquals(false, species.required(),
                 "species в chop_tree необязателен: без него рубят любое дерево (default any)");

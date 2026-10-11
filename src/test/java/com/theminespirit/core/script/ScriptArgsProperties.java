@@ -1,19 +1,19 @@
 package com.theminespirit.core.script;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Map;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
 
 class ScriptArgsProperties {
     @Property
-    void gotoParams_IntegerOrLongEncoding_ProducesEqualRecords(@ForAll int x, @ForAll int y, @ForAll int z) {
-        GotoParams byInt = GotoParams.from(Map.of("x", x, "y", y, "z", z));
-        GotoParams byLong = GotoParams.from(Map.of("x", (long) x, "y", (long) y, "z", (long) z));
-
-        assertEquals(byInt, byLong,
-                "маппинг goto обязан давать одинаковый результат для int и long из JSON-плана: иначе одно и то же "
-                        + "наблюдение зависит от того, как планировщик закодировал число, и дух идёт в разные точки");
+    void gotoParams_LongParameter_IsRejected(@ForAll @IntRange(min = 0, max = 100) int x,
+            @ForAll @IntRange(min = 0, max = 100) int y, @ForAll @IntRange(min = 0, max = 100) int z) {
+        assertThrows(IllegalArgumentException.class,
+                () -> GotoParams.from(Map.of("x", (long) x, "y", (long) y, "z", (long) z)),
+                "маппинг goto обязан принимать только Integer: валидатор плана приводит INT к Integer, "
+                        + "а long означает, что значение не прошло валидатор");
     }
 }
