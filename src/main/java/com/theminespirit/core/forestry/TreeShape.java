@@ -22,6 +22,7 @@ public final class TreeShape {
         Set<BlockCoord> logs = new LinkedHashSet<>();
         Set<BlockCoord> examined = new HashSet<>();
         Set<BlockCoord> leaves = new HashSet<>();
+        boolean builtNearby = false;
         Deque<BlockCoord> queue = new ArrayDeque<>();
         logs.add(start);
         examined.add(start);
@@ -40,11 +41,16 @@ public final class TreeShape {
                     queue.add(neighbour);
                 } else if (view.isNaturalLeaves(neighbour)) {
                     leaves.add(neighbour);
+                } else if (view.isArtificial(neighbour)) {
+                    builtNearby = true;
                 }
             }
         }
         if (!hasAllowedExtent(logs)) {
             return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
+        }
+        if (builtNearby) {
+            return new NotATree(NotATree.Reason.BUILT_NEARBY, Set.copyOf(logs));
         }
         if (!hasTrunkBase(logs)) {
             return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));

@@ -240,6 +240,40 @@ class TreeShapeTests {
     }
 
     @Test
+    void detect_HutOnSlopeWithPlanksTouchingBranches_ReturnsBuiltNearby() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                ".#......",
+                ".L......",
+                ".L......",
+                ".L...###",
+                ".LLLLLLL",
+                "@L@..PPP",
+                ".@......");
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(1, 1, 0), grid),
+                "Пол из брёвен на склоне с досками поверх, касающийся ствола, обязан быть отвергнут как "
+                        + "постройка: сруб пола под видом ветвей — нарушение политики «не трогать постройки игрока»");
+        assertEquals(NotATree.Reason.BUILT_NEARBY, rejection.reason(),
+                "Постройку выдают искусственные блоки (доски) вплотную к брёвнам группы, а не почва под ветвью");
+    }
+
+    @Test
+    void detect_PostBesidePlanksUnderNeighborCrown_ReturnsBuiltNearby() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "#.",
+                "LP",
+                "LP",
+                "L@",
+                "@@");
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Угловой столб сруба с досками стены, под кроной соседнего дерева, обязан быть отвергнут: "
+                        + "один столб с листьями вокруг неотличим от ствола, кроме досок рядом");
+        assertEquals(NotATree.Reason.BUILT_NEARBY, rejection.reason(),
+                "Доски вплотную к бревну выдают постройку раньше, чем листья чужой кроны выдают дерево");
+    }
+
+    @Test
     void detect_StartNotALog_Throws() {
         TreeGrid grid = TreeGrid.ofLayers("#", "L", "@@@");
 

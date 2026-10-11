@@ -8,4 +8,6 @@ public interface TreeView {
     boolean isNaturalLeaves(BlockCoord coord);
 
     boolean isSoil(BlockCoord coord);
+
+    boolean isArtificial(BlockCoord coord);
 }

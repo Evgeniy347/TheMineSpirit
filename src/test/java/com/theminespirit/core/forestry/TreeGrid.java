@@ -11,12 +11,14 @@ final class TreeGrid implements TreeView {
     private static final char LOG = 'L';
     private static final char LEAVES = '@';
     private static final char SOIL = '#';
+    private static final char PLANKS = 'P';
 
     private final Map<BlockCoord, Character> cells = new HashMap<>();
     private final Set<BlockCoord> logCoords = new HashSet<>();
     private int logReads;
     private int leavesReads;
     private int soilReads;
+    private int artificialReads;
 
     static TreeGrid ofLayers(String... layers) {
         TreeGrid grid = new TreeGrid();
@@ -47,6 +49,11 @@ final class TreeGrid implements TreeView {
         return this;
     }
 
+    TreeGrid planks(int x, int y, int z) {
+        put(new BlockCoord(x, y, z), PLANKS);
+        return this;
+    }
+
     Set<BlockCoord> logs() {
         return Set.copyOf(logCoords);
     }
@@ -61,6 +68,10 @@ final class TreeGrid implements TreeView {
 
     int soilReads() {
         return soilReads;
+    }
+
+    int artificialReads() {
+        return artificialReads;
     }
 
     @Override
@@ -79,6 +90,12 @@ final class TreeGrid implements TreeView {
     public boolean isSoil(BlockCoord coord) {
         soilReads++;
         return cell(coord) == SOIL;
+    }
+
+    @Override
+    public boolean isArtificial(BlockCoord coord) {
+        artificialReads++;
+        return cell(coord) == PLANKS;
     }
 
     private char cell(BlockCoord coord) {

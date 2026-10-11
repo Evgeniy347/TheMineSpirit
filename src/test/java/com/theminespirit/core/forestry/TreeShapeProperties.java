@@ -50,6 +50,41 @@ class TreeShapeProperties {
                         + "на 128 брёвен разрастается до тысяч чтений за тик");
     }
 
+    @Property(tries = 100)
+    void detect_PlanksTouchingAnyConnectedComponent_ReturnsBuiltNearbyWithWholeComponent(
+            @ForAll @IntRange(min = 1, max = 40) int size, @ForAll long seed) {
+        Random random = new Random(seed);
+        Set<BlockCoord> component = randomComponent(random, size);
+        TreeGrid grid = gridFor(component);
+        List<BlockCoord> members = new ArrayList<>(component);
+        BlockCoord touched = members.get(random.nextInt(members.size()));
+        BlockCoord plank = freeNeighbour(random, touched, component, grid);
+        grid.planks(plank.x(), plank.y(), plank.z());
+        BlockCoord start = members.get(random.nextInt(members.size()));
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(start, grid),
+                "Доска вплотную к любому бревну группы обязана отвергать всю группу как постройку, с какого бы "
+                        + "бревна ни начали разбор: лучше оставить дерево, чем сломать стену игрока");
+        assertEquals(NotATree.Reason.BUILT_NEARBY, rejection.reason(),
+                "Группа с искусственным соседом отвергается по причине BUILT_NEARBY, а не по форме или листьям");
+        assertEquals(Set.copyOf(component), rejection.logs(),
+                "Отвергнутая постройка несёт все свои брёвна: адаптер заносит их в known одним разбором");
+        int neighbours = nonLogNeighbours(component);
+        assertTrue(grid.artificialReads() <= neighbours,
+                "isArtificial читается не больше одного раза на различного соседа-не-бревно: без этого "
+                        + "проверка построек удваивает чтения мира в тике");
+    }
+
+    private static BlockCoord freeNeighbour(Random random, BlockCoord from, Set<BlockCoord> component, TreeGrid grid) {
+        while (true) {
+            BlockCoord candidate = randomNeighbour(random, from);
+            boolean taken = component.contains(candidate) || grid.isSoil(candidate) || grid.isNaturalLeaves(candidate);
+            if (!taken) {
+                return candidate;
+            }
+        }
+    }
+
     private static Set<BlockCoord> randomComponent(Random random, int size) {
         Set<BlockCoord> component = new LinkedHashSet<>();
         List<BlockCoord> members = new ArrayList<>();

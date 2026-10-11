@@ -15,6 +15,7 @@ public record NotATree(Reason reason, Set<BlockCoord> logs) implements TreeDetec
         NO_LEAVES,
         NO_SOIL,
         TOO_BIG,
-        NOT_A_TRUNK
+        NOT_A_TRUNK,
+        BUILT_NEARBY
     }
 }

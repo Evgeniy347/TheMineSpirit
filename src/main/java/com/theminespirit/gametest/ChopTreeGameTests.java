@@ -16,12 +16,14 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -31,12 +33,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -362,6 +368,95 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 500)
+    public static void chopTree_LogPostsWithPlankWallsUnderCrown_UntouchedAndRealOakChopped(GameTestHelper helper) {
+        prepareField(helper);
+        buildPlankHutOnLedge(helper, 3, 3);
+        buildOakTree(helper, 8, 8, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "хижина с досками обязана остаться, а настоящий дуб за ней срубиться. Статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int postLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(postLogs == HUT_POST_LOGS,
+                    "все " + HUT_POST_LOGS + " брёвна угловых столбов хижины обязаны остаться: столб с листьями "
+                            + "неотличим от ствола, кроме досок стены вплотную. Осталось " + postLogs);
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 2, 3)).is(BlockTags.DOORS)
+                            && helper.getBlockState(new BlockPos(4, 3, 5)).is(Blocks.GLASS)
+                            && helper.getBlockState(new BlockPos(4, 2, 4)).is(Blocks.TORCH),
+                    "дверь, стекло и факел хижины обязаны остаться на месте");
+            int oakInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(oakInInventory == 5,
+                    "настоящий дуб срублен целиком: 5 брёвен в инвентаре, фактически " + oakInInventory);
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
+    public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
+        prepareField(helper);
+        Map<BlockState, Boolean> table = new LinkedHashMap<>();
+        for (Block built : List.of(Blocks.OAK_PLANKS, Blocks.OAK_DOOR, Blocks.GLASS, Blocks.GLASS_PANE, Blocks.TORCH,
+                Blocks.WALL_TORCH, Blocks.OAK_STAIRS, Blocks.OAK_SLAB, Blocks.OAK_FENCE, Blocks.OAK_FENCE_GATE,
+                Blocks.OAK_TRAPDOOR, Blocks.LADDER, Blocks.STRIPPED_OAK_LOG, Blocks.OAK_WOOD, Blocks.OAK_SIGN,
+                Blocks.WHITE_BED, Blocks.CHEST, Blocks.CRAFTING_TABLE, Blocks.COBBLESTONE_WALL, Blocks.WHITE_WOOL,
+                Blocks.LANTERN, Blocks.BOOKSHELF)) {
+            table.put(built.defaultBlockState(), true);
+        }
+        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true), true);
+        for (Block natural : List.of(Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.GRAVEL,
+                Blocks.WATER, Blocks.SHORT_GRASS, Blocks.FERN, Blocks.VINE, Blocks.DANDELION, Blocks.SNOW,
+                Blocks.BROWN_MUSHROOM, Blocks.BEE_NEST, Blocks.BIRCH_LOG, Blocks.OAK_LOG, Blocks.MANGROVE_ROOTS,
+                Blocks.COCOA)) {
+            table.put(natural.defaultBlockState(), false);
+        }
+        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false), false);
+
+        LevelTreeView view = new LevelTreeView(helper.getLevel(), Set.of(Blocks.OAK_LOG));
+        int index = 0;
+        for (Map.Entry<BlockState, Boolean> entry : table.entrySet()) {
+            BlockPos cell = new BlockPos(index % PLATFORM, 1, index / PLATFORM);
+            helper.getLevel().setBlock(helper.absolutePos(cell), entry.getKey(), Block.UPDATE_CLIENTS);
+            BlockPos absolute = helper.absolutePos(cell);
+            BlockCoord coord = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+            helper.assertTrue(view.isArtificial(coord) == entry.getValue(),
+                    "блок " + entry.getKey() + (entry.getValue() ? " — постройка" : " — естественный")
+                            + ": LevelTreeView.isArtificial вернул " + view.isArtificial(coord)
+                            + ". Таблица решает, что дух не тронет; ошибка в сторону «естественный» ломает стены игрока, "
+                            + "в сторону «постройка» оставляет настоящие деревья стоять");
+            int answers = (view.isLog(coord) ? 1 : 0) + (view.isNaturalLeaves(coord) ? 1 : 0)
+                    + (view.isSoil(coord) ? 1 : 0) + (view.isArtificial(coord) ? 1 : 0);
+            helper.assertTrue(answers <= 1,
+                    "блок " + entry.getKey() + " не может быть двумя видами сразу, ответов " + answers);
+            index++;
+        }
+        helper.assertTrue(view.isLog(coordOf(helper, table, Blocks.OAK_LOG)),
+                "дубовое бревно при запрошенной породе oak — бревно");
+        helper.assertTrue(!view.isLog(coordOf(helper, table, Blocks.BIRCH_LOG)),
+                "берёзовое бревно при запрошенной породе oak не бревно рубки, но и не постройка");
+        clearField(helper);
+        helper.succeed();
+    }
+
+    private static BlockCoord coordOf(GameTestHelper helper, Map<BlockState, Boolean> table, Block block) {
+        int index = 0;
+        for (BlockState state : table.keySet()) {
+            if (state.is(block)) {
+                BlockPos absolute = helper.absolutePos(new BlockPos(index % PLATFORM, 1, index / PLATFORM));
+                return new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+            }
+            index++;
+        }
+        throw new IllegalStateException("блока " + block + " нет в таблице теста");
+    }
+
     private static SpiritEntity spawnChopper(GameTestHelper helper) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
@@ -452,6 +547,47 @@ public final class ChopTreeGameTests {
         helper.setBlock(x - 1, top + 1, z - 1, leavesState);
     }
 
+    private static final int HUT_POST_LOGS = 12;
+
+    private static void buildPlankHutOnLedge(GameTestHelper helper, int x, int z) {
+        for (int dx = 0; dx < 3; dx++) {
+            for (int dz = 0; dz < 3; dz++) {
+                helper.setBlock(x + dx, 1, z + dz, Blocks.DIRT);
+            }
+        }
+        for (int y = 2; y <= 4; y++) {
+            for (int dx = 0; dx <= 2; dx += 2) {
+                for (int dz = 0; dz <= 2; dz += 2) {
+                    helper.setBlock(x + dx, y, z + dz, Blocks.OAK_LOG);
+                }
+            }
+        }
+        for (int y = 2; y <= 3; y++) {
+            helper.setBlock(x + 1, y, z, Blocks.OAK_PLANKS);
+            helper.setBlock(x, y, z + 1, Blocks.OAK_PLANKS);
+            helper.setBlock(x + 2, y, z + 1, Blocks.OAK_PLANKS);
+        }
+        helper.setBlock(x + 1, 2, z + 2, Blocks.OAK_PLANKS);
+        helper.setBlock(x + 1, 3, z + 2, Blocks.GLASS);
+        helper.setBlock(x + 1, 2, z, Blocks.OAK_DOOR);
+        helper.setBlock(x + 1, 3, z, Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        helper.setBlock(x + 1, 2, z + 1, Blocks.TORCH);
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 2; dz++) {
+                helper.setBlock(x + dx, 5, z + dz, Blocks.OAK_PLANKS);
+            }
+        }
+        var leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        for (int dx = -1; dx <= 3; dx++) {
+            for (int dz = -1; dz <= 3; dz++) {
+                boolean ring = dx == -1 || dx == 3 || dz == -1 || dz == 3;
+                if (ring) {
+                    helper.setBlock(x + dx, 4, z + dz, leaves);
+                }
+            }
+        }
+    }
+
     private static void buildLogHut(GameTestHelper helper, int x, int z, int size) {
         for (int dx = 0; dx < size; dx++) {
             for (int dz = 0; dz < size; dz++) {
@@ -516,36 +652,6 @@ public final class ChopTreeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_hut_on_slope", timeoutTicks = 300)
-    public static void chopTree_HutOnSlopeWithArtificialBlocks_Protected(GameTestHelper helper) {
-        prepareField(helper);
-        buildOakTreeOnSlope(helper, 3, 3, 5);
-        buildHutOnSlopeWithArtificialBlocks(helper, 8, 3, 3);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
-        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
-
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("chop_tree", Map.of("species", "oak", "count", 1, "radius", 16, "replant", false)),
-                SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "дуб на склоне с веткой над травой обязан срубиться, причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-
-            int hutLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(hutLogs >= 27,
-                    "хижина на склоне с досками/стеклом/дверью/факелами не срублена, брёвен осталось " + hutLogs);
-
-            int oakLogs = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            helper.assertTrue(oakLogs == 5,
-                    "дуб срублен, 5 брёвен в инвентаре, фактически " + oakLogs);
-
-            clearField(helper);
-        });
-    }
-
     @GameTest(template = "empty", batch = "chop_tree_unrealized_goal", timeoutTicks = 100)
     public static void spiritGoal_UnrealizedGoal_RejectedWithReason(GameTestHelper helper) throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -574,31 +680,6 @@ public final class ChopTreeGameTests {
             helper.setBlock(x, y, z, Blocks.OAK_LOG);
         }
         addLeavesCrown(helper, x, z, height, Blocks.OAK_LEAVES);
-    }
-
-    private static void buildOakTreeOnSlope(GameTestHelper helper, int x, int z, int height) {
-        for (int y = 1; y <= height; y++) {
-            helper.setBlock(x, y, z, Blocks.OAK_LOG);
-        }
-        addLeavesCrown(helper, x, z, height, Blocks.OAK_LEAVES);
-        helper.setBlock(x + 1, height, z, Blocks.GRASS_BLOCK);
-    }
-
-    private static void buildHutOnSlopeWithArtificialBlocks(GameTestHelper helper, int x, int z, int size) {
-        for (int dx = 0; dx < size; dx++) {
-            for (int dz = 0; dz < size; dz++) {
-                for (int y = 1; y <= size; y++) {
-                    helper.setBlock(x + dx, y, z + dz, Blocks.OAK_LOG);
-                }
-            }
-        }
-        helper.setBlock(x, size + 1, z, Blocks.OAK_PLANKS);
-        helper.setBlock(x + 1, size + 1, z, Blocks.GLASS);
-        helper.setBlock(x + 2, size + 1, z, Blocks.OAK_DOOR);
-        helper.setBlock(x, size + 1, z + 1, Blocks.OAK_TRAPDOOR);
-        helper.setBlock(x + 1, size + 1, z + 1, Blocks.TORCH);
-        helper.setBlock(x + 2, size + 1, z + 1, Blocks.OAK_STAIRS);
-        helper.setBlock(x, size + 1, z + 2, Blocks.OAK_FENCE);
     }
 
     private static final String SPIRIT_SELECTOR = spiritSelector(1);
