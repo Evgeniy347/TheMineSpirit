@@ -9,7 +9,6 @@ import net.jqwik.api.constraints.IntRange;
 import org.junit.jupiter.api.Tag;
 
 class ScriptArgsProperties {
-    @Tag("slow")
     @Property
     void gotoParams_LongParameter_IsRejected(@ForAll @IntRange(min = 0, max = 100) int x,
             @ForAll @IntRange(min = 0, max = 100) int y, @ForAll @IntRange(min = 0, max = 100) int z) {

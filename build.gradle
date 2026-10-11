@@ -222,6 +222,8 @@ tasks.named('test', Test) {
     }
     maxParallelForks = testForks
     systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'jqwik.database', ".jqwik-database-fork-\${System.getProperty('org.gradle.test.worker')}"
+    failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
 }
@@ -235,8 +237,10 @@ tasks.register('slowTest', Test) {
     useJUnitPlatform {
         includeTags 'slow'
     }
-    maxParallelForks = testForks
+    maxParallelForks = 1
     systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'jqwik.database', ".jqwik-database-slow"
+    failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/slow/html')
     reports.junitXml.outputLocation = file('TestResults/slow/xml')
     shouldRunAfter tasks.named('test')

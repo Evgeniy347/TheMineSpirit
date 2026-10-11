@@ -17,7 +17,6 @@ class PlanParserProperties {
     private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog();
     private static final int MAX_ALLOWED_DEPTH = 15;
 
-    @Tag("slow")
     @Property
     void parse_WaitScriptWithAnyTicks_ReturnsSameTicks(@ForAll @IntRange(min = 1, max = 6000) int ticks) {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
@@ -29,7 +28,6 @@ class PlanParserProperties {
                         + "что задал планировщик");
     }
 
-    @Tag("slow")
     @Property
     void parse_SequenceWithinDepthLimit_Succeeds(
             @ForAll @IntRange(min = 1, max = MAX_ALLOWED_DEPTH) int depth) {
@@ -39,7 +37,6 @@ class PlanParserProperties {
                 "план глубиной до лимита обязан разбираться: иначе валидатор режет допустимые вложенные планы");
     }
 
-    @Tag("slow")
     @Property
     void parse_SequenceOverDepthLimit_IsRejected(@ForAll @IntRange(min = 17, max = 40) int depth) {
         assertThrows(
@@ -48,7 +45,6 @@ class PlanParserProperties {
                 "план глубиной больше 16 обязан отвергаться: рекурсивный план переполнит стек и уронит серверный тик");
     }
 
-    @Tag("slow")
     @Property
     void parse_AnyJsonString_ThrowsOnlyPlanValidationException(@ForAll String json) {
         try {

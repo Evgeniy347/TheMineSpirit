@@ -92,7 +92,6 @@ class PlanValidatorRulesTests {
     }
 
     @Property
-    @Tag("slow")
     void waitScript_TicksOutsideRange_IsRejected(@ForAll int ticks) {
         if (ticks >= 1 && ticks <= 6000) {
             String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
@@ -105,7 +104,6 @@ class PlanValidatorRulesTests {
     }
 
     @Property
-    @Tag("slow")
     void parse_AnyString_SameInputSameOutputOrException(@ForAll String json) {
         try {
             TaskNode first = PlanParser.parse(json, CATALOG);

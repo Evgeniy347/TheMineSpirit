@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Tag;
 class ResourceResolverProperties {
     private static final int MAX_ITEMS = 12;
 
-    @Tag("slow")
     @Property
     void resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal(
             @ForAll @Size(max = MAX_ITEMS) List<Integer> decisions,

@@ -9,13 +9,11 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Size;
-import org.junit.jupiter.api.Tag;
 
 class WorldObservationProperties {
     private static final BlockCoord ORIGIN = new BlockCoord(0, 64, 0);
     private static final int MAX_COUNT = 64;
 
-    @Tag("slow")
     @Property
     void hash_AllListsOrderChanged_StaysEqual(@ForAll @Size(max = 16) List<Integer> raw) {
         WorldObservation original = randomObservation(raw, 32, 1L);
@@ -27,7 +25,6 @@ class WorldObservationProperties {
                         + "сущностей и контейнеров, и кэш решений ИИ промахивается");
     }
 
-    @Tag("slow")
     @Property
     void json_RoundTrip_EqualsOriginal(@ForAll @Size(max = 8) List<Integer> raw,
             @ForAll int radius, @ForAll long tick) {
@@ -41,7 +38,6 @@ class WorldObservationProperties {
                         + "и план будет строиться по искажённым данным");
     }
 
-    @Tag("slow")
     @Property
     void hash_SameDataAnyPermutation_StaysEqual(@ForAll @Size(max = 12) List<Integer> raw,
             @ForAll @IntRange(min = 0, max = 10) int rotation) {
