@@ -266,6 +266,14 @@ class ScenarioRun:
         if sum(self.clock.sleeps) < expected:
             self.fail(when, f"клиент ждал {sum(self.clock.sleeps)} с, ожидалось не меньше {expected} (Retry-After)")
 
+    def check_halted(self, expected, when):
+        if bool(self.strategist.halted) != expected:
+            self.fail(when, f"остановка агента: {self.strategist.halted!r}, ожидалось {expected}")
+
+    def check_pause_exists(self, expected, when):
+        if self.config.pause_path.exists() != expected:
+            self.fail(when, f"файл PAUSE существует={self.config.pause_path.exists()}, ожидалось {expected}")
+
     def check_posted_scripts_allowed(self, expected, when):
         allowed = set(json.loads(self.config.policy_path.read_text(encoding="utf-8"))["allowed_scripts"])
         for request in self.task_posts():

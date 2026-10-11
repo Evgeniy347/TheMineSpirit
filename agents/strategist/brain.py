@@ -65,6 +65,10 @@ class BrainError(Exception):
     pass
 
 
+class SandboxBreach(BrainError):
+    pass
+
+
 def _write_if_changed(path: Path, content: str) -> None:
     if path.exists() and path.read_text(encoding="utf-8") == content:
         return
@@ -276,7 +280,7 @@ class OpencodeBrain:
                 if state.get("status") != "error":
                     executed.append(str(part.get("tool")))
         if executed:
-            raise BrainError(f"Нарушение песочницы: инструмент {', '.join(executed)} выполнился без отказа; "
+            raise SandboxBreach(f"Нарушение песочницы: инструмент {', '.join(executed)} выполнился без отказа; "
                              "проверьте sandbox/opencode.json и запуск без флага автоодобрения")
         if code != 0 and not text:
             raise BrainError(f"opencode завершился кодом {code} без ответа: {_tail(stderr) or _tail(stdout) or 'вывода нет'}")

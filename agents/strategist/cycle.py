@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from brain import BrainError, BrainUnavailable
+from brain import BrainError, BrainUnavailable, SandboxBreach
 from guard import ProviderHealth, fingerprint, request_id
 from parse import ReplyError, parse_reply
 from plan_check import Catalog, CatalogError, PlanError, PlanLimits, Policy, check_plan
@@ -58,6 +58,7 @@ class CycleRunner:
         self.plan_route_missing = False
         self.provider_down = False
         self._tasks_route_alerted = False
+        self.halted: str | None = None
 
     @property
     def effective_mode(self) -> str:
@@ -65,6 +66,8 @@ class CycleRunner:
 
     def run(self) -> CycleSummary:
         rt = self.rt
+        if self.halted:
+            return CycleSummary(rt.state["cycle"])
         rt.state["cycle"] += 1
         cycle = rt.state["cycle"]
         summary = CycleSummary(cycle)
@@ -116,11 +119,23 @@ class CycleRunner:
             self.provider.failure()
             self.rt.log("brain_failure", cycle=cycle, kind=error.kind, reason=error.text, probe=True)
             return False
+        except SandboxBreach as error:
+            self._halt(cycle, None, error)
+            return False
         except BrainError as error:
             self.rt.log("brain_failure", cycle=cycle, kind="error", reason=str(error), probe=True)
             return False
         self.provider.success()
         return True
+
+    def _halt(self, cycle: int, bot_id: str | None, error: SandboxBreach) -> None:
+        rt = self.rt
+        reason = f"{error}; агент остановлен и поставлен на паузу (создан {rt.config.pause_path}), разберите журнал и песочницу"
+        rt.alert(reason, code="sandbox_breach", cycle=cycle, bot=bot_id)
+        rt.config.pause_path.parent.mkdir(parents=True, exist_ok=True)
+        rt.config.pause_path.write_text(f"sandbox_breach: {error}\n", encoding="utf-8")
+        self.halted = reason
+        self.stop_requested = True
 
     def _provider_failed(self, cycle: int, bot_id: str, error: BrainUnavailable, summary: CycleSummary) -> None:
         if not self.provider_down:
@@ -178,6 +193,10 @@ class CycleRunner:
             except BrainUnavailable as error:
                 rt.guard.record_brain_call(rt.clock.now(), bot_id)
                 self._provider_failed(cycle, bot_id, error, summary)
+                return None
+            except SandboxBreach as error:
+                rt.guard.record_brain_call(rt.clock.now(), bot_id)
+                self._halt(cycle, bot_id, error)
                 return None
             except BrainError as error:
                 rt.guard.record_brain_call(rt.clock.now(), bot_id)

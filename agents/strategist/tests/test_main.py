@@ -74,6 +74,18 @@ class MainTests(unittest.TestCase):
         code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], **env)
         self.assertEqual(0, code, f"безопасные права — запуск возможен; stderr: {err}")
 
+    def test_executedTool_HaltsWithAlertPauseFileAndExitFive(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake), "FAKE_STATE": str(self.dir / "fake.state"),
+               "FAKE_TOOL": "executed"}
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], **env)
+        self.assertEqual(5, code, "выполненный инструмент в песочнице — остановка агента")
+        self.assertIn("нарушения песочницы", err)
+        self.assertTrue((self.home / "PAUSE").exists(), "PAUSE создан: перезапуск не начнёт ставить задачи сам")
+        alerts = [e for e in self.events() if e["event"] == "alert"]
+        self.assertEqual(["sandbox_breach"], [e.get("code") for e in alerts])
+        self.assertEqual(1, len([e for e in self.events() if e["event"] == "observed"]), "остальные духи не обрабатывались")
+
     def test_secondInstance_RefusedByLock(self):
         lock = strategist.acquire_lock(self.home)
         self.assertIsNotNone(lock)

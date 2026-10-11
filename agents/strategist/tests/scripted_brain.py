@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from brain import BrainError, BrainReply, BrainUnavailable
+from brain import BrainError, BrainReply, BrainUnavailable, SandboxBreach
 
 
 class ScriptedBrain:
@@ -29,6 +29,8 @@ class ScriptedBrain:
     def _result(self, entry: dict) -> BrainReply:
         if "unavailable" in entry:
             raise BrainUnavailable(entry["unavailable"], entry.get("text", f"{self.model}: недоступна"))
+        if "breach" in entry:
+            raise SandboxBreach(f"Нарушение песочницы: инструмент {entry['breach']} выполнился без отказа")
         if "error" in entry:
             raise BrainError(entry["error"])
         if "json" in entry:

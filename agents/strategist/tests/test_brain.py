@@ -11,8 +11,8 @@ from unittest import mock
 
 import brain as brain_module
 import config
-from brain import (BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, agent_violations, ensure_sandbox,
-                   verify_sandbox)
+from brain import (BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, SandboxBreach, agent_violations,
+                   ensure_sandbox, verify_sandbox)
 
 APP = Path(__file__).resolve().parent.parent
 FAKE = APP / "tests" / "fake_opencode.sh"
@@ -155,7 +155,7 @@ class OpencodeBrainTests(BrainTestCase):
         self.assertIn("bash", str(ctx.exception), "в ошибке названа попытка вызвать инструмент")
 
     def test_complete_ExecutedToolCall_RaisesBrainErrorAsSandboxBreach(self):
-        with self.assertRaises(BrainError) as ctx:
+        with self.assertRaises(SandboxBreach) as ctx:
             self.brain(FAKE_TOOL="executed").complete("с", "п")
         self.assertIn("песочниц", str(ctx.exception), "выполненный инструмент — нарушение песочницы, а не обычный ответ")
 

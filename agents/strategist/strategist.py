@@ -30,6 +30,7 @@ from tracker import Tracker
 EXIT_BAD_CONFIG = 2
 EXIT_LOCKED = 3
 EXIT_BROKEN = 4
+EXIT_BREACH = 5
 
 
 class Strategist:
@@ -65,6 +66,10 @@ class Strategist:
     def next_interval(self) -> float:
         return self.cycles.provider.interval()
 
+    @property
+    def halted(self) -> str | None:
+        return self.cycles.halted
+
     def stop(self) -> None:
         self.stopping = True
         self.cycles.stop_requested = True
@@ -85,6 +90,8 @@ class Strategist:
         clock = self.rt.clock
         while not self.stopping:
             self.run_cycle()
+            if self.halted:
+                break
             deadline = clock.now() + self.next_interval()
             while not self.stopping and clock.now() < deadline:
                 self.poll_tasks()
@@ -190,6 +197,13 @@ def _age(event: dict, now: float) -> float:
         return float("inf")
 
 
+def breach_exit(strategist: Strategist) -> int:
+    if not strategist.halted:
+        return 0
+    print(f"Стратег остановлен из-за нарушения песочницы: {strategist.halted}", file=sys.stderr, flush=True)
+    return EXIT_BREACH
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="strategist.py", description=__doc__.splitlines()[0])
     parser.add_argument("command", choices=["once", "run", "status", "probe", "smoke"])
@@ -238,12 +252,14 @@ def main(argv: list[str] | None = None) -> int:
         strategist = build(config, brain, out=lambda text: print(f"[{datetime.now().strftime('%H:%M:%S')}] {text}", flush=True))
         if args.command == "once":
             strategist.once()
-            return 0
+            return breach_exit(strategist)
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda *_: strategist.stop())
         print(f"Стратег запущен: режим {strategist.effective_mode}, модель {config.model}, интервал {config.interval} с, "
               f"домашний каталог {config.home}", flush=True)
         strategist.run_forever()
+        if strategist.halted:
+            return breach_exit(strategist)
         print("Стратег остановлен корректно: поставленные задачи не отменялись.", flush=True)
         return 0
     except (PromptError, ApiError, NetworkError, BrainError, BrainUnavailable, ValueError, OSError) as error:
