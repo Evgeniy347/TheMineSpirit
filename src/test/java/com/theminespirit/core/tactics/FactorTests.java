@@ -67,7 +67,7 @@ class FactorTests {
                                 Factor.PROXIMITY, 1 - 3.5 / 12)),
                 row("приказ защищать, подопечного бьют, поводок на исходе",
                         SituationBuilder.create().mode(CombatMode.PROTECT).ward(2, 2, true).enemy("zombie", 4).build(),
-                        0, 1.0, values(Factor.PROTECT_URGENCY, 1, Factor.LEASH_PRESSURE, 0.75)),
+                        0, 1.0, values(Factor.PROTECT_URGENCY, 1, Factor.LEASH_PRESSURE, 0.5)),
                 row("поводок превышен", SituationBuilder.create().enemy("zombie", 4).build(), 0, -3.0,
                         values(Factor.LEASH_PRESSURE, 1)),
                 row("далеко от ночи в тёмной пещере без врагов", SituationBuilder.create().light(0).build(), 0,

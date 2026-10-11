@@ -5,7 +5,7 @@ final class Scales {
             + " \"winMarginDivisor\": 3, \"lowHpFloor\": 0.6, \"pressureHorizon\": 10, \"proximityRange\": 12,"
             + " \"rangedRange\": 24, \"rangedFull\": 3, \"explosiveRange\": 7, \"allyFull\": 3, \"routesFull\": 3, \"lavaRange\": 6,"
             + " \"dropSafe\": 3, \"dropRange\": 9, \"nightFloor\": 0.4, \"hungerThreshold\": 0.5, \"healFull\": 3,"
-            + " \"leashMargin\": 4, \"speedRatioCap\": 10}";
+            + " \"leashMargin\": 2, \"speedRatioCap\": 10}";
     private static final FactorScales DEFAULTS = FactorScalesParser.parse(ConfigNode.root("weights.json", JSON));
 
     private Scales() {
