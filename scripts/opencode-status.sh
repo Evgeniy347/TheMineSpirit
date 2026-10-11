@@ -27,8 +27,9 @@ for line in open(path, encoding="utf-8", errors="replace"):
         tool = part.get("tool", "?")
         data = (part.get("state") or {}).get("input") or {}
         target = data.get("command") or data.get("filePath") or data.get("pattern") or data.get("description") or ""
-        steps.append(f"{tool}: {str(target).splitlines()[0][:110] if target else ''}")
-    elif event.get("type") == "text" and part.get("text"):
+        lines = str(target).strip().splitlines()
+        steps.append(f"{tool}: {lines[0][:110] if lines else ''}")
+    elif event.get("type") == "text" and (part.get("text") or "").strip():
         steps.append("ответ: " + part["text"].strip().splitlines()[0][:110])
     elif event.get("type") == "error":
         steps.append("ОШИБКА: " + json.dumps(event.get("error"), ensure_ascii=False)[:110])
