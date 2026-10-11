@@ -46,29 +46,36 @@ public final class ChunkLoadingGameTests {
                     "Дальний угол квадрата обязан тикать, как у игрока: иначе дух не выполняет задачу вдали от игрока");
 
             spirit.teleportTo(spirit.getX() + 16.0, spirit.getY(), spirit.getZ());
-            helper.runAfterDelay(20, () -> {
-                ChunkPos moved = spirit.chunkPosition();
-                helper.assertTrue(moved.x == center.x + 1 && moved.z == center.z,
-                        "Дух обязан оказаться в соседнем по X чанке: был (" + center.x + ", " + center.z
-                                + "), стал (" + moved.x + ", " + moved.z + ")");
-                Set<ChunkCoord> expectedMoved = ChunkSquare.chunks(new ChunkCoord(moved.x, moved.z), radius);
-                helper.assertTrue(spirit.trackedChunks().equals(expectedMoved),
-                        "После перехода в соседний чанк набор обязан сдвинуться на один ряд: ожидалось "
-                                + expectedMoved.size() + " чанков вокруг (" + moved.x + ", " + moved.z
-                                + "), удержано " + spirit.trackedChunks().size());
-
-                helper.succeedWhen(() -> {
-                    long ticketsBeforeDiscard = ticketCount(level);
-                    spirit.discard();
-                    long ticketsAfterDiscard = ticketCount(level);
-                    helper.assertTrue(spirit.trackedChunks().isEmpty(),
-                            "После discard дух обязан перестать держать чанки: осталось " + spirit.trackedChunks().size());
-                    helper.assertTrue(ticketsBeforeDiscard - ticketsAfterDiscard == squareSize(radius),
-                            "После discard обязаны сняться ровно все билеты духа: ожидалось " + squareSize(radius)
-                                    + ", снялось " + (ticketsBeforeDiscard - ticketsAfterDiscard)
-                                    + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
-                });
-            });
+            helper.startSequence()
+                    .thenWaitUntil(() -> {
+                        ChunkPos moved = spirit.chunkPosition();
+                        helper.assertTrue(moved.x == center.x + 1 && moved.z == center.z,
+                                "Дух обязан оказаться в соседнем по X чанке: был (" + center.x + ", " + center.z
+                                        + "), стал (" + moved.x + ", " + moved.z + ")");
+                        Set<ChunkCoord> expectedMoved = ChunkSquare.chunks(new ChunkCoord(moved.x, moved.z), radius);
+                        helper.assertTrue(spirit.trackedChunks().equals(expectedMoved),
+                                "После перехода в соседний чанк набор обязан сдвинуться на один ряд: ожидалось "
+                                        + expectedMoved.size() + " чанков вокруг (" + moved.x + ", " + moved.z
+                                        + "), удержано " + spirit.trackedChunks().size()
+                                        + ". Сдвиг делает SpiritChunkLoader в тик духа, а после телепорта движок "
+                                        + "переводит духа в секцию чанка назначения: пока её статус не TICKING, "
+                                        + "дух не тикает (tickCount замирает) и набор стоит. Ждём тик духа "
+                                        + "succeedWhen, а не фиксированные 20 тиков");
+                    })
+                    .thenExecute(() -> {
+                        long ticketsBeforeDiscard = ticketCount(level);
+                        spirit.discard();
+                        long ticketsAfterDiscard = ticketCount(level);
+                        helper.assertTrue(spirit.trackedChunks().isEmpty(),
+                                "После discard дух обязан перестать держать чанки: осталось "
+                                        + spirit.trackedChunks().size());
+                        helper.assertTrue(ticketsBeforeDiscard - ticketsAfterDiscard == squareSize(radius),
+                                "После discard обязаны сняться ровно все билеты духа: ожидалось "
+                                        + squareSize(radius) + ", снялось "
+                                        + (ticketsBeforeDiscard - ticketsAfterDiscard)
+                                        + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
+                    })
+                    .thenSucceed();
         });
     }
 
