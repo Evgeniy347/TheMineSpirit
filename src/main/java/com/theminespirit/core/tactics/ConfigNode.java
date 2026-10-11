@@ -168,9 +168,16 @@ final class ConfigNode {
         try {
             return constructor.get();
         } catch (InvalidFieldException e) {
-            String json = fieldPrefix.isEmpty() ? e.fieldName()
-                    : fieldPrefix + Character.toUpperCase(e.fieldName().charAt(0)) + e.fieldName().substring(1);
-            ConfigNode target = has(json) ? child(json) : this;
+            ConfigNode target = this;
+            for (int index = 0; index < e.path().size(); index++) {
+                String segment = e.path().get(index);
+                String json = index == 0 && !fieldPrefix.isEmpty()
+                        ? fieldPrefix + Character.toUpperCase(segment.charAt(0)) + segment.substring(1) : segment;
+                if (!target.has(json)) {
+                    break;
+                }
+                target = target.child(json);
+            }
             throw target.fail(e.getMessage(), "значение в границах " + e.owner() + " (их задаёт конструктор, не этот файл)");
         }
     }

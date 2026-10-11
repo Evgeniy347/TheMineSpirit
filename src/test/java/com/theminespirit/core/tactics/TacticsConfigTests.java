@@ -171,6 +171,16 @@ class TacticsConfigTests {
                         + "weights.json → scales.armorCap; получили: " + error.getMessage());
     }
 
+    @Test
+    void scoreWeights_WeightAboveLimit_RejectedByConstructorWithCellName() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> TacticsSensitivityTests.shifted(Factor.WIN_MARGIN, TacticalOption.FIGHT, 10),
+                "Вес 22 выше границы матрицы: границы весов держит конструктор ScoreWeights, а не парсер");
+
+        assertTrue(error.getMessage().contains("ScoreWeights.weights.WIN_MARGIN.FIGHT"),
+                "Сообщение называет ячейку матрицы, чтобы правка шла по подсказке; получили: " + error.getMessage());
+    }
+
     private static Arguments broken(String name, String file, String text, String path) {
         return Arguments.of(name, file, text, path);
     }

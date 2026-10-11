@@ -47,7 +47,7 @@ final class WeightsParser {
         Map<TacticalOption, Double> weights = new EnumMap<>(TacticalOption.class);
         for (Map.Entry<String, ConfigNode> cell : row.entries().entrySet()) {
             TacticalOption option = cell.getValue().enumValueOf(TacticalOption.class, cell.getKey(), "вариант решения");
-            if (weights.put(option, cell.getValue().number(-ScoreWeights.MAX_WEIGHT, ScoreWeights.MAX_WEIGHT)) != null) {
+            if (weights.put(option, cell.getValue().number()) != null) {
                 throw cell.getValue().fail("вариант " + option + " описан дважды", "ключи регистронезависимы: уберите дубль");
             }
         }

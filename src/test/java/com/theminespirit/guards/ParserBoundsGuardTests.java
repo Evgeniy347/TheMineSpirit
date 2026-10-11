@@ -1,7 +1,6 @@
 package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -17,19 +16,13 @@ class ParserBoundsGuardTests {
     private static final Path TACTICS = SourceFiles.MAIN.resolve("com/theminespirit/core/tactics");
     private static final List<String> PARSERS = List.of("FactorScalesParser.java", "EnemyProfilesParser.java",
             "ModesParser.java", "WeightsParser.java");
-    private static final String MATRIX_WEIGHT_MARKER = "ScoreWeights.MAX_WEIGHT";
     private static final Pattern BOUNDED_READ = Pattern.compile("\\.(?:number|integer)\\(\\s*[^)\\s][^)]*\\)");
 
     private static List<String> boundedReads(String file, String text) {
         List<String> found = new ArrayList<>();
         Matcher matcher = BOUNDED_READ.matcher(text);
         while (matcher.find()) {
-            int lineStart = text.lastIndexOf('\n', matcher.start()) + 1;
-            int lineEnd = text.indexOf('\n', matcher.end());
-            String line = text.substring(lineStart, lineEnd < 0 ? text.length() : lineEnd);
-            if (!line.contains(MATRIX_WEIGHT_MARKER)) {
-                found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " " + matcher.group());
-            }
+            found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " " + matcher.group());
         }
         return found;
     }
@@ -57,10 +50,8 @@ class ParserBoundsGuardTests {
     }
 
     @Test
-    void boundedReadPattern_ReadWithoutBoundsOrMatrixWeight_IsIgnored() {
+    void boundedReadPattern_ReadWithoutBounds_IsIgnored() {
         assertTrue(boundedReads("X.java", "return node.get(\"a\").number();").isEmpty(),
                 "Сторож ложно срабатывает: чтение числа без границ — как раз то, что нужно");
-        assertFalse(boundedReads("X.java", "put(cell.getValue().number(-ScoreWeights.MAX_WEIGHT, 1));").size() > 0,
-                "Матрица весов — единственное исключение: её границы нигде, кроме парсера, не проверяются");
     }
 }

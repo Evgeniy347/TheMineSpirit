@@ -16,6 +16,8 @@ public record ScoreWeights(Map<Factor, Map<TacticalOption, Double>> matrix, List
                 throw new IllegalArgumentException("ScoreWeights.matrix: у фактора " + factor
                         + " нет полной строки весов по вариантам FIGHT/RETREAT/IGNORE: матрица должна быть полной");
             }
+            row.forEach((option, weight) -> FactChecks.range("ScoreWeights.weights." + factor + "." + option, weight,
+                    -MAX_WEIGHT, MAX_WEIGHT));
             rows.put(factor, Map.copyOf(new EnumMap<>(row)));
         }
         matrix = Map.copyOf(rows);
