@@ -10,6 +10,7 @@ import com.theminespirit.core.pickup.PickupTuning;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -129,6 +130,17 @@ public final class HarvestSession {
 
     public int mined() {
         return mined;
+    }
+
+    public Map<String, Object> saveState() {
+        return Map.of("mined", mined);
+    }
+
+    public void restoreState(Map<String, Object> state) {
+        Object value = state.get("mined");
+        if (value instanceof Number number) {
+            mined = Math.max(mined, number.intValue());
+        }
     }
 
     public int planCalls() {

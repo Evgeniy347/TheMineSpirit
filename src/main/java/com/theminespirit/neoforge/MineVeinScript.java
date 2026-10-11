@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.MineVeinParams;
+import java.util.Map;
 
 final class MineVeinScript implements ScriptInstance {
     private final HarvestSession session;
@@ -28,5 +29,15 @@ final class MineVeinScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return session.failureReason();
+    }
+
+    @Override
+    public Map<String, Object> saveState() {
+        return session.saveState();
+    }
+
+    @Override
+    public void restoreState(Map<String, Object> state) {
+        session.restoreState(state);
     }
 }

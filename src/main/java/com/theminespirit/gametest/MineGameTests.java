@@ -15,11 +15,13 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -441,6 +443,57 @@ public final class MineGameTests {
                 "реестр скриптов духа обязан содержать mine_vein и gather, а содержит " + ids);
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "mine_persist", timeoutTicks = 2400)
+    public static void gatherCobblestone_SavedMidway_ResumesWithoutExtraMining(GameTestHelper helper) {
+        buildCave(helper);
+        for (int x = 1; x <= 3; x++) {
+            for (int z = 1; z <= 3; z++) {
+                helper.setBlock(x, 1, z, Blocks.COBBLESTONE);
+            }
+        }
+        int heapBefore = countBlock(helper, Blocks.COBBLESTONE);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        AtomicReference<SpiritEntity> live = new AtomicReference<>(spirit);
+        AtomicBoolean saved = new AtomicBoolean(false);
+        SpiritRun.launch(helper, spirit, gatherCall("cobblestone", 6), SETTLE_TICKS);
+        helper.onEachTick(() -> {
+            if (saved.get()) {
+                return;
+            }
+            SpiritEntity current = live.get();
+            if (GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE) == 3) {
+                saved.set(true);
+                CompoundTag tag = new CompoundTag();
+                current.saveWithoutId(tag);
+                live.set(reload(helper, current, tag));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            SpiritEntity current = live.get();
+            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленный gather обязан досчитать до 6 блоков: статус "
+                            + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + current.taskFailureReason().orElse("нет"));
+            int inInventory = GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(inInventory == 6,
+                    "после перезагрузки на середине в инвентаре обязано быть ровно 6 булыжника, а не пересчёт "
+                            + "с нуля: " + inInventory);
+            helper.assertTrue(countBlock(helper, Blocks.COBBLESTONE) == heapBefore - 6,
+                    "в куче обязано остаться " + (heapBefore - 6) + " блоков (исходно " + heapBefore
+                            + " минус 6), а не " + countBlock(helper, Blocks.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
+        original.discard();
+        SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
+        reloaded.load(tag);
+        helper.getLevel().addFreshEntity(reloaded);
+        return reloaded;
     }
 
     private static ScriptCall mineCall(String ore, int count) {
