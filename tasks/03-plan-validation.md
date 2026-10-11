@@ -33,8 +33,8 @@
       и полученное значение.
 - [ ] 3. Значения границ — константы в ОДНОМ месте (класс лимитов каталога), со ссылкой на источник в имени
       или в `docs/API.md`: `count` 1..256 (из API.md), радиус скана — из `ScanRadius`, `repeat.times` 1..64,
-      `wait.ticks` 1..6000, `follow.radius` 0..16, координаты `y` −64..319, `x`/`z` ±30 000 000. Четыре последних
-      числа — **предварительные** (решение пользователя ещё не получено, см. `todo.md` → «Открытые решения»).
+      `wait.ticks` 1..6000, `follow.radius` 0..16, координаты `y` −64..319, `x`/`z` ±30 000 000. Лимиты `repeat`, `wait`, `follow` утверждены пользователем
+      2026-10-11 (AGENTS.md → «Решения пользователя»).
 - [ ] 4. Валидатор над деревом: `PlanValidator.validate(TaskNode, ScriptCatalog, ConditionCatalog)`.
       `PlanParser` = JSON → `TaskNode` → `PlanValidator`. Планы `FallbackPlanner` и `ResourceResolver` проходят
       тот же валидатор (тест: fallback-цель с `count: "пять"` → `PlanValidationException`, а не план).

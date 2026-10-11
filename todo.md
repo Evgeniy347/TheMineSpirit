@@ -13,13 +13,12 @@
 - [ ] [tasks/04-observation.md](tasks/04-observation.md) — hash зависит от порядка слотов и тика, JSON не по контракту API
 - [ ] [tasks/05-adapter.md](tasks/05-adapter.md) — скан грузит чанки, путь каждый тик, тайм-аут goto, команды цели/статуса
 - [ ] [tasks/06-planners.md](tasks/06-planners.md) — тихий fallback ИИ, ложные совпадения слов, количества рецептов
+- [ ] [tasks/07-chunk-loading.md](tasks/07-chunk-loading.md) — дух держит чанки загруженными, как игрок (после 05)
 - [ ] Плавка без топлива: `ResourceResolver` не добывает топливо для `smelt`.
 - [ ] Задача духа не переживает выгрузку чанка и перезапуск сервера (`SpiritBrain` не сохраняется).
 
 ## Открытые решения (нужен выбор пользователя)
 
-- [ ] Лимиты плана (предварительно в tasks/03): `repeat.times` ≤ 64, `wait.ticks` ≤ 6000 (5 мин),
-      `follow.radius` ≤ 16, тайм-аут `goto` ~40 тиков на блок.
 - [ ] Интерфейс: только REST / REST + MCP для агентов. Рекомендация: оба (MCP позже).
 - [ ] Структура репозитория: single-module с пакетами (как сейчас) / multi-module `:core / :mod / :bridge`.
       Рекомендация: multi-module; текущий статус — single-module.
