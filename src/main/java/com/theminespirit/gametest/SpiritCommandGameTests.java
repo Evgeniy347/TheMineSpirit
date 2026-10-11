@@ -19,6 +19,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -131,6 +132,27 @@ public final class SpiritCommandGameTests {
                         + ", второй=" + second.taskStatus());
 
         removePlayer(helper, player);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void commandFollow_ServerSource_RefusesWithoutTask(GameTestHelper helper)
+            throws CommandSyntaxException {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        CommandSourceStack source = helper.getLevel().getServer().createCommandSourceStack()
+                .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(1, 1, 1))))
+                .withPermission(4);
+        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                .getCommands().getDispatcher();
+
+        int accepted = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " следуй за мной", source);
+
+        helper.assertTrue(accepted == 0,
+                "Цель 'за мной' без игрока-источника обязана возвращать 0, а не ставиться с пустым target: "
+                        + "результат=" + accepted);
+        helper.assertTrue(spirit.taskStatus().isEmpty(),
+                "Отказ без игрока-источника не должен запускать задачу: у духа появился статус "
+                        + spirit.taskStatus());
         helper.succeed();
     }
 

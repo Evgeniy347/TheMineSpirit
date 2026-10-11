@@ -1,6 +1,7 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -72,6 +73,20 @@ class FallbackPlannerTests {
                 () -> plan(new Goal("следуй за мной", Map.of())),
                 "Сопровождение без игрока-источника обязано отклоняться: заглушка 'player' в правилах fallback "
                         + "указывала на несуществующего игрока и роняла задачу на первом тике");
+    }
+
+    @Test
+    void requiresPlayerSource_FollowGoal_ReturnsTrue() {
+        assertTrue(FallbackPlanner.requiresPlayerSource("следуй за мной"),
+                "Сопровождение без игрока-источника исполнить нечем: планировщик обязан сообщать, что цели нужен "
+                        + "игрок, чтобы команда ответила понятным отказом, а не общим текстом валидатора");
+    }
+
+    @Test
+    void requiresPlayerSource_AttackGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresPlayerSource("убей зомби"),
+                "Атака не требует игрока-источника: иначе консоль или командный блок не смог бы приказать духу "
+                        + "бить враждебную цель");
     }
 
     @Test

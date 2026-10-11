@@ -14,6 +14,7 @@ import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.BatchPlanException;
 import com.theminespirit.core.planner.BatchPlanner;
+import com.theminespirit.core.planner.FallbackPlanner;
 import com.theminespirit.core.planner.Goal;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
@@ -55,7 +56,13 @@ final class SpiritTaskCommands {
                     "Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
-        Map<String, Object> goalParams = speakerParams(source);
+        ServerPlayer speaker = source.getPlayer();
+        if (speaker == null && FallbackPlanner.requiresPlayerSource(text)) {
+            source.sendFailure(Component.literal("Цель '" + text + "' требует игрока-источника: выполните её "
+                    + "от имени игрока или через '/execute as <игрок> run spirit goal ...'"));
+            return 0;
+        }
+        Map<String, Object> goalParams = speakerParams(speaker);
         List<ScriptCatalog> catalogs = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
             catalogs.add(SpiritScripts.catalogFor(spirit));
@@ -128,9 +135,8 @@ final class SpiritTaskCommands {
         return cancelled.size();
     }
 
-    private static Map<String, Object> speakerParams(CommandSourceStack source) {
-        ServerPlayer player = source.getPlayer();
-        return player == null ? Map.of() : Map.of("speaker", player.getName().getString());
+    private static Map<String, Object> speakerParams(ServerPlayer speaker) {
+        return speaker == null ? Map.of() : Map.of("speaker", speaker.getName().getString());
     }
 
     private static List<SpiritEntity> filterSpirits(Collection<? extends Entity> selected) {
