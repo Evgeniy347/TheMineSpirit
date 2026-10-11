@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
@@ -72,6 +73,22 @@ class PlanValidatorRulesTests {
         assertThrows(PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 description + ": план должен быть отклонён валидатором");
+    }
+
+    @Test
+    void mineVeinUnknownOre_Plan_IsRejectedWithAllowedList() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"ore\":\"mithril\"}}", CATALOG),
+                "ore=\"mithril\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
+
+        assertTrue(error.getMessage().contains("mithril"),
+                "Отказ обязан называть неизвестный вид 'mithril'. Фактическое: " + error.getMessage());
+        for (String allowed : OreKind.names()) {
+            assertTrue(error.getMessage().contains(allowed),
+                    "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
+                            + error.getMessage());
+        }
     }
 
     @Test

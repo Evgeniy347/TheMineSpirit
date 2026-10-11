@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -63,7 +64,8 @@ class ResourceResolverProperties {
         if (knowledge.isSmeltable(item)) {
             return new ScriptCall("smelt", Map.of("item", item, "count", count));
         }
-        return new ScriptCall("gather", Map.of("block", item, "count", count));
+        return new ScriptCall("gather", Map.of("block", item, "count", count,
+                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
     }
 
     private static boolean isObtainable(String item, ResourceKnowledge knowledge) {

@@ -2,6 +2,7 @@ package com.theminespirit.core.script;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 final class ScriptArgs {
     private ScriptArgs() {
@@ -23,6 +24,19 @@ final class ScriptArgs {
                     + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
         }
         return text;
+    }
+
+    static Optional<String> optionalString(Map<String, Object> params, String name) {
+        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
+        Object value = params.get(name);
+        if (value == null) {
+            return Optional.empty();
+        }
+        if (!(value instanceof String text)) {
+            throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть строкой, а получено "
+                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
+        }
+        return Optional.of(text);
     }
 
     private static Object require(Map<String, Object> params, String name) {

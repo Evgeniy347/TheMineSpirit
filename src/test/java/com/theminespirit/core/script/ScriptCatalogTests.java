@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.OreKind;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,46 @@ class ScriptCatalogTests {
         assertEquals(expected, catalog.all().stream().map(ScriptSpec::id).toList(),
                 "Каталог по умолчанию обязан содержать ровно оговорённый набор скриптов: пропущенный скрипт "
                         + "планировщик не найдёт, лишний — разойдётся с /v1/capabilities");
+    }
+
+    @Test
+    void defaultCatalog_MineVein_OreEnumAndDefaults() {
+        ScriptSpec mineVein = CoreScripts.defaultCatalog().find("mine_vein").orElseThrow();
+
+        ParamSpec ore = param(mineVein, "ore");
+        ParamSpec count = param(mineVein, "count");
+        ParamSpec radius = param(mineVein, "radius");
+
+        assertEquals(ParamType.ENUM, ore.type(),
+                "ore в mine_vein — enum: валидатор обязан ловить опечатку до запуска, а не искать несуществующую жилу");
+        assertEquals(OreKind.names(), ore.values(),
+                "Список допустимых ore обязан совпадать с видами OreKind: иначе каталог обещает один набор, а ядро знает другой");
+        assertEquals(false, ore.required(),
+                "ore в mine_vein необязателен: без него добывается любая руда");
+        assertTrue(ore.defaultValue() == null,
+                "enum ore без значения по умолчанию в каталоге: отсутствие параметра трактует маппинг как any, "
+                        + "а не валидатор через подстановку");
+        assertEquals(1, count.defaultValue(),
+                "count в mine_vein по умолчанию 1: без числа добывается один блок руды");
+        assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
+                "radius в mine_vein по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_Gather_CountRequiredRadiusDefaults() {
+        ScriptSpec gather = CoreScripts.defaultCatalog().find("gather").orElseThrow();
+
+        ParamSpec count = param(gather, "count");
+        ParamSpec radius = param(gather, "radius");
+
+        assertEquals(true, count.required(),
+                "count в gather обязателен: без числа сбор не имеет цели, в отличие от mine_vein с умолчанием 1");
+        assertEquals(false, radius.required(),
+                "radius в gather необязателен: по умолчанию поиск идёт в радиусе из каталога");
+        assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
+                "radius в gather по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы адаптер не дублировал умолчание");
     }
 
     private static ParamSpec param(ScriptSpec spec, String name) {

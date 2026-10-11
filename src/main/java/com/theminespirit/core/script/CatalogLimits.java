@@ -29,4 +29,9 @@ public final class CatalogLimits {
     public static final int WORLD_Y_MIN = -64;
     public static final int WORLD_Y_MAX = 319;
     public static final int WORLD_HORIZONTAL_LIMIT = 30_000_000;
+
+    // tasks/12: harvest radius 1..32 (предварительно)
+    public static final int HARVEST_RADIUS_MIN = 1;
+    public static final int HARVEST_RADIUS_MAX = 32;
+    public static final int HARVEST_RADIUS_DEFAULT = 16;
 }
