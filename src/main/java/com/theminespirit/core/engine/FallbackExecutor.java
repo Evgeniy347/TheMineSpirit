@@ -10,6 +10,7 @@ final class FallbackExecutor extends SingleChildExecutor {
     private final List<TaskNode> steps;
     private int index;
     private String lastReason;
+    private Throwable lastCause;
 
     FallbackExecutor(FallbackNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         super(scripts, conditions);
@@ -31,6 +32,7 @@ final class FallbackExecutor extends SingleChildExecutor {
         }
         if (child == ScriptStatus.FAILED) {
             lastReason = current().failureReason();
+            lastCause = current().failureCause().orElse(null);
             index++;
             current(null);
             if (index >= steps.size()) {
@@ -42,6 +44,6 @@ final class FallbackExecutor extends SingleChildExecutor {
     }
 
     private void failAll() {
-        fail(lastReason != null ? lastReason : ALL_FAILED);
+        fail(lastReason != null ? lastReason : ALL_FAILED, lastCause);
     }
 }

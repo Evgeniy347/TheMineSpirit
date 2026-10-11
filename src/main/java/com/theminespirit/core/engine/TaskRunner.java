@@ -8,6 +8,7 @@ public final class TaskRunner {
     private final NodeExecutor root;
     private RunStatus status = RunStatus.RUNNING;
     private String reason;
+    private Throwable cause;
 
     private TaskRunner(NodeExecutor root) {
         this.root = root;
@@ -30,6 +31,7 @@ public final class TaskRunner {
         } else if (node == ScriptStatus.FAILED) {
             status = RunStatus.FAILED;
             reason = root.failureReason();
+            cause = root.failureCause().orElse(null);
         }
         return status;
     }
@@ -40,6 +42,10 @@ public final class TaskRunner {
 
     public Optional<String> failureReason() {
         return Optional.ofNullable(reason);
+    }
+
+    public Optional<Throwable> failureCause() {
+        return Optional.ofNullable(cause);
     }
 
     public Optional<String> currentScript() {

@@ -7,10 +7,12 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import java.util.Optional;
 
 abstract class NodeExecutor {
     private ScriptStatus status = ScriptStatus.RUNNING;
     private String reason;
+    private Throwable cause;
 
     static NodeExecutor create(TaskNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         return switch (node) {
@@ -40,9 +42,28 @@ abstract class NodeExecutor {
         return reason;
     }
 
+    final Optional<Throwable> failureCause() {
+        return Optional.ofNullable(cause);
+    }
+
     final void fail(String message) {
+        fail(message, null);
+    }
+
+    final void fail(String message, Throwable cause) {
         status = ScriptStatus.FAILED;
         reason = message;
+        this.cause = cause;
+    }
+
+    final void failFrom(NodeExecutor child) {
+        fail(child.reason, child.cause);
+    }
+
+    static String describe(Throwable error) {
+        String type = error.getClass().getSimpleName();
+        String message = error.getMessage();
+        return message == null || message.isBlank() ? type : type + ": " + message;
     }
 
     abstract String currentScript();

@@ -25,13 +25,31 @@ final class ScriptExecutor extends NodeExecutor {
             if (result != ScriptStatus.RUNNING) {
                 instance = null;
             }
+            if (result == ScriptStatus.FAILED && failureReason() == null) {
+                fail("скрипт '" + scriptId + "' завершился с ошибкой");
+            }
             return result;
         } catch (UnknownScriptException error) {
-            fail(error.getMessage());
+            cancelLive(error);
+            fail(error.getMessage(), error);
             return ScriptStatus.FAILED;
         } catch (RuntimeException error) {
-            fail("скрипт '" + scriptId + "' упал: " + error.getMessage());
+            cancelLive(error);
+            fail("скрипт '" + scriptId + "' упал: " + NodeExecutor.describe(error), error);
             return ScriptStatus.FAILED;
+        }
+    }
+
+    private void cancelLive(RuntimeException failure) {
+        if (instance == null) {
+            return;
+        }
+        ScriptInstance live = instance;
+        instance = null;
+        try {
+            live.cancel();
+        } catch (RuntimeException cancelError) {
+            failure.addSuppressed(cancelError);
         }
     }
 

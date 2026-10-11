@@ -20,7 +20,7 @@ abstract class StepExecutor extends SingleChildExecutor {
         }
         ScriptStatus child = current().tick();
         if (child == ScriptStatus.FAILED) {
-            fail(current().failureReason());
+            failFrom(current());
             return ScriptStatus.FAILED;
         }
         if (child == ScriptStatus.SUCCEEDED) {

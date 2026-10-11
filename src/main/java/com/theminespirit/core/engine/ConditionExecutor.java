@@ -35,7 +35,7 @@ final class ConditionExecutor extends SingleChildExecutor {
             try {
                 passed = evaluator.get().test(params);
             } catch (RuntimeException error) {
-                fail("проверка '" + check + "' упала: " + error.getMessage());
+                fail("проверка '" + check + "' упала: " + NodeExecutor.describe(error), error);
                 return ScriptStatus.FAILED;
             }
             TaskNode branch = passed ? thenStep : elseStep;
@@ -46,7 +46,7 @@ final class ConditionExecutor extends SingleChildExecutor {
         }
         ScriptStatus child = current().tick();
         if (child == ScriptStatus.FAILED) {
-            fail(current().failureReason());
+            failFrom(current());
             return ScriptStatus.FAILED;
         }
         return child;

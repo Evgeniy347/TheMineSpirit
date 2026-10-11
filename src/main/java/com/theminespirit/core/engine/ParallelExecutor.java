@@ -16,6 +16,7 @@ final class ParallelExecutor extends NodeExecutor {
     private NodeExecutor[] children;
     private ScriptStatus[] results;
     private String[] reasons;
+    private Throwable[] causes;
 
     ParallelExecutor(ParallelNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         this.mode = node.mode();
@@ -38,6 +39,7 @@ final class ParallelExecutor extends NodeExecutor {
         children = new NodeExecutor[steps.size()];
         results = new ScriptStatus[steps.size()];
         reasons = new String[steps.size()];
+        causes = new Throwable[steps.size()];
         for (int i = 0; i < steps.size(); i++) {
             children[i] = NodeExecutor.create(steps.get(i), scripts, conditions);
             results[i] = ScriptStatus.RUNNING;
@@ -50,6 +52,7 @@ final class ParallelExecutor extends NodeExecutor {
                 results[i] = children[i].tick();
                 if (results[i] == ScriptStatus.FAILED) {
                     reasons[i] = children[i].failureReason();
+                    causes[i] = children[i].failureCause().orElse(null);
                 }
             }
         }
@@ -66,7 +69,7 @@ final class ParallelExecutor extends NodeExecutor {
         for (int i = 0; i < children.length; i++) {
             if (results[i] == ScriptStatus.FAILED) {
                 cancelAll();
-                fail(reasons[i] != null ? reasons[i] : STEP_FAILED);
+                fail(reasons[i] != null ? reasons[i] : STEP_FAILED, causes[i]);
                 return ScriptStatus.FAILED;
             }
         }
@@ -91,12 +94,14 @@ final class ParallelExecutor extends NodeExecutor {
             }
         }
         String lastReason = null;
-        for (String candidate : reasons) {
-            if (candidate != null) {
-                lastReason = candidate;
+        Throwable lastCause = null;
+        for (int i = 0; i < reasons.length; i++) {
+            if (reasons[i] != null) {
+                lastReason = reasons[i];
+                lastCause = causes[i];
             }
         }
-        fail(lastReason != null ? lastReason : ALL_STEPS_FAILED);
+        fail(lastReason != null ? lastReason : ALL_STEPS_FAILED, lastCause);
         return ScriptStatus.FAILED;
     }
 
