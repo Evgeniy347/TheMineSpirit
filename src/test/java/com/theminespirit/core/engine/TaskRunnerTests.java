@@ -226,6 +226,67 @@ class TaskRunnerTests {
     }
 
     @Test
+    void tick_ScriptFactoryThrows_ReturnsFailureNamingScriptAndException() {
+        ScriptFactory throwing = params -> {
+            throw new IllegalArgumentException("нет параметра x");
+        };
+        TaskRunner runner = TaskRunner.start(script("goto"), ScriptRegistry.of(Map.of("goto", throwing)),
+                TestScripts.condition(CHECK, true));
+
+        RunStatus status = runner.tick();
+
+        assertEquals(RunStatus.FAILED, status,
+                "исключение из фабрики скрипта обязано проваливать узел, а не вылетать из тика сущности: "
+                        + "иначе сервер упадёт с ошибкой 'Ticking entity'");
+        String reason = runner.failureReason().orElse("");
+        assertTrue(reason.contains("goto"),
+                "причина обязана называть скрипт 'goto', из которого прилетело исключение. Фактическое: " + reason);
+        assertTrue(reason.contains("нет параметра x"),
+                "причина обязана нести текст исключения 'нет параметра x'. Фактическое: " + reason);
+    }
+
+    @Test
+    void tick_ScriptInstanceThrows_ReturnsFailureNamingScriptAndException() {
+        ScriptFactory throwing = params -> () -> {
+            throw new IllegalStateException("сломанный тик");
+        };
+        TaskRunner runner = TaskRunner.start(script("goto"), ScriptRegistry.of(Map.of("goto", throwing)),
+                TestScripts.condition(CHECK, true));
+
+        RunStatus status = runner.tick();
+
+        assertEquals(RunStatus.FAILED, status,
+                "исключение из tick скрипта обязано проваливать узел, а не вылетать из тика сущности: "
+                        + "иначе сервер упадёт с ошибкой 'Ticking entity'");
+        String reason = runner.failureReason().orElse("");
+        assertTrue(reason.contains("goto"),
+                "причина обязана называть скрипт 'goto', в котором сломался тик. Фактическое: " + reason);
+        assertTrue(reason.contains("сломанный тик"),
+                "причина обязана нести текст исключения 'сломанный тик'. Фактическое: " + reason);
+    }
+
+    @Test
+    void tick_ConditionEvaluatorThrows_ReturnsFailureNamingCheckAndException() {
+        ConditionRegistry conditions = ConditionRegistry.of(Map.of("boom", params -> {
+            throw new IllegalStateException("условие сломалось");
+        }));
+        TaskNode plan = new ConditionNode("boom", Map.of(), script(SCRIPT), null);
+        TaskRunner runner = TaskRunner.start(plan, TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(1)),
+                conditions);
+
+        RunStatus status = runner.tick();
+
+        assertEquals(RunStatus.FAILED, status,
+                "исключение из проверки условия обязано проваливать узел, а не вылетать из тика сущности: "
+                        + "иначе сервер упадёт с ошибкой 'Ticking entity'");
+        String reason = runner.failureReason().orElse("");
+        assertTrue(reason.contains("boom"),
+                "причина обязана называть проверку 'boom', из которой прилетело исключение. Фактическое: " + reason);
+        assertTrue(reason.contains("условие сломалось"),
+                "причина обязана нести текст исключения 'условие сломалось'. Фактическое: " + reason);
+    }
+
+    @Test
     void cancel_RunningRun_TransitionsToCancelledAndFreezesStatus() {
         TaskRunner runner = TaskRunner.start(script(SCRIPT), TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(5)),
                 TestScripts.condition(CHECK, true));

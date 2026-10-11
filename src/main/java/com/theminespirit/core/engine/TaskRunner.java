@@ -125,9 +125,7 @@ public final class TaskRunner {
         ScriptStatus advance() {
             try {
                 if (instance == null) {
-                    ScriptFactory factory = registry.find(scriptId).orElseThrow(() -> new UnknownScriptException(
-                            "Неизвестный скрипт '" + scriptId + "': он не зарегистрирован в реестре исполнения"));
-                    instance = factory.create(params);
+                    instance = createInstance();
                 }
                 ScriptStatus result = instance.tick();
                 if (result != ScriptStatus.RUNNING) {
@@ -137,7 +135,16 @@ public final class TaskRunner {
             } catch (UnknownScriptException error) {
                 fail(error.getMessage());
                 return ScriptStatus.FAILED;
+            } catch (RuntimeException error) {
+                fail("скрипт '" + scriptId + "' упал: " + error.getMessage());
+                return ScriptStatus.FAILED;
             }
+        }
+
+        private ScriptInstance createInstance() {
+            ScriptFactory factory = registry.find(scriptId).orElseThrow(() -> new UnknownScriptException(
+                    "Неизвестный скрипт '" + scriptId + "': он не зарегистрирован в реестре исполнения"));
+            return factory.create(params);
         }
 
         @Override
@@ -446,7 +453,14 @@ public final class TaskRunner {
                     fail("Неизвестная проверка '" + check + "': она не зарегистрирована в реестре условий");
                     return ScriptStatus.FAILED;
                 }
-                TaskNode branch = evaluator.get().test(params) ? thenStep : elseStep;
+                boolean passed;
+                try {
+                    passed = evaluator.get().test(params);
+                } catch (RuntimeException error) {
+                    fail("проверка '" + check + "' упала: " + error.getMessage());
+                    return ScriptStatus.FAILED;
+                }
+                TaskNode branch = passed ? thenStep : elseStep;
                 if (branch == null) {
                     return ScriptStatus.SUCCEEDED;
                 }
