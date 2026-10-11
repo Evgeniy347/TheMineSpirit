@@ -65,7 +65,7 @@ public final class SpiritCommands {
                 new com.theminespirit.core.observation.BlockCoord(
                         player.blockPosition().getX(), player.blockPosition().getY(), player.blockPosition().getZ()),
                 ScanRadius.of(radius),
-                player.getInventory());
+                player.getInventory()).observation();
         if (asJson) {
             source.sendSuccess(() -> Component.literal(observation.toJson()), false);
         } else {

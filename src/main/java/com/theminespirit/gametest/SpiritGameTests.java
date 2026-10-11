@@ -58,11 +58,15 @@ public final class SpiritGameTests {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
-        WorldObservation observation = WorldScanner.observe(helper.getLevel(), "spirit_1",
+        WorldScanner.Scan scan = WorldScanner.observe(helper.getLevel(), "spirit_1",
                 new BlockCoord(
                         absolute.getX(), absolute.getY(), absolute.getZ()),
                 ScanRadius.of(2), spirit.getInventory());
+        WorldObservation observation = scan.observation();
 
+        helper.assertTrue(scan.scannedPositions() > 0,
+                "Скан обязан считать просмотренные позиции: по пустому числу GameTest не проверит счётчик "
+                        + "и не заметит, что обход грузит чанки");
         helper.assertTrue(!observation.blocks().isEmpty(),
                 "Скан вокруг духа обязан видеть блоки пола: при пустом наблюдении ИИ не может планировать добычу");
         helper.assertTrue(observation.hash().length() == 64,
@@ -70,6 +74,28 @@ public final class SpiritGameTests {
         helper.assertTrue(observation.entities().stream()
                         .anyMatch(entity -> entity.type().equals(ModIdentity.MOD_ID + ":spirit")),
                 "Скан обязан видеть самого духа в списке сущностей: без этого наблюдение не видит bot-а себя");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void scan_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
+        buildFloor(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
+        int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
+        WorldScanner.Scan scan = WorldScanner.observe(helper.getLevel(), "spirit_1",
+                new BlockCoord(
+                        absolute.getX(), absolute.getY(), absolute.getZ()),
+                ScanRadius.of(32), spirit.getInventory());
+        int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
+
+        helper.assertTrue(after == before,
+                "Скан у края загруженной области обязан не грузить чанки: было " + before
+                        + " загруженных чанков, стало " + after + ". Обращение к getBlockState незагруженного "
+                        + "чанка синхронно грузит его и фризит серверный тик");
+        helper.assertTrue(scan.scannedPositions() > 0,
+                "Скан обязан просмотреть позиции уже загруженных чанков, а не ничего: просмотрено "
+                        + scan.scannedPositions());
         helper.succeed();
     }
 
