@@ -5,7 +5,6 @@
     "minDps": 0.1,
     "winMarginDivisor": 3,
     "lowHpFloor": 0.6,
-    "pressureHorizon": 10,
     "proximityRange": 12,
     "rangedRange": 24,
     "rangedFull": 3,

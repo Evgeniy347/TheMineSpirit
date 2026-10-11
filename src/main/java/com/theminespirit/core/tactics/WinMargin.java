@@ -30,6 +30,14 @@ public final class WinMargin {
         return ownEhp / Math.max(scales.minDps(), enemies.totalDps());
     }
 
+    public static double pressure(SelfFacts self, EnemyMetrics enemies, FactorScales scales) {
+        double timeToKill = timeToKill(self, enemies, scales);
+        if (timeToKill <= 0) {
+            return 0;
+        }
+        return clamp(1 - timeToDie(self, enemies, scales) / timeToKill, 0, 1);
+    }
+
     static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }

@@ -34,11 +34,11 @@ class HysteresisTests {
     private static double borderlineSelfHp() {
         double bestHp = 0;
         double bestGap = Double.MAX_VALUE;
-        for (int step = 30; step <= 100; step++) {
-            double gap = Math.abs(fightMinusRetreat(noisyEnemy(0.9, step / 100.0)));
+        for (int step = 300; step <= 1000; step++) {
+            double gap = Math.abs(fightMinusRetreat(noisyEnemy(0.9, step / 1000.0)));
             if (gap < bestGap) {
                 bestGap = gap;
-                bestHp = step / 100.0;
+                bestHp = step / 1000.0;
             }
         }
         assertTrue(bestGap < 0.03,

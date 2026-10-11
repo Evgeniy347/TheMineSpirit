@@ -2,7 +2,7 @@ package com.theminespirit.core.tactics;
 
 final class FactorScalesParser {
     private static final String[] FIELDS = {"armorPerPoint", "armorCap", "minDps", "winMarginDivisor", "lowHpFloor",
-            "pressureHorizon", "proximityRange", "rangedRange", "rangedFull", "explosiveRange", "allyFull", "routesFull",
+            "proximityRange", "rangedRange", "rangedFull", "explosiveRange", "allyFull", "routesFull",
             "lavaRange", "dropSafe", "dropRange", "nightFloor", "hungerThreshold", "healFull", "leashMargin",
             "speedRatioCap"};
 
@@ -17,7 +17,6 @@ final class FactorScalesParser {
                 node.get("minDps").number(),
                 node.get("winMarginDivisor").number(),
                 node.get("lowHpFloor").number(),
-                node.get("pressureHorizon").number(),
                 node.get("proximityRange").number(),
                 node.get("rangedRange").number(),
                 node.get("rangedFull").number(),

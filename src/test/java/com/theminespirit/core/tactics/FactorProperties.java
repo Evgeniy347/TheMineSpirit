@@ -58,6 +58,22 @@ class FactorProperties {
                         + margin(stronger) + "; иначе дух отступает именно после усиления");
     }
 
+    @Property(tries = 200)
+    void pressure_MoreArmorHpOrDamage_NeverIncreases(@ForAll("situations") Situation situation,
+            @ForAll("steps") int armorStep, @ForAll("steps") int hpStep, @ForAll("steps") int dpsStep) {
+        SelfFacts self = situation.self();
+        Situation stronger = Situations.withSelf(situation, Situations.withStats(self,
+                Math.min(self.maxHp(), self.hp() + hpStep), Math.min(20, self.armor() + armorStep), self.dps() + dpsStep));
+
+        assertTrue(pressure(stronger) <= pressure(situation) + SLACK,
+                "Давление считается от перевеса духа: больше брони, HP или урона у нас — давление не растёт: "
+                        + pressure(situation) + " → " + pressure(stronger) + "; иначе дух бежит именно после усиления");
+    }
+
+    private static double pressure(Situation situation) {
+        return WinMargin.pressure(situation.self(), metrics(situation), Scales.defaults());
+    }
+
     @Provide
     Arbitrary<Integer> steps() {
         return Arbitraries.integers().between(0, 6);

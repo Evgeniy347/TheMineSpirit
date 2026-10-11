@@ -74,7 +74,7 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 | `BIAS` | 1 |
 | `WIN_MARGIN` | `clamp(log2(timeToDie / timeToKill) / winMarginDivisor)`; врагов нет — 0 |
 | `LOW_HP` | `clamp01((lowHpFloor − доля HP) / lowHpFloor)` |
-| `ENEMY_PRESSURE` | `clamp01(1 − timeToDie / pressureHorizon)` |
+| `ENEMY_PRESSURE` | `clamp01(1 − timeToDie / timeToKill)`: 0, пока дух убивает врагов быстрее, чем они его |
 | `PROXIMITY` | `clamp01(1 − ближайший / proximityRange)` |
 | `RANGED_EXPOSURE` | `clamp01(стрелков / rangedFull) × clamp01(1 − ближайший стрелок / rangedRange)` |
 | `EXPLOSIVE_NEAR` | `clamp01(1 − ближайший взрывной / explosiveRange)` |

@@ -6,7 +6,7 @@ public enum Factor {
     LOW_HP((situation, assessment, scales) -> unit(
             (scales.lowHpFloor() - situation.self().hpFraction()) / scales.lowHpFloor())),
     ENEMY_PRESSURE((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
-            : unit(1 - WinMargin.timeToDie(situation.self(), assessment.enemies(), scales) / scales.pressureHorizon())),
+            : WinMargin.pressure(situation.self(), assessment.enemies(), scales)),
     PROXIMITY((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
             : unit(1 - assessment.enemies().nearest() / scales.proximityRange())),
     RANGED_EXPOSURE((situation, assessment, scales) -> rangedExposure(assessment.enemies(), scales)),
