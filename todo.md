@@ -8,7 +8,6 @@
 
 Ревью кода от 2026-10-11 (HEAD `0ec3bd9`), выполняются по порядку:
 
-- [ ] [tasks/03-plan-validation.md](tasks/03-plan-validation.md) — enum и диапазоны параметров, repeat, белый список условий, каталог только реализованного
 - [ ] [tasks/04-observation.md](tasks/04-observation.md) — hash зависит от порядка слотов и тика, JSON не по контракту API
 - [ ] [tasks/05-adapter.md](tasks/05-adapter.md) — скан грузит чанки, путь каждый тик, тайм-аут goto, команды цели/статуса
 - [ ] [tasks/06-planners.md](tasks/06-planners.md) — тихий fallback ИИ, ложные совпадения слов, количества рецептов
