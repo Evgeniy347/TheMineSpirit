@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanRadius;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +34,10 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
 
     public static ObserveRequest defaults() {
         return new ObserveRequest(ScanRadius.DEFAULT, List.of(), true);
+    }
+
+    public IdFilter blockFilter() {
+        return IdFilter.of(filter);
     }
 
     public static ObserveRequest parse(byte[] body) {
@@ -125,8 +130,8 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
     }
 
     private static String pattern(JsonNode element, int index) {
-        if (!element.isTextual() || element.textValue().isBlank()) {
-            throw invalid("Элемент filter[" + index + "] должен быть непустой строкой-шаблоном, получено: " + element,
+        if (!element.isTextual()) {
+            throw invalid("Элемент filter[" + index + "] должен быть строкой-шаблоном, получено: " + element,
                     Map.of("field", FILTER, "index", index));
         }
         String pattern = element.textValue();
@@ -134,6 +139,12 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
             throw invalid("Шаблон filter[" + index + "] длиной " + pattern.length() + " длиннее допустимых "
                     + MAX_FILTER_LENGTH + " символов", Map.of("field", FILTER, "index", index,
                             "max_length", MAX_FILTER_LENGTH));
+        }
+        try {
+            IdFilter.of(List.of(pattern));
+        } catch (IllegalArgumentException rejected) {
+            throw invalid("Шаблон filter[" + index + "] отвергнут IdFilter: " + rejected.getMessage(),
+                    Map.of("field", FILTER, "index", index));
         }
         return pattern;
     }

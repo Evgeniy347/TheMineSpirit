@@ -66,6 +66,7 @@ class ObserveRequestTests {
                 Arguments.of("{\"filter\":\"*_ore\"}", "'filter' должно быть массивом"),
                 Arguments.of("{\"filter\":[1]}", "filter[0]"),
                 Arguments.of("{\"filter\":[\"ok\",\"\"]}", "filter[1]"),
+                Arguments.of("{\"filter\":[\"Iron!\"]}", "IdFilter"),
                 Arguments.of("{\"filter\":[" + String.join(",", Collections.nCopies(17, "\"a\"")) + "]}", "17 шаблонов"),
                 Arguments.of("{\"filter\":[\"" + "a".repeat(65) + "\"]}", "длиной 65"),
                 Arguments.of("{\"include_entities\":\"yes\"}", "'include_entities' должно быть"),
@@ -94,6 +95,20 @@ class ObserveRequestTests {
         assertEquals("foo", error.error().details().get("field"), "details.field называет лишнее поле");
         assertEquals(List.of("radius", "filter", "include_entities"), error.error().details().get("allowed"),
                 "details.allowed перечисляет допустимые поля в порядке документации");
+    }
+
+    @Test
+    void parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex() {
+        ApiException error = assertThrows(ApiException.class,
+                () -> ObserveRequest.parse(utf8("{\"filter\":[\"ok\",\"Iron!\"]}")),
+                "Шаблон с запрещённым символом обязан отклоняться, а не молча уходить в скан");
+
+        assertEquals(ErrorCode.INVALID_REQUEST, error.error().code(), "Отвергнутый шаблон — invalid_request (400)");
+        assertEquals(1, error.error().details().get("index"),
+                "details.index называет номер плохого шаблона filter[1], чтобы клиент нашёл поле: "
+                        + error.error().details());
+        assertTrue(error.getMessage().contains("IdFilter"),
+                "Сообщение обязано называть правило IdFilter, которым проверен шаблон: " + error.getMessage());
     }
 
     @Test
