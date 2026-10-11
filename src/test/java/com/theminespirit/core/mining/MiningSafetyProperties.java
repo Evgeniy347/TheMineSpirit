@@ -48,6 +48,22 @@ class MiningSafetyProperties {
                         + ": иначе планирование цели кладёт серверный тик. Чтений: " + reads);
     }
 
+    @Property(tries = 200)
+    void of_RandomWorld_NoStandUnderFallingAboveTarget(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        CellWorld world = randomWorld(new Random(seed));
+        if (world.peek(new BlockCoord(TARGET.x(), TARGET.y() + 1, TARGET.z())) != Cell.FALLING) {
+            return;
+        }
+
+        List<BlockCoord> spots = StandSpots.of(TARGET, world, new BlockCoord(0, 0, 0));
+
+        for (BlockCoord spot : spots) {
+            assertTrue(spot.x() != TARGET.x() || spot.z() != TARGET.z() || spot.y() >= TARGET.y(),
+                    "Под гравием над целью стоянка в столбце цели ниже её запрещена — гравий падает после ломки. "
+                            + "Нарушающая стоянка: " + spot);
+        }
+    }
+
     private static boolean fluidOnFace(CellWorld world) {
         for (int[] face : FACES) {
             Cell cell = world.peek(new BlockCoord(TARGET.x() + face[0], TARGET.y() + face[1], TARGET.z() + face[2]));

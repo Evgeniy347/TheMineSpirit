@@ -27,6 +27,7 @@ public final class StandSpots {
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: по ней сортируются стоянки");
         List<BlockCoord> candidates = new ArrayList<>();
         boolean exposed = false;
+        boolean fallingAbove = view.cellAt(offset(target, 0, 1, 0)) == Cell.FALLING;
         for (int[] face : FACE_OFFSETS) {
             BlockCoord neighbor = offset(target, face[0], face[1], face[2]);
             if (view.cellAt(neighbor) != Cell.PASSABLE) {
@@ -36,6 +37,9 @@ public final class StandSpots {
             for (int depth = 0; depth <= MAX_DEPTH; depth++) {
                 BlockCoord stand = new BlockCoord(neighbor.x(), neighbor.y() - depth, neighbor.z());
                 if (offset(stand, 0, -1, 0).equals(target)) {
+                    continue;
+                }
+                if (fallingAbove && stand.x() == target.x() && stand.z() == target.z() && stand.y() < target.y()) {
                     continue;
                 }
                 if (MiningSafety.canStand(stand, view)) {

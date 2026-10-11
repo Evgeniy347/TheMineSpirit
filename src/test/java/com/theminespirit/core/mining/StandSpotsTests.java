@@ -94,6 +94,22 @@ class StandSpotsTests {
     }
 
     @Test
+    void of_FallingBlockAboveTarget_RejectsValidStandUnderTarget() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, 1, 0, Cell.FALLING)
+                .set(0, -3, 0, Cell.SOLID)
+                .set(1, 0, 0, Cell.PASSABLE)
+                .set(1, -1, 0, Cell.SOLID);
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
+
+        assertEquals(List.of(new BlockCoord(1, 0, 0)), spots,
+                "Стоянка в столбце руды ниже её под гравием сверху запрещена: после ломки гравий падает сквозь "
+                        + "полость на духа; стоянка сбоку от столбца разрешена");
+    }
+
+    @Test
     void of_TargetReading_StaysWithinLimit() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
