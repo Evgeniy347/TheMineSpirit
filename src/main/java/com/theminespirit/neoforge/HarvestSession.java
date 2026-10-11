@@ -4,10 +4,10 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.PickupTuning;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,8 +34,6 @@ public final class HarvestSession {
         COLLECT
     }
 
-    private static final int MIN_BUFFER = 8;
-    private static final int MAX_TARGETS = 64;
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 4;
 
@@ -49,7 +47,7 @@ public final class HarvestSession {
     private final LevelSafetyView safety;
     private final BlockBreaker breaker;
     private final Approach approach;
-    private final List<BlockCoord> remaining = new ArrayList<>();
+    private final TargetBuffer buffer = new TargetBuffer();
 
     private State state = State.FIND;
     private Outcome outcome = Outcome.RUNNING;
@@ -184,18 +182,13 @@ public final class HarvestSession {
             fail(targets.refusalReason());
             return;
         }
-        if (remaining.size() >= MIN_BUFFER) {
+        if (!buffer.needsRefill()) {
             state = State.PICK;
             return;
         }
         findTicks++;
-        for (BlockCoord coord : targets.advance()) {
-            if (remaining.size() >= MAX_TARGETS) {
-                break;
-            }
-            remaining.add(coord);
-        }
-        if (!remaining.isEmpty()) {
+        buffer.offer(targets.advance());
+        if (!buffer.isEmpty()) {
             state = State.PICK;
             return;
         }
@@ -205,25 +198,25 @@ public final class HarvestSession {
     }
 
     private void pick() {
-        if (remaining.isEmpty()) {
+        if (buffer.isEmpty()) {
             state = State.FIND;
             return;
         }
         planCalls++;
         BlockPos from = spirit.blockPosition();
-        MiningPlanner.Outcome result = MiningPlanner.next(
-                new BlockCoord(from.getX(), from.getY(), from.getZ()), remaining, safety);
+        BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
+        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety);
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
-            remaining.clear();
+            buffer.clearActive();
             state = State.FIND;
             return;
         }
         MiningPlanner.Next next = (MiningPlanner.Next) result;
         BlockState targetState = level.getBlockState(toPos(next.target()));
         if (!breaker.dropsAllowedFor(targetState)) {
-            remaining.remove(next.target());
+            buffer.remove(next.target());
             if (breaker.toolBroke()) {
                 fail("инструмент сломался: добыто " + mined + " из " + count);
                 return;
@@ -235,7 +228,7 @@ public final class HarvestSession {
             noTool++;
             return;
         }
-        remaining.remove(next.target());
+        buffer.remove(next.target());
         currentTarget = next.target();
         approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
                 APPROACH_ARRIVAL);
