@@ -105,6 +105,17 @@ class MiningPlannerTests {
     }
 
     @Test
+    void next_FlatGroundTarget_IsReachableFromSurface() {
+        CellWorld world = new CellWorld().fill(0, -2, -2, 2, 2, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 0, 0)), world);
+
+        assertEquals(new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(-1, 1, 0)), outcome,
+                "Сбор на ровной земле не должен заканчиваться Exhausted(noStand>0): цель открыта сверху, "
+                        + "стоянка — клетка поверхности рядом с целью");
+    }
+
+    @Test
     void next_SafeTarget_ReturnedTargetPassesCanBreak() {
         CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(1, -1, 0, Cell.SOLID);
 

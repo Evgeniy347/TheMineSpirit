@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Objects;
 
 public final class StandSpots {
-    public static final int MAX_VIEW_READS = 360;
+    public static final int MAX_VIEW_READS = 440;
 
     private static final int MAX_DEPTH = 2;
     private static final int[][] FACE_OFFSETS = {
             {0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}
+    };
+    private static final int[][] HORIZONTAL_OFFSETS = {
+            {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}
     };
 
     private StandSpots() {
@@ -37,6 +40,14 @@ public final class StandSpots {
                 }
                 if (MiningSafety.canStand(stand, view)) {
                     candidates.add(stand);
+                }
+            }
+            if (face[1] == 1) {
+                for (int[] side : HORIZONTAL_OFFSETS) {
+                    BlockCoord stand = offset(neighbor, side[0], 0, side[2]);
+                    if (MiningSafety.canStand(stand, view)) {
+                        candidates.add(stand);
+                    }
                 }
             }
         }

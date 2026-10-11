@@ -58,7 +58,8 @@ class StandSpotsTests {
     void of_TargetOnCeiling_ReturnsFloorStandBelow() {
         CellWorld world = new CellWorld()
                 .fill(10, -2, -2, 2, 2, Cell.SOLID)
-                .fill(14, -2, -2, 2, 2, Cell.SOLID);
+                .fill(14, -2, -2, 2, 2, Cell.SOLID)
+                .set(0, 15, 0, Cell.SOLID);
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 14, 0), world, new BlockCoord(0, 0, 0));
 
@@ -78,6 +79,18 @@ class StandSpotsTests {
 
         assertEquals(List.of(new BlockCoord(1, 0, 0), new BlockCoord(-1, 0, 0)), spots,
                 "Стоянки сортируются по расстоянию от духа: ближняя стоянка первой сокращает путь");
+    }
+
+    @Test
+    void of_FlatGroundTarget_ReturnsStandsBesideTargetAtSurface() {
+        CellWorld world = new CellWorld().fill(0, -2, -2, 2, 2, Cell.SOLID);
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
+
+        assertEquals(List.of(new BlockCoord(-1, 1, 0), new BlockCoord(0, 1, -1),
+                        new BlockCoord(0, 1, 1), new BlockCoord(1, 1, 0)), spots,
+                "Руда, открытая только сверху на ровной земле, обязана дать стоянки у поверхности рядом с целью, "
+                        + "а не остаться недосягаемой: столб над целью исключён («пол=цель»), под целью нет пола");
     }
 
     @Test
