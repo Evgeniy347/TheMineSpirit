@@ -12,7 +12,7 @@
 - Ошибки — единый объект:
 
 ```json
-{ "error": { "code": "invalid_plan", "message": "скрипт chop_tree: не задан обязательный параметр count", "details": {} } }
+{ "error": { "code": "invalid_plan", "message": "У скрипта 'wait' не задан обязательный параметр 'ticks' (INT)", "details": {} } }
 ```
 
 Коды: `invalid_request`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `invalid_plan`,
@@ -48,7 +48,7 @@
     "params": { "type": "object", "properties": {
       "species": { "type": "string", "default": "any" },
       "count": { "type": "integer", "minimum": 1, "maximum": 256, "default": 1 } },
-      "required": ["count"] },
+      "required": [] },
     "preconditions": ["есть подходящие блоки в радиусе сканирования"],
     "effects": ["брёвна срублены", "предметы подобраны в инвентарь"] } ] }
 ```

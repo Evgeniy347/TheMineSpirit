@@ -20,16 +20,16 @@ public final class FallbackPlanner implements Planner {
     private static final List<Rule> RULES = List.of(
             new Rule(List.of("сруб", "дерев"), List.of(
                     new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
-                    new Step("chop_tree", List.of("species", "count"), Map.of("count", 1)))),
+                    new Step("chop_tree", List.of("species", "count"), Map.of()))),
             new Rule(List.of("руд", "шахт"), List.of(
                     new Step("scan", List.of("radius"), Map.of("filter", List.of("*_ore"))),
-                    new Step("mine_vein", List.of("ore", "count"), Map.of("count", 1)))),
+                    new Step("mine_vein", List.of("ore", "count"), Map.of()))),
             new Rule(List.of("следу", "за мной"), List.of(
                     new Step("follow", List.of("target", "radius"), Map.of("target", "player")))),
             new Rule(List.of("домой", "верни"), List.of(
                     new Step("return_home", List.of(), Map.of()))),
             new Rule(List.of("атак", "убей"), List.of(
-                    new Step("attack", List.of("target"), Map.of("target", "hostile")))));
+                    new Step("attack", List.of("target"), Map.of()))));
 
     private final ScriptCatalog scripts;
     private final ConditionCatalog conditions;

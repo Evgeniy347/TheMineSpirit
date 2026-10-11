@@ -166,15 +166,15 @@ class PlanParserTests {
 
     @Test
     void parse_MissingRequiredParam_ThrowsNamingParam() {
-        String json = "{\"type\":\"script\",\"script\":\"chop_tree\",\"params\":{\"species\":\"oak\"}}";
+        String json = "{\"type\":\"script\",\"script\":\"say\",\"params\":{}}";
 
         PlanValidationException error = assertThrows(PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
-                "Отсутствие обязательного параметра должно отвергаться: иначе скрипт получит null вместо числа "
+                "Отсутствие обязательного параметра должно отвергаться: иначе скрипт получит null вместо значения "
                         + "и поведение станет неопределённым");
 
-        assertTrue(error.getMessage().contains("count"),
-                "Сообщение обязано называть пропущенный параметр 'count': по нему правят план. Фактическое: "
+        assertTrue(error.getMessage().contains("text"),
+                "Сообщение обязано называть пропущенный параметр 'text': по нему правят план. Фактическое: "
                         + error.getMessage());
     }
 

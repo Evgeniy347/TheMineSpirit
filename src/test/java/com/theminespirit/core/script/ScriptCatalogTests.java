@@ -39,14 +39,17 @@ class ScriptCatalogTests {
     }
 
     @Test
-    void defaultCatalog_ChopTree_CountIsRequiredSpeciesIsOptional() {
+    void defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional() {
         ScriptSpec chopTree = CoreScripts.defaultCatalog().find("chop_tree").orElseThrow();
 
         ParamSpec count = param(chopTree, "count");
         ParamSpec species = param(chopTree, "species");
 
-        assertTrue(count.required(),
-                "count в chop_tree обязателен: рубка без числа деревьев не имеет границы и дух уйдёт рубить лес бесконечно");
+        assertEquals(false, count.required(),
+                "count в chop_tree необязателен: без числа деревьев рубка берёт одно дерево по умолчанию из каталога, "
+                        + "а не из шаблона fallback");
+        assertEquals(1, count.defaultValue(),
+                "count в chop_tree по умолчанию 1: значение задаёт каталог, чтобы шаблон fallback не дублировал умолчание");
         assertEquals(ParamType.INT, count.type(),
                 "count в chop_tree — целое: дробное число деревьев невозможно");
         assertEquals(false, species.required(),
