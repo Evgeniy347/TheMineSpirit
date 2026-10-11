@@ -8,21 +8,32 @@ final class Assessments {
     private Assessments() {
     }
 
+    private static boolean initiates(Situation situation) {
+        return TacticsConfig.loadDefault().modes().of(situation.orders().mode()).initiates();
+    }
+
     static EnemyProfiles profiles() {
         return PROFILES;
     }
 
     static Assessment of(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
-        return new Assessment(metrics, 0, 0, situation.orders().mode(), true, 0, Assessment.UNBOUNDED,
+        return new Assessment(metrics, 0, 0, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
                 Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
     }
 
     static Assessment full(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
         double margin = WinMargin.of(situation.self(), metrics, Scales.defaults());
-        return new Assessment(metrics, margin, 1, situation.orders().mode(), true, 0, Assessment.UNBOUNDED,
+        return new Assessment(metrics, margin, 1, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
                 Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
+    }
+
+    static Assessment custom(Situation situation, int routes, double leashLeft, double engageLeft,
+            TacticalState state) {
+        Assessment base = full(situation);
+        return new Assessment(base.enemies(), base.winMargin(), routes, base.mode(), base.initiates(),
+                base.zoneDistance(), leashLeft, engageLeft, base.speedRatio(), state, 0, 1000);
     }
 
     static FactMap facts(Situation situation) {
