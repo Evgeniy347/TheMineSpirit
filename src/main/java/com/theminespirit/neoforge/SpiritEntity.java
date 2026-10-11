@@ -36,11 +36,12 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason.shouldDestroy() || reason == Entity.RemovalReason.CHANGED_DIMENSION) {
+    public void onRemovedFromLevel() {
+        Entity.RemovalReason reason = getRemovalReason();
+        if (reason != null && (reason.shouldDestroy() || reason == Entity.RemovalReason.CHANGED_DIMENSION)) {
             chunkLoader.release();
         }
-        super.remove(reason);
+        super.onRemovedFromLevel();
     }
 
     public Set<ChunkCoord> trackedChunks() {
