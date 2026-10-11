@@ -36,8 +36,13 @@ public final class LlmPlanner implements Planner {
             TaskNode plan = PlanParser.parse(client.complete(prompt), catalog, conditions);
             return new PlanResult(plan, PlanSource.LLM, Optional.empty());
         } catch (LlmException | PlanValidationException error) {
-            PlanResult fallbackResult = fallback.plan(goal, observation);
-            return new PlanResult(fallbackResult.plan(), PlanSource.FALLBACK, Optional.of(error.getMessage()));
+            try {
+                PlanResult fallbackResult = fallback.plan(goal, observation);
+                return new PlanResult(fallbackResult.plan(), PlanSource.FALLBACK, Optional.of(error.getMessage()));
+            } catch (UnplannableGoalException | PlanValidationException fallbackError) {
+                fallbackError.addSuppressed(error);
+                throw fallbackError;
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.WorldObservation;
@@ -84,6 +85,28 @@ class LlmPlannerTests {
                         + "недоступен. Фактическое: " + result.fallbackReason());
         assertEquals(GOAL, fallback.lastGoal(),
                 "При сбое клиента fallback обязан получить исходную цель: подмена цели исказит довыполнение");
+    }
+
+    @Test
+    void plan_ClientAndFallbackBothFail_KeepsLlmErrorAsSuppressed() {
+        LlmException llmError = new LlmException("сеть недоступна");
+        StubLlmClient client = StubLlmClient.throwing(llmError);
+        Planner fallback = (goal, observation) -> {
+            throw new UnplannableGoalException("цель '" + goal.text() + "' не распознана");
+        };
+        LlmPlanner planner = new LlmPlanner(client, CATALOG, fallback);
+
+        UnplannableGoalException thrown = assertThrows(UnplannableGoalException.class,
+                () -> planner.plan(GOAL, OBSERVATION),
+                "Отказ обоих планировщиков обязан выбросить ошибку fallback: молчание скрыло бы, что ни ИИ, "
+                        + "ни шаблон не справились");
+
+        assertTrue(thrown.getSuppressed().length == 1 && thrown.getSuppressed()[0] == llmError,
+                "Ошибка ИИ обязана сохраниться в подавленных: без неё причина отказа ИИ теряется и по журналу "
+                        + "видно только невнятный отказ шаблона");
+        assertTrue(thrown.getMessage().contains("не распознана"),
+                "Сообщение обязано оставаться от fallback, а причина ИИ — в suppressed. Фактическое: "
+                        + thrown.getMessage());
     }
 
     @Test
