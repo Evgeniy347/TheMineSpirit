@@ -204,3 +204,53 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
 торговля и порог избытка; принадлежность контейнеров игрокам и защищённые регионы (контейнер называет вызывающий, `nearest`
 ограничен радиусом); печи, воронки и прочие станции (чеклист 17); блокировка сундука ключом; учёт влияния опыта и зачарований на ценность
 (ценность зависит только от `id`).
+
+## Замечания ревью части А (коммиты 5d97c79..ebf4adc)
+
+Принято: `Stack`, `ValueTable` (строгий разбор: неизвестное поле, отрицательная ценность, мёртвое правило — с путём и
+причиной), `BaseKit` (`best`/`any`, правило по категории, неразобранное — излишек целиком), `ChestSorter` (слияние по
+`item+variant`, минимум слотов, идемпотентность), `TransferPlanner` (доливка, затем пустые слоты, O(n + m) со счётчиком
+обращений), `NeedsOfPlan` (все узлы плана, защита от циклов, глубина 8), `ContainerTarget`/`TransferParams`/
+`UnloadParams`/`EquipParams`, каталог с `unload` и `overflow`. Тесты в каждом `feat:`, имена по шаблону, сообщения есть,
+reflection нет; последний прогон — 501 тест, 0 падений.
+
+- [ ] R1. **Процесс: ветка не слита с `main`, `IdFilter` продублирован.** `5d97c79` кладёт `core/observation/IdFilter`
+      (+ `IdFilterTests`, `IdFilterProperties`) — копию `task/10-foundation`; в `main` тот же класс уже есть (`f2fc703`).
+      Сейчас копии совпадают побайтно, но два коммита одного правила разойдутся при первой правке в любой ветке.
+      Как надо: `git merge main`; после слияния `git diff main -- src/main/java/com/theminespirit/core/observation/IdFilter.java
+      src/test/java/com/theminespirit/core/observation/IdFilter*` пуст (единственный источник — `main`). Ожидаемые конфликты:
+      `CoreScripts` (`collect_drops` из 10 получил параметры — добавить к ним `overflow`), `ScriptArgs.requireBoolean` (тот же
+      метод с другим переносом строки — взять версию `main`), `ScriptCatalogTests`. Затем полный `./gradlew test` — со
+      сторожами `main` (`TaskReferenceCommentGuardTests`, `CatalogDefaultGuardTests`).
+- [ ] R2. **Стиль: комментарии-ссылки на чеклист.** `core/script/CatalogLimits.java:24` «(чеклист 16)» и следующий блок
+      «Чеклист 16: разгрузка…» — после слияния `main` их ловит `TaskReferenceCommentGuardTests` (красный). Удалить; смысл
+      несут имена `CONTAINER_RADIUS_*`, `UNLOAD_TRIGGER_SLOTS`.
+- [ ] R3. **Дефект: при переполнении выбрасывается базовый набор.** `core/inventory/Protected.java:162` защищает слот,
+      только если излишек в нём `0`; `OverflowPolicy.java:35` выбрасывает слот **целиком** (`slot.count()`). Слот с 20 хлеба
+      при квоте 16 (излишек 4) считается выбрасываемым, и дух выкидывает все 20 — еды набора не остаётся. Свойство
+      `decide_DroppedSlot_IsNeverProtected` это пропускает: `shieldsSlot` честно отвечает `false`. Заодно `Protected`
+      держит свой снимок инвентаря, а `decide` получает другой список — индексы слотов могут разойтись молча.
+      Как надо: `DROP(slot, count)` с `count` = излишек слота (ценность сравнивается по выбрасываемой части), слот без
+      излишка — защищён; `Protected` строится из того же списка внутри `decide` (передаются шаблоны и `BaseKit`). Тесты
+      (красные сейчас): строка таблицы `bread:20;iron_ingot:64*35` + `diamond:1` → `DROP(0, 4)`, а не `DROP(0, 20)`;
+      свойство «после `DROP` и приёма для каждого правила `BaseKit` остаётся не меньше, чем было в пределах квоты».
+- [ ] R4. **Дефект данных: дорогое оценено как мусор.** `item_values.json` — по `default 1` идут `iron_block`,
+      `gold_block`, `raw_iron_block`, `raw_gold_block`, `copper_block`, `redstone_block`, `lapis_block`, `coal_block`,
+      `elytra`, `totem_of_undying`, `nether_star`, `trident`, `enchanted_book`, `heart_of_the_sea`, `beacon`,
+      `netherite_upgrade_smithing_template`; `golden_apple`/`enchanted_golden_apple` — 4 (как морковь); `*_shulker_box` — 1.
+      С `overflow = by_value` дух выбросит 64 железных блока ради 10 хлеба, шалкер — вместе с содержимым. Чеклист п. 1:
+      «`netherite_*`… 1000». Как надо: правила для блоков хранения (≥ 9 × слиток), редких предметов и `netherite_*`;
+      шалкер-боксы не выбрасываются никогда (защита в политике, а не только цена). Тест на файл (`ItemValuesFileTests`):
+      таблица «дорогих» id — каждое ≥ 100; для каждой пары «блок — слиток» ценность блока ≥ 9 × слитка; `OverflowPolicyTests`:
+      шалкер в самом дешёвом слоте — не `DROP`.
+- [ ] R5. **Стоимость: категория пересчитывается в каждом сравнении.** `core/inventory/ChestSorter.java:35` —
+      `comparingInt(stack -> ranks.get(values.categoryOf(...)))` вызывает `categoryOf` (до ~250 glob-шаблонов) на каждое
+      сравнение: ~O(n log n × шаблоны) на серверном потоке при каждом обращении к контейнеру; 6 свойств `ChestSorterProperties`
+      идут 5,6 с — выше порога «долгого» класса 2 с. Как надо: ранг категории — один раз на стопку (ключ сортировки
+      считается до `sort`), `ValueTable.valueOf/categoryOf` по id — с кэшем. Тест на масштаб (п. 13): счётчик `categoryOf`
+      на сортировку 90 слотов ≤ 90. Подлог: вернуть вызов в компаратор — краснеет.
+- [ ] R6. **Структура: загрузчик JSON написан дважды.** `ValueTable` и `BaseKit` содержат почти одинаковые `load`,
+      `readTree`, `checkFields`, `stringsField`, `integerField` (CONVENTIONS → «Структура»: две почти одинаковые семьи
+      методов). Вынести общий разбор (например, `core/inventory/JsonResource`) — дальше файлов данных станет больше (17).
+      Мелочи там же: `ValueTable.java:228` — два оператора в одной строке; `checkFields` пишет «Файл ценности» вместо
+      «ценностей». Тесты существующие, поведение не меняется (`refactor:`).
