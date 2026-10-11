@@ -92,17 +92,44 @@ public final class MineGameTests {
             helper.assertTrue(run.safetyReads() <= budget,
                     "чтений безопасности обязано быть не больше " + budget + " (K на цель на вызов планировщика), "
                             + "прочитано " + run.safetyReads() + " за " + run.planCalls() + " вызовов");
-            helper.assertTrue(run.slicesUsed() <= 4 * run.findTicks(),
-                    "поиск идёт порциями не больше 4 срезов за тик: срезов " + run.slicesUsed() + " за "
-                            + run.findTicks() + " тиков поиска");
-            helper.assertTrue(run.breakerTicks() <= run.totalTicks(),
-                    "ломка идёт не больше одного удара за тик: ударов " + run.breakerTicks() + " за "
-                            + run.totalTicks() + " тиков");
+            helper.assertTrue(run.maxSlicesPerTick() <= 4,
+                    "за тик поиск берёт не больше 4 срезов, максимум за тик: " + run.maxSlicesPerTick());
+            helper.assertTrue(run.maxBreakerHitsPerTick() <= 1,
+                    "ломка идёт не больше одного удара за тик, максимум за тик: " + run.maxBreakerHitsPerTick());
             int queryBudget = run.totalTicks() / PickupTuning.REFRESH_TICKS + 2 * run.collectRuns() + 2;
             helper.assertTrue(run.entityQueries() <= queryBudget,
                     "запросов сущностей обязано быть не больше " + queryBudget + " (раз в "
                             + PickupTuning.REFRESH_TICKS + " тиков и по одному на старте и финале сбора), сделано "
                             + run.entityQueries());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "mine_scale", timeoutTicks = 400)
+    public static void mineVein_NoOreInRadius_ScansAtMostFourSlicesPerTick(GameTestHelper helper) {
+        buildCave(helper);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
+        AtomicReference<HarvestSession> session = new AtomicReference<>();
+        helper.onEachTick(() -> {
+            if (session.get() == null) {
+                if (spirit.tickCount >= SETTLE_TICKS) {
+                    session.set(HarvestSession.mineVein(spirit, OreKind.IRON, 1, RADIUS));
+                }
+                return;
+            }
+            if (session.get().outcome() == HarvestSession.Outcome.RUNNING) {
+                session.get().tick();
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            HarvestSession run = session.get();
+            helper.assertTrue(run != null, "сессия обязана стартовать");
+            helper.assertTrue(run.outcome() == HarvestSession.Outcome.FAILED,
+                    "без руды в радиусе сессия обязана завершиться отказом, а не " + run.outcome());
+            helper.assertTrue(run.maxSlicesPerTick() <= 4,
+                    "за тик поиск обязан просматривать не больше 4 срезов, максимум за тик: "
+                            + run.maxSlicesPerTick() + " из " + run.slicesUsed() + " срезов всего");
             GameTestFixtures.reset(helper);
         });
     }
@@ -264,7 +291,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "gather_cobble", timeoutTicks = 2400)
+    @GameTest(template = "empty", batch = "gather_cobble", timeoutTicks = 1000)
     public static void gather_CobblestoneHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         buildCave(helper);
         for (int x = 1; x <= 3; x++) {
@@ -288,6 +315,9 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 0, 2)).is(Blocks.STONE),
                     "пол под кучей обязан остаться: блок под ногами не ломается");
+            helper.assertTrue(run.spiritTicks() <= 720,
+                    "куча из 18 булыжника обязана собраться за 720 тиков (замерено 481, тайм-аут в 2 раза: 1000), "
+                            + "заняло " + run.spiritTicks());
             GameTestFixtures.reset(helper);
         });
     }

@@ -17,6 +17,7 @@ final class VeinTargets implements HarvestTargets {
     private final LevelOreView oreView;
     private final Set<BlockCoord> seen = new HashSet<>();
     private int slices;
+    private int maxSlicesPerTick;
 
     VeinTargets(Level level, BlockPos center, int radius, Set<Block> ores) {
         this.search = BlockLocator.search(level, center, radius, ores);
@@ -25,13 +26,18 @@ final class VeinTargets implements HarvestTargets {
 
     @Override
     public List<BlockCoord> advance() {
+        int used = 0;
         for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {
             slices++;
+            used++;
             List<BlockPos> found = search.step(1);
             if (!found.isEmpty()) {
-                return expand(found);
+                List<BlockCoord> vein = expand(found);
+                maxSlicesPerTick = Math.max(maxSlicesPerTick, used);
+                return vein;
             }
         }
+        maxSlicesPerTick = Math.max(maxSlicesPerTick, used);
         return List.of();
     }
 
@@ -43,6 +49,11 @@ final class VeinTargets implements HarvestTargets {
     @Override
     public int slicesUsed() {
         return slices;
+    }
+
+    @Override
+    public int maxSlicesPerTick() {
+        return maxSlicesPerTick;
     }
 
     private List<BlockCoord> expand(List<BlockPos> found) {

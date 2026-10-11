@@ -177,6 +177,14 @@ public final class HarvestSession {
         return breakerTicks;
     }
 
+    public int maxSlicesPerTick() {
+        return targets.maxSlicesPerTick();
+    }
+
+    public int maxBreakerHitsPerTick() {
+        return breaker.maxHitsPerTick();
+    }
+
     private void find() {
         if (targets.refusalReason() != null) {
             fail(targets.refusalReason());

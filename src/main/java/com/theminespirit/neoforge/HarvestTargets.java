@@ -12,6 +12,8 @@ interface HarvestTargets {
 
     int slicesUsed();
 
+    int maxSlicesPerTick();
+
     default String refusalReason() {
         return null;
     }
