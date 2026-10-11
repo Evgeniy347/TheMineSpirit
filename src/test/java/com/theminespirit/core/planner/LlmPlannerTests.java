@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.ScriptSpec;
@@ -25,11 +24,15 @@ class LlmPlannerTests {
         RecordingPlanner fallback = RecordingPlanner.returning(FALLBACK_PLAN);
         LlmPlanner planner = new LlmPlanner(client, CATALOG, fallback);
 
-        TaskNode plan = planner.plan(GOAL, OBSERVATION);
+        PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(new ScriptCall("wait", Map.of("ticks", 5)), plan,
+        assertEquals(new ScriptCall("wait", Map.of("ticks", 5)), result.plan(),
                 "Валидный JSON-план от клиента обязан исполняться, а не заменяться шаблоном: иначе качество "
                         + "решения ИИ выбрасывается и дух всегда делает одно и то же");
+        assertEquals(PlanResult.SOURCE_LLM, result.source(),
+                "План от ИИ обязан помечаться источником 'llm': иначе не отличить решение ИИ от шаблона");
+        assertTrue(result.fallbackReason().isEmpty(),
+                "Успешный план ИИ не несёт причины fallback: причина появляется только при сбое");
         assertTrue(fallback.isEmpty(),
                 "Валидный план не должен передаваться в fallback: вызов запасного планировщика при рабочем "
                         + "ответе ИИ удваивает работу и может украсть сценарий");
@@ -44,11 +47,17 @@ class LlmPlannerTests {
         RecordingPlanner fallback = RecordingPlanner.returning(FALLBACK_PLAN);
         LlmPlanner planner = new LlmPlanner(client, CATALOG, fallback);
 
-        TaskNode plan = planner.plan(GOAL, OBSERVATION);
+        PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(FALLBACK_PLAN, plan,
+        assertEquals(FALLBACK_PLAN, result.plan(),
                 "Невалидный план ИИ обязан уходить в fallback: иначе неизвестный скрипт дойдёт до движка "
                         + "и задача сорвётся в тике вместо аккуратного плана по шаблону");
+        assertEquals(PlanResult.SOURCE_FALLBACK, result.source(),
+                "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
+                        + "останется незамеченным");
+        assertTrue(result.fallbackReason().orElseThrow().contains("no_such_script"),
+                "Причина fallback обязана содержать текст ошибки валидации с именем скрипта: по ней игрок "
+                        + "видит, почему ИИ не справился. Фактическое: " + result.fallbackReason());
         assertEquals(GOAL, fallback.lastGoal(),
                 "Fallback обязан получать исходную цель: несовпадение цели превратит довыполнение "
                         + "в исполнение чужой задачи");
@@ -62,11 +71,17 @@ class LlmPlannerTests {
         RecordingPlanner fallback = RecordingPlanner.returning(FALLBACK_PLAN);
         LlmPlanner planner = new LlmPlanner(client, CATALOG, fallback);
 
-        TaskNode plan = planner.plan(GOAL, OBSERVATION);
+        PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(FALLBACK_PLAN, plan,
+        assertEquals(FALLBACK_PLAN, result.plan(),
                 "Сбой клиента ИИ обязан уходить в fallback: иначе дух останется без плана при недоступном "
                         + "сервисе и простоит тик за тиком");
+        assertEquals(PlanResult.SOURCE_FALLBACK, result.source(),
+                "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
+                        + "останется незамеченным");
+        assertTrue(result.fallbackReason().orElseThrow().contains("сеть недоступна"),
+                "Причина fallback обязана содержать сообщение сбоя клиента: по ней видно, что сервис ИИ "
+                        + "недоступен. Фактическое: " + result.fallbackReason());
         assertEquals(GOAL, fallback.lastGoal(),
                 "При сбое клиента fallback обязан получить исходную цель: подмена цели исказит довыполнение");
     }

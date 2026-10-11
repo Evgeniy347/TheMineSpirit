@@ -17,9 +17,13 @@ class FallbackPlannerTests {
     private static final FallbackPlanner PLANNER = new FallbackPlanner();
     private static final WorldObservation OBSERVATION = Observations.empty("spirit_1");
 
+    private static TaskNode plan(Goal goal) {
+        return PLANNER.plan(goal, OBSERVATION).plan();
+    }
+
     @Test
     void plan_ChopGoal_ReturnsScanAndChopSequence() {
-        TaskNode plan = PLANNER.plan(new Goal("срубить деревья возле дома", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("срубить деревья возле дома", Map.of()));
 
         assertEquals(chopPlan(32, "any", 1), plan,
                 "Цель со словом 'сруб' обязана дать scan с фильтром брёвен и chop_tree: иначе дух рубит "
@@ -28,7 +32,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_TreeWordGoal_ReturnsScanAndChopSequence() {
-        TaskNode plan = PLANNER.plan(new Goal("валить деревья", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("валить деревья", Map.of()));
 
         assertEquals(chopPlan(32, "any", 1), plan,
                 "Слово 'дерев' обязано распознаваться как рубка: иначе синоним формулировки уводит в fallback "
@@ -37,7 +41,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_MineGoal_ReturnsScanAndMineSequence() {
-        TaskNode plan = PLANNER.plan(new Goal("добыть руду из шахты", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("добыть руду из шахты", Map.of()));
 
         assertEquals(minePlan(32, "any", 1), plan,
                 "Цель со словом 'руд' обязана дать scan с фильтром руды и mine_vein: иначе дух копает "
@@ -46,7 +50,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_MineShaftGoal_ReturnsScanAndMineSequence() {
-        TaskNode plan = PLANNER.plan(new Goal("спустись в шахту", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("спустись в шахту", Map.of()));
 
         assertEquals(minePlan(32, "any", 1), plan,
                 "Слово 'шахт' обязано распознаваться как добыча: иначе дух дойдёт до шахты и встанет, "
@@ -55,7 +59,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowGoal_ReturnsFollowCall() {
-        TaskNode plan = PLANNER.plan(new Goal("следуй за мной", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("следуй за мной", Map.of()));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
                 "Цель со словом 'следу' обязана дать follow на игрока: иначе дух не сопровождает игрока "
@@ -64,7 +68,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowBehindPhrase_ReturnsFollowCall() {
-        TaskNode plan = PLANNER.plan(new Goal("держись за мной", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("держись за мной", Map.of()));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "player", "radius", 3)), plan,
                 "Фраза 'за мной' обязана распознаваться как сопровождение: иначе естественная формулировка "
@@ -73,7 +77,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_HomeGoal_ReturnsReturnHomeCall() {
-        TaskNode plan = PLANNER.plan(new Goal("вернись домой", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("вернись домой", Map.of()));
 
         assertEquals(new ScriptCall("return_home", Map.of()), plan,
                 "Цель со словом 'домой' обязана дать return_home: иначе дух остаётся в шахте на ночь "
@@ -82,7 +86,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_ComeBackGoal_ReturnsReturnHomeCall() {
-        TaskNode plan = PLANNER.plan(new Goal("вернись ко мне", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("вернись ко мне", Map.of()));
 
         assertEquals(new ScriptCall("return_home", Map.of()), plan,
                 "Слово 'верни' обязано распознаваться как возвращение домой: иначе приказ отступить "
@@ -91,7 +95,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_AttackGoal_ReturnsAttackCall() {
-        TaskNode plan = PLANNER.plan(new Goal("атакуй монстра", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("атакуй монстра", Map.of()));
 
         assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
                 "Цель со словом 'атак' обязана дать attack на враждебную цель: иначе дух мирно стоит "
@@ -100,7 +104,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_KillGoal_ReturnsAttackCall() {
-        TaskNode plan = PLANNER.plan(new Goal("убей крипера", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("убей крипера", Map.of()));
 
         assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
                 "Слово 'убей' обязано распознаваться как атака: иначе боевая команда трактуется как мирная "
@@ -109,8 +113,8 @@ class FallbackPlannerTests {
 
     @Test
     void plan_ChopGoalWithParams_OverridesDefaults() {
-        TaskNode plan = PLANNER.plan(new Goal("срубить дерево",
-                Map.of("radius", 16, "species", "oak", "count", 3)), OBSERVATION);
+        TaskNode plan = plan(new Goal("срубить дерево",
+                Map.of("radius", 16, "species", "oak", "count", 3)));
 
         assertEquals(chopPlan(16, "oak", 3), plan,
                 "Параметры цели обязаны переопределять значения по умолчанию: иначе дух рубит любой вид "
@@ -119,8 +123,8 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowGoalWithParams_OverridesDefaults() {
-        TaskNode plan = PLANNER.plan(new Goal("следуй за мной",
-                Map.of("target", "villager", "radius", 5)), OBSERVATION);
+        TaskNode plan = plan(new Goal("следуй за мной",
+                Map.of("target", "villager", "radius", 5)));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "villager", "radius", 5)), plan,
                 "Параметры цели обязаны переопределять цель и дистанцию сопровождения: иначе дух сопровождает "
@@ -129,7 +133,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_UppercaseGoalWithSpaces_IsNormalizedBeforeMatch() {
-        TaskNode plan = PLANNER.plan(new Goal("   СРУБИТЬ ДУБ  ", Map.of()), OBSERVATION);
+        TaskNode plan = plan(new Goal("   СРУБИТЬ ДУБ  ", Map.of()));
 
         assertEquals(chopPlan(32, "any", 1), plan,
                 "Текст цели обязан нормализоваться (trim и нижний регистр) до поиска ключевых слов: иначе "
@@ -139,7 +143,7 @@ class FallbackPlannerTests {
     @Test
     void plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal() {
         UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
-                () -> PLANNER.plan(new Goal("полететь на луну", Map.of()), OBSERVATION),
+                () -> plan(new Goal("полететь на луну", Map.of())),
                 "Незнакомая цель обязана давать UnplannableGoalException: молчаливый план-заглушка уронит "
                         + "ожидания игрока и спрячет непонятые формулировки");
 
@@ -151,7 +155,7 @@ class FallbackPlannerTests {
     @Test
     void plan_ChopGoalWithInvalidCountType_ThrowsValidationException() {
         assertThrows(PlanValidationException.class,
-                () -> PLANNER.plan(new Goal("срубить деревья", Map.of("count", "пять")), OBSERVATION),
+                () -> plan(new Goal("срубить деревья", Map.of("count", "пять"))),
                 "Цель с неверным типом count должна быть отклонена валидатором: иначе в план попадает невалидное значение");
     }
 

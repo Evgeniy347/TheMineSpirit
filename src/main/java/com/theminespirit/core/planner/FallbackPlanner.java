@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class FallbackPlanner implements Planner {
     private static final List<Rule> RULES = List.of(
@@ -41,13 +42,14 @@ public final class FallbackPlanner implements Planner {
     }
 
     @Override
-    public TaskNode plan(Goal goal, WorldObservation observation) {
+    public PlanResult plan(Goal goal, WorldObservation observation) {
         Objects.requireNonNull(goal, "goal не может быть null: без текста цели сценарий не выбрать");
         String normalized = goal.text().strip().toLowerCase(Locale.ROOT);
         for (Rule rule : RULES) {
             if (normalized.contains(rule.keyword)) {
                 TaskNode node = rule.action.build(goal);
-                return PlanValidator.validate(node, scripts, conditions);
+                TaskNode validated = PlanValidator.validate(node, scripts, conditions);
+                return new PlanResult(validated, PlanResult.SOURCE_FALLBACK, Optional.empty());
             }
         }
         throw new UnplannableGoalException("Цель '" + goal.text()

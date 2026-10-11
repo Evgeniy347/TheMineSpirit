@@ -8,6 +8,7 @@ import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class LlmPlanner implements Planner {
     private final LlmClient client;
@@ -29,13 +30,14 @@ public final class LlmPlanner implements Planner {
     }
 
     @Override
-    public TaskNode plan(Goal goal, WorldObservation observation) {
+    public PlanResult plan(Goal goal, WorldObservation observation) {
         String prompt = buildPrompt(goal, observation);
         try {
-            String text = client.complete(prompt);
-            return PlanParser.parse(text, catalog, conditions);
+            TaskNode plan = PlanParser.parse(client.complete(prompt), catalog, conditions);
+            return new PlanResult(plan, PlanResult.SOURCE_LLM, Optional.empty());
         } catch (LlmException | PlanValidationException error) {
-            return fallback.plan(goal, observation);
+            PlanResult fallbackResult = fallback.plan(goal, observation);
+            return new PlanResult(fallbackResult.plan(), PlanResult.SOURCE_FALLBACK, Optional.of(error.getMessage()));
         }
     }
 

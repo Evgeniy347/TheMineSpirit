@@ -120,7 +120,7 @@ public final class SpiritCommands {
         for (SpiritEntity spirit : spirits) {
             try {
                 TaskNode plan = new FallbackPlanner(SpiritScripts.catalogFor(spirit), ConditionCatalog.empty())
-                        .plan(new Goal(text, Map.of()), emptyObservation(spirit));
+                        .plan(new Goal(text, Map.of()), emptyObservation(spirit)).plan();
                 spirit.startTask(plan);
                 assigned.add(spirit.getStringUUID());
             } catch (UnplannableGoalException | PlanValidationException e) {

@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 final class RecordingPlanner implements Planner {
     private final TaskNode response;
@@ -19,10 +20,10 @@ final class RecordingPlanner implements Planner {
     }
 
     @Override
-    public TaskNode plan(Goal goal, WorldObservation observation) {
+    public PlanResult plan(Goal goal, WorldObservation observation) {
         goals.add(goal);
         observations.add(observation);
-        return response;
+        return new PlanResult(response, PlanResult.SOURCE_FALLBACK, Optional.empty());
     }
 
     boolean isEmpty() {
