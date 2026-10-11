@@ -235,9 +235,9 @@ reflection нет; последний прогон — 501 тест, 0 паде�
       (красные сейчас): строка таблицы `bread:20;iron_ingot:64*35` + `diamond:1` → `DROP(0, 4)`, а не `DROP(0, 20)`;
       свойство «после `DROP` и приёма для каждого правила `BaseKit` остаётся не меньше, чем было в пределах квоты».
 - [ ] R4. **Дефект данных: дорогое оценено как мусор.** `item_values.json` — по `default 1` идут `iron_block`,
-      `gold_block`, `raw_iron_block`, `raw_gold_block`, `copper_block`, `redstone_block`, `lapis_block`, `coal_block`,
+      `gold_block`, `raw_iron_block`, `copper_block`, `redstone_block`, `lapis_block`, `coal_block`,
       `elytra`, `totem_of_undying`, `nether_star`, `trident`, `enchanted_book`, `heart_of_the_sea`, `beacon`,
-      `netherite_upgrade_smithing_template`; `golden_apple`/`enchanted_golden_apple` — 4 (как морковь); `*_shulker_box` — 1.
+      `netherite_upgrade_smithing_template`; `golden_apple` — 4 (как морковь); `*_shulker_box` — 1.
       С `overflow = by_value` дух выбросит 64 железных блока ради 10 хлеба, шалкер — вместе с содержимым. Чеклист п. 1:
       «`netherite_*`… 1000». Как надо: правила для блоков хранения (≥ 9 × слиток), редких предметов и `netherite_*`;
       шалкер-боксы не выбрасываются никогда (защита в политике, а не только цена). Тест на файл (`ItemValuesFileTests`):
