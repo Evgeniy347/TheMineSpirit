@@ -5,6 +5,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
@@ -58,7 +59,7 @@ public final class SpiritGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
         WorldObservation observation = WorldScanner.observe(helper.getLevel(), "spirit_1",
-                new com.theminespirit.core.observation.BlockPos(
+                new BlockCoord(
                         absolute.getX(), absolute.getY(), absolute.getZ()),
                 ScanRadius.of(2), spirit.getInventory());
 

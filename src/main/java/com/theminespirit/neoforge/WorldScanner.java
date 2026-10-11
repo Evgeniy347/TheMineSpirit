@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.observation.BlockPos;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ContainerRef;
 import com.theminespirit.core.observation.EntityRef;
-import com.theminespirit.core.observation.InventoryEntry;
+import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
 import java.util.ArrayList;
@@ -23,10 +23,10 @@ public final class WorldScanner {
     private WorldScanner() {
     }
 
-    public static WorldObservation observe(Level level, String botId, BlockPos center, ScanRadius radius,
+    public static WorldObservation observe(Level level, String botId, BlockCoord center, ScanRadius radius,
             Container inventory) {
         int r = radius.value();
-        List<InventoryEntry> blocks = new ArrayList<>();
+        List<ItemCount> blocks = new ArrayList<>();
         List<ContainerRef> containers = new ArrayList<>();
         Map<String, Integer> blockCounts = new LinkedHashMap<>();
 
@@ -43,7 +43,7 @@ public final class WorldScanner {
                         BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString(), toCore(pos)));
             }
         });
-        blockCounts.forEach((item, count) -> blocks.add(new InventoryEntry(item, count)));
+        blockCounts.forEach((item, count) -> blocks.add(new ItemCount(item, count)));
 
         Vec3 centerPos = new Vec3(center.x() + 0.5, center.y() + 0.5, center.z() + 0.5);
         AABB bounds = new AABB(min.getX(), min.getY(), min.getZ(),
@@ -59,22 +59,22 @@ public final class WorldScanner {
                 entities, containers, r);
     }
 
-    private static List<InventoryEntry> inventoryEntries(Container inventory) {
-        List<InventoryEntry> entries = new ArrayList<>();
+    private static List<ItemCount> inventoryEntries(Container inventory) {
+        List<ItemCount> entries = new ArrayList<>();
         if (inventory == null) {
             return entries;
         }
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
             if (!stack.isEmpty()) {
-                entries.add(new InventoryEntry(
+                entries.add(new ItemCount(
                         BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), stack.getCount()));
             }
         }
         return entries;
     }
 
-    private static BlockPos toCore(net.minecraft.core.BlockPos pos) {
-        return new BlockPos(pos.getX(), pos.getY(), pos.getZ());
+    private static BlockCoord toCore(net.minecraft.core.BlockPos pos) {
+        return new com.theminespirit.core.observation.BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 }

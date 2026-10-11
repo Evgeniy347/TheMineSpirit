@@ -1,8 +1,8 @@
 package com.theminespirit.core.observation;
 
-public record BlockPos(int x, int y, int z) implements Comparable<BlockPos> {
+public record BlockCoord(int x, int y, int z) implements Comparable<BlockCoord> {
     @Override
-    public int compareTo(BlockPos other) {
+    public int compareTo(BlockCoord other) {
         int byX = Integer.compare(x, other.x);
         if (byX != 0) {
             return byX;

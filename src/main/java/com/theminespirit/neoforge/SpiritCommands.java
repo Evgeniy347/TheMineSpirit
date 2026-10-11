@@ -62,7 +62,7 @@ public final class SpiritCommands {
         WorldObservation observation = WorldScanner.observe(
                 source.getLevel(),
                 "player_" + player.getScoreboardName(),
-                new com.theminespirit.core.observation.BlockPos(
+                new com.theminespirit.core.observation.BlockCoord(
                         player.blockPosition().getX(), player.blockPosition().getY(), player.blockPosition().getZ()),
                 ScanRadius.of(radius),
                 player.getInventory());

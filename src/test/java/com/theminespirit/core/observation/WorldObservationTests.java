@@ -2,33 +2,34 @@ package com.theminespirit.core.observation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class WorldObservationTests {
-    private static WorldObservation observation(List<InventoryEntry> inventory, List<EntityRef> entities) {
+    private static WorldObservation observation(List<ItemCount> inventory, List<EntityRef> entities) {
         return new WorldObservation(
                 "spirit_1",
                 123456L,
-                new BlockPos(10, 64, -3),
+                new com.theminespirit.core.observation.BlockCoord(10, 64, -3),
                 inventory,
-                List.of(new InventoryEntry("oak_log", 12), new InventoryEntry("grass_block", 340)),
+                List.of(new ItemCount("oak_log", 12), new ItemCount("grass_block", 340)),
                 entities,
-                List.of(new ContainerRef("minecraft:chest", new BlockPos(8, 63, -5))),
+                List.of(new ContainerRef("minecraft:chest", new com.theminespirit.core.observation.BlockCoord(8, 63, -5))),
                 32);
     }
 
     @Test
     void hash_SameDataDifferentListOrder_IsEqual() {
         WorldObservation first = observation(
-                List.of(new InventoryEntry("oak_log", 5), new InventoryEntry("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new BlockPos(14, 64, -1), 5.0),
-                        new EntityRef("minecraft:sheep", new BlockPos(2, 64, 1), 9.0)));
+                List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
+                List.of(new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0),
+                        new EntityRef("minecraft:sheep", new com.theminespirit.core.observation.BlockCoord(2, 64, 1), 9.0)));
         WorldObservation second = observation(
-                List.of(new InventoryEntry("iron_pickaxe", 1), new InventoryEntry("oak_log", 5)),
-                List.of(new EntityRef("minecraft:sheep", new BlockPos(2, 64, 1), 9.0),
-                        new EntityRef("minecraft:cow", new BlockPos(14, 64, -1), 5.0)));
+                List.of(new ItemCount("iron_pickaxe", 1), new ItemCount("oak_log", 5)),
+                List.of(new EntityRef("minecraft:sheep", new com.theminespirit.core.observation.BlockCoord(2, 64, 1), 9.0),
+                        new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0)));
 
         assertEquals(first.hash(), second.hash(),
                 "hash наблюдения обязан быть стабильным при любом порядке входных списков: иначе две одинаковые "
@@ -40,8 +41,8 @@ class WorldObservationTests {
 
     @Test
     void hash_DataChanged_Differs() {
-        WorldObservation base = observation(List.of(new InventoryEntry("oak_log", 5)), List.of());
-        WorldObservation changed = observation(List.of(new InventoryEntry("oak_log", 6)), List.of());
+        WorldObservation base = observation(List.of(new ItemCount("oak_log", 5)), List.of());
+        WorldObservation changed = observation(List.of(new ItemCount("oak_log", 6)), List.of());
 
         assertNotEquals(base.hash(), changed.hash(),
                 "hash обязан меняться при изменении данных наблюдения: иначе ИИ считает изменившийся мир прежним "
@@ -51,8 +52,8 @@ class WorldObservationTests {
     @Test
     void fromJson_AfterToJson_EqualsOriginal() {
         WorldObservation original = observation(
-                List.of(new InventoryEntry("oak_log", 5), new InventoryEntry("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new BlockPos(14, 64, -1), 5.0)));
+                List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
+                List.of(new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0)));
 
         WorldObservation restored = WorldObservation.fromJson(original.toJson());
 
@@ -69,4 +70,55 @@ class WorldObservationTests {
                 "hash — SHA-256 в hex, ровно 64 символа: другая длина означает, что используется не SHA-256 "
                         + "и хэши несравнимы между версиями");
     }
+
+    @Test
+    void hash_InventoryWithDuplicatesAggregated_IsEqualRegardlessOfSlots() {
+        WorldObservation first = observation(
+                List.of(new ItemCount("oak_log", 64), new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
+                List.of());
+        WorldObservation second = observation(
+                List.of(new ItemCount("iron_pickaxe", 1), new ItemCount("oak_log", 69)),
+                List.of());
+
+        assertEquals(first.hash(), second.hash(),
+                "Одинаковый мультимножественный инвентарь с повторами должен давать одинаковый hash после агрегации");
+    }
+
+
+    @Test
+    void hash_SameWorldDifferentTicks_SameHash() {
+        WorldObservation first = new WorldObservation("spirit_1", 1L, new BlockCoord(10, 64, -3),
+                List.of(new ItemCount("oak_log", 5)), List.of(), List.of(), List.of(), 32);
+        WorldObservation second = new WorldObservation("spirit_1", 999999L, new BlockCoord(10, 64, -3),
+                List.of(new ItemCount("oak_log", 5)), List.of(), List.of(), List.of(), 32);
+        assertEquals(first.hash(), second.hash(),
+                "hash должен описывать картину мира без тика: одно и то же состояние в разные тики даёт одинаковый hash");
+    }
+
+    @Test
+    void hash_EntityMovesBetweenBlocks_HashDiffers() {
+        WorldObservation first = observation(List.of(), List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1))));
+        WorldObservation second = observation(List.of(), List.of(new EntityRef("minecraft:cow", new BlockCoord(15, 64, -1))));
+        assertNotEquals(first.hash(), second.hash(),
+                "Сдвиг сущности на блок изменяет картину мира — hash должен отличаться");
+    }
+
+
+    @Test
+    void toJson_ContractShape_MatchesApiFields() {
+        WorldObservation obs = observation(
+                List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
+                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1))));
+        String json = obs.toJson();
+        assertTrue(json.contains("bot"));
+        assertTrue(json.contains("pos"));
+        assertTrue(json.contains("hash"));
+        assertTrue(json.contains("tick"));
+        assertTrue(json.contains("radius"));
+        assertTrue(json.contains("inventory"));
+        assertTrue(json.contains("blocks"));
+        assertTrue(json.contains("entities"));
+        assertTrue(json.contains("containers"));
+    }
+
 }
