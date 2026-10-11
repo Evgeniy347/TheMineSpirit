@@ -99,6 +99,14 @@ neoForge {
             // You can set various levels here.
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-logging-levels
             logLevel = org.slf4j.event.Level.DEBUG
+
+            if (name == 'gameTestServer') {
+                // GameTest — свой каталог и INFO вместо DEBUG: мир на каждый прогон новый
+                // (docs/TESTING.md), а лог не заваливается DEBUG-шумом
+                // (docs/research/test-performance.md → п.7)
+                logLevel = org.slf4j.event.Level.INFO
+                gameDirectory = project.file('build/gametest-run')
+            }
         }
     }
 
@@ -353,5 +361,13 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+// Чистый мир на каждый прогон GameTest: build/gametest-run/world удаляется перед стартом,
+// иначе мир растёт от прогона к прогону (docs/research/test-performance.md → п.7).
+tasks.named('runGameTestServer') {
+    doFirst {
+        delete(new File(gameDirectory, 'world'))
     }
 }
