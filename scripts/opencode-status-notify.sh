@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Сводка о задании opencode в тему «Оповещения» (таймер раз в 5 мин). Молчит, если opencode не запущен.
-status="$(sudo -u domovoy $(dirname "$0")/opencode-status.sh 1 2>/dev/null | sed -n '1p;3p' | tr '\n' ' ')"
-case "$status" in
-    *"не запущен"*|"") exit 0 ;;
-esac
-failures=$(wc -l < $(dirname "$0")/../TestResults/opencode/failures.log 2>/dev/null || echo 0)
-sudo -u ids-notify notify --level info --subject "minecraft: opencode" "$status | сбоев в логе: $failures"
+# Сводка в тему «Оповещения» Telegram (таймер раз в 5 мин): общий прогресс плана и работающие исполнители.
+# Молчит, если ни один исполнитель (tmux-сессия oc-*) не работает.
+dir="$(cd "$(dirname "$0")" && pwd)"
+sessions="$(sudo -u domovoy tmux ls -F '#{session_name}' 2>/dev/null | grep '^oc-' | tr '\n' ' ')"
+[ -z "$sessions" ] && exit 0
+progress="$("$dir/progress.sh")"
+status="$(sudo -u domovoy "$dir/opencode-status.sh" 1 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
+failures=$(cat /opt/minecraft/the-mine-spirit/TestResults/opencode/failures.log /opt/minecraft/wt/*/TestResults/opencode/failures.log 2>/dev/null | wc -l)
+sudo -u ids-notify notify --level info --subject "minecraft" \
+    "Прогресс плана: $progress | работают: $sessions| main: ${status:-—} | сбоев модели: $failures"
