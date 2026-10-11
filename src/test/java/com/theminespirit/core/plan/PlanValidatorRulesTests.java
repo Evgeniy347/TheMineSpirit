@@ -5,19 +5,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ParamType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.LongRange;
 import org.junit.jupiter.api.Test;
@@ -78,6 +82,33 @@ class PlanValidatorRulesTests {
         assertThrows(PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 description + ": план должен быть отклонён валидатором");
+    }
+
+    @Test
+    void mineVeinUnknownOre_Plan_IsRejectedWithAllowedList() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"ore\":\"mithril\"}}", CATALOG),
+                "ore=\"mithril\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
+
+        assertTrue(error.getMessage().contains("mithril"),
+                "Отказ обязан называть неизвестный вид 'mithril'. Фактическое: " + error.getMessage());
+        for (String allowed : OreKind.names()) {
+            assertTrue(error.getMessage().contains(allowed),
+                    "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
+                            + error.getMessage());
+        }
+    }
+
+    @Test
+    void mineVeinWithoutOre_Plan_ContainsCatalogDefault() {
+        TaskNode plan = PlanParser.parse(
+                "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"count\":2,\"radius\":8}}", CATALOG);
+
+        assertEquals(new ScriptCall("mine_vein",
+                        Map.of("ore", "any", "count", 2, "radius", 8)), plan,
+                "Валидатор обязан подставлять default 'any' для отсутствующего ore: иначе обещание default "
+                        + "в /v1/capabilities остаётся неправдой, а маппинг скрипта получит план без вида руды");
     }
 
     @Test
@@ -143,5 +174,30 @@ class PlanValidatorRulesTests {
 
         assertEquals(new ScriptCall("harvest_test", Map.of("replant", false, "species", "oak")), plan,
                 "Явное значение плана обязано побеждать умолчание каталога: иначе ИИ не сможет отключить replant");
+    }
+
+    @Provide
+    Arbitrary<JsonNode> jsonTrees() {
+        return JsonTrees.any();
+    }
+
+    @Property
+    void parse_AnyJsonTree_SameInputSameOutputOrException(@ForAll("jsonTrees") JsonNode tree) {
+        String json = tree.toString();
+        try {
+            TaskNode first = PlanParser.parse(json, CATALOG);
+            TaskNode second = PlanParser.parse(json, CATALOG);
+            assertEquals(first, second,
+                    "одинаковый вход обязан давать одинаковый план: если валидатор зависит от порядка или "
+                            + "состояния, один и тот же план в разное время выполнит разные действия. JSON=" + json);
+        } catch (PlanValidationException firstError) {
+            PlanValidationException secondError = assertThrows(PlanValidationException.class,
+                    () -> PlanParser.parse(json, CATALOG),
+                    "одинаковый вход обязан бросать одинаковое исключение: нестабильный валидатор то примет, "
+                            + "то отклонит один план. JSON=" + json);
+            assertEquals(firstError.getMessage(), secondError.getMessage(),
+                    "исключение должно быть тем же самым при том же входе: детерминизм валидатора — контракт, "
+                            + "иначе ИИ не сможет воспроизвести и починить сбой. JSON=" + json);
+        }
     }
 }

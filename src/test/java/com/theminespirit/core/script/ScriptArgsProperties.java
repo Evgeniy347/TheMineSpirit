@@ -11,6 +11,7 @@ import java.util.Optional;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
+import org.junit.jupiter.api.Tag;
 
 class ScriptArgsProperties {
     @Property
