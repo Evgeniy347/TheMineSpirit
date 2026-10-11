@@ -1,12 +1,18 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.chunk.ChunkCoord;
+import com.theminespirit.core.chunk.ChunkDiff;
+import com.theminespirit.core.chunk.ChunkSquare;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
@@ -17,6 +23,9 @@ public final class SpiritEntity extends PathfinderMob {
     private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
     private SpiritBrain brain;
     private int pathBuilds;
+    private ChunkCoord trackedCenter;
+    private int trackedRadius = -1;
+    private Set<ChunkCoord> trackedChunks;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -25,9 +34,51 @@ public final class SpiritEntity extends PathfinderMob {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        updateChunkTickets();
         if (brain != null) {
             brain.tick();
         }
+    }
+
+    @Override
+    public void remove(Entity.RemovalReason reason) {
+        releaseChunkTickets();
+        super.remove(reason);
+    }
+
+    public Set<ChunkCoord> trackedChunks() {
+        return trackedChunks == null ? Set.of() : trackedChunks;
+    }
+
+    private void updateChunkTickets() {
+        if (!(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        ChunkCoord center = new ChunkCoord(chunkPosition().x, chunkPosition().z);
+        int radius = SpiritConfig.radiusFor(serverLevel);
+        if (trackedChunks != null && center.equals(trackedCenter) && radius == trackedRadius) {
+            return;
+        }
+        Set<ChunkCoord> desired = ChunkSquare.chunks(center, radius);
+        ChunkDiff diff = trackedChunks == null
+                ? ChunkDiff.initial(desired)
+                : ChunkDiff.between(trackedChunks, desired);
+        if (!diff.isEmpty()) {
+            SpiritChunkTickets.apply(serverLevel, this, diff);
+        }
+        trackedCenter = center;
+        trackedRadius = radius;
+        trackedChunks = desired;
+    }
+
+    private void releaseChunkTickets() {
+        if (trackedChunks == null || !(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        SpiritChunkTickets.apply(serverLevel, this, new ChunkDiff(Set.of(), trackedChunks));
+        trackedChunks = null;
+        trackedCenter = null;
+        trackedRadius = -1;
     }
 
     @Override
