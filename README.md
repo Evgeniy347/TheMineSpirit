@@ -43,8 +43,8 @@
 | Скрипт | Назначение | Проверка |
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
-| [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: перезапуск той же сессии при «Free usage exceeded» (5, 5, 10, 30, 60 с), остановка после пятого, стоп при молчании 15 мин | код выхода 0 и `Сессия: ses_…`; 75 — сообщить пользователю |
-| [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): перезапуски, лимит, зависание, ложное срабатывание на чтении файла | все строки `OK` |
+| [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: при сбое провайдера (free usage, rate limit, квота, 429) или молчании модели ≥ 5 мин — перезапуск той же сессии (5, 5, 10, 30, 60 с), после пятого — стоп; сбои пишутся в `TestResults/opencode/failures.log` | код выхода 0 и `Сессия: ses_…`; 75 — сообщить пользователю |
+| [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): сбои провайдера, молчание модели, долгая команда, ложные срабатывания на файлах и логе INFO | все строки `OK` |
 | [scripts/opencode-status.sh](scripts/opencode-status.sh) | короткая сводка о текущем задании opencode: жив ли, давно ли писал, последние действия, состояние git | строка `opencode: работает; …` |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh) | подключает git-хуки из `scripts/git-hooks/` (один раз после клонирования) | `git config core.hooksPath` → `scripts/git-hooks` |
 | [scripts/git-hooks/reference-transaction](scripts/git-hooks/reference-transaction) | сторож истории: запрещает `--amend`, `rebase`, `reset` назад, `branch -f`, `stash` (docs/GIT.md) | `git commit --amend` отклоняется с объяснением |
