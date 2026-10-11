@@ -1,0 +1,1 @@
+{"version":1,"status":"RUNNING","plan":{"type":"fallback","steps":[{"type":"script","script":"a","params":{}},{"type":"script","script":"b","params":{}}]},"progress":{"type":"fallback","index":1,"lastReason":"первая ветка не смогла","child":{"type":"script","state":{}}}}

@@ -27,9 +27,13 @@ public final class PlanParser {
     public static TaskNode parse(String json, ScriptCatalog catalog, ConditionCatalog conditions) {
         Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу скриптов");
         Objects.requireNonNull(conditions, "conditions не может быть null: каталог проверок обязателен");
+        return PlanValidator.validate(parseStructure(json), catalog, conditions);
+    }
+
+    public static TaskNode parseStructure(String json) {
+        Objects.requireNonNull(json, "json не может быть null: план приходит текстом");
         JsonNode root = readTree(json);
-        TaskNode node = parseNode(root, 1, new Counter());
-        return PlanValidator.validate(node, catalog, conditions);
+        return parseNode(root, 1, new Counter());
     }
 
     private static JsonNode readTree(String json) {

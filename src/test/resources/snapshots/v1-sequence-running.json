@@ -1,0 +1,1 @@
+{"version":1,"status":"RUNNING","plan":{"type":"sequence","steps":[{"type":"script","script":"wait","params":{"ticks":5}},{"type":"script","script":"say","params":{"text":"go"}}]},"progress":{"type":"sequence","index":1,"child":{"type":"script","state":{}}}}

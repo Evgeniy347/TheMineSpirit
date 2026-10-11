@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.ParallelMode;
 import com.theminespirit.core.plan.ParallelNode;
 import com.theminespirit.core.plan.TaskNode;
+import java.util.ArrayList;
 import java.util.List;
 
 final class ParallelExecutor extends NodeExecutor {
@@ -117,6 +118,41 @@ final class ParallelExecutor extends NodeExecutor {
     @Override
     void cancel() {
         cancelAll();
+    }
+
+    @Override
+    TaskProgress buildProgress() {
+        if (children == null) {
+            List<TaskProgress.ParallelChild> pending = new ArrayList<>(steps.size());
+            for (int i = 0; i < steps.size(); i++) {
+                pending.add(new TaskProgress.ParallelChild(ScriptStatus.RUNNING, null, null));
+            }
+            return new TaskProgress.ParallelAt(pending);
+        }
+        List<TaskProgress.ParallelChild> listed = new ArrayList<>(children.length);
+        for (int i = 0; i < children.length; i++) {
+            TaskProgress child = results[i] == ScriptStatus.RUNNING ? children[i].snapshot() : null;
+            listed.add(new TaskProgress.ParallelChild(results[i], reasons[i], child));
+        }
+        return new TaskProgress.ParallelAt(listed);
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.ParallelAt at = (TaskProgress.ParallelAt) progress;
+        createChildren();
+        for (int i = 0; i < children.length; i++) {
+            TaskProgress.ParallelChild child = at.children().get(i);
+            if (child.status() == ScriptStatus.RUNNING) {
+                if (child.child() != null) {
+                    children[i].restore(child.child());
+                }
+            } else {
+                children[i].forceTerminal(child.status(), child.reason());
+            }
+            results[i] = child.status();
+            reasons[i] = child.reason();
+        }
     }
 
     @Override
