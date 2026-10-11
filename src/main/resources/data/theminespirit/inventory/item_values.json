@@ -37,6 +37,8 @@
     { "match": ["*_planks"], "value": 1 },
     { "match": ["stick"], "value": 1 },
     { "match": ["bowl"], "value": 1 },
+    { "match": ["bucket", "water_bucket", "lava_bucket", "milk_bucket", "powder_snow_bucket", "axolotl_bucket",
+      "cod_bucket", "pufferfish_bucket", "salmon_bucket", "tropical_fish_bucket", "tadpole_bucket"], "value": 4 },
     { "match": ["cooked_*"], "value": 10 },
     { "match": ["bread"], "value": 8 },
     { "match": ["apple", "golden_apple", "enchanted_golden_apple", "melon_slice", "sweet_berries", "glow_berries",

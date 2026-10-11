@@ -47,6 +47,8 @@ class ValueTableTests {
             "oak_log, 4",
             "oak_planks, 1",
             "stick, 1",
+            "bucket, 4",
+            "water_bucket, 4",
             "cooked_beef, 10",
             "bread, 8",
             "apple, 4",

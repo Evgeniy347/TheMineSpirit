@@ -1,0 +1,16 @@
+{
+  "rules": [
+    { "match": ["*_pickaxe"], "keep": 1, "mode": "best" },
+    { "match": ["*_axe"], "keep": 1, "mode": "best" },
+    { "match": ["*_shovel"], "keep": 1, "mode": "best" },
+    { "match": ["*_sword"], "keep": 1, "mode": "best" },
+    { "match": ["*_hoe"], "keep": 1, "mode": "best" },
+    { "match": ["bucket"], "keep": 1, "mode": "any" },
+    { "match": ["water_bucket"], "keep": 1, "mode": "any" },
+    { "match": ["lava_bucket"], "keep": 1, "mode": "any" },
+    { "category": "food", "keep": 16, "mode": "any" },
+    { "match": ["torch"], "keep": 16, "mode": "any" },
+    { "match": ["cobblestone", "dirt"], "keep": 32, "mode": "any" },
+    { "match": ["crafting_table"], "keep": 1, "mode": "any" }
+  ]
+}
