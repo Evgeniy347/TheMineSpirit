@@ -32,6 +32,7 @@
 | [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
 | [docs/GIT.md](docs/GIT.md) | коммиты и работа с git |
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера, согласование |
+| [opencode.json](opencode.json) | настройки opencode в проекте: модель big-pickle, полный доступ, вопросы запрещены |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
 | [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
 
@@ -40,6 +41,7 @@
 | Скрипт | Назначение | Проверка |
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
+| [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: перезапуск той же сессии при «Free usage exceeded» (5, 5, 10, 30, 60 с), остановка после пятого, стоп при молчании 15 мин | код выхода 0 и `Сессия: ses_…`; 75 — сообщить пользователю |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура
