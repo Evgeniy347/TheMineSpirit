@@ -1,0 +1,1 @@
+{"version":1,"status":"RUNNING","plan":{"type":"parallel","steps":[{"type":"script","script":"a","params":{}},{"type":"script","script":"b","params":{}}],"mode":"all"},"progress":{"type":"parallel","children":[{"status":"SUCCEEDED"},{"status":"RUNNING","child":{"type":"script","state":{}}}]}}
