@@ -166,6 +166,34 @@ class OverflowPolicyTests {
     }
 
     @Test
+    void decide_ShulkerBoxInCheapestSlot_IsNotDropped() {
+        List<Stack> inventory = inventory("white_shulker_box:1;cobblestone:64*35");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT);
+
+        assertEquals(OverflowPolicy.Action.DROP, decision.action(),
+                "Шалкер не выбрасывается никогда, поэтому кучка алмаза берётся ценой булыжника: "
+                        + "причина " + decision.reason());
+        assertEquals(35, decision.slot(),
+                "Слот шалкера (0) не выбирается: набор не отдаёт его ни при какой цене");
+        assertEquals(64, decision.count(),
+                "Отдаётся стопка булыжника целиком: в выбранном слоте все 64 предмета — излишек набора");
+    }
+
+    @Test
+    void decide_OnlyShulkersInInventory_RefusesInsteadOfDropping() {
+        List<Stack> inventory = inventory("white_shulker_box:1*36");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT);
+
+        assertEquals(OverflowPolicy.Action.REFUSE, decision.action(),
+                "Шалкер-бокс не выбрасывается никогда, даже если в нём меньше ценности, чем кучка: "
+                        + "внутри может лежать склад. Причина " + decision.reason());
+    }
+
+    @Test
     void decide_SlotInsideKitQuota_IsNeverDropped() {
         List<Stack> inventory = inventory("bread:16;cobblestone:64*35");
         Protected protection = Protected.of(List.of(), inventory, KIT, VALUES);

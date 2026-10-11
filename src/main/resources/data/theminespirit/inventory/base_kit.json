@@ -12,5 +12,6 @@
     { "match": ["torch"], "keep": 16, "mode": "any" },
     { "match": ["cobblestone", "dirt"], "keep": 32, "mode": "any" },
     { "match": ["crafting_table"], "keep": 1, "mode": "any" }
-  ]
+  ],
+  "never_give_away": ["*_shulker_box"]
 }

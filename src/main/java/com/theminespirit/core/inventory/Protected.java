@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.theminespirit.core.observation.IdFilter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +29,9 @@ public final class Protected {
         for (Slice slice : kit.surplus(inventory, values)) {
             giveAway[slice.slot()] = slice.count();
         }
-        return new Protected(patterns, List.copyOf(inventory), giveAway);
+        List<String> shields = new ArrayList<>(patterns);
+        shields.addAll(kit.neverGiveAway());
+        return new Protected(shields, List.copyOf(inventory), giveAway);
     }
 
     public boolean shields(String item) {

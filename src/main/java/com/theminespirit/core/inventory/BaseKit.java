@@ -17,15 +17,17 @@ import java.util.Set;
 public final class BaseKit {
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final Set<String> ROOT_FIELDS = Set.of("rules");
+    private static final Set<String> ROOT_FIELDS = Set.of("rules", "never_give_away");
     private static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
 
     private final String origin;
     private final List<KitRule> rules;
+    private final List<String> neverGiveAway;
 
-    private BaseKit(String origin, List<KitRule> rules) {
+    private BaseKit(String origin, List<KitRule> rules, List<String> neverGiveAway) {
         this.origin = origin;
         this.rules = List.copyOf(rules);
+        this.neverGiveAway = List.copyOf(neverGiveAway);
     }
 
     public static BaseKit load() {
@@ -57,7 +59,11 @@ public final class BaseKit {
         }
         checkFields(root, ROOT_FIELDS, origin, "файла базового набора");
         List<KitRule> rules = parseRules(root.get("rules"), origin);
-        return new BaseKit(origin, rules);
+        JsonNode neverGiveAway = root.get("never_give_away");
+        List<String> neverAway = neverGiveAway == null || neverGiveAway.isNull()
+                ? List.of()
+                : stringsField(neverGiveAway, origin, "списка never_give_away");
+        return new BaseKit(origin, rules, neverAway);
     }
 
     public List<Slice> surplus(List<Stack> inventory, ValueTable values) {
@@ -123,6 +129,10 @@ public final class BaseKit {
 
     public String origin() {
         return origin;
+    }
+
+    public List<String> neverGiveAway() {
+        return neverGiveAway;
     }
 
     public List<KitRule> rules() {
