@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
 import java.util.List;
 
@@ -38,8 +39,10 @@ public final class CoreScripts {
                         List.of("в радиусе есть подходящие брёвна"),
                         List.of("брёвна срублены", "предметы подобраны в инвентарь")),
                 spec("mine_vein", "добыть жилу руды",
-                        List.of(ParamSpec.text("ore", false, "any"),
-                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1)),
+                        List.of(ParamSpec.enumeration("ore", false, OreKind.names(), "any"),
+                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
+                                ParamSpec.integer("radius", false, CatalogLimits.HARVEST_RADIUS_MIN,
+                                        CatalogLimits.HARVEST_RADIUS_MAX, CatalogLimits.HARVEST_RADIUS_DEFAULT)),
                         List.of("в радиусе есть подходящая жила"), List.of("руда добыта")),
                 spec("dig_area", "выкопать область",
                         List.of(
@@ -52,7 +55,9 @@ public final class CoreScripts {
                         List.of(), List.of("блоки области удалены")),
                 spec("gather", "собрать блоки заданного типа",
                         List.of(ParamSpec.text("block", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
+                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.integer("radius", false, CatalogLimits.HARVEST_RADIUS_MIN,
+                                        CatalogLimits.HARVEST_RADIUS_MAX, CatalogLimits.HARVEST_RADIUS_DEFAULT)),
                         List.of("в радиусе есть подходящие блоки"), List.of("блоки собраны")),
                 spec("collect_drops", "подобрать выпавшие предметы",
                         List.of(), List.of("рядом есть выпавшие предметы"), List.of("предметы в инвентаре")),
