@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.forestry.TreeSpecies;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,40 @@ class ScriptCatalogTests {
                 "count в chop_tree — целое: дробное число деревьев невозможно");
         assertEquals(false, species.required(),
                 "species в chop_tree необязателен: без него рубят любое дерево (default any)");
+    }
+
+    @Test
+    void defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults() {
+        ScriptSpec chopTree = CoreScripts.defaultCatalog().find("chop_tree").orElseThrow();
+
+        ParamSpec species = param(chopTree, "species");
+        ParamSpec radius = param(chopTree, "radius");
+        ParamSpec replant = param(chopTree, "replant");
+
+        assertEquals(ParamType.ENUM, species.type(),
+                "species в chop_tree — enum: список пород объявляется из TreeSpecies один раз, "
+                        + "иначе каталог и ядро разойдутся при добавлении новой породы");
+        assertEquals(TreeSpecies.names(), species.values(),
+                "Список допустимых пород enum обязан браться из TreeSpecies, а не копироваться: "
+                        + "копия лишней породы молча принимает несуществующую");
+        assertEquals("any", species.defaultValue(),
+                "species в chop_tree по умолчанию any: рубить без указания породы можно, а вот несуществующую "
+                        + "породу нельзя");
+        assertEquals(ParamType.INT, radius.type(),
+                "radius в chop_tree — целое: дробный радиус бессмыслен");
+        assertEquals(false, radius.required(),
+                "radius в chop_tree необязателен: умолчание 16 из каталога достаточно для обычной рубки");
+        assertEquals(16, radius.defaultValue(),
+                "radius в chop_tree по умолчанию 16: каталог задаёт умолчание, чтобы шаблон fallback его не дублировал");
+        assertEquals((double) CatalogLimits.CHOP_RADIUS_MIN, radius.min(),
+                "radius в chop_tree не может быть ниже минимума каталога: под духом всегда есть хоть одна клетка поиска");
+        assertEquals((double) CatalogLimits.CHOP_RADIUS_MAX, radius.max(),
+                "radius в chop_tree не может быть выше максимума каталога: границы заданы в одном месте "
+                        + "и ядро и каталог читают их вместе");
+        assertEquals(ParamType.BOOL, replant.type(),
+                "replant в chop_tree — булев флаг: посадить саженец или нет, третьего не дано");
+        assertEquals(false, replant.defaultValue(),
+                "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
     }
 
     @Test

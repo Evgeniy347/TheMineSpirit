@@ -62,7 +62,9 @@ class PlanValidatorRulesTests {
                 Arguments.of("z выше максимума: > 30000000",
                         "{\"type\":\"script\",\"script\":\"dig_area\",\"params\":{\"x\":0,\"y\":0,\"z\":30000001}}"),
                 Arguments.of("follow radius выше максимума: > 16",
-                        "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"radius\":17}}")
+                        "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"radius\":17}}"),
+                Arguments.of("species вне enum: pine",
+                        "{\"type\":\"script\",\"script\":\"chop_tree\",\"params\":{\"species\":\"pine\"}}")
         );
     }
 
@@ -88,6 +90,21 @@ class PlanValidatorRulesTests {
     void waitScript_TicksInsideRange_IsAccepted() {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":3000}}";
         PlanParser.parse(json, CATALOG);
+    }
+
+    @Test
+    void chopTree_UnknownSpecies_IsRejectedListingAllowed() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"chop_tree\",\"params\":{\"species\":\"pine\",\"count\":1,"
+                                + "\"radius\":16,\"replant\":false}}",
+                        CATALOG),
+                "План с несуществующей породой обязан отклоняться: опечатка species иначе заставит духа "
+                        + "рубить любое дерево вместо берёзы");
+
+        assertTrue(error.getMessage().contains("oak") && error.getMessage().contains("any"),
+                "Сообщение обязано перечислить допустимые породы с 'any': по нему правят species. "
+                        + "Фактическое: " + error.getMessage());
     }
 
     @Property
