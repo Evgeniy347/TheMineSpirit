@@ -73,11 +73,11 @@ public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, O
         for (EnemyFact enemy : group) {
             count += enemy.count();
             hp += enemy.hpFraction() * enemy.count();
-            armor += enemy.armor() * enemy.count();
+            armor = Math.max(armor, enemy.armor());
             visible |= enemy.visible();
             targeting |= enemy.targetingSelf();
         }
         return new EnemyFact(first.type(), first.id(), first.pos(), Math.min(1, hp / count),
-                Math.min(20, armor / count), visible, targeting, Math.min(EnemyFact.MAX_COUNT, count));
+                armor, visible, targeting, Math.min(EnemyFact.MAX_COUNT, count));
     }
 }

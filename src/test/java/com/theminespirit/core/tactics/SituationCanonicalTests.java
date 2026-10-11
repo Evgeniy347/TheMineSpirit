@@ -58,10 +58,10 @@ class SituationCanonicalTests {
 
         EnemyFact aggregate = builder.build().enemies().get(Situation.MAX_ENEMIES);
 
-        assertEquals(List.of(4, 0.625, 7.5, true, false, "h1"),
+        assertEquals(List.of(4, 0.625, 10.0, true, false, "h1"),
                 List.of(aggregate.count(), aggregate.hpFraction(), aggregate.armor(), aggregate.visible(),
                         aggregate.targetingSelf(), aggregate.id()),
-                "Агрегат: число складывается, HP и броня — средневзвешенные по числу, видимость — «хоть один», "
+                "Агрегат: число складывается, HP — средневзвешенное по числу, броня — наибольшая (орда не слабеет от сворачивания), видимость — «хоть один», "
                         + "id и позиция — ближайшего из свёрнутых");
     }
 
