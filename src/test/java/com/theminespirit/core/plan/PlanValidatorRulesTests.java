@@ -11,13 +11,16 @@ import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ParamType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.LongRange;
 import org.junit.jupiter.api.Test;
@@ -128,5 +131,30 @@ class PlanValidatorRulesTests {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
         assertThrows(PlanValidationException.class, () -> PlanParser.parse(json, CATALOG),
                 "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
+    }
+
+    @Provide
+    Arbitrary<JsonNode> jsonTrees() {
+        return JsonTrees.any();
+    }
+
+    @Property
+    void parse_AnyJsonTree_SameInputSameOutputOrException(@ForAll("jsonTrees") JsonNode tree) {
+        String json = tree.toString();
+        try {
+            TaskNode first = PlanParser.parse(json, CATALOG);
+            TaskNode second = PlanParser.parse(json, CATALOG);
+            assertEquals(first, second,
+                    "одинаковый вход обязан давать одинаковый план: если валидатор зависит от порядка или "
+                            + "состояния, один и тот же план в разное время выполнит разные действия. JSON=" + json);
+        } catch (PlanValidationException firstError) {
+            PlanValidationException secondError = assertThrows(PlanValidationException.class,
+                    () -> PlanParser.parse(json, CATALOG),
+                    "одинаковый вход обязан бросать одинаковое исключение: нестабильный валидатор то примет, "
+                            + "то отклонит один план. JSON=" + json);
+            assertEquals(firstError.getMessage(), secondError.getMessage(),
+                    "исключение должно быть тем же самым при том же входе: детерминизм валидатора — контракт, "
+                            + "иначе ИИ не сможет воспроизвести и починить сбой. JSON=" + json);
+        }
     }
 }
