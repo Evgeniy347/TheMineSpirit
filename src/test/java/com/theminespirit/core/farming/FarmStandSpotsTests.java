@@ -62,18 +62,22 @@ class FarmStandSpotsTests {
     }
 
     @Test
-    void of_FarmlandFloor_IsDeprioritizedBehindDirtAtEqualDistance() {
+    void of_DirtStand_IsPreferredOverStrictlyCloserFarmland() {
         CountingSafety safety = flatFloor();
         MapFarmView farm = dirtPlane()
                 .set(1, 0, 0, new FarmTile(Ground.FARMLAND, Above.CROP,
                         Optional.of(new CropState(CropKind.WHEAT, 7))));
-        BlockCoord from = new BlockCoord(0, 1, 5);
+        BlockCoord from = new BlockCoord(1, 1, 4);
+        BlockCoord farmlandStand = new BlockCoord(1, 1, 0);
+        BlockCoord dirtStand = new BlockCoord(2, 1, 0);
 
         List<BlockCoord> stands = FarmStandSpots.of(TARGET, from, safety, farm);
 
-        assertTrue(stands.indexOf(new BlockCoord(-1, 1, 0)) < stands.indexOf(new BlockCoord(1, 1, 0)),
-                "При равном расстоянии стоянка с полом-грядкой идёт позже земляной: дух не топчет farmland. Стоянки: "
-                        + stands.stream().limit(4).toList());
+        assertTrue(stands.contains(farmlandStand) && stands.contains(dirtStand),
+                "Обе стоянки обязаны подходить: иначе тест сравнивает несравнимое. Стоянки: " + stands);
+        assertTrue(stands.indexOf(dirtStand) < stands.indexOf(farmlandStand),
+                "Земляная стоянка идёт первой, хотя пашня строго ближе к духу (16 < 17): дух не топчет farmland "
+                        + "даже ценой лишнего шага. Стоянки: " + stands.stream().limit(4).toList());
     }
 
     @Test

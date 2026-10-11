@@ -52,6 +52,13 @@ class FarmPlannerTests {
         return cells;
     }
 
+    private static long distanceSquared(BlockCoord from, BlockCoord to) {
+        long dx = (long) to.x() - from.x();
+        long dy = (long) to.y() - from.y();
+        long dz = (long) to.z() - from.z();
+        return dx * dx + dy * dy + dz * dz;
+    }
+
     @Test
     void next_HarvestOnMixedBed_PicksOnlyMatureCrop() {
         MapFarmView farm = wheatBed();
@@ -65,17 +72,28 @@ class FarmPlannerTests {
     }
 
     @Test
-    void next_HarvestOnBed_StandIsNotOnFarmland() {
-        MapFarmView farm = wheatBed();
+    void next_HarvestOnBed_StandPrefersDirtOverCloserFarmland() {
+        MapFarmView farm = new MapFarmView().set(0, 0, 0, MATURE_WHEAT);
+        BlockCoord from = new BlockCoord(5, 1, 0);
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                for (int y = 0; y <= 1; y++) {
+                    BlockCoord floor = new BlockCoord(x, y, z);
+                    long distance = distanceSquared(from, new BlockCoord(x, y + 1, z));
+                    if ((x != 0 || z != 0) && distance < 16 && !(x == 1 && y == 0 && z == 0)) {
+                        farm.set(x, y, z, new FarmTile(Ground.FARMLAND, Above.AIR, Optional.empty()));
+                    }
+                }
+            }
+        }
+        farm.set(1, 0, 0, DIRT_AIR);
 
-        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, bedCells(), farm,
-                openField(), channelWater());
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, from,
+                List.of(new BlockCoord(0, 0, 0)), farm, openField(), channelWater());
 
-        assertTrue(outcome instanceof FarmPlanner.Next next
-                && farm.peek(new BlockCoord(next.stand().x(), next.stand().y() - 1, next.stand().z()))
-                        .ground() != Ground.FARMLAND,
-                "Стоянка не топчет грядку, а вода рядом не отвергает стоянку: иначе дух застрянет у канала. Итог: "
-                        + outcome);
+        assertEquals(new FarmPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 1, 0)), outcome,
+                "Стоянка предпочитает землю пашне даже ценой пути (квадрат 16 против 4): дух не топчет farmland, "
+                        + "а выбор стоянки не зависит от точки духа. Итог: " + outcome);
     }
 
     @Test
