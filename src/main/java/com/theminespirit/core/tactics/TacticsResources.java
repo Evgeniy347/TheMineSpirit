@@ -4,14 +4,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class TacticsResources {
     private static final String ROOT = "/data/theminespirit/tactics/";
+    private static final AtomicInteger READS = new AtomicInteger();
 
     private TacticsResources() {
     }
 
+    static int reads() {
+        return READS.get();
+    }
+
     static String read(String name) {
+        READS.incrementAndGet();
         try (InputStream stream = TacticsResources.class.getResourceAsStream(ROOT + name)) {
             if (stream == null) {
                 throw new IllegalStateException("Ресурс тактики " + ROOT + name
