@@ -15,6 +15,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -81,7 +82,7 @@ public final class WorldScanner {
         AABB bounds = new AABB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
         List<EntityRef> entities = new ArrayList<>();
         for (Entity entity : level.getEntities((Entity) null, bounds, e -> !e.isRemoved())) {
-            String type = net.minecraft.world.entity.EntityType.getKey(entity.getType()).toString();
+            String type = EntityType.getKey(entity.getType()).toString();
             entities.add(new EntityRef(type, toCore(entity.blockPosition()),
                     entity.position().distanceTo(centerPos)));
         }
@@ -124,7 +125,7 @@ public final class WorldScanner {
         return entries;
     }
 
-    private static BlockCoord toCore(net.minecraft.core.BlockPos pos) {
-        return new com.theminespirit.core.observation.BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    private static BlockCoord toCore(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 }

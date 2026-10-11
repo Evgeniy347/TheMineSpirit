@@ -3,8 +3,11 @@ package com.theminespirit.neoforge;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -37,8 +40,8 @@ public final class SpiritCommands {
     }
 
     public static void register(RegisterCommandsEvent event) {
-        com.mojang.brigadier.CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> spirit =
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        LiteralArgumentBuilder<CommandSourceStack> spirit =
                 literal("spirit").requires(source -> source.hasPermission(2));
         spirit.then(literal("spawn")
                 .executes(context -> spawnNear(context.getSource()))
@@ -91,7 +94,7 @@ public final class SpiritCommands {
         WorldObservation observation = WorldScanner.observe(
                 source.getLevel(),
                 "player_" + player.getScoreboardName(),
-                new com.theminespirit.core.observation.BlockCoord(
+                new BlockCoord(
                         player.blockPosition().getX(), player.blockPosition().getY(), player.blockPosition().getZ()),
                 ScanRadius.of(radius),
                 player.getInventory()).observation();
@@ -106,7 +109,7 @@ public final class SpiritCommands {
         return 1;
     }
 
-    private static int goal(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private static int goal(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
         String text = StringArgumentType.getString(ctx, "goal");
@@ -134,7 +137,7 @@ public final class SpiritCommands {
         return spirits.size();
     }
 
-    private static int status(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private static int status(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
         List<SpiritEntity> spirits = filterSpirits(selected);
@@ -155,7 +158,7 @@ public final class SpiritCommands {
         return spirits.size();
     }
 
-    private static int cancel(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private static int cancel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
         List<SpiritEntity> spirits = filterSpirits(selected);

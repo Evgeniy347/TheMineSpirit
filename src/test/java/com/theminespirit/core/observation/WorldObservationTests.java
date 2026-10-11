@@ -13,11 +13,11 @@ class WorldObservationTests {
         return new WorldObservation(
                 "spirit_1",
                 123456L,
-                new com.theminespirit.core.observation.BlockCoord(10, 64, -3),
+                new BlockCoord(10, 64, -3),
                 inventory,
                 List.of(new ItemCount("oak_log", 12), new ItemCount("grass_block", 340)),
                 entities,
-                List.of(new ContainerRef("minecraft:chest", new com.theminespirit.core.observation.BlockCoord(8, 63, -5))),
+                List.of(new ContainerRef("minecraft:chest", new BlockCoord(8, 63, -5))),
                 32);
     }
 
@@ -25,12 +25,12 @@ class WorldObservationTests {
     void hash_SameDataDifferentListOrder_IsEqual() {
         WorldObservation first = observation(
                 List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0),
-                        new EntityRef("minecraft:sheep", new com.theminespirit.core.observation.BlockCoord(2, 64, 1), 9.0)));
+                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1), 5.0),
+                        new EntityRef("minecraft:sheep", new BlockCoord(2, 64, 1), 9.0)));
         WorldObservation second = observation(
                 List.of(new ItemCount("iron_pickaxe", 1), new ItemCount("oak_log", 5)),
-                List.of(new EntityRef("minecraft:sheep", new com.theminespirit.core.observation.BlockCoord(2, 64, 1), 9.0),
-                        new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0)));
+                List.of(new EntityRef("minecraft:sheep", new BlockCoord(2, 64, 1), 9.0),
+                        new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1), 5.0)));
 
         assertEquals(first.hash(), second.hash(),
                 "hash наблюдения обязан быть стабильным при любом порядке входных списков: иначе две одинаковые "
@@ -54,7 +54,7 @@ class WorldObservationTests {
     void fromJson_AfterToJson_EqualsOriginal() {
         WorldObservation original = observation(
                 List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new com.theminespirit.core.observation.BlockCoord(14, 64, -1), 5.0)));
+                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1), 5.0)));
 
         WorldObservation restored = WorldObservation.fromJson(original.toJson());
 
