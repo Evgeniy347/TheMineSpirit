@@ -40,6 +40,13 @@ final class Assessments {
                 base.zoneDistance(), leashLeft, engageLeft, base.speedRatio(), state, 0, 1000);
     }
 
+    static FactMap timed(Situation situation, TacticalState state, long inState, long sinceEnemySeen) {
+        Assessment base = full(situation);
+        return FactMap.from(situation, new Assessment(base.enemies(), base.winMargin(), base.escapeRoutes(),
+                base.mode(), base.initiates(), base.zoneDistance(), base.leashLeft(), base.engageLeft(),
+                base.speedRatio(), state, inState, sinceEnemySeen));
+    }
+
     static FactMap factsInMode(Situation situation, CombatMode mode) {
         Assessment base = full(situation);
         return FactMap.from(situation, new Assessment(base.enemies(), base.winMargin(), base.escapeRoutes(), mode,
