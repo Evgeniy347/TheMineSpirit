@@ -100,9 +100,9 @@ class TreeShapeProperties {
         for (BlockCoord coord : component) {
             grid.log(coord.x(), coord.y(), coord.z());
         }
+        int baseY = component.stream().mapToInt(BlockCoord::y).min().orElseThrow();
         for (BlockCoord coord : component) {
-            BlockCoord below = new BlockCoord(coord.x(), coord.y() - 1, coord.z());
-            if (!component.contains(below) && soil.add(below)) {
+            if (coord.y() == baseY && soil.add(new BlockCoord(coord.x(), coord.y() - 1, coord.z()))) {
                 grid.soil(coord.x(), coord.y() - 1, coord.z());
             }
         }
