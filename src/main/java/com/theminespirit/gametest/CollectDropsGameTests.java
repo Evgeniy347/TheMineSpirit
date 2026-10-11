@@ -153,6 +153,36 @@ public final class CollectDropsGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "drops_pit", timeoutTicks = 400)
+    public static void collectDrops_ItemAtBottomOfFourDeepPit_IsSkippedWithoutDescending(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int y = 0; y >= -3; y--) {
+            helper.setBlock(4, y, 2, Blocks.AIR);
+        }
+        helper.setBlock(4, -4, 2, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        ItemEntity drop = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 4.5, -3, 2.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
+        double startY = spirit.getY();
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "предмет на дне ямы недостижим: collect_drops обязан провалиться, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("не дотянулся"),
+                    "причина обязана говорить о недостижимом предмете, фактически: " + reason);
+            helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
+                    "дух не должен спускаться в яму за предметом: y был " + startY + ", стал " + spirit.getY());
+            helper.assertTrue(!drop.isRemoved() && drop.getItem().getCount() == 1,
+                    "предмет на дне ямы обязан остаться нетронутым");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "drops_endless_delay", timeoutTicks = 400)
     public static void collectDrops_HeapWithEndlessPickupDelay_IsSkippedAfterBoundedWait(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
