@@ -12,6 +12,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import signal
 import subprocess
 import time
@@ -21,19 +22,21 @@ from pathlib import Path
 from config import Config
 
 PROVIDER_PATTERN = r'free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
+NETWORK_PATTERN = r'cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable'
 PROBE_PROMPT = "ответь OK"
 AGENT_NAME = "strategist"
 POLL_SECONDS = 0.1
 KILL_GRACE_SECONDS = 2.0
 PROVIDER_EXIT_CODE = 75
 ERROR_TEXT_LIMIT = 300
+KEPT_FAILURES = 20
 SANDBOX_PERMISSION = {
     "read": "ask", "edit": "ask", "bash": "ask",
     "webfetch": "deny", "websearch": "deny", "task": "deny", "skill": "deny", "external_directory": "deny",
     "question": "deny", "glob": "deny", "grep": "deny", "list": "deny", "lsp": "deny", "todowrite": "deny",
     "doom_loop": "deny",
 }
-_PATTERN = re.compile(PROVIDER_PATTERN, re.IGNORECASE)
+_PATTERN = re.compile(f"{PROVIDER_PATTERN}|{NETWORK_PATTERN}", re.IGNORECASE)
 _STDERR_LEVEL = re.compile(r"level=(ERROR|WARN)")
 
 
@@ -166,8 +169,23 @@ class OpencodeBrain:
                 stdout, stderr, code = self._wait(process, out_path, err_path, started + timeout, timeout)
             except BaseException:
                 _kill_group(process)
+                self._keep_failure(runs, out_path, err_path)
                 raise
-        return self._interpret(stdout, stderr, code, time.monotonic() - started)
+        try:
+            return self._interpret(stdout, stderr, code, time.monotonic() - started)
+        except BrainError:
+            self._keep_failure(runs, out_path, err_path)
+            raise
+
+    @staticmethod
+    def _keep_failure(runs: Path, out_path: Path, err_path: Path) -> None:
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        for source, suffix in ((out_path, "out"), (err_path, "err")):
+            if source.exists():
+                shutil.copyfile(source, runs / f"failed-{stamp}-{os.getpid()}.{suffix}")
+        old = sorted(runs.glob("failed-*"), key=lambda path: path.stat().st_mtime)
+        for path in old[:-2 * KEPT_FAILURES]:
+            path.unlink()
 
     def _wait(self, process, out_path: Path, err_path: Path, deadline: float, timeout: float):
         while True:

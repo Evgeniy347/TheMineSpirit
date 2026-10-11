@@ -81,10 +81,30 @@ class OpencodeBrainTests(BrainTestCase):
                 self.assertIn(text.split()[0], ctx.exception.text)
                 self.assertLess(time.monotonic() - started, 2.5, "сбой провайдера опознаётся сразу, а не по тайм-ауту")
 
+    def test_complete_NetworkErrorEvent_RaisesProviderQuickly(self):
+        texts = ("Cannot connect to API: Unable to connect. Is the computer able to access the url?",
+                 "fetch failed: ECONNRESET", "getaddrinfo ENOTFOUND opencode.ai", "connect ETIMEDOUT 104.18.0.1:443")
+        for text in texts:
+            with self.subTest(text=text):
+                started = time.monotonic()
+                with self.assertRaises(BrainUnavailable, msg="обрыв сети до провайдера — недоступность, а не ожидание до конца ретраев opencode") as ctx:
+                    self.brain(FAKE_ERROR="json", FAKE_ERROR_TEXT=text).complete("с", "п")
+                self.assertEqual("provider", ctx.exception.kind)
+                self.assertLess(time.monotonic() - started, 2.5)
+
     def test_complete_ProviderErrorInStderr_RaisesProvider(self):
         with self.assertRaises(BrainUnavailable) as ctx:
             self.brain(FAKE_ERROR="stderr", FAKE_ERROR_TEXT="Rate limit exceeded. Please try again later.").complete("с", "п")
         self.assertEqual("provider", ctx.exception.kind)
+
+    def test_failure_KeepsRawOutputForDiagnosis(self):
+        with self.assertRaises(BrainUnavailable):
+            self.brain(FAKE_ERROR="stderr", FAKE_ERROR_TEXT="Rate limit exceeded. Please try again later.").complete("с", "п")
+        kept = list((self.cfg.home / "runs").glob("failed-*.err"))
+        self.assertEqual(1, len(kept), "сырой вывод упавшего вызова сохраняется для разбора")
+        self.assertIn("Rate limit exceeded", kept[0].read_text(encoding="utf-8"))
+        self.brain().complete("с", "п")
+        self.assertEqual(1, len(list((self.cfg.home / "runs").glob("failed-*.err"))), "успешный вызов ничего не сохраняет")
 
     def test_complete_Silence_RaisesSilenceAndKillsWholeProcessGroup(self):
         cfg = dataclasses.replace(self.cfg, brain_timeout=1.0)
