@@ -42,6 +42,8 @@
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: перезапуск той же сессии при «Free usage exceeded» (5, 5, 10, 30, 60 с), остановка после пятого, стоп при молчании 15 мин | код выхода 0 и `Сессия: ses_…`; 75 — сообщить пользователю |
+| [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh) | подключает git-хуки из `scripts/git-hooks/` (один раз после клонирования) | `git config core.hooksPath` → `scripts/git-hooks` |
+| [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура

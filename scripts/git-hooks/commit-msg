@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Сторож формата сообщения коммита (docs/GIT.md → «Сообщение коммита»). Подключается scripts/install-git-hooks.sh.
+TYPES="feat|fix|test|refactor|docs|chore"
+subject="$(head -n 1 "$1")"
+
+case "$subject" in
+    "Merge "*|"Revert "*) exit 0 ;;
+esac
+
+fail() {
+    cat >&2 <<EOF
+Сообщение коммита отклонено: «$subject»
+Ошибка: $1
+Нужно: <тип>: <краткое описание на русском>, тип — один из: ${TYPES//|/, }.
+Почему: по типу из истории видно, что менялось (поведение, тесты, документация), без чтения дифа;
+типы вне списка (build, scripts, …) размывают это — сборка и скрипты относятся к chore.
+Пример: chore: скрипт публикации спрашивает подтверждение
+Правило: docs/GIT.md → «Сообщение коммита».
+EOF
+    exit 1
+}
+
+printf '%s' "$subject" | grep -qE "^($TYPES): [^ ]" || fail "нет типа из списка или пробела после двоеточия"
+printf '%s' "$subject" | LC_ALL=C.UTF-8 grep -qP '\p{Cyrillic}' || fail "описание не на русском"
+exit 0
