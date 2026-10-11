@@ -8,6 +8,7 @@ within OpenCode»), поэтому для них - ask.
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 import re
@@ -30,7 +31,12 @@ KILL_GRACE_SECONDS = 2.0
 PROVIDER_EXIT_CODE = 75
 ERROR_TEXT_LIMIT = 300
 KEPT_FAILURES = 20
+STRIPPED_ENV = ("OPENCODE_PERMISSION", "OPENCODE_CONFIG", "OPENCODE_CONFIG_CONTENT", "OPENCODE_CONFIG_DIR")
+TOOL_PERMISSION = {"write": "edit", "patch": "edit", "multiedit": "edit"}
+SAFE_ACTIONS = ("ask", "deny")
+DEBUG_TIMEOUT_SECONDS = 30
 SANDBOX_PERMISSION = {
+    "*": "deny",
     "read": "ask", "edit": "ask", "bash": "ask",
     "webfetch": "deny", "websearch": "deny", "task": "deny", "skill": "deny", "external_directory": "deny",
     "question": "deny", "glob": "deny", "grep": "deny", "list": "deny", "lsp": "deny", "todowrite": "deny",
@@ -71,7 +77,7 @@ def _write_if_changed(path: Path, content: str) -> None:
 def ensure_sandbox(directory: Path, system: str | None = None) -> None:
     directory = Path(directory)
     config_text = json.dumps({"$schema": "https://opencode.ai/config.json", "permission": SANDBOX_PERMISSION},
-                             ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+                             ensure_ascii=False, indent=2) + "\n"
     _write_if_changed(directory / "opencode.json", config_text)
     agent_path = directory / ".opencode" / "agent" / f"{AGENT_NAME}.md"
     if system is not None or not agent_path.exists():
@@ -93,6 +99,38 @@ def verify_sandbox(directory: Path) -> None:
         if actual == "allow" or actual != expected:
             raise BrainError(f"В песочнице {path} инструмент {tool} = {actual!r}, ожидается {expected!r}: "
                              "разрешённый инструмент превращает prompt injection в выполнение команд")
+
+
+def brain_env(extra: dict | None = None) -> dict:
+    env = {**os.environ, **(extra or {})}
+    for name in STRIPPED_ENV:
+        env.pop(name, None)
+    return env
+
+
+def agent_violations(agent: dict) -> list[str]:
+    rules = agent.get("permission")
+    tools = agent.get("tools")
+    if not isinstance(rules, list) or not isinstance(tools, dict):
+        return ["в выводе opencode debug agent нет списка permission или словаря tools"]
+    problems = []
+    for tool, enabled in tools.items():
+        if not enabled or tool == "invalid":
+            continue
+        permission = TOOL_PERMISSION.get(tool, tool)
+        matching = [(index, rule) for index, rule in enumerate(rules)
+                    if isinstance(rule, dict) and fnmatch.fnmatchcase(permission, str(rule.get("permission")))]
+        general = [(index, rule) for index, rule in matching if rule.get("pattern") == "*"]
+        if not general:
+            problems.append(f"{tool}: нет правила на любой шаблон")
+            continue
+        last_index, last = general[-1]
+        if last.get("action") not in SAFE_ACTIONS:
+            problems.append(f"{tool}: итоговое правило {last.get('action')!r} (разрешено только ask или deny)")
+        for index, rule in matching:
+            if index > last_index and rule.get("action") == "allow":
+                problems.append(f"{tool}: после общего правила разрешён шаблон {rule.get('pattern')!r}")
+    return problems
 
 
 def provider_failure_text(stdout: str, stderr: str) -> str | None:
@@ -149,6 +187,22 @@ class OpencodeBrain:
         args += ["--format", "json", "--print-logs", "--log-level", "INFO", "--dir", str(self.config.sandbox_dir), user]
         return args
 
+    def verify(self) -> None:
+        ensure_sandbox(self.config.sandbox_dir)
+        args = [self.config.opencode_bin, "debug", "agent", AGENT_NAME]
+        try:
+            done = subprocess.run(args, cwd=self.config.sandbox_dir, capture_output=True, text=True, encoding="utf-8",
+                                  timeout=DEBUG_TIMEOUT_SECONDS, env=brain_env(self.extra_env), stdin=subprocess.DEVNULL)
+            start = done.stdout.index("{")
+            agent = json.JSONDecoder().raw_decode(done.stdout[start:])[0]
+        except (OSError, subprocess.TimeoutExpired, ValueError) as error:
+            raise BrainError(f"Не удалось получить итоговые права агента командой '{' '.join(args)}': {error}; "
+                             "без проверки запуск отменён") from error
+        problems = agent_violations(agent)
+        if problems:
+            raise BrainError("Итоговые права агента strategist в opencode небезопасны: " + "; ".join(problems)
+                             + ". Проверьте глобальный конфиг opencode и каталог песочницы; запуск отменён")
+
     def complete(self, system: str, user: str) -> BrainReply:
         ensure_sandbox(self.config.sandbox_dir, system)
         return self._run(self.build_args(user), self.config.brain_timeout)
@@ -164,7 +218,7 @@ class OpencodeBrain:
         started = time.monotonic()
         with open(out_path, "wb") as out, open(err_path, "wb") as err:
             process = subprocess.Popen(args, cwd=self.config.sandbox_dir, stdin=subprocess.DEVNULL, stdout=out, stderr=err,
-                                       start_new_session=True, env={**os.environ, **self.extra_env})
+                                       start_new_session=True, env=brain_env(self.extra_env))
             try:
                 stdout, stderr, code = self._wait(process, out_path, err_path, started + timeout, timeout)
             except BaseException:
@@ -240,6 +294,9 @@ class CommandBrain:
         self.command = command
         self.model = model
 
+    def verify(self) -> None:
+        return None
+
     def complete(self, system: str, user: str) -> BrainReply:
         return self._call(system, user, self.config.brain_timeout)
 
@@ -273,6 +330,11 @@ class FallbackBrain:
         self.primary = primary
         self.fallback = fallback
         self.model = primary.model
+
+    def verify(self) -> None:
+        self.primary.verify()
+        if self.fallback is not None:
+            self.fallback.verify()
 
     def complete(self, system: str, user: str) -> BrainReply:
         return self._with_fallback(lambda brain: brain.complete(system, user))

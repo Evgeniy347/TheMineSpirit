@@ -62,6 +62,18 @@ class MainTests(unittest.TestCase):
         self.assertIn("согласи", err)
         self.assertFalse((self.home / "journal.jsonl").exists(), "отказ происходит до любых действий")
 
+    def test_opencodeBrainWithUnsafeAgentPermissions_RefusesToStart(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake), "FAKE_STATE": str(self.dir / "fake.state"),
+               "FAKE_AGENT": "allow"}
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], **env)
+        self.assertEqual(4, code, "небезопасные итоговые права агента — отказ запуска")
+        self.assertIn("bash", err)
+        self.assertFalse((self.home / "journal.jsonl").exists(), "до проверки прав не происходит ничего")
+        env["FAKE_AGENT"] = "safe"
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], **env)
+        self.assertEqual(0, code, f"безопасные права — запуск возможен; stderr: {err}")
+
     def test_secondInstance_RefusedByLock(self):
         lock = strategist.acquire_lock(self.home)
         self.assertIsNotNone(lock)

@@ -11,6 +11,19 @@
 # FAKE_BAD_MODEL=m      — для модели m (аргумент -m) сбой провайдера; для остальных работает
 # FAKE_PROBE_FAIL=1     — проба «ответь OK» сообщает о сбое провайдера
 state="${FAKE_STATE:?FAKE_STATE обязателен}"
+# FAKE_AGENT=allow|late_allow|garbage — итоговые права агента в «opencode debug agent»: bash allow / шаблон allow после общего ask / не JSON
+if [ "$1 $2" = "debug agent" ]; then
+    echo "DEBUG_ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset}" >> "$state.args"
+    case "${FAKE_AGENT:-}" in
+        garbage) echo "это не JSON"; exit 0 ;;
+        allow) last='{"permission":"bash","pattern":"*","action":"allow"}' ;;
+        late_allow) last='{"permission":"read","pattern":"*.txt","action":"allow"}' ;;
+        *) last='{"permission":"external_directory","pattern":"/tmp/x/*","action":"allow"}' ;;
+    esac
+    echo "timestamp=x level=INFO message=noise"
+    echo '{"name":"strategist","mode":"primary","permission":[{"permission":"*","pattern":"*","action":"allow"},{"permission":"*","pattern":"*","action":"deny"},{"permission":"read","pattern":"*","action":"ask"},{"permission":"edit","pattern":"*","action":"ask"},{"permission":"bash","pattern":"*","action":"ask"},'"$last"'],"tools":{"invalid":true,"bash":true,"read":true,"edit":true,"write":true,"glob":false,"webfetch":false}}'
+    exit 0
+fi
 args="$*"
 count=$(cat "$state" 2>/dev/null || echo 0)
 echo $((count + 1)) > "$state"
@@ -24,6 +37,7 @@ done
     echo "ARGS: $args"
     echo "CWD: $PWD"
     echo "PID: $$"
+    echo "ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset}"
     [ -f "$PWD/.opencode/agent/strategist.md" ] && echo "AGENT_FILE: $(tr '\n' ' ' < "$PWD/.opencode/agent/strategist.md" | cut -c1-300)"
 } >> "$state.args"
 echo $$ > "$state.pid"

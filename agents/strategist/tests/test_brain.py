@@ -7,10 +7,12 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import brain as brain_module
 import config
-from brain import BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, ensure_sandbox, verify_sandbox
+from brain import (BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, agent_violations, ensure_sandbox,
+                   verify_sandbox)
 
 APP = Path(__file__).resolve().parent.parent
 FAKE = APP / "tests" / "fake_opencode.sh"
@@ -226,6 +228,95 @@ class SandboxGuardTests(unittest.TestCase):
         (self.dir / "opencode.json").write_text('{"permission": {"bash": "allow"}}', encoding="utf-8")
         ensure_sandbox(self.dir, "система")
         verify_sandbox(self.dir)
+
+
+REAL_AGENT = json.loads((APP / "tests" / "fixtures" / "opencode-agent-debug.json").read_text(encoding="utf-8"))
+
+
+class AgentViolationsTests(unittest.TestCase):
+    def agent(self, *extra_rules):
+        agent = json.loads(json.dumps(REAL_AGENT))
+        agent["permission"].extend(extra_rules)
+        return agent
+
+    def test_realOpencodeOutput_NoViolations(self):
+        self.assertEqual([], agent_violations(REAL_AGENT), "записанный вывод opencode debug agent для песочницы должен быть безопасным")
+        enabled = [tool for tool, on in REAL_AGENT["tools"].items() if on and tool != "invalid"]
+        self.assertIn("write", enabled, "образец содержит write: он проверяется по правилу edit")
+
+    def test_finalAllowOnEnabledTool_Violation(self):
+        for tool in ("bash", "read", "edit"):
+            with self.subTest(tool=tool):
+                problems = agent_violations(self.agent({"permission": tool, "pattern": "*", "action": "allow"}))
+                self.assertTrue(any(problem.startswith(tool) or tool == "edit" and problem.startswith("write") for problem in problems),
+                                f"итоговый allow для {tool} обязан быть найден: {problems}")
+
+    def test_writeToolIsCheckedByEditRule(self):
+        problems = agent_violations(self.agent({"permission": "edit", "pattern": "*", "action": "allow"}))
+        self.assertTrue(any(p.startswith("write") for p in problems), f"write — это edit: {problems}")
+
+    def test_narrowAllowAfterGeneralRule_Violation(self):
+        problems = agent_violations(self.agent({"permission": "read", "pattern": "*.txt", "action": "allow"}))
+        self.assertTrue(any("*.txt" in p for p in problems), f"узкий allow после общего ask обходит отказ: {problems}")
+
+    def test_allowOnDisabledToolOrNonTool_Ignored(self):
+        agent = self.agent({"permission": "glob", "pattern": "*", "action": "allow"},
+                           {"permission": "external_directory", "pattern": "/x/*", "action": "allow"})
+        self.assertEqual([], agent_violations(agent), "glob выключен, external_directory — не инструмент")
+
+    def test_toolWithoutAnyRule_Violation(self):
+        agent = {"permission": [{"permission": "bash", "pattern": "*", "action": "ask"}], "tools": {"read": True, "bash": True}}
+        self.assertTrue(any(p.startswith("read") for p in agent_violations(agent)))
+
+    def test_wildcardAllowThenSpecificAsk_Fine(self):
+        agent = {"permission": [{"permission": "*", "pattern": "*", "action": "allow"},
+                                {"permission": "read", "pattern": "*", "action": "ask"}], "tools": {"read": True}}
+        self.assertEqual([], agent_violations(agent))
+
+    def test_garbage_Violation(self):
+        for garbage in ({}, {"permission": "x", "tools": {}}, {"permission": [], "tools": []}):
+            self.assertTrue(agent_violations(garbage))
+
+
+class SandboxVerificationTests(BrainTestCase):
+    def test_sandboxConfig_StarDenyIsFirstKey(self):
+        self.brain().complete("с", "п")
+        permission = json.loads((self.cfg.sandbox_dir / "opencode.json").read_text(encoding="utf-8"))["permission"]
+        self.assertEqual("*", next(iter(permission)), "\"*\": deny первым ключом: новые инструменты opencode по умолчанию запрещены")
+        self.assertEqual("deny", permission["*"])
+
+    def test_verify_SafeAgent_Passes(self):
+        self.brain().verify()
+
+    def test_verify_UnsafeAgents_RefuseToStart(self):
+        for mode, needle in (("allow", "bash"), ("late_allow", "*.txt")):
+            with self.subTest(mode=mode):
+                with self.assertRaises(BrainError) as ctx:
+                    self.brain(FAKE_AGENT=mode).verify()
+                self.assertIn(needle, str(ctx.exception))
+
+    def test_verify_GarbageOrMissingBinary_RefusesToStart(self):
+        with self.assertRaises(BrainError):
+            self.brain(FAKE_AGENT="garbage").verify()
+        broken = OpencodeBrain(dataclasses.replace(self.cfg, opencode_bin=str(self.dir / "нет-такого")), "m", env=self.env)
+        with self.assertRaises(BrainError) as ctx:
+            broken.verify()
+        self.assertIn("запуск отменён", str(ctx.exception))
+
+    def test_fallbackVerify_ChecksBothBrains(self):
+        FallbackBrain(self.brain("a"), self.brain("b")).verify()
+        with self.assertRaises(BrainError):
+            FallbackBrain(self.brain("a"), self.brain("b", FAKE_AGENT="allow")).verify()
+
+    def test_environment_PermissionOverridesAreStrippedForRunAndDebug(self):
+        hostile = {name: "{\"bash\":\"allow\"}" for name in ("OPENCODE_PERMISSION", "OPENCODE_CONFIG", "OPENCODE_CONFIG_CONTENT",
+                                                              "OPENCODE_CONFIG_DIR")}
+        with mock.patch.dict(os.environ, hostile):
+            self.brain().verify()
+            self.brain().complete("с", "п")
+        log = self.args_log()
+        self.assertEqual(2, log.count("PERMISSION=unset CONFIG=unset CONTENT=unset DIR=unset"),
+                         f"переменные OPENCODE_* должны быть убраны из окружения debug и run: {log}")
 
 
 class CommandBrainTests(unittest.TestCase):

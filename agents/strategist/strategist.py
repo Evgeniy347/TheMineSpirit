@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import config as config_module
-from brain import CommandBrain, FallbackBrain, OpencodeBrain, ensure_sandbox
+from brain import BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, ensure_sandbox
 from config import APP_DIR, Config, ConfigError
 from cycle import CycleRunner, CycleSummary
 from guard import Guard
@@ -222,10 +222,12 @@ def main(argv: list[str] | None = None) -> int:
         brain = make_brain(config)
         if config.brain == "opencode":
             ensure_sandbox(config.sandbox_dir)
+            brain.verify()
         if args.command == "smoke":
             from smoke import run_smoke
             model = args.model or config.model
-            smoke_brain = CommandBrain(config, config.brain_command, model) if config.brain == "command"                 else OpencodeBrain(config, model)
+            smoke_brain = (CommandBrain(config, config.brain_command, model) if config.brain == "command"
+                           else OpencodeBrain(config, model))
             report = run_smoke(config, smoke_brain, args.fixtures or APP_DIR / "tests" / "fixtures", runs=args.runs)
             print(f"Отчёт smoke: {report}")
             return 0
@@ -244,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
         strategist.run_forever()
         print("Стратег остановлен корректно: поставленные задачи не отменялись.", flush=True)
         return 0
-    except (PromptError, ApiError, NetworkError, ValueError, OSError) as error:
+    except (PromptError, ApiError, NetworkError, BrainError, BrainUnavailable, ValueError, OSError) as error:
         print(f"Ошибка запуска: {type(error).__name__}: {error}", file=sys.stderr)
         return EXIT_BROKEN
     finally:
