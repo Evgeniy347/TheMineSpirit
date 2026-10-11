@@ -22,6 +22,10 @@ class ReadResult:
     bad: list[tuple[str, int, str]] = field(default_factory=list)
 
 
+def is_recent_decision(event: dict) -> bool:
+    return event.get("event") in RECENT_EVENTS or (event.get("event") == "decision" and event.get("skip") is True)
+
+
 def truncate_utf8(text: str, limit: int) -> tuple[str, bool]:
     raw = text.encode("utf-8")
     if len(raw) <= limit:
@@ -101,6 +105,5 @@ class Journal:
 
     def recent_decisions(self, bot: str, limit: int, events: list[dict] | None = None) -> list[dict]:
         source = self.read().events if events is None else events
-        relevant = [e for e in source if e.get("bot") == bot and (
-            e.get("event") in RECENT_EVENTS or (e.get("event") == "decision" and e.get("skip") is True))]
+        relevant = [e for e in source if e.get("bot") == bot and is_recent_decision(e)]
         return relevant[-limit:]

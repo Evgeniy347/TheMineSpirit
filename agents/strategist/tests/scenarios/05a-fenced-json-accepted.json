@@ -1,0 +1,43 @@
+{
+ "description": "JSON в ограждении ```json принят",
+ "brain": {
+  "default": {
+   "fenced": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0
+   }
+  }
+ ],
+ "name": "05a-fenced-json-accepted",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

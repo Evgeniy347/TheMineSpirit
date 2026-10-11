@@ -1,0 +1,93 @@
+{
+ "description": "два духа, у первого отказ: второй обработан",
+ "bots": [
+  {
+   "id": "a",
+   "world": "forest"
+  },
+  {
+   "id": "b",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "телепорт",
+     "plan": {
+      "type": "script",
+      "script": "teleport",
+      "params": {
+       "x": 1,
+       "y": 64,
+       "z": 1
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "телепорт",
+     "plan": {
+      "type": "script",
+      "script": "teleport",
+      "params": {
+       "x": 1,
+       "y": 64,
+       "z": 1
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом зрелая пшеница.",
+     "goal": "собрать пшеницу",
+     "plan": {
+      "type": "script",
+      "script": "harvest_crop",
+      "params": {
+       "crop": "wheat",
+       "radius": 8
+      }
+     }
+    }
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 3
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "bot": "b"
+   }
+  },
+  {
+   "journal_lacks": {
+    "event": "posted",
+    "bot": "a"
+   }
+  }
+ ],
+ "name": "21-two-bots-one-rejected-second-processed"
+}

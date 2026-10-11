@@ -194,6 +194,39 @@ class FakeRestTests(unittest.TestCase):
         self.assertEqual((422, "invalid_plan"), (status, body["error"]["code"]))
         self.assertEqual({"status": 422}, body["error"]["details"])
 
+    def test_taskPostErrors_Knob_AffectsOnlyTaskPost(self):
+        self.fake.task_post_errors.append((409, "conflict"))
+        self.assertEqual(200, call(self.base, "GET", "/v1/bots")[0], "очередь ошибок постановки не трогает другие ручки")
+        status, _, body = call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())
+        self.assertEqual((409, "conflict"), (status, body["error"]["code"]))
+        self.assertEqual(0, len(self.fake.tasks), "при ошибке задача не создаётся")
+        self.assertEqual(202, call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())[0])
+
+    def test_observeErrors_Knob_AffectsOnlyObserve(self):
+        self.fake.observe_errors.append((500, "internal"))
+        self.assertEqual(200, call(self.base, "GET", "/v1/bots/spirit_1")[0])
+        self.assertEqual(500, call(self.base, "POST", "/v1/bots/spirit_1/observe", {})[0])
+        self.assertEqual(200, call(self.base, "POST", "/v1/bots/spirit_1/observe", {})[0])
+
+    def test_taskPostLoseResponse_Knob_CreatesTaskButBreaksConnection(self):
+        self.fake.task_post_lose_response = 1
+        with self.assertRaises((urllib.error.URLError, ConnectionError, OSError)):
+            call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())
+        self.assertEqual(1, len(self.fake.tasks), "сервер задачу создал, клиент ответа не увидел")
+        status, _, body = call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())
+        self.assertEqual(202, status)
+        self.assertEqual(1, len(self.fake.tasks), "повтор с тем же request_id дубля не создаёт")
+
+    def test_clock_Knob_StampsRequestsWithFakeTime(self):
+        class Clock:
+            def now(self):
+                return 4242.0
+        call(self.base, "GET", "/v1/bots")
+        self.assertNotIn("fake_t", self.fake.requests[-1])
+        self.fake.clock = Clock()
+        call(self.base, "GET", "/v1/bots")
+        self.assertEqual(4242.0, self.fake.requests[-1]["fake_t"])
+
     def test_delayNext_Knob_MakesResponseSlow(self):
         started = time.monotonic()
         call(self.base, "GET", "/v1/bots")

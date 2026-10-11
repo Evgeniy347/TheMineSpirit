@@ -63,15 +63,17 @@ def load_policy(path: Path) -> Policy:
 
 
 class Catalog:
-    def __init__(self, scripts: dict[str, dict], conditions: dict[str, dict]):
+    def __init__(self, scripts: dict[str, dict], conditions: dict[str, dict], raw: dict | None = None):
         self.scripts = scripts
         self.conditions = conditions
+        self.raw = raw if raw is not None else {}
 
     @classmethod
     def from_capabilities(cls, capabilities) -> "Catalog":
         if not isinstance(capabilities, dict) or not isinstance(capabilities.get("scripts"), list):
             raise CatalogError("Каталог capabilities без списка scripts: проверьте ответ GET /v1/capabilities")
-        return cls(cls._index(capabilities["scripts"], "scripts"), cls._index(capabilities.get("conditions", []), "conditions"))
+        return cls(cls._index(capabilities["scripts"], "scripts"), cls._index(capabilities.get("conditions", []), "conditions"),
+                   capabilities)
 
     @staticmethod
     def _index(entries, field: str) -> dict[str, dict]:

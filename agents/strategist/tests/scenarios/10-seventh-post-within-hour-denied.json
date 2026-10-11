@@ -1,0 +1,78 @@
+{
+ "description": "шесть задач в час: седьмой POST не уходит",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 1
+  }
+ },
+ "steps": [
+  {
+   "repeat": 7,
+   "steps": [
+    {
+     "fake": {
+      "set_world": {
+       "bot": "forest",
+       "worlds": [
+        "forest",
+        "farm"
+       ]
+      }
+     }
+    },
+    {
+     "cycle": true
+    },
+    {
+     "advance": 300
+    }
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "posts": 6
+  },
+  {
+   "brain_calls": 7
+  },
+  {
+   "journal": {
+    "posted": 6
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "guard",
+    "reason_contains": "6"
+   }
+  },
+  {
+   "distinct_request_ids": 6
+  }
+ ],
+ "name": "10-seventh-post-within-hour-denied",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

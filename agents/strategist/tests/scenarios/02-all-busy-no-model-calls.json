@@ -1,0 +1,57 @@
+{
+ "description": "все духи заняты: ни вызова модели, ни POST, ни observe",
+ "bots": [
+  {
+   "id": "a",
+   "world": "forest",
+   "state": "busy"
+  },
+  {
+   "id": "b",
+   "world": "farm",
+   "state": "busy"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "brain_calls": 0
+  },
+  {
+   "posts": 0
+  },
+  {
+   "journal": {
+    "bot_skipped": 2,
+    "observed": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "bot_skipped",
+    "bot": "a",
+    "reason_contains": "busy"
+   }
+  }
+ ],
+ "name": "02-all-busy-no-model-calls"
+}

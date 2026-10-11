@@ -121,6 +121,13 @@ class JournalTests(unittest.TestCase):
         self.assertEqual({}, unknown, "имена событий журнала должны входить в journal.EVENTS: добавьте в перечень "
                                      "или исправьте опечатку")
 
+    def test_eventNames_EveryCatalogueNameIsUsedInSource(self):
+        used = set()
+        for path in APP.glob("*.py"):
+            used.update(LOG_CALL.findall(path.read_text(encoding="utf-8")))
+        self.assertEqual([], sorted(set(EVENTS) - used), "имя из journal.EVENTS нигде не пишется в журнал: уберите его из "
+                                                          "перечня или допишите событие")
+
     def test_eventNamesGuard_PatternFindsViolationInSample(self):
         sample = 'self.journal.log("bogus_event", cycle=1)\njournal.log(\n "multi_line")'
         self.assertEqual(["bogus_event", "multi_line"], LOG_CALL.findall(sample),

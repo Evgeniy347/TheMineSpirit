@@ -56,6 +56,10 @@ class FakeRest:
         self.busy_after_observe: set[str] = set()
         self.drop_connection_next = 0
         self.garbage_next = 0
+        self.task_post_errors: list = []
+        self.observe_errors: list = []
+        self.task_post_lose_response = 0
+        self.clock = None
         self.tick = 1000
         self._lock = threading.RLock()
         self._counter = 0
@@ -102,6 +106,7 @@ class FakeRest:
 
         class Handler(BaseHTTPRequestHandler):
             protocol_version = "HTTP/1.1"
+            wbufsize = 65536
 
             def log_message(self, *args):
                 return
@@ -147,6 +152,8 @@ class FakeRest:
             body = {"_unparsable": raw.decode("utf-8", "replace")}
         with self._lock:
             entry = {"method": method, "path": path, "body": body, "t": time.monotonic(), "status": None}
+            if self.clock is not None:
+                entry["fake_t"] = self.clock.now()
             self.requests.append(entry)
             delay = self.delay_next.pop(0) if self.delay_next else 0
             drop = self.drop_connection_next
@@ -160,6 +167,12 @@ class FakeRest:
         with self._lock:
             status, payload, headers = self._route(method, path, body)
             entry["status"] = status
+            is_task_post = method == "POST" and path.endswith("/tasks") and path.startswith("/v1/bots/")
+            if is_task_post and self.task_post_lose_response and status == 202:
+                self.task_post_lose_response -= 1
+                entry["status"] = "response_lost"
+                handler.connection.close()
+                return
             if self.garbage_next:
                 self.garbage_next -= 1
                 payload = None
@@ -209,6 +222,9 @@ class FakeRest:
         return 200, dict(bot), {}
 
     def _observe(self, bot_id: str):
+        if self.observe_errors:
+            status, code = self.observe_errors.pop(0)
+            return status, error_body(code, f"Ошибка {code} при наблюдении", {"status": status}), {}
         if bot_id not in self.bots:
             return 404, error_body("not_found", f"Дух {bot_id} не найден", {"id": bot_id}), {}
         self.tick += 20
@@ -228,6 +244,9 @@ class FakeRest:
         return 200, {"valid": True}, {}
 
     def _post_task(self, bot_id: str, body):
+        if self.task_post_errors:
+            status, code = self.task_post_errors.pop(0)
+            return status, error_body(code, f"Ошибка {code} при постановке задачи", {"status": status}), {}
         if not self.tasks_route:
             return 404, error_body("not_found", "Путь задач не найден"), {}
         bot = self.bots.get(bot_id)

@@ -1,0 +1,80 @@
+{
+ "description": "рестарт с активной задачей: повторного POST нет, отслеживание продолжается",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 4
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "restart": true
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 1
+    },
+    {
+     "tasks_created": 1
+    },
+    {
+     "active_tasks": 1
+    },
+    {
+     "brain_calls": 1
+    }
+   ]
+  },
+  {
+   "advance": 120
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "journal": {
+    "task_done": 1
+   }
+  },
+  {
+   "active_tasks": 0
+  },
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "succeeded"
+   }
+  }
+ ],
+ "name": "15-restart-with-active-task-no-duplicate",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

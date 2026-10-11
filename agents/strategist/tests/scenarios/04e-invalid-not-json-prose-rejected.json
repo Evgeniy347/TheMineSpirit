@@ -1,0 +1,40 @@
+{
+ "description": "ответ прозой без JSON отвергается (rejected, стадия parse)",
+ "brain": {
+  "default": {
+   "text": "Я бы срубил пару деревьев, но формат ответа мне не по душе."
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "parse",
+    "reason_contains": "JSON"
+   }
+  }
+ ],
+ "name": "04e-invalid-not-json-prose-rejected",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

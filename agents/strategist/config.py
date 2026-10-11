@@ -47,6 +47,7 @@ class Config:
     task_timeout: float = 1800
     rest_per_second: int = 5
     rest_timeout: float = 10
+    observe_radius: int = 24
     max_nodes: int = 32
     max_root_steps: int = 8
     journal_max_bytes: int = 10 * 1024 * 1024
@@ -145,6 +146,7 @@ def from_env(env: Mapping[str, str] | None = None) -> Config:
         task_timeout=_number(env, "STRATEGIST_TASK_TIMEOUT", 1800, 30, 86400, float),
         rest_per_second=_number(env, "STRATEGIST_REST_PER_SECOND", 5, 1, 20, int),
         rest_timeout=_number(env, "STRATEGIST_REST_TIMEOUT", 10, 1, 120, float),
+        observe_radius=_number(env, "STRATEGIST_OBSERVE_RADIUS", 24, 1, 32, int),
         max_nodes=_number(env, "STRATEGIST_MAX_NODES", 32, 1, 256, int),
         max_root_steps=_number(env, "STRATEGIST_MAX_ROOT_STEPS", 8, 1, 64, int),
         journal_max_bytes=_number(env, "STRATEGIST_JOURNAL_MAX_BYTES", 10 * 1024 * 1024, 1024, 1 << 30, int),

@@ -1,0 +1,66 @@
+{
+ "description": "409 при отправке: запись в журнале, повторного POST в цикле нет",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "task_post_errors": [
+     [
+      409,
+      "conflict"
+     ]
+    ]
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "tasks_created": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "active_tasks": 0
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "post",
+    "reason_contains": "conflict"
+   }
+  },
+  {
+   "journal": {
+    "posted": 0
+   }
+  }
+ ],
+ "name": "08-post-409-logged-not-repeated",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
