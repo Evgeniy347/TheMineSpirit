@@ -1,0 +1,51 @@
+package com.theminespirit.core.task;
+
+import com.theminespirit.core.engine.RunProgress;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public final class TaskEventDiff {
+    private TaskEventDiff() {
+    }
+
+    public static List<TaskEvent> between(TaskRecord previous, TaskRecord current) {
+        Objects.requireNonNull(previous, "previous не может быть null: дифф считают между двумя кадрами задачи");
+        Objects.requireNonNull(current, "current не может быть null: дифф считают между двумя кадрами задачи");
+        List<TaskEvent> events = new ArrayList<>(2);
+        if (progressChanged(previous.progress(), current.progress())) {
+            events.add(new TaskEvent(0, TaskEvent.TYPE_PROGRESS, progressData(current.progress())));
+        }
+        if (current.state() == TaskState.FAILED && previous.state() != TaskState.FAILED) {
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("script", previous.progress() == null ? null : previous.progress().currentScript());
+            data.put("reason", current.error());
+            events.add(new TaskEvent(0, TaskEvent.TYPE_SCRIPT_FAILED, data));
+        }
+        if (previous.state() != current.state()) {
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("state", current.state().wire());
+            events.add(new TaskEvent(0, TaskEvent.TYPE_STATE, data));
+        }
+        return List.copyOf(events);
+    }
+
+    private static boolean progressChanged(RunProgress previous, RunProgress current) {
+        if (current == null) {
+            return false;
+        }
+        return !current.equals(previous);
+    }
+
+    private static Map<String, Object> progressData(RunProgress progress) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("step", progress.step());
+        data.put("total_steps", progress.totalSteps());
+        data.put("current_script", progress.currentScript());
+        data.put("done", progress.done());
+        data.put("target", progress.target());
+        return data;
+    }
+}
