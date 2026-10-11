@@ -47,7 +47,18 @@ final class RulesParser {
             rules.add(new HardRule(claimId(item.get("id")), item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
                     ConditionParser.parse(item.get("when")), hardEffect(item.get("then"))));
         }
+        requireClosingNoRouteRule(section, rules);
         return rules;
+    }
+
+    private static void requireClosingNoRouteRule(ConfigNode section, List<HardRule> rules) {
+        boolean closed = rules.stream()
+                .anyMatch(rule -> rule.noRouteOption().isPresent() && rule.when().atoms().isEmpty());
+        if (!closed) {
+            throw section.fail("нет замыкающего правила подмены с noRoute и пустым when",
+                    "добавьте правило без условий с then.noRoute: иначе RETREAT без способа отхода останется без подмены "
+                            + "и вернётся запасное FIGHT");
+        }
     }
 
     private static HardEffect hardEffect(ConfigNode then) {
@@ -59,7 +70,12 @@ final class RulesParser {
                             + "отступать некуда (noRoute)");
         }
         if (then.has("noRoute")) {
-            return new HardEffect.NoRoute(then.get("noRoute").enumValue(TacticalOption.class));
+            TacticalOption option = then.get("noRoute").enumValue(TacticalOption.class);
+            if (option == TacticalOption.RETREAT) {
+                throw then.get("noRoute").fail("подмена RETREAT на RETREAT",
+                        "noRoute заменяет отход, которому некуда идти: допустимы FIGHT и IGNORE");
+            }
+            return new HardEffect.NoRoute(option);
         }
         if (then.has("decision")) {
             return new HardEffect.Decide(then.get("decision").enumValue(TacticalOption.class));
