@@ -29,12 +29,12 @@ class TacticsConfigTests {
     void loadDefault_ShippedFiles_ParseWithAllSections() {
         TacticsConfig config = TacticsConfig.loadDefault();
 
-        assertEquals(List.of(9, 6, 6, 9, 8, 15, 5),
+        assertEquals(List.of(10, 7, 6, 9, 8, 15, 5),
                 List.of(config.rules().hard().size(), config.rules().actions().size(),
                         config.rules().modeTransitions().size(), config.rules().states().size(),
                         config.rules().retreat().entries().size(), config.weights().matrix().size(),
                         config.modes().params().size()),
-                "Стартовый набор: 9 жёстких правил, 6 действий, 6 смен режима, 9 переходов состояния, 8 способов отхода, "
+                "Стартовый набор: 10 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 8 способов отхода, "
                         + "15 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/TACTICS.md");
     }
 
@@ -121,7 +121,7 @@ class TacticsConfigTests {
                 broken("приоритет строкой", "rules.json", TacticsTexts.mutate(rules, "\"priority\": 95",
                         "\"priority\": \"95\""), "hard[1].priority"),
                 broken("опечатка в режиме", "rules.json", TacticsTexts.mutate(rules, "\"value\": \"passive\"",
-                        "\"value\": \"pasive\""), "hard[4].when[0].value"),
+                        "\"value\": \"pasive\""), "hard[5].when[0].value"),
                 broken("неизвестное действие", "rules.json", TacticsTexts.mutate(rules, "\"SHOOT\"", "\"SHOT\""),
                         "actions[0].then.action"),
                 broken("нет замыкающего правила", "rules.json", TacticsTexts.mutate(rules,
@@ -142,7 +142,7 @@ class TacticsConfigTests {
                         "\"from\": [\"aggressive\"]", "\"from\": [\"agressive\"]"), "modeTransitions[0].from[0]"),
                 broken("и decision, и exclude", "rules.json", TacticsTexts.mutate(rules,
                         "\"then\": {\"exclude\": [\"FIGHT\"]}", "\"then\": {\"decision\": \"IGNORE\", \"exclude\": [\"FIGHT\"]}"),
-                        "hard[5].then"),
+                        "hard[6].then"),
                 broken("неизвестная секция", "rules.json", TacticsTexts.mutateFirst(rules, "\"hard\":", "\"hrad\":"),
                         "hrad"),
                 broken("неизвестный режим в modes", "modes.json", TacticsTexts.mutate(modes, "\"guard_area\": {",

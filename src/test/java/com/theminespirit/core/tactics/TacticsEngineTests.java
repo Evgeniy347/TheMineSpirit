@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -140,5 +141,26 @@ class TacticsEngineTests {
 
         assertThrows(IllegalArgumentException.class, () -> engine().step(situation, Memories.fresh(situation), -1),
                 "Номер тика обязан быть неотрицательным: отрицательный означает ошибку адаптера, а не момент до начала мира");
+    }
+
+    @Test
+    void step_CreeperHoversAroundFive_NeverSwingsBetweenRetreatAndFight() {
+        double[] distances = {9, 7, 6, 5, 6, 7, 6, 7};
+        TacticsEngine engine = engine();
+        TacticsMemory memory = null;
+        List<TacticalOption> decisions = new ArrayList<>();
+        for (int i = 0; i < distances.length; i++) {
+            Situation situation = SituationBuilder.create().enemy("creeper", distances[i]).cover(5).build();
+            memory = memory == null ? Memories.fresh(situation) : memory;
+            TacticalOutcome outcome = engine.step(situation, memory, 1000 + 10L * i);
+            decisions.add(outcome.decision());
+            memory = outcome.memory();
+        }
+
+        assertEquals(List.of(TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.RETREAT,
+                TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT),
+                decisions,
+                "Крипер подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
+                        + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву");
     }
 }

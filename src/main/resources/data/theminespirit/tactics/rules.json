@@ -12,6 +12,9 @@
     {"id": "explosive_close_retreat", "priority": 85,
      "when": [{"fact": "enemy.nearestExplosive", "op": "<=", "value": 5}],
      "then": {"decision": "RETREAT"}},
+    {"id": "explosive_band_retreat", "priority": 84,
+     "when": [{"fact": "state.tactical", "op": "==", "value": "retreating"}, {"fact": "enemy.nearestExplosive", "op": "<", "value": 8}],
+     "then": {"decision": "RETREAT"}},
     {"id": "passive_never_fights", "priority": 80,
      "when": [{"fact": "order.mode", "op": "==", "value": "passive"}, {"fact": "enemy.count", "op": ">=", "value": 1}],
      "then": {"decision": "RETREAT"}},
@@ -29,6 +32,9 @@
      "then": {"decision": "IGNORE"}}
   ],
   "actions": [
+    {"id": "shoot_explosive", "priority": 55,
+     "when": [{"fact": "self.hasRanged", "op": "==", "value": true}, {"fact": "enemy.anyExplosive", "op": "==", "value": true}, {"fact": "enemy.nearestExplosive", "op": ">=", "value": 3}, {"fact": "enemy.visibleCount", "op": ">=", "value": 1}],
+     "then": {"action": "SHOOT"}},
     {"id": "shoot_at_range", "priority": 50,
      "when": [{"fact": "self.hasRanged", "op": "==", "value": true}, {"fact": "enemy.nearest", "op": ">=", "value": 5}, {"fact": "enemy.visibleCount", "op": ">=", "value": 1}],
      "then": {"action": "SHOOT"}},
