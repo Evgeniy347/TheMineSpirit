@@ -93,13 +93,13 @@ public final class RestScaleGameTests {
                             .filter(reply -> reply.join().status() == 429
                                     && reply.join().json().path("error").path("code").asText().equals("rate_limited"))
                             .count();
-                    problems.expect(ok >= 1 && limited >= 1,
-                            "Первые наблюдения обязаны получить 200, пятое — 429 rate_limited: ok " + ok
-                                    + ", rate_limited " + limited);
+                    problems.expect(ok == FIVE_OBSERVES - 1 && limited == 1,
+                            "Пять запросов в один тик обязаны дать ровно четыре 200 и один 429 rate_limited, "
+                                    + "получили ok " + ok + ", rate_limited " + limited);
                     int peak = rest.gateway().peakObserveJobs();
-                    problems.expect(peak <= MAX_CONCURRENT_OBSERVES,
-                            "Одновременно обязаны крутиться не больше " + MAX_CONCURRENT_OBSERVES + " наблюдений, пик "
-                                    + peak);
+                    problems.expect(peak == MAX_CONCURRENT_OBSERVES,
+                            "Пик одновременных наблюдений обязан быть ровно " + MAX_CONCURRENT_OBSERVES
+                                    + ", вырос до " + peak);
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);
