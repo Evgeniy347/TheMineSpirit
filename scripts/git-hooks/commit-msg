@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Сторож формата сообщения коммита (docs/GIT.md → «Сообщение коммита»). Подключается scripts/install-git-hooks.sh.
+# Сторож коммита (docs/GIT.md → «Сообщение коммита», docs/TESTING.md). Подключается scripts/install-git-hooks.sh.
+# 1) формат сообщения «<тип>: <описание на русском>»; 2) feat/fix, меняющий production-код, приносит и тест.
 TYPES="feat|fix|test|refactor|docs|chore"
+GAME_TESTS="src/main/java/com/theminespirit/gametest/"
 subject="$(head -n 1 "$1")"
 
 case "$subject" in
@@ -22,4 +24,24 @@ EOF
 
 printf '%s' "$subject" | grep -qE "^($TYPES): [^ ]" || fail "нет типа из списка или пробела после двоеточия"
 printf '%s' "$subject" | LC_ALL=C.UTF-8 grep -qP '\p{Cyrillic}' || fail "описание не на русском"
+
+type="${subject%%:*}"
+if [ "$type" = "feat" ] || [ "$type" = "fix" ]; then
+    staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+    production="$(printf '%s\n' "$staged" | grep '^src/main/java/' | grep -v "^$GAME_TESTS")"
+    tests="$(printf '%s\n' "$staged" | grep -E "^src/test/java/|^$GAME_TESTS")"
+    if [ -n "$production" ] && [ -z "$tests" ]; then
+        cat >&2 <<EOF
+Коммит отклонён: «$subject» меняет поведение (тип $type), но не приносит ни одного теста.
+Изменён production-код:
+$(printf '%s\n' "$production" | sed 's/^/  /')
+Почему: изменение поведения без теста в том же коммите никто не защищает — следующая правка сломает его молча,
+а ревью видит только обещание в отчёте. Баг сначала воспроизводится красным тестом, фича приходит со своим.
+Как надо: добавь в этот же коммит тест в src/test/java (JUnit) или в ${GAME_TESTS} (GameTest).
+Если поведение не меняется — это refactor:, если меняются только сборка и скрипты — chore:.
+Правило: docs/TESTING.md → «Тест, который может упасть».
+EOF
+        exit 1
+    fi
+fi
 exit 0
