@@ -49,8 +49,14 @@ class TreeShapeProperties {
     private static Set<BlockCoord> randomComponent(Random random, int size) {
         Set<BlockCoord> component = new LinkedHashSet<>();
         List<BlockCoord> members = new ArrayList<>();
+        int canopyY = 1 + random.nextInt(3);
         for (int x = -ChopTuning.MAX_SPREAD; x <= ChopTuning.MAX_SPREAD; x++) {
-            BlockCoord cell = new BlockCoord(x, 0, 0);
+            BlockCoord cell = new BlockCoord(x, canopyY, 0);
+            component.add(cell);
+            members.add(cell);
+        }
+        for (int y = 0; y <= canopyY; y++) {
+            BlockCoord cell = new BlockCoord(0, y, 0);
             component.add(cell);
             members.add(cell);
         }
@@ -59,6 +65,9 @@ class TreeShapeProperties {
             attempts++;
             BlockCoord from = members.get(random.nextInt(members.size()));
             BlockCoord candidate = randomNeighbour(random, from);
+            if (candidate.y() <= 0) {
+                continue;
+            }
             if (Math.abs(candidate.x()) > ChopTuning.MAX_SPREAD
                     || Math.abs(candidate.z()) > ChopTuning.MAX_SPREAD) {
                 continue;

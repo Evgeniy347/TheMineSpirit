@@ -14,6 +14,7 @@ public record NotATree(Reason reason, Set<BlockCoord> logs) implements TreeDetec
     public enum Reason {
         NO_LEAVES,
         NO_SOIL,
-        TOO_BIG
+        TOO_BIG,
+        NOT_A_TRUNK
     }
 }

@@ -46,6 +46,9 @@ public final class TreeShape {
         if (!hasAllowedExtent(logs)) {
             return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
         }
+        if (!hasTrunkBase(logs)) {
+            return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
+        }
         BlockCoord base = base(logs);
         if (!view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
             return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
@@ -74,6 +77,27 @@ public final class TreeShape {
             maxZ = Math.max(maxZ, log.z());
         }
         return maxX - minX <= 2 * ChopTuning.MAX_SPREAD && maxZ - minZ <= 2 * ChopTuning.MAX_SPREAD;
+    }
+
+    private static boolean hasTrunkBase(Set<BlockCoord> logs) {
+        int baseY = logs.stream().mapToInt(BlockCoord::y).min().orElseThrow();
+        int count = 0;
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (BlockCoord log : logs) {
+            if (log.y() == baseY) {
+                count++;
+                minX = Math.min(minX, log.x());
+                maxX = Math.max(maxX, log.x());
+                minZ = Math.min(minZ, log.z());
+                maxZ = Math.max(maxZ, log.z());
+            }
+        }
+        return count <= ChopTuning.TRUNK_BASE_MAX_LOGS
+                && maxX - minX <= ChopTuning.TRUNK_BASE_SPREAD
+                && maxZ - minZ <= ChopTuning.TRUNK_BASE_SPREAD;
     }
 
     private static List<BlockCoord> neighbours(BlockCoord coord) {

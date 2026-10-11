@@ -102,7 +102,7 @@ class TreeShapeTests {
     }
 
     @Test
-    void detect_HutWithoutLeaves_ReturnsNoLeaves() {
+    void detect_HutWithoutLeaves_ReturnsNotATrunk() {
         TreeGrid grid = TreeGrid.ofLayers(
                 "###",
                 "LLL",
@@ -113,9 +113,42 @@ class TreeShapeTests {
         NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
                 "Хижина из брёвен без листвы обязана быть отвергнута как не-дерево: бревенчатая постройка "
                         + "игрока не должна ломаться под видом леса");
-        assertEquals(NotATree.Reason.NO_LEAVES, rejection.reason(),
-                "Хижина без листвы отвергается из-за отсутствия кроны: листьев вокруг брёвен меньше "
-                        + "MIN_NATURAL_LEAVES");
+        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
+                "Хижина отвергается по форме нижнего слоя: основание 3x3 — больше четырёх брёвен, которые "
+                        + "допускает квадрат 2x2 у настоящего ствола");
+    }
+
+    @Test
+    void detect_HutNextToOakWithCrown_ReturnsNotATrunk() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "####\n####\n####",
+                "LLLL\n.LLL\n.LLL",
+                "LLLL\n.LLL\n.LLL",
+                "LLLL\n.LLL\n.LLL",
+                ".@..\n@@..\n....");
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(1, 1, 1), grid),
+                "Бревенчатая хижина вплотную к дубу обязана быть отвергнута как не-дерево: крона дуба нависает "
+                        + "и даёт три листа, но сруб постройки игрока запрещён политикой «не трогать постройки»");
+        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
+                "Хижина с примкнувшим стволом отвергается по форме нижнего слоя: основание 3x3 шире, чем "
+                        + "четыре бревна в квадрате 2x2 у настоящего дерева");
+    }
+
+    @Test
+    void detect_PillarUnderNeighborCrown_ReturnsNotATrunk() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "####",
+                "LLL.",
+                "LLL.",
+                ".@@@");
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Столб из брёвен под кроной соседнего дерева обязан быть отвергнут как не-дерево: листья чужой "
+                        + "кроны касаются постройки, но рубить её дух не должен");
+        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
+                "Постройка отвергается по форме нижнего слоя: три бревна в линию не влезают в квадрат 2x2, "
+                        + "листья же чужого дерева могут висеть над любой постройкой");
     }
 
     @Test
