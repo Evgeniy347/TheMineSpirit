@@ -10,16 +10,18 @@ import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ParamType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.LongRange;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -103,8 +105,14 @@ class PlanValidatorRulesTests {
                 "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
     }
 
+    @Provide
+    Arbitrary<JsonNode> jsonTrees() {
+        return JsonTrees.any();
+    }
+
     @Property
-    void parse_AnyString_SameInputSameOutputOrException(@ForAll String json) {
+    void parse_AnyJsonTree_SameInputSameOutputOrException(@ForAll("jsonTrees") JsonNode tree) {
+        String json = tree.toString();
         try {
             TaskNode first = PlanParser.parse(json, CATALOG);
             TaskNode second = PlanParser.parse(json, CATALOG);
