@@ -25,7 +25,6 @@ public final class CatalogLimits {
     public static final int FOLLOW_RADIUS_MIN = 0;
     public static final int FOLLOW_RADIUS_MAX = 16;
 
-    // чеклист 11: chop_tree.radius 1..32
     public static final int CHOP_RADIUS_MIN = 1;
     public static final int CHOP_RADIUS_MAX = 32;
 
