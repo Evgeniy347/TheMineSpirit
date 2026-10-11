@@ -82,6 +82,19 @@ class TacticsScenarioTests {
     }
 
     @Test
+    void scenarios_OutsideMandatoryList_EachExplainsWhy() {
+        List<String> unexplained = ScenarioFile.load().stream()
+                .filter(scenario -> MANDATORY.stream().noneMatch(scenario.name()::startsWith))
+                .filter(scenario -> scenario.why().map(String::isBlank).orElse(true))
+                .map(ScenarioFile.Scenario::name).toList();
+
+        assertEquals(List.of(), unexplained,
+                "Сценарий сверх обязательного списка закрепляет решение без объяснения: поле \"why\" называет, почему "
+                        + "именно так, и по нему видно, спорное ли это решение геймдизайна. Допишите \"why\" или удалите "
+                        + "сценарий. Без объяснения");
+    }
+
+    @Test
     void scenarios_Memory_InitialMemoryHasNoPreviousDecision() {
         ScenarioFile.Scenario first = ScenarioFile.load().get(0);
 
