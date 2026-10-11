@@ -7,6 +7,8 @@ public interface ResourceKnowledge {
 
     boolean isCraftable(String item);
 
+    int outputCount(String item);
+
     List<Ingredient> ingredientsFor(String item);
 
     boolean isSmeltable(String item);

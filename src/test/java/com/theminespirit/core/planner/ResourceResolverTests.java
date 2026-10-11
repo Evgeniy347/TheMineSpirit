@@ -53,6 +53,56 @@ class ResourceResolverTests {
     }
 
     @Test
+    void resolve_CraftableWithOutputCount_ResolvesIngredientsForCraftsNotItems() {
+        ResourceKnowledge planks = new StubKnowledge(
+                Set.of("oak_log"),
+                Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
+                Map.of(),
+                Map.of("oak_planks", 4));
+
+        TaskNode plan = ResourceResolver.resolve("oak_planks", 8, planks);
+
+        assertEquals(new SequenceNode(List.of(
+                new ScriptCall("gather", Map.of("block", "oak_log", "count", 2)),
+                new ScriptCall("craft", Map.of("item", "oak_planks", "count", 8)))), plan,
+                "Рецепт с выходом 4 предмета обязан требовать 2 крафта на 8 досок: иначе резолвер добывает "
+                        + "8 брёвен вместо 2 и заваливает духа лишним материалом");
+    }
+
+    @Test
+    void resolve_SingleItemFromMultiOutputRecipe_RoundsCraftsUp() {
+        ResourceKnowledge planks = new StubKnowledge(
+                Set.of("oak_log"),
+                Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
+                Map.of(),
+                Map.of("oak_planks", 4));
+
+        TaskNode plan = ResourceResolver.resolve("oak_planks", 1, planks);
+
+        assertEquals(new SequenceNode(List.of(
+                new ScriptCall("gather", Map.of("block", "oak_log", "count", 1)),
+                new ScriptCall("craft", Map.of("item", "oak_planks", "count", 1)))), plan,
+                "Одна доска из рецепта на 4 не может дать полкрафта: число крафтов округляется вверх до 1, "
+                        + "иначе план добывает 0 брёвен и крафт провалится");
+    }
+
+    @Test
+    void resolve_IngredientCountOverflow_ThrowsUnplannableGoal() {
+        ResourceKnowledge heavy = new StubKnowledge(
+                Set.of("oak_log"),
+                Map.of("heavy", List.of(new Ingredient("oak_log", 2))),
+                Map.of());
+
+        UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
+                () -> ResourceResolver.resolve("heavy", Integer.MAX_VALUE, heavy),
+                "Переполнение произведения количества ингредиента на число крафтов обязано отвергаться: "
+                        + "тихое переполнение int превратит план в отрицательную добычу");
+
+        assertEquals("heavy", error.item(),
+                "Исключение о переполнении обязано нести предмет 'heavy' отдельным полем: по нему правят цель");
+    }
+
+    @Test
     void resolve_NestedCraftableItem_ResolvesIngredientsRecursively() {
         TaskNode plan = ResourceResolver.resolve("iron_pickaxe", 1, KNOWLEDGE);
 

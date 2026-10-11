@@ -8,11 +8,18 @@ final class StubKnowledge implements ResourceKnowledge {
     private final Set<String> gatherable;
     private final Map<String, List<Ingredient>> crafts;
     private final Map<String, String> smelts;
+    private final Map<String, Integer> outputs;
 
     StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts) {
+        this(gatherable, crafts, smelts, Map.of());
+    }
+
+    StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
+            Map<String, Integer> outputs) {
         this.gatherable = Set.copyOf(gatherable);
         this.crafts = Map.copyOf(crafts);
         this.smelts = Map.copyOf(smelts);
+        this.outputs = Map.copyOf(outputs);
     }
 
     @Override
@@ -23,6 +30,11 @@ final class StubKnowledge implements ResourceKnowledge {
     @Override
     public boolean isCraftable(String item) {
         return crafts.containsKey(item);
+    }
+
+    @Override
+    public int outputCount(String item) {
+        return outputs.getOrDefault(item, 1);
     }
 
     @Override

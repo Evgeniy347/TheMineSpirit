@@ -61,12 +61,27 @@ public final class ResourceResolver {
     }
 
     private static TaskNode craftPlan(String item, int count, ResourceKnowledge knowledge, Set<String> path) {
+        int output = knowledge.outputCount(item);
+        if (output <= 0) {
+            throw new UnplannableGoalException(item, "Рецепт предмета '" + item + "' даёт " + output
+                    + " предметов за крафт: выход рецепта обязан быть положительным");
+        }
+        long crafts = (count + (long) output - 1) / output;
         List<TaskNode> steps = new ArrayList<>();
         for (Ingredient ingredient : knowledge.ingredientsFor(item)) {
-            steps.add(resolve(ingredient.item(), ingredient.count() * count, knowledge, path));
+            steps.add(resolve(ingredient.item(), ingredientCount(ingredient, crafts, item), knowledge, path));
         }
         steps.add(new ScriptCall("craft", Map.of("item", item, "count", count)));
         return new SequenceNode(steps);
+    }
+
+    private static int ingredientCount(Ingredient ingredient, long crafts, String item) {
+        long total = ingredient.count() * crafts;
+        if (total > Integer.MAX_VALUE) {
+            throw new UnplannableGoalException(item, "Для '" + item + "' нужно " + total + " предмета '"
+                    + ingredient.item() + "' на цепочке рецептов: количество переполняет int, уменьшите цель");
+        }
+        return (int) total;
     }
 
     private static TaskNode smeltPlan(String item, int count, ResourceKnowledge knowledge, Set<String> path) {
