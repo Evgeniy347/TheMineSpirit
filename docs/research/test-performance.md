@@ -2,8 +2,10 @@
 
 Цель: тысячи тестов идут быстро и не душат общую машину; долгий тест виден сразу после прогона.
 Замеры 2026-10-11 на `main@2875905` (228 JUnit-тестов в 34 классах, 11 свойств jqwik ≈ 9,7 тыс. tries,
-15 GameTest) во временном worktree. Машина: 4 ядра, 11 ГБ; во время замеров load average 10–20,
-CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 ГБ, swap занят на 1 ГБ.
+15 GameTest) во временном worktree. С тех пор в main влиты 12-mine и 09: свойств 22 (≈ 14,7 тыс. tries),
+сторожей 7, параллель JUnit выключена, `maxParallelForks = 1`, есть `slowTest`. Абсолютные числа CPU тира
+сейчас выше, соотношения из опытов ниже переносятся. Машина: 4 ядра, 11 ГБ; во время замеров load average
+10–20, CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 ГБ, swap занят на 1 ГБ.
 Узкое место — процессор, а не диск: NVMe, IO pressure ≈ 5 %.
 
 ## 1. Что измерено
@@ -15,8 +17,7 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
 | Gradle: старт демона / configuration (промах кэша) / попадание в configuration cache | 1,9–2,6 с / 0,5–0,7 с / 0 с |
 | CPU тестовой JVM (utime+stime), 5 прогонов | 12,0–15,4 с, медиана 14,6 с |
 | Пиковый RSS тестовой JVM | 272 МБ при `-Xmx512m` (дефолт Gradle) |
-| Постоянная часть: JVM + платформа с одним пустым тестом | 4,0 с CPU |
-| Первое свойство jqwik (инициализация движка) | +1,3–2 с CPU |
+| Постоянная часть: JVM + платформа с одним пустым тестом / первое свойство jqwik | 4,0 с CPU / +1,3–2 с |
 | Сумма `testcase time` на одном и том же коде | 3,5–12,6 с — разброс ×3,6 |
 
 Самые долгие тесты (медиана 3 прогонов, wall):
@@ -29,9 +30,9 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
 | `ChunkSquareProperties.chunks_AnyRadius_…` / `WorldObservationProperties.hash_…` / `ResourceResolverProperties` | ≈0,5 каждый | 1000 tries |
 
 Ловушки в отчётах:
-- `time` у `<testsuite>` врёт для классов, где есть и `@Test`, и `@Property`: `PlanValidatorRulesTests` — 6,9 с
-  на уровне класса при сумме тестов 0,32 с. Это интервал от прогона Jupiter до прогона jqwik
-  (движки идут друг за другом). Считать по сумме `testcase`, не по классу.
+- `time` у `<testsuite>` врёт для классов, где есть и `@Test`, и `@Property`. `PlanValidatorRulesTests`: 6,9 с
+  на уровне класса при сумме тестов 0,32 с; в свежем отчёте main — 4,68 с против 0,23 с. Это интервал от
+  прогона Jupiter до прогона jqwik (движки идут друг за другом). Считать по сумме `testcase`.
 - Время одного теста на общей машине — шум (×3,6), плюс прогрев JIT и загрузка классов достаются первому тесту,
   который трогает библиотеку. Меньше tries — меньше CPU, но время теста падает не пропорционально.
 
@@ -44,8 +45,8 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
 | то же + `-XX:TieredStopAtLevel=1` (только C1) | 5,8–6,3 | **−58 %** (сумма testcase 3,9–5,4 с) |
 | `maxParallelForks = 2` | 20,9–21,1 | **+45 %** |
 
-В `task/09-testing` (2 форка + `parallel.config.strategy=dynamic`) последний отчёт исполнителя: сумма времени
-классов 45 с против 15 с на main — потоки дерутся за занятые ядра.
+Ветка 09 до исправления (2 форка + `parallel.config.strategy=dynamic`): сумма времени классов 45 с против 15 с
+на main — потоки дрались за занятые ядра. В слитой 09 параллель уже выключена.
 
 ### GameTest (`./gradlew runGameTestServer`)
 | Фаза | Как есть (4 прогона) | С флагами JVM (2 прогона)¹ |
@@ -62,7 +63,8 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
 - `GameTestServer.waitUntilNextTick()` не спит, а только выполняет задачи: тики идут без паузы 50 мс.
   Время теста = число тиков × стоимость тика (≈50–80 мс под нагрузкой), то есть тики в тесте — это CPU,
   а не ожидание. Самый длинный тест задаёт время батча: `FollowGameTests` ждёт фиксированно 20+120 тиков,
-  `SpiritCommandGameTests` — 40.
+  `SpiritCommandGameTests` — 40. Побочный эффект: базовый цикл сервера считает себя отстающим, и лог
+  забит «Can't keep up!».
 - Флак под нагрузкой: `chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare` упал 1 раз из 6
   при load 20 («ожидалось 9 чанков вокруг (…), удержано 9»: набор не успел сдвинуться за 20 тиков).
 - `run/world` не чистится, а тесты каждый раз встают в случайную точку мира: +5–8 МБ за прогон
@@ -71,51 +73,57 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
   `new ObjectMapper()` на вызов в тестах и `core` нет.
 
 ### Сторожа
-Пять сторожей и `CoreIsolationTests` обходят и читают исходники каждый сам: `src/test/java` — 4 раза,
-`src/main/java` — 3 раза (133 файла, 390 КБ). Сейчас это 1–1,7 с CPU сверх пустого прогона;
-растёт как (число файлов × число сторожей).
+Семь сторожей и `CoreIsolationTests` обходят и читают исходники каждый сам: 10 обходов на прогон
+(`src/test/java` — 4, `src/main/java` — 4, из них `SilentCatchGuardTests` — дважды, `gametest` и `core` — по 1).
+На 2875905 (133 файла, 390 КБ) это 1–1,7 с CPU сверх пустого прогона; растёт как (файлы × обходы).
 
 ### Демоны Gradle
 Демоны общие для всех worktree (`~/.gradle`), но при занятости запускаются новые: замерено 5 живых
-(`-Xmx2G`, RSS 0,3–1,0 ГБ каждый) и полтора десятка остановленных за час. `./gradlew --stop` гасит и чужие
-занятые демоны, поэтому на общей машине его использовать нельзя.
+(`-Xmx2G`, RSS 0,3–1,0 ГБ каждый) и полтора десятка остановленных за час. `./gradlew --stop` гасит все демоны
+этой версии (занятые — после их текущей сборки), и каждый исполнитель потом платит холодный старт. На общей
+машине `--stop` не использовать.
 
 ## 2. Рекомендации (по убыванию выигрыша)
 
 | # | Файл — изменение | Ожидаемый выигрыш |
 |---|---|---|
-| 1 | `build.gradle`, `tasks.test`: `jvmArgs '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-XX:ActiveProcessorCount=2'`, `maxHeapSize = '512m'` явно. В `slowTest` C1-only не ставить: долгие вычисления выигрывают от C2 | CPU быстрого тира −58 % (14,6 → 6 с); меньше потоков GC/JIT на чужих ядрах |
-| 2 | `build.gradle`, `neoForge.runs.gameTestServer`: `jvmArguments.addAll('-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-Xmx1G')`; перепроверить на 3+ прогонах | wall 72–124 → 37–48 с, CPU −60 %, RSS −35 % |
-| 3 | Новый `scripts/gametest.sh`: `flock -w 1800 /tmp/theminespirit-gametest.lock ./gradlew runGameTestServer`; исполнители и хуки зовут только его | на машине одна JVM игры (~1 ГБ, ~75 с CPU) вместо нескольких; меньше флаков под нагрузкой |
-| 4 | Ветка 09: `maxParallelForks = 1`; в `junit-platform.properties` `parallel.config.strategy=fixed`, `fixed.parallelism=2` (или параллель выключить, пока CPU тира < 30 с). Там же баг: `"…-fork-\${System.getProperty(…)}"` даёт буквальное имя файла — все форки пишут одну базу jqwik | не тратить +45 % CPU на второй форк; база seed не портится |
-| 5 | `junit-platform.properties`: `jqwik.tries.default=200` в быстром тире; `slowTest` / ночной прогон — `systemProperty 'jqwik.tries.default', '1000'`. `ChunkSquareProperties.diff_AnyCenters`: новый центр = старый + сдвиг в `[-2R-1, 2R+1]`, R ≤ 8 | −20 % CPU сейчас и линейно на каждое новое свойство; diff начинает проверять пересечения квадратов, а не почти всегда непересекающиеся |
-| 6 | `gradle.properties`: `org.gradle.daemon.idletimeout=900000` (15 мин вместо 3 ч), `org.gradle.workers.max=2`; `-Xmx2G` → `-Xmx1536m` после замера пика демона на `createMinecraftArtifacts` | меньше спящих демонов по 0,3–1 ГБ; сборки не забирают все 4 ядра |
-| 7 | `guards/SourceFiles.java`: `javaUnder` кэширует результат в `static ConcurrentHashMap<Path, Map<Path,String>>`; `CoreIsolationTests` берёт файлы оттуда же | один обход на корень за JVM вместо 7; при 1000+ файлов это секунды CPU |
-| 8 | GameTest: `gameTestServer` получает свой `gameDirectory` в `build/gametest-run`, его `world` удаляется перед прогоном; `logLevel` INFO вместо DEBUG; фиксированные `runAfterDelay(120)` → `succeedWhen` с проверкой «путь построен ≤ 2 раз»; `timeoutTicks` ≈ 2× фактического числа тиков | мир не растёт; батч заканчивается по последнему условию, а не по таймеру |
+| 1 | `build.gradle`, `tasks.test`: `jvmArgs '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-XX:ActiveProcessorCount=2'`, `maxHeapSize = '512m'` явно. `ActiveProcessorCount` нужен не GC (Serial однопоточный): он режет потоки C1 и `availableProcessors()` для кода под тестом (`commonPool`, parallel streams). В `slowTest` C1-only не ставить — долгие вычисления выигрывают от C2; числа `test` и `slowTest` поэтому несравнимы | CPU быстрого тира −58 % (14,6 → 6 с на 2875905); меньше потоков GC/JIT на чужих ядрах |
+| 2 | `build.gradle`, `neoForge.runs.gameTestServer`: `jvmArguments.addAll('-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-Xmx1536m', '-XX:+ExitOnOutOfMemoryError')`. RSS 0,65 ГБ измерен лишь на 2 прогонах: `-Xmx1G` впритык, и OOM выглядел бы как падение сервера, а не теста. C1 медленнее C2 на горячих циклах (поиск пути, тики чанков): пересмотреть, когда появятся тесты > 200 тиков. Перепроверить на 3+ прогонах | wall 72–124 → 37–48 с, CPU −60 %, RSS −35 % |
+| 3 | Новый `scripts/gametest.sh`: `flock -w 1800 -E 75 /tmp/theminespirit-gametest.lock ./gradlew runGameTestServer`; при коде 75 — внятное сообщение «ждали 30 мин, идёт чужой GameTest». Хука для GameTest нет: скрипт вызывают исполнители (чеклист перед сдачей) и главный агент перед слиянием | на машине одна JVM игры (~1 ГБ, ~75 с CPU) вместо нескольких; меньше флаков под нагрузкой |
+| 4 | Параллель JUnit: в 09 уже сделано (слито `d962f07`): `maxParallelForks = 1`, `parallel.enabled=false`, одна база jqwik. Не включать обратно без нового замера; разумный предел — 1 форк и ≤ 2 потока | второй форк стоил +45 % CPU |
+| 5 | `junit-platform.properties`: `jqwik.tries.default=200`; `slowTest` и ночной прогон — `systemProperty 'jqwik.tries.default', '1000'` (jqwik читает его через параметры конфигурации JUnit, системное свойство перекрывает файл). Дефолт действует только на свойства без явного `tries` — сейчас 12 из 22. `ChunkSquareProperties.diff_AnyCenters`: через `Arbitraries.frequencyOf` ~90 % «новый центр = старый + сдвиг в [-2R-1, 2R+1]» и ~10 % «любой центр», радиус оставить 0–16 | −20 % CPU на 2875905 и линейно на каждое новое свойство; diff проверяет пересечения квадратов, а не почти всегда непересекающиеся |
+| 6 | `gradle.properties`: `org.gradle.daemon.idletimeout=900000` (15 мин вместо 3 ч), `org.gradle.workers.max=2`; `-Xmx2G` → `-Xmx1536m` после замера пика демона на `compileJava`/`test`/конфигурации `runGameTestServer` (`createMinecraftArtifacts` идёт в отдельной JVM NFRT). Вносить только через main и сразу во все ветки: `org.gradle.jvmargs` — критерий совместимости демона, разные значения в worktree плодят лишние демоны. Уже живые демоны сохранят 3 ч; цена — чуть больше холодных стартов (1,9–2,6 с) | меньше спящих демонов по 0,3–1 ГБ; сборки не забирают все 4 ядра |
+| 7 | `guards/SourceFiles.java`: `javaUnder` кэширует результат в `static ConcurrentHashMap<Path, Map<Path,String>>` (значение — `Map.copyOf`, неизменяемое; провал проверки каталога не кэшируется); `CoreIsolationTests` берёт файлы оттуда же. В `docs/TESTING.md` записать исключение из правила «нет изменяемого static»: кэш только для чтения | один обход на корень за JVM вместо 10; при 1000+ файлов это секунды CPU |
+| 8 | GameTest: `gameTestServer` получает свой `gameDirectory` в `build/gametest-run`, его `world` удаляется перед прогоном; `logLevel` INFO вместо DEBUG. В `ChunkLoadingGameTests` фиксированное `runAfterDelay(20)` после телепорта → `succeedWhen` (лечит флак). `FollowGameTests` окно оставить фиксированным: `pathBuilds() <= 2` — верхняя граница за окно, `succeedWhen` её не поймает; можно укоротить 120 → 60 тиков с пропорциональным порогом | мир не растёт; батч короче на ~60 тиков; меньше флаков |
 
-Сохранение мира на остановке (7–15 с) упирается в процессор, а не в диск, поэтому tmpfs почти ничего не даст.
-Это не приоритет.
+Надёжность, не скорость: `timeoutTicks` ≈ 2× фактических тиков — зелёный прогон не ускоряет, но зависший тест
+падает быстрее. Сохранение мира на остановке (7–15 с) упирается в процессор, а не в диск, — tmpfs почти ничего
+не даст.
 
 ## 3. Как сразу подсвечивать долгие тесты
 
 Мерить CPU потока, а не wall. Шум wall на общей машине ×3,6, CPU всей JVM — ±13 %.
 - `src/test/java/.../testing/TestCostListener` (JUnit Platform `TestExecutionListener`, подключается через
-  `META-INF/services`): для каждого теста записывает `ThreadMXBean.getCurrentThreadCpuTime()` до и после
-  и wall-время в `TestResults/unit/test-cost.csv` (класс, тест, cpu_ms, wall_ms). Свойство jqwik
-  выполняется в одном потоке, поэтому учитывается целиком. Первый тест, который загрузил Jackson или jqwik,
-  помечается как прогрев и в пороги не идёт.
+  `META-INF/services`; Jupiter и jqwik зовут его в потоке теста): для каждого теста пишет в
+  `TestResults/unit/test-cost.csv` класс, тест, `cpu_ms` (`ThreadMXBean.getCurrentThreadCpuTime()`), `wall_ms`,
+  `gc_ms` (дельта `GarbageCollectorMXBean.getCollectionTime()`: CPU потока не включает GC и JIT, аллокационно
+  тяжёлые тесты иначе выглядят дешевле) и метку `warmup`, если за тест загружено > 200 классов
+  (`ClassLoadingMXBean`). Тесты с `warmup` в пороги не идут. Работа в чужих потоках (`CompletableFuture`,
+  parallel streams) не учитывается — это ограничение метода.
 - `build.gradle`: `tasks.test { finalizedBy 'testCostReport' }`. Задача печатает топ-10 по CPU и строки выше
   порога с пометкой `МЕДЛЕННЫЙ`. Хук pre-commit показывает этот вывод и при зелёных тестах.
-- GameTest: свой `TestReporter` через `GlobalTestReporter.replaceWith(...)` при `GameTestHooks.isGametestServer()`.
-  Пишет `TestResults/gametest/report.xml`: `getRunTime()`, тики теста (`level.getGameTime()` при завершении
-  минус тик старта батча) и мс на тик по батчу. Основная метрика — тики: они не зависят от нагрузки.
+- GameTest: обернуть ванильный `JUnitLikeTestReporter(File)` (он уже пишет XML с `time = getRunTime()`) и
+  поставить через `GlobalTestReporter.replaceWith(...)` при `GameTestHooks.isGametestServer()` до старта тестов
+  (при создании сервера); файл пишется в `finish()` — после него сервер выходит. Добавить мс на тик по батчу и
+  тики теста = `getRunTime()` / (мс на тик). Счётчик тиков `GameTestInfo` закрыт, а «игровое время минус старт
+  батча» завышает на ожидание загрузки чанков (до ~20 тиков). Тики — основная метрика: от нагрузки не зависят.
 
-Пороги (CPU одного теста, предупреждение / «долгий»):
+Пороги — при флагах рекомендации 1 и `tries.default=200`; при другой конфигурации JVM откалибровать заново.
 | Что | Предупреждение | Долгий: разобрать до коммита или в slow |
 |---|---|---|
-| `@Test`, `@Example`, строка параметризованного теста | ≥ 100 мс | ≥ 500 мс |
-| `@Property` (все tries) | ≥ 300 мс | ≥ 1 с |
-| JUnit-класс (сумма testcase) | ≥ 500 мс | ≥ 2 с |
+| `@Test`, `@Example`, строка параметризованного теста | ≥ 100 мс CPU | ≥ 500 мс |
+| `@Property` | ≥ 1,5 мс CPU на try или ≥ 300 мс всего | ≥ 5 мс на try или ≥ 1 с |
+| JUnit-класс (сумма testcase) | ≥ 500 мс CPU | ≥ 2 с |
 | GameTest | ≥ 100 тиков | ≥ 200 тиков или `timeoutTicks` > 400 |
 | Бутстрап GameTest-сервера | ≥ 40 с | ≥ 60 с (смотреть флаги JVM и новые моды) |
 
@@ -131,11 +139,12 @@ CPU pressure (`/proc/pressure/cpu`, some avg60) ≈ 85 %, свободно ~3,3 
 ## 4. Бюджеты и нагрузка
 
 - Быстрый тир (`./gradlew test`, его гоняет pre-commit): CPU тестовой JVM ≤ 20 с, wall команды ≤ 60 с.
-  Постоянная часть 4 с, в среднем ≤ 5 мс CPU на тест: 2000 тестов ≈ 4 + 10 с. Сейчас 14,6 с на 228 тестов
-  (≈ 46 мс на тест — съедают tries jqwik и прогрев). С рекомендациями 1 и 5 — около 5 с.
+  Постоянная часть 4 с, в среднем ≤ 5 мс CPU на тест: 2000 тестов ≈ 4 + 10 с. На 2875905 было 14,6 с на 228
+  тестов (≈ 46 мс на тест — съедают tries jqwik и прогрев). С рекомендациями 1 и 5 оценка — 5–7 с;
+  перепроверить после внедрения (выигрыши не перемножаются: рек. 5 касается только свойств без `tries`).
 - Slow-тир и GameTest не идут в pre-commit: GameTest — перед слиянием ветки, slow — ночью или по запросу.
 - Одна тестовая JVM на исполнителя, не больше 2 потоков JUnit; GameTest-сервер — один на машину (flock).
   Пять исполнителей × (демон до 1 ГБ + тестовая JVM 0,3 ГБ) занимают до ~6,5 ГБ из 11 ГБ, вторая JVM игры
   (~1 ГБ) уводит машину в swap.
-- Не держать после себя: worktree для замеров удалять. Демоны не гасить через `--stop` (он гасит и занятые
-  чужие); короткий `idletimeout` (рекомендация 6) убирает лишние демоны сам.
+- Не держать после себя: worktree для замеров удалять. Демоны не гасить через `--stop`; короткий
+  `idletimeout` (рекомендация 6) убирает лишние демоны сам.
