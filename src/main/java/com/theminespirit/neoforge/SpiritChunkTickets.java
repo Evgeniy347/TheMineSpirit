@@ -38,12 +38,8 @@ public final class SpiritChunkTickets {
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
         Set<UUID> owners = helper.getEntityTickets().keySet();
-        // Реестр читается с диска до первого тика духов: если файла нет (мир до появления реестра), сущности
-        // ещё не загружены и опознать мёртвых владельцев нельзя — тогда билеты сохраняются все.
-        Set<UUID> knownLiveSpirits = SpiritRegistry.find(level)
-                .map(SpiritRegistry::alive)
-                .orElse(owners);
-        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(owners, knownLiveSpirits);
+        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(owners,
+                SpiritRegistry.find(level).map(SpiritRegistry::alive));
         for (UUID owner : owners) {
             if (!keep.contains(owner)) {
                 helper.removeAllTickets(owner);
