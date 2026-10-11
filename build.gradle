@@ -212,15 +212,15 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 // Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).
-// Тег slow (свойства jqwik и тесты на масштаб) гоняет отдельная задача slowTest,
-// чтобы ./gradlew test укладывался в минуту. check зависит от обеих.
-var testForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
-
+// Свойства jqwik и тесты на масштаб идут этим же прогоном; тег slow оставлен для будущего
+// тяжёлого теста, который не влезает в бюджет (гоняет задача slowTest). check зависит от обеих.
+// Параллельные форки выключены: замер на 4 ядрах показал, что 2 форка дороже старта второй JVM
+// и обгоняют прогон (числа — docs/TESTING.md → «Параллельный прогон и теги»).
 tasks.named('test', Test) {
     useJUnitPlatform {
         excludeTags 'slow'
     }
-    maxParallelForks = testForks
+    maxParallelForks = 1
     systemProperty 'theminespirit.modId', project.mod_id
     systemProperty 'jqwik.database', ".jqwik-database-fork-\${System.getProperty('org.gradle.test.worker')}"
     failOnNoDiscoveredTests = true
@@ -228,10 +228,10 @@ tasks.named('test', Test) {
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
 }
 
-// Медленный тир: только тесты с тегом slow (docs/TESTING.md).
+// Медленный тир: только тесты с тегом slow (docs/TESTING.md). Сейчас пуст: тяжёлых тестов нет.
 tasks.register('slowTest', Test) {
     group = 'verification'
-    description = 'Медленные тесты с тегом slow: свойства jqwik и тесты на масштаб'
+    description = 'Медленные тесты с тегом slow: только для теста, который не влезает в бюджет быстрого тира'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
@@ -264,9 +264,11 @@ tasks.withType(Test).configureEach {
     }
 }
 
-// check проверяет и быстрый, и медленный тир, чтобы build не оставался без инвариантов.
+// check гоняет быстрый тир. slowTest намеренно НЕ входит в check: сейчас в нём нет тестов, а
+// пустой тир по R10 падает, и check/build стали бы вечно красными. slowTest запускают отдельно,
+// когда появится тяжёлый тест с замеренным временем (docs/TESTING.md).
 tasks.named('check') {
-    dependsOn tasks.named('test'), tasks.named('slowTest')
+    dependsOn tasks.named('test')
 }
 
 // Покрытие JaCoCo — отчёт, а не гейт сборки (docs/TESTING.md).
