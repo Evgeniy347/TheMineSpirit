@@ -104,9 +104,13 @@ public final class SpiritGameTests {
             helper.assertTrue(status == RunStatus.FAILED,
                     "goto к недостижимой точке обязан довести задачу до FAILED, а не потерять её: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("goto"),
-                    "после провала причина обязана называть упавший скрипт 'goto', а не теряться. Фактическое: "
+            helper.assertTrue(spirit.taskFailureReason().filter(reason -> !reason.isBlank()).isPresent(),
+                    "после провала причина обязана дойти до задачи, а не теряться. Фактическое: "
                             + spirit.taskFailureReason().orElse("нет причины"));
+            helper.assertTrue(spirit.taskFailureReason().filter(reason -> reason.contains("не дошёл")
+                            || reason.contains("застрял")).isPresent(),
+                    "причина падения goto обязана описывать неудачу перемещения, а не общий текст движка. "
+                            + "Фактическое: " + spirit.taskFailureReason().orElse("нет причины"));
         });
     }
 
