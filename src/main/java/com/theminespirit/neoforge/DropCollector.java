@@ -37,6 +37,7 @@ public final class DropCollector {
     private int ticksSinceQuery;
     private int entityQueries;
     private int collected;
+    private int delayWaited;
     private boolean queriedThisTick;
 
     public DropCollector(SpiritEntity spirit, IdFilter items, BlockCoord center, int radius, PickupTuning tuning) {
@@ -73,6 +74,7 @@ public final class DropCollector {
             if (target == null) {
                 return conclude();
             }
+            delayWaited = 0;
         }
         return pursue();
     }
@@ -95,7 +97,7 @@ public final class DropCollector {
 
     private void refresh() {
         nearby = spirit.level().getEntitiesOfClass(ItemEntity.class, area,
-                drop -> !drop.isRemoved() && items.matches(itemId(drop.getItem())));
+                drop -> !drop.isRemoved() && addressedToAnyone(drop) && items.matches(itemId(drop.getItem())));
         entityQueries++;
         ticksSinceQuery = 0;
         queriedThisTick = true;
@@ -152,6 +154,10 @@ public final class DropCollector {
         };
     }
 
+    private boolean addressedToAnyone(ItemEntity drop) {
+        return drop.getTarget() == null || drop.getTarget().equals(spirit.getUUID());
+    }
+
     private State giveUpOnTarget() {
         skipped.add(target.getStringUUID());
         target = null;
@@ -160,7 +166,7 @@ public final class DropCollector {
 
     private State pickUp() {
         if (target.hasPickUpDelay()) {
-            return State.RUNNING;
+            return ++delayWaited > tuning.maxDelayWaitTicks() ? giveUpOnTarget() : State.RUNNING;
         }
         ItemStack stack = target.getItem();
         ItemStack rest = spirit.getInventory().addItem(stack.copy());

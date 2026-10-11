@@ -11,6 +11,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
@@ -30,6 +31,7 @@ public final class CollectDropsGameTests {
     private static final int PILLAR_HEIGHT = 4;
     private static final int SETTLE_TICKS = 1;
     private static final int PILLAR_SETTLE_TICKS = 10;
+    private static final int ENDLESS_PICKUP_DELAY = 32767;
 
     private CollectDropsGameTests() {
     }
@@ -147,6 +149,60 @@ public final class CollectDropsGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(!onPillar.isRemoved() && onPillar.getItem().getCount() == 4,
                     "кучка на столбе обязана остаться целой");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "drops_endless_delay", timeoutTicks = 400)
+    public static void collectDrops_HeapWithEndlessPickupDelay_IsSkippedAfterBoundedWait(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        ItemEntity display = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 3.5, 1, 4.5);
+        display.setPickUpDelay(ENDLESS_PICKUP_DELAY);
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 2, 7.5, 1, 4.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "кучка с бесконечной задержкой обязана провалить итог collect_drops, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("не дотянулся до 1"),
+                    "причина обязана называть одну недоступную кучку, фактически: " + reason);
+            helper.assertTrue(run.spiritTicks() <= 120,
+                    "ожидание задержки ограничено 40 тиками: итог за 120 тиков духа, а заняло " + run.spiritTicks());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 2,
+                    "обычная кучка обязана быть подобрана, пока дух не ждёт вечную: в инвентаре "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            helper.assertTrue(!display.isRemoved() && display.getItem().getCount() == 1,
+                    "кучка с бесконечной задержкой не должна быть тронута");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "drops_foreign_target", timeoutTicks = 400)
+    public static void collectDrops_HeapAddressedToAnotherPlayer_IsLeftUntouched(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        ItemEntity foreign = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 4, 3.5, 1, 4.5);
+        foreign.setTarget(UUID.randomUUID());
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 2, 7.5, 1, 4.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "чужая кучка не входит в подбор: collect_drops обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 2,
+                    "в инвентаре обязана быть только обычная кучка (2): вещь, адресованную игроку, дух не забирает");
+            helper.assertTrue(!foreign.isRemoved() && foreign.getItem().getCount() == 4,
+                    "кучка, адресованная другому игроку, обязана остаться нетронутой");
             GameTestFixtures.reset(helper);
         });
     }
