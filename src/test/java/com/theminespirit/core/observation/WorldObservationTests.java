@@ -2,6 +2,7 @@ package com.theminespirit.core.observation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -128,5 +129,37 @@ class WorldObservationTests {
         assertEquals(expected, json,
                 "JSON наблюдения обязан строго совпадать с контрактом API: имена полей, порядок, структура, включая hash");
     }
+
+
+
+    @Test
+    void fromJson_BadPosWrongLengthTwo_ThrowsIllegalArgument() {
+        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
+        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
+                "Битый JSON с pos неверной длины обязан приводить к IllegalArgumentException с понятной причиной");
+    }
+
+    @Test
+    void fromJson_BadPosWrongLengthFour_ThrowsIllegalArgument() {
+        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2,3,4],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
+        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
+                "Битый JSON с pos неверной длины обязан приводить к IllegalArgumentException с понятной причиной");
+    }
+
+    @Test
+    void fromJson_BadPosNotArray_ThrowsIllegalArgument() {
+        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":\"not-array\",\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
+        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
+                "Битый JSON с pos не массивом обязан приводить к IllegalArgumentException с понятной причиной");
+    }
+
+    @Test
+    void fromJson_BadPosNonNumeric_ThrowsIllegalArgument() {
+        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2,\"x\"],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
+        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
+                "Битый JSON с нечисловым pos обязан приводить к IllegalArgumentException с понятной причиной");
+    }
+
+
 
 }
