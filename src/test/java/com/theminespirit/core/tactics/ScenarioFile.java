@@ -179,17 +179,19 @@ public final class ScenarioFile {
     }
 
     private static TacticsMemory memory(ConfigNode node, Situation situation, long tick) {
-        node.fields(new String[] {}, "state", "inState", "sinceSeen", "previous", "decidedAgo", "mode");
+        node.fields(new String[] {}, "state", "inState", "sinceSeen", "previous", "by", "decidedAgo",
+                "mode");
         TacticsMemory base = TacticsMemory.initial(situation.orders().mode(), tick, situation.self().hpFraction());
         TacticalState state = node.has("state") ? node.get("state").enumValue(TacticalState.class) : base.state();
         long inState = node.has("inState") ? node.get("inState").integer(0, (int) tick) : 0;
         long sinceSeen = node.has("sinceSeen") ? node.get("sinceSeen").integer(0, (int) tick) : tick - base.lastSeenTick();
         Optional<TacticalOption> previous = node.has("previous")
                 ? Optional.of(node.get("previous").enumValue(TacticalOption.class)) : Optional.empty();
+        DecisionSource by = node.has("by") ? node.get("by").enumValue(DecisionSource.class) : DecisionSource.SCORE;
         long decidedAgo = node.has("decidedAgo") ? node.get("decidedAgo").integer(0, (int) tick) : 0;
         CombatMode mode = node.has("mode") ? node.get("mode").enumValue(CombatMode.class) : base.mode();
         Optional<Point> anchor = state == TacticalState.CALM ? Optional.empty() : Optional.of(situation.self().pos());
-        return new TacticsMemory(previous, DecisionSource.SCORE, tick - decidedAgo, state, tick - inState, mode, base.orderedMode(), anchor,
+        return new TacticsMemory(previous, by, tick - decidedAgo, state, tick - inState, mode, base.orderedMode(), anchor,
                 tick - sinceSeen, base.hpWindowRef(), tick);
     }
 

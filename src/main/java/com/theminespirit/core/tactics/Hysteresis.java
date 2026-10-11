@@ -11,7 +11,7 @@ public final class Hysteresis {
     }
 
     public HoldStatus status(TacticsMemory memory, long now, double hpFraction, Set<TacticalOption> candidates) {
-        if (memory.previous().isEmpty()) {
+        if (memory.previous().isEmpty() || memory.previousSource() == DecisionSource.RULE) {
             return HoldStatus.NONE;
         }
         if (!candidates.contains(memory.previous().get())) {
@@ -26,7 +26,8 @@ public final class Hysteresis {
 
     public TacticsMemory remember(TacticsMemory memory, Decision decision, long now, double hpFraction) {
         TacticalOption chosen = decision.option();
-        boolean changed = memory.previous().map(option -> option != chosen).orElse(true);
+        boolean changed = memory.previous().map(option -> option != chosen).orElse(true)
+                || memory.previousSource() != decision.source();
         boolean windowOver = now - memory.hpWindowStart() >= weights.holdTicks();
         return new TacticsMemory(Optional.of(chosen), decision.source(), changed ? now : memory.decidedAt(),
                 memory.state(), memory.stateSince(), memory.mode(), memory.orderedMode(), memory.anchor(),

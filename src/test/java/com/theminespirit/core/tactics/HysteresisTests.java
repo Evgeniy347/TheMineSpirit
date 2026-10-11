@@ -159,6 +159,57 @@ class HysteresisTests {
     }
 
     @Test
+    void step_NewZombieTenTicksAfterNoEnemiesRule_FightsInsteadOfHoldingIgnore() {
+        TacticsEngine engine = new TacticsEngine(CONFIG);
+        Situation empty = SituationBuilder.create().build();
+        Situation zombie = SituationBuilder.create().enemy("zombie", 3).cover(6).build();
+        TacticalOutcome quiet = engine.step(empty, Memories.fresh(empty), 1000);
+
+        TacticalOutcome attacked = engine.step(zombie, quiet.memory(), 1010);
+
+        assertEquals(List.of(TacticalOption.IGNORE, "no_enemies_ignore", TacticalOption.FIGHT, Decision.BY_SCORE,
+                HoldStatus.NONE), List.of(quiet.decision(), quiet.trace().rule(), attacked.decision(),
+                attacked.trace().rule(), attacked.trace().hold()),
+                "Решение жёсткого правила «врагов нет» не удерживается: гистерезис гасит дрожь оценки, а не переносит "
+                        + "IGNORE на ситуацию, где появился зомби в 3 блоках и aggressive-дух обязан ответить. Если "
+                        + "ожидание меняют осознанно, пересмотрите Hysteresis.status и TacticsMemory.previousSource");
+    }
+
+    @Test
+    void decide_PreviousFromRuleInsideWindow_EqualsDecisionWithoutMemory() {
+        Situation zombie = SituationBuilder.create().enemy("zombie", 3).build();
+        Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());
+        Assessment assessment = Assessments.full(zombie).withEscapeRoutes(1);
+        Scores scores = new Scorer().score(zombie, assessment, CONFIG.weights());
+        FactMap facts = FactMap.from(zombie, assessment);
+
+        Decision afterRule = decider.decide(facts, scores, 1, Memories.decidedByRule(zombie, TacticalOption.IGNORE, 990),
+                1000);
+        Decision withoutMemory = decider.decide(facts, scores, 1, Memories.fresh(zombie), 1000);
+
+        assertEquals(List.of(withoutMemory.option(), withoutMemory.rule(), HoldStatus.NONE),
+                List.of(afterRule.option(), afterRule.rule(), afterRule.hold()),
+                "Прежнее решение принято правилом, а не счётом: удержание и бонус stickiness ему не положены, решение "
+                        + "равно решению без памяти");
+    }
+
+    @Test
+    void remember_ScoreDecisionAfterRuleWithSameOption_StartsHoldWindowFromNow() {
+        TacticsMemory afterRule = new Hysteresis(CONFIG.weights()).remember(
+                TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1.0),
+                new Decision(TacticalOption.IGNORE, "no_enemies_ignore", Set.of(), List.of(), HoldStatus.NONE), 10, 1.0);
+
+        TacticsMemory afterScore = new Hysteresis(CONFIG.weights()).remember(afterRule, scored(TacticalOption.IGNORE),
+                30, 1.0);
+
+        assertEquals(List.of(DecisionSource.RULE, 10L, DecisionSource.SCORE, 30L),
+                List.of(afterRule.previousSource(), afterRule.decidedAt(), afterScore.previousSource(),
+                        afterScore.decidedAt()),
+                "Окно удержания отсчитывается от решения по счёту: тот же вариант, принятый счётом после правила, "
+                        + "начинает окно заново, иначе удержание кончится раньше времени");
+    }
+
+    @Test
     void decide_SameInputAndMemory_GivesSameOutput() {
         Situation situation = zombies(3, 0.8).build();
         TacticsMemory memory = Memories.holding(situation, TacticalOption.FIGHT, 5);
