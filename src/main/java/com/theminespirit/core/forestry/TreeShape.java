@@ -35,7 +35,7 @@ public final class TreeShape {
                 if (view.isLog(neighbour)) {
                     logs.add(neighbour);
                     if (logs.size() > ChopTuning.MAX_LOGS) {
-                        return new NotATree(NotATree.Reason.TOO_BIG);
+                        return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
                     }
                     queue.add(neighbour);
                 } else if (view.isNaturalLeaves(neighbour)) {
@@ -44,14 +44,14 @@ public final class TreeShape {
             }
         }
         if (!hasAllowedExtent(logs)) {
-            return new NotATree(NotATree.Reason.TOO_BIG);
+            return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
         }
         BlockCoord base = base(logs);
         if (!view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
-            return new NotATree(NotATree.Reason.NO_SOIL);
+            return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
         }
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES) {
-            return new NotATree(NotATree.Reason.NO_LEAVES);
+            return new NotATree(NotATree.Reason.NO_LEAVES, Set.copyOf(logs));
         }
         return new Tree(base, List.copyOf(logs));
     }

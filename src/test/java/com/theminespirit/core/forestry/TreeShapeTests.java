@@ -110,9 +110,29 @@ class TreeShapeTests {
                 "LLL",
                 "LLL");
 
-        assertEquals(new NotATree(NotATree.Reason.NO_LEAVES), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
                 "Хижина из брёвен без листвы обязана быть отвергнута как не-дерево: бревенчатая постройка "
                         + "игрока не должна ломаться под видом леса");
+        assertEquals(NotATree.Reason.NO_LEAVES, rejection.reason(),
+                "Хижина без листвы отвергается из-за отсутствия кроны: листьев вокруг брёвен меньше "
+                        + "MIN_NATURAL_LEAVES");
+    }
+
+    @Test
+    void reject_HutNotATree_CarriesAllItsLogs() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "###",
+                "LLL",
+                "LLL",
+                "LLL",
+                "LLL");
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Хижина обязана быть отвергнута как не-дерево: это постройка игрока, а не лес");
+        assertEquals(grid.logs(), rejection.logs(),
+                "Отвергнутая группа обязана нести все свои брёвна: по одному разбору на хижину адаптер заносит "
+                        + "в known всю группу, иначе на каждое бревно постройки будет отдельный разбор и счёт "
+                        + "«отвергнутых» переполнит MAX_REJECTED_TREES до того, как дух дойдёт до настоящих деревьев");
     }
 
     @Test
@@ -124,9 +144,12 @@ class TreeShapeTests {
                 "L",
                 "@@@");
 
-        assertEquals(new NotATree(NotATree.Reason.NO_SOIL), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
                 "Ствол без почвы под основанием обязан быть отвергнут как не-дерево: летающее бревно — арт-объект "
                         + "или постройка, а не лес");
+        assertEquals(NotATree.Reason.NO_SOIL, rejection.reason(),
+                "Ствол в воздухе отвергается по почве под нижним бревном, а не по кроне: над листьями "
+                        + "проверяется, что дерево стоит на земле");
     }
 
     @Test
@@ -136,9 +159,15 @@ class TreeShapeTests {
             grid.log(0, y, 0);
         }
 
-        assertEquals(new NotATree(NotATree.Reason.TOO_BIG), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
                 "Связная группа из 200 брёвен обязана быть отвергнута по размеру: разбор гигантского массива "
                         + "стоит больше лимита MAX_LOGS и завешивает тик");
+        assertEquals(NotATree.Reason.TOO_BIG, rejection.reason(),
+                "Группа больше лимита отвергается как TOO_BIG: разбор обязан останавливаться по числу брёвен, "
+                        + "а не обходить весь массив");
+        assertEquals(ChopTuning.MAX_LOGS + 1, rejection.logs().size(),
+                "Отвергнутая группа несёт пройденные до остановки брёвна: адаптер заносит в known именно их, "
+                        + "чтобы не разбирать гигантский массив по одному бревну");
     }
 
     @Test
@@ -150,9 +179,11 @@ class TreeShapeTests {
                 "L",
                 "@@");
 
-        assertEquals(new NotATree(NotATree.Reason.NO_LEAVES), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
                 "Два естественных листа вокруг брёвен — ещё не дерево: граница в три листа отличает лес "
                         + "от декоративного столба и забора");
+        assertEquals(NotATree.Reason.NO_LEAVES, rejection.reason(),
+                "Две листвы рядом со стволом не дают крону: меньше MIN_NATURAL_LEAVES — группа отвергается");
     }
 
     @Test
