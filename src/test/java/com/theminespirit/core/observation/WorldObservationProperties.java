@@ -14,7 +14,7 @@ class WorldObservationProperties {
     private static final int MAX_COUNT = 64;
 
     @Property
-    void hash_inventoryOrderChanged_StaysEqual(@ForAll @Size(max = 16) List<Integer> raw) {
+    void hash_InventoryOrderChanged_StaysEqual(@ForAll @Size(max = 16) List<Integer> raw) {
         List<InventoryEntry> entries = entries(raw);
         List<InventoryEntry> reversed = new ArrayList<>(entries);
         Collections.reverse(reversed);
@@ -27,7 +27,7 @@ class WorldObservationProperties {
     }
 
     @Property
-    void json_roundTrip_EqualsOriginal(@ForAll int radius, @ForAll long tick) {
+    void json_RoundTrip_EqualsOriginal(@ForAll int radius, @ForAll long tick) {
         WorldObservation original = observation(entries(List.of(radius)), radius, tick);
 
         assertEquals(

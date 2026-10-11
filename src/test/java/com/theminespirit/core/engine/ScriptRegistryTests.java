@@ -29,7 +29,7 @@ class ScriptRegistryTests {
     }
 
     @Test
-    void contains_ReportsPresenceAndAbsence() {
+    void contains_KnownAndUnknownIds_ReportsPresenceAndAbsence() {
         ScriptRegistry registry = ScriptRegistry.of(Map.of("mine", TestScripts.succeeding(1)));
 
         assertTrue(registry.contains("mine"), "contains обязан подтверждать зарегистрированный скрипт");

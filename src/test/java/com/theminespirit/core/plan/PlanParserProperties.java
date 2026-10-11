@@ -16,7 +16,7 @@ class PlanParserProperties {
     private static final int MAX_ALLOWED_DEPTH = 15;
 
     @Property
-    void parse_waitScriptWithAnyTicks_ReturnsSameTicks(@ForAll int ticks) {
+    void parse_WaitScriptWithAnyTicks_ReturnsSameTicks(@ForAll int ticks) {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
 
         assertEquals(
@@ -27,7 +27,7 @@ class PlanParserProperties {
     }
 
     @Property
-    void parse_sequenceWithinDepthLimit_Succeeds(
+    void parse_SequenceWithinDepthLimit_Succeeds(
             @ForAll @IntRange(min = 1, max = MAX_ALLOWED_DEPTH) int depth) {
         assertInstanceOf(
                 SequenceNode.class,
@@ -36,7 +36,7 @@ class PlanParserProperties {
     }
 
     @Property
-    void parse_sequenceOverDepthLimit_IsRejected(@ForAll @IntRange(min = 17, max = 40) int depth) {
+    void parse_SequenceOverDepthLimit_IsRejected(@ForAll @IntRange(min = 17, max = 40) int depth) {
         assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(nestedSequence(depth), CATALOG),

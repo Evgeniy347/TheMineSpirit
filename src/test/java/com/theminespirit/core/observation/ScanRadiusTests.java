@@ -1,6 +1,5 @@
 package com.theminespirit.core.observation;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,10 +9,10 @@ import org.junit.jupiter.api.Test;
 class ScanRadiusTests {
     @Test
     void constructor_MinAndMax_AreAccepted() {
-        assertDoesNotThrow(() -> new ScanRadius(ScanRadius.MIN),
-                "радиус, равный минимальному лимиту, обязан приниматься: лимит — это граница, а не запрет");
-        assertDoesNotThrow(() -> new ScanRadius(ScanRadius.MAX),
-                "радиус, равный максимальному лимиту, обязан приниматься: лимит — это граница, а не запрет");
+        assertEquals(ScanRadius.MIN, new ScanRadius(ScanRadius.MIN).value(),
+                "радиус, равный минимальному лимиту, обязан приниматься без изменения: лимит — это граница, а не запрет");
+        assertEquals(ScanRadius.MAX, new ScanRadius(ScanRadius.MAX).value(),
+                "радиус, равный максимальному лимиту, обязан приниматься без изменения: лимит — это граница, а не запрет");
     }
 
     @Test
@@ -37,7 +36,7 @@ class ScanRadiusTests {
     }
 
     @Test
-    void defaultRadius_WithinLimits() {
+    void defaultRadius_PassedToConstructor_LiesWithinLimits() {
         assertTrue(ScanRadius.DEFAULT.value() >= ScanRadius.MIN && ScanRadius.DEFAULT.value() <= ScanRadius.MAX,
                 "радиус по умолчанию обязан лежать в допустимых границах: иначе команда observe без аргумента не работает");
         assertEquals(ScanRadius.DEFAULT, new ScanRadius(ScanRadius.DEFAULT.value()),
