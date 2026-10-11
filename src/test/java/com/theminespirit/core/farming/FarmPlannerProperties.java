@@ -1,0 +1,129 @@
+package com.theminespirit.core.farming;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
+
+class FarmPlannerProperties {
+    private static final int GRID = 6;
+    private static final BlockCoord FROM = new BlockCoord(0, 1, 0);
+    private static final Cell[] CELLS = Cell.values();
+    private static final Ground[] GROUNDS = Ground.values();
+    private static final Above[] ABOVES = {Above.AIR, Above.WEED, Above.BLOCKED};
+    private static final CropKind[] CROPS = {CropKind.WHEAT, CropKind.CARROT, CropKind.POTATO, CropKind.BEETROOT};
+
+    @Property(tries = 200)
+    void next_RandomInput_ReturnedTargetIsEligibleWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        Random random = new Random(seed);
+        MapFarmView farm = randomFarm(random);
+        CountingSafety safety = randomSafety(random);
+        Hydration hydration = randomHydration(random);
+        List<BlockCoord> candidates = randomTargets(random);
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm,
+                safety, hydration);
+
+        if (outcome instanceof FarmPlanner.Next next) {
+            FarmTile fresh = farm.peek(next.target());
+            assertTrue(FarmJob.HARVEST.eligible(fresh, CropKind.ANY, false),
+                    "Выбранная цель обязана подходить под работу на свежем тайле: иначе дух идёт к чужой клетке");
+            assertTrue(FarmStandSpots.of(next.target(), FROM, safety, farm).contains(next.stand()),
+                    "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место");
+        }
+    }
+
+    @Property(tries = 200)
+    void next_RandomInput_IndependentOfCandidateOrder(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        Random random = new Random(seed);
+        MapFarmView farm = randomFarm(random);
+        Hydration hydration = randomHydration(random);
+        List<BlockCoord> candidates = randomTargets(random);
+        List<BlockCoord> shuffled = new ArrayList<>(candidates);
+        Collections.shuffle(shuffled, new Random((long) seed + 1));
+
+        FarmPlanner.Outcome ordered = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm,
+                randomSafety(new Random(seed + 100)), hydration);
+        FarmPlanner.Outcome reordered = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, shuffled, farm,
+                randomSafety(new Random(seed + 100)), hydration);
+
+        assertEquals(ordered, reordered,
+                "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
+                        + "работа непредсказуемо выбирает разные клетки");
+    }
+
+    @Property(tries = 200)
+    void next_RandomInput_SafetyReadsBoundedByTargetCount(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        Random random = new Random(seed);
+        MapFarmView farm = randomFarm(random);
+        CountingSafety safety = randomSafety(random);
+        Hydration hydration = randomHydration(random);
+        List<BlockCoord> candidates = randomTargets(random);
+
+        FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm, safety, hydration);
+
+        assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * candidates.size(),
+                "Планирование читает не более " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET + " клеток на цель: "
+                        + "иначе перебор целей кладёт серверный тик. Чтений: " + safety.reads() + ", целей: "
+                        + candidates.size());
+    }
+
+    private static MapFarmView randomFarm(Random random) {
+        MapFarmView farm = new MapFarmView();
+        for (int x = 0; x < GRID; x++) {
+            for (int z = 0; z < GRID; z++) {
+                Ground ground = GROUNDS[random.nextInt(GROUNDS.length)];
+                Above above = ground == Ground.FARMLAND && random.nextBoolean() ? Above.CROP
+                        : ABOVES[random.nextInt(ABOVES.length)];
+                Optional<CropState> crop = Optional.empty();
+                if (above == Above.CROP) {
+                    CropKind kind = CROPS[random.nextInt(CROPS.length)];
+                    crop = Optional.of(new CropState(kind, random.nextInt(kind.maxAge() + 1)));
+                }
+                farm.set(x, 0, z, new FarmTile(ground, above, crop));
+            }
+        }
+        return farm;
+    }
+
+    private static CountingSafety randomSafety(Random random) {
+        CountingSafety safety = new CountingSafety().fillFloor(0, -1, -1, GRID, GRID);
+        for (int x = -1; x <= GRID; x++) {
+            for (int y = 1; y <= 3; y++) {
+                for (int z = -1; z <= GRID; z++) {
+                    safety.set(x, y, z, CELLS[random.nextInt(CELLS.length)]);
+                }
+            }
+        }
+        return safety;
+    }
+
+    private static Hydration randomHydration(Random random) {
+        Set<BlockCoord> water = new HashSet<>();
+        int count = random.nextInt(0, 6);
+        for (int i = 0; i < count; i++) {
+            water.add(new BlockCoord(random.nextInt(GRID), 0, random.nextInt(GRID)));
+        }
+        return Hydration.of(water);
+    }
+
+    private static List<BlockCoord> randomTargets(Random random) {
+        int count = random.nextInt(1, 9);
+        List<BlockCoord> targets = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            targets.add(new BlockCoord(random.nextInt(GRID), 0, random.nextInt(GRID)));
+        }
+        return targets;
+    }
+}

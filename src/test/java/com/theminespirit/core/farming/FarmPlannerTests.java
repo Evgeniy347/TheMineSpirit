@@ -1,0 +1,168 @@
+package com.theminespirit.core.farming;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
+class FarmPlannerTests {
+    private static final BlockCoord FROM = new BlockCoord(-2, 1, -2);
+    private static final FarmTile MATURE_WHEAT = new FarmTile(Ground.FARMLAND, Above.CROP,
+            Optional.of(new CropState(CropKind.WHEAT, 7)));
+    private static final FarmTile YOUNG_WHEAT = new FarmTile(Ground.FARMLAND, Above.CROP,
+            Optional.of(new CropState(CropKind.WHEAT, 3)));
+    private static final FarmTile DIRT_AIR = new FarmTile(Ground.DIRT, Above.AIR, Optional.empty());
+
+    private static MapFarmView wheatBed() {
+        MapFarmView farm = new MapFarmView();
+        for (int x = 0; x < 5; x++) {
+            for (int z = 0; z < 5; z++) {
+                farm.set(x, 0, z, (x + z) % 2 == 0 ? MATURE_WHEAT : YOUNG_WHEAT);
+            }
+        }
+        return farm;
+    }
+
+    private static CountingSafety openField() {
+        return new CountingSafety().fillFloor(0, -6, -6, 10, 10);
+    }
+
+    private static Hydration channelWater() {
+        Set<BlockCoord> water = new HashSet<>();
+        for (int x = 0; x < 5; x++) {
+            water.add(new BlockCoord(x, 0, 6));
+        }
+        return Hydration.of(water);
+    }
+
+    private static List<BlockCoord> bedCells() {
+        List<BlockCoord> cells = new ArrayList<>();
+        for (int x = 0; x < 5; x++) {
+            for (int z = 0; z < 5; z++) {
+                cells.add(new BlockCoord(x, 0, z));
+            }
+        }
+        return cells;
+    }
+
+    @Test
+    void next_HarvestOnMixedBed_PicksOnlyMatureCrop() {
+        MapFarmView farm = wheatBed();
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, bedCells(), farm,
+                openField(), channelWater());
+
+        assertTrue(outcome instanceof FarmPlanner.Next next
+                && farm.peek(next.target()).crop().orElseThrow().isMature(),
+                "HARVEST берёт только зрелую клетку рядом с недозрелой: недозрелое не трогается. Итог: " + outcome);
+    }
+
+    @Test
+    void next_HarvestOnBed_StandIsNotOnFarmland() {
+        MapFarmView farm = wheatBed();
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, bedCells(), farm,
+                openField(), channelWater());
+
+        assertTrue(outcome instanceof FarmPlanner.Next next
+                && farm.peek(new BlockCoord(next.stand().x(), next.stand().y() - 1, next.stand().z()))
+                        .ground() != Ground.FARMLAND,
+                "Стоянка не топчет грядку, а вода рядом не отвергает стоянку: иначе дух застрянет у канала. Итог: "
+                        + outcome);
+    }
+
+    @Test
+    void next_TillNearChannel_FindsWateredTarget() {
+        MapFarmView farm = new MapFarmView()
+                .fillBed(0, 0, 0, 4, 1, DIRT_AIR)
+                .fillBed(0, 0, 3, 4, 4, DIRT_AIR);
+        Set<BlockCoord> water = new HashSet<>();
+        for (int x = 0; x < 5; x++) {
+            water.add(new BlockCoord(x, 0, 2));
+        }
+        List<BlockCoord> candidates = new ArrayList<>();
+        for (int x = 0; x < 5; x++) {
+            for (int z = 0; z < 5; z++) {
+                if (z != 2) {
+                    candidates.add(new BlockCoord(x, 0, z));
+                }
+            }
+        }
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM, candidates, farm,
+                openField(), Hydration.of(water));
+
+        assertTrue(outcome instanceof FarmPlanner.Next,
+                "Грядка с водным каналом посередине обязана пахаться: вода в 2 клетках достаёт каждый ряд. Итог: "
+                        + outcome);
+    }
+
+    @Test
+    void next_TargetSurroundedByLava_ReturnsNoStand() {
+        MapFarmView farm = new MapFarmView().fillBed(0, -5, -5, 5, 5, DIRT_AIR);
+        CountingSafety safety = openField().fill(1, -4, -4, 4, 4, Cell.LAVA);
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM,
+                List.of(new BlockCoord(0, 0, 0)), farm, safety,
+                Hydration.of(Set.of(new BlockCoord(1, 0, 1))));
+
+        assertEquals(new FarmPlanner.Exhausted(0, 1), outcome,
+                "Цель в лавовом кольце обязана считаться в noStand: стоянки рядом с лавой отвергаются все");
+    }
+
+    @Test
+    void next_WalledTarget_ReturnsNoStand() {
+        MapFarmView farm = new MapFarmView().set(0, 0, 0, DIRT_AIR);
+        CountingSafety safety = openField()
+                .fill(1, -4, -4, 4, 4, Cell.SOLID)
+                .fill(2, -4, -4, 4, 4, Cell.SOLID);
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM,
+                List.of(new BlockCoord(0, 0, 0)), farm, safety,
+                Hydration.of(Set.of(new BlockCoord(1, 0, 1))));
+
+        assertEquals(new FarmPlanner.Exhausted(0, 1), outcome,
+                "Замурованная цель обязана считаться в noStand: без числа непонятно, почему работа встала");
+    }
+
+    @Test
+    void next_DryDirtBed_ReturnsIneligible() {
+        MapFarmView farm = new MapFarmView().fillBed(0, 0, 0, 4, 4, DIRT_AIR);
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM, bedCells(), farm,
+                openField(), Hydration.of(Set.of()));
+
+        assertEquals(new FarmPlanner.Exhausted(25, 0), outcome,
+                "Сухая земля не пашется: все 25 клеток считаются в ineligible, а не в noStand");
+    }
+
+    @Test
+    void next_LineOf256Targets_ReadsStayWithinEightPerTarget() {
+        MapFarmView farm = new MapFarmView();
+        CountingSafety safety = new CountingSafety().fillFloor(2, -5, -5, 260, 5);
+        Set<BlockCoord> water = new HashSet<>();
+        List<BlockCoord> targets = new ArrayList<>(256);
+        for (int x = 0; x < 256; x++) {
+            farm.set(x, 2, 0, DIRT_AIR);
+            water.add(new BlockCoord(x, 2, 0));
+            targets.add(new BlockCoord(x, 2, 0));
+        }
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, new BlockCoord(0, 3, 0),
+                targets, farm, safety, Hydration.of(water));
+
+        assertTrue(outcome instanceof FarmPlanner.Next,
+                "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
+        assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L,
+                "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
+                        + "(dist(from,target) − 3), и дальше перебирать незачем. Чтений: " + safety.reads()
+                        + ", предел: " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L);
+    }
+}
