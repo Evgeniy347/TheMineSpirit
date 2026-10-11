@@ -69,6 +69,18 @@ final class ScriptExecutor extends NodeExecutor {
     }
 
     @Override
+    TaskProgress buildProgress() {
+        return new TaskProgress.ScriptAt(instance == null ? Map.of() : instance.saveState());
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.ScriptAt at = (TaskProgress.ScriptAt) progress;
+        instance = createInstance();
+        instance.restoreState(at.state());
+    }
+
+    @Override
     void cancel() {
         if (instance != null) {
             ScriptInstance live = instance;

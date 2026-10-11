@@ -1,0 +1,1 @@
+{"version":1,"status":"RUNNING","plan":{"type":"script","script":"goto","params":{"x":10,"y":64,"z":10}},"progress":{"type":"script","state":{"elapsed":3}}}

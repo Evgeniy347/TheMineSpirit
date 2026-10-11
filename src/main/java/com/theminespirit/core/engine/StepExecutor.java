@@ -34,4 +34,12 @@ abstract class StepExecutor extends SingleChildExecutor {
     }
 
     abstract TaskNode stepAt(int index);
+
+    final int index() {
+        return index;
+    }
+
+    final void index(int value) {
+        index = value;
+    }
 }

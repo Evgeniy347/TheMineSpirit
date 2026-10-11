@@ -11,7 +11,7 @@ final class ConditionExecutor extends SingleChildExecutor {
     private final TaskNode thenStep;
     private final TaskNode elseStep;
     private final ConditionRegistry conditions;
-    private boolean resolved;
+    private TaskProgress.ConditionBranch branch = TaskProgress.ConditionBranch.UNRESOLVED;
 
     ConditionExecutor(ConditionNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         super(scripts, conditions);
@@ -24,8 +24,7 @@ final class ConditionExecutor extends SingleChildExecutor {
 
     @Override
     ScriptStatus advance() {
-        if (!resolved) {
-            resolved = true;
+        if (branch == TaskProgress.ConditionBranch.UNRESOLVED) {
             Optional<ConditionEvaluator> evaluator = conditions.find(check);
             if (evaluator.isEmpty()) {
                 fail("Неизвестная проверка '" + check + "': она не зарегистрирована в реестре условий");
@@ -38,11 +37,12 @@ final class ConditionExecutor extends SingleChildExecutor {
                 fail("проверка '" + check + "' упала: " + NodeExecutor.describe(error), error);
                 return ScriptStatus.FAILED;
             }
-            TaskNode branch = passed ? thenStep : elseStep;
-            if (branch == null) {
+            branch = passed ? TaskProgress.ConditionBranch.THEN : TaskProgress.ConditionBranch.ELSE;
+            TaskNode chosen = passed ? thenStep : elseStep;
+            if (chosen == null) {
                 return ScriptStatus.SUCCEEDED;
             }
-            current(spawn(branch));
+            current(spawn(chosen));
         }
         ScriptStatus child = current().tick();
         if (child == ScriptStatus.FAILED) {
@@ -50,5 +50,21 @@ final class ConditionExecutor extends SingleChildExecutor {
             return ScriptStatus.FAILED;
         }
         return child;
+    }
+
+    @Override
+    TaskProgress buildProgress() {
+        return new TaskProgress.ConditionAt(branch, current() == null ? null : current().snapshot());
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.ConditionAt at = (TaskProgress.ConditionAt) progress;
+        branch = at.branch();
+        if (at.child() != null) {
+            TaskNode chosen = branch == TaskProgress.ConditionBranch.THEN ? thenStep : elseStep;
+            current(spawn(chosen));
+            current().restore(at.child());
+        }
     }
 }

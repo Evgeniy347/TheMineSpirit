@@ -31,6 +31,12 @@ public final class SpiritScripts {
         return ConditionRegistry.of(Map.of());
     }
 
+    public static ConditionCatalog conditionCatalog() {
+        // Зеркало conditions(): у каждой проверки в реестре обязано быть описание в каталоге, иначе
+        // PlanValidator отклонит условие, которое движок умеет исполнять. Пока проверок нет — каталог пуст.
+        return ConditionCatalog.empty();
+    }
+
     public static ScriptCatalog catalogFor(SpiritEntity spirit) {
         return CoreScripts.defaultCatalog().restrictedTo(registryFor(spirit).ids());
     }

@@ -28,7 +28,7 @@ PROBE_TIMEOUT="${OPENCODE_PROBE_TIMEOUT:-60}"
 WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
 SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
-PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]'
+PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
 и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам; коммитишь сам, частями, по \
