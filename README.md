@@ -17,7 +17,7 @@
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
-| `scripts/deploy.sh` | собирает мод и ставит jar на сервер `/opt/minecraft/server`, перезапуская его, если он работал | `Установлен theminespirit-<версия>.jar` |
+| `scripts/publish.sh` | собирает мод и ставит jar на сервер `/opt/minecraft/server`, перезапуская его, если он работал. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
 
 Первая сборка скачивает Gradle, Minecraft и NeoForge — несколько минут; дальше секунды.
 
@@ -31,6 +31,7 @@
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | соглашения кода |
 | [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
 | [docs/GIT.md](docs/GIT.md) | коммиты и работа с git |
+| [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера, согласование |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
 | [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
 
@@ -38,7 +39,7 @@
 
 | Скрипт | Назначение | Проверка |
 |---|---|---|
-| [scripts/deploy.sh](scripts/deploy.sh) | сборка и установка мода на сервер | в `/opt/minecraft/server/mods/` лежит свежий jar |
+| [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура
