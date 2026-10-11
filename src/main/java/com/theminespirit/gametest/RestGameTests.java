@@ -198,7 +198,6 @@ public final class RestGameTests {
                     "Фильтр *_ore обязан убрать stone из blocks, а камень " + stone + " из "
                             + (GameTestFixtures.FLOOR_SIZE * GameTestFixtures.FLOOR_SIZE - ORE_FLOOR_IRON - ORE_FLOOR_COAL)
                             + " пола остался: " + reply.body());
-            GameTestFixtures.reset(helper);
             return problems.found();
         });
         RestFixture.await(helper, rest, scenario);
