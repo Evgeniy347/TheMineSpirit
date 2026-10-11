@@ -54,7 +54,7 @@ class MiningSafetyTests {
     }
 
     @Test
-    void canBreak_ChecksOnlySixFaces() {
+    void canBreak_AnyTarget_ChecksOnlySixFaces() {
         CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID);
 
         MiningSafety.canBreak(new BlockCoord(0, 0, 0), world);

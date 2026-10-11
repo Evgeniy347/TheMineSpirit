@@ -105,7 +105,7 @@ class MiningPlannerTests {
     }
 
     @Test
-    void next_ReturnedTargetPassesCanBreak() {
+    void next_SafeTarget_ReturnedTargetPassesCanBreak() {
         CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(1, -1, 0, Cell.SOLID);
 
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 0, 0)), world);
