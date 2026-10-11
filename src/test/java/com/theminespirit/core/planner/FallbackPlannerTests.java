@@ -44,7 +44,7 @@ class FallbackPlannerTests {
     void plan_MineGoal_ReturnsScanAndMineSequence() {
         TaskNode plan = plan(new Goal("добыть руду из шахты", Map.of()));
 
-        assertEquals(minePlan(8, 1), plan,
+        assertEquals(minePlan(8, "any", 1), plan,
                 "Цель со словом 'руд' обязана дать scan с фильтром руды и mine_vein: иначе дух копает "
                         + "вслепую и не находит жилу");
     }
@@ -53,7 +53,7 @@ class FallbackPlannerTests {
     void plan_MineShaftGoal_ReturnsScanAndMineSequence() {
         TaskNode plan = plan(new Goal("спустись в шахту", Map.of()));
 
-        assertEquals(minePlan(8, 1), plan,
+        assertEquals(minePlan(8, "any", 1), plan,
                 "Слово 'шахт' обязано распознаваться как добыча: иначе дух дойдёт до шахты и встанет, "
                         + "не начав добычу ради которой пришёл");
     }
@@ -217,10 +217,10 @@ class FallbackPlannerTests {
                 new ScriptCall("chop_tree", Map.of("species", species, "count", count))));
     }
 
-    private static TaskNode minePlan(int radius, int count) {
+    private static TaskNode minePlan(int radius, String ore, int count) {
         return new SequenceNode(List.of(
                 new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_ore"))),
-                new ScriptCall("mine_vein", Map.of("count", count,
+                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count,
                         "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT))));
     }
 }

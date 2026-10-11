@@ -76,4 +76,8 @@ public record ParamSpec(
     public static ParamSpec enumeration(String name, boolean required, List<String> values) {
         return new ParamSpec(name, ParamType.ENUM, required, null, null, values, null);
     }
+
+    public static ParamSpec enumeration(String name, boolean required, List<String> values, String defaultValue) {
+        return new ParamSpec(name, ParamType.ENUM, required, null, null, values, defaultValue);
+    }
 }

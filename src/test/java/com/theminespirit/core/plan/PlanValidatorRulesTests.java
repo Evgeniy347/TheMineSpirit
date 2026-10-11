@@ -92,6 +92,17 @@ class PlanValidatorRulesTests {
     }
 
     @Test
+    void mineVeinWithoutOre_Plan_ContainsCatalogDefault() {
+        TaskNode plan = PlanParser.parse(
+                "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"count\":2,\"radius\":8}}", CATALOG);
+
+        assertEquals(new ScriptCall("mine_vein",
+                        Map.of("ore", "any", "count", 2, "radius", 8)), plan,
+                "Валидатор обязан подставлять default 'any' для отсутствующего ore: иначе обещание default "
+                        + "в /v1/capabilities остаётся неправдой, а маппинг скрипта получит план без вида руды");
+    }
+
+    @Test
     void followWithoutRadius_Plan_ContainsCatalogDefault() {
         TaskNode plan = PlanParser.parse(
                 "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"target\":\"player\"}}", CATALOG);

@@ -18,12 +18,11 @@ class MineVeinParamsTests {
     }
 
     @Test
-    void from_OreAbsent_DefaultsToAny() {
-        MineVeinParams params = MineVeinParams.from(Map.of("count", 1, "radius", 16));
-
-        assertEquals(new MineVeinParams(OreKind.ANY, 1, 16), params,
-                "Без параметра ore добывается любая руда: умолчание 'any' применяет маппинг, потому что enum "
-                        + "в каталоге необязателен");
+    void from_MissingOre_IsRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> MineVeinParams.from(Map.of("count", 1, "radius", 16)),
+                "mine_vein без ore обязан отказывать: валидатор плана подставляет умолчание any, "
+                        + "а его отсутствие означает, что значение не прошло валидатор");
     }
 
     @Test

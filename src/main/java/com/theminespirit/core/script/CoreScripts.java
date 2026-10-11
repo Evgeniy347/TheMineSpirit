@@ -39,7 +39,7 @@ public final class CoreScripts {
                         List.of("в радиусе есть подходящие брёвна"),
                         List.of("брёвна срублены", "предметы подобраны в инвентарь")),
                 spec("mine_vein", "добыть жилу руды",
-                        List.of(ParamSpec.enumeration("ore", false, OreKind.names()),
+                        List.of(ParamSpec.enumeration("ore", false, OreKind.names(), "any"),
                                 ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
                                 ParamSpec.integer("radius", false, CatalogLimits.HARVEST_RADIUS_MIN,
                                         CatalogLimits.HARVEST_RADIUS_MAX, CatalogLimits.HARVEST_RADIUS_DEFAULT)),

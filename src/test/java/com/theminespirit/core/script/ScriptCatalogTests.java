@@ -84,9 +84,9 @@ class ScriptCatalogTests {
                 "Список допустимых ore обязан совпадать с видами OreKind: иначе каталог обещает один набор, а ядро знает другой");
         assertEquals(false, ore.required(),
                 "ore в mine_vein необязателен: без него добывается любая руда");
-        assertTrue(ore.defaultValue() == null,
-                "enum ore без значения по умолчанию в каталоге: отсутствие параметра трактует маппинг как any, "
-                        + "а не валидатор через подстановку");
+        assertEquals("any", ore.defaultValue(),
+                "enum ore по умолчанию 'any': умолчание живёт в каталоге, а не в маппинге — его видит "
+                        + "/v1/capabilities и подставляет валидатор");
         assertEquals(1, count.defaultValue(),
                 "count в mine_vein по умолчанию 1: без числа добывается один блок руды");
         assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),

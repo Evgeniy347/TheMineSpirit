@@ -22,7 +22,7 @@ public record MineVeinParams(OreKind ore, int count, int radius) {
     public static MineVeinParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new MineVeinParams(
-                ScriptArgs.optionalString(params, "ore").map(OreKind::parse).orElse(OreKind.ANY),
+                OreKind.parse(ScriptArgs.requireString(params, "ore")),
                 ScriptArgs.requireInt(params, "count"),
                 ScriptArgs.requireInt(params, "radius"));
     }
