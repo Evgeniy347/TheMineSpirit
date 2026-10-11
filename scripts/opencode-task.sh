@@ -31,7 +31,7 @@ SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
-и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам; коммитишь сам, частями, по \
+и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам, красный JUnit или GameTest не коммитишь; коммитишь сам, частями, по \
 docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом прикладываешь вывод scripts/prove-red.sh <коммит>; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
 коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
