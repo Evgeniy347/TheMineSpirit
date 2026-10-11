@@ -32,6 +32,7 @@
 | [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
 | [docs/GIT.md](docs/GIT.md) | коммиты и работа с git |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
+| [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
 
 ## Скрипты
 
