@@ -16,7 +16,7 @@ set -uo pipefail
 
 REPO_DIR="${OPENCODE_REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 OPENCODE_BIN="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
-MODEL="opencode/big-pickle"
+MODEL="${OPENCODE_MODEL:-opencode/big-pickle}"
 RETRY_DELAYS=(5 5 10 30 60)
 SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]'
