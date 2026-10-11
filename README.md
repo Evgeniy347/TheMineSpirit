@@ -12,7 +12,10 @@
 | Команда | Что делает | Результат |
 |---|---|---|
 | `./gradlew build` | компиляция (`-Werror`), JUnit-тесты, сборка jar | `build/libs/theminespirit-<версия>.jar`, отчёты в `TestResults/unit/` |
-| `./gradlew test` | только JUnit-тесты | `BUILD SUCCESSFUL`, отчёты в `TestResults/unit/` |
+| `./gradlew test` | только быстрые JUnit-тесты (исключая `@Tag("slow")`) | `BUILD SUCCESSFUL`, отчёты в `TestResults/unit/` |
+| `./gradlew slowTest` | медленные JUnit-тесты (`@Tag("slow")`) | отчёты в `TestResults/slow/` |
+| `./gradlew check` | test + slowTest | зелёный прогон всех JUnit-тестов |
+| `./gradlew jacocoTestReport` | отчёт покрытия JaCoCo | `TestResults/coverage/` |
 | `./gradlew runGameTestServer` | поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |

@@ -19,6 +19,7 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.LongRange;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -91,6 +92,7 @@ class PlanValidatorRulesTests {
     }
 
     @Property
+    @Tag("slow")
     void waitScript_TicksOutsideRange_IsRejected(@ForAll int ticks) {
         if (ticks >= 1 && ticks <= 6000) {
             String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
@@ -100,5 +102,25 @@ class PlanValidatorRulesTests {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
         assertThrows(PlanValidationException.class, () -> PlanParser.parse(json, CATALOG),
                 "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
+    }
+
+    @Property
+    @Tag("slow")
+    void parse_AnyString_SameInputSameOutputOrException(@ForAll String json) {
+        try {
+            TaskNode first = PlanParser.parse(json, CATALOG);
+            TaskNode second = PlanParser.parse(json, CATALOG);
+            assertEquals(first, second,
+                    "одинаковый вход обязан давать одинаковый план: если валидатор зависит от порядка или "
+                            + "состояния, один и тот же план в разное время выполнит разные действия. JSON=" + json);
+        } catch (PlanValidationException firstError) {
+            PlanValidationException secondError = assertThrows(PlanValidationException.class,
+                    () -> PlanParser.parse(json, CATALOG),
+                    "одинаковый вход обязан бросать одинаковое исключение: нестабильный валидатор то примет, "
+                            + "то отклонит один план. JSON=" + json);
+            assertEquals(firstError.getMessage(), secondError.getMessage(),
+                    "исключение должно быть тем же самым при том же входе: детерминизм валидатора — контракт, "
+                            + "иначе ИИ не сможет воспроизвести и починить сбой. JSON=" + json);
+        }
     }
 }

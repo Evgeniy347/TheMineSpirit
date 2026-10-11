@@ -17,10 +17,12 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Size;
+import org.junit.jupiter.api.Tag;
 
 class ResourceResolverProperties {
     private static final int MAX_ITEMS = 12;
 
+    @Tag("slow")
     @Property
     void resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal(
             @ForAll @Size(max = MAX_ITEMS) List<Integer> decisions,

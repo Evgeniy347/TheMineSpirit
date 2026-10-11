@@ -6,8 +6,10 @@ import java.util.Set;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
+import org.junit.jupiter.api.Tag;
 
 class ChunkSquareProperties {
+    @Tag("slow")
     @Property
     void chunks_AnyRadius_ContainsExactSquareSize(@ForAll @IntRange(min = 0, max = 32) int radius) {
         Set<ChunkCoord> chunks = ChunkSquare.chunks(new ChunkCoord(0, 0), radius);
@@ -17,6 +19,7 @@ class ChunkSquareProperties {
                         + "не ту зону, а на границе чанк либо теряется, либо грузится лишний");
     }
 
+    @Tag("slow")
     @Property
     void diff_AnyCenters_RemovesAndAddsToReachNewSquare(
             @ForAll @IntRange(min = -1000, max = 1000) int oldX,
@@ -35,6 +38,7 @@ class ChunkSquareProperties {
                         + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше");
     }
 
+    @Tag("slow")
     @Property(tries = 200)
     void diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep(
             @ForAll @IntRange(min = 1, max = 64) int steps,

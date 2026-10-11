@@ -64,6 +64,19 @@
 - Подмена production-кода ради теста через `Function`/`Supplier` в публичном API.
 - `@Disabled` как способ «починить» красный тест.
 
+## Параллельный прогон и теги
+
+- `src/test/resources/junit-platform.properties`: параллельное выполнение классов (`junit.jupiter.execution.parallel.mode.classes.default=concurrent`),
+  методы в классе — последовательно. Так сторожа и тесты, читающие общие файлы, не мешают друг другу.
+- Gradle: `tasks.test.maxParallelForks = max(1, Runtime.runtime.availableProcessors()/2)`.
+- Теги: медленные тесты и jqwik-свойства помечены `@Tag("slow")`. `./gradlew test` — быстрый тир без slow; `./gradlew slowTest` — только slow.
+- `./gradlew check` зависит от `test` и `slowTest`. Базовый быстрый тир (`./gradlew test` без прогона slow) укладывается в ~1 минуту.
+
+## Покрытие
+
+- `./gradlew jacocoTestReport` формирует отчёт JaCoCo: XML `TestResults/coverage/jacoco.xml`, HTML `TestResults/coverage/html`.
+- Покрытие — отчёт, а не гейт сборки (гейт — сторожа и тесты).
+
 ## Время тестов
 
 - Тяжёлую подготовку, которую тесты только читают, делать один раз (`@BeforeAll`), а не в каждом тесте.

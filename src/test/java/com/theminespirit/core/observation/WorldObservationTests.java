@@ -3,10 +3,13 @@ package com.theminespirit.core.observation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class WorldObservationTests {
     private static WorldObservation observation(List<ItemCount> inventory, List<EntityRef> entities) {
@@ -51,19 +54,6 @@ class WorldObservationTests {
     }
 
     @Test
-    void fromJson_AfterToJson_EqualsOriginal() {
-        WorldObservation original = observation(
-                List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1), 5.0)));
-
-        WorldObservation restored = WorldObservation.fromJson(original.toJson());
-
-        assertEquals(original, restored,
-                "fromJson(toJson(x)) обязан возвращать равное наблюдение: иначе bridge теряет данные при передаче "
-                        + "наблюдения по REST и решение принимается по испорченной картине мира");
-    }
-
-    @Test
     void hash_HexForm_IsSha256Length() {
         String hash = observation(List.of(), List.of()).hash();
 
@@ -85,7 +75,6 @@ class WorldObservationTests {
                 "Одинаковый мультимножественный инвентарь с повторами должен давать одинаковый hash после агрегации");
     }
 
-
     @Test
     void hash_SameWorldDifferentTicks_SameHash() {
         WorldObservation first = new WorldObservation("spirit_1", 1L, new BlockCoord(10, 64, -3),
@@ -103,7 +92,6 @@ class WorldObservationTests {
         assertNotEquals(first.hash(), second.hash(),
                 "Сдвиг сущности на блок изменяет картину мира — hash должен отличаться");
     }
-
 
     @Test
     void toJson_ContractShape_MatchesExpectedJson() {
@@ -130,36 +118,60 @@ class WorldObservationTests {
                 "JSON наблюдения обязан строго совпадать с контрактом API: имена полей, порядок, структура, включая hash");
     }
 
-
-
-    @Test
-    void fromJson_BadPosWrongLengthTwo_ThrowsIllegalArgument() {
-        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
-        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
-                "Битый JSON с pos неверной длины обязан приводить к IllegalArgumentException с понятной причиной");
+    static Stream<Arguments> brokenPosCases() {
+        return Stream.of(
+                Arguments.of("pos из двух чисел", "[1,2]"),
+                Arguments.of("pos из четырёх чисел", "[1,2,3,4]"),
+                Arguments.of("pos не массив", "\"not-array\""),
+                Arguments.of("pos с нечисловым элементом", "[1,2,\"x\"]"));
     }
 
-    @Test
-    void fromJson_BadPosWrongLengthFour_ThrowsIllegalArgument() {
-        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2,3,4],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
-        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
-                "Битый JSON с pos неверной длины обязан приводить к IllegalArgumentException с понятной причиной");
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("brokenPosCases")
+    void fromJson_BrokenPos_ThrowsIllegalArgument(String description, String brokenPos) {
+        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(jsonWithPos(brokenPos)),
+                description + ": битый JSON с pos обязан приводить к IllegalArgumentException с понятной причиной, "
+                        + "иначе bridge падает нечитаемой ошибкой на повреждённом запросе");
     }
 
-    @Test
-    void fromJson_BadPosNotArray_ThrowsIllegalArgument() {
-        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":\"not-array\",\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
-        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
-                "Битый JSON с pos не массивом обязан приводить к IllegalArgumentException с понятной причиной");
+    static Stream<Arguments> serializationCases() {
+        WorldObservation withContainers = new WorldObservation("spirit_1", 7L, new BlockCoord(1, 2, 3),
+                List.of(new ItemCount("oak_log", 5)),
+                List.of(new ItemCount("stone", 9)),
+                List.of(new EntityRef("minecraft:cow", new BlockCoord(1, 1, 1), 2.0),
+                        new EntityRef("minecraft:sheep", new BlockCoord(3, 3, 3), 4.0)),
+                List.of(new ContainerRef("minecraft:chest", new BlockCoord(5, 5, 5)),
+                        new ContainerRef("minecraft:barrel", new BlockCoord(6, 6, 6))),
+                16);
+        WorldObservation extreme = new WorldObservation("spirit_extreme", Long.MIN_VALUE,
+                new BlockCoord(Integer.MIN_VALUE, -64, Integer.MAX_VALUE),
+                List.of(new ItemCount("item", Integer.MAX_VALUE)),
+                List.of(new ItemCount("item", Integer.MIN_VALUE)),
+                List.of(),
+                List.of(),
+                Integer.MAX_VALUE);
+        WorldObservation empty = new WorldObservation("spirit_1", 0L, new BlockCoord(0, 64, 0),
+                List.of(), List.of(), List.of(), List.of(), 32);
+        return Stream.of(
+                Arguments.of("пустое наблюдение", empty),
+                Arguments.of("повторы предметов в инвентаре", observation(
+                        List.of(new ItemCount("oak_log", 64), new ItemCount("oak_log", 5),
+                                new ItemCount("iron_pickaxe", 1)),
+                        List.of())),
+                Arguments.of("сущности и контейнеры", withContainers),
+                Arguments.of("крайние координаты и значения", extreme));
     }
 
-    @Test
-    void fromJson_BadPosNonNumeric_ThrowsIllegalArgument() {
-        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[1,2,\"x\"],\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"" + observation(List.of(), List.of()).hash() + "\"}";
-        assertThrows(IllegalArgumentException.class, () -> WorldObservation.fromJson(json),
-                "Битый JSON с нечисловым pos обязан приводить к IllegalArgumentException с понятной причиной");
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("serializationCases")
+    void json_AnyObservation_RoundTripsWithoutLoss(String description, WorldObservation original) {
+        assertEquals(original, WorldObservation.fromJson(original.toJson()),
+                description + ": fromJson(toJson(x)) обязан возвращать равное наблюдение, иначе bridge теряет "
+                        + "данные при передаче по REST и решение принимается по испорченной картине мира");
     }
 
-
-
+    private static String jsonWithPos(String posField) {
+        return "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":" + posField
+                + ",\"radius\":32,\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],\"hash\":\"any\"}";
+    }
 }

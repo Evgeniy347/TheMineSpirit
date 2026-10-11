@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'jacoco'
     id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
@@ -210,12 +211,53 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
 }
 
-// Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md)
+// Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).
+// Тег slow (свойства jqwik и тесты на масштаб) гоняет отдельная задача slowTest,
+// чтобы ./gradlew test укладывался в минуту. check зависит от обеих.
+var testForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
+
 tasks.named('test', Test) {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'slow'
+    }
+    maxParallelForks = testForks
     systemProperty 'theminespirit.modId', project.mod_id
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
+}
+
+// Медленный тир: только тесты с тегом slow (docs/TESTING.md).
+tasks.register('slowTest', Test) {
+    group = 'verification'
+    description = 'Медленные тесты с тегом slow: свойства jqwik и тесты на масштаб'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'slow'
+    }
+    maxParallelForks = testForks
+    systemProperty 'theminespirit.modId', project.mod_id
+    reports.html.outputLocation = file('TestResults/slow/html')
+    reports.junitXml.outputLocation = file('TestResults/slow/xml')
+    shouldRunAfter tasks.named('test')
+}
+
+// check проверяет и быстрый, и медленный тир, чтобы build не оставался без инвариантов.
+tasks.named('check') {
+    dependsOn tasks.named('test'), tasks.named('slowTest')
+}
+
+// Покрытие JaCoCo — отчёт, а не гейт сборки (docs/TESTING.md).
+// Версия инструмента — встроенная в Gradle, отдельно не выбирается (AGENTS.md).
+tasks.named('jacocoTestReport', JacocoReport) {
+    dependsOn tasks.named('test')
+    reports {
+        csv.required = false
+        xml.required = true
+        xml.outputLocation = file('TestResults/coverage/jacoco.xml')
+        html.required = true
+        html.outputLocation = file('TestResults/coverage/html')
+    }
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
