@@ -1,7 +1,6 @@
 package com.theminespirit.core.plan;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.ConditionEvaluator;
 import com.theminespirit.core.engine.ConditionRegistry;
@@ -15,7 +14,6 @@ import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +26,7 @@ import net.jqwik.api.constraints.IntRange;
 class TaskRunnerRestoreProperties {
     private static final int TICKS_PER_SCRIPT = 2;
     private static final int MAX_TICKS = 100_000;
+    private static final String FAIL_TEXT = "fail";
 
     @Property
     void restore_AnyRunningSnapshot_ContinuesExactlyLikeUninterruptedRun(
@@ -53,14 +52,16 @@ class TaskRunnerRestoreProperties {
         TaskRunner resumed = TaskRunner.restore(decoded, registryFor(restarted), conditions());
         RunStatus restartedStatus = runToTerminal(resumed, MAX_TICKS).status();
 
-        Collections.sort(continuous);
-        Collections.sort(restarted);
+        // Сравниваем в порядке выполнения, без сортировки: переставленные или повторённые шаги обязаны быть видны.
+        // Исход задаёт план (say с текстом "fail" проваливается, limit=0 у проверки — ложь), поэтому список
+        // завершённых скриптов непрерывного и перезапущенного прогона обязан совпадать поэлементно.
         assertEquals(continuous, restarted,
-                "перезапуск с тика " + cut + " обязан дать тот же набор завершённых скриптов, что и непрерывный "
-                        + "прогон: пропуск шага или повтор уже сделанного виден в списке. seed=" + seed
-                        + ", план=" + plan);
+                "перезапуск с тика " + cut + " обязан дать тот же порядок завершённых скриптов, что и непрерывный "
+                        + "прогон: пропуск шага, повтор уже сделанного или неверная ветка fallback/else видны в списке. "
+                        + "seed=" + seed + ", план=" + plan);
         assertEquals(continuousOutcome.status(), restartedStatus,
-                "итоговый статус перезапущенной задачи обязан совпасть с непрерывным прогоном. seed=" + seed);
+                "итоговый статус перезапущенной задачи обязан совпасть с непрерывным прогоном. seed=" + seed
+                        + ", план=" + plan);
     }
 
     private static Outcome runToTerminal(TaskNode plan, List<String> recorder, int maxTicks) {
@@ -80,14 +81,18 @@ class TaskRunnerRestoreProperties {
     private static ScriptRegistry registryFor(List<String> recorder) {
         Map<String, ScriptFactory> factories = new LinkedHashMap<>();
         for (ScriptSpec spec : RandomPlans.SCRIPTS.all()) {
-            factories.put(spec.id(), params -> new RecordingInstance(spec.id(), recorder));
+            factories.put(spec.id(), params -> new RecordingInstance(spec.id(), params, recorder));
         }
         return ScriptRegistry.of(factories);
     }
 
     private static ConditionRegistry conditions() {
         Map<String, ConditionEvaluator> checks = new LinkedHashMap<>();
-        checks.put("seen", params -> true);
+        // Проверка ложна при limit=0: генератор выдаёт и 0, поэтому свойство проходит обе ветки condition.
+        checks.put("seen", params -> {
+            Object limit = params.get("limit");
+            return limit instanceof Number number && number.intValue() != 0;
+        });
         return ConditionRegistry.of(checks);
     }
 
@@ -118,11 +123,13 @@ class TaskRunnerRestoreProperties {
     private static final class RecordingInstance implements ScriptInstance {
         private final String id;
         private final List<String> recorder;
+        private final boolean fails;
         private int elapsed;
 
-        RecordingInstance(String id, List<String> recorder) {
+        RecordingInstance(String id, Map<String, Object> params, List<String> recorder) {
             this.id = id;
             this.recorder = recorder;
+            this.fails = id.equals("say") && FAIL_TEXT.equals(params.get("text"));
         }
 
         @Override
@@ -131,8 +138,8 @@ class TaskRunnerRestoreProperties {
             if (elapsed < TICKS_PER_SCRIPT) {
                 return ScriptStatus.RUNNING;
             }
-            recorder.add(id);
-            return ScriptStatus.SUCCEEDED;
+            recorder.add(fails ? id + ":fail" : id);
+            return fails ? ScriptStatus.FAILED : ScriptStatus.SUCCEEDED;
         }
 
         @Override
