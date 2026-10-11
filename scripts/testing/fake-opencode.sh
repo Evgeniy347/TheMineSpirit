@@ -6,7 +6,22 @@
 # FAKE_BUSY_TOOL=S  — «команда» работает S секунд без вывода (дочерний процесс), это не сбой.
 # FAKE_TOOL_READ=1  — модель «читает» файл, где упомянута ошибка квоты; это не сбой.
 # FAKE_INFO_LOG=1   — в логе INFO команда со словами «rate limit»; это не сбой.
+# FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
+#                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
 state="${FAKE_STATE:?}"
+case "$*" in
+    *"ответь OK"*)
+        probes=$(cat "$state.probes" 2>/dev/null || echo 0)
+        echo $((probes + 1)) > "$state.probes"
+        echo "PROBE: $PWD" >> "$state.args"
+        if [ "$probes" -lt "${FAKE_PROBE_FAILURES:-0}" ]; then
+            echo '{"type":"error","sessionID":"ses_probe","error":{"name":"APIError","data":{"message":"Free usage exceeded"}}}'
+            exec sleep 600
+        fi
+        echo '{"type":"text","sessionID":"ses_probe","part":{"type":"text","text":"OK"}}'
+        exit 0
+        ;;
+esac
 count=$(cat "$state" 2>/dev/null || echo 0)
 echo $((count + 1)) > "$state"
 echo "ARGS: $*" >> "$state.args"
