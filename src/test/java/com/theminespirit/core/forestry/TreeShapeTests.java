@@ -220,7 +220,7 @@ class TreeShapeTests {
     }
 
     @Test
-    void detect_HutOnSlopeAboveBaseTouchingBranches_ReturnsNotATrunk() {
+    void detect_OakOnSlopeWithBranchOverGrass_ReturnsTreeWithBranch() {
         TreeGrid grid = TreeGrid.ofLayers(
                 ".#......",
                 ".L......",
@@ -229,14 +229,14 @@ class TreeShapeTests {
                 ".LLLLLLL",
                 "@L@.....",
                 ".@......");
-        BlockCoord start = new BlockCoord(1, 1, 0);
 
-        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(start, grid),
-                "Хижина на склоне выше основания дерева, пол которой касается ветвей, обязана быть отвергнута "
-                        + "как не-дерево: сруб пола под видом ветвей — нарушение политики «не трогать постройки игрока»");
-        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
-                "Пол, лежащий на почве склона выше основания, отвергает группу по форме: у настоящего дерева "
-                        + "почву касается только нижний слой, а не ветви и постройки на них");
+        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(new BlockCoord(1, 1, 0), grid),
+                "Настоящий дуб на склоне, ветка которого висит над травой выше основания, обязан рубиться: "
+                        + "почва под веткой не признак постройки, иначе дух не тронет ни одного дерева на холме");
+        assertEquals(new BlockCoord(1, 1, 0), tree.base(),
+                "Основанием остаётся нижнее бревно ствола, а не ветка над склоном");
+        assertEquals(11, tree.logs().size(),
+                "Дерево на склоне содержит ствол и ветку целиком: 11 брёвен, ничего не отрезано почвой под веткой");
     }
 
     @Test

@@ -368,6 +368,33 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_slope_oak", timeoutTicks = 400)
+    public static void chopTree_OakOnSlopeWithBranchOverGrass_ChoppedWithBranch(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        helper.setBlock(5, 1, 4, Blocks.GRASS_BLOCK);
+        helper.setBlock(5, 2, 4, Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "настоящий дуб на склоне, ветка которого висит над травой выше основания, обязан рубиться: "
+                            + "почва под веткой не признак постройки. Статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(logsInInventory == 6,
+                    "ствол из 5 брёвен и ветка над склоном — 6 брёвен в инвентаре, фактически " + logsInInventory);
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.OAK_LOG) == 0,
+                    "в мире не должно остаться брёвен дерева на склоне");
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 500)
     public static void chopTree_LogPostsWithPlankWallsUnderCrown_UntouchedAndRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
