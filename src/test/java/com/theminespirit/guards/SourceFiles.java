@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,11 +30,11 @@ public final class SourceFiles {
 
     private static Map<Path, String> readJava(Path root) {
         try (Stream<Path> files = Files.walk(root)) {
-            Map<Path, String> sources = new TreeMap<>();
+            TreeMap<Path, String> sources = new TreeMap<>();
             for (Path file : files.filter(path -> path.toString().endsWith(".java")).toList()) {
                 sources.put(file, Files.readString(file));
             }
-            return Map.copyOf(sources);
+            return Collections.unmodifiableSortedMap(sources);
         } catch (IOException e) {
             throw new UncheckedIOException("Сторож не смог прочитать исходники в " + root, e);
         }

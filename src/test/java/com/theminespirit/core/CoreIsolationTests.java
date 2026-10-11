@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.guards.SourceFiles;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
@@ -16,10 +18,20 @@ class CoreIsolationTests {
 
     @Test
     void coreSources_Scanned_ImportNothingFromMinecraftOrNeoForge() {
-        List<String> offenders = SourceFiles.javaUnder(SourceFiles.MAIN).entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(CORE_SOURCES))
-                .filter(entry -> GAME_IMPORT.matcher(entry.getValue()).find())
-                .map(entry -> entry.getKey().toString())
+        Map<Path, String> all = SourceFiles.javaUnder(SourceFiles.MAIN);
+        List<Path> coreFiles = all.keySet().stream()
+                .filter(path -> path.startsWith(CORE_SOURCES))
+                .toList();
+        assertTrue(Files.isDirectory(CORE_SOURCES),
+                "Сторож не нашёл каталог core " + CORE_SOURCES + ": переименование пакета молча делает "
+                        + "сторож зелёным на нуле файлов");
+        assertTrue(!coreFiles.isEmpty(),
+                "Сторож не нашёл ни одного файла в " + CORE_SOURCES + ": переименование пакета молча делает "
+                        + "сторож зелёным на нуле файлов");
+
+        List<String> offenders = coreFiles.stream()
+                .filter(path -> GAME_IMPORT.matcher(all.get(path)).find())
+                .map(Path::toString)
                 .toList();
 
         assertEquals(
