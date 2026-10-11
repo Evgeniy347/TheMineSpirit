@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Агент-стратег духов: раз в INTERVAL решает, чем заняться простаивающим духам, и ставит задачи по REST.
 
-Команды: once | run | status | probe  [--fixtures КАТАЛОГ]. Подробности: docs/STRATEGIST.md.
+Команды: once | run | status | probe | smoke  [--fixtures КАТАЛОГ] [--model МОДЕЛЬ] [--runs N]. Подробности: docs/STRATEGIST.md.
 """
 
 from __future__ import annotations
@@ -192,7 +192,9 @@ def _age(event: dict, now: float) -> float:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="strategist.py", description=__doc__.splitlines()[0])
-    parser.add_argument("command", choices=["once", "run", "status", "probe"])
+    parser.add_argument("command", choices=["once", "run", "status", "probe", "smoke"])
+    parser.add_argument("--model", help="smoke: модель вместо STRATEGIST_MODEL")
+    parser.add_argument("--runs", type=int, default=2, help="smoke: прогонов на каждое место (по умолчанию 2)")
     parser.add_argument("--fixtures", type=Path, help="каталог с записанными наблюдениями: поднять фейковый REST вместо мода")
     args = parser.parse_args(argv)
     try:
@@ -220,6 +222,13 @@ def main(argv: list[str] | None = None) -> int:
         brain = make_brain(config)
         if config.brain == "opencode":
             ensure_sandbox(config.sandbox_dir)
+        if args.command == "smoke":
+            from smoke import run_smoke
+            model = args.model or config.model
+            smoke_brain = CommandBrain(config, config.brain_command, model) if config.brain == "command"                 else OpencodeBrain(config, model)
+            report = run_smoke(config, smoke_brain, args.fixtures or APP_DIR / "tests" / "fixtures", runs=args.runs)
+            print(f"Отчёт smoke: {report}")
+            return 0
         if args.command == "probe":
             reply = brain.probe()
             print(f"Проба прошла: модель {reply.model}, {reply.seconds} с, ответ «{reply.text.strip()[:80]}»")
