@@ -18,6 +18,13 @@ final class Assessments {
                 Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
     }
 
+    static Assessment full(Situation situation) {
+        EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
+        double margin = WinMargin.of(situation.self(), metrics, Scales.defaults());
+        return new Assessment(metrics, margin, 1, situation.orders().mode(), true, 0, Assessment.UNBOUNDED,
+                Assessment.UNBOUNDED, 10, TacticalState.CALM, 0, 1000);
+    }
+
     static FactMap facts(Situation situation) {
         return FactMap.from(situation, of(situation));
     }

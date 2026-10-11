@@ -46,8 +46,8 @@ public enum Factor {
         if (enemies.rangedCount() == 0) {
             return 0;
         }
-        double share = (double) enemies.rangedCount() / enemies.count();
-        return share * unit(1 - enemies.nearestRanged() / scales.rangedRange());
+        return unit(enemies.rangedCount() / scales.rangedFull())
+                * unit(1 - enemies.nearestRanged() / scales.rangedRange());
     }
 
     @FunctionalInterface

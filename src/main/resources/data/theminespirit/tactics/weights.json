@@ -8,6 +8,7 @@
     "pressureHorizon": 10,
     "proximityRange": 12,
     "rangedRange": 24,
+    "rangedFull": 3,
     "explosiveRange": 7,
     "allyFull": 3,
     "routesFull": 3,

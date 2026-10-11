@@ -61,7 +61,7 @@ class FactorTests {
                         values(Factor.WIN_MARGIN, -1, Factor.LOW_HP, 1.0 / 3, Factor.ENEMY_PRESSURE, 1 - 8.0 / 15 / 10,
                                 Factor.PROXIMITY, 1 - 2.0 / 12, Factor.ESCAPE_ROUTE, 2.0 / 3)),
                 row("скелет, крипер, ночь, лава и обрыв", hazardousNight(), 5, Assessment.UNBOUNDED,
-                        values(Factor.RANGED_EXPOSURE, 0.5 * (1 - 12.0 / 24), Factor.EXPLOSIVE_NEAR, 0.5,
+                        values(Factor.RANGED_EXPOSURE, (1.0 / 3) * (1 - 12.0 / 24), Factor.EXPLOSIVE_NEAR, 0.5,
                                 Factor.ALLY_SUPPORT, 2.0 / 3, Factor.ESCAPE_ROUTE, 1, Factor.TERRAIN_RISK, 0.5,
                                 Factor.DARKNESS, 1 - 4.0 / 15, Factor.HUNGER, 0.5, Factor.HEALING_AVAILABLE, 1.0 / 3,
                                 Factor.PROXIMITY, 1 - 3.5 / 12)),
