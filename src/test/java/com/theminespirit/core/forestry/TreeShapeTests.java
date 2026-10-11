@@ -220,6 +220,26 @@ class TreeShapeTests {
     }
 
     @Test
+    void detect_HutOnSlopeAboveBaseTouchingBranches_ReturnsNotATrunk() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                ".#......",
+                ".L......",
+                ".L......",
+                ".L...###",
+                ".LLLLLLL",
+                "@L@.....",
+                ".@......");
+        BlockCoord start = new BlockCoord(1, 1, 0);
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(start, grid),
+                "Хижина на склоне выше основания дерева, пол которой касается ветвей, обязана быть отвергнута "
+                        + "как не-дерево: сруб пола под видом ветвей — нарушение политики «не трогать постройки игрока»");
+        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
+                "Пол, лежащий на почве склона выше основания, отвергает группу по форме: у настоящего дерева "
+                        + "почву касается только нижний слой, а не ветви и постройки на них");
+    }
+
+    @Test
     void detect_StartNotALog_Throws() {
         TreeGrid grid = TreeGrid.ofLayers("#", "L", "@@@");
 

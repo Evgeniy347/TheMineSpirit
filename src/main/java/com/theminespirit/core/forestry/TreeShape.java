@@ -50,6 +50,9 @@ public final class TreeShape {
             return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
         }
         BlockCoord base = base(logs);
+        if (hasRaisedFloor(logs, base, view)) {
+            return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
+        }
         if (!view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
             return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
         }
@@ -98,6 +101,15 @@ public final class TreeShape {
         return count <= ChopTuning.TRUNK_BASE_MAX_LOGS
                 && maxX - minX <= ChopTuning.TRUNK_BASE_SPREAD
                 && maxZ - minZ <= ChopTuning.TRUNK_BASE_SPREAD;
+    }
+
+    private static boolean hasRaisedFloor(Set<BlockCoord> logs, BlockCoord base, TreeView view) {
+        for (BlockCoord log : logs) {
+            if (log.y() > base.y() && view.isSoil(new BlockCoord(log.x(), log.y() - 1, log.z()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<BlockCoord> neighbours(BlockCoord coord) {
