@@ -67,6 +67,7 @@ class ObserveRequestTests {
                 Arguments.of("{\"filter\":[1]}", "filter[0]"),
                 Arguments.of("{\"filter\":[\"ok\",\"\"]}", "filter[1]"),
                 Arguments.of("{\"filter\":[\"Iron!\"]}", "IdFilter"),
+                Arguments.of("{\"filter\":[\"*_or?\"]}", "IdFilter"),
                 Arguments.of("{\"filter\":[" + String.join(",", Collections.nCopies(17, "\"a\"")) + "]}", "17 шаблонов"),
                 Arguments.of("{\"filter\":[\"" + "a".repeat(65) + "\"]}", "длиной 65"),
                 Arguments.of("{\"include_entities\":\"yes\"}", "'include_entities' должно быть"),
