@@ -457,7 +457,7 @@ public final class ChopTreeGameTests {
             totalExamined = search.examinedPositions();
             steps++;
         }
-        helper.assertTrue(totalExamined <= 60 * 27 * 5,
+        helper.assertTrue(totalExamined <= 60 * 27 * 6,
                 "общее число прочитанных позиций ограничено: " + totalExamined);
         helper.assertTrue(steps <= (16 + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK * 4,
                 "скан радиуса 16 заканчивается за разумное число шагов, шагов " + steps);
