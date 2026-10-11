@@ -16,7 +16,7 @@ public final class LlmPlanner implements Planner {
     private final Planner fallback;
 
     public LlmPlanner(LlmClient client, ScriptCatalog catalog, Planner fallback) {
-        this(client, catalog, com.theminespirit.core.script.ConditionCatalog.empty(), fallback);
+        this(client, catalog, ConditionCatalog.empty(), fallback);
     }
 
     public LlmPlanner(LlmClient client, ScriptCatalog catalog, ConditionCatalog conditions, Planner fallback) {

@@ -45,12 +45,12 @@ public record ParamSpec(
         return new ParamSpec(name, ParamType.INT, required, null, null, null, null);
     }
 
-    public static ParamSpec integer(String name, boolean required, double min, double max) {
-        return new ParamSpec(name, ParamType.INT, required, min, max, null, null);
+    public static ParamSpec integer(String name, boolean required, long min, long max) {
+        return new ParamSpec(name, ParamType.INT, required, (double) min, (double) max, null, null);
     }
 
-    public static ParamSpec integer(String name, boolean required, double min, double max, int defaultValue) {
-        return new ParamSpec(name, ParamType.INT, required, min, max, null, defaultValue);
+    public static ParamSpec integer(String name, boolean required, long min, long max, int defaultValue) {
+        return new ParamSpec(name, ParamType.INT, required, (double) min, (double) max, null, defaultValue);
     }
 
     public static ParamSpec number(String name, boolean required, double min, double max) {
