@@ -358,12 +358,20 @@ class CycleRunner:
                      "с тем же request_id", code="post_unconfirmed", cycle=cycle, bot=bot_id)
             return False
         except ApiError as error:
-            del rt.state["pending"][bot_id]
+            verdict = "rejected"
             if error.status in ROUTE_MISSING_STATUSES:
+                verdict = "route_missing" if error.status == 405 else self._what_does_404_mean(bot_id)
+            if verdict == "unknown":
+                rt.alert(f"POST задачи духа {bot_id} ответил {error.status}, причину не установить (перечитать духа не удалось); "
+                         "решение сохранено и будет отправлено повторно", code="post_unconfirmed", cycle=cycle, bot=bot_id)
+                return False
+            rt.state["pending"].pop(bot_id, None)
+            if verdict == "route_missing":
                 self._tasks_route_missing(cycle, error)
             else:
                 rt.guard.record_decision(bot_id, pending["obs_hash"])
-                rt.log("rejected", cycle=cycle, bot=bot_id, stage="post", reason=str(error), goal=pending["goal"],
+                reason = f"дух {bot_id} исчез, задача не поставлена: {error}" if verdict == "vanished" else str(error)
+                rt.log("rejected", cycle=cycle, bot=bot_id, stage="post", reason=reason, goal=pending["goal"],
                        plan=pending["plan"], request_id=pending["request_id"], fingerprint=pending["fingerprint"])
             rt.save()
             return False
@@ -382,6 +390,15 @@ class CycleRunner:
                prompt_sha=pending["prompt_sha"], recovered=True if recovered else None)
         rt.save()
         return True
+
+    def _what_does_404_mean(self, bot_id: str) -> str:
+        try:
+            self.rt.client.get(f"/v1/bots/{bot_id}")
+        except ApiError as error:
+            return "vanished" if error.status == 404 else "unknown"
+        except NetworkError:
+            return "unknown"
+        return "route_missing"
 
     def _tasks_route_missing(self, cycle: int, error: ApiError) -> None:
         self.dry_forced = True

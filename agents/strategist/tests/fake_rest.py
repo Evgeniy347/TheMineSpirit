@@ -59,6 +59,8 @@ class FakeRest:
         self.task_post_errors: list = []
         self.observe_errors: list = []
         self.bots_as_list = False
+        self.vanish_on_task_post: set = set()
+        self.bot_get_errors: list = []
         self.task_post_lose_response = 0
         self.clock = None
         self.tick = 1000
@@ -218,6 +220,11 @@ class FakeRest:
         return 404, error_body("not_found", f"Путь {path} не найден"), {}
 
     def _bot(self, bot_id: str):
+        if self.bot_get_errors:
+            entry = self.bot_get_errors.pop(0)
+            if entry is not None:
+                status, code = entry
+                return status, error_body(code, f"Ошибка {code} при чтении духа", {"status": status}), {}
         bot = self.bots.get(bot_id)
         if bot is None:
             return 404, error_body("not_found", f"Дух {bot_id} не найден", {"id": bot_id}), {}
@@ -249,6 +256,9 @@ class FakeRest:
         if self.task_post_errors:
             status, code = self.task_post_errors.pop(0)
             return status, error_body(code, f"Ошибка {code} при постановке задачи", {"status": status}), {}
+        if bot_id in self.vanish_on_task_post and bot_id in self.bots:
+            del self.bots[bot_id]
+            return 404, error_body("not_found", f"Дух {bot_id} не найден", {"id": bot_id}), {}
         if not self.tasks_route:
             return 404, error_body("not_found", "Путь задач не найден"), {}
         bot = self.bots.get(bot_id)

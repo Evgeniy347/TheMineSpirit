@@ -207,6 +207,16 @@ class FakeRestTests(unittest.TestCase):
         self.assertEqual(0, len(self.fake.tasks), "при ошибке задача не создаётся")
         self.assertEqual(202, call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())[0])
 
+    def test_vanishOnTaskPost_Knob_RemovesBotAndAnswers404(self):
+        self.fake.vanish_on_task_post = {"spirit_1"}
+        status, _, body = call(self.base, "POST", "/v1/bots/spirit_1/tasks", task_body())
+        self.assertEqual((404, "not_found"), (status, body["error"]["code"]))
+        self.assertEqual(404, call(self.base, "GET", "/v1/bots/spirit_1")[0], "после этого духа на сервере нет")
+
+    def test_botGetErrors_Knob_NoneMeansPassThrough(self):
+        self.fake.bot_get_errors.extend([None, (500, "internal")])
+        self.assertEqual([200, 500, 200], [call(self.base, "GET", "/v1/bots/spirit_1")[0] for _ in range(3)])
+
     def test_observeErrors_Knob_AffectsOnlyObserve(self):
         self.fake.observe_errors.append((500, "internal"))
         self.assertEqual(200, call(self.base, "GET", "/v1/bots/spirit_1")[0])

@@ -1,0 +1,88 @@
+{
+ "description": "404 на POST и сбой перечитывания духа: причина неизвестна, режим не меняется, решение досылается позже",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "task_post_errors": [
+     [
+      404,
+      "not_found"
+     ]
+    ],
+    "bot_get_errors": [
+     null,
+     [
+      500,
+      "internal"
+     ]
+    ]
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "mode": "live"
+    },
+    {
+     "posts": 1
+    },
+    {
+     "journal": {
+      "alert": 1
+     }
+    },
+    {
+     "journal_has": {
+      "event": "alert",
+      "code": "post_unconfirmed"
+     }
+    }
+   ]
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "tasks_created": 1
+  },
+  {
+   "mode": "live"
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "recovered": true
+   }
+  }
+ ],
+ "name": "38-post-404-and-bot-unreadable-keeps-decision-for-retry",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
