@@ -97,9 +97,9 @@ public final class SpiritCommandGameTests {
                     "После /spirit goal дух обязан быть в состоянии «выполняется»: команда не запустила задачу. "
                             + "Состояние=" + spirit.taskStatus() + ", причина=" + spirit.taskFailureReason());
 
-            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " сруби дерево", source);
+            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " добудь руду", source);
             helper.assertTrue(rejected == 0,
-                    "Цель, чья схема не реализована в каталоге духа (scan/chop_tree отсутствуют), обязана вернуть 0 и не "
+                    "Цель, чья схема не реализована в каталоге духа (mine_vein отсутствует), обязана вернуть 0 и не "
                             + "заменить выполняемую задачу: результат=" + rejected);
             helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
                     "Отклонённая команда goal не должна трогать уже выполняемую задачу: статус духа изменился");
@@ -129,7 +129,7 @@ public final class SpiritCommandGameTests {
                     .getCommands().getDispatcher();
             String both = spiritSelector(2);
 
-            int rejected = dispatcher.execute("spirit goal " + both + " сруби дерево", source);
+            int rejected = dispatcher.execute("spirit goal " + both + " добудь руду", source);
             helper.assertTrue(rejected == 0,
                     "Цель, не реализуемая в каталоге духов, обязана вернуть 0: результат=" + rejected);
             helper.assertTrue(first.taskStatus().isEmpty() && second.taskStatus().isEmpty(),
