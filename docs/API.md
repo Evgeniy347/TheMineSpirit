@@ -8,6 +8,7 @@
 - Авторизация: `Authorization: Bearer <token>`. Токен хранится в окружении bridge, в git не попадает.
 - Идемпотентность: изменяющие запросы несут `request_id` (UUID). Повтор с тем же `request_id` возвращает
   прежний результат, а не выполняет действие заново.
+- Лимиты плана (проверяются валидатором): `repeat.times` 1..64, глубина дерева 1..15, число узлов ≤ 256.
 - Ошибки — единый объект:
 
 ```json
@@ -46,7 +47,7 @@
   { "id": "chop_tree", "summary": "срубить деревья",
     "params": { "type": "object", "properties": {
       "species": { "type": "string", "default": "any" },
-      "count": { "type": "integer", "minimum": 1, "maximum": 256 } },
+      "count": { "type": "integer", "minimum": 1, "maximum": 256, "default": 1 } },
       "required": ["count"] },
     "preconditions": ["есть подходящие блоки в радиусе сканирования"],
     "effects": ["брёвна срублены", "предметы подобраны в инвентарь"] } ] }
