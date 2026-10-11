@@ -123,6 +123,25 @@ class FarmPlannerTests {
     }
 
     @Test
+    void next_OverlappingTargets_EachCellReadOnce() {
+        MapFarmView farm = new MapFarmView()
+                .set(0, 0, 0, DIRT_AIR)
+                .set(1, 0, 0, DIRT_AIR);
+        CountingSafety safety = openField();
+        Set<BlockCoord> water = Set.of(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0));
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM,
+                List.of(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)), farm, safety,
+                Hydration.of(water));
+
+        assertTrue(outcome instanceof FarmPlanner.Next,
+                "Соседние цели обязаны давать стоянку: иначе нечего проверять на пересекающихся окрестностях");
+        assertEquals(1, safety.maxReadsPerCell(),
+                "Каждая клетка читается не более раза на весь перебор целей: окрестности соседних целей "
+                        + "пересекаются, повторные чтения кладут серверный тик. Всего чтений: " + safety.reads());
+    }
+
+    @Test
     void next_TargetSurroundedByLava_ReturnsNoStand() {
         MapFarmView farm = new MapFarmView().fillBed(0, -5, -5, 5, 5, DIRT_AIR);
         CountingSafety safety = openField().fill(1, -4, -4, 4, 4, Cell.LAVA);

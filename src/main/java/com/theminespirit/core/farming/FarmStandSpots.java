@@ -23,7 +23,6 @@ public final class FarmStandSpots {
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней сортируются стоянки");
         Objects.requireNonNull(safety, "SafetyView не может быть null: по нему проверяется пол и опасные соседи");
         Objects.requireNonNull(farmView, "FarmView не может быть null: по нему стоянка не топчет грядку");
-        SafetyView cached = new CachedSafetyView(safety);
         List<Stand> stands = new ArrayList<>();
         for (int dx = -STAND_RADIUS; dx <= STAND_RADIUS; dx++) {
             for (int dz = -STAND_RADIUS; dz <= STAND_RADIUS; dz++) {
@@ -32,7 +31,7 @@ public final class FarmStandSpots {
                 }
                 for (int dy = 1; dy <= 2; dy++) {
                     BlockCoord feet = new BlockCoord(target.x() + dx, target.y() + dy, target.z() + dz);
-                    if (!canStand(feet, cached) || !withinReach(feet, target)) {
+                    if (!canStand(feet, safety) || !withinReach(feet, target)) {
                         continue;
                     }
                     BlockCoord floor = new BlockCoord(feet.x(), feet.y() - 1, feet.z());

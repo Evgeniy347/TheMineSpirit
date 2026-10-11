@@ -46,14 +46,14 @@ class FarmStandSpotsTests {
     }
 
     @Test
-    void of_OpenGround_ReadsStayWithinBound() {
+    void of_CachedView_ReadsStayWithinBound() {
         CountingSafety safety = flatFloor();
 
-        FarmStandSpots.of(TARGET, FROM, safety, dirtPlane());
+        FarmStandSpots.of(TARGET, FROM, new CachedSafetyView(safety), dirtPlane());
 
         assertTrue(safety.reads() <= FarmStandSpots.MAX_SAFETY_READS,
-                "Поиск стоянки читает не более ящика 9×4×9=" + FarmStandSpots.MAX_SAFETY_READS + " клеток: "
-                        + "иначе перебор стоянок кладёт серверный тик. Чтений: " + safety.reads());
+                "Поиск стоянки через кэш читает не более ящика 9×4×9=" + FarmStandSpots.MAX_SAFETY_READS
+                        + " клеток: иначе перебор стоянок кладёт серверный тик. Чтений: " + safety.reads());
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.util.Map;
 
 final class CountingSafety implements SafetyView {
     private final Map<BlockCoord, Cell> cells = new HashMap<>();
+    private final Map<BlockCoord, Integer> perCell = new HashMap<>();
     private int reads;
 
     CountingSafety set(int x, int y, int z, Cell cell) {
@@ -37,9 +38,14 @@ final class CountingSafety implements SafetyView {
         return reads;
     }
 
+    int maxReadsPerCell() {
+        return perCell.values().stream().mapToInt(count -> count).max().orElse(0);
+    }
+
     @Override
     public Cell cellAt(BlockCoord coord) {
         reads++;
+        perCell.merge(coord, 1, Integer::sum);
         return cells.getOrDefault(coord, Cell.PASSABLE);
     }
 }
