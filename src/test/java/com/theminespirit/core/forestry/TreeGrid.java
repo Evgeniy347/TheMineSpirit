@@ -14,7 +14,8 @@ final class TreeGrid implements TreeView {
 
     private final Map<BlockCoord, Character> cells = new HashMap<>();
     private final Set<BlockCoord> logCoords = new HashSet<>();
-    private int cellReads;
+    private int logReads;
+    private int leavesReads;
     private int soilReads;
 
     static TreeGrid ofLayers(String... layers) {
@@ -50,19 +51,27 @@ final class TreeGrid implements TreeView {
         return Set.copyOf(logCoords);
     }
 
-    int reads() {
-        return cellReads + soilReads;
+    int logReads() {
+        return logReads;
+    }
+
+    int leavesReads() {
+        return leavesReads;
+    }
+
+    int soilReads() {
+        return soilReads;
     }
 
     @Override
     public boolean isLog(BlockCoord coord) {
-        cellReads++;
+        logReads++;
         return cell(coord) == LOG;
     }
 
     @Override
     public boolean isNaturalLeaves(BlockCoord coord) {
-        cellReads++;
+        leavesReads++;
         return cell(coord) == LEAVES;
     }
 
