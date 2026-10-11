@@ -28,7 +28,9 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 
 Любая ошибка при загрузке — `IllegalStateException` вида «файл → путь: что не так. Проверьте: что сделать».
 Неизвестные поля, дубли ключей и пустые таблицы запрещены. Загрузка: `TacticsConfig.loadDefault()` (один раз за
-процесс) или `TacticsConfig.fromJson(enemies, weights, rules, modes)` из строк.
+процесс) или `TacticsConfig.fromJson(enemies, weights, rules, modes)` из строк. Границы чисел держит
+конструктор записи (`FactChecks.range`), парсер читает число без границ, а `ConfigNode.build` превращает отказ
+конструктора в ошибку с путём в файле (`weights.json → scales.armorCap`); границы в одном месте.
 
 | Файл | Содержимое |
 |---|---|
