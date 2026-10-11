@@ -18,16 +18,18 @@ import java.util.Optional;
 
 public final class FallbackPlanner implements Planner {
     private static final List<Rule> RULES = List.of(
-            new Rule("сруб", FallbackPlanner::chopPlan),
-            new Rule("дерев", FallbackPlanner::chopPlan),
-            new Rule("руд", FallbackPlanner::minePlan),
-            new Rule("шахт", FallbackPlanner::minePlan),
-            new Rule("следу", FallbackPlanner::followPlan),
-            new Rule("за мной", FallbackPlanner::followPlan),
-            new Rule("домой", FallbackPlanner::homePlan),
-            new Rule("верни", FallbackPlanner::homePlan),
-            new Rule("атак", FallbackPlanner::attackPlan),
-            new Rule("убей", FallbackPlanner::attackPlan));
+            new Rule(List.of("сруб", "дерев"), List.of(
+                    new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
+                    new Step("chop_tree", List.of("species", "count"), Map.of("count", 1)))),
+            new Rule(List.of("руд", "шахт"), List.of(
+                    new Step("scan", List.of("radius"), Map.of("filter", List.of("*_ore"))),
+                    new Step("mine_vein", List.of("ore", "count"), Map.of("count", 1)))),
+            new Rule(List.of("следу", "за мной"), List.of(
+                    new Step("follow", List.of("target", "radius"), Map.of("target", "player")))),
+            new Rule(List.of("домой", "верни"), List.of(
+                    new Step("return_home", List.of(), Map.of()))),
+            new Rule(List.of("атак", "убей"), List.of(
+                    new Step("attack", List.of("target"), Map.of("target", "hostile")))));
 
     private final ScriptCatalog scripts;
     private final ConditionCatalog conditions;
@@ -47,9 +49,22 @@ public final class FallbackPlanner implements Planner {
         Objects.requireNonNull(goal, "goal не может быть null: без текста цели сценарий не выбрать");
         Rule rule = match(goal.text()).orElseThrow(() -> new UnplannableGoalException("Цель '" + goal.text()
                 + "' не распознана: измените формулировку или передайте её ИИ-планировщику"));
-        TaskNode node = rule.action.build(goal);
-        TaskNode validated = PlanValidator.validate(node, scripts, conditions);
+        TaskNode validated = PlanValidator.validate(build(rule, goal), scripts, conditions);
         return new PlanResult(validated, PlanResult.SOURCE_FALLBACK, Optional.empty());
+    }
+
+    private static TaskNode build(Rule rule, Goal goal) {
+        List<TaskNode> steps = new ArrayList<>(rule.steps.size());
+        for (Step step : rule.steps) {
+            Map<String, Object> params = new LinkedHashMap<>(step.fixed);
+            for (String name : step.fromGoal) {
+                if (goal.params().containsKey(name)) {
+                    params.put(name, goal.params().get(name));
+                }
+            }
+            steps.add(new ScriptCall(step.script, params));
+        }
+        return steps.size() == 1 ? steps.get(0) : new SequenceNode(steps);
     }
 
     private static Optional<Rule> match(String text) {
@@ -57,7 +72,7 @@ public final class FallbackPlanner implements Planner {
         Rule best = null;
         int bestIndex = Integer.MAX_VALUE;
         for (Rule rule : RULES) {
-            int index = matchIndex(tokens, rule.keyword);
+            int index = firstIndex(tokens, rule.stems);
             if (index >= 0 && index < bestIndex) {
                 best = rule;
                 bestIndex = index;
@@ -66,8 +81,19 @@ public final class FallbackPlanner implements Planner {
         return Optional.ofNullable(best);
     }
 
-    private static int matchIndex(List<String> tokens, String keyword) {
-        List<String> parts = tokenize(keyword);
+    private static int firstIndex(List<String> tokens, List<String> stems) {
+        int best = -1;
+        for (String stem : stems) {
+            int index = matchIndex(tokens, stem);
+            if (index >= 0 && (best < 0 || index < best)) {
+                best = index;
+            }
+        }
+        return best;
+    }
+
+    private static int matchIndex(List<String> tokens, String stem) {
+        List<String> parts = tokenize(stem);
         if (parts.isEmpty()) {
             return -1;
         }
@@ -98,51 +124,9 @@ public final class FallbackPlanner implements Planner {
         return tokens;
     }
 
-    private static TaskNode chopPlan(Goal goal) {
-        Map<String, Object> scan = new LinkedHashMap<>();
-        copyFromGoal(scan, goal, "radius");
-        scan.put("filter", List.of("*_log"));
-        Map<String, Object> chop = new LinkedHashMap<>();
-        copyFromGoal(chop, goal, "species");
-        chop.put("count", goal.params().getOrDefault("count", 1));
-        return new SequenceNode(List.of(new ScriptCall("scan", scan), new ScriptCall("chop_tree", chop)));
+    private record Rule(List<String> stems, List<Step> steps) {
     }
 
-    private static TaskNode minePlan(Goal goal) {
-        Map<String, Object> scan = new LinkedHashMap<>();
-        copyFromGoal(scan, goal, "radius");
-        scan.put("filter", List.of("*_ore"));
-        Map<String, Object> mine = new LinkedHashMap<>();
-        copyFromGoal(mine, goal, "ore");
-        mine.put("count", goal.params().getOrDefault("count", 1));
-        return new SequenceNode(List.of(new ScriptCall("scan", scan), new ScriptCall("mine_vein", mine)));
-    }
-
-    private static TaskNode followPlan(Goal goal) {
-        Map<String, Object> follow = new LinkedHashMap<>();
-        follow.put("target", goal.params().getOrDefault("target", "player"));
-        copyFromGoal(follow, goal, "radius");
-        return new ScriptCall("follow", follow);
-    }
-
-    private static void copyFromGoal(Map<String, Object> target, Goal goal, String name) {
-        if (goal.params().containsKey(name)) {
-            target.put(name, goal.params().get(name));
-        }
-    }
-
-    private static TaskNode homePlan(Goal goal) {
-        return new ScriptCall("return_home", Map.of());
-    }
-
-    private static TaskNode attackPlan(Goal goal) {
-        return new ScriptCall("attack", Map.of("target", goal.params().getOrDefault("target", "hostile")));
-    }
-
-    private record Rule(String keyword, Action action) {
-    }
-
-    private interface Action {
-        TaskNode build(Goal goal);
+    private record Step(String script, List<String> fromGoal, Map<String, Object> fixed) {
     }
 }
