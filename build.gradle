@@ -245,6 +245,10 @@ tasks.register('slowTest', Test) {
         includeTags 'slow'
     }
     maxParallelForks = 1
+    // Медленный тир гоняет свойства с повышенным числом попыток; число test и slowTest несравнимы
+    // (в test ещё C1-only). Системное свойство перекрывает junit-platform.properties (jqwik читает его
+    // через параметры конфигурации JUnit), но не явный @Property(tries = …). См. docs/TESTING.md.
+    systemProperty 'jqwik.tries.default', '1000'
     systemProperty 'theminespirit.modId', project.mod_id
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/slow/html')

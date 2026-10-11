@@ -3,8 +3,13 @@ package com.theminespirit.core.chunk;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Set;
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
+import net.jqwik.api.Combinators;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
+import net.jqwik.api.Tuple;
 import net.jqwik.api.constraints.IntRange;
 
 class ChunkSquareProperties {
@@ -19,13 +24,10 @@ class ChunkSquareProperties {
 
     @Property
     void diff_AnyCenters_RemovesAndAddsToReachNewSquare(
-            @ForAll @IntRange(min = -1000, max = 1000) int oldX,
-            @ForAll @IntRange(min = -1000, max = 1000) int oldZ,
-            @ForAll @IntRange(min = -1000, max = 1000) int newX,
-            @ForAll @IntRange(min = -1000, max = 1000) int newZ,
-            @ForAll @IntRange(min = 0, max = 16) int radius) {
-        ChunkCoord oldCenter = new ChunkCoord(oldX, oldZ);
-        ChunkCoord newCenter = new ChunkCoord(newX, newZ);
+            @ForAll("diffCases") Tuple.Tuple3<ChunkCoord, ChunkCoord, Integer> sample) {
+        ChunkCoord oldCenter = sample.get1();
+        ChunkCoord newCenter = sample.get2();
+        int radius = sample.get3();
         ChunkDiff diff = ChunkSquare.diff(oldCenter, newCenter, radius);
 
         Set<ChunkCoord> applied = ChunkSquare.apply(ChunkSquare.chunks(oldCenter, radius), diff);
@@ -33,6 +35,26 @@ class ChunkSquareProperties {
         assertEquals(ChunkSquare.chunks(newCenter, radius), applied,
                 "Применённый diff обязан переводить старый квадрат в новый при любых центрах: билеты после "
                         + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше");
+    }
+
+    // Центры почти всегда рядом (на один-два квадрата), а не случайные: diff проверяет пересечение квадратов,
+    // а независимые центры ±1000 почти никогда не пересекаются и тривиальны. ~10 % — любой центр, чтобы
+    // остался и далёкий переход. Генератор — docs/research/test-performance.md → рек. 5.
+    @Provide
+    Arbitrary<Tuple.Tuple3<ChunkCoord, ChunkCoord, Integer>> diffCases() {
+        return Arbitraries.integers().between(0, 16).flatMap(radius -> {
+            int span = 2 * radius + 1;
+            Arbitrary<ChunkCoord> anyCenter = anyCenter();
+            Arbitrary<ChunkCoord> nearbyCenter = anyCenter.flatMap(old -> Combinators
+                    .combine(Arbitraries.integers().between(-span, span),
+                            Arbitraries.integers().between(-span, span))
+                    .as((dx, dz) -> new ChunkCoord(old.x() + dx, old.z() + dz)));
+            Arbitrary<ChunkCoord> newCenter = Arbitraries.frequencyOf(
+                    Tuple.of(9, nearbyCenter),
+                    Tuple.of(1, anyCenter));
+            return Combinators.combine(anyCenter, newCenter)
+                    .as((old, fresh) -> Tuple.of(old, fresh, radius));
+        });
     }
 
     @Property(tries = 200)
@@ -58,5 +80,12 @@ class ChunkSquareProperties {
                         + "остаются нагруженными и утекут");
         assertEquals(ChunkSquare.chunks(new ChunkCoord(steps, 0), radius), current,
                 "После N переходов удержанный набор обязан равняться квадрату вокруг конечного центра");
+    }
+
+    private static Arbitrary<ChunkCoord> anyCenter() {
+        return Combinators
+                .combine(Arbitraries.integers().between(-1000, 1000),
+                        Arbitraries.integers().between(-1000, 1000))
+                .as(ChunkCoord::new);
     }
 }
