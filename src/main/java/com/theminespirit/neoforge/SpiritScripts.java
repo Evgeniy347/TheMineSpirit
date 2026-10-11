@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.FollowParams;
@@ -17,6 +18,7 @@ public final class SpiritScripts {
     public static ScriptRegistry registryFor(SpiritEntity spirit) {
         return ScriptRegistry.of(Map.of(
                 "scan", params -> new ScanScript(spirit, ScanParams.from(params)),
+                "collect_drops", params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)),
                 "goto", params -> new GotoScript(spirit, GotoParams.from(params)),
                 "follow", params -> new FollowScript(spirit, FollowParams.from(params))));
     }
