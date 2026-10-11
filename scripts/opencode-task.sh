@@ -154,6 +154,11 @@ while true; do
         *)
             echo "Сессия: ${session:-не создана}"
             echo "Логи: $log_dir"
+            dirty="$(git -C "$REPO_DIR" status --short --untracked-files=no)"
+            if [ -n "$dirty" ]; then
+                echo "ВНИМАНИЕ: в дереве остались незакоммиченные изменения — закоммиченное состояние могло не проходить тесты:"
+                echo "$dirty"
+            fi
             echo "--- последний ответ opencode ---"
             print_last_answer "$attempt_log.jsonl"
             exit "$code"
