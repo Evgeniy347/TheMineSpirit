@@ -33,6 +33,7 @@ final class ChopTreeScript implements ScriptInstance {
         FIND,
         APPROACH,
         CHOP,
+        APPROACH_BASE,
         COLLECT
     }
 
@@ -79,6 +80,7 @@ final class ChopTreeScript implements ScriptInstance {
             case FIND -> find();
             case APPROACH -> approach();
             case CHOP -> chop();
+            case APPROACH_BASE -> approachBase();
             case COLLECT -> collect();
         };
     }
@@ -203,7 +205,21 @@ final class ChopTreeScript implements ScriptInstance {
             distanceRetried = false;
             planIndex++;
         }
-        return startCollect();
+        return startApproachBase();
+    }
+
+    private ScriptStatus startApproachBase() {
+        approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
+        phase = Phase.APPROACH_BASE;
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus approachBase() {
+        return switch (approach.tick()) {
+            case MOVING -> ScriptStatus.RUNNING;
+            case ARRIVED -> startCollect();
+            case STUCK, TIMEOUT -> startCollect(); // если не дошли — пробуем подбирать всё равно
+        };
     }
 
     private ScriptStatus startCollect() {
