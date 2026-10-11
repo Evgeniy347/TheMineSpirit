@@ -207,7 +207,8 @@ class Prompter:
             "",
             "# Лимиты плана",
             f"Не больше {limits.max_nodes} узлов в плане, не больше {limits.max_root_steps} шагов в корне, "
-            f"глубина не больше {limits.max_depth}, repeat.times {limits.repeat_min}..{limits.repeat_max}.",
+            f"глубина не больше {limits.max_depth}, repeat.times {limits.repeat_min}..{limits.repeat_max}. "
+            f"goto — не дальше {self.policy.max_goto_distance} блоков по горизонтали от духа; блок в gather.block — только из наблюдения.",
             "",
             "# Недавние решения по этому духу (данные)",
             "<history>",

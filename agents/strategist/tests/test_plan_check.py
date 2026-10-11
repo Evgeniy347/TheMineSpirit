@@ -4,7 +4,8 @@ import random
 import unittest
 from pathlib import Path
 
-from plan_check import Catalog, CatalogError, PlanError, PlanLimits, check_plan, load_policy
+from plan_check import (Catalog, CatalogError, PlanContext, PlanError, PlanLimits, check_plan, context_from_observation,
+                        load_policy)
 from tests.fake_rest import default_capabilities
 
 APP = Path(__file__).resolve().parent.parent
@@ -222,6 +223,89 @@ class PlanCheckTests(unittest.TestCase):
                     self.check(example["plan"])
                 except PlanError as error:
                     self.fail(f"образец {path.name} не проходит plan_check: {error}")
+
+
+def goto(x, z, y=64):
+    return script("goto", x=x, y=y, z=z)
+
+
+class WorldRulesTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog.from_capabilities(default_capabilities())
+        cls.policy = load_policy(APP / "policy.json")
+        cls.context = PlanContext((100, 64, -50), frozenset({"stone", "oak_log", "grass_block"}))
+
+    def check(self, plan, context="default"):
+        return check_plan(plan, self.catalog, self.policy, PlanLimits(), self.context if context == "default" else context)
+
+    def test_policy_LoadsWorldRuleSettings(self):
+        self.assertEqual(256, self.policy.max_goto_distance)
+        self.assertEqual((("gather", "block"),), self.policy.observed_block_params)
+
+    def test_goto_HorizontalDistanceBoundary256(self):
+        self.check(goto(100 + 256, -50))
+        self.check(goto(100 - 256, -50))
+        self.check(goto(100, -50 + 256, y=300))
+        for far in (goto(100 + 257, -50), goto(100, -50 - 257), goto(100 + 190, -50 + 190)):
+            with self.assertRaises(PlanError, msg="цель дальше 256 блоков по горизонтали отвергается") as ctx:
+                self.check(far)
+            self.assertIn("по горизонтали", str(ctx.exception))
+        self.check(goto(100 + 180, -50 + 180))
+
+    def test_goto_InsideNestedPlan_NamesFullPath(self):
+        plan = {"type": "sequence", "steps": [script("scan"), goto(5000, 5000)]}
+        with self.assertRaises(PlanError) as ctx:
+            self.check(plan)
+        self.assertIn("plan.steps[1].params", str(ctx.exception))
+
+    def test_goto_WithoutContext_NotChecked(self):
+        self.check(goto(29_000_000, 0), context=None)
+
+    def test_goto_UnknownSpiritPosition_Rejected(self):
+        with self.assertRaises(PlanError) as ctx:
+            self.check(goto(1, 1), context=PlanContext(None, frozenset()))
+        self.assertIn("позиция духа", str(ctx.exception))
+
+    def test_gather_OnlyBlocksFromObservation(self):
+        self.check(script("gather", block="stone", count=5))
+        self.check(script("gather", block="minecraft:stone", count=5))
+        self.check(script("gather", block="oak_log", count=5))
+        for bad in ("diamond_ore", "minecraft:diamond_ore", "*_log", "stone,oak_log", ""):
+            with self.subTest(block=bad):
+                with self.assertRaises(PlanError, msg=f"блок {bad!r} отсутствует в наблюдении") as ctx:
+                    self.check(script("gather", block=bad, count=5))
+                self.assertIn("plan.params.block", str(ctx.exception))
+                self.assertIn("наблюдении", str(ctx.exception))
+
+    def test_gather_ObservedBlocksUnknownOrEmpty(self):
+        self.check(script("gather", block="whatever", count=1), context=PlanContext((0, 0, 0), None))
+        with self.assertRaises(PlanError):
+            self.check(script("gather", block="stone", count=1), context=PlanContext((0, 0, 0), frozenset()))
+
+    def test_otherScripts_BlockParamNotCheckedAgainstObservation(self):
+        self.check(script("mine_vein", ore="diamond", count=1))
+
+    def test_contextFromObservation_ReadsPositionAndNormalisedBlocks(self):
+        observation = {"pos": [10, 64, -3], "blocks": [{"item": "minecraft:stone", "count": 5}, {"item": "dirt", "count": 1}, "мусор"]}
+        context = context_from_observation(observation)
+        self.assertEqual((10, 64, -3), context.position)
+        self.assertEqual(frozenset({"stone", "dirt"}), context.observed_blocks)
+        self.assertIsNone(context_from_observation({"pos": "x"}).position)
+        self.assertEqual(frozenset(), context_from_observation({}).observed_blocks)
+
+    def test_property_GotoVerdictMatchesHypotAcrossRandomPoints(self):
+        rng = random.Random(4)
+        for _ in range(500):
+            dx, dz = rng.randint(-400, 400), rng.randint(-400, 400)
+            plan = goto(100 + dx, -50 + dz, y=rng.randint(-64, 319))
+            far = (dx * dx + dz * dz) ** 0.5 > 256
+            try:
+                self.check(plan)
+                accepted = True
+            except PlanError:
+                accepted = False
+            self.assertEqual(not far, accepted, f"dx={dx}, dz={dz}: проверка расстояния расходится с расчётом")
 
 
 def random_json(rng, depth=0):

@@ -199,6 +199,8 @@ class PrompterTests(unittest.TestCase):
         self.assertIn("- chop_tree ", user)
         self.assertNotIn("- fill ", user)
         self.assertIn("Не больше 32 узлов", user, "лимит узлов назван")
+        self.assertIn("не дальше 256 блоков по горизонтали", user, "модель знает предел goto из policy.json")
+        self.assertIn("gather.block", user, "модель знает, что блок для gather берётся из наблюдения")
         self.assertIn("<observation>", user)
         self.assertIn(world("forest")["hash"], user)
 

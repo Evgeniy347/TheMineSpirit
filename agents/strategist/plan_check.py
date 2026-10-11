@@ -49,6 +49,28 @@ class Policy:
     allowed_scripts: frozenset
     max_string_length: int = 200
     max_list_items: int = 32
+    max_goto_distance: int = 256
+    observed_block_params: tuple = (("gather", "block"),)
+
+
+@dataclass(frozen=True)
+class PlanContext:
+    position: tuple | None
+    observed_blocks: frozenset | None
+
+
+def normalize_block(name: str) -> str:
+    return name[len("minecraft:"):] if name.startswith("minecraft:") else name
+
+
+def context_from_observation(observation: dict) -> PlanContext:
+    pos = observation.get("pos")
+    position = tuple(pos) if isinstance(pos, list) and len(pos) == 3 and all(
+        isinstance(v, (int, float)) and not isinstance(v, bool) for v in pos) else None
+    blocks = observation.get("blocks")
+    observed = frozenset(normalize_block(entry["item"]) for entry in blocks if isinstance(entry, dict)
+                         and isinstance(entry.get("item"), str)) if isinstance(blocks, list) else frozenset()
+    return PlanContext(position, observed)
 
 
 def load_policy(path: Path) -> Policy:
@@ -59,7 +81,11 @@ def load_policy(path: Path) -> Policy:
     allowed = data.get("allowed_scripts") if isinstance(data, dict) else None
     if not isinstance(allowed, list) or not all(isinstance(item, str) for item in allowed) or not allowed:
         raise ValueError(f"{path}: allowed_scripts должен быть непустым списком имён скриптов")
-    return Policy(frozenset(allowed), int(data.get("max_string_length", 200)), int(data.get("max_list_items", 32)))
+    block_params = data.get("observed_block_params", {"gather": "block"})
+    if not isinstance(block_params, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in block_params.items()):
+        raise ValueError(f"{path}: observed_block_params должен быть объектом вида {{\"скрипт\": \"параметр\"}}")
+    return Policy(frozenset(allowed), int(data.get("max_string_length", 200)), int(data.get("max_list_items", 32)),
+                  int(data.get("max_goto_distance", 256)), tuple(sorted(block_params.items())))
 
 
 class Catalog:
@@ -97,9 +123,10 @@ class _TooManyNodes(Exception):
     pass
 
 
-def check_plan(plan, catalog: Catalog, policy: Policy, limits: PlanLimits | None = None) -> None:
+def check_plan(plan, catalog: Catalog, policy: Policy, limits: PlanLimits | None = None,
+               context: PlanContext | None = None) -> None:
     limits = limits or PlanLimits()
-    checker = _Checker(catalog, policy, limits)
+    checker = _Checker(catalog, policy, limits, context)
     checker.run(plan)
     if checker.errors:
         raise PlanError(checker.errors[:MAX_ERRORS])
@@ -122,7 +149,8 @@ def _describe(value) -> str:
 
 
 class _Checker:
-    def __init__(self, catalog: Catalog, policy: Policy, limits: PlanLimits):
+    def __init__(self, catalog: Catalog, policy: Policy, limits: PlanLimits, context: PlanContext | None = None):
+        self.context = context
         self.catalog = catalog
         self.policy = policy
         self.limits = limits
@@ -177,7 +205,28 @@ class _Checker:
             self._error(f"{path}: скрипт {name!r} есть в каталоге, но вне белого списка policy.json "
                         f"(разрешены: {', '.join(sorted(self.policy.allowed_scripts))})")
             return
+        before = len(self.errors)
         self._params(node.get("params"), schema, path, f"скрипта {name!r}")
+        if self.context is not None and len(self.errors) == before and isinstance(node.get("params"), dict):
+            self._world_rules(name, node["params"], path)
+
+    def _world_rules(self, name: str, params: dict, path: str) -> None:
+        context = self.context
+        if name == "goto":
+            if context.position is None:
+                self._error(f"{path}: позиция духа в наблюдении неизвестна, расстояние goto не проверить")
+            else:
+                distance = math.hypot(params["x"] - context.position[0], params["z"] - context.position[2])
+                if distance > self.policy.max_goto_distance:
+                    self._error(f"{path}.params: цель goto в {distance:.0f} блоках по горизонтали от духа, допустимо не больше "
+                                f"{self.policy.max_goto_distance}: выберите точку ближе или идите несколькими планами")
+        for script, param in self.policy.observed_block_params:
+            value = params.get(param)
+            unknown = (isinstance(value, str) and context.observed_blocks is not None
+                       and normalize_block(value) not in context.observed_blocks)
+            if script == name and unknown:
+                shown = ", ".join(sorted(context.observed_blocks)[:12]) or "в наблюдении нет блоков"
+                self._error(f"{path}.params.{param}: блока {value!r} нет в последнем наблюдении (есть, например: {shown})")
 
     def _params(self, params, schema: dict, path: str, owner: str) -> None:
         if params is None:

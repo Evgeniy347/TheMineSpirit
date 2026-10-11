@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from brain import BrainError, BrainUnavailable, SandboxBreach
 from guard import ProviderHealth, fingerprint, request_id
 from parse import ReplyError, parse_reply
-from plan_check import Catalog, CatalogError, PlanError, PlanLimits, Policy, check_plan
+from plan_check import Catalog, CatalogError, PlanError, PlanLimits, Policy, check_plan, context_from_observation
 from prompt import Prompter
 from rest_client import ApiError, NetworkError
 from runtime import Runtime
@@ -184,6 +184,7 @@ class CycleRunner:
         bot_id = str(bot.get("id"))
         obs_hash = observation.get("hash")
         prompt = self.prompter.build(catalog.raw, bot, observation, rt.recent_for(bot_id), rt.clock.now())
+        context = context_from_observation(observation)
         error_text = None
         for attempt in range(MAX_ATTEMPTS):
             verdict = rt.guard.allow_brain_call(rt.clock.now(), bot_id, retry=attempt > 0)
@@ -208,7 +209,7 @@ class CycleRunner:
                 return None
             rt.guard.record_brain_call(rt.clock.now(), bot_id)
             self.provider.success()
-            evaluation = self._evaluate(cycle, bot_id, reply, prompt.sha, catalog, summary)
+            evaluation = self._evaluate(cycle, bot_id, reply, prompt.sha, catalog, context, summary)
             if evaluation.kind == "skip":
                 rt.guard.record_decision(bot_id, obs_hash)
                 return None
@@ -225,7 +226,8 @@ class CycleRunner:
     def _retry_user(user: str, error: str) -> str:
         return f"{user}\n\n{RETRY_HEADER}\n{error.replace('<', '‹')}\nИсправь ответ и верни только JSON."
 
-    def _evaluate(self, cycle: int, bot_id: str, reply, prompt_sha: str, catalog: Catalog, summary: CycleSummary) -> Evaluation:
+    def _evaluate(self, cycle: int, bot_id: str, reply, prompt_sha: str, catalog: Catalog, context,
+                  summary: CycleSummary) -> Evaluation:
         rt = self.rt
         try:
             decision = parse_reply(reply.text)
@@ -240,7 +242,7 @@ class CycleRunner:
         if decision.skip:
             return Evaluation("skip")
         try:
-            check_plan(decision.plan, catalog, self.policy, self.limits)
+            check_plan(decision.plan, catalog, self.policy, self.limits, context)
         except PlanError as error:
             summary.rejected += 1
             rt.log("rejected", cycle=cycle, bot=bot_id, stage="plan_check", reason=str(error), goal=decision.goal,

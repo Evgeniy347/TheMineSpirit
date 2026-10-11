@@ -1,0 +1,59 @@
+{
+ "description": "близкая точка goto и блок из наблюдения проходят",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "набрать дубовые брёвна",
+    "plan": {
+     "type": "sequence",
+     "steps": [
+      {
+       "type": "script",
+       "script": "goto",
+       "params": {
+        "x": 150,
+        "y": 70,
+        "z": -35
+       }
+      },
+      {
+       "type": "script",
+       "script": "gather",
+       "params": {
+        "block": "oak_log",
+        "count": 8
+       }
+      }
+     ]
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  }
+ ],
+ "name": "33-near-goto-and-observed-gather-accepted",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
