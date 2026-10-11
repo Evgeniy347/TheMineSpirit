@@ -16,7 +16,7 @@
 | `./gradlew slowTest` | только `@Tag("slow")`; сейчас таких тестов нет, поэтому задача падает на 0 тестов | отчёты в `TestResults/slow/` |
 | `./gradlew check` | быстрый тир (`test`); `slowTest` запускается отдельно | зелёный прогон быстрых тестов |
 | `./gradlew jacocoTestReport` | отчёт покрытия JaCoCo | `TestResults/coverage/` |
-| `./gradlew runGameTestServer` | поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
+| `scripts/gametest.sh` | GameTest под `flock` (один сервер на машину): поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
@@ -76,6 +76,7 @@
 | Скрипт | Назначение | Проверка |
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
+| [scripts/gametest.sh](scripts/gametest.sh) | GameTest под `flock`: один GameTest-сервер на машину, ждёт до 30 мин (код 75), лишние JVM игры не плодятся | `All N required tests passed`; код 75 — идёт чужой GameTest |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: при сбое провайдера (free usage, rate limit, квота, 429), сетевом сбое (нет соединения, «Endpoint is unavailable») или молчании модели ≥ 5 мин — перезапуск той же сессии (5, 5, 10, 30, 60 с), затем режим ожидания: раз в 120 с (`OPENCODE_PROBE_INTERVAL`) короткая проба модели из пустого каталога, провайдер вернулся — та же сессия продолжается, предел ожидания `OPENCODE_WAIT_LIMIT` 7200 с, потом стоп; сбои пишутся в `TestResults/opencode/failures.log`; новое задание не стартует в грязном дереве (там может работать другой агент), `OPENCODE_ALLOW_DIRTY=1` — осознанно | код выхода 0 и `Сессия: ses_…`; 75 (предел ожидания исчерпан) — сообщить пользователю |
 | [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): сбои провайдера, сетевые сбои (json «Cannot connect», stderr «Endpoint is unavailable» опознаются как сбой провайдера, а не молчание), режим ожидания (провайдер вернулся / предел исчерпан), молчание модели, долгая команда, ложные срабатывания на файлах и логе INFO | все строки `OK` |
 | [scripts/strategist.sh](scripts/strategist.sh) | надзор за агентом-стратегом: `start`, `stop`, `status`, `pause`, `resume`, `once`, `smoke [модель]`, `logs [N]`; tmux-сессия `mc-strategist`, второй экземпляр отказывается, `live` только с `STRATEGIST_CONFIRM_LIVE=1` (после согласия пользователя) | `status` показывает «агент: работает», режим, модель и счётчики за час |
