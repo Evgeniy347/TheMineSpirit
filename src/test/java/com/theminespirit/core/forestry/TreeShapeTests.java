@@ -57,6 +57,30 @@ class TreeShapeTests {
     }
 
     @Test
+    void detect_AcaciaFromTrunkAndBranchTip_ReturnsSameTree() {
+        TreeGrid grid = new TreeGrid().soil(0, 0, 0);
+        for (int y = 1; y <= 5; y++) {
+            grid.log(0, y, 0);
+        }
+        for (int x = 1; x <= 9; x++) {
+            grid.log(x, 5, 0);
+        }
+        grid.leaves(7, 6, 0).leaves(8, 6, 0).leaves(9, 6, 0);
+        BlockCoord trunk = new BlockCoord(0, 1, 0);
+        BlockCoord branchTip = new BlockCoord(9, 5, 0);
+
+        Tree fromTrunk = assertInstanceOf(Tree.class, TreeShape.detect(trunk, grid),
+                "Акация со ствола обязана распознаться деревом: габарит группы 9 блоков в пределах "
+                        + "2·MAX_SPREAD, дух обязан рубить такое дерево");
+        Tree fromTip = assertInstanceOf(Tree.class, TreeShape.detect(branchTip, grid),
+                "Акация с кончика ветви обязана распознаться деревом: стартовое бревно — ближайшее к духу, "
+                        + "это может быть конец ветви, и разбор не должен превращать то же дерево в TOO_BIG");
+        assertEquals(fromTrunk, fromTip,
+                "Ответ разбора обязан не зависеть от выбранного бревна: TreeChooser начинает с ближайшего "
+                        + "к духу бревна, и одинаковое дерево обязано давать одинаковый план рубки");
+    }
+
+    @Test
     void detect_TwoByTwoTrunk_ReturnsAllEightLogs() {
         TreeGrid grid = TreeGrid.ofLayers(
                 "##\n##",

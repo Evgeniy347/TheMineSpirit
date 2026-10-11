@@ -17,16 +17,18 @@ import net.jqwik.api.constraints.IntRange;
 
 class TreeShapeProperties {
     @Property(tries = 200)
-    void detect_AnyConnectedComponent_ReturnsWholeComponentExactlyOnce(
+    void detect_AnyConnectedComponentFromRandomStart_ReturnsWholeComponentExactlyOnce(
             @ForAll @IntRange(min = 1, max = 40) int size, @ForAll long seed) {
         Random random = new Random(seed);
         Set<BlockCoord> component = randomComponent(random, size);
         TreeGrid grid = gridFor(component);
-        BlockCoord start = component.iterator().next();
+        List<BlockCoord> members = new ArrayList<>(component);
+        BlockCoord start = members.get(random.nextInt(members.size()));
 
         Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(start, grid),
-                "Случайная связная группа брёвен с почвой и тремя листьями обязана распознаться деревом: "
-                        + "разбор не должен отвергать настоящие деревья");
+                "Разбор обязана давать одно и то же дерево, с какого бы бревна его ни начали: стартовое бревно — "
+                        + "ближайшее к духу, это может быть конец ветви акации, и дерево не должно становиться TOO_BIG "
+                        + "из-за выбора начала обхода");
         assertEquals(Set.copyOf(component), Set.copyOf(tree.logs()),
                 "Разбор обязан вернуть всю компоненту связности: пропущенное или лишнее бревно даёт "
                         + "неправильный план рубки");
@@ -47,9 +49,11 @@ class TreeShapeProperties {
     private static Set<BlockCoord> randomComponent(Random random, int size) {
         Set<BlockCoord> component = new LinkedHashSet<>();
         List<BlockCoord> members = new ArrayList<>();
-        BlockCoord origin = new BlockCoord(0, 0, 0);
-        component.add(origin);
-        members.add(origin);
+        for (int x = -ChopTuning.MAX_SPREAD; x <= ChopTuning.MAX_SPREAD; x++) {
+            BlockCoord cell = new BlockCoord(x, 0, 0);
+            component.add(cell);
+            members.add(cell);
+        }
         int attempts = 0;
         while (component.size() < size && attempts < 100_000) {
             attempts++;
