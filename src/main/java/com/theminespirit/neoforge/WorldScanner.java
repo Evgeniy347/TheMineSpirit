@@ -57,11 +57,11 @@ public final class WorldScanner {
                 int scanMaxX = Math.min(chunkX * 16 + 15, maxX);
                 int scanMinZ = Math.max(chunkZ * 16, minZ);
                 int scanMaxZ = Math.min(chunkZ * 16 + 15, maxZ);
+                // Поблочный обход идёт напрямую по секциям: LevelChunkSection читает state по локальным
+                // координатам без выделения BlockPos на каждую позицию скана (до 275 тыс. позиций).
+                LevelChunkSection[] sections = chunk.getSections();
                 for (int x = scanMinX; x <= scanMaxX; x++) {
                     for (int z = scanMinZ; z <= scanMaxZ; z++) {
-                        // Поблочный обход идёт напрямую по секциям: LevelChunkSection читает state по локальным
-                        // координатам без выделения BlockPos на каждую позицию скана (до 275 тыс. позиций).
-                        LevelChunkSection[] sections = chunk.getSections();
                         for (int y = minY; y <= maxY; y++) {
                             scannedPositions++;
                             LevelChunkSection section = sections[chunk.getSectionIndex(y)];
@@ -94,8 +94,7 @@ public final class WorldScanner {
 
     private static void scanContainers(LevelChunk chunk, int minX, int maxX, int minY, int maxY, int minZ, int maxZ,
             List<ContainerRef> containers) {
-        // Контейнеры берутся из уже загруженных блок-сущностей чанка, а не из второй проверки
-        // level.getBlockState(pos): спектр этого же чанка отсчитывается без повторного запроса.
+        // Контейнеры ищутся среди уже загруженных блок-сущностей чанка: их список готов, повторный обход блоков не нужен.
         for (Map.Entry<BlockPos, BlockEntity> entry : chunk.getBlockEntities().entrySet()) {
             BlockPos pos = entry.getKey();
             if (pos.getX() < minX || pos.getX() > maxX || pos.getY() < minY || pos.getY() > maxY
