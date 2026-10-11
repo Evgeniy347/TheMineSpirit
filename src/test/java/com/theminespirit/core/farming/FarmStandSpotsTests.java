@@ -8,7 +8,11 @@ import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class FarmStandSpotsTests {
     private static final BlockCoord TARGET = new BlockCoord(0, 0, 0);
@@ -101,6 +105,31 @@ class FarmStandSpotsTests {
                 "Наибольшее смещение стоянки обязано равняться 11 = 3²+1²+1² (по земле 3 и 1, вверх 1 — предел "
                         + "досягаемости глаз 4.0): по нему планировщик вычитает √11 в раннем выходе, а не радиус 3. "
                         + "Стоянок: " + stands.size());
+    }
+
+    static Stream<Arguments> hazardRows() {
+        return Stream.of(
+                Arguments.of(Cell.LAVA, new BlockCoord(2, 1, 0), "лава у ног"),
+                Arguments.of(Cell.FIRE, new BlockCoord(2, 1, 0), "огонь у ног"),
+                Arguments.of(Cell.HAZARD, new BlockCoord(2, 1, 0), "магма и кактус у ног"),
+                Arguments.of(Cell.FALLING, new BlockCoord(2, 1, 0), "падающий блок у ног"),
+                Arguments.of(Cell.LAVA, new BlockCoord(2, 0, 0), "лава у пола"),
+                Arguments.of(Cell.FIRE, new BlockCoord(2, 0, 0), "огонь у пола"),
+                Arguments.of(Cell.HAZARD, new BlockCoord(2, 0, 0), "магма и кактус у пола"),
+                Arguments.of(Cell.FALLING, new BlockCoord(2, 0, 0), "падающий блок у пола"));
+    }
+
+    @ParameterizedTest(name = "{2}")
+    @MethodSource("hazardRows")
+    void of_HazardNeighbor_RejectsAdjacentStand(Cell hazard, BlockCoord hazardCell, String reason) {
+        CountingSafety clean = flatFloor();
+        CountingSafety exposed = flatFloor().set(hazardCell.x(), hazardCell.y(), hazardCell.z(), hazard);
+        BlockCoord stand = new BlockCoord(1, 1, 0);
+
+        assertTrue(FarmStandSpots.of(TARGET, FROM, clean, dirtPlane()).contains(stand),
+                "Контроль: стоянка без опасности обязана подходить, иначе строка таблицы проверяет не опасность");
+        assertFalse(FarmStandSpots.of(TARGET, FROM, exposed, dirtPlane()).contains(stand),
+                "Стоянка рядом с опасностью отвергается (" + reason + "): дух сгорит раньше, чем взмахнёт мотыгой");
     }
 
     @Test
