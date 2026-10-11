@@ -216,12 +216,13 @@ public final class MineGameTests {
     }
 
     @GameTest(template = "empty", batch = "mine_pit", timeoutTicks = 200)
-    public static void mineVein_OreAboveFiveDeepPit_StaysAndSpiritKeepsHeight(GameTestHelper helper) {
+    public static void mineVein_OreAboveThreeDeepPit_StaysAndSpiritKeepsHeight(GameTestHelper helper) {
         buildCave(helper);
         helper.setBlock(-1, 2, 2, Blocks.IRON_ORE);
-        for (int y = 0; y >= -4; y--) {
+        for (int y = 0; y >= -2; y--) {
             helper.setBlock(0, y, 2, Blocks.AIR);
         }
+        helper.setBlock(0, -3, 2, Blocks.STONE);
         SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
         SpiritRun run = SpiritRun.launch(helper, spirit, mineCall("iron", 1), SETTLE_TICKS);
         double startY = spirit.getY();
@@ -234,7 +235,31 @@ public final class MineGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(-1, 2, 2)).is(Blocks.IRON_ORE),
                     "руду у ямы без пола трогать нельзя");
             helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
-                    "дух не должен спускаться в яму: y был " + startY + ", стал " + spirit.getY());
+                    "дух не должен спускаться в яму глубиной 3 (навигация согласна прыгнуть): без проверки пола "
+                            + "стоянки он шагнёт за край. y был " + startY + ", стал " + spirit.getY());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "mine_gravel_ceiling", timeoutTicks = 400)
+    public static void mineVein_OreUnderCeilingGravel_MinesFromSideAndIsNotBuried(GameTestHelper helper) {
+        buildCave(helper);
+        helper.setBlock(2, 3, 2, Blocks.IRON_ORE);
+        helper.setBlock(2, 4, 2, Blocks.GRAVEL);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(2, 1, 2), Items.IRON_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, mineCall("iron", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(!helper.getBlockState(new BlockPos(2, 3, 2)).is(Blocks.IRON_ORE),
+                    "руду на потолке под гравием обязано быть добыта, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            BlockPos targetAbs = helper.absolutePos(new BlockPos(2, 3, 2));
+            BlockPos spiritCell = spirit.blockPosition();
+            helper.assertTrue(spiritCell.getX() != targetAbs.getX() || spiritCell.getZ() != targetAbs.getZ(),
+                    "стоянку в столбце руды под гравием запрещено выбирать: дух добыл руду, стоя в "
+                            + spiritCell + ", столбец руды " + targetAbs);
             GameTestFixtures.reset(helper);
         });
     }
