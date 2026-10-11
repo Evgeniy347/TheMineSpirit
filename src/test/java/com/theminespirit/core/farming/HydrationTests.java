@@ -108,13 +108,11 @@ class HydrationTests {
     }
 
     static boolean bruteForce(Set<BlockCoord> water, BlockCoord ground) {
-        for (int dx = -4; dx <= 4; dx++) {
-            for (int dy = 0; dy <= 1; dy++) {
-                for (int dz = -4; dz <= 4; dz++) {
-                    if (water.contains(new BlockCoord(ground.x() + dx, ground.y() + dy, ground.z() + dz))) {
-                        return true;
-                    }
-                }
+        for (BlockCoord cell : water) {
+            if (Math.abs(cell.x() - ground.x()) <= Hydration.RADIUS
+                    && cell.y() - ground.y() >= 0 && cell.y() - ground.y() <= 1
+                    && Math.abs(cell.z() - ground.z()) <= Hydration.RADIUS) {
+                return true;
             }
         }
         return false;
