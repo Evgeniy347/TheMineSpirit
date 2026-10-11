@@ -17,6 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class FallbackPlanner implements Planner {
+    private static final String SPEAKER = "speaker";
+
     private static final List<Rule> RULES = List.of(
             new Rule(List.of("сруб", "дерев"), List.of(
                     new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
@@ -25,7 +27,7 @@ public final class FallbackPlanner implements Planner {
                     new Step("scan", List.of("radius"), Map.of("filter", List.of("*_ore"))),
                     new Step("mine_vein", List.of("ore", "count"), Map.of()))),
             new Rule(List.of("следу", "за мной"), List.of(
-                    new Step("follow", List.of("target", "radius"), Map.of()))),
+                    new Step("follow", List.of("radius"), Map.of(SPEAKER, "target"), Map.of()))),
             new Rule(List.of("домой", "верни"), List.of(
                     new Step("return_home", List.of(), Map.of()))),
             new Rule(List.of("атак", "убей"), List.of(
@@ -56,15 +58,26 @@ public final class FallbackPlanner implements Planner {
     private static TaskNode build(Rule rule, Goal goal) {
         List<TaskNode> steps = new ArrayList<>(rule.steps.size());
         for (Step step : rule.steps) {
-            Map<String, Object> params = new LinkedHashMap<>(step.fixed);
-            for (String name : step.fromGoal) {
+            Map<String, Object> params = new LinkedHashMap<>(step.fixed());
+            for (String name : step.sameName()) {
                 if (goal.params().containsKey(name)) {
                     params.put(name, goal.params().get(name));
                 }
             }
-            steps.add(new ScriptCall(step.script, params));
+            for (Map.Entry<String, String> binding : step.renamed().entrySet()) {
+                if (goal.params().containsKey(binding.getKey())) {
+                    params.put(binding.getValue(), goal.params().get(binding.getKey()));
+                }
+            }
+            steps.add(new ScriptCall(step.script(), params));
         }
         return steps.size() == 1 ? steps.get(0) : new SequenceNode(steps);
+    }
+
+    public static boolean requiresPlayerSource(String text) {
+        return match(text)
+                .map(rule -> rule.steps().stream().anyMatch(step -> step.renamed().containsKey(SPEAKER)))
+                .orElse(false);
     }
 
     private static Optional<Rule> match(String text) {
@@ -127,6 +140,9 @@ public final class FallbackPlanner implements Planner {
     private record Rule(List<String> stems, List<Step> steps) {
     }
 
-    private record Step(String script, List<String> fromGoal, Map<String, Object> fixed) {
+    private record Step(String script, List<String> sameName, Map<String, String> renamed, Map<String, Object> fixed) {
+        private Step(String script, List<String> sameName, Map<String, Object> fixed) {
+            this(script, sameName, Map.of(), fixed);
+        }
     }
 }

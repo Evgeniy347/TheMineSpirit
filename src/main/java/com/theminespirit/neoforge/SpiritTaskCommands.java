@@ -56,7 +56,7 @@ final class SpiritTaskCommands {
                     "Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
-        Map<String, Object> goalParams = playerTargetParams(source);
+        Map<String, Object> goalParams = speakerParams(source);
         List<TaskNode> plans = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
             try {
@@ -127,9 +127,9 @@ final class SpiritTaskCommands {
         return cancelled.size();
     }
 
-    private static Map<String, Object> playerTargetParams(CommandSourceStack source) {
+    private static Map<String, Object> speakerParams(CommandSourceStack source) {
         ServerPlayer player = source.getPlayer();
-        return player == null ? Map.of() : Map.of("target", player.getName().getString());
+        return player == null ? Map.of() : Map.of("speaker", player.getName().getString());
     }
 
     private static List<SpiritEntity> filterSpirits(Collection<? extends Entity> selected) {
