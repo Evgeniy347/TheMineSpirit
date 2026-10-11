@@ -34,11 +34,6 @@ public final class Protected {
         return new Protected(shields, List.copyOf(inventory), giveAway);
     }
 
-    public boolean shields(String item) {
-        Objects.requireNonNull(item, "Предмет не назван: защита проверяется по id предмета");
-        return filter != null && filter.matches(item);
-    }
-
     public int giveAway(int slot) {
         if (slot < 0 || slot >= inventory.size()) {
             return 0;
@@ -50,13 +45,5 @@ public final class Protected {
             return 0;
         }
         return giveAway[slot];
-    }
-
-    public boolean shieldsSlot(int slot) {
-        return giveAway(slot) == 0;
-    }
-
-    public List<String> patterns() {
-        return patterns;
     }
 }
