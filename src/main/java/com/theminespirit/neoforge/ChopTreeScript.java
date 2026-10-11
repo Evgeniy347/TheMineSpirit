@@ -33,7 +33,7 @@ final class ChopTreeScript implements ScriptInstance {
         FIND,
         APPROACH,
         CHOP,
-        APPROACH_BASE,
+        APPROACH_LOG,
         COLLECT
     }
 
@@ -57,7 +57,7 @@ final class ChopTreeScript implements ScriptInstance {
     private int unreachable;
     private int consecutiveRejections;
     private boolean breaking;
-    private boolean distanceRetried;
+    private boolean movedCloser;
     private String failureReason;
 
     ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
@@ -80,7 +80,7 @@ final class ChopTreeScript implements ScriptInstance {
             case FIND -> find();
             case APPROACH -> approach();
             case CHOP -> chop();
-            case APPROACH_BASE -> approachBase();
+            case APPROACH_LOG -> approachLog();
             case COLLECT -> collect();
         };
     }
@@ -159,7 +159,6 @@ final class ChopTreeScript implements ScriptInstance {
         tree = found;
         plan = ChopPlan.of(tree, ChopTuning.REACH_ABOVE_BASE);
         planIndex = 0;
-        consecutiveRejections = 0;
         approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
         phase = Phase.APPROACH;
         return ScriptStatus.RUNNING;
@@ -168,27 +167,25 @@ final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus approach() {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
-            case ARRIVED -> {
-                if (distanceRetried) {
-                    distanceRetried = false;
-                    planIndex++;
-                    phase = Phase.CHOP;
-                } else {
-                    phase = Phase.CHOP;
-                }
-                yield ScriptStatus.RUNNING;
-            }
+            case ARRIVED -> resumeChop();
+            case STUCK, TIMEOUT -> unreachableTree();
+        };
+    }
+
+    private ScriptStatus approachLog() {
+        return switch (approach.tick()) {
+            case MOVING -> ScriptStatus.RUNNING;
+            case ARRIVED -> resumeChop();
             case STUCK, TIMEOUT -> {
-                if (distanceRetried) {
-                    distanceRetried = false;
-                    planIndex++;
-                    phase = Phase.CHOP;
-                } else {
-                    unreachableTree();
-                }
-                yield ScriptStatus.RUNNING;
+                skipLog();
+                yield resumeChop();
             }
         };
+    }
+
+    private ScriptStatus resumeChop() {
+        phase = Phase.CHOP;
+        return ScriptStatus.RUNNING;
     }
 
     private ScriptStatus unreachableTree() {
@@ -207,53 +204,42 @@ final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus chop() {
         if (breaking) {
-            BlockBreaker.Progress progress = breaker.tick();
-            if (progress == BlockBreaker.Progress.BREAKING) {
+            if (breaker.tick() == BlockBreaker.Progress.BREAKING) {
                 return ScriptStatus.RUNNING;
             }
             breaking = false;
-            distanceRetried = false;
-            planIndex++;
+            skipLog();
         }
         while (planIndex < plan.reachable().size()) {
-            BlockPos pos = toPos(plan.reachable().get(planIndex));
-            BlockBreaker.Begin begin = breaker.begin(pos);
+            BlockCoord log = plan.reachable().get(planIndex);
+            BlockBreaker.Begin begin = breaker.begin(toPos(log));
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
-            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !distanceRetried) {
-                distanceRetried = true;
-                BlockCoord base = tree.base();
-                BlockPos groundPos = new BlockPos(base.x(), base.y(), base.z());
-                approach.begin(Vec3.atCenterOf(groundPos), ChopTuning.STAND_DISTANCE);
-                phase = Phase.APPROACH;
+            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloser) {
+                movedCloser = true;
+                approach.begin(standingPointUnder(log), ChopTuning.CLOSE_DISTANCE);
+                phase = Phase.APPROACH_LOG;
                 return ScriptStatus.RUNNING;
             }
-            distanceRetried = false;
-            planIndex++;
+            skipLog();
         }
-        return startApproachBase();
+        return startCollect();
     }
 
-    private ScriptStatus startApproachBase() {
-        approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
-        phase = Phase.APPROACH_BASE;
-        return ScriptStatus.RUNNING;
+    private void skipLog() {
+        planIndex++;
+        movedCloser = false;
     }
 
-    private ScriptStatus approachBase() {
-        return switch (approach.tick()) {
-            case MOVING -> ScriptStatus.RUNNING;
-            case ARRIVED -> startCollect();
-            case STUCK, TIMEOUT -> startCollect(); // если не дошли — пробуем подбирать всё равно
-        };
+    private Vec3 standingPointUnder(BlockCoord log) {
+        return Vec3.atBottomCenterOf(new BlockPos(log.x(), tree.base().y(), log.z()));
     }
 
     private ScriptStatus startCollect() {
-        BlockCoord base = tree.base();
-        collector = new DropCollector(spirit, logFilter, base, ChopTuning.COLLECT_RADIUS, PickupTuning.DEFAULT);
+        collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS, PickupTuning.DEFAULT);
         phase = Phase.COLLECT;
         return ScriptStatus.RUNNING;
     }

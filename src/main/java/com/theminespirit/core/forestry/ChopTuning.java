@@ -12,6 +12,7 @@ public final class ChopTuning {
     public static final int TRUNK_BASE_SPREAD = 1;
     public static final int SEARCH_MAX_LOGS = 256;
     public static final double STAND_DISTANCE = 2.0;
+    public static final double CLOSE_DISTANCE = 0.7;
     public static final int COLLECT_RADIUS = 6;
     public static final int MAX_REJECTED_TREES = 8;
 }

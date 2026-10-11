@@ -26,14 +26,19 @@ final class GameTestFixtures {
     }
 
     static void reset(GameTestHelper helper) {
+        reset(helper, CLEAR_HEIGHT);
+    }
+
+    static void reset(GameTestHelper helper, int clearHeight) {
         for (int x = -CLEAR_MARGIN; x < FLOOR_SIZE + CLEAR_MARGIN; x++) {
-            for (int y = 0; y < CLEAR_HEIGHT; y++) {
+            for (int y = 0; y < clearHeight; y++) {
                 for (int z = -CLEAR_MARGIN; z < FLOOR_SIZE + CLEAR_MARGIN; z++) {
                     helper.setBlock(x, y, z, Blocks.AIR);
                 }
             }
         }
-        for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper), e -> !(e instanceof Player))) {
+        for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper, clearHeight),
+                e -> !(e instanceof Player))) {
             entity.discard();
         }
     }
@@ -92,8 +97,12 @@ final class GameTestFixtures {
     }
 
     private static AABB area(GameTestHelper helper) {
+        return area(helper, CLEAR_HEIGHT);
+    }
+
+    private static AABB area(GameTestHelper helper, int clearHeight) {
         Vec3 first = helper.absoluteVec(new Vec3(-CLEAR_MARGIN, 0, -CLEAR_MARGIN));
-        Vec3 second = helper.absoluteVec(new Vec3(FLOOR_SIZE + CLEAR_MARGIN, CLEAR_HEIGHT, FLOOR_SIZE + CLEAR_MARGIN));
+        Vec3 second = helper.absoluteVec(new Vec3(FLOOR_SIZE + CLEAR_MARGIN, clearHeight, FLOOR_SIZE + CLEAR_MARGIN));
         return new AABB(first, second);
     }
 }
