@@ -12,7 +12,7 @@ failures_log="$OPENCODE_LOG_ROOT/failures.log"
 check() {
     local name="$1" expected_code="$2" expected_runs="$3"
     shift 3
-    export FAKE_STATE="$work/$name.state"
+    export FAKE_STATE="$PWD/$work/$name.state"
     local started=$(date +%s)
     env "$@" scripts/opencode-task.sh "${task_args[@]}" "тестовое задание" >"$work/$name.out" 2>&1
     local code=$? runs=$(cat "$FAKE_STATE" 2>/dev/null || echo 0) took=$(( $(date +%s) - started ))
@@ -37,8 +37,42 @@ check dirty_tree_new_task 3 0 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_re
 task_args=(-s ses_existing)
 check dirty_tree_continue_session 0 1 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_repo"
 task_args=()
-check exhausted 75 6 FAKE_FAILURES=99
+check exhausted 75 6 FAKE_FAILURES=99 OPENCODE_WAIT_LIMIT=0
 grep "перезапуск\|Остановлено" "$work/exhausted.out" | sed 's/^/  /'
 failures_after=$(wc -l < "$failures_log")
 echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+1+6 = 10)"
 tail -n 1 "$failures_log" | sed 's/^/  последняя: /'
+
+# Режим ожидания (короткие интервалы через переменные): 5 быстрых перезапусков исчерпаны, дальше — пробы провайдера.
+wait_env=(OPENCODE_RETRY_DELAYS="1 1 1 1 1" OPENCODE_PROBE_INTERVAL=2 OPENCODE_PROBE_TIMEOUT=3)
+check_probes() {
+    local name="$1" min="$2" max="$3" probes
+    probes=$(cat "$work/$name.state.probes" 2>/dev/null || echo 0)
+    local verdict=FAIL
+    [ "$probes" -ge "$min" ] && [ "$probes" -le "$max" ] && verdict=OK
+    echo "$verdict $name: проб=$probes (ожидал $min..$max)"
+}
+failures_before=$(wc -l < "$failures_log")
+check provider_returns_during_wait 0 7 FAKE_FAILURES=6 FAKE_PROBE_FAILURES=2 OPENCODE_WAIT_LIMIT=60 "${wait_env[@]}"
+check_probes provider_returns_during_wait 3 3
+last_run="$(grep '^ARGS: ' "$work/provider_returns_during_wait.state.args" | tail -n 1)"
+case "$last_run" in
+    *"-s ses_fake123 "*"Продолжай выполнение"*) echo "OK provider_returns_during_wait: после возврата продолжена та же сессия (-s ses_fake123, текст продолжения)" ;;
+    *) echo "FAIL provider_returns_during_wait: последний запуск не продолжает сессию: ${last_run:0:120}" ;;
+esac
+probe_dir_used="$(grep '^PROBE: ' "$work/provider_returns_during_wait.state.args" | sort -u | sed 's/^PROBE: //')"
+case "$probe_dir_used" in
+    "$PWD"*) echo "FAIL provider_returns_during_wait: проба шла внутри репозитория: $probe_dir_used" ;;
+    *) echo "OK provider_returns_during_wait: проба шла вне репозитория ($probe_dir_used)" ;;
+esac
+new_lines="$(tail -n +$((failures_before + 1)) "$failures_log")"
+waits=$(grep -cP 'ожидание провайдера	' <<<"$new_lines"); back=$(grep -c 'провайдер вернулся' <<<"$new_lines")
+[ "$waits" = 2 ] && [ "$back" = 1 ] && v=OK || v=FAIL
+echo "$v provider_returns_during_wait: в failures.log проб ожидания=$waits (ожидал 2), «провайдер вернулся»=$back (ожидал 1)"
+failures_before=$(wc -l < "$failures_log")
+check wait_limit_exhausted 75 6 FAKE_FAILURES=99 FAKE_PROBE_FAILURES=99 OPENCODE_WAIT_LIMIT=14 "${wait_env[@]}"
+check_probes wait_limit_exhausted 2 4
+grep "жду провайдера\|предел ожидания" "$work/wait_limit_exhausted.out" | sed 's/^/  /'
+gave_up=$(tail -n +$((failures_before + 1)) "$failures_log" | grep -c 'ожидание провайдера исчерпано')
+[ "$gave_up" = 1 ] && v=OK || v=FAIL
+echo "$v wait_limit_exhausted: в failures.log «ожидание провайдера исчерпано»=$gave_up (ожидал 1)"

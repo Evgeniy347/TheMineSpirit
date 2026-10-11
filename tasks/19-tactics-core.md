@@ -1,0 +1,225 @@
+# 19 — Ядро тактики: факты обстановки, оценка «бой / отход / игнор», режимы боя
+
+Источник: `todo.md` → «Тактическое и стратегическое поведение» (слои «политики → тактика → стратегия», «Оценка обстановки»,
+«Матрица решений и коэффициенты», «Режимы боя», «Сценарии боя и отхода», «Тестирование решений»), «Карта действий духа» → «Бой и
+охота» (`set_combat_mode`, `defend`, `guard_area`, `hunt_hostile`), «Управление и ИИ» (тактика детерминированная, LLM — только
+стратегия; критичное решает тактика немедленно, без ожидания LLM); `AGENTS.md` → «Решения пользователя» (стратег — внешний
+ИИ-агент по REST, мод сам LLM не вызывает). Идеи — `docs/research/npc-ai-commands.md` (Citizens: `Goal.shouldExecute/run/reset`,
+приоритет и «когда цель» отдельно от «как бить») и `docs/research/navigation-movement.md` (AltoClef: реактивные цепочки
+`MobDefenseChain` поверх основной задачи; Baritone: `GoalRunAway`, избегание сущностей). Код сторонних проектов не копируется
+(лицензии — `docs/research/README.md`).
+
+Перед работой прочитай `AGENTS.md`, `docs/CONVENTIONS.md` (Быстрый путь — **весь этот чеклист только в `core`**, без
+`net.minecraft`; Структура; Ошибки — тихий fallback запрещён; комментарии — минимум, причина в тесте), `docs/TESTING.md`
+(свойства jqwik, сторожа, «тест обязан уметь краснеть», `@ParameterizedTest` для таблиц), `docs/GIT.md`. Код: образцы данных
+и валидации — `core/script/{ParamSpec,CatalogLimits}`, `core/observation/{EntityRef,WorldObservation,IdFilter}`,
+`core/mining/{Cell,SafetyView}` (формат «мир из картинок» в тестах), загрузка JSON — `core/plan/PlanParser`
+(Jackson уже в `core`), сторож `CoreIsolationTests`. Публикацию и перезапуск сервера не делать.
+
+**Границы.** Адаптер (чтение мира, команды, исполнение действий, `set_combat_mode`) в этот чеклист **не входит**: он
+пишется отдельным заданием поверх готового API. Политики безопасности — чеклист 20 (они выше тактики и не зависят от
+неё); этот чеклист их не реализует, только уважает порядок слоёв (п. 17).
+
+## Что должно получиться
+
+Чистая функция «обстановка → решение», которую адаптер позже вызывает раз в `EVAL_INTERVAL_TICKS` (10, предварительно)
+или по событию «ударили»:
+
+`TacticsEngine.step(Situation, TacticsMemory, long nowTick) → TacticalOutcome(decision, action, retreatMethod, state, mode, trace, memory')`
+
+- **Факты** (`Situation`): свой потенциал (HP, броня, урон оружия, дальний бой с боезапасом, еда, блоки для баррикады,
+  вода-ведро, союзники рядом, лечилки), противники (число, тип, дистанция, HP-доля, броня, видимость, нацелен ли на нас),
+  среда (лава/обрыв рядом, укрытие, вода, свет, время суток, путь домой и его длина, доступность способов отхода),
+  приказы (режим боя, зона охраны, защищаемый, «страж-радиус»).
+- **Оценка**: `score(вариант) = Σ весᵢ · факторᵢ` для `FIGHT`, `RETREAT`, `IGNORE`; факторы — фиксированный упорядоченный
+  набор, веса и пороги — данные (JSON-ресурс), а не код. Побеждает больший счёт; ничья — по фиксированному порядку
+  `tieBreak`. Решение объяснимо: `trace` перечисляет вклад каждого фактора и сработавшее правило.
+- **Жёсткие правила безопасности выше оценки**: декларативная таблица с приоритетом и условиями на факты (например
+  «HP < 25 % и враги рядом → отход», «отступать некуда → бой», «режим passive не нападает», «лава рядом — драться нельзя»).
+- **Таблица «ситуация → действие»** (после решения): `ENGAGE`, `SHOOT`, `DEFEND_AREA`, `PROTECT`, `RETREAT`, `CONTINUE`
+  — тоже данные с приоритетом.
+- **Режимы боя** `passive / defensive / protect / guard_area / aggressive` — таблица параметров (радиус реакции, радиус
+  преследования, кто считается угрозой) и декларативные условия входа/выхода; **leash-радиус**: за границей зоны не
+  преследуем и возвращаемся к якорю.
+- **Отход**: выбор способа из `HOME / COVER / KITE / WATER / BARRICADE / PILLAR` по таблице условий и полезности с учётом
+  свойств врагов («кого вода не спасает»: утопленники, лучники; «кого баррикада не спасает»: стрелки, криперы; «кого
+  столб не спасает»: стрелки, летающие), плюс побочное действие `CALL_HELP`.
+- **Состояние боя** `CALM → ENGAGED → RETREATING → RECOVERING` — конечный автомат с таблицей переходов (данные).
+- **Детерминизм и устойчивость**: одинаковые факты (в любом порядке врагов) — одинаковое решение; гистерезис не даёт решению
+  дрожать на шуме; при любых допустимых фактах решение определено.
+
+## Общие точки с другими чеклистами (merge)
+
+- Новый пакет `core/tactics/*`, ресурсы `src/main/resources/data/theminespirit/tactics/*.json`, тесты `core/tactics/*`,
+  `src/test/resources/tactics/scenarios.json` — **файлов, общих с 10–18, нет**.
+- `docs/TACTICS.md` (новый, ≤ 150 строк: схема JSON, как добавить врага, правило, режим) — строка в таблицу `AGENTS.md` и в
+  карту `README.md` тем же коммитом (правило `AGENTS.md`). Эти два файла правят и другие чеклисты (строки таблиц):
+  возможен тривиальный конфликт «оставить обе стороны».
+- `CatalogLimits`, `CoreScripts`, `SpiritScripts`, `ScriptInstance` **не трогаются**: скрипты `set_combat_mode`, `attack`,
+  `defend`, `retreat` подключит адаптерный чеклист.
+- Свойства jqwik пишутся так, чтобы укладываться в 200 прогонов (после чеклиста 18 дефолт быстрого тира станет 200).
+
+## Часть А — факты, данные, загрузка
+
+- [ ] 1. **Перечисления и факты** — `core/tactics/{CombatMode,TacticalOption,TacticalAction,TacticalState,TimeOfDay}`;
+      `SelfFacts`, `EnemyFact`, `EnvFacts`, `Orders`, `Situation` — неизменяемые записи с проверкой в конструкторе
+      (доли 0..1, HP ≥ 0, броня 0..20, дистанции ≥ 0, не `NaN`/`∞`; нарушение — `IllegalArgumentException` с полем и допустимым
+      диапазоном). `Situation` канонизирует врагов: сортировка `(дистанция, тип, HP-доля, id)`; сверх `MAX_ENEMIES = 16`
+      (предварительно) хвост сворачивается в агрегат «ещё n того же типа» — порядок и усечение детерминированы.
+      Тесты (красными до реализации): таблица отказов конструкторов (≥ 15 строк); канонизация — свойство «любая перестановка
+      врагов даёт равную `Situation`»; усечение сохраняет число врагов и суммарный урон.
+- [ ] 2. **Профили врагов** — `EnemyProfile(type, hp, dps, speed, ranged, explosive, swims, flies, tier)` и
+      `enemies.json`: `minecraft:zombie`, `husk`, `drowned` (swims), `skeleton` (ranged), `stray`, `spider`, `cave_spider`,
+      `creeper` (explosive), `witch` (ranged), `enderman`, `slime`, `phantom` (flies), `pillager` (ranged), `vindicator`,
+      `ravager`, `blaze` (flies, ranged), `wither_skeleton`, `piglin_brute`, `warden`, плюс `default` для неизвестного типа
+      (консервативный: hp 20, dps 4, speed 1.0). Цифры (предварительно): zombie hp 20 dps 3 speed 0.23; skeleton hp 20 dps 4
+      ranged; creeper hp 20 dps 0 explosive (взрыв — отдельный фактор, а не dps); spider hp 16 dps 2 speed 0.3; drowned
+      hp 20 dps 3 swims; phantom hp 20 dps 3 flies; vindicator hp 24 dps 6; ravager hp 100 dps 8; warden hp 500 dps 30.
+      Тест на файл: все типы уникальны, значения в диапазоне, есть `default`, шаблон ключей — `minecraft:` + `[a-z_]+`.
+- [ ] 3. **Каталог фактов и условия** — `core/tactics/{FactName,FactMap,Comparison,Condition}`. `FactName` — единый реестр имён
+      с типом (`NUM`, `BOOL`, `ENUM`): `self.hpFraction`, `self.armor`, `self.dps`, `self.speed`, `self.food`, `self.blocks`,
+      `self.hasRanged`, `self.hasWaterBucket`, `self.allies`, `self.healItems`; `enemy.count`, `enemy.visibleCount`,
+      `enemy.nearest`, `enemy.nearestExplosive`, `enemy.totalHp`, `enemy.totalDps`, `enemy.fastest`, `enemy.anyRanged`,
+      `enemy.anyExplosive`, `enemy.anySwims`, `enemy.anyFlies`, `enemy.targetingSelf`; `env.lavaNear`, `env.dropHeight`,
+      `env.light`, `env.night`, `env.homeDistance`, `env.homeReachable`, `env.coverDistance`, `env.waterDistance`,
+      `env.escapeAvailability`; `order.mode`, `order.zoneDistance`, `order.leashLeft`, `order.protectedThreatened`,
+      `order.helpAvailable`; `time.sinceHit`, `time.sinceEnemySeen`; `state.tactical`; `derived.winMargin`.
+      `FactMap.from(Situation, derived)` строит плоскую карту. `Condition` — конъюнкция атомов `{fact, op, value}`, `op` ∈
+      `< <= > >= == != in`; значение проверяется по типу факта; неизвестный факт, оператор или несоответствие типа — ошибка
+      загрузки с путём в файле. Тесты: таблица ≥ 20 атомов (граница `<` против `<=`, `in` для enum, bool); отказы разбора.
+- [ ] 4. **Загрузчик и валидатор конфигурации** — `core/tactics/TacticsConfig` читает набор ресурсов
+      `tactics/{enemies,weights,rules,modes}.json` с classpath (`loadDefault()`) либо из переданных строк (для тестов);
+      проверяет: полная матрица весов (каждый фактор × каждый вариант), нет лишних/неизвестных полей, уникальные `id` правил,
+      приоритеты целые, пороги в диапазонах, все ссылки на режимы/действия/способы отхода существуют. Любое нарушение —
+      `IllegalStateException` «файл → путь → что не так → что проверить». Тесты: валидный файл читается; ≥ 15 мутаций
+      (удалён вес, неизвестный фактор, опечатка в режиме, дубль `id`, порог 1.5, пустая таблица) — каждая даёт ошибку с
+      нужным путём; ресурс по умолчанию грузится (тест на сам файл).
+
+## Часть Б — оценка и жёсткие правила
+
+- [ ] 5. **Факторы** — `core/tactics/Factor` (enum, порядок объявления = порядок членов суммы, не менять без причины):
+      `BIAS` (=1), `WIN_MARGIN`, `LOW_HP`, `ENEMY_PRESSURE`, `PROXIMITY`, `RANGED_EXPOSURE`, `EXPLOSIVE_NEAR`, `ALLY_SUPPORT`,
+      `ESCAPE_ROUTE`, `TERRAIN_RISK`, `DARKNESS`, `HUNGER`, `PROTECT_URGENCY`, `LEASH_PRESSURE`, `HEALING_AVAILABLE`; каждый —
+      чистая функция `Situation → double` в [−1; 1] (определения — в `docs/TACTICS.md`). Ключевая формула (предварительно):
+      `ownEhp = hp / (1 − min(0.8, 0.04 × броня))`, `timeToKill = Σ hp врагов / max(0.1, свой dps)`,
+      `timeToDie = ownEhp / max(0.1, Σ dps врагов)`, `WIN_MARGIN = clamp(log2(timeToDie / timeToKill) / 3, −1, 1)`;
+      нет врагов — 0. Тесты: таблица значений каждого фактора на 3–4 ситуациях; границы (нет врагов, один, `MAX_ENEMIES`);
+      свойства: все факторы конечны и в диапазоне; **монотонность**: больше брони/HP/урона у нас — `WIN_MARGIN` не убывает;
+      больше врагов того же типа — не растёт.
+- [ ] 6. **Веса и оценка** — `weights.json`: матрица `вариант × фактор`, `tieBreak: [RETREAT, FIGHT, IGNORE]`, `stickiness`, `holdTicks`.
+      `Scorer.score(Situation, ScoreWeights)` → `Map<TacticalOption, Double>` + вклад каждого члена для `trace`.
+      Стартовые веса (предварительно; истина — сценарии п. 14, веса подгоняются под них): `BIAS` 0 / 0.2 / 0.5
+      (FIGHT / RETREAT / IGNORE); `WIN_MARGIN` +2.0 / −1.6 / 0; `LOW_HP` −1.5 / +2.0 / 0; `ENEMY_PRESSURE` −0.5 / +1.2 / −0.8;
+      `PROXIMITY` +1.0 / +0.6 / −2.0; `RANGED_EXPOSURE` −0.4 / +0.8 / −0.3; `EXPLOSIVE_NEAR` −1.0 / +2.0 / −0.5;
+      `ALLY_SUPPORT` +0.8 / −0.5 / 0; `ESCAPE_ROUTE` 0 / +0.6 / 0; `TERRAIN_RISK` −0.8 / +0.4 / 0; `DARKNESS` −0.2 / +0.3 / 0;
+      `HUNGER` −0.3 / +0.3 / 0; `PROTECT_URGENCY` +1.5 / −0.6 / −1.0; `LEASH_PRESSURE` −1.5 / 0 / +1.2; `HEALING_AVAILABLE` +0.3 / −0.3 / 0.
+      Тесты: счёт равен ручной сумме на 5 примерах; сумма линейна по факторам (свойство: удвоение всех факторов удваивает счёт при
+      `BIAS = 0`); ничья разрешается по `tieBreak` (пример с равными весами); **метаморфические свойства**: рост HP не превращает
+      `FIGHT` в `RETREAT`, рост числа врагов не превращает `RETREAT` в `FIGHT` (при прочих равных).
+- [ ] 7. **Жёсткие правила** — `rules.json → hard`: упорядоченные по приоритету правила `{id, priority, when[], then:{decision | exclude[]}}`;
+      первое подходящее с `decision` выигрывает, все подходящие `exclude` вычёркивают варианты из оценки (если остался один —
+      он; если вычеркнуто всё — `RETREAT`, если отход возможен, иначе `FIGHT`). Стартовый набор (приоритет — убывающий, всё
+      предварительно): `no_enemies_ignore` 100 (`enemy.count == 0` → IGNORE); `cornered_fight` 95 (`env.escapeAvailability == 0`,
+      `enemy.nearest <= 3` → FIGHT); `critical_hp_retreat` 90 (`self.hpFraction < 0.25`, `enemy.count >= 1` → RETREAT);
+      `explosive_close_retreat` 85 (`enemy.nearestExplosive <= 5` → RETREAT); `passive_never_fights` 80 (`order.mode == passive`,
+      `enemy.count >= 1` → RETREAT); `no_fight_near_lava` 70 (`env.lavaNear <= 2` → exclude FIGHT); `outside_leash_ignore` 60
+      (`order.leashLeft < 0`, режим `guard_area|defensive`, `enemy.nearest > 3` → IGNORE). Тесты: таблица ≥ 20 сценариев по правилам
+      (каждое срабатывает и не срабатывает на границе), приоритет (два правила — выигрывает старший), `exclude` оставляет один вариант,
+      «вычеркнуто всё» даёт `RETREAT`/`FIGHT` по доступности отхода; **свойство: жёсткое правило с `decision` не может быть
+      перебито ни при каких весах** (случайные матрицы весов).
+- [ ] 8. **Гистерезис** — `core/tactics/Hysteresis` + `TacticsMemory(previous, since, state, ...)`: прежнее решение получает
+      `stickiness` (0.25) к счёту и удерживается минимум `holdTicks` (40, предварительно); удержание снимается, если сработало
+      жёсткое правило или HP упали более чем на 30 % за окно. Тесты: пример «шум факторов ±5 % не переключает решение чаще раза за
+      окно»; свойство — на случайном ряду фактов решение меняется не чаще, чем раз в `holdTicks`, кроме случаев жёстких правил;
+      память детерминирована (тот же вход и память → тот же выход).
+
+## Часть В — таблицы, режимы, отход, автомат
+
+- [ ] 9. **Таблица «ситуация → действие»** — `rules.json → actions`: `{id, priority, when[], then:{action}}`. Стартово:
+      `shoot_at_range` (FIGHT, `self.hasRanged`, `enemy.nearest >= 5`, `enemy.visibleCount >= 1` → SHOOT); `defend_area` (FIGHT,
+      `order.mode == guard_area` → DEFEND_AREA); `protect_ward` (FIGHT, `order.mode == protect`, `order.protectedThreatened` → PROTECT);
+      `engage_default` (FIGHT → ENGAGE); `retreat_default` (RETREAT → RETREAT); `continue_default` (IGNORE → CONTINUE). Для любого
+      решения должно найтись действие — проверка при загрузке (замыкающее правило обязательно). Тесты: таблица ≥ 15 строк; свойство
+      «для любой ситуации действие определено и согласуется с решением (FIGHT → не RETREAT/CONTINUE)».
+- [ ] 10. **Режимы и leash** — `modes.json`: на режим `{initiates, engageRadius, pursuitRadius, anchor (self|zone|protected), leash,
+      returnToAnchor}`. Стартово (предварительно): `passive` — не инициирует, радиусы 0; `defensive` — engage 6, pursuit 8, якорь —
+      точка начала боя; `protect` — engage 16 вокруг подопечного, pursuit 12 от него; `guard_area` — engage = радиус зоны, pursuit
+      = радиус зоны + 4, якорь — центр, возврат после боя; `aggressive` — engage 24, pursuit 32. `Leash.check(mode, anchor, pos,
+      targetPos, params)` → `Within | Exceeded(остаток)`; факты `order.leashLeft`/`order.zoneDistance` строит `FactMap`. Условия
+      входа/выхода: `rules.json → modeTransitions` (`{id, from[], to, when[]}`), стартово: `aggressive → defensive` при
+      `self.hpFraction < 0.3`, обратно при `>= 0.7` (если приказ — aggressive); `protect → defensive`, если подопечного нет;
+      `guard_area → defensive`, если зона не задана; приказ стратега (`Orders.mode`) — запоминается и не теряется при временных
+      сменах. Тесты: таблицы переходов (≥ 12 строк); `Leash` — свойства: монотонность по расстоянию, цель за `pursuitRadius` не
+      преследуется, возврат к якорю после боя; все режимы описаны в файле.
+- [ ] 11. **Выбор способа отхода** — `core/tactics/{RetreatMethod,RetreatSelector}`, `rules.json → retreat`: `{method, requires[],
+      utility, bonus[]}`. Стартово: `HOME` (`env.homeReachable`, `env.homeDistance <= 80`, `self.speed >= enemy.fastest × 0.9`; полезность
+      `1 − homeDistance/160`); `COVER` (`env.coverDistance <= 12`; 0.8 при `enemy.anyRanged`, иначе 0.4); `KITE` (`self.hasRanged`,
+      `self.speed >= enemy.fastest`; 0.7); `WATER` (`env.waterDistance <= 8`, не `enemy.anySwims`, не `enemy.anyRanged`; 0.6);
+      `BARRICADE` (`self.blocks >= 6`, не ranged, не explosive, `enemy.nearest >= 3`; 0.5); `PILLAR` (`self.blocks >= 8`, не ranged, не
+      flies; 0.4); побочное `CALL_HELP` (`order.helpAvailable`) добавляется к любому. Максимум полезности, ничья — порядок `HOME, COVER,
+      KITE, WATER, BARRICADE, PILLAR`. Ни один способ не подходит — `NONE` (тогда `env.escapeAvailability` для жёсткого правила
+      «отступать некуда» считается 0). Тесты — **таблица враг × доступные способы → выбранный**: утопленник — не вода; скелеты —
+      укрытие, не баррикада и не столб; крипер — не баррикада; фантом — не столб; зомби и ведро воды рядом — вода; близкий дом и
+      скорость выше — дом; пусто — `NONE`. Свойство: выбранный способ всегда удовлетворяет собственному `requires`.
+- [ ] 12. **Автомат состояния боя** — `core/tactics/StateMachine`, `rules.json → states`: `CALM → ENGAGED` (решение FIGHT),
+      `CALM|ENGAGED → RETREATING` (RETREAT), `ENGAGED → CALM` (`enemy.count == 0` ≥ 20 тиков), `RETREATING → RECOVERING`
+      (`enemy.visibleCount == 0`, `time.sinceEnemySeen >= 60`), `RECOVERING → CALM` (`self.hpFraction >= 0.7` или 600 тиков),
+      `RECOVERING → RETREATING` (RETREAT при появлении врага). Тесты: таблица переходов; свойство «из любого состояния при любых
+      фактах существует выход в CALM за конечное число шагов» (нет тупиков), нет перехода, не описанного таблицей.
+
+## Часть Г — движок, сценарии, свойства
+
+- [ ] 13. **`TacticsEngine`** — собирает всё: факты → производные → жёсткие правила → оценка (с гистерезисом) → действие → способ
+      отхода → автомат → режим; возвращает `TacticalOutcome` с `trace` (сработавшее правило/вклады факторов/почему не FIGHT).
+      Вызов без побочных эффектов и ввода-вывода, время — аргумент `nowTick`. Тесты: интеграционные примеры по 5 сценариям с
+      проверкой `trace`.
+- [ ] 14. **Сценарии-таблицы** — `src/test/resources/tactics/scenarios.json` (≥ 40 строк, каждая: `name`, факты в сжатом виде
+      (минимум полей, остальное — умолчания `ScenarioDefaults`), ожидание: класс решения, действие, способ отхода, id сработавшего
+      правила) и параметризованный тест `TacticsScenarioTests`. Обязательные сценарии (минимум): «один зомби, меч, полное HP → FIGHT»;
+      «пять зомби, без оружия → RETREAT»; «крипер в 3 блоках → RETREAT»; «скелеты на дистанции 12, укрытие в 5, брони нет → RETREAT /
+      COVER»; «passive, зомби в 2, отступать некуда → FIGHT (cornered)»; «guard_area, враг за leash → IGNORE»; «protect, игрока бьют,
+      HP полное → FIGHT/PROTECT»; «protect, но HP 20 % → RETREAT»; «ночь, орда, дом в 30 → RETREAT/HOME»; «лук есть, враг в 10 → FIGHT/SHOOT»;
+      «враг в воде-только-утопленник, ведро есть → не WATER»; «враги нет → IGNORE»; «aggressive, вдвое сильнее → FIGHT»;
+      «aggressive, HP 25 % → RETREAT»; «ravager против железной брони и меча → RETREAT»; «воин слабее, но союзников 3 → FIGHT».
+      **Охват:** сторож-тест проверяет, что каждое правило из `rules.json` (hard, actions, modeTransitions, states, retreat) срабатывает
+      хотя бы в одном сценарии (мёртвое правило — красный тест с перечнем), и что у сторожа есть тест на собственный шаблон.
+- [ ] 15. **Свойства** (`TacticsProperties`, jqwik, генераторы допустимых `Situation`): (а) **определённость** — для любых допустимых
+      фактов `step` не бросает и возвращает решение/действие, согласованные между собой; (б) **детерминизм** — два вызова с равными
+      входами равны побитово (включая `trace`); (в) **перестановка врагов** не меняет результат; (г) **монотонность безопасности** —
+      при прочих равных падение HP ниже порога `critical_hp_retreat` никогда не даёт `FIGHT`, кроме `cornered`; (д) **passive никогда не
+      даёт `FIGHT`, кроме `cornered`**; (е) **leash** — при `order.leashLeft < 0` в режимах охраны решение не `FIGHT`, кроме врага ≤ 3;
+      (ж) **JSON-устойчивость** — перестановка ключей/пробелы в ресурсе не меняют результат. Каждое свойство докажи подлогом: поменяй
+      приоритет правила / знак веса — свойство краснеет.
+- [ ] 16. **Тест на масштаб (числа операций)** — `step` на ситуации с `MAX_ENEMIES` врагами: число вычислений факторов == числу
+      факторов (счётчик в `Scorer`, доступный пакету), обращений к таблицам правил ≤ `правил × 1` за вызов, ни одного обращения к
+      файлам/ресурсам после `loadDefault()` (счётчик загрузок == 1 за процесс); `TacticsConfig` потокобезопасен для чтения (неизменяем).
+- [ ] 17. **Порядок слоёв** — `core/tactics/LayerOrder` (данные, не логика): объявлен приоритет `POLICY > TACTICS > STRATEGY > IDLE` и
+      правило «прерванный слой возобновляется»; тест `LayerOrderTests` фиксирует порядок, чтобы адаптер (чеклист 20 и следующий за
+      ним) не мог переставить слои молча. Само арбитрирование тика — чеклист 20.
+- [ ] 18. **Документ** — `docs/TACTICS.md` (≤ 150 строк): схема четырёх JSON, список факторов и фактов, как добавить врага, правило,
+      режим, способ отхода; как читать `trace`; запись в `AGENTS.md` (таблица) и `README.md` (карта документов) в том же коммите.
+
+## Красными до реализации
+
+Все тесты `core/tactics/*` (классов нет), `TacticsScenarioTests` (нет `TacticsEngine`), сторож охвата правил. Назови красные до прогона.
+Подлоги для проверки, что тесты умеют краснеть: поменять порядок `tieBreak` — краснеет ничья; убрать `no_fight_near_lava` — краснеет сценарий
+лавы; поменять знак `LOW_HP` у `RETREAT` — краснеет метаморфическое свойство; сделать `Situation` изменяемой по порядку врагов — краснеет (в).
+
+## Стоимость в тике
+
+Ядро вызывается адаптером не каждый тик, а раз в `EVAL_INTERVAL_TICKS` (10, предварительно) или по событию «ударили»; один вызов — O(факторы
+15 + правила ≈ 40 + враги ≤ 16), без выделения больших структур и без обращения к файлам. Построение `Situation` адаптером — задача
+адаптера: чтение мира ограничено радиусом `SENSE_RADIUS = 24` (предварительно), один запрос сущностей на вызов, без обхода блоков по всему радиусу.
+
+## Завершение
+
+- [ ] 19. `./gradlew test` зелёный (адаптера и GameTest нет, `runGameTestServer` не обязателен). Коммиты по пунктам (`test:`/`feat:`/`docs:`), хук
+      требует тест в `feat:`. `todo.md` не править. Отчёт: хэши; сколько тестов прошло и упало; красные до реализации; время самого медленного
+      класса; какие веса пришлось подогнать под сценарии (и почему); что не сделано.
+
+## Не входит
+
+Адаптер (сбор фактов из мира, исполнение действий атаки/стрельбы/отхода, `set_combat_mode`, REST-поле режима); сама стрельба и бой; ротация
+защитников и командная тактика (todo → «Оборона базы»); гибель игрока и порталы (todo → «Порталы и гибель игрока»); обучение весов;
+переопределение конфигурации из файла сервера (загрузчик принимает строки, подключить файл — отдельным заданием); политики безопасности
+(чеклист 20).

@@ -46,4 +46,20 @@ final class FallbackExecutor extends SingleChildExecutor {
     private void failAll() {
         fail(lastReason != null ? lastReason : ALL_FAILED, lastCause);
     }
+
+    @Override
+    TaskProgress buildProgress() {
+        return new TaskProgress.FallbackAt(index, lastReason, current() == null ? null : current().snapshot());
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.FallbackAt at = (TaskProgress.FallbackAt) progress;
+        index = at.index();
+        lastReason = at.lastReason();
+        if (at.child() != null) {
+            current(spawn(steps.get(at.index())));
+            current().restore(at.child());
+        }
+    }
 }

@@ -13,6 +13,10 @@ public final class CatalogLimits {
     public static final int SCAN_RADIUS_MIN = ScanRadius.MIN;
     public static final int SCAN_RADIUS_MAX = ScanRadius.MAX;
 
+    public static final int DROP_RADIUS_MIN = 1;
+    public static final int DROP_RADIUS_MAX = 16;
+    public static final int DROP_RADIUS_DEFAULT = 8;
+
     // AGENTS.md: лимиты плана (repeat.times 1..64)
     public static final int REPEAT_TIMES_MIN = 1;
     public static final int REPEAT_TIMES_MAX = 64;
@@ -21,12 +25,12 @@ public final class CatalogLimits {
     public static final int WAIT_TICKS_MIN = 1;
     public static final int WAIT_TICKS_MAX = 6000;
 
-    // Контейнеры инвентаря (чеклист 16): радиус поиска ближайшего сундука
+    // Радиус поиска ближайшего контейнера у скриптов инвентаря
     public static final int CONTAINER_RADIUS_MIN = 1;
     public static final int CONTAINER_RADIUS_MAX = 16;
     public static final int CONTAINER_RADIUS_DEFAULT = 8;
 
-    // Чеклист 16: разгрузка на базе, когда занято столько слотов инвентаря из 36
+    // Сколько слотов инвентаря занимает дух, прежде чем разгружаться на базе
     public static final int UNLOAD_TRIGGER_SLOTS = 24;
 
     // AGENTS.md: follow.radius 0..16
@@ -37,4 +41,8 @@ public final class CatalogLimits {
     public static final int WORLD_Y_MIN = -64;
     public static final int WORLD_Y_MAX = 319;
     public static final int WORLD_HORIZONTAL_LIMIT = 30_000_000;
+
+    public static final int HARVEST_RADIUS_MIN = 1;
+    public static final int HARVEST_RADIUS_MAX = 32;
+    public static final int HARVEST_RADIUS_DEFAULT = 16;
 }

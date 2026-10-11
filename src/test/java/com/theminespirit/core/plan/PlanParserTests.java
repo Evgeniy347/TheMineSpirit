@@ -55,13 +55,13 @@ class PlanParserTests {
     @Test
     void parse_FallbackNode_ReturnsSteps() {
         String json = "{\"type\":\"fallback\",\"steps\":["
-                + "{\"type\":\"script\",\"script\":\"collect_drops\"},"
+                + "{\"type\":\"script\",\"script\":\"sort_chest\"},"
                 + "{\"type\":\"script\",\"script\":\"return_home\"}]}";
 
         TaskNode node = PlanParser.parse(json, CATALOG);
 
         assertEquals(new FallbackNode(List.of(
-                new ScriptCall("collect_drops", Map.of("overflow", "by_value")),
+                new ScriptCall("sort_chest", Map.of()),
                 new ScriptCall("return_home", Map.of()))), node,
                 "Узел fallback обязан нести шаги по порядку: потеря порядка ломает стратегию 'первый успешный'");
     }

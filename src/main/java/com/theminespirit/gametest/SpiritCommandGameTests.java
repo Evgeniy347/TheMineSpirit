@@ -32,7 +32,7 @@ public final class SpiritCommandGameTests {
     }
 
     private static String spiritSelector(int limit) {
-        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,limit=" + limit + "]";
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,sort=nearest,limit=" + limit + "]";
     }
 
     @GameTest(template = "empty", timeoutTicks = 200)
