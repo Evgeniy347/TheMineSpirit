@@ -60,3 +60,10 @@
       `pos` должен быть массивом `[x, y, z]` (у наблюдения, сущностей и контейнеров), пустые `id` не выводятся вовсе
       (`"id": null` — шум в промпте ИИ), `hash` — 64 hex-символа без префикса (API.md уже поправлен). Приведи
       `ObservationJson` к контракту, эталон в тесте — к примеру из API.md, round-trip остаётся.
+- [ ] R7. `ObservationJson` (c319127): (а) два механизма одного правила — зарегистрированный `BlockCoordSerializer`
+      и ручная перекладка в `int[]` в DTO; оставь один (сериализатор + десериализатор `BlockCoord` ⇄ `[x, y, z]`
+      или DTO с `int[]`, но не оба), перекладка `x, y, z` — в одном месте. (б) `pos` неверной длины (`[1, 2]`)
+      даёт `ArrayIndexOutOfBoundsException` мимо `catch` — для будущего REST-моста это сбой на чужом вводе.
+      Любой битый JSON → `IllegalArgumentException` с понятной причиной; тест на `pos` из двух и четырёх чисел
+      и на `pos` не массивом. (в) Убери неиспользуемое `disable(WRITE_DATES_AS_TIMESTAMPS)` и полные имена
+      `com.fasterxml.jackson.core.JsonGenerator` / `SerializerProvider` — импорты.
