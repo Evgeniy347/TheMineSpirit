@@ -246,6 +246,24 @@ tasks.register('slowTest', Test) {
     shouldRunAfter tasks.named('test')
 }
 
+// Пустой тир не должен молча зеленеть: если фильтр не нашёл ни одного теста,
+// задача падает с понятным сообщением. failOnNoDiscoveredTests покрывает только случай
+// без фильтров, а теги (test/slowTest) — это фильтры, поэтому считаем отчёты сами.
+tasks.withType(Test).configureEach {
+    def executedTests = new java.util.concurrent.atomic.AtomicLong()
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            executedTests.set(result.testCount)
+        }
+    }
+    doLast {
+        if (executedTests.get() == 0) {
+            throw new GradleException("Тестовая задача '${name}' выполнила 0 тестов: проверьте фильтры " +
+                    "(теги, --tests). Пустой тир не должен молча зеленеть (см. docs/TESTING.md).")
+        }
+    }
+}
+
 // check проверяет и быстрый, и медленный тир, чтобы build не оставался без инвариантов.
 tasks.named('check') {
     dependsOn tasks.named('test'), tasks.named('slowTest')
