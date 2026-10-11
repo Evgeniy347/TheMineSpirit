@@ -1,0 +1,142 @@
+package com.theminespirit.core.forestry;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
+class TreeShapeTests {
+    private static final BlockCoord AIR_START = new BlockCoord(0, 0, 0);
+
+    @Test
+    void detect_TrunkWithCrown_ReturnsLogsBottomUp() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "#",
+                "L",
+                "L",
+                "L",
+                "L",
+                "L@",
+                "@@");
+        BlockCoord start = new BlockCoord(0, 1, 0);
+
+        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(start, grid),
+                "Ствол с тремя естественными листьями рядом обязан распознаться деревом: иначе дух "
+                        + "пройдёт мимо настоящего дерева");
+
+        assertEquals(new Tree(new BlockCoord(0, 1, 0),
+                        List.of(new BlockCoord(0, 1, 0), new BlockCoord(0, 2, 0), new BlockCoord(0, 3, 0),
+                                new BlockCoord(0, 4, 0), new BlockCoord(0, 5, 0))),
+                tree,
+                "Дерево обязано содержать все брёвна ствола снизу вверх: порядок рубки начинается с основания, "
+                        + "поэтому список брёвен отсортирован по высоте");
+    }
+
+    @Test
+    void detect_TrunkWithDiagonalBranch_ReturnsAllLogs() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "#........",
+                "L........",
+                "LL.......",
+                "L@L@.....",
+                "..@......");
+        BlockCoord start = new BlockCoord(0, 1, 0);
+
+        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(start, grid),
+                "Акация с диагональной веткой обязана распознаться деревом: 26 соседей связывают ветку со стволом");
+
+        assertEquals(List.of(new BlockCoord(0, 1, 0), new BlockCoord(0, 2, 0), new BlockCoord(1, 2, 0),
+                        new BlockCoord(0, 3, 0), new BlockCoord(2, 3, 0)),
+                tree.logs(),
+                "Диагональная ветка входит в дерево целиком: обход по 26 соседям должен захватить ветку "
+                        + "и упорядочить брёвна снизу вверх, а на одном уровне — ближе к основанию");
+    }
+
+    @Test
+    void detect_TwoByTwoTrunk_ReturnsAllEightLogs() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "##\n##",
+                "LL\nLL",
+                "LL\nLL",
+                "@@\n@@");
+        BlockCoord start = new BlockCoord(0, 1, 0);
+
+        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(start, grid),
+                "Ствол 2x2 тёмного дуба обязан распознаться деревом: дух должен рубить толстый ствол целиком");
+
+        assertEquals(8, tree.logs().size(),
+                "Ствол 2x2 из двух слоёв — 8 брёвен: каждое бревно учитывается ровно один раз");
+        assertEquals(Set.copyOf(List.of(new BlockCoord(0, 1, 0), new BlockCoord(1, 1, 0),
+                        new BlockCoord(0, 1, 1), new BlockCoord(1, 1, 1), new BlockCoord(0, 2, 0),
+                        new BlockCoord(1, 2, 0), new BlockCoord(0, 2, 1), new BlockCoord(1, 2, 1))),
+                Set.copyOf(tree.logs()),
+                "Дерево 2x2 обязано собрать все брёвна обеих слоёв, без пропусков и чужих клеток");
+    }
+
+    @Test
+    void detect_HutWithoutLeaves_ReturnsNoLeaves() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "###",
+                "LLL",
+                "LLL",
+                "LLL",
+                "LLL");
+
+        assertEquals(new NotATree(NotATree.Reason.NO_LEAVES), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Хижина из брёвен без листвы обязана быть отвергнута как не-дерево: бревенчатая постройка "
+                        + "игрока не должна ломаться под видом леса");
+    }
+
+    @Test
+    void detect_TrunkInAir_ReturnsNoSoil() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                ".",
+                "L",
+                "L",
+                "L",
+                "@@@");
+
+        assertEquals(new NotATree(NotATree.Reason.NO_SOIL), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Ствол без почвы под основанием обязан быть отвергнут как не-дерево: летающее бревно — арт-объект "
+                        + "или постройка, а не лес");
+    }
+
+    @Test
+    void detect_TwoHundredLogs_ReturnsTooBig() {
+        TreeGrid grid = new TreeGrid().soil(0, 0, 0);
+        for (int y = 1; y <= 200; y++) {
+            grid.log(0, y, 0);
+        }
+
+        assertEquals(new NotATree(NotATree.Reason.TOO_BIG), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Связная группа из 200 брёвен обязана быть отвергнута по размеру: разбор гигантского массива "
+                        + "стоит больше лимита MAX_LOGS и завешивает тик");
+    }
+
+    @Test
+    void detect_TwoLeavesOnly_ReturnsNoLeaves() {
+        TreeGrid grid = TreeGrid.ofLayers(
+                "#",
+                "L",
+                "L",
+                "L",
+                "@@");
+
+        assertEquals(new NotATree(NotATree.Reason.NO_LEAVES), TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Два естественных листа вокруг брёвен — ещё не дерево: граница в три листа отличает лес "
+                        + "от декоративного столба и забора");
+    }
+
+    @Test
+    void detect_StartNotALog_Throws() {
+        TreeGrid grid = TreeGrid.ofLayers("#", "L", "@@@");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TreeShape.detect(AIR_START, grid),
+                "Разбор с не-бревна обязан отказывать: искать дерево с пустой клетки бессмысленно");
+    }
+}
