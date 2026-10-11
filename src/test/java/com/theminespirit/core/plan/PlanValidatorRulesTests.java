@@ -87,6 +87,7 @@ class PlanValidatorRulesTests {
             return;
         }
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
-        assertThrows(PlanValidationException.class, () -> PlanParser.parse(json, CATALOG));
+        assertThrows(PlanValidationException.class, () -> PlanParser.parse(json, CATALOG),
+                "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
     }
 }

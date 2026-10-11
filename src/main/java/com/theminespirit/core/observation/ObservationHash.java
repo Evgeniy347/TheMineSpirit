@@ -5,7 +5,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class ObservationHash {
     private static final char FIELD_SEPARATOR = '\u001f';
@@ -25,9 +27,9 @@ public final class ObservationHash {
         builder.append(obs.radius()).append(FIELD_SEPARATOR);
         appendCoord(builder, obs.position());
         builder.append(FIELD_SEPARATOR);
-        appendInventory(builder, aggregatedInventory(obs.inventory()));
+        appendInventory(builder, obs.inventory());
         builder.append(FIELD_SEPARATOR);
-        appendInventory(builder, aggregatedInventory(obs.blocks()));
+        appendInventory(builder, obs.blocks());
         builder.append(FIELD_SEPARATOR);
         appendEntities(builder, obs.entities());
         builder.append(FIELD_SEPARATOR);
@@ -35,16 +37,7 @@ public final class ObservationHash {
         return builder.toString();
     }
 
-    private static List<ItemCount> aggregatedInventory(List<ItemCount> entries) {
-        java.util.LinkedHashMap<String, Integer> map = new java.util.LinkedHashMap<>();
-        for (ItemCount entry : entries) {
-            map.merge(entry.item(), entry.count(), Integer::sum);
-        }
-        List<ItemCount> result = new ArrayList<>();
-        map.forEach((item, count) -> result.add(new ItemCount(item, count)));
-        result.sort(Comparator.comparing(ItemCount::item));
-        return result;
-    }
+
 
     private static void appendInventory(StringBuilder builder, List<ItemCount> entries) {
         for (ItemCount entry : entries) {

@@ -105,20 +105,28 @@ class WorldObservationTests {
 
 
     @Test
-    void toJson_ContractShape_MatchesApiFields() {
-        WorldObservation obs = observation(
+    void toJson_ContractShape_MatchesExpectedJson() {
+        WorldObservation obs = new WorldObservation(
+                "spirit_1",
+                123456L,
+                new BlockCoord(10, 64, -3),
                 List.of(new ItemCount("oak_log", 5), new ItemCount("iron_pickaxe", 1)),
-                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1))));
+                List.of(new ItemCount("grass_block", 340), new ItemCount("oak_log", 12)),
+                List.of(new EntityRef("minecraft:cow", new BlockCoord(14, 64, -1), 5.0),
+                        new EntityRef("minecraft:sheep", new BlockCoord(2, 64, 1), 9.0)),
+                List.of(new ContainerRef("minecraft:chest", new BlockCoord(8, 63, -5))),
+                32);
         String json = obs.toJson();
-        assertTrue(json.contains("bot"));
-        assertTrue(json.contains("pos"));
-        assertTrue(json.contains("hash"));
-        assertTrue(json.contains("tick"));
-        assertTrue(json.contains("radius"));
-        assertTrue(json.contains("inventory"));
-        assertTrue(json.contains("blocks"));
-        assertTrue(json.contains("entities"));
-        assertTrue(json.contains("containers"));
+        String hash = obs.hash();
+        String expected = "{\"bot\":\"spirit_1\",\"tick\":123456,\"pos\":{\"x\":10,\"y\":64,\"z\":-3},\"radius\":32,"
+                + "\"inventory\":[{\"item\":\"iron_pickaxe\",\"count\":1},{\"item\":\"oak_log\",\"count\":5}],"
+                + "\"blocks\":[{\"item\":\"grass_block\",\"count\":340},{\"item\":\"oak_log\",\"count\":12}],"
+                + "\"entities\":[{\"type\":\"minecraft:cow\",\"pos\":{\"x\":14,\"y\":64,\"z\":-1},\"id\":null,\"distance\":5.0},"
+                + "{\"type\":\"minecraft:sheep\",\"pos\":{\"x\":2,\"y\":64,\"z\":1},\"id\":null,\"distance\":9.0}],"
+                + "\"containers\":[{\"type\":\"minecraft:chest\",\"pos\":{\"x\":8,\"y\":63,\"z\":-5},\"id\":null}],"
+                + "\"hash\":\"" + hash + "\"}";
+        assertEquals(expected, json,
+                "JSON наблюдения обязан строго совпадать с контрактом API: имена полей, порядок, структура, включая hash");
     }
 
 }
