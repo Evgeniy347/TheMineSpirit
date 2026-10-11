@@ -27,7 +27,8 @@
 Сборка, Gradle, скрипты — это `chore`, отдельных типов `build`/`scripts` нет.
 
 Коммит `feat:`/`fix:`, меняющий production-код (`src/main/java`, кроме GameTest), обязан в том же коммите
-менять и тесты (`src/test/java` или GameTest): поведение без теста не защищено.
+менять и тесты (`src/test/java` или GameTest): поведение без теста не защищено. Коммит, меняющий только
+GameTest, — это `test:`, даже если правка родилась из исправления: GameTest лежит в `src/main/java`, но это тест.
 
 Формат и правило про тест проверяет хук `scripts/git-hooks/commit-msg`; после клонирования подключи его:
 `scripts/install-git-hooks.sh`. Обходить хук (`--no-verify`) запрещено.

@@ -1,0 +1,24 @@
+{
+  "enemies": [
+    {"type": "minecraft:zombie", "hp": 20, "dps": 3, "speed": 0.23, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 1},
+    {"type": "minecraft:husk", "hp": 20, "dps": 3, "speed": 0.23, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 1},
+    {"type": "minecraft:drowned", "hp": 20, "dps": 3, "speed": 0.23, "ranged": false, "explosive": false, "swims": true, "flies": false, "tier": 1},
+    {"type": "minecraft:skeleton", "hp": 20, "dps": 4, "speed": 0.25, "ranged": true, "explosive": false, "swims": false, "flies": false, "tier": 2},
+    {"type": "minecraft:stray", "hp": 20, "dps": 4, "speed": 0.25, "ranged": true, "explosive": false, "swims": false, "flies": false, "tier": 2},
+    {"type": "minecraft:spider", "hp": 16, "dps": 2, "speed": 0.3, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 1},
+    {"type": "minecraft:cave_spider", "hp": 12, "dps": 2, "speed": 0.3, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 1},
+    {"type": "minecraft:creeper", "hp": 20, "dps": 0, "speed": 0.25, "ranged": false, "explosive": true, "swims": false, "flies": false, "tier": 2},
+    {"type": "minecraft:witch", "hp": 26, "dps": 3, "speed": 0.25, "ranged": true, "explosive": false, "swims": false, "flies": false, "tier": 2},
+    {"type": "minecraft:enderman", "hp": 40, "dps": 7, "speed": 0.3, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 3},
+    {"type": "minecraft:slime", "hp": 16, "dps": 2, "speed": 0.2, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 1},
+    {"type": "minecraft:phantom", "hp": 20, "dps": 3, "speed": 0.6, "ranged": false, "explosive": false, "swims": false, "flies": true, "tier": 2},
+    {"type": "minecraft:pillager", "hp": 24, "dps": 4, "speed": 0.35, "ranged": true, "explosive": false, "swims": false, "flies": false, "tier": 2},
+    {"type": "minecraft:vindicator", "hp": 24, "dps": 6, "speed": 0.35, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 3},
+    {"type": "minecraft:ravager", "hp": 100, "dps": 8, "speed": 0.3, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 4},
+    {"type": "minecraft:blaze", "hp": 20, "dps": 5, "speed": 0.23, "ranged": true, "explosive": false, "swims": false, "flies": true, "tier": 3},
+    {"type": "minecraft:wither_skeleton", "hp": 20, "dps": 8, "speed": 0.25, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 3},
+    {"type": "minecraft:piglin_brute", "hp": 50, "dps": 7, "speed": 0.35, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 3},
+    {"type": "minecraft:warden", "hp": 500, "dps": 30, "speed": 0.3, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 5},
+    {"type": "default", "hp": 20, "dps": 4, "speed": 1.0, "ranged": false, "explosive": false, "swims": false, "flies": false, "tier": 2}
+  ]
+}

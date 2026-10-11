@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.OreKind;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +35,21 @@ class ScriptCatalogTests {
                 "Каталог обязан находить скрипт по id: иначе планировщик не сможет вызвать известный скрипт");
         assertEquals("пройти", found.orElseThrow().summary(),
                 "find возвращает описание именно запрошенного скрипта: перепутанный id приводит к вызову чужого скрипта");
+    }
+
+    @Test
+    void restrictedTo_SetInDifferentOrder_KeepsCatalogOrder() {
+        ScriptCatalog catalog = ScriptCatalog.of(List.of(
+                new ScriptSpec("scan", "первый", List.of(), List.of(), List.of()),
+                new ScriptSpec("goto", "второй", List.of(), List.of(), List.of()),
+                new ScriptSpec("follow", "третий", List.of(), List.of(), List.of())));
+
+        ScriptCatalog subset = catalog.restrictedTo(new LinkedHashSet<>(List.of("follow", "scan")));
+
+        assertEquals(List.of("scan", "follow"), subset.all().stream().map(ScriptSpec::id).toList(),
+                "Скрипты подкаталога обязаны идти в порядке полного каталога, а не набора: /v1/capabilities "
+                        + "перечисляет их в порядке каталога (docs/API.md), а IMPLEMENTED-таблица даёт другой порядок. "
+                        + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору");
     }
 
     @Test
