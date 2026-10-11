@@ -1,32 +1,40 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ContainerRef;
 import com.theminespirit.core.observation.EntityRef;
+import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.ScanRadius;
+import com.theminespirit.core.observation.SectionCursor;
+import com.theminespirit.core.observation.SectionSlice;
 import com.theminespirit.core.observation.WorldObservation;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class WorldScanner {
+    private static final int UNLIMITED_SLICES = Integer.MAX_VALUE;
+
     private WorldScanner() {
     }
 
@@ -35,79 +43,136 @@ public final class WorldScanner {
 
     public static Scan observe(Level level, String botId, BlockCoord center, ScanRadius radius,
             Container inventory) {
-        int r = radius.value();
-        int minX = center.x() - r;
-        int maxX = center.x() + r;
-        int minY = Math.max(center.y() - r, level.getMinBuildHeight());
-        int maxY = Math.min(center.y() + r, level.getMaxBuildHeight() - 1);
-        int minZ = center.z() - r;
-        int maxZ = center.z() + r;
+        Session session = new Session(level, botId, center, radius, IdFilter.matchAll(), inventory);
+        while (!session.done()) {
+            session.step(UNLIMITED_SLICES);
+        }
+        return session.result();
+    }
 
-        List<ItemCount> blocks = new ArrayList<>();
-        List<ContainerRef> containers = new ArrayList<>();
-        Map<String, Integer> blockCounts = new LinkedHashMap<>();
-        int scannedPositions = 0;
-        int skippedChunks = 0;
+    public static final class Session {
+        private final Level level;
+        private final String botId;
+        private final BlockCoord center;
+        private final int radius;
+        private final Container inventory;
+        private final Optional<BlockBox> box;
+        private final SectionCursor cursor;
+        private final Set<Block> filteredBlocks;
+        private final Map<Block, int[]> blockCounts = new IdentityHashMap<>();
+        private final List<ContainerRef> containers = new ArrayList<>();
+        private final Set<Long> visitedChunks = new HashSet<>();
+        private final Set<Long> skippedChunks = new HashSet<>();
+        private int examinedPositions;
+        private Scan result;
 
-        for (int chunkX = SectionPos.blockToSectionCoord(minX); chunkX <= SectionPos.blockToSectionCoord(maxX); chunkX++) {
-            for (int chunkZ = SectionPos.blockToSectionCoord(minZ); chunkZ <= SectionPos.blockToSectionCoord(maxZ); chunkZ++) {
-                if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk chunk)) {
-                    skippedChunks++;
-                    continue;
-                }
-                int scanMinX = Math.max(chunkX * 16, minX);
-                int scanMaxX = Math.min(chunkX * 16 + 15, maxX);
-                int scanMinZ = Math.max(chunkZ * 16, minZ);
-                int scanMaxZ = Math.min(chunkZ * 16 + 15, maxZ);
-                // Поблочный обход идёт напрямую по секциям: LevelChunkSection читает state по локальным
-                // координатам без выделения BlockPos на каждую позицию скана (до 275 тыс. позиций).
-                LevelChunkSection[] sections = chunk.getSections();
-                for (int x = scanMinX; x <= scanMaxX; x++) {
-                    for (int z = scanMinZ; z <= scanMaxZ; z++) {
-                        for (int y = minY; y <= maxY; y++) {
-                            scannedPositions++;
-                            LevelChunkSection section = sections[chunk.getSectionIndex(y)];
-                            BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
-                            if (!state.isAir()) {
-                                String key = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-                                blockCounts.merge(key, 1, Integer::sum);
-                            }
+        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter blockFilter,
+                Container inventory) {
+            this.level = level;
+            this.botId = botId;
+            this.center = center;
+            this.radius = radius.value();
+            this.inventory = inventory;
+            this.box = LoadedWorld.cube(level, center, this.radius);
+            this.cursor = LoadedWorld.cursor(box, center);
+            this.filteredBlocks = blockFilter.matchesAll() ? null : BlockSets.resolve(blockFilter);
+        }
+
+        public void step(int maxSlices) {
+            for (SectionSlice slice : cursor.next(maxSlices)) {
+                scan(slice);
+            }
+        }
+
+        public boolean done() {
+            return cursor.isDone();
+        }
+
+        public int examinedPositions() {
+            return examinedPositions;
+        }
+
+        public Scan result() {
+            if (!done()) {
+                throw new IllegalStateException("Скан не закончен: осталось срезов " + cursor.remaining()
+                        + ", результат читают после done()");
+            }
+            if (result == null) {
+                result = finish();
+            }
+            return result;
+        }
+
+        private void scan(SectionSlice slice) {
+            LevelChunk chunk = LoadedWorld.chunk(level, slice.sectionX(), slice.sectionZ(), skippedChunks);
+            if (chunk == null) {
+                return;
+            }
+            if (visitedChunks.add(chunk.getPos().toLong())) {
+                collectContainers(chunk);
+            }
+            LevelChunkSection section = chunk.getSection(chunk.getSectionIndexFromSectionY(slice.sectionY()));
+            if (section.hasOnlyAir()
+                    || (filteredBlocks != null && !section.maybeHas(state -> filteredBlocks.contains(state.getBlock())))) {
+                return;
+            }
+            BlockBox bounds = slice.bounds();
+            for (int x = bounds.min().x(); x <= bounds.max().x(); x++) {
+                for (int y = bounds.min().y(); y <= bounds.max().y(); y++) {
+                    for (int z = bounds.min().z(); z <= bounds.max().z(); z++) {
+                        examinedPositions++;
+                        BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
+                        if (counts(state)) {
+                            blockCounts.computeIfAbsent(state.getBlock(), block -> new int[1])[0]++;
                         }
                     }
                 }
-                scanContainers(chunk, minX, maxX, minY, maxY, minZ, maxZ, containers);
             }
         }
-        blockCounts.forEach((item, count) -> blocks.add(new ItemCount(item, count)));
 
-        Vec3 centerPos = new Vec3(center.x() + 0.5, center.y() + 0.5, center.z() + 0.5);
-        AABB bounds = new AABB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
-        List<EntityRef> entities = new ArrayList<>();
-        for (Entity entity : level.getEntities((Entity) null, bounds, e -> !e.isRemoved())) {
-            String type = EntityType.getKey(entity.getType()).toString();
-            entities.add(new EntityRef(type, toCore(entity.blockPosition()),
-                    entity.position().distanceTo(centerPos)));
+        private boolean counts(BlockState state) {
+            if (filteredBlocks == null) {
+                return !state.isAir();
+            }
+            return filteredBlocks.contains(state.getBlock());
         }
 
-        WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
-                inventoryEntries(inventory), blocks, entities, containers, r);
-        return new Scan(observation, scannedPositions, skippedChunks);
-    }
+        private void collectContainers(LevelChunk chunk) {
+            BlockBox cube = box.orElseThrow();
+            for (Map.Entry<BlockPos, BlockEntity> entry : chunk.getBlockEntities().entrySet()) {
+                BlockPos pos = entry.getKey();
+                if (cube.contains(toCore(pos)) && entry.getValue() instanceof Container) {
+                    containers.add(new ContainerRef(
+                            BuiltInRegistries.BLOCK.getKey(entry.getValue().getBlockState().getBlock()).toString(),
+                            toCore(pos)));
+                }
+            }
+        }
 
-    private static void scanContainers(LevelChunk chunk, int minX, int maxX, int minY, int maxY, int minZ, int maxZ,
-            List<ContainerRef> containers) {
-        // Контейнеры ищутся среди уже загруженных блок-сущностей чанка: их список готов, повторный обход блоков не нужен.
-        for (Map.Entry<BlockPos, BlockEntity> entry : chunk.getBlockEntities().entrySet()) {
-            BlockPos pos = entry.getKey();
-            if (pos.getX() < minX || pos.getX() > maxX || pos.getY() < minY || pos.getY() > maxY
-                    || pos.getZ() < minZ || pos.getZ() > maxZ) {
-                continue;
+        private Scan finish() {
+            List<ItemCount> blocks = new ArrayList<>();
+            blockCounts.forEach((block, count) ->
+                    blocks.add(new ItemCount(BuiltInRegistries.BLOCK.getKey(block).toString(), count[0])));
+            WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
+                    inventoryEntries(inventory), blocks, findEntities(), containers, radius);
+            return new Scan(observation, examinedPositions, skippedChunks.size());
+        }
+
+        private List<EntityRef> findEntities() {
+            List<EntityRef> entities = new ArrayList<>();
+            if (box.isEmpty()) {
+                return entities;
             }
-            if (entry.getValue() instanceof Container container) {
-                containers.add(new ContainerRef(
-                        BuiltInRegistries.BLOCK.getKey(entry.getValue().getBlockState().getBlock()).toString(),
-                        toCore(pos)));
+            BlockBox cube = box.get();
+            Vec3 centerPos = new Vec3(center.x() + 0.5, center.y() + 0.5, center.z() + 0.5);
+            AABB bounds = new AABB(cube.min().x(), cube.min().y(), cube.min().z(),
+                    cube.max().x() + 1.0, cube.max().y() + 1.0, cube.max().z() + 1.0);
+            for (Entity entity : level.getEntities((Entity) null, bounds, e -> !e.isRemoved())) {
+                String type = EntityType.getKey(entity.getType()).toString();
+                entities.add(new EntityRef(type, toCore(entity.blockPosition()),
+                        entity.position().distanceTo(centerPos)));
             }
+            return entities;
         }
     }
 

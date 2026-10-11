@@ -13,6 +13,7 @@ import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ParamType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.ScriptSpec;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class PlanValidatorRulesTests {
     private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog();
+    private static final ScriptCatalog DEFAULTS_CATALOG = ScriptCatalog.of(List.of(new ScriptSpec("harvest_test",
+            "скрипт с булевым и перечислимым параметром", List.of(
+                    ParamSpec.bool("replant", false, true),
+                    ParamSpec.enumeration("species", false, List.of("any", "oak", "birch"), "any")),
+            List.of(), List.of())));
 
     static Stream<Arguments> validationRules() {
         return Stream.of(
@@ -131,6 +137,43 @@ class PlanValidatorRulesTests {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
         assertThrows(PlanValidationException.class, () -> PlanParser.parse(json, CATALOG),
                 "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
+    }
+
+    @Test
+    void booleanAndEnumDefaults_ParamsOmitted_AreSubstitutedIntoPlan() {
+        TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\"}", DEFAULTS_CATALOG);
+
+        assertEquals(new ScriptCall("harvest_test", Map.of("replant", true, "species", "any")), plan,
+                "Валидатор обязан подставить умолчания bool и enum из каталога: иначе скрипты рубки и добычи получат "
+                        + "неполную карту параметров, а ИИ не узнает, что делает план без явного значения");
+    }
+
+    @Test
+    void enumParam_ValueOutsideList_IsRejectedWithAllowedValuesNamed() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\","
+                        + "\"params\":{\"species\":\"spruce\"}}", DEFAULTS_CATALOG),
+                "Значение enum вне списка обязано отвергаться валидатором: скрипт не должен гадать, что такое spruce");
+
+        assertTrue(error.getMessage().contains("oak") && error.getMessage().contains("spruce"),
+                "Сообщение обязано называть недопустимое значение и допустимые. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void booleanParam_StringValue_IsRejected() {
+        assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\","
+                        + "\"params\":{\"replant\":\"yes\"}}", DEFAULTS_CATALOG),
+                "Строка вместо boolean обязана отвергаться валидатором: скрипт читает значение через requireBoolean");
+    }
+
+    @Test
+    void booleanParam_ExplicitFalse_OverridesDefault() {
+        TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\","
+                + "\"params\":{\"replant\":false,\"species\":\"oak\"}}", DEFAULTS_CATALOG);
+
+        assertEquals(new ScriptCall("harvest_test", Map.of("replant", false, "species", "oak")), plan,
+                "Явное значение плана обязано побеждать умолчание каталога: иначе ИИ не сможет отключить replant");
     }
 
     @Provide

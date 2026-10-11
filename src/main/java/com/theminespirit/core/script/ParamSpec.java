@@ -73,6 +73,10 @@ public record ParamSpec(
         return new ParamSpec(name, ParamType.BOOL, required, null, null, null, null);
     }
 
+    public static ParamSpec bool(String name, boolean required, boolean defaultValue) {
+        return new ParamSpec(name, ParamType.BOOL, required, null, null, null, defaultValue);
+    }
+
     public static ParamSpec enumeration(String name, boolean required, List<String> values) {
         return new ParamSpec(name, ParamType.ENUM, required, null, null, values, null);
     }

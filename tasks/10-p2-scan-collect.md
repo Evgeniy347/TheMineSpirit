@@ -175,3 +175,39 @@ WorldScanner,SpiritScripts,SpiritEntity}`, `core/script/{CoreScripts,CatalogLimi
 Опыт-шары; подбор «инстинктом» без задачи (пассивный магнит); сортировка/выброс при переполнении инвентаря
 (политика «дорого/дёшево» — отдельно); сообщение планировщику о пропущенных незагруженных чанках (в
 `WorldObservation` пока нет поля).
+
+## Замечания ревью (коммиты f2fc703..8354ec4)
+
+Принято: `IdFilter`, `BlockBox`/`SectionCursor`, `BreakTiming`/`ToolChoice` (таблица по ванили), `DropRoute`,
+`Approach` (порядок проверок `GotoScript` сохранён, тесты `goto` без правок), `BlockLocator` (только `FULL` без
+загрузки, пропуск секций по палитре), `BlockBreaker` (дроп с инструментом, износ, снятие трещин при
+`BROKEN/GONE/cancel`), `WorldScanner.Session` (≤ 4 среза за тик, контейнеры раз на чанк, сущности одним запросом),
+`ScanScript` (отмена не пишет наблюдение), счётчик запросов `DropCollector`. Коммиты по пунктам.
+
+- [x] R1. **Дефект: дух подбирает чужое и ждёт вечно.** `DropCollector.java:96-102,161-163`. (а) Кучка с
+      `ItemEntity.getTarget()` — вещь, которую игра адресовала конкретному игроку (ванильный `playerTouch` её другим не
+      отдаёт), — дух забирает себе. (б) Кучка с бесконечной задержкой подбора (`setPickUpDelay(32767)`: витрины,
+      декорации карт) — `hasPickUpDelay()` навсегда, дух стоит рядом до общего потолка 2400 тиков и только тогда
+      `FAILED`, остальные кучки не подобраны. Как надо: в `refresh` отбрасывать кучки с `getTarget() != null` и не
+      равным UUID духа; ожидание задержки у кучки ограничить `PickupTuning.MAX_DELAY_WAIT_TICKS` (например, 40 — больше
+      ванильной задержки броска), дальше — в `skipped`. GameTest (красный сейчас): кучка с `setPickUpDelay(32767)` и
+      обычная — обычная подобрана, итог `FAILED` «не дотянулся до 1…» ≤ 120 тиков духа; кучка с `setTarget(<чужой UUID>)`
+      не тронута.
+- [x] R2. **Тест/возможный дефект 07: «дух за габаритами структуры стоит неподвижно».** `docs/TESTING.md:16` объясняет
+      `arena` и пачку на тест тем, что сущности тикают только в чанках структуры. Но дух сам держит тикающие билеты
+      (`SpiritChunkTickets`, `forceChunk(..., true, true)`) — за пределами структуры он обязан тикать. Если утверждение
+      верно, это дефект чеклиста 07 в игре (дух, ушедший от игрока, замирает); если неверно — пачки и правило в
+      TESTING.md держатся на ложной причине. Как надо: GameTest — дух на краю площадки идёт `goto` на 24 блока за её
+      пределы: `tickCount` растёт, задача `SUCCEEDED`. Зелёный — исправить абзац в TESTING.md (истинная причина
+      пачек); красный — отдельный fix в `SpiritChunkTickets`, тест тот же.
+- [x] R3. **API основы: результат `begin` — флаг и nullable-строка.** `BlockBreaker.java:32` `Begin(boolean started,
+      String refusal)` + `isRefused()`. Остальная основа и ядро 12 отвечают закрытыми типами (`BreakSafety.Safe/Unsafe`,
+      `GatherPolicy.Allowed/Refused`, `MiningPlanner.Next/Exhausted`); на этот API лягут 11, 12 и 16 — сменить его
+      потом дороже. Как надо: `sealed interface Begin permits Started, Refused(String reason)`. Тесты в
+      `BlockBreakerGameTests` — через `instanceof Refused refused` и `refused.reason()`.
+- [x] R4. **Слияние с `main` (ядро 12 и сторожа уже там).** Ветка от `13dbedc`; после слияния:
+      (а) `guards/CatalogDefaultGuardTests` покраснеет на `collect_drops.filter` (необязательный без умолчания) —
+      добавить исключение с причиной, как у `scan.filter` («пусто — все предметы, это не подставленное значение»);
+      (б) `ParamSpec.enumeration(name, required, values, defaultValue)` уже есть в `main` (12) — оставить одну копию,
+      лишнюю пустую строку после `bool(...)` убрать; (в) сторож `TaskReferenceCommentGuardTests` — нарушений нет.
+      Прогнать полный `./gradlew test` и `runGameTestServer` на слитом дереве; числа — в отчёт.
