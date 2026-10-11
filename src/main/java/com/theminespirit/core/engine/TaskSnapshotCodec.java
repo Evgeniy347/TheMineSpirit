@@ -511,4 +511,18 @@ public final class TaskSnapshotCodec {
         throw new IllegalArgumentException("Состояние скрипта в '" + path + "' имеет тип "
                 + value.getClass().getSimpleName() + ": допустимы строки, числа, булевы значения, списки и карты из них");
     }
+
+    public static SaveEncoded encodeForSave(TaskSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "snapshot не может быть null: сохранять нечего");
+        try {
+            return new SaveEncoded(encode(snapshot), null);
+        } catch (RuntimeException e) {
+            String reason = "не удалось сохранить задачу: " + e.getMessage();
+            return new SaveEncoded(
+                    encode(new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.FAILED, reason, null, null)), reason);
+        }
+    }
+
+    public record SaveEncoded(String json, String failureReason) {
+    }
 }

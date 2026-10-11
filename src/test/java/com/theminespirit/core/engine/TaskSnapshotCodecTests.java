@@ -215,6 +215,22 @@ class TaskSnapshotCodecTests {
                 "отказ обязан называть ключ состояния 'broken'. Фактическое: " + error.getMessage());
     }
 
+    @Test
+    void encodeForSave_NonJsonState_ReturnsFailedSnapshotWithReason() {
+        TaskSnapshot snapshot = running(new ScriptCall("a", Map.of()),
+                new ScriptAt(Map.of("broken", new Object())));
+
+        TaskSnapshotCodec.SaveEncoded encoded = TaskSnapshotCodec.encodeForSave(snapshot);
+
+        assertTrue(encoded.failureReason() != null,
+                "безопасное сохранение обязано вернуть причину, чтобы адаптер записал её в лог с uuid");
+        TaskSnapshot saved = TaskSnapshotCodec.decode(encoded.json());
+        assertEquals(RunStatus.FAILED, saved.status(),
+                "несохранимое состояние превращает запись в FAILED, а не роняет сохранение чанка");
+        assertTrue(saved.reason().startsWith("не удалось сохранить задачу"),
+                "причина обязана начинаться с 'не удалось сохранить задачу', а получено '" + saved.reason() + "'");
+    }
+
     private static TaskSnapshot running(TaskNode plan, TaskProgress progress) {
         return new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, null, plan, progress);
     }
