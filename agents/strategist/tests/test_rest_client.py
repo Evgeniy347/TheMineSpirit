@@ -17,6 +17,12 @@ class RestClientTests(unittest.TestCase):
         body = self.client.get("/v1/bots")
         self.assertEqual("spirit_1", body["bots"][0]["id"])
 
+    def test_get_BareJsonArray_ReturnedAsList(self):
+        self.fake.bots_as_list = True
+        body = self.client.get("/v1/bots")
+        self.assertIsInstance(body, list)
+        self.assertEqual("spirit_1", body[0]["id"])
+
     def test_post_Ok_SendsJsonBodyAndReturnsParsed(self):
         body = self.client.post("/v1/bots/spirit_1/observe", {"radius": 16})
         self.assertEqual("spirit_1", body["bot"])

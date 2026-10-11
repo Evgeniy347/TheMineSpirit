@@ -1,0 +1,45 @@
+{
+ "description": "GET /v1/bots вернул голый массив вместо {bots: [...]}: оба формата принимаются",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "bots_as_list": true
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "journal": {
+    "posted": 1
+   }
+  }
+ ],
+ "name": "29-bots-endpoint-bare-array-accepted",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

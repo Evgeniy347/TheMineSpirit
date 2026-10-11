@@ -53,6 +53,11 @@ class FakeRestTests(unittest.TestCase):
         _, _, single = call(self.base, "GET", "/v1/bots/spirit_1")
         self.assertEqual("dead", single["state"], "смена состояния ручкой должна менять ответ GET /bots/{id}")
 
+    def test_botsAsList_Knob_ReturnsBareArray(self):
+        self.assertIsInstance(call(self.base, "GET", "/v1/bots")[2], dict)
+        self.fake.bots_as_list = True
+        self.assertIsInstance(call(self.base, "GET", "/v1/bots")[2], list, "ручка bots_as_list отдаёт голый массив")
+
     def test_bot_Unknown_Returns404WithIdInDetails(self):
         status, _, body = call(self.base, "GET", "/v1/bots/ghost")
         self.assertEqual(404, status)

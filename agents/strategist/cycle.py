@@ -75,9 +75,10 @@ class CycleRunner:
                active_tasks=len(rt.state["active"]))
         try:
             catalog = Catalog.from_capabilities(rt.client.get("/v1/capabilities"))
-            bots = rt.client.get("/v1/bots").get("bots")
-            if not isinstance(bots, list):
-                raise CatalogError("в ответе GET /v1/bots нет списка bots")
+            listing = rt.client.get("/v1/bots")
+            bots = listing if isinstance(listing, list) else listing.get("bots")
+            if not isinstance(bots, list) or not all(isinstance(bot, dict) for bot in bots):
+                raise CatalogError("в ответе GET /v1/bots нет списка духов (ожидался массив или объект с полем bots)")
         except (ApiError, NetworkError, CatalogError) as error:
             rt.alert(f"цикл {cycle} прерван: каталог или список духов недоступны ({error}); проверьте SPIRIT_API и сервер",
                      code="rest_unavailable", cycle=cycle)
@@ -148,6 +149,8 @@ class CycleRunner:
                                          {"radius": rt.config.observe_radius, "include_entities": True})
         except (ApiError, NetworkError) as error:
             return self._skip(summary, cycle, bot_id, f"observe не удался: {error}", "observe_failed")
+        if not isinstance(observation, dict):
+            return self._skip(summary, cycle, bot_id, "observe вернул не объект", "observe_failed")
         obs_hash = observation.get("hash")
         rt.log("observed", cycle=cycle, bot=bot_id, hash=obs_hash, blocks=len(observation.get("blocks", [])),
                entities=len(observation.get("entities", [])), inventory=len(observation.get("inventory", [])))
@@ -261,6 +264,8 @@ class CycleRunner:
             return
         try:
             fresh = rt.client.get(f"/v1/bots/{bot_id}")
+            if not isinstance(fresh, dict):
+                raise ApiError("bad_response", 200, "GET /v1/bots/{id} вернул не объект")
         except (ApiError, NetworkError) as error:
             return self._skip(summary, cycle, bot_id, f"перед отправкой не удалось перечитать духа: {error}", "recheck_failed")
         if fresh.get("state") != "idle":
@@ -312,7 +317,11 @@ class CycleRunner:
                        plan=pending["plan"], request_id=pending["request_id"], fingerprint=pending["fingerprint"])
             rt.save()
             return False
-        task_id = response.get("task_id")
+        task_id = response.get("task_id") if isinstance(response, dict) else None
+        if not isinstance(task_id, str):
+            rt.alert(f"POST задачи духа {bot_id}: в ответе нет task_id ({str(response)[:80]}); решение сохранено для повтора "
+                     "с тем же request_id", code="post_unconfirmed", cycle=cycle, bot=bot_id)
+            return False
         now = rt.clock.now()
         del rt.state["pending"][bot_id]
         self.tracker.add(task_id, bot_id, pending["goal"], pending["request_id"], pending["fingerprint"], cycle, now)

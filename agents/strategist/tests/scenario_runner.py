@@ -133,7 +133,7 @@ class ScenarioRun:
                 self.fake.forget_tasks()
             elif key == "busy_after_observe":
                 self.fake.busy_after_observe = set(value)
-            elif key in ("tasks_route", "plan_route", "plan_error", "task_post_lose_response", "drop_connection_next"):
+            elif key in ("tasks_route", "plan_route", "plan_error", "task_post_lose_response", "drop_connection_next", "bots_as_list"):
                 setattr(self.fake, key, value)
             elif key in ("task_post_errors", "server_errors", "rate_limited", "observe_errors"):
                 getattr(self.fake, key).extend([tuple(v) if isinstance(v, list) else v for v in value])

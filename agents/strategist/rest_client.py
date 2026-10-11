@@ -47,7 +47,7 @@ class RestClient:
         self.sent_at: list[float] = []
         self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
-    def get(self, path: str) -> dict:
+    def get(self, path: str) -> dict | list:
         return self._request("GET", path, None)
 
     def post(self, path: str, body: dict) -> dict:
@@ -114,7 +114,7 @@ class RestClient:
             return 1.0
 
     @staticmethod
-    def _finish(method: str, path: str, status: int, raw: bytes) -> dict:
+    def _finish(method: str, path: str, status: int, raw: bytes) -> dict | list:
         try:
             parsed = json.loads(raw.decode("utf-8")) if raw else {}
         except (ValueError, UnicodeDecodeError):
@@ -127,6 +127,6 @@ class RestClient:
                 raise ApiError("bad_response", status, f"{method} {path}: ошибка без объекта error в теле")
             raise ApiError(str(error.get("code", "unknown")), status, str(error.get("message", "")),
                            error.get("details") if isinstance(error.get("details"), dict) else {})
-        if not isinstance(parsed, dict):
-            raise ApiError("bad_response", status, f"{method} {path}: ожидался JSON-объект")
+        if not isinstance(parsed, (dict, list)):
+            raise ApiError("bad_response", status, f"{method} {path}: ожидался JSON-объект или массив")
         return parsed

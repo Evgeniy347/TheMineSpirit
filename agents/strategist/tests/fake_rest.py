@@ -58,6 +58,7 @@ class FakeRest:
         self.garbage_next = 0
         self.task_post_errors: list = []
         self.observe_errors: list = []
+        self.bots_as_list = False
         self.task_post_lose_response = 0
         self.clock = None
         self.tick = 1000
@@ -200,7 +201,8 @@ class FakeRest:
         if parts == ["capabilities"] and method == "GET":
             return 200, self.capabilities, {}
         if parts == ["bots"] and method == "GET":
-            return 200, {"bots": [dict(b) for b in self.bots.values()]}, {}
+            listing = [dict(b) for b in self.bots.values()]
+            return 200, listing if self.bots_as_list else {"bots": listing}, {}
         if len(parts) == 2 and parts[0] == "bots" and method == "GET":
             return self._bot(parts[1])
         if len(parts) == 3 and parts[0] == "bots" and parts[2] == "observe" and method == "POST":
