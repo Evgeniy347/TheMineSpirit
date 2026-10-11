@@ -188,6 +188,12 @@ class FakeRestTests(unittest.TestCase):
         self.fake.server_errors.extend([503, 500])
         self.assertEqual([503, 500, 200], [call(self.base, "GET", "/v1/bots")[0] for _ in range(3)])
 
+    def test_serverErrors_TupleEntry_SetsStatusAndCode(self):
+        self.fake.server_errors.append((422, "invalid_plan"))
+        status, _, body = call(self.base, "GET", "/v1/bots")
+        self.assertEqual((422, "invalid_plan"), (status, body["error"]["code"]))
+        self.assertEqual({"status": 422}, body["error"]["details"])
+
     def test_delayNext_Knob_MakesResponseSlow(self):
         started = time.monotonic()
         call(self.base, "GET", "/v1/bots")

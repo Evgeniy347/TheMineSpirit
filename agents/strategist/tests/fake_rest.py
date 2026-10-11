@@ -177,8 +177,9 @@ class FakeRest:
             retry_after = self.rate_limited.pop(0)
             return 429, error_body("rate_limited", "Слишком много запросов: подождите"), {"Retry-After": str(retry_after)}
         if self.server_errors:
-            status = self.server_errors.pop(0)
-            return status, error_body("internal", "Внутренняя ошибка сервера"), {}
+            item = self.server_errors.pop(0)
+            status, code = item if isinstance(item, tuple) else (item, "internal")
+            return status, error_body(code, f"Ошибка {code}: проверьте запрос", {"status": status}), {}
         parts = [p for p in path.split("/") if p]
         if parts[:1] != ["v1"]:
             return 404, error_body("not_found", f"Путь {path} не найден"), {}
