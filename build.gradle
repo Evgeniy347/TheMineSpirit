@@ -221,6 +221,10 @@ tasks.named('test', Test) {
         excludeTags 'slow'
     }
     maxParallelForks = 1
+    // Быстрый тир — только C1, SerialGC и два потока: замер (docs/research/test-performance.md)
+    // дал −58 % CPU тестовой JVM. C1-only не ставим в slowTest: долгие вычисления выигрывают от C2.
+    jvmArgs '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-XX:ActiveProcessorCount=2'
+    maxHeapSize = '512m'
     systemProperty 'theminespirit.modId', project.mod_id
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
