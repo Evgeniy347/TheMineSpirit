@@ -1,6 +1,7 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,6 +10,7 @@ import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -59,15 +61,15 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowGoal_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("следуй за мной", Map.of("target", "Steve")));
+        TaskNode plan = plan(new Goal("следуй за мной", Map.of("speaker", "Steve")));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
-                "Цель со словом 'следу' обязана дать follow на названного игрока: иначе дух не сопровождает "
+                "Цель со словом 'следу' обязана дать follow на игрока-источника: иначе дух не сопровождает "
                         + "игрока и цель сопровождения не исполняется");
     }
 
     @Test
-    void plan_FollowGoalWithoutTarget_ThrowsValidationException() {
+    void plan_FollowGoalWithoutSpeaker_ThrowsValidationException() {
         assertThrows(PlanValidationException.class,
                 () -> plan(new Goal("следуй за мной", Map.of())),
                 "Сопровождение без игрока-источника обязано отклоняться: заглушка 'player' в правилах fallback "
@@ -75,8 +77,31 @@ class FallbackPlannerTests {
     }
 
     @Test
+    void requiresPlayerSource_FollowGoal_ReturnsTrue() {
+        assertTrue(FallbackPlanner.requiresPlayerSource("следуй за мной"),
+                "Сопровождение без игрока-источника исполнить нечем: планировщик обязан сообщать, что цели нужен "
+                        + "игрок, чтобы команда ответила понятным отказом, а не общим текстом валидатора");
+    }
+
+    @Test
+    void requiresPlayerSource_AttackGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresPlayerSource("убей зомби"),
+                "Атака не требует игрока-источника: иначе консоль или командный блок не смог бы приказать духу "
+                        + "бить враждебную цель");
+    }
+
+    @Test
+    void plan_AttackGoalWithSpeaker_DoesNotTargetSpeaker() {
+        TaskNode plan = plan(new Goal("убей зомби", Map.of("speaker", "Steve")));
+
+        assertEquals(new ScriptCall("attack", Map.of("target", "hostile")), plan,
+                "Игрок-источник не должен становиться целью атаки: иначе '/spirit goal ... убей' заставляет "
+                        + "духа бить собственного хозяина вместо враждебной цели");
+    }
+
+    @Test
     void plan_FollowBehindPhrase_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("держись за мной", Map.of("target", "Steve")));
+        TaskNode plan = plan(new Goal("держись за мной", Map.of("speaker", "Steve")));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
                 "Фраза 'за мной' обязана распознаваться как сопровождение: иначе естественная формулировка "
@@ -132,7 +157,7 @@ class FallbackPlannerTests {
     @Test
     void plan_FollowGoalWithParams_OverridesDefaults() {
         TaskNode plan = plan(new Goal("следуй за мной",
-                Map.of("target", "villager", "radius", 5)));
+                Map.of("speaker", "villager", "radius", 5)));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "villager", "radius", 5)), plan,
                 "Параметры цели обязаны переопределять цель и дистанцию сопровождения: иначе дух сопровождает "
@@ -187,7 +212,7 @@ class FallbackPlannerTests {
 
     @Test
     void plan_FollowWordGoal_ReturnsFollowCall() {
-        TaskNode plan = plan(new Goal("иди за мной", Map.of("target", "Steve")));
+        TaskNode plan = plan(new Goal("иди за мной", Map.of("speaker", "Steve")));
 
         assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
                 "Фраза 'за мной' по словам обязана распознаваться как сопровождение: иначе игрок идёт один "
@@ -220,6 +245,7 @@ class FallbackPlannerTests {
     private static TaskNode minePlan(int radius, String ore, int count) {
         return new SequenceNode(List.of(
                 new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_ore"))),
-                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count))));
+                new ScriptCall("mine_vein", Map.of("ore", ore, "count", count,
+                        "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT))));
     }
 }

@@ -28,6 +28,6 @@ public record ChopTreeParams(List<TreeSpecies> species, int count, int radius, b
                 TreeSpecies.parse(ScriptArgs.requireString(params, "species")),
                 ScriptArgs.requireInt(params, "count"),
                 ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireBool(params, "replant"));
+                ScriptArgs.requireBoolean(params, "replant"));
     }
 }

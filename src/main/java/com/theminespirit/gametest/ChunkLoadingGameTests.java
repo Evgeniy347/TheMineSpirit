@@ -2,8 +2,10 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
+import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.ChunkSquare;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -13,8 +15,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.portal.DimensionTransition;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -63,6 +68,58 @@ public final class ChunkLoadingGameTests {
                                 + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
                 helper.succeed();
             });
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void chunkLoading_UnloadedToChunk_KeepsTickets(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        SpiritEntity spirit = spawnFloating(helper);
+
+        helper.runAfterDelay(3, () -> {
+            long ticketsBeforeUnload = ticketCount(level);
+
+            // Движок выгружает сущность через setRemoved(UNLOADED_TO_CHUNK), минуя remove(): тест идёт тем же путём.
+            spirit.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+
+            helper.assertTrue(!spirit.trackedChunks().isEmpty(),
+                    "Выгрузка чанка — это не смерть: дух обязан сохранить свои чанки, иначе перед остановкой мира "
+                            + "снимутся билеты и дух потеряет тикающие чанки");
+            helper.assertTrue(ticketCount(level) == ticketsBeforeUnload,
+                    "setRemoved(UNLOADED_TO_CHUNK) не должен снимать билеты: было " + ticketsBeforeUnload
+                            + ", стало " + ticketCount(level));
+
+            SpiritChunkTickets.apply(level, spirit, new ChunkDiff(Set.of(), spirit.trackedChunks()));
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void chunkLoading_ChangedDimension_ReleasesSourceTickets(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        int radius = SpiritConfig.radiusFor(level);
+        SpiritEntity spirit = spawnFloating(helper);
+
+        helper.runAfterDelay(3, () -> {
+            long ticketsBefore = ticketCount(level);
+            helper.assertTrue(ticketsBefore > 0,
+                    "Дух обязан держать билеты до смены измерения: иначе тест ничего не проверяет");
+
+            ServerLevel nether = level.getServer().getLevel(Level.NETHER);
+            SpiritEntity moved = (SpiritEntity) spirit.changeDimension(
+                    new DimensionTransition(nether, spirit, DimensionTransition.DO_NOTHING));
+
+            helper.assertTrue(spirit.trackedChunks().isEmpty(),
+                    "Смена измерения обязана освободить чанки исходного мира: осталось "
+                            + spirit.trackedChunks().size());
+            helper.assertTrue(ticketsBefore - ticketCount(level) == squareSize(radius),
+                    "Смена измерения обязана снять ровно все билеты духа из исходного мира: ожидалось "
+                            + squareSize(radius) + ", снялось " + (ticketsBefore - ticketCount(level)));
+
+            if (moved != null) {
+                moved.discard();
+            }
+            helper.succeed();
         });
     }
 

@@ -8,6 +8,7 @@ import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +26,7 @@ class ResourceResolverTests {
     void resolve_GatherableItem_ReturnsGatherCall() {
         TaskNode plan = ResourceResolver.resolve("oak_log", 5, KNOWLEDGE);
 
-        assertEquals(new ScriptCall("gather", Map.of("block", "oak_log", "count", 5)), plan,
+        assertEquals(gather("oak_log", 5), plan,
                 "Gatherable предмет обязан резолвиться в скрипт gather с block и count: иначе дух не соберёт "
                         + "материал, доступный напрямую, и будет искать бесполезный рецепт");
     }
@@ -35,7 +36,7 @@ class ResourceResolverTests {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE);
 
         assertEquals(new SequenceNode(List.of(
-                new ScriptCall("gather", Map.of("block", "iron_ore", "count", 2)),
+                gather("iron_ore", 2),
                 new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 2)))), plan,
                 "Smeltable предмет обязан резолвиться в добычу входа и переплавку: без шага smelt дух получит "
                         + "руду вместо слитка и цель не будет исполнена");
@@ -46,7 +47,7 @@ class ResourceResolverTests {
         TaskNode plan = ResourceResolver.resolve("stick", 1, KNOWLEDGE);
 
         assertEquals(new SequenceNode(List.of(
-                new ScriptCall("gather", Map.of("block", "oak_log", "count", 2)),
+                gather("oak_log", 2),
                 new ScriptCall("craft", Map.of("item", "stick", "count", 1)))), plan,
                 "Craftable предмет обязан резолвиться в получение ингредиентов и скрипт craft: без рекурсивного "
                         + "разбора ингредиентов дух попробует скрафтить из ничего");
@@ -63,7 +64,7 @@ class ResourceResolverTests {
         TaskNode plan = ResourceResolver.resolve("oak_planks", 8, planks);
 
         assertEquals(new SequenceNode(List.of(
-                new ScriptCall("gather", Map.of("block", "oak_log", "count", 2)),
+                gather("oak_log", 2),
                 new ScriptCall("craft", Map.of("item", "oak_planks", "count", 8)))), plan,
                 "Рецепт с выходом 4 предмета обязан требовать 2 крафта на 8 досок: иначе резолвер добывает "
                         + "8 брёвен вместо 2 и заваливает духа лишним материалом");
@@ -80,7 +81,7 @@ class ResourceResolverTests {
         TaskNode plan = ResourceResolver.resolve("oak_planks", 1, planks);
 
         assertEquals(new SequenceNode(List.of(
-                new ScriptCall("gather", Map.of("block", "oak_log", "count", 1)),
+                gather("oak_log", 1),
                 new ScriptCall("craft", Map.of("item", "oak_planks", "count", 1)))), plan,
                 "Одна доска из рецепта на 4 не может дать полкрафта: число крафтов округляется вверх до 1, "
                         + "иначе план добывает 0 брёвен и крафт провалится");
@@ -108,10 +109,10 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 new SequenceNode(List.of(
-                        new ScriptCall("gather", Map.of("block", "oak_log", "count", 4)),
+                        gather("oak_log", 4),
                         new ScriptCall("craft", Map.of("item", "stick", "count", 2)))),
                 new SequenceNode(List.of(
-                        new ScriptCall("gather", Map.of("block", "iron_ore", "count", 3)),
+                        gather("iron_ore", 3),
                         new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 3)))),
                 new ScriptCall("craft", Map.of("item", "iron_pickaxe", "count", 1)))), plan,
                 "Вложенный craft обязан рекурсивно резолвить каждый ингредиент с учётом количества: иначе план "
@@ -132,10 +133,10 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 new SequenceNode(List.of(
-                        new ScriptCall("gather", Map.of("block", "d", "count", 1)),
+                        gather("d", 1),
                         new ScriptCall("craft", Map.of("item", "b", "count", 1)))),
                 new SequenceNode(List.of(
-                        new ScriptCall("gather", Map.of("block", "d", "count", 1)),
+                        gather("d", 1),
                         new ScriptCall("craft", Map.of("item", "c", "count", 1)))),
                 new ScriptCall("craft", Map.of("item", "a", "count", 1)))), plan,
                 "Общий ингредиент в двух ветках — не цикл: он обязан резолвиться дважды. Если путь рекурсии "
@@ -210,5 +211,10 @@ class ResourceResolverTests {
         assertThrows(PlanValidationException.class,
                 () -> ResourceResolver.resolve("oak_log", 300, knowledge),
                 "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
+    }
+
+    private static ScriptCall gather(String block, int count) {
+        return new ScriptCall("gather", Map.of("block", block, "count", count,
+                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
     }
 }

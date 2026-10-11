@@ -11,12 +11,12 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
-import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.BatchPlanException;
+import com.theminespirit.core.planner.BatchPlanner;
 import com.theminespirit.core.planner.FallbackPlanner;
 import com.theminespirit.core.planner.Goal;
-import com.theminespirit.core.planner.UnplannableGoalException;
-import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,17 +56,25 @@ final class SpiritTaskCommands {
                     "Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
-        Map<String, Object> goalParams = playerTargetParams(source);
-        List<TaskNode> plans = new ArrayList<>(spirits.size());
+        ServerPlayer speaker = source.getPlayer();
+        if (speaker == null && FallbackPlanner.requiresPlayerSource(text)) {
+            source.sendFailure(Component.literal("Цель '" + text + "' требует игрока-источника: выполните её "
+                    + "от имени игрока или через '/execute as <игрок> run spirit goal ...'"));
+            return 0;
+        }
+        Map<String, Object> goalParams = speakerParams(speaker);
+        List<ScriptCatalog> catalogs = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
-            try {
-                plans.add(new FallbackPlanner(SpiritScripts.catalogFor(spirit), ConditionCatalog.empty())
-                        .plan(new Goal(text, goalParams), emptyObservation(spirit)).plan());
-            } catch (UnplannableGoalException | PlanValidationException e) {
-                source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: дух '"
-                        + spirit.getStringUUID() + "' не смог её принять: " + e.getMessage()));
-                return 0;
-            }
+            catalogs.add(SpiritScripts.catalogFor(spirit));
+        }
+        List<TaskNode> plans;
+        try {
+            plans = BatchPlanner.planAll(catalogs, new Goal(text, goalParams), emptyObservation(spirits.get(0)));
+        } catch (BatchPlanException e) {
+            SpiritEntity failed = spirits.get(e.index());
+            source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: дух '"
+                    + failed.getStringUUID() + "' не смог её принять: " + e.getMessage()));
+            return 0;
         }
         List<String> assigned = new ArrayList<>(spirits.size());
         for (int i = 0; i < spirits.size(); i++) {
@@ -127,9 +135,8 @@ final class SpiritTaskCommands {
         return cancelled.size();
     }
 
-    private static Map<String, Object> playerTargetParams(CommandSourceStack source) {
-        ServerPlayer player = source.getPlayer();
-        return player == null ? Map.of() : Map.of("target", player.getName().getString());
+    private static Map<String, Object> speakerParams(ServerPlayer speaker) {
+        return speaker == null ? Map.of() : Map.of("speaker", speaker.getName().getString());
     }
 
     private static List<SpiritEntity> filterSpirits(Collection<? extends Entity> selected) {

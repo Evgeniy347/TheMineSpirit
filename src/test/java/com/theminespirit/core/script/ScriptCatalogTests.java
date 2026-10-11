@@ -5,11 +5,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.mining.OreKind;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ScriptCatalogTests {
+    private static final long WORLD_MIN = -30_000_000L;
+    private static final long WORLD_MAX = 30_000_000L;
+
+    record ScriptExpectation(String id, List<String> required, Map<String, long[]> bounds) {
+    }
+
     @Test
     void find_KnownId_ReturnsSpec() {
         ScriptCatalog catalog = ScriptCatalog.of(List.of(
@@ -57,7 +69,7 @@ class ScriptCatalogTests {
                 "species в chop_tree необязателен: без него рубят любое дерево (default any)");
     }
 
-    @Test
+@Test
     void defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults() {
         ScriptSpec chopTree = CoreScripts.defaultCatalog().find("chop_tree").orElseThrow();
 
@@ -91,17 +103,170 @@ class ScriptCatalogTests {
                 "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
     }
 
-    @Test
-    void defaultCatalog_ExpectedIds_ArePresent() {
-        ScriptCatalog catalog = CoreScripts.defaultCatalog();
-        List<String> expected = List.of("scan", "goto", "follow", "return_home", "patrol", "flee", "chop_tree",
-                "mine_vein", "dig_area", "gather", "collect_drops", "harvest_crop", "plant_crop", "craft", "smelt",
-                "equip", "deposit", "withdraw", "sort_chest", "acquire", "attack", "defend", "retreat", "place_block",
-                "fill", "clear_area", "build_schematic", "deliver", "meet", "say", "wait");
+    static Stream<Arguments> scriptSpecRows() {
+        List<ScriptExpectation> rows = List.of(
+                spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
+                spec("goto", List.of("x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("follow", List.of("target"), Map.of("radius", new long[]{0, 16})),
+                spec("return_home", List.of(), Map.of()),
+                spec("patrol", List.of(), Map.of()),
+                spec("flee", List.of(), Map.of()),
+                spec("chop_tree", List.of(), Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
+                spec("mine_vein", List.of(), Map.of("count", new long[]{1, 256})),
+                spec("dig_area", List.of("x", "y", "z", "size"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("gather", List.of("block", "count"), Map.of("count", new long[]{1, 256})),
+                spec("collect_drops", List.of(), Map.of()),
+                spec("harvest_crop", List.of("crop"), Map.of()),
+                spec("plant_crop", List.of("crop"), Map.of()),
+                spec("craft", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("smelt", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("equip", List.of("item"), Map.of()),
+                spec("deposit", List.of("container", "item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("withdraw", List.of("container", "item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("sort_chest", List.of(), Map.of()),
+                spec("acquire", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("attack", List.of(), Map.of()),
+                spec("defend", List.of("target"), Map.of()),
+                spec("retreat", List.of(), Map.of()),
+                spec("place_block", List.of("block", "x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("fill", List.of("block", "x1", "y1", "z1", "x2", "y2", "z2"),
+                        Map.of("x1", new long[]{WORLD_MIN, WORLD_MAX}, "y1", new long[]{-64, 319},
+                                "z1", new long[]{WORLD_MIN, WORLD_MAX}, "x2", new long[]{WORLD_MIN, WORLD_MAX},
+                                "y2", new long[]{-64, 319}, "z2", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("clear_area", List.of("x1", "y1", "z1", "x2", "y2", "z2"),
+                        Map.of("x1", new long[]{WORLD_MIN, WORLD_MAX}, "y1", new long[]{-64, 319},
+                                "z1", new long[]{WORLD_MIN, WORLD_MAX}, "x2", new long[]{WORLD_MIN, WORLD_MAX},
+                                "y2", new long[]{-64, 319}, "z2", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("build_schematic", List.of("file", "x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("deliver", List.of("item", "count", "to"), Map.of("count", new long[]{1, 256})),
+                spec("meet", List.of("target"), Map.of()),
+                spec("say", List.of("text"), Map.of()),
+                spec("wait", List.of("ticks"), Map.of("ticks", new long[]{1, 6000})));
 
-        assertEquals(expected, catalog.all().stream().map(ScriptSpec::id).toList(),
-                "Каталог по умолчанию обязан содержать ровно оговорённый набор скриптов: пропущенный скрипт "
-                        + "планировщик не найдёт, лишний — разойдётся с /v1/capabilities");
+        return rows.stream().map(row -> Arguments.of(row));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("scriptSpecRows")
+    void catalog_ScriptTable_RowMatchesSpec(ScriptExpectation expected) {
+        ScriptSpec spec = CoreScripts.defaultCatalog().find(expected.id())
+                .orElseThrow(() -> new AssertionError("В каталоге нет скрипта " + expected.id()));
+
+        List<String> required = spec.params().stream().filter(ParamSpec::required).map(ParamSpec::name).toList();
+        assertEquals(expected.required(), required,
+                "Набор обязательных параметров скрипта " + expected.id() + " обязан совпадать с таблицей: "
+                        + "варианты плана без обязательного параметра валидатор должен отклонять, а лишний "
+                        + "обязательный параметр отвергнет легитимный план");
+
+        expected.bounds().forEach((name, minMax) -> {
+            ParamSpec param = param(spec, name);
+            assertEquals((double) minMax[0], param.min(),
+                    "Нижняя граница параметра " + name + " скрипта " + expected.id() + " обязана совпадать с "
+                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана");
+            assertEquals((double) minMax[1], param.max(),
+                    "Верхняя граница параметра " + name + " скрипта " + expected.id() + " обязана совпадать с "
+                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана");
+        });
+    }
+
+    @Test
+    void defaultCatalog_ScriptTable_CoversExactlyAllIds() {
+        ScriptCatalog catalog = CoreScripts.defaultCatalog();
+        List<String> tableIds = scriptSpecRows()
+                .map(arguments -> arguments.get()[0])
+                .map(ScriptExpectation.class::cast)
+                .map(ScriptExpectation::id)
+                .toList();
+
+        assertEquals(tableIds, catalog.all().stream().map(ScriptSpec::id).toList(),
+                "Таблица каталога обязана покрывать ровно все скрипты defaultCatalog: пропущенный скрипт "
+                        + "планировщик не найдёт, лишний разойдётся с /v1/capabilities");
+    }
+
+    private static ScriptExpectation spec(String id, List<String> required, Map<String, long[]> bounds) {
+        return new ScriptExpectation(id, required, bounds);
+    }
+
+    @Test
+    void defaultCatalog_MineVein_OreEnumAndDefaults() {
+        ScriptSpec mineVein = CoreScripts.defaultCatalog().find("mine_vein").orElseThrow();
+
+        ParamSpec ore = param(mineVein, "ore");
+        ParamSpec count = param(mineVein, "count");
+        ParamSpec radius = param(mineVein, "radius");
+
+        assertEquals(ParamType.ENUM, ore.type(),
+                "ore в mine_vein — enum: валидатор обязан ловить опечатку до запуска, а не искать несуществующую жилу");
+        assertEquals(OreKind.names(), ore.values(),
+                "Список допустимых ore обязан совпадать с видами OreKind: иначе каталог обещает один набор, а ядро знает другой");
+        assertEquals(false, ore.required(),
+                "ore в mine_vein необязателен: без него добывается любая руда");
+        assertEquals("any", ore.defaultValue(),
+                "enum ore по умолчанию 'any': умолчание живёт в каталоге, а не в маппинге — его видит "
+                        + "/v1/capabilities и подставляет валидатор");
+        assertEquals(1, count.defaultValue(),
+                "count в mine_vein по умолчанию 1: без числа добывается один блок руды");
+        assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
+                "radius в mine_vein по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_Gather_CountRequiredRadiusDefaults() {
+        ScriptSpec gather = CoreScripts.defaultCatalog().find("gather").orElseThrow();
+
+        ParamSpec count = param(gather, "count");
+        ParamSpec radius = param(gather, "radius");
+
+        assertEquals(true, count.required(),
+                "count в gather обязателен: без числа сбор не имеет цели, в отличие от mine_vein с умолчанием 1");
+        assertEquals(false, radius.required(),
+                "radius в gather необязателен: по умолчанию поиск идёт в радиусе из каталога");
+        assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
+                "radius в gather по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
+                        + ": значение задаёт каталог, чтобы адаптер не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_CollectDrops_RadiusHasBoundsAndDefaultFilterIsOptionalList() {
+        ScriptSpec collectDrops = CoreScripts.defaultCatalog().find("collect_drops").orElseThrow();
+
+        ParamSpec radius = param(collectDrops, "radius");
+        ParamSpec filter = param(collectDrops, "filter");
+
+        assertEquals(1.0, radius.min(),
+                "Радиус подбора начинается с 1 блока: нулевой радиус подбирал бы только предметы под духом");
+        assertEquals(16.0, radius.max(),
+                "Радиус подбора ограничен 16 блоками: больший радиус тащит духа за предметами через полкарты");
+        assertEquals(8, radius.defaultValue(), "Радиус подбора по умолчанию 8: значение живёт в каталоге");
+        assertEquals(false, radius.required(), "radius в collect_drops необязателен: умолчание подставляет валидатор");
+        assertEquals(ParamType.STRING_LIST, filter.type(),
+                "filter в collect_drops — список шаблонов id предметов");
+        assertEquals(false, filter.required(),
+                "filter в collect_drops необязателен: без него подбирается всё");
+        assertEquals(2, collectDrops.params().size(),
+                "У collect_drops ровно два параметра, radius и filter: лишний параметр попал бы в capabilities");
+    }
+
+    @Test
+    void defaultCatalog_Scan_RadiusUsesScanRadiusLimitsAndFilterIsOptionalList() {
+        ScriptSpec scan = CoreScripts.defaultCatalog().find("scan").orElseThrow();
+
+        ParamSpec radius = param(scan, "radius");
+
+        assertEquals((double) CatalogLimits.SCAN_RADIUS_MAX, radius.max(),
+                "Радиус scan ограничен ScanRadius.MAX: скан большего радиуса кладёт серверный тик");
+        assertEquals(ParamType.STRING_LIST, param(scan, "filter").type(),
+                "filter в scan — список шаблонов id блоков");
+        assertEquals(false, param(scan, "filter").required(), "filter в scan необязателен: без него видны все блоки");
     }
 
     private static ParamSpec param(ScriptSpec spec, String name) {

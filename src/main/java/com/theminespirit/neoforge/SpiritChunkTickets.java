@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
+import com.theminespirit.core.chunk.SpiritTicketRetention;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -35,8 +37,11 @@ public final class SpiritChunkTickets {
     }
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
-        for (UUID owner : helper.getEntityTickets().keySet()) {
-            if (level.getEntity(owner) == null) {
+        Set<UUID> owners = helper.getEntityTickets().keySet();
+        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(owners,
+                SpiritRegistry.find(level).map(SpiritRegistry::alive));
+        for (UUID owner : owners) {
+            if (!keep.contains(owner)) {
                 helper.removeAllTickets(owner);
             }
         }
