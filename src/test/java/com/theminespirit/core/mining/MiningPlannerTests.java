@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -113,6 +114,25 @@ class MiningPlannerTests {
         assertEquals(new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(-1, 1, 0)), outcome,
                 "Сбор на ровной земле не должен заканчиваться Exhausted(noStand>0): цель открыта сверху, "
                         + "стоянка — клетка поверхности рядом с целью");
+    }
+
+    @Test
+    void next_LineOf256Targets_ReadsStayWithinEightPerTarget() {
+        CellWorld world = new CellWorld();
+        List<BlockCoord> targets = new ArrayList<>(256);
+        for (int x = 0; x < 256; x++) {
+            world.set(x, 2, 0, Cell.SOLID);
+            targets.add(new BlockCoord(x, 2, 0));
+        }
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, targets, world);
+
+        assertTrue(outcome instanceof MiningPlanner.Next,
+                "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
+        assertTrue(world.reads() <= MiningPlanner.MAX_VIEW_READS_PER_TARGET * 8L,
+                "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
+                        + "(dist(from,target) − 3), и дальше перебирать незачем. Чтений: " + world.reads()
+                        + ", предел: " + MiningPlanner.MAX_VIEW_READS_PER_TARGET * 8L);
     }
 
     @Test
