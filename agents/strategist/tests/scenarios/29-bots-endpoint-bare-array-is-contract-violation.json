@@ -1,5 +1,5 @@
 {
- "description": "GET /v1/bots вернул голый массив вместо {bots: [...]}: оба формата принимаются",
+ "description": "GET /v1/bots вернул голый массив: контракт нарушен, цикл прерван с alert, модель не вызывается",
  "brain": {
   "default": {
    "json": {
@@ -27,15 +27,24 @@
  ],
  "expect": [
   {
-   "posts": 1
+   "posts": 0
+  },
+  {
+   "brain_calls": 0
   },
   {
    "journal": {
-    "posted": 1
+    "alert": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "alert",
+    "code": "rest_unavailable"
    }
   }
  ],
- "name": "29-bots-endpoint-bare-array-accepted",
+ "name": "29-bots-endpoint-bare-array-is-contract-violation",
  "bots": [
   {
    "id": "forest",

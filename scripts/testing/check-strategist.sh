@@ -9,6 +9,7 @@ rm -rf "$work"
 mkdir -p "$work"
 failed=0
 
+chars() { python3 -c 'import sys; print(sys.stdin.read().strip()[: int(sys.argv[1])])' "$1"; }
 ok() { echo "OK $1${2:+: $2}"; }
 fail() { echo "FAIL $1${2:+: $2}"; failed=1; }
 expect_code() {
@@ -96,7 +97,7 @@ expect_code "status_stopped" 1 $?
 expect_text "status_stopped_text" "агент: не запущен" "$work/status3.out"
 
 "$script" once >"$work/once.out" 2>&1
-expect_code "once" 0 $? "$(tail -n 1 "$work/once.out" | cut -c1-80)"
+expect_code "once" 0 $? "$(tail -n 1 "$work/once.out" | chars 80)"
 
 "$script" smoke >"$work/smoke.out" 2>&1
 expect_code "smoke_with_command_brain" 0 $?

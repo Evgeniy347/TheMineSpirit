@@ -79,9 +79,9 @@ class CycleRunner:
         try:
             catalog = Catalog.from_capabilities(rt.client.get("/v1/capabilities"))
             listing = rt.client.get("/v1/bots")
-            bots = listing if isinstance(listing, list) else listing.get("bots")
+            bots = listing.get("bots")
             if not isinstance(bots, list) or not all(isinstance(bot, dict) for bot in bots):
-                raise CatalogError("в ответе GET /v1/bots нет списка духов (ожидался массив или объект с полем bots)")
+                raise CatalogError('в ответе GET /v1/bots нет списка духов (контракт: объект {"bots": [...]})')
         except (ApiError, NetworkError, CatalogError) as error:
             rt.alert(f"цикл {cycle} прерван: каталог или список духов недоступны ({error}); проверьте SPIRIT_API и сервер",
                      code="rest_unavailable", cycle=cycle)
