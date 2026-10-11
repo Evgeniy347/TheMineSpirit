@@ -48,4 +48,5 @@ TestResults/
 .codegraph/
 
 # База jqwik: seed упавших прогонов, коммитить не нужно (docs/TESTING.md)
-.jqwik-database
+# Имя включает идентификатор форка Gradle, чтобы два JVM не писали один файл.
+.jqwik-database*
