@@ -426,6 +426,39 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 500)
+    public static void chopTree_LogBuildingOfManyLogs_TreeBehindItIsChopped(GameTestHelper helper) {
+        prepareField(helper);
+        for (int x = 3; x <= 9; x++) {
+            for (int y = 1; y <= 7; y++) {
+                for (int z = 3; z <= 9; z++) {
+                    helper.setBlock(x, y, z, Blocks.OAK_LOG);
+                }
+            }
+        }
+        buildOakTree(helper, 1, 8, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "постройка из " + BIG_BUILDING_LOGS + " брёвен всех отвергнута, а дерево за ней обязано срубиться: "
+                            + "лимит кандидатов не считает отвергнутых, иначе поиск не идёт дальше и скрипт висит. "
+                            + "Статус: " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
+                            + ", причина: " + spirit.taskFailureReason().orElse("нет"));
+            int oakInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(oakInInventory == 5,
+                    "дерево за постройкой срублено: 5 брёвен в инвентаре, фактически " + oakInInventory);
+            int buildingLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(buildingLogs == BIG_BUILDING_LOGS,
+                    "ни одно из " + BIG_BUILDING_LOGS + " брёвен постройки не тронуто, осталось " + buildingLogs);
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);
@@ -575,6 +608,7 @@ public final class ChopTreeGameTests {
     }
 
     private static final int HUT_POST_LOGS = 12;
+    private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
 
     private static void buildPlankHutOnLedge(GameTestHelper helper, int x, int z) {
         for (int dx = 0; dx < 3; dx++) {

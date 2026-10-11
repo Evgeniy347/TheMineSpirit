@@ -6,7 +6,7 @@ import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeChooser;
+import com.theminespirit.core.forestry.TreeCandidates;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
@@ -16,8 +16,6 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.ChopTreeParams;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -44,9 +42,7 @@ final class ChopTreeScript implements ScriptInstance {
     private final BlockLocator.Search search;
     private final Approach approach;
     private final BlockBreaker breaker;
-    private final List<BlockCoord> candidates = new ArrayList<>();
-    private final Set<BlockCoord> candidateCoords = new HashSet<>();
-    private final Set<BlockCoord> known = new HashSet<>();
+    private final TreeCandidates candidates = new TreeCandidates(ChopTuning.SEARCH_MAX_LOGS);
     private Phase phase = Phase.FIND;
     private Tree tree;
     private ChopPlan plan;
@@ -55,7 +51,7 @@ final class ChopTreeScript implements ScriptInstance {
     private int chopped;
     private int rejected;
     private int unreachable;
-    private int consecutiveRejections;
+    private int consecutiveUnreachable;
     private boolean breaking;
     private boolean movedCloser;
     private String failureReason;
@@ -100,11 +96,8 @@ final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus find() {
-        for (BlockCoord coord : locate()) {
-            remember(coord);
-        }
-        Optional<BlockCoord> start = TreeChooser.next(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ(),
-                candidates, known);
+        locate();
+        Optional<BlockCoord> start = candidates.nearest(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
         if (start.isEmpty()) {
             return search.done() ? outOfTrees() : ScriptStatus.RUNNING;
         }
@@ -115,43 +108,18 @@ final class ChopTreeScript implements ScriptInstance {
         return startChop((Tree) detection);
     }
 
-    private List<BlockCoord> locate() {
-        List<BlockCoord> found = new ArrayList<>();
-        pruneCandidates();
-        if (candidates.size() >= ChopTuning.SEARCH_MAX_LOGS) {
-            return found;
-        }
-        for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
-            found.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-        }
-        return found;
-    }
-
-    private void pruneCandidates() {
-        if (candidates.isEmpty()) {
+    private void locate() {
+        if (candidates.isFull()) {
             return;
         }
-        boolean removed = candidates.removeIf(known::contains);
-        if (removed) {
-            candidateCoords.clear();
-            candidateCoords.addAll(candidates);
-        }
-    }
-
-    private void remember(BlockCoord coord) {
-        if (!known.contains(coord) && candidateCoords.add(coord)) {
-            candidates.add(coord);
+        for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
+            candidates.offer(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }
     }
 
     private ScriptStatus reject(NotATree notATree) {
         rejected++;
-        consecutiveRejections++;
-        known.addAll(notATree.logs());
-        if (consecutiveRejections > ChopTuning.MAX_REJECTED_TREES) {
-            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " отказов подряд: только постройки и "
-                    + "недоступные деревья, срублено " + chopped + " из " + params.count());
-        }
+        candidates.markKnown(notATree.logs());
         return ScriptStatus.RUNNING;
     }
 
@@ -190,13 +158,13 @@ final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus unreachableTree() {
         unreachable++;
-        consecutiveRejections++;
-        known.addAll(tree.logs());
+        consecutiveUnreachable++;
+        candidates.markKnown(tree.logs());
         tree = null;
         plan = null;
-        if (consecutiveRejections > ChopTuning.MAX_REJECTED_TREES) {
-            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " отказов подряд: срублено " + chopped
-                    + " из " + params.count() + ", недоступных деревьев " + unreachable);
+        if (consecutiveUnreachable > ChopTuning.MAX_REJECTED_TREES) {
+            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " недоступных деревьев подряд: срублено "
+                    + chopped + " из " + params.count() + ", недоступных деревьев " + unreachable);
         }
         phase = Phase.FIND;
         return ScriptStatus.RUNNING;
@@ -255,8 +223,8 @@ final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus finishTree() {
         collector = null;
         chopped++;
-        consecutiveRejections = 0;
-        known.addAll(tree.logs());
+        consecutiveUnreachable = 0;
+        candidates.markKnown(tree.logs());
         tree = null;
         plan = null;
         if (chopped >= params.count()) {
