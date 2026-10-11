@@ -61,6 +61,8 @@
 | [scripts/git-hooks/reference-transaction](scripts/git-hooks/reference-transaction) | сторож истории: запрещает `--amend`, `rebase`, `reset` назад, `branch -f`, `stash` (docs/GIT.md) | `git commit --amend` отклоняется с объяснением |
 | [scripts/git-hooks/pre-rebase](scripts/git-hooks/pre-rebase) | ранний отказ `rebase` с объяснением | `git rebase` отклоняется |
 | [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
+| [scripts/git-hooks/pre-commit](scripts/git-hooks/pre-commit) | сторож зелёного коммита: при изменениях в `src/`, `build.gradle`, `gradle.properties`, `settings.gradle` прогоняет `./gradlew test` и отклоняет коммит при красном; документы, скрипты и слияния — без прогона (docs/GIT.md) | коммит с падающим тестом отклоняется с объяснением |
+| [scripts/testing/check-pre-commit.sh](scripts/testing/check-pre-commit.sh) | регрессионная проверка `pre-commit` на временном клоне: красный тест, документ, зелёный тест, `git commit -- путь`, незастейдженная правка, слияние | все строки `OK` |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура
