@@ -31,7 +31,7 @@ class RetreatSelectorTests {
                 row("скелеты: укрытие, а не баррикада и не столб", world().enemies("skeleton", 12, 2).cover(5).blocks(20)
                         .build(), RetreatMethod.COVER, "retreat_cover"),
                 row("скелеты без укрытия: баррикада и столб закрыты", world().enemies("skeleton", 12, 2).blocks(20)
-                        .build(), RetreatMethod.AWAY, "retreat_away"),
+                        .build(), RetreatMethod.NONE, ""),
                 row("крипер: баррикада не годится, столб годится", world().enemy("creeper", 4).blocks(10).build(),
                         RetreatMethod.PILLAR, "retreat_pillar"),
                 row("фантом: столб не годится, баррикада годится", world().enemy("phantom", 10).blocks(10).build(),

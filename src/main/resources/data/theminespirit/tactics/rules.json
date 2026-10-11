@@ -108,7 +108,7 @@
        "utility": {"base": 0.4},
        "bonus": []},
       {"id": "retreat_away", "method": "AWAY",
-       "requires": [{"fact": "derived.speedRatio", "op": ">=", "value": 1.0}, {"fact": "enemy.nearest", "op": ">", "value": 3}],
+       "requires": [{"fact": "derived.speedRatio", "op": ">=", "value": 1.0}, {"fact": "enemy.nearest", "op": ">", "value": 3}, {"fact": "enemy.anyRanged", "op": "==", "value": false}],
        "utility": {"base": 0.2},
        "bonus": []}
     ],
