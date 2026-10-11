@@ -29,6 +29,7 @@ public final class ChunkLoadingGameTests {
     private ChunkLoadingGameTests() {
     }
 
+    // Флак под нагрузкой: дух ждёт сдвиг набора через succeedWhen, тик духа не гарантирован (R2)
     @GameTest(template = "empty", timeoutTicks = 600)
     public static void chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();

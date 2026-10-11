@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Random;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.Tag;
 import net.jqwik.api.constraints.IntRange;
 
 class MiningPlannerProperties {
@@ -18,6 +19,7 @@ class MiningPlannerProperties {
     private static final BlockCoord FROM = new BlockCoord(0, 0, 0);
     private static final Cell[] CELLS = Cell.values();
 
+    @Tag("slow")
     @Property(tries = 300)
     void next_RandomInput_ReturnedTargetIsSafeWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -34,6 +36,7 @@ class MiningPlannerProperties {
         }
     }
 
+    @Tag("slow")
     @Property(tries = 300)
     void next_RandomInput_IndependentOfTargetOrder(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -141,6 +144,7 @@ class MiningPlannerProperties {
         return dx * dx + dy * dy + dz * dz;
     }
 
+    @Tag("slow")
     @Property(tries = 300)
     void next_RandomInput_ReadsBoundedByTargetCount(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);

@@ -10,12 +10,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import net.jqwik.api.Property;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.support.descriptor.ClassSource;
@@ -25,30 +24,34 @@ import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
 
 public final class TestCostListener implements TestExecutionListener {
-    private static final Path CSV = Path.of("TestResults/unit/test-cost.csv");
+    private static final String CSV_PROPERTY = "theminespirit.testCost.csv";
+    private static final Path DEFAULT_CSV = Path.of("TestResults/unit/test-cost.csv");
 
     private final ThreadMXBean threadMx = ManagementFactory.getThreadMXBean();
     private final List<GarbageCollectorMXBean> gcMbeans = ManagementFactory.getGarbageCollectorMXBeans();
     private final ClassLoadingMXBean classMx = ManagementFactory.getClassLoadingMXBean();
     private final boolean cpuSupported = threadMx.isThreadCpuTimeSupported() && threadMx.isCurrentThreadCpuTimeSupported();
 
-    private final AtomicLong loadedClassesBase = new AtomicLong(classMx.getLoadedClassCount());
-    private final ConcurrentHashMap<String, Long> startCpu = new ConcurrentHashMap<>();
+    private final Path csv;
     private final ConcurrentHashMap<String, Long> startWall = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> startCpu = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> startGc = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Integer> classesAtStart = new ConcurrentHashMap<>();
-    private final List<Run> runs = Collections.synchronizedList(new ArrayList<>());
+    private final ConcurrentHashMap<String, Integer> classesAtTestStart = new ConcurrentHashMap<>();
+    private int classesAtRunStart;
+
+    public TestCostListener() {
+        String configured = System.getProperty(CSV_PROPERTY);
+        this.csv = configured == null || configured.isBlank() ? DEFAULT_CSV : Path.of(configured);
+    }
 
     @Override
     public void testPlanExecutionStarted(TestPlan testPlan) {
+        classesAtRunStart = classMx.getLoadedClassCount();
         try {
-            Files.createDirectories(CSV.getParent());
-            if (!Files.exists(CSV)) {
-                Files.writeString(CSV, "class,test,cpu_ms,wall_ms,gc_ms,warmup\n", StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            }
+            Files.createDirectories(csv.getParent());
+            Files.writeString(csv, "class,test,kind,cpu_ms,wall_ms,gc_ms,warmup\n", StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new UncheckedIOException("Не удалось подготовить CSV тестовой стоимости", e);
+            throw new UncheckedIOException("Не удалось подготовить CSV тестовой стоимости " + csv, e);
         }
     }
 
@@ -57,10 +60,10 @@ public final class TestCostListener implements TestExecutionListener {
         if (!id.isTest()) {
             return;
         }
-        String key = idKey(id);
+        String key = id.getUniqueId();
         startWall.put(key, System.nanoTime());
         startGc.put(key, gcTime());
-        classesAtStart.put(key, classMx.getLoadedClassCount());
+        classesAtTestStart.put(key, classMx.getLoadedClassCount());
         if (cpuSupported) {
             startCpu.put(key, threadMx.getCurrentThreadCpuTime());
         }
@@ -68,10 +71,10 @@ public final class TestCostListener implements TestExecutionListener {
 
     @Override
     public void executionFinished(TestIdentifier id, TestExecutionResult result) {
-        if (!id.isTest() || !startWall.containsKey(idKey(id))) {
+        if (!id.isTest() || !startWall.containsKey(id.getUniqueId())) {
             return;
         }
-        String key = idKey(id);
+        String key = id.getUniqueId();
         long wallNs = System.nanoTime() - startWall.remove(key);
         long cpuNs = 0;
         if (cpuSupported) {
@@ -79,18 +82,20 @@ public final class TestCostListener implements TestExecutionListener {
             cpuNs = c == null ? 0 : Math.max(0, threadMx.getCurrentThreadCpuTime() - c);
         }
         long gcMsDelta = Math.max(0, gcTime() - startGc.remove(key));
-        int classesAt = classesAtStart.remove(key);
-        long loaded = Math.max(0L, classMx.getLoadedClassCount() - loadedClassesBase.get());
+        int classesAtStart = classesAtTestStart.remove(key);
+        long loaded = Math.max(0L, classMx.getLoadedClassCount() - classesAtStart);
         boolean warmup = loaded >= 200L;
 
         String className = classOf(id);
         String testName = testName(id);
-        String line = String.format(Locale.ROOT, "%s,%s,%d,%d,%d,%s\n",
-                escape(className), escape(testName), cpuNs / 1_000_000L, wallNs / 1_000_000L, gcMsDelta, warmup ? "true" : "false");
+        String kind = kindOf(className, testName);
+        String line = String.format(Locale.ROOT, "%s,%s,%s,%d,%d,%d,%s\n",
+                escape(className), escape(testName), kind, cpuNs / 1_000_000L, wallNs / 1_000_000L, gcMsDelta,
+                warmup ? "true" : "false");
         try {
-            Files.writeString(CSV, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            Files.writeString(csv, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new UncheckedIOException("Не удалось записать строку стоимости теста", e);
+            throw new UncheckedIOException("Не удалось записать строку стоимости теста в " + csv, e);
         }
     }
 
@@ -103,8 +108,18 @@ public final class TestCostListener implements TestExecutionListener {
         return sum;
     }
 
-    private String idKey(TestIdentifier id) {
-        return id.getUniqueId();
+    private String kindOf(String className, String testName) {
+        try {
+            Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+            for (Method method : clazz.getDeclaredMethods()) {
+                if (method.getName().equals(testName) && method.isAnnotationPresent(Property.class)) {
+                    return "jqwik";
+                }
+            }
+        } catch (Throwable ignored) {
+            // класс или метод недоступны — считаем обычным JUnit-тестом
+        }
+        return "junit";
     }
 
     private String classOf(TestIdentifier id) {
@@ -132,19 +147,5 @@ public final class TestCostListener implements TestExecutionListener {
             return "\"" + s.replace("\"", "\"\"") + "\"";
         }
         return s;
-    }
-
-    private static class Run {
-        final String clazz;
-        final String test;
-        final long cpuMs;
-        final boolean warmup;
-
-        Run(String clazz, String test, long cpuMs, boolean warmup) {
-            this.clazz = clazz;
-            this.test = test;
-            this.cpuMs = cpuMs;
-            this.warmup = warmup;
-        }
     }
 }

@@ -135,6 +135,7 @@ public final class SpiritGameTests {
         });
     }
 
+    // Флак под нагрузкой: дух идёт к недостижимой цели, ждём тайм-аут задачи
     @GameTest(template = "empty", timeoutTicks = 500)
     public static void gotoScript_UnreachableTarget_KeepsFailureStatusAndReason(GameTestHelper helper) {
         buildFloor(helper);

@@ -90,14 +90,14 @@ neoForge {
         configureEach {
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
+            // "SCAN": For scanning mods.
             // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
+            // "REGISTRYDUMP": For getting the contents of registries.
             systemProperty 'forge.logging.markers', 'REGISTRIES'
 
             // Recommended logging level for the console
             // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-logging-levels
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
@@ -230,6 +230,8 @@ tasks.named('test', Test) {
     jvmArgs '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-XX:ActiveProcessorCount=2'
     maxHeapSize = '512m'
     systemProperty 'theminespirit.modId', project.mod_id
+    // Слушатель тестовой стоимости пишет CSV в путь от задачи (docs/TESTING.md → «Время тестов»)
+    systemProperty 'theminespirit.testCost.csv', 'TestResults/unit/test-cost.csv'
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
@@ -250,10 +252,33 @@ tasks.register('slowTest', Test) {
     // через параметры конфигурации JUnit), но не явный @Property(tries = …). См. docs/TESTING.md.
     systemProperty 'jqwik.tries.default', '1000'
     systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'theminespirit.testCost.csv', 'TestResults/slow/test-cost.csv'
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/slow/html')
     reports.junitXml.outputLocation = file('TestResults/slow/xml')
     shouldRunAfter tasks.named('test')
+}
+
+// Подсветка долгих тестов (docs/TESTING.md → «Время тестов»): после test и slowTest печатает
+// топ-10 по CPU потока и строки выше порога с пометкой МЕДЛЕННЫЙ. Пороги — в одном файле
+// test-cost-thresholds.properties (миллисекунды). Логика отчёта — в TestCostReporter
+// (JUnit-тест TestCostReporterTests проверяет её на таблице случаев).
+tasks.register('testCostReport', JavaExec) {
+    group = 'verification'
+    description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV стоимости тестов'
+    dependsOn tasks.named('test')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.theminespirit.testing.TestCostReporter'
+    args 'TestResults/unit/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'
+}
+
+tasks.register('slowTestCostReport', JavaExec) {
+    group = 'verification'
+    description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV медленного тира'
+    dependsOn tasks.named('slowTest')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.theminespirit.testing.TestCostReporter'
+    args 'TestResults/slow/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'
 }
 
 // Пустой тир не должен молча зеленеть: если фильтр не нашёл ни одного теста,
@@ -279,6 +304,15 @@ tasks.withType(Test).configureEach {
 // когда появится тяжёлый тест с замеренным временем (docs/TESTING.md).
 tasks.named('check') {
     dependsOn tasks.named('test')
+}
+
+// Подсветка долгих печатается после прогона, даже зелёного (docs/TESTING.md → «Время тестов»)
+tasks.named('test') {
+    finalizedBy tasks.named('testCostReport')
+}
+
+tasks.named('slowTest') {
+    finalizedBy tasks.named('slowTestCostReport')
 }
 
 // Покрытие JaCoCo — отчёт, а не гейт сборки (docs/TESTING.md).
