@@ -17,4 +17,19 @@ final class RepeatExecutor extends StepExecutor {
     TaskNode stepAt(int index) {
         return index < times ? step : null;
     }
+
+    @Override
+    TaskProgress buildProgress() {
+        return new TaskProgress.RepeatAt(index(), current() == null ? null : current().snapshot());
+    }
+
+    @Override
+    void applyRestore(TaskProgress progress) {
+        TaskProgress.RepeatAt at = (TaskProgress.RepeatAt) progress;
+        index(at.index());
+        if (at.child() != null) {
+            current(spawn(stepAt(at.index())));
+            current().restore(at.child());
+        }
+    }
 }

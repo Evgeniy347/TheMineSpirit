@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.TaskRunner;
+import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -55,6 +56,35 @@ public final class SpiritBrain {
 
     public Optional<String> currentScript() {
         return runner == null ? Optional.empty() : runner.currentScript();
+    }
+
+    public Optional<TaskSnapshot> snapshot() {
+        if (runner != null) {
+            return runner.snapshot();
+        }
+        if (lastStatus != null) {
+            return Optional.of(new TaskSnapshot(TaskSnapshot.VERSION, lastStatus, lastReason, null, null));
+        }
+        return Optional.empty();
+    }
+
+    public void restore(TaskSnapshot snapshot) {
+        runner = TaskRunner.restore(snapshot, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
+        lastStatus = runner.status();
+        if (lastStatus != RunStatus.RUNNING) {
+            lastReason = runner.failureReason().orElse(null);
+            lastCause = runner.failureCause().orElse(null);
+        } else {
+            lastReason = null;
+            lastCause = null;
+        }
+    }
+
+    public void failRestore(String reason) {
+        runner = null;
+        lastStatus = RunStatus.FAILED;
+        lastReason = reason;
+        lastCause = null;
     }
 
     public void tick() {

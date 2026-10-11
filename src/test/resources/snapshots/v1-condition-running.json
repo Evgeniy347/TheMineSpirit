@@ -1,0 +1,1 @@
+{"version":1,"status":"RUNNING","plan":{"type":"condition","check":"seen","params":{},"then":{"type":"script","script":"a","params":{}},"else":{"type":"script","script":"b","params":{}}},"progress":{"type":"condition","branch":"then","child":{"type":"script","state":{}}}}
