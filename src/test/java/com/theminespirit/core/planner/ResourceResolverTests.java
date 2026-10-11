@@ -151,7 +151,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_CountOutOfRange_ThrowsValidationException() {
-        ResourceKnowledge knowledge = ResourceKnowledge.builder().gatherable("oak_log").build();
+        ResourceKnowledge knowledge = new StubKnowledge(Set.of("oak_log"), Map.of(), Map.of());
         assertThrows(PlanValidationException.class,
                 () -> ResourceResolver.resolve("oak_log", 300, knowledge),
                 "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
