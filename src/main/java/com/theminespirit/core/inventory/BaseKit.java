@@ -1,22 +1,14 @@
 package com.theminespirit.core.inventory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
 public final class BaseKit {
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "never_give_away");
     private static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
 
@@ -35,36 +27,18 @@ public final class BaseKit {
     }
 
     public static BaseKit load(String resourcePath) {
-        Objects.requireNonNull(resourcePath,
-                "Путь к файлу базового набора не может быть null: по нему файл ищется на classpath");
-        try (InputStream stream = BaseKit.class.getClassLoader().getResourceAsStream(resourcePath)) {
-            if (stream == null) {
-                throw new IllegalStateException("Файл базового набора '" + resourcePath
-                        + "' не найден на classpath: проверьте, что он лежит в src/main/resources/data/theminespirit/inventory");
-            }
-            return parse(new String(stream.readAllBytes(), StandardCharsets.UTF_8), resourcePath);
-        } catch (IOException error) {
-            throw new UncheckedIOException("Файл базового набора '" + resourcePath
-                    + "' не прочитан: проверьте права и кодировку файла", error);
-        }
+        return parse(JsonResource.readClasspath(resourcePath), resourcePath);
     }
 
     public static BaseKit parse(String json, String origin) {
-        Objects.requireNonNull(json, "Текст файла базового набора не может быть null: разбирать нечего");
-        Objects.requireNonNull(origin, "Источник файла не может быть null: сообщение об ошибке называет путь");
-        JsonNode root = readTree(json, origin);
-        if (!root.isObject()) {
-            throw new IllegalStateException("Файл базового набора '" + origin
-                    + "' — не объект: на верхнем уровне ждётся список rules");
-        }
-        checkFields(root, ROOT_FIELDS, origin, "файла базового набора");
+        JsonNode root = JsonResource.parse(json, origin);
+        JsonResource.checkFields(root, ROOT_FIELDS, origin, "файла базового набора");
         List<KitRule> rules = parseRules(root.get("rules"), origin);
-        JsonNode neverGiveAway = root.get("never_give_away");
-        List<String> neverAway = neverGiveAway == null || neverGiveAway.isNull()
-                ? List.of()
-                : stringsField(neverGiveAway, origin, "списка never_give_away");
+        List<String> neverAway = JsonResource.optionalStrings(root.get("never_give_away"), origin,
+                "списка never_give_away");
         return new BaseKit(origin, rules, neverAway);
     }
+
 
     public List<Slice> surplus(List<Stack> inventory, ValueTable values) {
         Grouping grouping = group(inventory, values);
@@ -213,35 +187,23 @@ public final class BaseKit {
     private record Grouping(List<Stack> stacks, List<List<Integer>> byRule, int[] claimed) {
     }
 
-    private static JsonNode readTree(String json, String origin) {
-        try {
-            JsonNode root = MAPPER.readTree(json);
-            if (root == null) {
-                throw new IllegalStateException("Файл базового набора '" + origin + "' пуст: в нём нет ни одного правила");
-            }
-            return root;
-        } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Файл базового набора '" + origin + "' — не разобран JSON: "
-                    + error.getOriginalMessage() + ". Исправьте синтаксис файла");
-        }
-    }
-
     private static List<KitRule> parseRules(JsonNode node, String origin) {
         if (node == null || !node.isArray() || node.isEmpty()) {
             throw new IllegalStateException("Файл базового набора '" + origin
                     + "' без списка rules: без правил набор пуст и разгрузка отдала бы всё подряд");
         }
-        List<KitRule> rules = new ArrayList<>(node.size());
-        for (int index = 0; index < node.size(); index++) {
-            JsonNode ruleNode = node.get(index);
+        List<JsonNode> nodes = JsonResource.array(node, origin, "списка rules");
+        List<KitRule> rules = new ArrayList<>(nodes.size());
+        for (int index = 0; index < nodes.size(); index++) {
+            JsonNode ruleNode = nodes.get(index);
             if (!ruleNode.isObject()) {
                 throw new IllegalStateException("Файл базового набора '" + origin + "': правило №" + index
                         + " — не объект с полями match/category, keep и mode");
             }
-            checkFields(ruleNode, RULE_FIELDS, origin, "правила №" + index);
-            rules.add(rule(stringsField(ruleNode.get("match"), origin, "правила №" + index),
+            JsonResource.checkFields(ruleNode, RULE_FIELDS, origin, "правила №" + index);
+            rules.add(rule(optionalStringsField(ruleNode.get("match"), origin, "поля match правила №" + index),
                     textField(ruleNode.get("category"), origin, "правила №" + index),
-                    integerField(ruleNode.get("keep"), origin, "правила №" + index),
+                    JsonResource.integer(ruleNode.get("keep"), origin, "поля keep правила №" + index),
                     modeField(ruleNode.get("mode"), origin, "правила №" + index), origin, "правила №" + index));
         }
         return rules;
@@ -290,6 +252,13 @@ public final class BaseKit {
         return patterns;
     }
 
+    private static List<String> optionalStringsField(JsonNode node, String origin, String what) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        return JsonResource.strings(node, origin, what);
+    }
+
     private static String textField(JsonNode node, String origin, String what) {
         if (node == null) {
             return null;
@@ -301,25 +270,4 @@ public final class BaseKit {
         return node.asText();
     }
 
-    private static int integerField(JsonNode node, String origin, String what) {
-        if (node == null || !node.isInt()) {
-            throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
-                    + " нет квоты keep или она не целая: квота это сколько предметов набора остаётся у духа");
-        }
-        return node.asInt();
-    }
-
-    private static void checkFields(JsonNode node, Set<String> allowed, String origin, String what) {
-        List<String> fields = new ArrayList<>();
-        Iterator<String> names = node.fieldNames();
-        while (names.hasNext()) {
-            fields.add(names.next());
-        }
-        for (String field : fields) {
-            if (!allowed.contains(field)) {
-                throw new IllegalStateException("Файл базового набора '" + origin + "': неизвестное поле '" + field
-                        + "' у " + what + ": допустимы " + allowed + ", опечатка в имени поля сделала бы квоту мёртвой");
-            }
-        }
-    }
 }
