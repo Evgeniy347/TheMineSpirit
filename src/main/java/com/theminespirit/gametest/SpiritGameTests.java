@@ -2,11 +2,15 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritScripts;
 import com.theminespirit.neoforge.WorldScanner;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -21,6 +25,22 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SpiritGameTests {
     private SpiritGameTests() {
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void adapterRegistry_EveryScriptId_IsDescribedInCatalog(GameTestHelper helper) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        ScriptRegistry registry = SpiritScripts.registryFor(spirit);
+        ScriptCatalog catalog = CoreScripts.defaultCatalog();
+        for (String id : registry.ids()) {
+            helper.assertTrue(catalog.find(id).isPresent(),
+                    "Скрипт '" + id + "' адаптера отсутствует в каталоге скриптов: реестр выдаёт id, которого нет в "
+                            + "CoreScripts.defaultCatalog()");
+        }
+        ScriptCatalog restricted = SpiritScripts.catalogFor(spirit);
+        helper.assertTrue(!restricted.all().isEmpty(),
+                "catalogFor должен возвращать непустой каталог для реализованных скриптов: иначе LlmPlanner получит пустой каталог");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)

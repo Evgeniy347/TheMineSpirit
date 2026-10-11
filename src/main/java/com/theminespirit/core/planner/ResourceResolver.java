@@ -1,8 +1,13 @@
 package com.theminespirit.core.planner;
 
+import com.theminespirit.core.plan.PlanValidationException;
+import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,14 +20,26 @@ public final class ResourceResolver {
     }
 
     public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge) {
+        return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+    }
+
+    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
+            ConditionCatalog conditions) {
         Objects.requireNonNull(item, "item не может быть null: без имени предмета резолвер не найдёт способ добычи");
         Objects.requireNonNull(knowledge,
                 "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
+        Objects.requireNonNull(scripts, "scripts не может быть null");
+        Objects.requireNonNull(conditions, "conditions не может быть null");
         if (count <= 0) {
             throw new IllegalArgumentException(
                     "Количество предмета должно быть больше 0, а получено " + count + ": нулевая цель не имеет смысла");
         }
-        return resolve(item, count, knowledge, new HashSet<>());
+        TaskNode plan = resolve(item, count, knowledge, new HashSet<>());
+        try {
+            return PlanValidator.validate(plan, scripts, conditions);
+        } catch (PlanValidationException error) {
+            throw error;
+        }
     }
 
     private static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, Set<String> path) {

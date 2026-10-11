@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public final class ScriptRegistry {
     private final Map<String, ScriptFactory> byId;
@@ -32,5 +33,9 @@ public final class ScriptRegistry {
 
     public boolean contains(String id) {
         return byId.containsKey(id);
+    }
+
+    public Set<String> ids() {
+        return byId.keySet();
     }
 }

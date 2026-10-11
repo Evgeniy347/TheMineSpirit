@@ -1,9 +1,13 @@
 package com.theminespirit.core.planner;
 
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.ScriptCatalog;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,13 +27,27 @@ public final class FallbackPlanner implements Planner {
             new Rule("атак", FallbackPlanner::attackPlan),
             new Rule("убей", FallbackPlanner::attackPlan));
 
+    private final ScriptCatalog scripts;
+    private final ConditionCatalog conditions;
+
+    public FallbackPlanner() {
+        this(CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+    }
+
+    public FallbackPlanner(ScriptCatalog scripts, ConditionCatalog conditions) {
+        this.scripts = Objects.requireNonNull(scripts, "scripts не может быть null: план валидируется по каталогу");
+        this.conditions = Objects.requireNonNull(conditions,
+                "conditions не может быть null: каталог проверок обязателен");
+    }
+
     @Override
     public TaskNode plan(Goal goal, WorldObservation observation) {
         Objects.requireNonNull(goal, "goal не может быть null: без текста цели сценарий не выбрать");
         String normalized = goal.text().strip().toLowerCase(Locale.ROOT);
         for (Rule rule : RULES) {
             if (normalized.contains(rule.keyword)) {
-                return rule.action.build(goal);
+                TaskNode node = rule.action.build(goal);
+                return PlanValidator.validate(node, scripts, conditions);
             }
         }
         throw new UnplannableGoalException("Цель '" + goal.text()

@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -83,8 +87,12 @@ class PlanParserTests {
         String json = "{\"type\":\"condition\",\"check\":\"has_item\",\"params\":{\"item\":\"oak_log\"},"
                 + "\"then\":{\"type\":\"script\",\"script\":\"craft\",\"params\":{\"item\":\"stick\",\"count\":4}},"
                 + "\"else\":{\"type\":\"script\",\"script\":\"acquire\",\"params\":{\"item\":\"oak_log\",\"count\":1}}}";
+        java.util.List<com.theminespirit.core.script.ConditionSpec> specs = java.util.List.of(
+                new com.theminespirit.core.script.ConditionSpec("has_item", "has_item",
+                        java.util.List.of(com.theminespirit.core.script.ParamSpec.text("item", true))));
+        ConditionCatalog conditions = ConditionCatalog.of(specs);
 
-        TaskNode node = PlanParser.parse(json, CATALOG);
+        TaskNode node = PlanParser.parse(json, CATALOG, conditions);
 
         assertEquals(new ConditionNode("has_item", Map.of("item", "oak_log"),
                 new ScriptCall("craft", Map.of("item", "stick", "count", 4)),
@@ -96,8 +104,11 @@ class PlanParserTests {
     void parse_ConditionNodeWithoutElse_ReturnsNullElseBranch() {
         String json = "{\"type\":\"condition\",\"check\":\"is_day\","
                 + "\"then\":{\"type\":\"script\",\"script\":\"return_home\"}}";
+        java.util.List<com.theminespirit.core.script.ConditionSpec> specs = java.util.List.of(
+                new com.theminespirit.core.script.ConditionSpec("is_day", "is_day", java.util.List.of()));
+        ConditionCatalog conditions = ConditionCatalog.of(specs);
 
-        TaskNode node = PlanParser.parse(json, CATALOG);
+        TaskNode node = PlanParser.parse(json, CATALOG, conditions);
 
         assertEquals(new ConditionNode("is_day", Map.of(),
                 new ScriptCall("return_home", Map.of()), null), node,

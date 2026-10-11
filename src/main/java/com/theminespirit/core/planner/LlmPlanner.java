@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.Objects;
@@ -11,11 +12,18 @@ import java.util.Objects;
 public final class LlmPlanner implements Planner {
     private final LlmClient client;
     private final ScriptCatalog catalog;
+    private final ConditionCatalog conditions;
     private final Planner fallback;
 
     public LlmPlanner(LlmClient client, ScriptCatalog catalog, Planner fallback) {
+        this(client, catalog, com.theminespirit.core.script.ConditionCatalog.empty(), fallback);
+    }
+
+    public LlmPlanner(LlmClient client, ScriptCatalog catalog, ConditionCatalog conditions, Planner fallback) {
         this.client = Objects.requireNonNull(client, "client не может быть null: без клиента ИИ некому строить план");
         this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу скриптов");
+        this.conditions = Objects.requireNonNull(conditions,
+                "conditions не может быть null: каталог проверок обязателен");
         this.fallback = Objects.requireNonNull(fallback,
                 "fallback не может быть null: невалидный ответ ИИ должен передаваться в запасной планировщик");
     }
@@ -25,7 +33,7 @@ public final class LlmPlanner implements Planner {
         String prompt = buildPrompt(goal, observation);
         try {
             String text = client.complete(prompt);
-            return PlanParser.parse(text, catalog);
+            return PlanParser.parse(text, catalog, conditions);
         } catch (LlmException | PlanValidationException error) {
             return fallback.plan(goal, observation);
         }

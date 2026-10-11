@@ -11,9 +11,10 @@ public record FollowParams(String target, int radius) {
             throw new IllegalArgumentException(
                     "Не задана цель follow: без цели скрипт не знает, за кем следовать");
         }
-        if (radius < 0) {
-            throw new IllegalArgumentException(
-                    "Радиус удержания " + radius + " отрицателен: follow не может требовать дистанцию меньше нуля");
+        if (radius < CatalogLimits.FOLLOW_RADIUS_MIN || radius > CatalogLimits.FOLLOW_RADIUS_MAX) {
+            throw new IllegalArgumentException("Радиус удержания " + radius + " вне диапазона [" +
+                    CatalogLimits.FOLLOW_RADIUS_MIN + ", " + CatalogLimits.FOLLOW_RADIUS_MAX +
+                    "]: значение должно лежать в этом промежутке");
         }
     }
 

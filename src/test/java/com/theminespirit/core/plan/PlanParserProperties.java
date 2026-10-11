@@ -16,7 +16,7 @@ class PlanParserProperties {
     private static final int MAX_ALLOWED_DEPTH = 15;
 
     @Property
-    void parse_WaitScriptWithAnyTicks_ReturnsSameTicks(@ForAll int ticks) {
+    void parse_WaitScriptWithAnyTicks_ReturnsSameTicks(@ForAll @IntRange(min = 1, max = 6000) int ticks) {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":" + ticks + "}}";
 
         assertEquals(
