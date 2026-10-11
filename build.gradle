@@ -259,6 +259,26 @@ tasks.register('slowTest', Test) {
     shouldRunAfter tasks.named('test')
 }
 
+// Глубокий прогон свойств: 1000 попыток на каждое (docs/TESTING.md). Без фильтра тегов — все
+// @Property идут с tries=1000. Не в check: предназначен для ночного прогона или по запросу.
+tasks.register('propertyTest', Test) {
+    group = 'verification'
+    description = 'Свойства jqwik с 1000 попытками: глубокий прогон инвариантов'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeEngines 'jqwik'
+    }
+    maxParallelForks = 1
+    systemProperty 'jqwik.tries.default', '1000'
+    systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'theminespirit.testCost.csv', 'TestResults/property/test-cost.csv'
+    failOnNoDiscoveredTests = true
+    reports.html.outputLocation = file('TestResults/property/html')
+    reports.junitXml.outputLocation = file('TestResults/property/xml')
+    shouldRunAfter tasks.named('test')
+}
+
 // Подсветка долгих тестов (docs/TESTING.md → «Время тестов»): после test и slowTest печатает
 // топ-10 по CPU потока и строки выше порога с пометкой МЕДЛЕННЫЙ. Пороги — в одном файле
 // test-cost-thresholds.properties (миллисекунды). Логика отчёта — в TestCostReporter
