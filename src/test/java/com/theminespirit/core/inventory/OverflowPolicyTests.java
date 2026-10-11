@@ -27,7 +27,10 @@ class OverflowPolicyTests {
             "всё защищено шаблоном|cobblestone:64*36|diamond:1|*|REFUSE|-1|-1",
             "защищён только дешёвый слот|cobblestone:64*35;dirt:64|diamond:1|cobblestone|DROP|35|64",
             "незащищён только дорогой слот|cobblestone:64*35;diamond:1|cobblestone:1|cobblestone|REFUSE|-1|-1",
-            "нужная еда защищена шаблоном|bread:16*35;cobblestone:64|diamond:1|bread|DROP|35|64"})
+            "нужная еда защищена шаблоном|bread:16*35;cobblestone:64|diamond:1|bread|DROP|35|64",
+            "защищён дорогой слот|iron_ingot:1*35;cobblestone:64|diamond:1|iron_ingot|DROP|35|64",
+            "кучка того же предмета при полном инвентаре|dirt:64*36|dirt:64| |REFUSE|-1|-1",
+            "новое дороже всего защищённого|torch:16*35;cobblestone:64|iron_ingot:1|torch|DROP|35|64"})
     void decide_TableOfSituations_MatchesExpected(String situation, String inventorySpec, String incomingSpec,
             String protectedSpec, String expectedAction, int expectedSlot, int expectedCount) {
         List<Stack> inventory = inventory(inventorySpec);
