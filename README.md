@@ -45,7 +45,10 @@
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: перезапуск той же сессии при «Free usage exceeded» (5, 5, 10, 30, 60 с), остановка после пятого, стоп при молчании 15 мин | код выхода 0 и `Сессия: ses_…`; 75 — сообщить пользователю |
 | [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): перезапуски, лимит, зависание, ложное срабатывание на чтении файла | все строки `OK` |
+| [scripts/opencode-status.sh](scripts/opencode-status.sh) | короткая сводка о текущем задании opencode: жив ли, давно ли писал, последние действия, состояние git | строка `opencode: работает; …` |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh) | подключает git-хуки из `scripts/git-hooks/` (один раз после клонирования) | `git config core.hooksPath` → `scripts/git-hooks` |
+| [scripts/git-hooks/reference-transaction](scripts/git-hooks/reference-transaction) | сторож истории: запрещает `--amend`, `rebase`, `reset` назад, `branch -f`, `stash` (docs/GIT.md) | `git commit --amend` отклоняется с объяснением |
+| [scripts/git-hooks/pre-rebase](scripts/git-hooks/pre-rebase) | ранний отказ `rebase` с объяснением | `git rebase` отклоняется |
 | [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 

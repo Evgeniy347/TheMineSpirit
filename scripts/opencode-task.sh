@@ -20,6 +20,10 @@ RETRY_DELAYS=(5 5 10 30 60)
 IDLE_LIMIT="${OPENCODE_IDLE_LIMIT:-900}"
 QUOTA_PATTERN='free usage exceeded|freeusagelimiterror'
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
+EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
+и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам; коммитишь сам, частями, по \
+docs/GIT.md; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
+коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
 EXIT_QUOTA_EXHAUSTED=75
 EXIT_STALLED=76
@@ -88,7 +92,7 @@ run_attempt() {
     [ -n "$session" ] && args+=(-s "$session")
     : >"$out"
     : >"$err"
-    setsid "$OPENCODE_BIN" "${args[@]}" "$message" >"$out" 2>"$err" </dev/null &
+    setsid "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES" >"$out" 2>"$err" </dev/null &
     local pid=$!
     while kill -0 "$pid" 2>/dev/null; do
         sleep "$POLL_SECONDS"
