@@ -8,6 +8,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.AbstractSet;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +85,23 @@ class HydrationTests {
     }
 
     @Test
+    void countingWater_StreamTraversal_CountsElementVisits() {
+        CountingWater water = new CountingWater();
+        for (int i = 0; i < 5; i++) {
+            water.add(new BlockCoord(i, 0, 0));
+        }
+        int before = water.lookups;
+
+        List<BlockCoord> seen = water.stream().filter(cell -> cell.x() >= 0).toList();
+
+        assertEquals(5, seen.size(),
+                "Обход обязан вернуть все клетки: счётчик не должен терять элементы");
+        assertTrue(water.lookups - before >= 5,
+                "Обход через stream/iterator обязан считаться поэлементно: иначе перебор всего озера даст "
+                        + "0 обращений и тест масштаба ослепнет. Обращений за обход: " + (water.lookups - before));
+    }
+
+    @Test
     void maxLookups_BoxVolume_Is162() {
         assertEquals(162, Hydration.MAX_LOOKUPS,
                 "Предел обращений обязан равняться объёму ящика 9×9×2: иначе тест масштаба проверяет не то число");
@@ -119,11 +137,24 @@ class HydrationTests {
 
         @Override
         public Iterator<BlockCoord> iterator() {
-            return cells.iterator();
+            Iterator<BlockCoord> delegate = cells.iterator();
+            return new Iterator<>() {
+                @Override
+                public boolean hasNext() {
+                    return delegate.hasNext();
+                }
+
+                @Override
+                public BlockCoord next() {
+                    lookups++;
+                    return delegate.next();
+                }
+            };
         }
 
         @Override
         public int size() {
+            lookups++;
             return cells.size();
         }
     }
