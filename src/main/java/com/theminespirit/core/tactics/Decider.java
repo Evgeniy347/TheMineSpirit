@@ -20,6 +20,15 @@ public final class Decider {
     }
 
     public Decision decide(FactMap facts, Scores scores, int escapeRoutes, TacticsMemory memory, long now) {
+        Decision decision = choose(facts, scores, escapeRoutes, memory, now);
+        if (decision.option() == TacticalOption.RETREAT && escapeRoutes == 0) {
+            return new Decision(TacticalOption.FIGHT, Decision.NO_ROUTE, decision.excluded(), decision.excludingRules(),
+                    decision.hold());
+        }
+        return decision;
+    }
+
+    private Decision choose(FactMap facts, Scores scores, int escapeRoutes, TacticsMemory memory, long now) {
         HardVerdict verdict = hardRules.evaluate(facts);
         if (verdict.decisive().isPresent()) {
             HardRule rule = verdict.decisive().get();

@@ -7,5 +7,6 @@ public enum RetreatMethod {
     WATER,
     BARRICADE,
     PILLAR,
+    AWAY,
     NONE
 }

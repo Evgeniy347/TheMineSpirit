@@ -100,6 +100,10 @@
       {"id": "retreat_pillar", "method": "PILLAR",
        "requires": [{"fact": "self.blocks", "op": ">=", "value": 8}, {"fact": "enemy.anyRanged", "op": "==", "value": false}, {"fact": "enemy.anyFlies", "op": "==", "value": false}],
        "utility": {"base": 0.4},
+       "bonus": []},
+      {"id": "retreat_away", "method": "AWAY",
+       "requires": [{"fact": "derived.speedRatio", "op": ">=", "value": 1.0}, {"fact": "enemy.nearest", "op": ">", "value": 3}],
+       "utility": {"base": 0.2},
        "bonus": []}
     ],
     "callHelp": {"when": [{"fact": "order.helpAvailable", "op": "==", "value": true}]}

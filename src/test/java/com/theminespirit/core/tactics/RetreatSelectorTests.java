@@ -25,13 +25,13 @@ class RetreatSelectorTests {
     static Stream<Arguments> table() {
         return Stream.of(
                 row("утопленник: вода не спасает, ведро есть", world().enemy("drowned", 6).bucket(true).water(3).build(),
-                        RetreatMethod.NONE, ""),
+                        RetreatMethod.AWAY, "retreat_away"),
                 row("утопленник и укрытие рядом: идём в укрытие", world().enemy("drowned", 6).bucket(true).water(3)
                         .cover(5).build(), RetreatMethod.COVER, "retreat_cover"),
                 row("скелеты: укрытие, а не баррикада и не столб", world().enemies("skeleton", 12, 2).cover(5).blocks(20)
                         .build(), RetreatMethod.COVER, "retreat_cover"),
                 row("скелеты без укрытия: баррикада и столб закрыты", world().enemies("skeleton", 12, 2).blocks(20)
-                        .build(), RetreatMethod.NONE, ""),
+                        .build(), RetreatMethod.AWAY, "retreat_away"),
                 row("крипер: баррикада не годится, столб годится", world().enemy("creeper", 4).blocks(10).build(),
                         RetreatMethod.PILLAR, "retreat_pillar"),
                 row("фантом: столб не годится, баррикада годится", world().enemy("phantom", 10).blocks(10).build(),
@@ -43,7 +43,7 @@ class RetreatSelectorTests {
                 row("зомби и водоём рядом: вода из водоёма полезнее", world().enemy("zombie", 5).bucket(true).water(4)
                         .build(), RetreatMethod.WATER, "retreat_water"),
                 row("водоём дальше 8 блоков не годится", world().enemy("zombie", 5).water(8.5).build(),
-                        RetreatMethod.NONE, ""),
+                        RetreatMethod.AWAY, "retreat_away"),
                 row("близкий дом и скорость выше: дом", world().enemy("zombie", 5).home(20).cover(5).build(),
                         RetreatMethod.HOME, "retreat_home"),
                 row("дом дальше 80 блоков: недоступен", world().enemy("zombie", 5).home(100).cover(10).build(),
@@ -62,7 +62,9 @@ class RetreatSelectorTests {
                         RetreatMethod.COVER, "retreat_cover"),
                 row("стрелок: близкий дом всё же лучше укрытия", world().enemy("skeleton", 12).home(20).cover(6)
                         .build(), RetreatMethod.HOME, "retreat_home"),
-                row("ничего нет", world().enemy("zombie", 5).build(), RetreatMethod.NONE, ""));
+                row("ничего нет, кроме бега прочь", world().enemy("zombie", 5).build(), RetreatMethod.AWAY, "retreat_away"),
+                row("враг быстрее и ничего нет: бежать бессмысленно", world().enemy("zombie", 5).speed(0.2).build(),
+                        RetreatMethod.NONE, ""));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -97,14 +99,14 @@ class RetreatSelectorTests {
 
         RetreatOptions options = selector(TacticsConfig.loadDefault()).evaluate(Assessments.facts(situation));
 
-        assertEquals(3, options.routes(),
-                "Водоём и ведро — один способ WATER: доступность отхода считается по способам (дом, укрытие, вода), а не по строкам");
+        assertEquals(4, options.routes(),
+                "Водоём и ведро — один способ WATER: доступность отхода считается по способам (дом, укрытие, вода, бег прочь), а не по строкам");
     }
 
     @Test
     void routes_NothingApplies_IsZero() {
         RetreatOptions options = selector(TacticsConfig.loadDefault())
-                .evaluate(Assessments.facts(world().enemy("zombie", 5).build()));
+                .evaluate(Assessments.facts(world().enemy("zombie", 5).speed(0.2).build()));
 
         assertEquals(0, options.routes(), "Без способов отхода routes = 0: жёсткое правило «отступать некуда» опирается на это число");
     }
