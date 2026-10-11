@@ -3,10 +3,10 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.observation.WorldObservation;
-import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
 import java.util.Set;
@@ -18,7 +18,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
-import com.theminespirit.core.script.ConditionCatalog;
 
 public final class SpiritEntity extends PathfinderMob {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -164,13 +163,9 @@ public final class SpiritEntity extends PathfinderMob {
 
     private void restoreSnapshot(TaskSnapshot snapshot) {
         try {
-            if (snapshot.status() == RunStatus.RUNNING) {
-                TaskNode plan = snapshot.plan();
-                if (plan != null) {
-                    PlanValidator.validate(plan, SpiritScripts.catalogFor(this), ConditionCatalog.empty());
-                }
-            }
-            brain().restore(snapshot);
+            TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(snapshot, SpiritScripts.catalogFor(this),
+                    SpiritScripts.conditionCatalog());
+            brain().restore(validated);
         } catch (RuntimeException e) {
             String reason = "не удалось восстановить задачу: " + e.getMessage();
             brain().failRestore(reason);
