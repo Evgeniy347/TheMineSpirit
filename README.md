@@ -26,7 +26,8 @@
 | Файл | Назначение |
 |---|---|
 | [AGENTS.md](AGENTS.md) | карта правил для разработчика и AI-агента, решения пользователя |
-| [todo.md](todo.md) | живой чеклист плана работ и открытые решения |
+| [todo.md](todo.md) | примерный план работ, техдолг и открытые решения |
+| [tasks/](tasks/) | подробные чеклисты блоков из todo.md для opencode; удаляются после выполнения и ревью |
 | [CLAUDE.md](CLAUDE.md) | вход для Claude Code, отсылает к AGENTS.md |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | соглашения кода |
 | [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
