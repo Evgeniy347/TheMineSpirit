@@ -298,7 +298,7 @@ class CycleRunner:
         rid = request_id(bot_id, cycle, plan_fingerprint)
         base = {"request_id": rid, "goal": accepted.goal, "plan": accepted.plan, "fingerprint": plan_fingerprint,
                 "reason": accepted.reason, "model": accepted.model, "prompt_sha": accepted.prompt_sha, "cycle": cycle,
-                "obs_hash": accepted.obs_hash}
+                "obs_hash": accepted.obs_hash, "created_at": rt.clock.now()}
         if self.effective_mode == "dry":
             rt.guard.record_post(rt.clock.now(), bot_id, plan_fingerprint)
             rt.guard.record_decision(bot_id, accepted.obs_hash)
@@ -319,7 +319,33 @@ class CycleRunner:
                 rt.alert(f"у духа {bot_id} была неотправленная задача, но режим теперь dry: решение сброшено", code="pending_dropped",
                          cycle=cycle, bot=bot_id)
                 continue
-            self._post(bot_id, pending, recovered=True)
+            if rt.clock.now() - pending.get("created_at", 0) > rt.config.pending_ttl:
+                del rt.state["pending"][bot_id]
+                rt.alert(f"неотправленное решение духа {bot_id} старше {int(rt.config.pending_ttl)} с и сброшено: мир мог измениться",
+                         code="pending_expired", cycle=cycle, bot=bot_id)
+            elif rt.config.pause_path.exists():
+                self._skip(CycleSummary(cycle), cycle, bot_id, "файл PAUSE: неотправленное решение ждёт, повторной отправки нет",
+                           "pending_paused")
+            elif self._pending_bot_gone(bot_id, cycle):
+                del rt.state["pending"][bot_id]
+            else:
+                self._post(bot_id, pending, recovered=True)
+
+    def _pending_bot_gone(self, bot_id: str, cycle: int) -> bool:
+        rt = self.rt
+        try:
+            fresh = rt.client.get(f"/v1/bots/{bot_id}")
+        except ApiError as error:
+            if error.status == 404:
+                rt.alert(f"дух {bot_id} исчез, неотправленное решение сброшено ({error})", code="pending_dropped", cycle=cycle, bot=bot_id)
+                return True
+            return False
+        except NetworkError:
+            return False
+        if isinstance(fresh, dict) and fresh.get("state") == "dead":
+            rt.alert(f"дух {bot_id} мёртв, неотправленное решение сброшено", code="pending_dropped", cycle=cycle, bot=bot_id)
+            return True
+        return False
 
     def _post(self, bot_id: str, pending: dict, recovered: bool) -> bool:
         rt = self.rt

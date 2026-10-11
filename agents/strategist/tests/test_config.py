@@ -18,6 +18,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual((10, 1800, 5, 32, 8), (cfg.task_poll, cfg.task_timeout, cfg.rest_per_second, cfg.max_nodes,
                                                  cfg.max_root_steps))
         self.assertEqual(240, cfg.brain_timeout, "STRATEGIST_BRAIN_TIMEOUT по умолчанию 240 с")
+        self.assertEqual(900, cfg.pending_ttl, "срок годности неотправленного решения 15 мин")
         self.assertEqual(24, cfg.observe_radius, "радиус наблюдения в пределах ScanRadius 1..32")
 
     def test_overrides_ValidValues_Applied(self):
@@ -33,7 +34,7 @@ class ConfigTests(unittest.TestCase):
             ("SPIRIT_API", ""), ("STRATEGIST_MODEL", "  "), ("STRATEGIST_BRAIN_TIMEOUT", "0"),
             ("STRATEGIST_TASKS_PER_HOUR", "0"), ("STRATEGIST_TASKS_PER_HOUR", "6.5"),
             ("STRATEGIST_REST_PER_SECOND", "100"), ("STRATEGIST_MAX_NODES", "257"), ("STRATEGIST_TASK_POLL", "0"),
-            ("STRATEGIST_CONFIRM_LIVE", "да"), ("STRATEGIST_JOURNAL_FILES", "0"), ("STRATEGIST_OBSERVE_RADIUS", "0"), ("STRATEGIST_OBSERVE_RADIUS", "33"), ("STRATEGIST_TASK_TIMEOUT", "5"),
+            ("STRATEGIST_CONFIRM_LIVE", "да"), ("STRATEGIST_JOURNAL_FILES", "0"), ("STRATEGIST_OBSERVE_RADIUS", "0"), ("STRATEGIST_PENDING_TTL", "59"), ("STRATEGIST_OBSERVE_RADIUS", "33"), ("STRATEGIST_TASK_TIMEOUT", "5"),
         ]
         for name, value in table:
             with self.subTest(name=name, value=value):

@@ -44,6 +44,7 @@ class Config:
     failures_to_pause: int = 3
     pause_duration: float = 1800
     task_poll: float = 10
+    pending_ttl: float = 900
     task_timeout: float = 1800
     rest_per_second: int = 5
     rest_timeout: float = 10
@@ -143,6 +144,7 @@ def from_env(env: Mapping[str, str] | None = None) -> Config:
         failures_to_pause=_number(env, "STRATEGIST_FAILURES_TO_PAUSE", 3, 1, 20, int),
         pause_duration=_number(env, "STRATEGIST_PAUSE_DURATION", 1800, 0, 86400, float),
         task_poll=_number(env, "STRATEGIST_TASK_POLL", 10, 1, 300, float),
+        pending_ttl=_number(env, "STRATEGIST_PENDING_TTL", 900, 60, 86400, float),
         task_timeout=_number(env, "STRATEGIST_TASK_TIMEOUT", 1800, 30, 86400, float),
         rest_per_second=_number(env, "STRATEGIST_REST_PER_SECOND", 5, 1, 20, int),
         rest_timeout=_number(env, "STRATEGIST_REST_TIMEOUT", 10, 1, 120, float),

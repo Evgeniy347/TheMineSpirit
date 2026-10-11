@@ -1,0 +1,61 @@
+{
+ "description": "перед повтором перечитывается дух: мёртвому неотправленное решение не досылается",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "task_post_lose_response": 1
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "restart": true
+  },
+  {
+   "fake": {
+    "set_state": {
+     "bot": "forest",
+     "state": "dead"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "journal_has": {
+    "event": "alert",
+    "code": "pending_dropped",
+    "reason_contains": "мёртв"
+   }
+  }
+ ],
+ "name": "36-pending-decision-dropped-when-bot-is-dead",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
