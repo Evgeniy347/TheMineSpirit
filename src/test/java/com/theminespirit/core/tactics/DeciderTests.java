@@ -83,4 +83,29 @@ class DeciderTests {
                 List.of(decision.option(), decision.rule()),
                 "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало");
     }
+
+    @Test
+    void decide_HeldRetreatReplacedWithoutRoute_HasNoHold() {
+        TacticsConfig config = TacticsConfig.loadDefault();
+        Situation situation = SituationBuilder.create().enemy("zombie", 6).build();
+        Assessment assessment = Assessments.full(situation).withEscapeRoutes(0);
+        Scores scores = new Scorer().score(situation, assessment, config.weights());
+        Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
+
+        Decision decision = decider.decide(FactMap.from(situation, assessment), scores, 0,
+                Memories.holding(situation, TacticalOption.RETREAT, 0), 10);
+
+        assertEquals(List.of(TacticalOption.FIGHT, "no_route_fight_targeted", HoldStatus.NONE),
+                List.of(decision.option(), decision.rule(), decision.hold()),
+                "Удерживаемое RETREAT без способа отхода подменено боем: подмена — решение правила, а не удержания, "
+                        + "поэтому hold = NONE, а не HELD внутреннего решения");
+    }
+
+    @Test
+    void decide_NoRouteAndFightExcluded_ReplacesRetreatWithIgnore() {
+        Decision decision = decide(TacticsConfig.loadDefault(), SituationBuilder.create().lava(1).enemy("zombie", 6).build(), 0);
+
+        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"), List.of(decision.option(), decision.rule()),
+                "Бой у лавы вычеркнут: подмена RETREAT без пути обязана уйти на невычеркнутый вариант IGNORE");
+    }
 }

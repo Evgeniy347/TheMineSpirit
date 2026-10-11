@@ -29,7 +29,11 @@
      "then": {"decision": "IGNORE"}},
     {"id": "outside_engage_ignore", "priority": 55,
      "when": [{"fact": "state.tactical", "op": "==", "value": "calm"}, {"fact": "order.engageLeft", "op": "<", "value": 0}, {"fact": "enemy.targetingSelf", "op": "==", "value": false}],
-     "then": {"decision": "IGNORE"}}
+     "then": {"decision": "IGNORE"}},
+    {"id": "no_route_fight_targeted", "priority": 30,
+     "when": [{"fact": "enemy.targetingSelf", "op": "==", "value": true}],
+     "then": {"noRoute": "FIGHT"}},
+    {"id": "no_route_ignore", "priority": 10, "when": [], "then": {"noRoute": "IGNORE"}}
   ],
   "actions": [
     {"id": "shoot_explosive", "priority": 55,

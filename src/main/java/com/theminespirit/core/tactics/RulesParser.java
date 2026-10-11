@@ -51,10 +51,15 @@ final class RulesParser {
     }
 
     private static HardEffect hardEffect(ConfigNode then) {
-        then.fields(new String[] {}, "decision", "exclude");
-        if (then.has("decision") == then.has("exclude")) {
-            throw then.fail("нужно ровно одно из полей decision и exclude",
-                    "правило либо решает (decision), либо вычёркивает варианты (exclude)");
+        then.fields(new String[] {}, "decision", "exclude", "noRoute");
+        int effects = (then.has("decision") ? 1 : 0) + (then.has("exclude") ? 1 : 0) + (then.has("noRoute") ? 1 : 0);
+        if (effects != 1) {
+            throw then.fail("нужно ровно одно из полей decision, exclude и noRoute",
+                    "правило либо решает (decision), либо вычёркивает варианты (exclude), либо подменяет RETREAT, когда "
+                            + "отступать некуда (noRoute)");
+        }
+        if (then.has("noRoute")) {
+            return new HardEffect.NoRoute(then.get("noRoute").enumValue(TacticalOption.class));
         }
         if (then.has("decision")) {
             return new HardEffect.Decide(then.get("decision").enumValue(TacticalOption.class));

@@ -19,6 +19,9 @@ public final class HardRules {
         Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
         List<String> excluding = new ArrayList<>();
         for (HardRule rule : rules) {
+            if (rule.noRouteOption().isPresent()) {
+                continue;
+            }
             counter.check();
             if (!rule.when().matches(facts)) {
                 continue;
@@ -30,5 +33,26 @@ public final class HardRules {
             excluding.add(rule.id());
         }
         return new HardVerdict(Optional.empty(), excluded, excluding);
+    }
+
+    public Optional<HardRule> noRouteReplacement(FactMap facts) {
+        Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
+        for (HardRule rule : rules) {
+            if (!rule.excludes().isEmpty()) {
+                counter.check();
+                if (rule.when().matches(facts)) {
+                    excluded.addAll(rule.excludes());
+                }
+            }
+        }
+        for (HardRule rule : rules) {
+            if (rule.noRouteOption().isPresent() && !excluded.contains(rule.noRouteOption().get())) {
+                counter.check();
+                if (rule.when().matches(facts)) {
+                    return Optional.of(rule);
+                }
+            }
+        }
+        return Optional.empty();
     }
 }

@@ -22,8 +22,11 @@ public final class Decider {
     public Decision decide(FactMap facts, Scores scores, int escapeRoutes, TacticsMemory memory, long now) {
         Decision decision = choose(facts, scores, escapeRoutes, memory, now);
         if (decision.option() == TacticalOption.RETREAT && escapeRoutes == 0) {
-            return new Decision(TacticalOption.FIGHT, Decision.NO_ROUTE, decision.excluded(), decision.excludingRules(),
-                    decision.hold());
+            return hardRules.noRouteReplacement(facts)
+                    .map(rule -> new Decision(rule.noRouteOption().get(), rule.id(), decision.excluded(),
+                            decision.excludingRules(), HoldStatus.NONE))
+                    .orElseGet(() -> new Decision(TacticalOption.FIGHT, Decision.ALL_EXCLUDED, decision.excluded(),
+                            decision.excludingRules(), HoldStatus.NONE));
         }
         return decision;
     }

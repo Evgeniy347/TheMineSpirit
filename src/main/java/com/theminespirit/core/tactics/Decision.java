@@ -9,7 +9,6 @@ public record Decision(TacticalOption option, String rule, Set<TacticalOption> e
     public static final String SOLE_CANDIDATE = "sole_candidate";
     public static final String ALL_EXCLUDED = "all_excluded";
     public static final String HELD = "hold";
-    public static final String NO_ROUTE = "no_route_fight";
 
     public Decision {
         excluded = Set.copyOf(excluded);

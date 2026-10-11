@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Combinators;
@@ -26,7 +27,9 @@ class TacticsProperties {
     private static final TacticsConfig CONFIG = TacticsConfig.loadDefault();
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String CORNERED = "cornered_fight";
-    private static final Set<String> FIGHT_WITHOUT_EXIT = Set.of(CORNERED, Decision.NO_ROUTE);
+    private static final Set<String> NO_ROUTE_FIGHT = CONFIG.rules().hard().stream()
+            .filter(rule -> rule.noRouteOption().equals(Optional.of(TacticalOption.FIGHT))).map(HardRule::id)
+            .collect(Collectors.toSet());
 
     record Case(Situation situation, TacticsMemory memory, long tick) {
     }
@@ -86,6 +89,17 @@ class TacticsProperties {
         return Situations.withEnemies(Situations.withSelf(situation, Situations.withStats(self, hp, 20, 1000)), hostile);
     }
 
+    private static boolean anyTargeting(Situation situation) {
+        return situation.enemies().stream().anyMatch(EnemyFact::targetingSelf);
+    }
+
+    private static boolean fightJustified(Situation situation, String rule) {
+        if (rule.equals(CORNERED)) {
+            return true;
+        }
+        return NO_ROUTE_FIGHT.contains(rule) && anyTargeting(situation);
+    }
+
     private static TacticalOutcome run(Case c) {
         return new TacticsEngine(CONFIG).step(c.situation(), c.memory(), c.tick());
     }
@@ -109,7 +123,7 @@ class TacticsProperties {
 
         assertTrue(outcome.decision() != TacticalOption.RETREAT || outcome.retreatMethod() != RetreatMethod.NONE,
                 "Решение RETREAT без способа отхода (rule " + outcome.trace().rule() + ") отправило бы духа в никуда: "
-                        + "если способов нет совсем, решение FIGHT (no_route_fight)");
+                        + "если способов нет совсем, замена по правилам noRoute");
     }
 
     @Property(tries = 200)
@@ -135,9 +149,10 @@ class TacticsProperties {
         TacticalOutcome outcome = run(c);
 
         if (outcome.decision() == TacticalOption.FIGHT) {
-            assertTrue(FIGHT_WITHOUT_EXIT.contains(outcome.trace().rule()),
-                    "При HP 20 % и врагах рядом бой допустим только когда загнан в угол, а решило правило "
-                            + outcome.trace().rule() + ": иначе дух героически гибнет вместо отхода");
+            assertTrue(fightJustified(c.situation(), outcome.trace().rule()),
+                    "При HP 20 % и врагах рядом бой допустим только когда загнан в угол (враг ближе 3 блоков) или отступать некуда, "
+                            + "а враг целится в духа; решило правило " + outcome.trace().rule()
+                            + ": иначе дух героически гибнет вместо отхода");
         }
     }
 
@@ -146,8 +161,9 @@ class TacticsProperties {
         TacticalOutcome outcome = run(c);
 
         if (!c.situation().enemies().isEmpty() && outcome.decision() == TacticalOption.FIGHT) {
-            assertTrue(FIGHT_WITHOUT_EXIT.contains(outcome.trace().rule()),
-                    "Пассивный режим не нападает: бой только если загнан в угол, а решило " + outcome.trace().rule());
+            assertTrue(fightJustified(c.situation(), outcome.trace().rule()),
+                    "Пассивный режим не нападает: бой только если загнан в угол (враг ближе 3 блоков) или отступать некуда, "
+                            + "а враг целится в духа; решило " + outcome.trace().rule());
         }
     }
 
@@ -160,9 +176,11 @@ class TacticsProperties {
         boolean guarded = outcome.mode() == CombatMode.GUARD_AREA || outcome.mode() == CombatMode.DEFENSIVE;
 
         if (guarded && geometry.leashLeft() < 0 && nearest > 3) {
-            assertTrue(outcome.decision() != TacticalOption.FIGHT || outcome.trace().rule().equals(Decision.NO_ROUTE),
+            assertTrue(outcome.decision() != TacticalOption.FIGHT || (NO_ROUTE_FIGHT.contains(outcome.trace().rule())
+                    && anyTargeting(situation)),
                     "За поводком (остаток " + geometry.leashLeft() + ") в режиме " + outcome.mode()
-                            + " враг дальше 3 блоков не повод драться (кроме no_route_fight, когда бежать нельзя): дух не преследует за пределы зоны");
+                            + " враг дальше 3 блоков не повод драться (кроме замены noRoute, когда враг целится в духа и бежать некуда); "
+                            + "решило " + outcome.trace().rule() + ": дух не преследует за пределы зоны");
         }
     }
 

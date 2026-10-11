@@ -11,4 +11,8 @@ public record HardRule(String id, int priority, Condition when, HardEffect effec
     public Set<TacticalOption> excludes() {
         return effect instanceof HardEffect.Exclude exclude ? exclude.options() : Set.of();
     }
+
+    public Optional<TacticalOption> noRouteOption() {
+        return effect instanceof HardEffect.NoRoute noRoute ? Optional.of(noRoute.option()) : Optional.empty();
+    }
 }
