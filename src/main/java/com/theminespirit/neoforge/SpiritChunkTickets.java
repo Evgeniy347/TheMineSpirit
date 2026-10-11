@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
+import com.theminespirit.core.chunk.SpiritTicketRetention;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -35,8 +37,15 @@ public final class SpiritChunkTickets {
     }
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
-        for (UUID owner : helper.getEntityTickets().keySet()) {
-            if (level.getEntity(owner) == null) {
+        Set<UUID> owners = helper.getEntityTickets().keySet();
+        // Реестр читается с диска до первого тика духов: если файла нет (мир до появления реестра), сущности
+        // ещё не загружены и опознать мёртвых владельцев нельзя — тогда билеты сохраняются все.
+        Set<UUID> knownLiveSpirits = SpiritRegistry.find(level)
+                .map(SpiritRegistry::alive)
+                .orElse(owners);
+        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(owners, knownLiveSpirits);
+        for (UUID owner : owners) {
+            if (!keep.contains(owner)) {
                 helper.removeAllTickets(owner);
             }
         }

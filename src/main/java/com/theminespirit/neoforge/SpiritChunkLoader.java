@@ -24,6 +24,7 @@ final class SpiritChunkLoader {
         if (!(spirit.level() instanceof ServerLevel serverLevel)) {
             return;
         }
+        SpiritRegistry.get(serverLevel).markAlive(spirit.getUUID());
         ChunkCoord center = new ChunkCoord(spirit.chunkPosition().x, spirit.chunkPosition().z);
         int radius = SpiritConfig.radiusFor(serverLevel);
         if (trackedChunks != null && center.equals(trackedCenter) && radius == trackedRadius) {
@@ -42,7 +43,11 @@ final class SpiritChunkLoader {
     }
 
     void release() {
-        if (trackedChunks == null || !(spirit.level() instanceof ServerLevel serverLevel)) {
+        if (!(spirit.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        SpiritRegistry.get(serverLevel).markDead(spirit.getUUID());
+        if (trackedChunks == null) {
             return;
         }
         SpiritChunkTickets.apply(serverLevel, spirit, new ChunkDiff(Set.of(), trackedChunks));
