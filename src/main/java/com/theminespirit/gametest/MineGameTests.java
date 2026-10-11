@@ -70,9 +70,9 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             HarvestSession run = session.get();
-            if (run == null || run.outcome() == HarvestSession.Outcome.RUNNING) {
-                return;
-            }
+            helper.assertTrue(run != null && run.outcome() != HarvestSession.Outcome.RUNNING,
+                    "сессия обязана завершиться, а не висеть в RUNNING: "
+                            + (run == null ? "сессия не стартовала" : run.outcome().name()));
             helper.assertTrue(run.outcome() == HarvestSession.Outcome.SUCCEEDED,
                     "пять железной руды рядом обязаны добыться, а сессия сказала " + run.outcome() + ": "
                             + run.failureReason());
@@ -101,7 +101,7 @@ public final class MineGameTests {
                     "запросов сущностей обязано быть не больше " + queryBudget + " (раз в "
                             + PickupTuning.REFRESH_TICKS + " тиков и по одному на старте и финале сбора), сделано "
                             + run.entityQueries());
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -114,9 +114,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "деревянная кирка не берёт железную руду: обязана быть ошибка, а статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -127,7 +124,7 @@ public final class MineGameTests {
                     "отказ обязан случиться до первого удара, за 5 тиков духа, заняло " + run.spiritTicks());
             helper.assertTrue(helper.getBlockState(new BlockPos(-1, 2, 2)).is(Blocks.IRON_ORE),
                     "руда обязана остаться на месте: до начала работы её не трогают");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -143,9 +140,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "одна из пяти руды небезопасна: задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
@@ -162,7 +156,7 @@ public final class MineGameTests {
                     "лавовый блок обязан остаться один, стало " + countBlock(helper, Blocks.LAVA));
             helper.assertTrue(!helper.getLevel().getBlockState(spirit.blockPosition()).is(Blocks.LAVA),
                     "дух не должен оказаться в лаве");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -176,9 +170,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "руда под водой небезопасна: задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -189,7 +180,7 @@ public final class MineGameTests {
                     "руда под водой обязана остаться нетронутой");
             helper.assertTrue(helper.getBlockState(new BlockPos(-1, 3, 2)).is(Blocks.WATER),
                     "блок воды обязан остаться на месте");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -208,9 +199,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "замурованная руда недобываема: задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -221,7 +209,7 @@ public final class MineGameTests {
                     "замурованную руду нельзя пробивать через соседей: она обязана остаться");
             helper.assertTrue(run.spiritTicks() <= 40,
                     "отказ по замурованной руде обязан наступить за 40 тиков духа, заняло " + run.spiritTicks());
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -238,9 +226,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "единственная стоянка без пола: задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -248,7 +233,7 @@ public final class MineGameTests {
                     "руду у ямы без пола трогать нельзя");
             helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
                     "дух не должен спускаться в яму: y был " + startY + ", стал " + spirit.getY());
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -267,9 +252,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "куча из 18 булыжника обязана собраться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
@@ -279,7 +261,7 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 0, 2)).is(Blocks.STONE),
                     "пол под кучей обязан остаться: блок под ногами не ломается");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -294,9 +276,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "три бревна по шаблону *_log обязаны собраться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
@@ -304,7 +283,7 @@ public final class MineGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) == 3,
                     "в инвентаре обязано быть 3 бревна, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG));
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -333,6 +312,7 @@ public final class MineGameTests {
                 .getBlockEntity(helper.absolutePos(new BlockPos(2, 1, 2)));
         helper.assertTrue(kept.getItem(0).is(Items.DIAMOND) && kept.getItem(0).getCount() == 3,
                 "содержимое сундука обязано уцелеть, в слоте " + kept.getItem(0));
+        GameTestFixtures.reset(helper);
         helper.succeed();
     }
 
@@ -360,15 +340,15 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (cancelTick.get() < 0 || spirit.tickCount < cancelTick.get() + 40) {
-                return;
-            }
+            helper.assertTrue(cancelTick.get() >= 0 && spirit.tickCount >= cancelTick.get() + 40,
+                    "нужно дождаться отмены и переждать 40 тиков: тик отмены " + cancelTick.get() + ", тик духа "
+                            + spirit.tickCount);
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
                     "отменённая задача обязана быть CANCELLED, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             helper.assertTrue(caveSnapshot(helper).equals(snapshot.get()),
                     "через 40 тиков после отмены мир обязан остаться прежним");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -384,9 +364,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "сломанная кирка обязана провалить задачу, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -395,7 +372,7 @@ public final class MineGameTests {
                     "причина обязана сказать, что инструмент сломался после первой руды, фактически: " + reason);
             helper.assertTrue(helper.getBlockState(new BlockPos(-1, 2, 3)).is(Blocks.IRON_ORE),
                     "вторая руда обязана остаться: её нечем добыть");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -409,9 +386,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "алмаз не по кирке: задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -423,7 +397,7 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
             helper.assertTrue(helper.getBlockState(new BlockPos(-1, 2, 3)).is(Blocks.DIAMOND_ORE),
                     "алмазная руда обязана остаться целой");
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -437,9 +411,6 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                return;
-            }
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "две редстоуновые руды обязаны добыться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
@@ -448,7 +419,7 @@ public final class MineGameTests {
                     + GameTestFixtures.countInWorld(helper, Items.REDSTONE);
             helper.assertTrue(total >= 8 && total <= 10,
                     "две руды дают 8..10 редстоуна вместе в инвентаре и мире, фактически " + total);
-            helper.succeed();
+            GameTestFixtures.reset(helper);
         });
     }
 
@@ -468,6 +439,7 @@ public final class MineGameTests {
         var ids = SpiritScripts.registryFor(spirit).ids();
         helper.assertTrue(ids.contains("mine_vein") && ids.contains("gather"),
                 "реестр скриптов духа обязан содержать mine_vein и gather, а содержит " + ids);
+        GameTestFixtures.reset(helper);
         helper.succeed();
     }
 

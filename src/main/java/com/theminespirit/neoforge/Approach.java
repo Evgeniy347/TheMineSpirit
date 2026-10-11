@@ -95,11 +95,7 @@ public final class Approach {
     }
 
     private void moveToTarget(Vec3 target) {
-        if (targetEntity == null) {
-            spirit.getNavigation().moveTo(target.x, target.y, target.z, MOVE_SPEED);
-        } else {
-            spirit.getNavigation().moveTo(targetEntity, MOVE_SPEED);
-        }
+        spirit.getNavigation().moveTo(target.x, target.y, target.z, 0, MOVE_SPEED);
     }
 
     private void finish() {

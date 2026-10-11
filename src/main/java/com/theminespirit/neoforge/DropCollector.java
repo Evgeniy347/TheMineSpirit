@@ -140,14 +140,19 @@ public final class DropCollector {
     }
 
     private State pursue() {
-        if (spirit.position().distanceTo(target.position()) <= tuning.pickupReach()) {
+        if (spirit.getBoundingBox().distanceToSqr(target.position())
+                <= tuning.pickupReach() * tuning.pickupReach()) {
             approach.cancel();
             return pickUp();
         }
         if (!approach.isActive()) {
             approach.begin(target, tuning.pickupReach());
         }
-        return switch (approach.tick()) {
+        Approach.State state = approach.tick();
+        if (state == Approach.State.MOVING && spirit.getNavigation().isDone()) {
+            spirit.getMoveControl().setWantedPosition(target.getX(), spirit.getY(), target.getZ(), 1.0);
+        }
+        return switch (state) {
             case MOVING -> State.RUNNING;
             case ARRIVED -> pickUp();
             case STUCK, TIMEOUT -> giveUpOnTarget();
