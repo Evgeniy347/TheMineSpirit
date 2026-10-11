@@ -2,15 +2,19 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.script.FollowParams;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 
 final class FollowScript implements ScriptInstance {
     private static final double MOVE_SPEED = 1.0;
 
     private final SpiritEntity spirit;
     private final FollowParams params;
+    private final PathRefreshPolicy pathRefresh = new PathRefreshPolicy();
+    private String failureReason;
 
     FollowScript(SpiritEntity spirit, FollowParams params) {
         this.spirit = spirit;
@@ -20,15 +24,24 @@ final class FollowScript implements ScriptInstance {
     @Override
     public ScriptStatus tick() {
         if (spirit.isRemoved()) {
+            stopNavigation();
+            failureReason = "дух исчез во время сопровождения";
             return ScriptStatus.FAILED;
         }
         ServerPlayer target = findTarget();
         if (target == null) {
             stopNavigation();
+            failureReason = "цель '" + params.target() + "' не найдена";
             return ScriptStatus.FAILED;
         }
-        if (spirit.position().distanceTo(target.position()) > params.radius()) {
+        if (spirit.position().distanceTo(target.position()) <= params.radius()) {
+            return ScriptStatus.RUNNING;
+        }
+        Vec3 targetPos = target.position();
+        boolean pathFinished = spirit.getNavigation().isDone();
+        if (pathRefresh.shouldRefresh(targetPos.x, targetPos.y, targetPos.z, pathFinished)) {
             spirit.getNavigation().moveTo(target, MOVE_SPEED);
+            spirit.countPathBuild();
         }
         return ScriptStatus.RUNNING;
     }
@@ -36,6 +49,11 @@ final class FollowScript implements ScriptInstance {
     @Override
     public void cancel() {
         stopNavigation();
+    }
+
+    @Override
+    public String failureReason() {
+        return failureReason;
     }
 
     private void stopNavigation() {

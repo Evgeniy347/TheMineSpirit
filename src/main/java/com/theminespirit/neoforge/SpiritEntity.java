@@ -16,6 +16,7 @@ public final class SpiritEntity extends PathfinderMob {
 
     private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
     private SpiritBrain brain;
+    private int pathBuilds;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -65,6 +66,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public Optional<String> taskFailureReason() {
         return brain == null ? Optional.empty() : brain.failureReason();
+    }
+
+    public void countPathBuild() {
+        pathBuilds++;
+    }
+
+    public int pathBuilds() {
+        return pathBuilds;
     }
 
     private SpiritBrain brain() {

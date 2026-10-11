@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.script.GotoParams;
 import net.minecraft.world.phys.Vec3;
 
@@ -12,6 +13,8 @@ final class GotoScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final Vec3 target;
+    private final PathRefreshPolicy pathRefresh = new PathRefreshPolicy();
+    private String failureReason;
     private int elapsed;
 
     GotoScript(SpiritEntity spirit, GotoParams params) {
@@ -23,6 +26,7 @@ final class GotoScript implements ScriptInstance {
     public ScriptStatus tick() {
         if (spirit.isRemoved()) {
             stopNavigation();
+            failureReason = "дух исчез до достижения цели";
             return ScriptStatus.FAILED;
         }
         if (spirit.position().distanceTo(target) <= ARRIVAL_TOLERANCE) {
@@ -31,15 +35,25 @@ final class GotoScript implements ScriptInstance {
         }
         if (elapsed++ >= MAX_TICKS) {
             stopNavigation();
+            failureReason = "не дошёл до цели за " + MAX_TICKS + " тиков";
             return ScriptStatus.FAILED;
         }
-        spirit.getNavigation().moveTo(target.x, target.y, target.z, MOVE_SPEED);
+        boolean pathFinished = spirit.getNavigation().isDone();
+        if (pathRefresh.shouldRefresh(target.x, target.y, target.z, pathFinished)) {
+            spirit.getNavigation().moveTo(target.x, target.y, target.z, MOVE_SPEED);
+            spirit.countPathBuild();
+        }
         return ScriptStatus.RUNNING;
     }
 
     @Override
     public void cancel() {
         stopNavigation();
+    }
+
+    @Override
+    public String failureReason() {
+        return failureReason;
     }
 
     private void stopNavigation() {
