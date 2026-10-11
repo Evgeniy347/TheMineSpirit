@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -145,6 +146,13 @@ class FallbackPlannerTests {
         assertTrue(error.getMessage().contains("полететь на луну"),
                 "Сообщение обязано называть нераспознанную цель: по нему игрок видит, что планировщик не понял "
                         + "его просьбу. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void plan_ChopGoalWithInvalidCountType_ThrowsValidationException() {
+        assertThrows(PlanValidationException.class,
+                () -> PLANNER.plan(new Goal("срубить деревья", Map.of("count", "пять")), OBSERVATION),
+                "Цель с неверным типом count должна быть отклонена валидатором: иначе в план попадает невалидное значение");
     }
 
     private static TaskNode chopPlan(int radius, String species, int count) {

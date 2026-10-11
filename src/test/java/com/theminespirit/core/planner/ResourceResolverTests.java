@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -146,5 +147,13 @@ class ResourceResolverTests {
         assertThrows(IllegalArgumentException.class, () -> new Ingredient(" ", 1),
                 "Ингредиент с пустым именем обязан отвергаться: без имени резолвер не найдёт предмет, "
                         + "и ошибка всплывёт далеко от места создания ингредиента");
+    }
+
+    @Test
+    void resolve_CountOutOfRange_ThrowsValidationException() {
+        ResourceKnowledge knowledge = ResourceKnowledge.builder().gatherable("oak_log").build();
+        assertThrows(PlanValidationException.class,
+                () -> ResourceResolver.resolve("oak_log", 300, knowledge),
+                "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
     }
 }
