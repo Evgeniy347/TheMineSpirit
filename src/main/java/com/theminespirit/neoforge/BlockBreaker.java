@@ -48,6 +48,7 @@ public final class BlockBreaker {
     private int elapsed;
     private int crackStage = NO_STAGE;
     private boolean active;
+    private boolean toolBroke;
 
     public BlockBreaker(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -125,6 +126,10 @@ public final class BlockBreaker {
         return ToolChoice.best(toolOptions(targetState)).dropsAllowed();
     }
 
+    public boolean toolBroke() {
+        return toolBroke;
+    }
+
     private List<ToolOption> toolOptions(BlockState targetState) {
         boolean needsTool = targetState.requiresCorrectToolForDrops();
         List<ToolOption> options = new ArrayList<>();
@@ -162,6 +167,9 @@ public final class BlockBreaker {
         }
         if (!usedTool.isEmpty() && wearsTool) {
             usedTool.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            toolBroke = usedTool.isEmpty();
+        } else {
+            toolBroke = false;
         }
     }
 

@@ -224,15 +224,15 @@ public final class HarvestSession {
         BlockState targetState = level.getBlockState(toPos(next.target()));
         if (!breaker.dropsAllowedFor(targetState)) {
             remaining.remove(next.target());
-            if (skipWithoutTool) {
-                noTool++;
+            if (breaker.toolBroke()) {
+                fail("инструмент сломался: добыто " + mined + " из " + count);
                 return;
             }
-            if (mined == 0) {
+            if (mined == 0 && !skipWithoutTool) {
                 fail(tierReason(targetState));
-            } else {
-                fail("инструмент сломался: добыто " + mined + " из " + count);
+                return;
             }
+            noTool++;
             return;
         }
         remaining.remove(next.target());
