@@ -63,6 +63,10 @@ public final class SpiritEntity extends PathfinderMob {
         return brain == null ? Optional.empty() : brain.currentScript();
     }
 
+    public Optional<String> taskFailureReason() {
+        return brain == null ? Optional.empty() : brain.failureReason();
+    }
+
     private SpiritBrain brain() {
         if (brain == null) {
             brain = new SpiritBrain(this);

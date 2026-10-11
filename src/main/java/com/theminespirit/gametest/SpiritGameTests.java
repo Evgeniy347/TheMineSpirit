@@ -70,6 +70,25 @@ public final class SpiritGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 500)
+    public static void gotoScript_UnreachableTarget_KeepsFailureStatusAndReason(GameTestHelper helper) {
+        buildFloor(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        BlockPos target = helper.absolutePos(new BlockPos(1, 1, 1));
+        spirit.startTask(new ScriptCall("goto",
+                Map.of("x", target.getX(), "y", target.getY() + 20, "z", target.getZ())));
+
+        helper.succeedWhen(() -> {
+            RunStatus status = spirit.taskStatus().orElse(null);
+            helper.assertTrue(status == RunStatus.FAILED,
+                    "goto к недостижимой точке обязан довести задачу до FAILED, а не потерять её: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("goto"),
+                    "после провала причина обязана называть упавший скрипт 'goto', а не теряться. Фактическое: "
+                            + spirit.taskFailureReason().orElse("нет причины"));
+        });
+    }
+
     private static void buildFloor(GameTestHelper helper) {
         for (int x = 0; x < 3; x++) {
             for (int z = 0; z < 3; z++) {
