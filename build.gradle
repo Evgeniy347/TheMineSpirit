@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'jacoco'
     id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
@@ -210,12 +211,75 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
 }
 
-// Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md)
+// Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).
+// Свойства jqwik и тесты на масштаб идут этим же прогоном; тег slow оставлен для будущего
+// тяжёлого теста, который не влезает в бюджет (гоняет задача slowTest отдельно, в check он не входит).
+// Параллельные форки выключены: замер на 4 ядрах показал, что 2 форка дороже старта второй JVM
+// и обгоняют прогон (числа — docs/TESTING.md → «Параллельный прогон и теги»).
 tasks.named('test', Test) {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'slow'
+    }
+    maxParallelForks = 1
     systemProperty 'theminespirit.modId', project.mod_id
+    failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
+}
+
+// Медленный тир: только тесты с тегом slow (docs/TESTING.md). Сейчас пуст: тяжёлых тестов нет.
+tasks.register('slowTest', Test) {
+    group = 'verification'
+    description = 'Медленные тесты с тегом slow: только для теста, который не влезает в бюджет быстрого тира'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'slow'
+    }
+    maxParallelForks = 1
+    systemProperty 'theminespirit.modId', project.mod_id
+    failOnNoDiscoveredTests = true
+    reports.html.outputLocation = file('TestResults/slow/html')
+    reports.junitXml.outputLocation = file('TestResults/slow/xml')
+    shouldRunAfter tasks.named('test')
+}
+
+// Пустой тир не должен молча зеленеть: если фильтр не нашёл ни одного теста,
+// задача падает с понятным сообщением. failOnNoDiscoveredTests покрывает только случай
+// без фильтров, а теги (test/slowTest) — это фильтры, поэтому считаем отчёты сами.
+tasks.withType(Test).configureEach {
+    def executedTests = new java.util.concurrent.atomic.AtomicLong()
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            executedTests.set(result.testCount)
+        }
+    }
+    doLast {
+        if (executedTests.get() == 0) {
+            throw new GradleException("Тестовая задача '${name}' выполнила 0 тестов: проверьте фильтры " +
+                    "(теги, --tests). Пустой тир не должен молча зеленеть (см. docs/TESTING.md).")
+        }
+    }
+}
+
+// check гоняет быстрый тир. slowTest намеренно НЕ входит в check: сейчас в нём нет тестов, а
+// пустой тир по R10 падает, и check/build стали бы вечно красными. slowTest запускают отдельно,
+// когда появится тяжёлый тест с замеренным временем (docs/TESTING.md).
+tasks.named('check') {
+    dependsOn tasks.named('test')
+}
+
+// Покрытие JaCoCo — отчёт, а не гейт сборки (docs/TESTING.md).
+// Версия инструмента — встроенная в Gradle, отдельно не выбирается (AGENTS.md).
+tasks.named('jacocoTestReport', JacocoReport) {
+    dependsOn tasks.named('test')
+    reports {
+        csv.required = false
+        xml.required = true
+        xml.outputLocation = file('TestResults/coverage/jacoco.xml')
+        html.required = true
+        html.outputLocation = file('TestResults/coverage/html')
+    }
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.

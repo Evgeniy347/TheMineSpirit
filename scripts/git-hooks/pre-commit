@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Сторож зелёного коммита (docs/GIT.md → «Коммит»). Подключается scripts/install-git-hooks.sh.
+# Если в коммите (индекс, в том числе временный при `git commit -- <пути>`) есть изменения в src/, build.gradle,
+# gradle.properties или settings.gradle — прогоняет `./gradlew test` и при красном отклоняет коммит.
+# Коммиты только документов и скриптов, слияния — без прогона.
+WATCHED='^(src/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
+
+git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
+
+staged="$(git diff --cached --name-only | grep -E "$WATCHED")"
+[ -n "$staged" ] || exit 0
+
+top="$(git rev-parse --show-toplevel)"
+cd "$top" || exit 1
+
+# Тесты читают рабочее дерево, а не индекс: незастейдженные правки в наблюдаемых путях попадают в прогон.
+unstaged="$( { git diff --name-only; git ls-files --others --exclude-standard; } | grep -E "$WATCHED")"
+
+log="$(mktemp)"
+stamp="$(mktemp)"
+trap 'rm -f "$log" "$stamp"' EXIT
+echo "pre-commit: в коммите есть изменения в src/ или сборке — прогоняю ./gradlew test (зелёный нужен до коммита)…" >&2
+started=$(date +%s)
+# GIT_* из окружения хука не нужны сборке и могут увести её git-команды в чужой индекс.
+env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX ./gradlew test -q --offline >"$log" 2>&1
+code=$?
+took=$(( $(date +%s) - started ))
+
+if [ -n "$unstaged" ]; then
+    cat >&2 <<EOF
+pre-commit: ВНИМАНИЕ — прогон относится к рабочему дереву, а не к индексу. Не попадут в коммит, но участвовали в тестах:
+$(printf '%s\n' "$unstaged" | sed 's/^/  /')
+EOF
+fi
+
+if [ "$code" -ne 0 ]; then
+    # Упавшие тесты — из свежих XML-отчётов; если их нет (не скомпилировалось), показываем хвост вывода сборки.
+    failed="$(find TestResults/unit/xml -name 'TEST-*.xml' -newer "$stamp" 2>/dev/null | xargs -r awk -F'"' '
+        /<testcase / { name = $2; cls = $4 }
+        /<(failure|error) / { print cls "." name }' | sort -u | head -n 20)"
+    if [ -n "$failed" ]; then
+        details="Упавшие тесты:
+$(printf '%s\n' "$failed" | sed 's/^/  /')
+Подробности — TestResults/unit/html/index.html."
+    else
+        details="Тесты не запустились (ошибка сборки), хвост вывода:
+$(tail -n 15 "$log" | sed 's/^/  /')"
+    fi
+    cat >&2 <<EOF
+Коммит отклонён: ./gradlew test красный (код $code, $took с).
+$details
+Почему: красный коммит ломает бисекцию (git bisect попадает на нерабочее состояние) и scripts/prove-red.sh
+(он ждёт зелёный на самом коммите), а ревью смотрит на непроверенное.
+Как надо: почини код или тест и закоммить зелёное. Поломку в чужой части не прячь — назови её в отчёте;
+тест не отключай (@Disabled запрещён, docs/TESTING.md).
+Правило: docs/GIT.md → «Коммит».
+EOF
+    exit 1
+fi
+echo "pre-commit: ./gradlew test зелёный (${took} с)" >&2
+exit 0

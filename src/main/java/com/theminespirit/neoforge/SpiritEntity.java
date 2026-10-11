@@ -3,17 +3,15 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.engine.SnapshotFormatException;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
-import com.theminespirit.core.plan.PlanValidationException;
+import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -29,6 +27,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
     private final SpiritChunkLoader chunkLoader = new SpiritChunkLoader(this);
     private SpiritBrain brain;
+    private WorldObservation perception;
     private int pathBuilds;
     private int snapshotBuilds;
     private TaskSnapshot pendingSnapshot;
@@ -88,7 +87,7 @@ public final class SpiritEntity extends PathfinderMob {
         });
     }
 
-    public Container getInventory() {
+    public SimpleContainer getInventory() {
         return inventory;
     }
 
@@ -119,6 +118,15 @@ public final class SpiritEntity extends PathfinderMob {
         }
         return brain.snapshot().map(snapshot -> TaskSnapshotCodec.encode(snapshot));
     }
+
+    public Optional<WorldObservation> observation() {
+        return Optional.ofNullable(perception);
+    }
+
+    public void updateObservation(WorldObservation observation) {
+        this.perception = observation;
+    }
+
 
     public int snapshotBuilds() {
         return snapshotBuilds;

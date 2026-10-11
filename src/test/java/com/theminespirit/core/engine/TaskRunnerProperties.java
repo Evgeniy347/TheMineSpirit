@@ -18,6 +18,7 @@ import java.util.Random;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
+import org.junit.jupiter.api.Tag;
 
 class TaskRunnerProperties {
     private static final String OK = "ok";
