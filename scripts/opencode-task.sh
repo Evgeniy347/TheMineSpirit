@@ -10,10 +10,11 @@
 #   scripts/opencode-task.sh -s ses_XXXX "замечания ревью"     (продолжить существующую сессию)
 #
 # Коды выхода: 0 — opencode завершил работу; 75 — сбой провайдера не прошёл после 5 перезапусков;
-# иначе — код самого opencode. Каждый сбой пишется строкой в TestResults/opencode/failures.log.
+# 3 — новое задание в грязном дереве (там может работать другой агент); иначе — код самого opencode.
+# Каждый сбой пишется строкой в TestResults/opencode/failures.log.
 set -uo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="${OPENCODE_REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 OPENCODE_BIN="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODEL="opencode/big-pickle"
 RETRY_DELAYS=(5 5 10 30 60)
@@ -26,6 +27,7 @@ docs/GIT.md; публикацию мода и перезапуск сервер�
 коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
 EXIT_PROVIDER_EXHAUSTED=75
+EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
 ATTEMPT_SILENT=201
 
@@ -47,6 +49,14 @@ shift $((OPTIND - 1))
 [ $# -gt 0 ] && prompt="$*"
 [ -z "$prompt" ] && [ -z "$session" ] && usage
 [ -z "$prompt" ] && prompt="$CONTINUE_PROMPT"
+
+if [ -z "$session" ] && [ -z "${OPENCODE_ALLOW_DIRTY:-}" ] && [ -n "$(git -C "$REPO_DIR" status --porcelain)" ]; then
+    echo "Новое задание не запущено: в дереве незакоммиченные изменения — возможно, там работает другой агент" >&2
+    echo "(например, агент владельца через opencode serve). Спроси владельца. Если это твоя работа и запуск" >&2
+    echo "осознанный — OPENCODE_ALLOW_DIRTY=1. Продолжение своей сессии (-s) разрешено всегда." >&2
+    git -C "$REPO_DIR" status --short >&2
+    exit "$EXIT_DIRTY_TREE"
+fi
 
 log_root="${OPENCODE_LOG_ROOT:-$REPO_DIR/TestResults/opencode}"
 log_dir="$log_root/$(date +%Y%m%d-%H%M%S)"
