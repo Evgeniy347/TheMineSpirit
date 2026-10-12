@@ -368,6 +368,6 @@ idea {
 // иначе мир растёт от прогона к прогону (docs/research/test-performance.md → п.7).
 tasks.named('runGameTestServer') {
     doFirst {
-        delete(new File(gameDirectory, 'world'))
+        new File(gameDirectory.getAsFile().get(), 'world').deleteDir()
     }
 }
