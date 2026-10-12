@@ -22,6 +22,7 @@ import com.theminespirit.core.tactics.adapter.RetreatCommitment;
 import com.theminespirit.core.tactics.adapter.RetreatPlan;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.core.tactics.adapter.RetreatTracker;
+import com.theminespirit.core.tactics.adapter.StoredTactics;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.tactics.adapter.TacticsSchedule;
 import com.theminespirit.core.tactics.adapter.TacticsTrace;
@@ -86,6 +87,7 @@ public final class TacticsService {
     private int entityQueries;
     private int failures;
     private String lastFailure;
+    private String restoreFailure;
 
     public TacticsService(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -168,6 +170,10 @@ public final class TacticsService {
         forced = true;
     }
 
+    public boolean hasState() {
+        return memory != null || ordered != DEFAULT_MODE || zone.isPresent() || ward.isPresent() || retreat.retreating();
+    }
+
     public boolean wantsControl() {
         return active;
     }
@@ -221,8 +227,29 @@ public final class TacticsService {
         return Optional.ofNullable(lastFailure);
     }
 
+    public Optional<String> restoreFailure() {
+        return Optional.ofNullable(restoreFailure);
+    }
+
     public Optional<String> explain() {
         return Optional.ofNullable(outcome).map(TacticsTrace::format);
+    }
+
+    public StoredTactics snapshot() {
+        return new StoredTactics(ordered, zone, ward.map(UUID::toString), Optional.ofNullable(memory), retreat);
+    }
+
+    public void restore(StoredTactics stored) {
+        ordered = stored.ordered();
+        zone = stored.zone();
+        ward = stored.ward().map(UUID::fromString);
+        memory = stored.memory().orElse(null);
+        retreat = stored.retreat();
+        forced = true;
+    }
+
+    public void failRestore(String reason) {
+        restoreFailure = reason;
     }
 
     private void evaluate(long now, boolean byEvent) {

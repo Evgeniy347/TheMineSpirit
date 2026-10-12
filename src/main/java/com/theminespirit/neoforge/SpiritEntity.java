@@ -18,12 +18,16 @@ import com.theminespirit.core.policy.DropPolicy;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.tactics.Layer;
+import com.theminespirit.core.tactics.adapter.StoredTactics;
+import com.theminespirit.core.tactics.adapter.TacticsFormatException;
+import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
 import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
 import com.theminespirit.neoforge.tactics.SpiritGear;
+import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.Optional;
 import java.util.Set;
@@ -156,6 +160,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritTaskStore.write(compound, taskJsonForSave());
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
+        SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);
     }
 
     private String taskJsonForSave() {
@@ -189,12 +194,26 @@ public final class SpiritEntity extends PathfinderMob {
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил рабочую зону: {}", getUUID(), e.getMessage());
         }
+        restoreTactics(compound);
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
             try {
                 pendingSnapshot = TaskSnapshotCodec.decode(json);
             } catch (RuntimeException e) {
                 pendingRestoreFailure = "не удалось восстановить задачу: " + e.getMessage();
+            }
+        });
+    }
+
+    private void restoreTactics(CompoundTag compound) {
+        SpiritTacticsStore.read(compound).ifPresent(json -> {
+            try {
+                StoredTactics stored = TacticsStateCodec.decode(json);
+                tactics.restore(stored);
+            } catch (TacticsFormatException e) {
+                tactics.failRestore(e.getMessage());
+                LOGGER.error("Дух {} потерял состояние тактики, начнёт с чистого листа. Причина: {}", getUUID(),
+                        e.getMessage(), e);
             }
         });
     }
