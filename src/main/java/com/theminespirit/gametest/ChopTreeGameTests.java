@@ -428,6 +428,42 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_cobblestone_wall", timeoutTicks = 500)
+    public static void chopTree_LogPostByCobblestoneWallUnderForeignCrown_NotChoppedRealOakChopped(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 6, 4, 5);
+        var leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        helper.setBlock(5, 5, 3, leaves);
+        helper.setBlock(5, 5, 5, leaves);
+        buildLogPillar(helper, 4, 4, 4);
+        for (int y = 1; y <= 4; y++) {
+            helper.setBlock(3, y, 4, Blocks.COBBLESTONE);
+        }
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "дуб рядом со стеной из булыжника обязан срубиться, а столб под чужой кроной — остаться: "
+                            + "булыжник не признак постройки, и столб с листьями неотличим от ствола. Статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int oakInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(oakInInventory == 5,
+                    "настоящий дуб срублен целиком: 5 брёвен в инвентаре, фактически " + oakInInventory);
+            int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(logsInWorld == 4,
+                    "4 бревна столба у стены из булыжника обязаны остаться нетронутыми, осталось " + logsInWorld);
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.COBBLESTONE) == 4,
+                    "стена из булыжника обязана остаться целиком: 4 блока, фактически "
+                            + countBlocksInWorld(helper, Blocks.COBBLESTONE));
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 500)
     public static void chopTree_LogBuildingOfManyLogs_TreeBehindItIsChopped(GameTestHelper helper) {
         prepareField(helper);
@@ -776,7 +812,17 @@ public final class ChopTreeGameTests {
                 Blocks.WALL_TORCH, Blocks.OAK_STAIRS, Blocks.OAK_SLAB, Blocks.OAK_FENCE, Blocks.OAK_FENCE_GATE,
                 Blocks.OAK_TRAPDOOR, Blocks.LADDER, Blocks.STRIPPED_OAK_LOG, Blocks.OAK_WOOD, Blocks.OAK_SIGN,
                 Blocks.WHITE_BED, Blocks.CHEST, Blocks.CRAFTING_TABLE, Blocks.COBBLESTONE_WALL, Blocks.WHITE_WOOL,
-                Blocks.LANTERN, Blocks.BOOKSHELF)) {
+                Blocks.LANTERN, Blocks.BOOKSHELF,
+                Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, Blocks.COBBLESTONE_SLAB, Blocks.COBBLESTONE_STAIRS,
+                Blocks.MOSSY_COBBLESTONE_SLAB, Blocks.MOSSY_COBBLESTONE_STAIRS, Blocks.MOSSY_COBBLESTONE_WALL,
+                Blocks.STONE_BRICKS, Blocks.MOSSY_STONE_BRICKS, Blocks.CRACKED_STONE_BRICKS, Blocks.CHISELED_STONE_BRICKS,
+                Blocks.STONE_BRICK_SLAB, Blocks.STONE_BRICK_STAIRS, Blocks.STONE_BRICK_WALL,
+                Blocks.MOSSY_STONE_BRICK_SLAB, Blocks.MOSSY_STONE_BRICK_STAIRS, Blocks.MOSSY_STONE_BRICK_WALL,
+                Blocks.BRICKS, Blocks.BRICK_SLAB, Blocks.BRICK_STAIRS, Blocks.BRICK_WALL,
+                Blocks.TERRACOTTA, Blocks.WHITE_TERRACOTTA, Blocks.RED_TERRACOTTA,
+                Blocks.WHITE_GLAZED_TERRACOTTA, Blocks.RED_GLAZED_TERRACOTTA,
+                Blocks.WHITE_CONCRETE, Blocks.RED_CONCRETE, Blocks.WHITE_CONCRETE_POWDER, Blocks.RED_CONCRETE_POWDER,
+                Blocks.IRON_BARS, Blocks.RAIL, Blocks.POWERED_RAIL, Blocks.DETECTOR_RAIL, Blocks.ACTIVATOR_RAIL)) {
             table.put(built.defaultBlockState(), true);
         }
         table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true), true);
