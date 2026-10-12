@@ -21,9 +21,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
@@ -42,6 +48,87 @@ final class RestFixture {
                 return MAPPER.readTree(body);
             } catch (IOException e) {
                 throw new IllegalStateException("Ответ REST-моста не разобран как JSON: " + body, e);
+            }
+        }
+    }
+
+    record Frame(String id, String event, String data) {
+        long idNumber() {
+            return Long.parseLong(id);
+        }
+
+        JsonNode json() {
+            try {
+                return MAPPER.readTree(data);
+            } catch (IOException e) {
+                throw new IllegalStateException("Данные SSE-кадра не разобраны как JSON: " + data, e);
+            }
+        }
+    }
+
+    static final class SseCapture {
+        private final List<String> lines = new CopyOnWriteArrayList<>();
+        private final AtomicReference<Stream<String>> body = new AtomicReference<>();
+        private final CompletableFuture<Integer> status = new CompletableFuture<>();
+        private final CompletableFuture<Void> finished = new CompletableFuture<>();
+        private volatile String contentType;
+
+        CompletableFuture<Integer> status() {
+            return status;
+        }
+
+        boolean finished() {
+            return finished.isDone();
+        }
+
+        String contentType() {
+            return contentType;
+        }
+
+        List<String> lines() {
+            return List.copyOf(lines);
+        }
+
+        List<Frame> frames() {
+            List<Frame> frames = new ArrayList<>();
+            String id = null;
+            String event = null;
+            String data = null;
+            for (String line : lines()) {
+                if (line.isEmpty()) {
+                    if (event != null) {
+                        frames.add(new Frame(id, event, data));
+                    }
+                    id = null;
+                    event = null;
+                    data = null;
+                } else if (line.startsWith("id: ")) {
+                    id = line.substring("id: ".length());
+                } else if (line.startsWith("event: ")) {
+                    event = line.substring("event: ".length());
+                } else if (line.startsWith("data: ")) {
+                    data = line.substring("data: ".length());
+                }
+            }
+            return frames;
+        }
+
+        void cancel() {
+            Stream<String> open = body.get();
+            if (open != null) {
+                open.close();
+            }
+        }
+
+        private void read(HttpResponse<Stream<String>> response) {
+            contentType = response.headers().firstValue("Content-Type").orElse("");
+            status.complete(response.statusCode());
+            try (Stream<String> stream = response.body()) {
+                body.set(stream);
+                stream.forEach(lines::add);
+                finished.complete(null);
+            } catch (RuntimeException e) {
+                finished.completeExceptionally(e);
             }
         }
     }
@@ -67,6 +154,11 @@ final class RestFixture {
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final ExecutorService readers = Executors.newCachedThreadPool(task -> {
+        Thread thread = new Thread(task, "rest-gametest-sse-reader");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
         this.minecraft = minecraft;
@@ -149,6 +241,21 @@ final class RestFixture {
         return CompletableFuture.supplyAsync(read, minecraft);
     }
 
+    SseCapture stream(String path, Map<String, String> headers) {
+        HttpRequest.Builder request = HttpRequest.newBuilder(uri(path)).GET();
+        headers.forEach(request::header);
+        SseCapture capture = new SseCapture();
+        client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofLines()).whenComplete((response, error) -> {
+            if (error != null) {
+                capture.status.completeExceptionally(error);
+                capture.finished.completeExceptionally(error);
+                return;
+            }
+            readers.execute(() -> capture.read(response));
+        });
+        return capture;
+    }
+
     SpiritEntity spawn(GameTestHelper helper, BlockPos relative) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         spirits.add(spirit);
@@ -167,7 +274,8 @@ final class RestFixture {
         spirits.forEach(SpiritEntity::discard);
         index.unregister(NeoForge.EVENT_BUS);
         server.stop();
-        client.shutdown();
+        client.shutdownNow();
+        readers.shutdownNow();
     }
 
     private URI uri(String path) {

@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.theminespirit.core.rest.ApiError;
 import com.theminespirit.core.rest.ApiException;
+import com.theminespirit.core.rest.ClientRateLimit;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ErrorJson;
 import com.theminespirit.core.rest.QueryString;
@@ -13,6 +14,8 @@ import com.theminespirit.core.rest.RestRequest;
 import com.theminespirit.core.rest.RestResponse;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.Router;
+import com.theminespirit.core.rest.SseStream;
+import com.theminespirit.core.rest.SseWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +37,8 @@ import org.slf4j.Logger;
 public final class RestServer {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
+    private static final String EVENT_STREAM_CONTENT_TYPE = "text/event-stream; charset=utf-8";
+    private static final int CHUNKED_RESPONSE = 0;
     private static final int STOP_DELAY_SECONDS = 1;
     private static final int POOL_TERMINATION_SECONDS = 2;
     private static final int DRAIN_CHUNK_BYTES = 8192;
@@ -41,6 +47,7 @@ public final class RestServer {
     private final ExecutorService pool;
     private final Router router;
     private final Runnable onStop;
+    private final ClientRateLimit rateLimit = new ClientRateLimit();
     private final AtomicBoolean stopped = new AtomicBoolean();
 
     private RestServer(HttpServer httpServer, ExecutorService pool, Router router, Runnable onStop) {
@@ -100,6 +107,11 @@ public final class RestServer {
     private RestResponse answer(HttpExchange exchange) {
         String description = exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath();
         try {
+            Optional<RestResponse> limited = rateLimit.reject(clientKey(exchange), System.nanoTime());
+            if (limited.isPresent()) {
+                drain(exchange);
+                return limited.get();
+            }
             return router.handle(read(exchange));
         } catch (ApiException e) {
             return ErrorJson.response(e);
@@ -107,6 +119,16 @@ public final class RestServer {
             LOGGER.error("REST-мост: необработанная ошибка при обработке {}", description, e);
             return ErrorJson.response(ApiError.of(ErrorCode.INTERNAL,
                     "Внутренняя ошибка моста при обработке запроса: подробности в логе сервера"));
+        }
+    }
+
+    private static String clientKey(HttpExchange exchange) {
+        return exchange.getRemoteAddress().getAddress().getHostAddress();
+    }
+
+    private static void drain(HttpExchange exchange) throws IOException {
+        try (InputStream in = exchange.getRequestBody()) {
+            discardRest(in);
         }
     }
 
@@ -138,6 +160,10 @@ public final class RestServer {
     }
 
     private static void write(HttpExchange exchange, RestResponse response) throws IOException {
+        if (response.stream() != null) {
+            writeStream(exchange, response);
+            return;
+        }
         byte[] bytes = response.body().getBytes(StandardCharsets.UTF_8);
         Headers headers = exchange.getResponseHeaders();
         headers.set("Content-Type", JSON_CONTENT_TYPE);
@@ -146,6 +172,21 @@ public final class RestServer {
         exchange.sendResponseHeaders(response.status(), bytes.length);
         try (OutputStream out = exchange.getResponseBody()) {
             out.write(bytes);
+        }
+    }
+
+    private static void writeStream(HttpExchange exchange, RestResponse response) {
+        SseStream stream = response.stream();
+        try (OutputStream out = exchange.getResponseBody()) {
+            Headers headers = exchange.getResponseHeaders();
+            headers.set("Content-Type", EVENT_STREAM_CONTENT_TYPE);
+            headers.set("Cache-Control", "no-store");
+            exchange.sendResponseHeaders(response.status(), CHUNKED_RESPONSE);
+            LOGGER.debug("REST-мост: поток событий закрыт: {}", SseWriter.pump(stream, out));
+        } catch (IOException e) {
+            LOGGER.debug("REST-мост: поток событий не открыт или закрыт клиентом: {}", e.toString());
+        } finally {
+            stream.close();
         }
     }
 
