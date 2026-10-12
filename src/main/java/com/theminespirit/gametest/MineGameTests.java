@@ -531,6 +531,32 @@ public final class MineGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "gather_any_ore_close", timeoutTicks = 400)
+    public static void gather_WildcardOreDiamondCloserThanCoal_SkipsDiamond(GameTestHelper helper) {
+        buildCave(helper);
+        helper.setBlock(-1, 2, 1, Blocks.DIAMOND_ORE);
+        helper.setBlock(-1, 2, 3, Blocks.COAL_ORE);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.STONE_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("*_ore", 2), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "алмаз не по кирке: gather обязан провалиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("без подходящего инструмента: 1"),
+                    "первым выбран ближний алмаз без подходящего инструмента: его обязано пропустить и посчитать, "
+                            + "а не отказываться до начала, фактически: " + reason);
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL) == 1,
+                    "дальний уголь обязан быть добыт каменной киркой, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
+            helper.assertTrue(helper.getBlockState(new BlockPos(-1, 2, 1)).is(Blocks.DIAMOND_ORE),
+                    "ближний алмаз обязан остаться целой");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "empty", batch = "mine_preserve", timeoutTicks = 400)
     public static void mineVein_TwoRedstoneOre_ConservesAllDrops(GameTestHelper helper) {
         buildCave(helper);
