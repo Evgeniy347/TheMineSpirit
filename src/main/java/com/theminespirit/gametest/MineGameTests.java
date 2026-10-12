@@ -631,7 +631,7 @@ public final class MineGameTests {
             helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "восстановленный gather обязан досчитать до 6 блоков: статус "
                             + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + current.taskFailureReason().orElse("нет"));
+                            + current.taskFailureReason().orElse("нет") + ", тиков духа " + current.tickCount);
             int inInventory = GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE);
             helper.assertTrue(inInventory == 6,
                     "после перезагрузки на середине в инвентаре обязано быть ровно 6 булыжника, а не пересчёт "
@@ -709,7 +709,10 @@ public final class MineGameTests {
         original.discard();
         SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
         reloaded.load(tag);
-        helper.getLevel().addFreshEntity(reloaded);
+        boolean added = helper.getLevel().addFreshEntity(reloaded);
+        if (!added) {
+            throw new IllegalStateException("перезагруженный дух не добавлен в мир: uuid " + reloaded.getUUID());
+        }
         return reloaded;
     }
 
