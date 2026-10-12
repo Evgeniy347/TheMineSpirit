@@ -248,6 +248,30 @@ class FarmPlannerTests {
     }
 
     @Test
+    void next_TieOnOneLine_FarTargetWithSameStandDistanceWins() {
+        BlockCoord from = new BlockCoord(0, 5, 0);
+        BlockCoord close = new BlockCoord(9, 0, 3);
+        BlockCoord far = new BlockCoord(5, 0, 15);
+        BlockCoord closeStand = new BlockCoord(12, 1, 4);
+        BlockCoord farStand = new BlockCoord(4, 1, 12);
+        MapFarmView farm = new MapFarmView()
+                .set(9, 0, 3, DIRT_AIR)
+                .set(5, 0, 15, DIRT_AIR);
+        CountingSafety safety = new CountingSafety()
+                .set(12, 0, 4, Cell.SOLID)
+                .set(4, 0, 12, Cell.SOLID);
+        Hydration hydration = Hydration.of(Set.of(new BlockCoord(9, 0, 3), new BlockCoord(5, 0, 15)));
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from,
+                List.of(far, close), farm, safety, hydration);
+
+        assertEquals(new FarmPlanner.Next(far, farStand), outcome,
+                "Ничья на одной прямой обязана достаться дальней цели (5,0,15) со стоянкой (4,1,12): "
+                        + "dist²=275, best=176, gap² отличается на 5.7e-14 < допуска 1e-9, строгий знак > "
+                        + "пропускает цель и оставляет ближнюю (9,0,3). Итог: " + outcome);
+    }
+
+    @Test
     void next_LineOf256Targets_ReadsStayWithinEightPerTarget() {
         MapFarmView farm = new MapFarmView();
         CountingSafety safety = new CountingSafety().fillFloor(2, -5, -5, 260, 5);
