@@ -132,6 +132,13 @@ class RestClientTests(unittest.TestCase):
             slow.get("/v1/bots")
         self.assertGreaterEqual(slow.sent_at[2] - slow.sent_at[0], 2.0, "rps=1: три запроса не быстрее 2 с")
 
+    def test_opener_BuiltOnFirstSend_NotInConstructor(self):
+        client = RestClient(self.fake.url, clock=self.clock, timeout=2.0)
+        self.assertIsNone(client._opener, "opener (со сборкой SSL-контекста) строится при первом запросе, а не в "
+                                          "конструкторе: клиент создаётся в процессах, которые могут и не ходить в сеть")
+        self.assertEqual("spirit_1", client.get("/v1/bots")["bots"][0]["id"])
+        self.assertIsNotNone(client._opener, "к моменту первого запроса opener собран")
+
 
 if __name__ == "__main__":
     unittest.main()
