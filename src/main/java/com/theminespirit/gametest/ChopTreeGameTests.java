@@ -860,6 +860,36 @@ public final class ChopTreeGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = FIELD, batch = "tree_view_unloaded_cell", timeoutTicks = 40)
+    public static void treeView_UnloadedCell_AllAnswersFalseAndChunkNotLoaded(GameTestHelper helper) {
+        prepareField(helper);
+        Level level = helper.getLevel();
+        BlockPos base = helper.absolutePos(SPIRIT_START);
+        BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
+        helper.assertTrue(unloaded != null, "рядом должна найтись незагруженная область для проверки неизвестной клетки");
+        int chunkX = unloaded.getX() >> 4;
+        int chunkZ = unloaded.getZ() >> 4;
+        helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
+                "клетка для проверки обязана быть в незагруженном чанке");
+        int loadedBefore = level.getChunkSource().getLoadedChunksCount();
+        LevelTreeView view = new LevelTreeView(level, Set.of(Blocks.OAK_LOG));
+        BlockCoord coord = new BlockCoord(unloaded.getX(), unloaded.getY(), unloaded.getZ());
+        helper.assertTrue(!view.isLog(coord) && !view.isNaturalLeaves(coord) && !view.isSoil(coord)
+                        && !view.isArtificial(coord),
+                "клетка в незагруженном чанке неизвестна: все четыре ответа обязаны быть ложью, иначе дух примет "
+                        + "чужой блок за своё бревно, почву или постройку");
+        helper.assertTrue(view.blockReads() > 0,
+                "неизвестная клетка обязана считаться прочитанной из вида: нулевой счётчик означал бы, что разбор "
+                        + "читает мир мимо LevelTreeView");
+        helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
+                "чтение неизвестной клетки не должно грузить чанк");
+        helper.assertTrue(level.getChunkSource().getLoadedChunksCount() == loadedBefore,
+                "чтение неизвестной клетки не должно грузить чанки: было " + loadedBefore + ", стало "
+                        + level.getChunkSource().getLoadedChunksCount());
+        clearField(helper);
+        helper.succeed();
+    }
+
     private static BlockCoord coordOf(GameTestHelper helper, Map<BlockState, Boolean> table, Block block) {
         int index = 0;
         for (BlockState state : table.keySet()) {

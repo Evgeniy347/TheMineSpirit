@@ -106,6 +106,9 @@ final class Replanter {
 
     private boolean canPlantAt(BlockPos cell) {
         Level level = spirit.level();
+        if (level.getChunkSource().getChunkNow(cell.getX() >> 4, cell.getZ() >> 4) == null) {
+            return false;
+        }
         return level.getBlockState(cell).canBeReplaced() && saplingState.canSurvive(level, cell);
     }
 

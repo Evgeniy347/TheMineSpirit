@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.neoforge.common.Tags;
 
 public final class LevelTreeView implements TreeView {
@@ -20,7 +21,8 @@ public final class LevelTreeView implements TreeView {
         NATURAL_LEAVES,
         SOIL,
         ARTIFICIAL,
-        OTHER
+        OTHER,
+        UNKNOWN
     }
 
     private static final Set<Block> BUILT_BLOCKS = Set.of(Blocks.TORCH, Blocks.WALL_TORCH, Blocks.SOUL_TORCH,
@@ -116,7 +118,11 @@ public final class LevelTreeView implements TreeView {
     }
 
     private Kind classify(BlockCoord coord) {
-        return classify(level.getBlockState(new BlockPos(coord.x(), coord.y(), coord.z())));
+        LevelChunk chunk = level.getChunkSource().getChunkNow(coord.x() >> 4, coord.z() >> 4);
+        if (chunk == null) {
+            return Kind.UNKNOWN;
+        }
+        return classify(chunk.getBlockState(new BlockPos(coord.x(), coord.y(), coord.z())));
     }
 
     private Kind classify(BlockState state) {
