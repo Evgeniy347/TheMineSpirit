@@ -342,6 +342,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_by_hand", timeoutTicks = 600)
     public static void chopTree_WithoutAxeTwoLogs_SucceedsByHand(GameTestHelper helper) {
         prepareField(helper);
@@ -397,6 +398,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 500)
     public static void chopTree_LogPostsWithPlankWallsUnderCrown_UntouchedAndRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
@@ -428,6 +430,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_cobblestone_wall", timeoutTicks = 500)
     public static void chopTree_LogPostByCobblestoneWallUnderForeignCrown_NotChoppedRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
@@ -464,6 +467,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 500)
     public static void chopTree_LogBuildingOfManyLogs_TreeBehindItIsChopped(GameTestHelper helper) {
         prepareField(helper);
@@ -497,6 +501,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 600)
     public static void chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog(GameTestHelper helper) {
         prepareField(helper);
@@ -575,6 +580,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 900)
     public static void chopTree_ReloadedAfterFirstTree_ChopsExactlyThreeTrees(GameTestHelper helper) {
         prepareField(helper);
@@ -675,6 +681,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_replant_dark_oak", timeoutTicks = 900)
     public static void chopTree_ReplantDarkOakWithFourSaplings_PlantsAllFourCells(GameTestHelper helper) {
         prepareField(helper);
@@ -703,6 +710,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_replant_short", timeoutTicks = 900)
     public static void chopTree_ReplantDarkOakWithThreeSaplings_PlantsNothing(GameTestHelper helper) {
         prepareField(helper);
@@ -727,6 +735,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 500)
     public static void chopTree_SecondOakVanishesDuringFirst_FailsWithTreesRanOut(GameTestHelper helper) {
         prepareField(helper);
@@ -761,6 +770,7 @@ public final class ChopTreeGameTests {
         });
     }
 
+    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 1000)
     public static void chopTree_BranchBehindWall_LeftLogsAreCountedInSummary(GameTestHelper helper) {
         prepareField(helper);

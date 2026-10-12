@@ -293,6 +293,7 @@ public final class MineGameTests {
         });
     }
 
+    // [флак] дух добывает блоки и подбирает дроп, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = "empty", batch = "gather_cobble", timeoutTicks = 1000)
     public static void gather_CobblestoneHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         buildCave(helper);
@@ -370,6 +371,7 @@ public final class MineGameTests {
         });
     }
 
+    // [флак] дух добывает блоки и подбирает дроп, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = "empty", batch = "gather_logs", timeoutTicks = 600)
     public static void gather_WildcardLogFilter_CollectsAllMatchingLogs(GameTestHelper helper) {
         buildCave(helper);
