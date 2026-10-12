@@ -1,0 +1,8 @@
+{
+  "minecraft:wooden_sword": "wood",
+  "minecraft:stone_sword": "stone",
+  "minecraft:golden_sword": "gold",
+  "minecraft:iron_sword": "iron",
+  "minecraft:diamond_sword": "diamond",
+  "minecraft:netherite_sword": "netherite"
+}
