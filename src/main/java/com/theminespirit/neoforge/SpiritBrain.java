@@ -5,6 +5,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Optional;
 import org.slf4j.Logger;
 
@@ -16,6 +17,7 @@ public final class SpiritBrain {
     private RunStatus lastStatus;
     private String lastReason;
     private Throwable lastCause;
+    private String suspendReason;
 
     public SpiritBrain(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -26,9 +28,36 @@ public final class SpiritBrain {
             runner.cancel();
         }
         runner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
+        suspendReason = null;
         lastStatus = RunStatus.RUNNING;
         lastReason = null;
         lastCause = null;
+    }
+
+    public void suspend(String reason) {
+        if (runner != null && runner.status() == RunStatus.RUNNING && !runner.isSuspended()) {
+            runner.suspend();
+            suspendReason = reason;
+        }
+    }
+
+    public void resume() {
+        if (runner != null) {
+            runner.resume();
+        }
+        suspendReason = null;
+    }
+
+    public boolean isSuspended() {
+        return runner != null && runner.isSuspended();
+    }
+
+    public Optional<String> suspendReason() {
+        return isSuspended() ? Optional.ofNullable(suspendReason) : Optional.empty();
+    }
+
+    public PolicyExemptions policyExemptions() {
+        return runner == null ? PolicyExemptions.empty() : runner.policyExemptions();
     }
 
     public void cancel() {

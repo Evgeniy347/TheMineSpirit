@@ -52,6 +52,11 @@ final class FollowScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        stopNavigation();
+    }
+
+    @Override
     public String failureReason() {
         return failureReason;
     }

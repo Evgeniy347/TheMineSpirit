@@ -83,6 +83,10 @@ public final class DropCollector {
         return pursue();
     }
 
+    public void suspend() {
+        approach.suspend();
+    }
+
     public void cancel() {
         approach.cancel();
     }

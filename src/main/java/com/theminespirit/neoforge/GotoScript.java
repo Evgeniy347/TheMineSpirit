@@ -47,6 +47,11 @@ final class GotoScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        approach.suspend();
+    }
+
+    @Override
     public String failureReason() {
         return failureReason;
     }

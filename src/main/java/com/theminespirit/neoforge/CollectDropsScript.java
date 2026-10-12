@@ -32,6 +32,11 @@ final class CollectDropsScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        collector.suspend();
+    }
+
+    @Override
     public String failureReason() {
         return collector.failureReason();
     }

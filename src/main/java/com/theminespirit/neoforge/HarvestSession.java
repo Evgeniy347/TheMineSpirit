@@ -120,6 +120,23 @@ public final class HarvestSession {
         }
     }
 
+    public void suspend() {
+        approach.suspend();
+        if (state == State.BREAK) {
+            breaker.cancel();
+            buffer.offer(List.of(currentTarget));
+            currentTarget = null;
+            state = State.PICK;
+        }
+        if (collector != null) {
+            collector.suspend();
+        }
+    }
+
+    public int crackStage() {
+        return breaker.crackStage();
+    }
+
     public Outcome outcome() {
         return outcome;
     }

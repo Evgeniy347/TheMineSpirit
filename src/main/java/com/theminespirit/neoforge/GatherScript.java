@@ -27,6 +27,11 @@ final class GatherScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        session.suspend();
+    }
+
+    @Override
     public String failureReason() {
         return session.failureReason();
     }

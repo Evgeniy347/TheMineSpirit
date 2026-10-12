@@ -68,6 +68,12 @@ public final class Approach {
         }
     }
 
+    public void suspend() {
+        if (active) {
+            spirit.getNavigation().stop();
+        }
+    }
+
     public boolean isActive() {
         return active;
     }
