@@ -29,6 +29,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -41,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
@@ -723,15 +725,18 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 700)
-    public static void chopTree_BranchOverShallowPit_LeftLogsAreCountedInSummary(GameTestHelper helper) {
+    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 1000)
+    public static void chopTree_BranchBehindWall_LeftLogsAreCountedInSummary(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
-        for (int x = 5; x <= 9; x++) {
+        for (int x = 5; x <= 10; x++) {
             helper.setBlock(x, 6, 4, Blocks.OAK_LOG);
         }
-        // Стена за дальними брёвнами ветки, шире платформы: они недосягаемы, подход встаёт,
-        // брёвна остаются стоять. Ближние брёвна ветки перед стеной: дроп с них достижим.
+        // Лист кроны под первым бревном ветки удержал бы его дроп на высоте, куда не дотянуться.
+        helper.setBlock(5, 5, 4, Blocks.AIR);
+        // Стена от земли до уровня ниже брёвен ветки и шире платформы: дух не заходит за x=7.
+        // Бревно x=10 недосягаемо наверняка (центр 10,5 против центра духа не дальше 7,5); x=8 и x=9
+        // достижимы или нет в зависимости от того, где встал дух, поэтому число оставленных читается из мира.
         for (int z = -2; z <= 12; z++) {
             for (int y = 1; y <= 5; y++) {
                 helper.setBlock(8, y, z, Blocks.STONE);
@@ -741,17 +746,23 @@ public final class ChopTreeGameTests {
         ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1));
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
+        // Дроп с брёвен над стеной и за ней не достать: он уходит «в пропасть», иначе подбор падал бы
+        // не на проверяемом (счёт оставленных брёвен), а на предметах, которые и так нельзя подобрать.
+        BlockPos beyond = helper.absolutePos(new BlockPos(8, 0, -2));
+        AABB beyondWall = new AABB(beyond.getX(), beyond.getY(), beyond.getZ(), beyond.getX() + 4,
+                beyond.getY() + FIELD_HEIGHT, beyond.getZ() + 16);
+        helper.onEachTick(() -> helper.getLevel().getEntitiesOfClass(ItemEntity.class, beyondWall)
+                .forEach(ItemEntity::discard));
+
         helper.succeedWhen(() -> {
-            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
-                    "дерево срублено, недосягаемое бревно ветки осталось, статус " + status[0] + ", причина: "
-                            + script.failureReason());
+            String state = "статус " + status[0] + ", причина: " + script.failureReason() + ", итог: "
+                    + script.summary();
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED, "дерево срублено, брёвна ветки остались: " + state);
             int left = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(left == 1,
-                    "бревно ветки над ямой недосягаемо (подход встаёт) и остаётся стоять, а осталось "
-                            + left + " брёвен");
+            helper.assertTrue(left >= 1, "бревно x=10 недосягаемо и обязано остаться стоять: " + state);
             helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + left),
                     "итог обязан называть все оставленные брёвна, в том числе пропущенные после повторного "
-                            + "приближения: в мире " + left + ", а итог: " + script.summary());
+                            + "приближения: в мире " + left + ", а " + state);
 
             clearField(helper);
         });

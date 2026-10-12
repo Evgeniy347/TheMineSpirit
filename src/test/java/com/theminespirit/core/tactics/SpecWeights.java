@@ -16,7 +16,8 @@ final class SpecWeights {
             + "\"HUNGER\": {\"FIGHT\": -0.3, \"RETREAT\": 0.3, \"IGNORE\": 0},"
             + "\"PROTECT_URGENCY\": {\"FIGHT\": 1.5, \"RETREAT\": -0.6, \"IGNORE\": -1.0},"
             + "\"LEASH_PRESSURE\": {\"FIGHT\": -1.5, \"RETREAT\": 0, \"IGNORE\": 1.2},"
-            + "\"HEALING_AVAILABLE\": {\"FIGHT\": 0.3, \"RETREAT\": -0.3, \"IGNORE\": 0}}";
+            + "\"HEALING_AVAILABLE\": {\"FIGHT\": 0.3, \"RETREAT\": -0.3, \"IGNORE\": 0},"
+            + "\"URGENCY\": {\"FIGHT\": -0.12, \"RETREAT\": 0.24, \"IGNORE\": -0.18}}";
 
     private SpecWeights() {
     }

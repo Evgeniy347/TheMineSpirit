@@ -29,13 +29,13 @@ class TacticsConfigTests {
     void loadDefault_ShippedFiles_ParseWithAllSections() {
         TacticsConfig config = TacticsConfig.loadDefault();
 
-        assertEquals(List.of(12, 7, 6, 9, 8, 15, 5),
+        assertEquals(List.of(13, 7, 6, 9, 8, 16, 5),
                 List.of(config.rules().hard().size(), config.rules().actions().size(),
                         config.rules().modeTransitions().size(), config.rules().states().size(),
                         config.rules().retreat().entries().size(), config.weights().matrix().size(),
                         config.modes().params().size()),
-                "Стартовый набор: 12 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 8 способов отхода, "
-                        + "15 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/TACTICS.md");
+                "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 8 способов отхода, "
+                        + "16 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/TACTICS.md");
     }
 
     @Test
@@ -113,7 +113,8 @@ class TacticsConfigTests {
                 broken("нет масштаба", "weights.json", TacticsTexts.mutate(weights, "    \"minDps\": 0.1,\n", ""),
                         "scales.minDps"),
                 broken("опечатка в факте условия", "rules.json", TacticsTexts.mutate(rules,
-                        "\"enemy.nearestExplosive\"", "\"enemy.nearestExplosiv\""), "hard[3].when[0].fact"),
+                        "\"enemy.nearestExplosive\", \"op\": \"<=\", \"value\": 5",
+                        "\"enemy.nearestExplosiv\", \"op\": \"<=\", \"value\": 5"), "hard[4].when[0].fact"),
                 broken("дубль id правила", "rules.json", TacticsTexts.mutate(rules, "\"id\": \"cornered_fight\"",
                         "\"id\": \"no_enemies_ignore\""), "hard[1].id"),
                 broken("приоритет дробью", "rules.json", TacticsTexts.mutate(rules, "\"priority\": 95",
@@ -121,7 +122,7 @@ class TacticsConfigTests {
                 broken("приоритет строкой", "rules.json", TacticsTexts.mutate(rules, "\"priority\": 95",
                         "\"priority\": \"95\""), "hard[1].priority"),
                 broken("опечатка в режиме", "rules.json", TacticsTexts.mutate(rules, "\"value\": \"passive\"",
-                        "\"value\": \"pasive\""), "hard[5].when[0].value"),
+                        "\"value\": \"pasive\""), "hard[6].when[0].value"),
                 broken("неизвестное действие", "rules.json", TacticsTexts.mutate(rules, "\"SHOOT\"", "\"SHOT\""),
                         "actions[0].then.action"),
                 broken("нет замыкающего правила", "rules.json", TacticsTexts.mutate(rules,
@@ -142,10 +143,10 @@ class TacticsConfigTests {
                         "\"from\": [\"aggressive\"]", "\"from\": [\"agressive\"]"), "modeTransitions[0].from[0]"),
                 broken("и decision, и exclude", "rules.json", TacticsTexts.mutate(rules,
                         "\"then\": {\"exclude\": [\"FIGHT\"]}", "\"then\": {\"decision\": \"IGNORE\", \"exclude\": [\"FIGHT\"]}"),
-                        "hard[6].then"),
+                        "hard[7].then"),
                 broken("подмена RETREAT на RETREAT", "rules.json", TacticsTexts.mutate(rules,
                         "\"then\": {\"noRoute\": \"FIGHT\"}}", "\"then\": {\"noRoute\": \"RETREAT\"}}"),
-                        "hard[10].then.noRoute"),
+                        "hard[11].then.noRoute"),
                 broken("нет замыкающего правила подмены", "rules.json", TacticsTexts.mutate(rules,
                         ",\n    {\"id\": \"no_route_ignore\", \"priority\": 10, \"when\": [], \"then\": {\"noRoute\": \"IGNORE\"}}", ""),
                         "hard"),

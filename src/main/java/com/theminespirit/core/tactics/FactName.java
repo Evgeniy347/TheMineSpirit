@@ -49,6 +49,7 @@ public enum FactName {
     ORDER_PROTECTED_THREATENED("order.protectedThreatened", FactType.BOOL),
     ORDER_HELP_AVAILABLE("order.helpAvailable", FactType.BOOL),
     TIME_SINCE_HIT("time.sinceHit", FactType.NUM),
+    TIME_SINCE_STRIKE("time.sinceStrike", FactType.NUM),
     TIME_SINCE_ENEMY_SEEN("time.sinceEnemySeen", FactType.NUM),
     TIME_IN_STATE("time.inState", FactType.NUM),
     STATE_TACTICAL("state.tactical", FactType.ENUM),

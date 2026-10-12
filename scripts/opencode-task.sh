@@ -30,13 +30,25 @@ PROBE_PROMPT="ответь OK"
 SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
+UNFINISHED_PROMPT="Ты закончил ход на полуслове, не доделав задание и без итогового отчёта. Продолжай с того места, где \
+остановился, и не заканчивай ход, пока не будет итогового отчёта: хэши коммитов, итог тестов, что не сделано."
+# Модель иногда заканчивает ход фразой «Теперь посмотрю …:» — надзор продолжает ту же сессию, не больше UNFINISHED_LIMIT раз.
+UNFINISHED_LIMIT="${OPENCODE_UNFINISHED_LIMIT:-3}"
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
 и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам, красный JUnit или GameTest не коммитишь; коммитишь сам, частями, по \
 docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом прикладываешь вывод scripts/prove-red.sh <коммит>; каждый новый тест \
 доказываешь подлогом по существу (ломаешь поведение так, что код компилируется, и видишь красный тест) — «на родителе \
-не компилируется» не доказательство; пределы в тестах — числа в самом тесте, а не константы production; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
+не компилируется» не доказательство; в проверке предела ожидание — число в самом тесте, а факт — из production (assertEquals(24, Limits.X)), \
+сравнение литерала с литералом — не проверка; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
 коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
+# opencode запускается через setsid и переживает свой надзор: при остановке надзора (tmux kill-session, Ctrl+C)
+# его надо гасить явно, иначе осиротевший процесс продолжит править дерево рядом с новым исполнителем.
+current_pid=""
+trap '[ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null' EXIT
+trap 'exit 143' TERM HUP INT
+# На Windows python3 — заглушка магазина: там задают PYTHON=python.
+PYTHON="${PYTHON:-python3}"
 EXIT_PROVIDER_EXHAUSTED=75
 EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
@@ -70,7 +82,7 @@ if [ -z "$session" ] && [ -z "${OPENCODE_ALLOW_DIRTY:-}" ] && [ -n "$(git -C "$R
 fi
 
 log_root="${OPENCODE_LOG_ROOT:-$REPO_DIR/TestResults/opencode}"
-log_dir="$log_root/$(date +%Y%m%d-%H%M%S)"
+log_dir="$log_root/$(date +%Y%m%d-%H%M%S)-$$"
 failures_log="$log_root/failures.log"
 mkdir -p "$log_dir"
 failure_text=""
@@ -91,7 +103,7 @@ provider_failure_text() {
         return 0
     fi
     grep -qiE "$PROVIDER_PATTERN" "$out" || return 1
-    python3 -I -c '
+    "$PYTHON" -I -c '
 import json, re, sys
 pattern = re.compile(sys.argv[2], re.IGNORECASE)
 for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
@@ -110,6 +122,9 @@ sys.exit(1)
 
 waiting_for_model() {
     local pid="$1"
+    # Без pgrep (Git Bash на Windows) дочерние процессы не видны: молчание считается по одному таймеру —
+    # на ПК для долгих сборок ставь OPENCODE_IDLE_LIMIT побольше.
+    command -v pgrep >/dev/null || return 0
     ! pgrep -a -P "$pid" 2>/dev/null | grep -qvE 'lsp|language.?server|jdtls|mcp'
 }
 
@@ -130,8 +145,11 @@ run_attempt() {
     [ -n "$session" ] && args+=(-s "$session")
     : >"$out"
     : >"$err"
-    setsid "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES" >"$out" 2>"$err" </dev/null &
+    local detach=()
+    command -v setsid >/dev/null && detach=(setsid)
+    "${detach[@]}" "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES" >"$out" 2>"$err" </dev/null &
     local pid=$!
+    current_pid=$pid
     while kill -0 "$pid" 2>/dev/null; do
         sleep "$POLL_SECONDS"
         [ -z "$session" ] && session="$(capture_session_id "$out")"
@@ -154,8 +172,22 @@ run_attempt() {
     return "$code"
 }
 
+# Ответ оборван: кончается двоеточием или многоточием либо это короткое «Теперь …/Сейчас …/Let me …» без отчёта.
+answer_unfinished() {
+    "$PYTHON" -I -c '
+import re, sys
+text = sys.stdin.read().strip()
+if not text:
+    sys.exit(1)
+if text.endswith((":", "…", "...")):
+    sys.exit(0)
+starts = r"^(Теперь|Сейчас|Дальше|Продолжаю|Смотрю|Проверяю|Переписываю|Готовлю|Запускаю|Читаю|Let me|Now |Next)"
+sys.exit(0 if len(text) < 400 and re.match(starts, text, re.I) else 1)
+'
+}
+
 print_last_answer() {
-    python3 -I -c '
+    "$PYTHON" -I -c '
 import json, sys
 last = ""
 for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
@@ -221,9 +253,12 @@ wait_for_provider() {
 }
 
 attempt=0
+run_no=0
+unfinished=0
 message="$prompt"
 while true; do
-    attempt_log="$log_dir/attempt-$attempt"
+    attempt_log="$log_dir/attempt-$run_no"
+    run_no=$((run_no + 1))
     run_attempt "$attempt_log" "$message"
     code=$?
     case "$code" in
@@ -249,6 +284,15 @@ while true; do
             [ -n "$session" ] && message="$CONTINUE_PROMPT"
             ;;
         *)
+            if [ "$code" = 0 ] && [ -n "$session" ] && [ "$unfinished" -lt "$UNFINISHED_LIMIT" ] \
+                && print_last_answer "$attempt_log.jsonl" | answer_unfinished; then
+                unfinished=$((unfinished + 1))
+                record_failure "ответ оборван" "$(print_last_answer "$attempt_log.jsonl" | head -c 200)"
+                echo "opencode: ответ оборван на полуслове, продолжаю сессию ${session} (${unfinished}/${UNFINISHED_LIMIT})" >&2
+                attempt=0
+                message="$UNFINISHED_PROMPT"
+                continue
+            fi
             echo "Сессия: ${session:-не создана}"
             echo "Логи: $log_dir"
             dirty="$(git -C "$REPO_DIR" status --short --untracked-files=no)"

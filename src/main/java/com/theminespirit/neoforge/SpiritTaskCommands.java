@@ -9,6 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
@@ -25,9 +26,12 @@ import java.util.Optional;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 
 final class SpiritTaskCommands {
     private SpiritTaskCommands() {
@@ -64,16 +68,22 @@ final class SpiritTaskCommands {
         }
         Map<String, Object> goalParams = speakerParams(speaker);
         List<ScriptCatalog> catalogs = new ArrayList<>(spirits.size());
+        List<WorldObservation> observations = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
             catalogs.add(SpiritScripts.catalogFor(spirit));
+            observations.add(goalObservation(spirit));
         }
         List<TaskNode> plans;
         try {
-            plans = BatchPlanner.planAll(catalogs, new Goal(text, goalParams), emptyObservation(spirits.get(0)));
+            plans = BatchPlanner.planAll(catalogs, new Goal(text, goalParams), observations);
         } catch (BatchPlanException e) {
             SpiritEntity failed = spirits.get(e.index());
             source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: дух '"
                     + failed.getStringUUID() + "' не смог её принять: " + e.getMessage()));
+            return 0;
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: "
+                    + e.getMessage()));
             return 0;
         }
         List<String> assigned = new ArrayList<>(spirits.size());
@@ -84,6 +94,26 @@ final class SpiritTaskCommands {
         source.sendSuccess(() -> Component.literal("Цель '" + text + "' поставлена духам: "
                 + String.join(", ", assigned) + ". Состояние — /spirit status"), true);
         return spirits.size();
+    }
+
+    private static WorldObservation goalObservation(SpiritEntity spirit) {
+        BlockPos pos = spirit.blockPosition();
+        return new WorldObservation("spirit_" + spirit.getStringUUID(), spirit.level().getGameTime(),
+                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), inventoryEntries(spirit),
+                List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
+    }
+
+    private static List<ItemCount> inventoryEntries(SpiritEntity spirit) {
+        List<ItemCount> entries = new ArrayList<>();
+        SimpleContainer inventory = spirit.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!stack.isEmpty()) {
+                entries.add(new ItemCount(
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), stack.getCount()));
+            }
+        }
+        return entries;
     }
 
     private static int status(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -147,13 +177,6 @@ final class SpiritTaskCommands {
             }
         }
         return spirits;
-    }
-
-    private static WorldObservation emptyObservation(SpiritEntity spirit) {
-        BlockPos pos = spirit.blockPosition();
-        return new WorldObservation("spirit_" + spirit.getStringUUID(), spirit.level().getGameTime(),
-                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
-                List.of(), List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
     }
 
     private static String describe(SpiritEntity spirit) {

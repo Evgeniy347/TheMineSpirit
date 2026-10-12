@@ -19,7 +19,7 @@ class FactMapTests {
             "enemy.anyFlies", "enemy.targetingSelf", "env.lavaNear", "env.dropHeight", "env.light", "env.night",
             "env.homeDistance", "env.homeReachable", "env.coverDistance", "env.waterDistance",
             "env.escapeAvailability", "order.mode", "order.zoneDistance", "order.leashLeft",
-            "order.protectedThreatened", "order.helpAvailable", "time.sinceHit", "time.sinceEnemySeen",
+            "order.protectedThreatened", "order.helpAvailable", "time.sinceHit", "time.sinceStrike", "time.sinceEnemySeen",
             "state.tactical", "derived.winMargin");
     private static final Pattern KEY = Pattern.compile("[a-z]+\\.[A-Za-z]+");
 
@@ -89,6 +89,17 @@ class FactMapTests {
                         facts.number(FactName.TIME_SINCE_HIT), facts.bool(FactName.SELF_HAS_RANGED),
                         facts.bool(FactName.ORDER_ZONE_SET), facts.bool(FactName.ORDER_PROTECTED_THREATENED)),
                 "Факты о себе и приказах берутся из Situation без искажений");
+    }
+
+    @Test
+    void from_StrikeTimer_IsReflectedAsFact() {
+        Situation situation = SituationBuilder.create().sinceStrike(7).build();
+
+        FactMap facts = Assessments.facts(situation);
+
+        assertEquals(7.0, facts.number(FactName.TIME_SINCE_STRIKE),
+                "Тики с последнего удара духа по врагу видны тактике: по ним правило «ударил–отошёл» держит отход "
+                        + "после удара, а не по дистанции; значение обязано доходить без искажений");
     }
 
     @Test

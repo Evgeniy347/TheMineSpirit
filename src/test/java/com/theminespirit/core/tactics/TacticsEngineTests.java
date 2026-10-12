@@ -42,7 +42,7 @@ class TacticsEngineTests {
 
     @Test
     void step_CreeperCloseWithCoverAndBlocks_RetreatsByHardRuleToCover() {
-        Situation situation = SituationBuilder.create().enemy("creeper", 3).cover(4).blocks(10).build();
+        Situation situation = SituationBuilder.create().dps(1).enemy("creeper", 3).cover(4).blocks(10).build();
 
         TacticalOutcome outcome = first(situation);
 
@@ -50,7 +50,7 @@ class TacticsEngineTests {
                 TacticalState.RETREATING, "explosive_close_retreat", "решило правило explosive_close_retreat"),
                 List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(), outcome.state(),
                         outcome.trace().rule(), outcome.trace().whyNotFight()),
-                "Крипер в 3 блоках: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
+                "Крипер в 3 блоках без меча: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
                         + "по порядку способов, баррикада закрыта взрывчаткой");
     }
 
@@ -144,13 +144,31 @@ class TacticsEngineTests {
     }
 
     @Test
+    void step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight() {
+        Situation situation = SituationBuilder.create().hpFraction(0.2).lava(1).enemy("pillager", 6).build();
+
+        TacticalOutcome outcome = first(situation);
+
+        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"),
+                List.of(outcome.decision(), outcome.trace().rule()),
+                "HP 20 % при лаве рядом и целящемся враге: отходить некуда (от быстрого стрелка не убежать), бой "
+                        + "вычеркнут, подмена noRoute выбирает IGNORE");
+        assertEquals(List.of("no_fight_near_lava"), outcome.trace().excludingRules(),
+                "Trace подмены обязан хранить вычёркивания, которые она учла: иначе вычеркнутый бой теряется "
+                        + "в Decision.excluded. Проверьте слияние вычёркиваний подмены в Decider");
+        assertEquals("бой вычеркнут правилами [no_fight_near_lava]", outcome.trace().whyNotFight(),
+                "Trace обязан объяснять, почему не FIGHT: игрок видит IGNORE и должен узнать про лаву, а не "
+                        + "«решило правило no_route_ignore» без причины");
+    }
+
+    @Test
     void step_CreeperHoversAroundFive_NeverSwingsBetweenRetreatAndFight() {
         double[] distances = {9, 7, 6, 5, 6, 7, 6, 7};
         TacticsEngine engine = engine();
         TacticsMemory memory = null;
         List<TacticalOption> decisions = new ArrayList<>();
         for (int i = 0; i < distances.length; i++) {
-            Situation situation = SituationBuilder.create().enemy("creeper", distances[i]).cover(5).build();
+            Situation situation = SituationBuilder.create().dps(1).enemy("creeper", distances[i]).cover(5).build();
             memory = memory == null ? Memories.fresh(situation) : memory;
             TacticalOutcome outcome = engine.step(situation, memory, 1000 + 10L * i);
             decisions.add(outcome.decision());
@@ -160,7 +178,7 @@ class TacticsEngineTests {
         assertEquals(List.of(TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.RETREAT,
                 TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT),
                 decisions,
-                "Крипер подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
+                "Крипер без меча подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
                         + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву");
     }
 }

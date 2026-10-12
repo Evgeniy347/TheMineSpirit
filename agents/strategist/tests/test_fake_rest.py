@@ -1,4 +1,5 @@
-"""Тест харнесса: каждая ручка фейкового REST действительно меняет ответ (иначе сценарии зеленеют вхолостую)."""
+"""Тест харнесса: каждая ручка фейкового REST действительно меняет ответ (иначе сценарии зеленеют вхолостую);
+in-process клиент отвечает так же, как сокет, — сценарии без сети проверяют то же поведение."""
 
 import json
 import time
@@ -6,7 +7,9 @@ import unittest
 import urllib.error
 import urllib.request
 
-from tests.fake_rest import FakeRest, default_capabilities, observation_hash
+from rest_client import ApiError, RestClient
+from tests.fake_rest import FakeRest, InProcessClient, default_capabilities, observation_hash
+from tests.helpers import FakeClock
 
 
 def call(base, method, path, body=None, timeout=5):
@@ -266,6 +269,34 @@ class FakeRestTests(unittest.TestCase):
 
     def test_unknownPath_Returns404(self):
         self.assertEqual(404, call(self.base, "GET", "/v1/nope")[0])
+
+    def clients(self):
+        """HTTP-клиент по сокету и in-process клиент над тем же фейком — оба транспорта один ответ."""
+        return (RestClient(self.base, clock=FakeClock(), rps=1000, timeout=2.0),
+                InProcessClient(self.fake, clock=FakeClock(), rps=1000, timeout=2.0))
+
+    def test_garbageNext_HttpAndInProcess_GiveSameBadResponse(self):
+        seen = []
+        for client in self.clients():
+            with self.subTest(client=type(client).__name__):
+                self.fake.garbage_next = 1
+                with self.assertRaises(ApiError) as ctx:
+                    client.get("/v1/bots")
+                seen.append((ctx.exception.code, ctx.exception.status))
+                self.assertEqual(("bad_response", 200), seen[-1], "мусор вместо JSON — ошибка контракта на обоих "
+                                                                 "транспортах, а не пустой объект в одном из них")
+        self.assertEqual(seen[0], seen[1], "in-process транспорт отдаёт те же байты, что ушёл бы по сокету")
+
+    def test_dropConnection_HttpAndInProcess_RetryGetTheSameWay(self):
+        attempts = []
+        for client in self.clients():
+            with self.subTest(client=type(client).__name__):
+                self.fake.requests.clear()
+                self.fake.drop_connection_next = 1
+                body = client.get("/v1/bots")
+                self.assertEqual("spirit_1", body["bots"][0]["id"], "обрыв GET повторяется на обоих транспортах")
+                attempts.append(len(self.fake.requests))
+        self.assertEqual([2, 2], attempts, "по одному обрыву и одной повторной попытке: сокет и процесс считают одинаково")
 
 
 if __name__ == "__main__":

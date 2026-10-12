@@ -29,6 +29,21 @@ public final class MiningSafety {
         return new BreakSafety.Safe();
     }
 
+    public static boolean canStepFrom(BlockCoord feet, BlockCoord item, SafetyView view) {
+        Objects.requireNonNull(feet, "Клетка духа не может быть null: без неё неизвестно, куда шагать");
+        Objects.requireNonNull(item, "Клетка предмета не может быть null: без неё неизвестно, куда шагать");
+        Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется, годится ли клетка для шага");
+        if (item.y() != feet.y()) {
+            return false;
+        }
+        int dx = Math.abs(item.x() - feet.x());
+        int dz = Math.abs(item.z() - feet.z());
+        if (dx > 1 || dz > 1 || (dx == 0 && dz == 0)) {
+            return false;
+        }
+        return canStand(item, view);
+    }
+
     public static boolean canStand(BlockCoord cell, SafetyView view) {
         Objects.requireNonNull(cell, "Клетка стоянки не может быть null: без неё неизвестно, где проверять пол и ноги");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется пол и опасные соседи");

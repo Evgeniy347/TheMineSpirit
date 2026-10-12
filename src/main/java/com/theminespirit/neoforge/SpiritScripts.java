@@ -8,7 +8,9 @@ import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.FollowParams;
+import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.LinkedHashMap;
@@ -28,6 +30,8 @@ public final class SpiritScripts {
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
+        table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
+        table.put("gather", spirit -> params -> new GatherScript(spirit, GatherParams.from(params)));
         return table;
     }
 

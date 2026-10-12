@@ -6,6 +6,7 @@ import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
@@ -54,6 +55,10 @@ public final class BlockBreaker {
     private int elapsed;
     private int crackStage = NO_STAGE;
     private boolean active;
+    private boolean toolBroke;
+    private int lastHitTick = -1;
+    private int hitsThisTick;
+    private int maxHitsPerTick;
 
     public BlockBreaker(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -93,6 +98,7 @@ public final class BlockBreaker {
         if (!active) {
             throw new IllegalStateException("Ломка не начата: сначала begin(...), иначе нечего ломать");
         }
+        recordHit();
         Level level = spirit.level();
         boolean unloaded = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4) == null;
         if (unloaded || !level.getBlockState(pos).is(state.getBlock())) {
@@ -124,6 +130,30 @@ public final class BlockBreaker {
 
     public Choice choice() {
         return choice;
+    }
+
+    public boolean dropsAllowedFor(BlockState targetState) {
+        Objects.requireNonNull(targetState, "Состояние блока не может быть null: по нему выбирается инструмент");
+        return ToolChoice.best(toolOptions(targetState)).dropsAllowed();
+    }
+
+    public boolean toolBroke() {
+        return toolBroke;
+    }
+
+    public int maxHitsPerTick() {
+        return maxHitsPerTick;
+    }
+
+    private void recordHit() {
+        int now = spirit.tickCount;
+        if (now == lastHitTick) {
+            hitsThisTick++;
+        } else {
+            lastHitTick = now;
+            hitsThisTick = 1;
+        }
+        maxHitsPerTick = Math.max(maxHitsPerTick, hitsThisTick);
     }
 
     private List<ToolOption> toolOptions(BlockState targetState) {
@@ -163,6 +193,9 @@ public final class BlockBreaker {
         }
         if (!usedTool.isEmpty() && wearsTool) {
             usedTool.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            toolBroke = usedTool.isEmpty();
+        } else {
+            toolBroke = false;
         }
     }
 

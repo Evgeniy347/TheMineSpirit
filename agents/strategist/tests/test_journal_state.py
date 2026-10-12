@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import tempfile
 import unittest
@@ -7,7 +8,7 @@ from unittest import mock
 
 import journal as journal_module
 from journal import EVENTS, Journal
-from state import StateStore
+from state import default_state, StateStore
 from tests.helpers import FakeClock
 
 APP = Path(__file__).resolve().parent.parent
@@ -163,6 +164,29 @@ class StateTests(unittest.TestCase):
         self.assertEqual(7, again["cycle"])
         self.assertEqual("b", again["active"]["t-1"]["bot"])
         self.assertEqual(["state.json"], [p.name for p in self.dir.glob("state*")], "временных файлов не остаётся")
+
+    def test_save_SameStateTwice_DoesNotTouchDisk(self):
+        state = self.store.load(self.journal).state
+        state["cycle"] = 1
+        with mock.patch("os.replace", wraps=os.replace) as replace:
+            self.store.save(state)
+            self.store.save(state)
+            self.assertEqual(1, replace.call_count,
+                            "повторное сохранение неизменного состояния не должно перезаписывать файл: каждая запись — "
+                            "fsync, а save() зовут после каждого цикла и каждого опроса задачи")
+            state["cycle"] = 2
+            self.store.save(state)
+            self.assertEqual(2, replace.call_count, "состояние изменилось — записать обязательно")
+        self.assertEqual(2, self.store.load(self.journal).state["cycle"], "на диске последнее состояние")
+
+    def test_save_AfterCorruptLoad_WritesAgain(self):
+        self.store.save(default_state())
+        (self.dir / "state.json").write_text('{"schema": 1, "cycle": ', encoding="utf-8")
+        self.store.load(self.journal)
+        with mock.patch("os.replace", wraps=os.replace) as replace:
+            self.store.save(default_state())
+            self.assertEqual(1, replace.call_count, "после карантина битого файла кэш записи сброшен: состояние "
+                                                   "обязано лечь на диск заново")
 
     def test_save_FailureBeforeRename_KeepsPreviousStateIntact(self):
         state = self.store.load(self.journal).state

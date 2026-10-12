@@ -31,6 +31,8 @@ check silent_model 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6
 check busy_tool_is_not_silence 0 1 FAKE_BUSY_TOOL=15 OPENCODE_IDLE_LIMIT=6
 check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
 check info_log_mentions_limit 0 1 FAKE_INFO_LOG=1
+check unfinished_answer_continues 0 3 FAKE_UNFINISHED=2
+check unfinished_answer_limit 0 4 FAKE_UNFINISHED=99 OPENCODE_UNFINISHED_LIMIT=3
 dirty_repo="$PWD/$work/dirty-repo"
 git init -q "$dirty_repo" && echo "чужая работа" > "$dirty_repo/foreign.txt"
 check dirty_tree_new_task 3 0 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_repo"
@@ -40,7 +42,7 @@ task_args=()
 check exhausted 75 6 FAKE_FAILURES=99 OPENCODE_WAIT_LIMIT=0
 grep "перезапуск\|Остановлено" "$work/exhausted.out" | sed 's/^/  /'
 failures_after=$(wc -l < "$failures_log")
-echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+1+6 = 10)"
+echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+1+2+3+6 = 15: сбои, молчание, оборванные ответы, исчерпание)"
 tail -n 1 "$failures_log" | sed 's/^/  последняя: /'
 
 # Режим ожидания (короткие интервалы через переменные): 5 быстрых перезапусков исчерпаны, дальше — пробы провайдера.

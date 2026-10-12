@@ -8,16 +8,22 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -155,13 +161,75 @@ public final class SpiritCommandGameTests {
         }
     }
 
+    @GameTest(template = "arena", batch = "spirit_goal", timeoutTicks = 200)
+    public static void commandGoal_TwoSpiritsOnArena_PlansFromEachOwnObservation(GameTestHelper helper)
+            throws CommandSyntaxException {
+        GameTestFixtures.reset(helper);
+        helper.setBlock(0, 0, 0, Blocks.STONE);
+        helper.setBlock(10, 0, 10, Blocks.STONE);
+        // Тег уникален на запуск: мир переживает прогоны, и духи с прошлым тегом попали бы в селектор.
+        String tag = "observe_each_" + UUID.randomUUID();
+        SpiritEntity first = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
+        first.addTag(tag);
+        SpiritEntity second = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(10, 1, 10));
+        second.addTag(tag);
+        second.getInventory().setItem(0, new ItemStack(Items.IRON_AXE, 1));
+        helper.assertTrue(GameTestFixtures.countInInventory(second.getInventory(), Items.IRON_AXE) == 1,
+                "Подготовка обязана положить топор в инвентарь второго духа: без разного инвентаря наблюдения "
+                        + "духов неразличимы и тест не доказывает по-духовые наблюдения");
+        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(5, 1, 5), "gt_observe_each");
+        try {
+            CommandSourceStack source = playerSource(player);
+            CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                    .getCommands().getDispatcher();
+            String both = "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
+
+            int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
+            helper.assertTrue(accepted == 2,
+                    "Одна команда на двух духов обязана ставить задачу обоим: общее наблюдение первого духа "
+                            + "сторож BatchPlanner отклоняет, и задача не ставится никому. Результат=" + accepted);
+            helper.assertTrue(first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
+                            && second.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+                    "После /spirit goal оба духа обязаны выполняться: первый=" + first.taskStatus()
+                            + ", второй=" + second.taskStatus());
+
+            helper.succeed();
+        } finally {
+            first.discard();
+            second.discard();
+            removePlayer(helper, player);
+        }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void commandFollow_ServerSource_RefusesWithoutTask(GameTestHelper helper)
             throws CommandSyntaxException {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        CommandSourceStack source = helper.getLevel().getServer().createCommandSourceStack()
+        CommandSourceStack base = helper.getLevel().getServer().createCommandSourceStack()
                 .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(1, 1, 1))))
                 .withPermission(4);
+        List<String> failures = new ArrayList<>();
+        CommandSourceStack source = base.withSource(new CommandSource() {
+            @Override
+            public void sendSystemMessage(Component message) {
+                failures.add(message.getString());
+            }
+
+            @Override
+            public boolean acceptsSuccess() {
+                return base.source.acceptsSuccess();
+            }
+
+            @Override
+            public boolean acceptsFailure() {
+                return true;
+            }
+
+            @Override
+            public boolean shouldInformAdmins() {
+                return false;
+            }
+        });
         CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
                 .getCommands().getDispatcher();
 
@@ -173,6 +241,12 @@ public final class SpiritCommandGameTests {
         helper.assertTrue(spirit.taskStatus().isEmpty(),
                 "Отказ без игрока-источника не должен запускать задачу: у духа появился статус "
                         + spirit.taskStatus());
+        helper.assertTrue(failures.size() == 1
+                        && failures.get(0).contains("требует игрока-источника")
+                        && failures.get(0).contains("следуй за мной"),
+                "Отказ без игрока-источника обязан называть причину текстом с целью и подсказкой: молчаливый отказ "
+                        + "или чужой текст не объяснит оператору, что команду надо выполнить от имени игрока. "
+                        + "Получено: " + failures);
         helper.succeed();
     }
 

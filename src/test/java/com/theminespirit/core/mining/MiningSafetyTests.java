@@ -118,4 +118,37 @@ class MiningSafetyTests {
         assertFalse(MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
                 "Лава у уровня пола соседней клетки обязана отвергаться: затечёт под ноги духа");
     }
+
+    @Test
+    void canStepFrom_NeighborSameLevelBesideLava_IsRejected() {
+        CellWorld world = new CellWorld().set(1, -1, 0, Cell.SOLID).set(2, 0, 0, Cell.LAVA);
+
+        assertFalse(MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
+                "Соседняя клетка того же уровня, не проходящая canStand (рядом лава), обязана запрещать шаг: "
+                        + "иначе дух шагает в опасную клетку мимо навигации");
+    }
+
+    @Test
+    void canStepFrom_NeighborSameLevelWithoutFloor_IsRejected() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.SOLID);
+
+        assertFalse(MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
+                "Соседняя клетка без пола обязана запрещать шаг: без проверки пола дух падает в полость");
+    }
+
+    @Test
+    void canStepFrom_SafeNeighborSameLevel_IsAccepted() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.SOLID).set(1, -1, 0, Cell.SOLID);
+
+        assertTrue(MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
+                "Безопасная соседняя клетка того же уровня обязана разрешать шаг: иначе предмет не подобрать");
+    }
+
+    @Test
+    void canStepFrom_NeighborOtherLevel_IsRejected() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.SOLID).set(1, -2, 0, Cell.SOLID);
+
+        assertFalse(MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, -1, 0), world),
+                "Соседняя клетка другого уровня обязана запрещать прямой шаг: предмет на дне ямы недосягаем пешком");
+    }
 }

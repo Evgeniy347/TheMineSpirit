@@ -10,7 +10,7 @@ class DeciderTests {
     private static final String LAVA_RULE = "\"then\": {\"exclude\": [\"FIGHT\"]}";
 
     private static Decision decide(TacticsConfig config, Situation situation, int routes) {
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(routes);
+        Assessment assessment = Assessments.withRoutes(situation, routes);
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
         return decider.decide(FactMap.from(situation, assessment), scores, routes, Memories.fresh(situation), 0);
@@ -75,20 +75,21 @@ class DeciderTests {
 
     @Test
     void decide_DecisiveRule_CarriesRuleIdAndExcludedFromHigherRules() {
-        Situation burning = SituationBuilder.create().enemy("creeper", 4).build();
+        Situation burning = SituationBuilder.create().dps(1).enemy("creeper", 4).build();
 
         Decision decision = decide(TacticsConfig.loadDefault(), burning, 1);
 
         assertEquals(List.of(TacticalOption.RETREAT, "explosive_close_retreat"),
                 List.of(decision.option(), decision.rule()),
-                "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало");
+                "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало "
+                        + "(крипер в 4 блоках, дух без меча)");
     }
 
     @Test
     void decide_HeldRetreatReplacedWithoutRoute_HasNoHold() {
         TacticsConfig config = TacticsConfig.loadDefault();
         Situation situation = SituationBuilder.create().enemy("zombie", 6).build();
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(0);
+        Assessment assessment = Assessments.withRoutes(situation, 0);
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
 
@@ -107,5 +108,20 @@ class DeciderTests {
 
         assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"), List.of(decision.option(), decision.rule()),
                 "Бой у лавы вычеркнут: подмена RETREAT без пути обязана уйти на невычеркнутый вариант IGNORE");
+    }
+
+    @Test
+    void decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement() {
+        Situation situation = SituationBuilder.create().hpFraction(0.2).lava(1).enemy("zombie", 6).build();
+
+        Decision decision = decide(TacticsConfig.loadDefault(), situation, 0);
+
+        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"), List.of(decision.option(), decision.rule()),
+                "HP 20 % даёт жёсткий отход, путей нет, враг целится: подмена уходит в IGNORE, а не в вычеркнутый бой");
+        assertEquals(Set.of(TacticalOption.FIGHT), decision.excluded(),
+                "Подмена noRoute учла вычёркивание боя у лавы: иначе trace не объяснит, почему дух не дерётся. "
+                        + "Проверьте слияние вычёркиваний подмены в Decider");
+        assertEquals(List.of("no_fight_near_lava"), decision.excludingRules(),
+                "Trace обязан называть правило, вычеркнувшее бой: иначе «почему не FIGHT» сошлётся на подмену без причины");
     }
 }

@@ -49,7 +49,8 @@ public final class TacticsEngine {
         ModeStep modeStep = modes.next(current, FactMap.from(situation, frame.assessment(current).assessment()));
         Assessed assessed = frame.assessment(modeStep.mode());
         RetreatOptions options = retreat.evaluate(FactMap.from(situation, assessed.assessment()));
-        Assessment assessment = assessed.assessment().withEscapeRoutes(options.routes());
+        Assessment assessment = assessed.assessment().withEscapeRoutes(options.routes())
+                .withEscapeQuality(options.bestUtility());
         FactMap facts = FactMap.from(situation, assessment);
         return conclude(frame, modeStep, assessed.geometry(), options, assessment, facts);
     }
@@ -138,7 +139,7 @@ public final class TacticsEngine {
             ModeParams params = config.modes().of(mode);
             ModeGeometry geometry = ModeGeometry.of(situation, params, memory.anchor());
             Assessment assessment = new Assessment(metrics, WinMargin.of(situation.self(), metrics, scales),
-                    0, mode, params.initiates(), geometry.zoneDistance(), geometry.leashLeft(),
+                    0, 0, mode, params.initiates(), geometry.zoneDistance(), geometry.leashLeft(),
                     geometry.engageLeft(), metrics.speedRatio(situation.self().speed(), scales.speedRatioCap()),
                     memory.state(), ticksBetween(memory.stateSince(), nowTick), ticksBetween(lastSeen, nowTick));
             return new Assessed(assessment, geometry);

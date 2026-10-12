@@ -61,8 +61,16 @@ class SituationValidationTests {
                 row("точка за пределами мира", () -> new Point(4.0E7, 0, 0), "Point.x"),
                 row("ticksSinceHit отрицательный",
                         () -> new Situation(self(20, 20, 0, 5, 0.3, 1, 0, 0), List.of(), env(5, 0, 15, 5),
-                                Orders.mode(CombatMode.DEFENSIVE), -1),
-                        "Situation.ticksSinceHit"));
+                                Orders.mode(CombatMode.DEFENSIVE), -1, 0),
+                        "Situation.ticksSinceHit"),
+                row("ticksSinceStrike отрицательный",
+                        () -> new Situation(self(20, 20, 0, 5, 0.3, 1, 0, 0), List.of(), env(5, 0, 15, 5),
+                                Orders.mode(CombatMode.DEFENSIVE), 0, -1),
+                        "Situation.ticksSinceStrike"),
+                row("ticksSinceStrike больше предела",
+                        () -> new Situation(self(20, 20, 0, 5, 0.3, 1, 0, 0), List.of(), env(5, 0, 15, 5),
+                                Orders.mode(CombatMode.DEFENSIVE), 0, Situation.MAX_TICKS + 1),
+                        "Situation.ticksSinceStrike"));
     }
 
     private static Arguments row(String name, Executable construction, String field) {

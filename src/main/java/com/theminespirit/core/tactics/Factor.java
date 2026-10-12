@@ -13,7 +13,7 @@ public enum Factor {
     EXPLOSIVE_NEAR((situation, assessment, scales) -> unit(
             1 - assessment.enemies().nearestExplosive() / scales.explosiveRange())),
     ALLY_SUPPORT((situation, assessment, scales) -> unit(situation.self().allies() / scales.allyFull())),
-    ESCAPE_ROUTE((situation, assessment, scales) -> unit(assessment.escapeRoutes() / scales.routesFull())),
+    ESCAPE_ROUTE((situation, assessment, scales) -> assessment.escapeQuality()),
     TERRAIN_RISK((situation, assessment, scales) -> Math.max(
             unit(1 - situation.env().lavaNear() / scales.lavaRange()),
             unit((situation.env().dropHeight() - scales.dropSafe()) / scales.dropRange()))),
@@ -26,7 +26,9 @@ public enum Factor {
             assessment.mode() == CombatMode.PROTECT && situation.orders().wardThreatened() ? 1 : 0),
     LEASH_PRESSURE((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
             : unit(1 - assessment.leashLeft() / scales.leashMargin())),
-    HEALING_AVAILABLE((situation, assessment, scales) -> unit(situation.self().healItems() / scales.healFull()));
+    HEALING_AVAILABLE((situation, assessment, scales) -> unit(situation.self().healItems() / scales.healFull())),
+    URGENCY((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
+            : WinMargin.urgency(situation.self(), assessment.enemies(), scales));
 
     private final FactorFunction function;
 

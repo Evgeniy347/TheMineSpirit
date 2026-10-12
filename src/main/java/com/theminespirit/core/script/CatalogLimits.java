@@ -25,6 +25,14 @@ public final class CatalogLimits {
     public static final int WAIT_TICKS_MIN = 1;
     public static final int WAIT_TICKS_MAX = 6000;
 
+    // Радиус поиска ближайшего контейнера у скриптов инвентаря
+    public static final int CONTAINER_RADIUS_MIN = 1;
+    public static final int CONTAINER_RADIUS_MAX = 16;
+    public static final int CONTAINER_RADIUS_DEFAULT = 8;
+
+    // Сколько слотов инвентаря занимает дух, прежде чем разгружаться на базе
+    public static final int UNLOAD_TRIGGER_SLOTS = 24;
+
     // AGENTS.md: follow.radius 0..16
     public static final int FOLLOW_RADIUS_MIN = 0;
     public static final int FOLLOW_RADIUS_MAX = 16;

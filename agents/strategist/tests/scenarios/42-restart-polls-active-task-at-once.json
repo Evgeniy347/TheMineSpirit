@@ -1,0 +1,68 @@
+{
+  "name": "42-restart-polls-active-task-at-once",
+  "description": "после перезапуска активная задача опрашивается сразу: расписание опросов не хранится в state.json",
+  "bots": [
+    {
+      "id": "forest",
+      "world": "forest"
+    }
+  ],
+  "fates": {
+    "*": {
+      "outcome": "succeeded",
+      "after_polls": 1
+    }
+  },
+  "brain": {
+    "default": {
+      "json": {
+        "reason": "Рядом лес, инструментов хватает.",
+        "goal": "срубить деревья",
+        "plan": {
+          "type": "script",
+          "script": "chop_tree",
+          "params": {
+            "count": 3
+          }
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "cycle": true
+    },
+    {
+      "restart": true
+    },
+    {
+      "poll": true
+    }
+  ],
+  "expect": [
+    {
+      "posts": 1
+    },
+    {
+      "tasks_created": 1
+    },
+    {
+      "active_tasks": 0
+    },
+    {
+      "brain_calls": 1
+    },
+    {
+      "journal": {
+        "task_done": 1,
+        "cycle_start": 1
+      }
+    },
+    {
+      "journal_has": {
+        "event": "task_done",
+        "outcome": "succeeded"
+      }
+    }
+  ]
+}

@@ -40,8 +40,16 @@ class HardRulesTests {
                 plain("отход есть: не загнан", world().enemy("zombie", 3).build(), 1, ""),
                 plain("HP чуть ниже порога", world().hp(4.9).enemy("zombie", 10).build(), 1, "critical_hp_retreat"),
                 plain("HP ровно на пороге", world().hp(5).enemy("zombie", 10).build(), 1, ""),
-                plain("крипер ровно в 5 блоках", world().enemy("creeper", 5).build(), 1, "explosive_close_retreat"),
-                plain("крипер чуть дальше 5", world().enemy("creeper", 5.01).build(), 1, ""),
+                plain("крипер ровно в 5 блоках без меча", world().dps(1).enemy("creeper", 5).build(), 1,
+                        "explosive_close_retreat"),
+                plain("крипер чуть дальше 5", world().dps(1).enemy("creeper", 5.01).build(), 1, ""),
+                plain("крипер в 5 блоках с мечом: дистанция не решает", world().enemy("creeper", 5).build(), 1, ""),
+                plain("крипер в 4 блоках с мечом сразу после удара: отход",
+                        world().sinceStrike(5).enemy("creeper", 4).build(), 1, "explosive_strike_retreat"),
+                plain("крипер в 4 блоках с мечом без удара: подхода ждёт счёт",
+                        world().enemy("creeper", 4).build(), 1, ""),
+                plain("крипер в 6 блоках сразу после удара: полоса удара кончилась",
+                        world().sinceStrike(5).enemy("creeper", 6).build(), 1, ""),
                 plain("пассивный режим: любой враг", world().mode(CombatMode.PASSIVE).enemy("zombie", 20).build(), 1,
                         "passive_never_fights"),
                 plain("агрессивный режим: не пассивный", world().enemy("zombie", 20).build(), 1, ""),
@@ -113,15 +121,15 @@ class HardRulesTests {
 
     @Test
     void evaluate_DecisionRuleAboveExcludeRule_StopsBeforeLowerRules() {
-        Situation burning = world().lava(1).enemy("creeper", 4).build();
+        Situation burning = world().dps(1).lava(1).enemy("creeper", 4).build();
         FactMap facts = Assessments.facts(burning);
         RuleCounter counter = new RuleCounter();
 
         HardVerdict verdict = new HardRules(TacticsConfig.loadDefault().rules().hard(), counter).evaluate(facts);
 
-        assertEquals(List.of("explosive_close_retreat", 4L),
+        assertEquals(List.of("explosive_close_retreat", 5L),
                 List.of(verdict.decisive().get().id(), counter.checks()),
                 "После первого подходящего правила с решением остальные не проверяются: стоимость вызова ограничена "
-                        + "числом правил до него (no_enemies, cornered, critical, explosive)");
+                        + "числом правил до него (no_enemies, cornered, critical, strike, explosive)");
     }
 }

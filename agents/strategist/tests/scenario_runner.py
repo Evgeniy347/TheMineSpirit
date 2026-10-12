@@ -1,4 +1,5 @@
-"""Прогон сценария-таблицы tests/scenarios/*.json: фейковый REST, подделанные часы, скриптовый мозг, проверки по журналу."""
+"""Прогон сценария-таблицы tests/scenarios/*.json: фейковый REST внутри процесса (без HTTP), подделанные часы,
+скриптовый мозг, проверки по журналу."""
 
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ from pathlib import Path
 import config as config_module
 from brain import FallbackBrain
 from strategist import build
-from tests.fake_rest import FIXTURES, FakeRest
+from tests.fake_rest import FIXTURES, FakeRest, InProcessClient
 from tests.helpers import FakeClock
 from tests.scripted_brain import ScriptedBrain
 
@@ -39,11 +40,12 @@ class ScenarioRun:
         self.clock = FakeClock()
         self.fake = FakeRest()
         self.fake.clock = self.clock
-        self.fake.start()
-        env = {"STRATEGIST_HOME": str(self.tmp / "home"), "SPIRIT_API": self.fake.url, "STRATEGIST_MODE": "live"}
+        env = {"STRATEGIST_HOME": str(self.tmp / "home"), "STRATEGIST_MODE": "live"}
         env.update({k: str(v) for k, v in scenario.get("config", {}).items()})
         self.config = config_module.from_env(env)
         self.brains = self._make_brains()
+        self.client = InProcessClient(self.fake, clock=self.clock, rps=self.config.rest_per_second,
+                                      timeout=self.config.rest_timeout)
         self.strategist = self._new_strategist()
         self._setup_bots()
         self.repeat_index = 0
@@ -65,7 +67,7 @@ class ScenarioRun:
         return self.brains["primary"]
 
     def _new_strategist(self):
-        return build(self.config, self._brain(), clock=self.clock, out=None)
+        return build(self.config, self._brain(), clock=self.clock, client=self.client, out=None)
 
     def _setup_bots(self):
         for spec in self.scenario["bots"]:
