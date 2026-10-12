@@ -2,6 +2,8 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.GotoParams;
 import net.minecraft.world.phys.Vec3;
 
@@ -12,6 +14,7 @@ final class GotoScript implements ScriptInstance {
     private final Vec3 target;
     private final Approach approach;
     private String failureReason;
+    private boolean zoneChecked;
 
     GotoScript(SpiritEntity spirit, GotoParams params) {
         this.spirit = spirit;
@@ -26,6 +29,15 @@ final class GotoScript implements ScriptInstance {
             approach.cancel();
             failureReason = "дух исчез до достижения цели";
             return ScriptStatus.FAILED;
+        }
+        if (!zoneChecked) {
+            zoneChecked = true;
+            BlockCoord goal = new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
+            if (spirit.protectionGate().checkTravel(goal) instanceof BlockProtection.Refused refused) {
+                approach.cancel();
+                failureReason = refused.reason();
+                return ScriptStatus.FAILED;
+            }
         }
         return switch (approach.tick()) {
             case ARRIVED -> ScriptStatus.SUCCEEDED;

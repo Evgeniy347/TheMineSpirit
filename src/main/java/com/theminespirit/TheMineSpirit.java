@@ -6,6 +6,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritCommands;
 import com.theminespirit.neoforge.SpiritConfig;
+import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.rest.RestConfig;
 import com.theminespirit.neoforge.rest.RestLifecycle;
 import net.neoforged.bus.api.IEventBus;
@@ -26,6 +27,7 @@ public final class TheMineSpirit {
         modContainer.registerConfig(ModConfig.Type.SERVER, SpiritConfig.spec());
         modContainer.registerConfig(ModConfig.Type.SERVER, RestConfig.spec(), RestConfig.FILE_NAME);
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
+        PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
     }

@@ -4,6 +4,8 @@ import com.theminespirit.core.mining.BreakTiming;
 import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
+import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.policy.PolicyId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,13 +39,16 @@ public final class BlockBreaker {
         OUT_OF_REACH
     }
 
-    public sealed interface Begin permits Started, Refused {
+    public sealed interface Begin permits Started, Refused, Protected {
     }
 
     public record Started() implements Begin {
     }
 
     public record Refused(RefuseReason reason, String message) implements Begin {
+    }
+
+    public record Protected(PolicyId policy, String reason) implements Begin {
     }
 
     private final SpiritEntity spirit;
@@ -83,6 +88,9 @@ public final class BlockBreaker {
         if (distance > REACH) {
             return new Refused(RefuseReason.OUT_OF_REACH, "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
                     + distance + "): сначала подойти");
+        }
+        if (spirit.protectionGate().checkBreak(target, targetState) instanceof BlockProtection.Refused refused) {
+            return new Protected(refused.policy(), refused.reason());
         }
         pos = target.immutable();
         state = targetState;

@@ -15,8 +15,11 @@ import com.theminespirit.core.perception.PerceptionResult;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.DropPolicy;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.WorkZone;
+import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
+import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
@@ -36,6 +39,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
     private final SpiritChunkLoader chunkLoader = new SpiritChunkLoader(this);
     private final SpiritPolicies policies = new SpiritPolicies(this);
+    private final ProtectionGate protectionGate = new ProtectionGate(this);
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -81,6 +85,22 @@ public final class SpiritEntity extends PathfinderMob {
         return policies;
     }
 
+    public ProtectionGate protectionGate() {
+        return protectionGate;
+    }
+
+    public Optional<WorkZone> workZone() {
+        return policies.workZone();
+    }
+
+    public void setWorkZone(WorkZone zone) {
+        policies.setWorkZone(zone);
+    }
+
+    public void clearWorkZone() {
+        policies.clearWorkZone();
+    }
+
     public Optional<SpiritBrain> brainIfPresent() {
         return Optional.ofNullable(brain);
     }
@@ -104,6 +124,7 @@ public final class SpiritEntity extends PathfinderMob {
         compound.put("SpiritInventory", inventory.createTag(registryAccess()));
         SpiritTaskStore.write(compound, taskJsonForSave());
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
+        SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
     }
 
     private String taskJsonForSave() {
@@ -132,6 +153,11 @@ public final class SpiritEntity extends PathfinderMob {
             inventory.fromTag(compound.getList("SpiritInventory", Tag.TAG_COMPOUND), registryAccess());
         }
         memory = SpiritMemoryStore.read(compound).map(this::decodeMemory).orElse(MemoryStore.empty());
+        try {
+            SpiritWorkZoneStore.read(compound).ifPresent(policies::setWorkZone);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Дух {} не восстановил рабочую зону: {}", getUUID(), e.getMessage());
+        }
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
             try {

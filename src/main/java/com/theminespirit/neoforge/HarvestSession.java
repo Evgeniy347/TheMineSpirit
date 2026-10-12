@@ -59,6 +59,7 @@ public final class HarvestSession {
     private int unsafe;
     private int noStand;
     private int noTool;
+    private int protectedSkipped;
     private int planCalls;
     private int collectTicks;
     private int collectRuns;
@@ -276,7 +277,14 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
-        if (!(breaker.begin(toPos(currentTarget)) instanceof BlockBreaker.Started)) {
+        BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget));
+        if (begin instanceof BlockBreaker.Protected) {
+            protectedSkipped++;
+            currentTarget = null;
+            state = State.PICK;
+            return;
+        }
+        if (!(begin instanceof BlockBreaker.Started)) {
             noStand++;
             currentTarget = null;
             state = State.PICK;
@@ -338,7 +346,8 @@ public final class HarvestSession {
         return "добыто " + mined + " из " + count
                 + "; пропущено небезопасных: " + unsafe
                 + ", без места для духа: " + noStand
-                + ", без подходящего инструмента: " + noTool;
+                + ", без подходящего инструмента: " + noTool
+                + ", пропущено защищённых: " + protectedSkipped;
     }
 
     private String tierReason(BlockState state) {

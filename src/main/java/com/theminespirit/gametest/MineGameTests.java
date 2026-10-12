@@ -294,32 +294,32 @@ public final class MineGameTests {
     }
 
     // [флак] дух добывает блоки и подбирает дроп, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "empty", batch = "gather_cobble", timeoutTicks = 1000)
-    public static void gather_CobblestoneHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
+    @GameTest(template = "empty", batch = "gather_dirt_heap", timeoutTicks = 1000)
+    public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         buildCave(helper);
         for (int x = 1; x <= 3; x++) {
             for (int y = 1; y <= 2; y++) {
                 for (int z = 1; z <= 3; z++) {
-                    helper.setBlock(x, y, z, Blocks.COBBLESTONE);
+                    helper.setBlock(x, y, z, Blocks.DIRT);
                 }
             }
         }
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("cobblestone", 18), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "куча из 18 булыжника обязана собраться целиком, статус "
+                    "куча из 18 блоков земли обязана собраться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 18,
-                    "в инвентаре обязано быть 18 булыжника, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 18,
+                    "в инвентаре обязано быть 18 земли, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 0, 2)).is(Blocks.STONE),
                     "пол под кучей обязан остаться: блок под ногами не ломается");
             helper.assertTrue(run.spiritTicks() <= 720,
-                    "куча из 18 булыжника обязана собраться за 720 тиков (замерено 486, порог ≈1.5×), "
+                    "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 486, порог ≈1.5×), "
                             + "заняло " + run.spiritTicks());
             GameTestFixtures.reset(helper);
         });

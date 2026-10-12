@@ -3,7 +3,10 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.PathRefreshPolicy;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.FollowParams;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -32,6 +35,13 @@ final class FollowScript implements ScriptInstance {
         if (target == null) {
             stopNavigation();
             failureReason = "цель '" + params.target() + "' не найдена";
+            return ScriptStatus.FAILED;
+        }
+        BlockPos targetCell = target.blockPosition();
+        if (spirit.protectionGate().checkTravel(new BlockCoord(targetCell.getX(), targetCell.getY(), targetCell.getZ()))
+                instanceof BlockProtection.Refused refused) {
+            stopNavigation();
+            failureReason = "цель вышла за границы рабочей зоны: " + refused.reason();
             return ScriptStatus.FAILED;
         }
         if (spirit.position().distanceTo(target.position()) <= params.radius()) {
