@@ -95,19 +95,19 @@ class TransferPlannerTests {
     }
 
     @Test
-    void plan_StackLargerThanEmptySlot_SplitsAcrossSlots() {
-        List<Stack> from = List.of(new Stack("cobblestone", 0, 100, 64));
+    void plan_TwoSourceStacks_FillEmptySlotsInOrder() {
+        List<Stack> from = List.of(new Stack("cobblestone", 0, 64, 64), new Stack("cobblestone", 0, 36, 64));
         List<Stack> to = slots(null, null, null);
 
         TransferPlan plan = TransferPlanner.plan(from, to, ANY, 100);
 
-        assertEquals(List.of(new Move(0, 0, 64), new Move(0, 1, 36)), plan.moves(),
-                "Стопка больше максимума режется по слотам: 64 в первый слот, остаток 36 во второй, "
-                        + "иначе перенос затирал бы лимит стопки и предметы потерялись бы");
+        assertEquals(List.of(new Move(0, 0, 64), new Move(1, 1, 36)), plan.moves(),
+                "Первая стопка занимает первый свободный слот, вторая — следующий: 64 в первый слот, "
+                        + "остаток 36 во второй, иначе перенос затирал бы занятые слоты и предметы терялись бы");
         assertEquals(100, plan.moved(),
-                "Все 100 булыжника перенесены: деление на стопки не теряет предметы");
+                "Все 100 булыжника перенесены: перенос двух стопок не теряет предметы");
         assertEquals(0, plan.leftover(),
-                "Остатка нет: остаток 36 ушёл во второй слот контейнера");
+                "Остатка нет: обе стопки ушли в контейнер");
     }
 
     @Test

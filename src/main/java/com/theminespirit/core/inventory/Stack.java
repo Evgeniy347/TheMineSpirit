@@ -19,6 +19,11 @@ public record Stack(String item, int variant, int count, int maxStack) {
             throw new IllegalArgumentException("Максимум стопки предмета '" + item + "' равен " + maxStack
                     + ": слот обязан вмещать хотя бы один предмет");
         }
+        if (count > maxStack) {
+            throw new IllegalArgumentException("Стопка предмета '" + item + "' содержит " + count
+                    + " предметов при максимуме " + maxStack + ": лишние предметы заняли бы соседний слот, "
+                    + "а не этот");
+        }
     }
 
     public boolean sameKindAs(Stack other) {

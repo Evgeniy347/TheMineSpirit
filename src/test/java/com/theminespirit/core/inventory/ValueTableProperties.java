@@ -47,22 +47,26 @@ class ValueTableProperties {
     }
 
     @Property
-    void stackValue_Stack_EqualsUnitValueTimesCount(@ForAll("itemIds") String item, @ForAll int variant,
-            @ForAll("counts") int count, @ForAll("maxStacks") int maxStack) {
-        Stack stack = new Stack(item, Math.abs(variant % 4), count, maxStack);
-
+    void stackValue_Stack_EqualsUnitValueTimesCount(@ForAll("stacks") Stack stack) {
         assertEquals(VALUES.valueOf(stack.item()) * stack.count(), VALUES.stackValue(stack),
-                "Ценность стопки предмета '" + item + "' × " + stack.count() + " обязана равняться цене предмета "
-                        + "на количество: сравнение «взять или выбросить» идёт по стопкам, а не по предметам");
+                "Ценность стопки предмета '" + stack.item() + "' × " + stack.count() + " обязана равняться цене "
+                        + "предмета на количество: сравнение «взять или выбросить» идёт по стопкам, а не по предметам");
     }
 
     @Provide
-    Arbitrary<Integer> counts() {
-        return Arbitraries.integers().between(1, 64);
+    Arbitrary<Stack> stacks() {
+        return Combinators.combine(itemIds(), variantNumber(), maxStackNumber())
+                .flatAs((item, variant, maxStack) -> Arbitraries.integers().between(1, maxStack)
+                        .map(count -> new Stack(item, variant, count, maxStack)));
     }
 
     @Provide
-    Arbitrary<Integer> maxStacks() {
+    Arbitrary<Integer> variantNumber() {
+        return Arbitraries.integers().between(0, 3);
+    }
+
+    @Provide
+    Arbitrary<Integer> maxStackNumber() {
         return Arbitraries.integers().between(1, 64);
     }
 }

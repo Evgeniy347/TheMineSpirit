@@ -18,25 +18,23 @@ class OverflowPolicyProperties {
 
     @Provide
     Arbitrary<List<Stack>> inventories() {
-        Arbitrary<String> items = Arbitraries.of("cobblestone", "dirt", "iron_ingot", "iron_nugget", "bread",
-                "diamond", "oak_log", "torch", "iron_pickaxe", "crafting_table", "bucket");
-        Arbitrary<Stack> stack = Combinators.combine(
-                items,
-                Arbitraries.integers().between(0, 1),
-                Arbitraries.integers().between(1, 64))
-                .as((item, variant, count) -> new Stack(item, variant, count, maxStackOf(item)));
-        return stack.list().ofMaxSize(36).ofMinSize(36);
+        return stacks(
+                Arbitraries.of("cobblestone", "dirt", "iron_ingot", "iron_nugget", "bread",
+                        "diamond", "oak_log", "torch", "iron_pickaxe", "crafting_table", "bucket"))
+                .list().ofMaxSize(36).ofMinSize(36);
     }
 
     @Provide
     Arbitrary<Stack> incoming() {
-        Arbitrary<String> items = Arbitraries.of("cobblestone", "dirt", "iron_ingot", "bread", "diamond",
-                "oak_log", "torch", "iron_pickaxe", "gold_ingot");
-        return Combinators.combine(
-                items,
-                Arbitraries.integers().between(0, 1),
-                Arbitraries.integers().between(1, 64))
-                .as((item, variant, count) -> new Stack(item, variant, count, maxStackOf(item)));
+        return stacks(
+                Arbitraries.of("cobblestone", "dirt", "iron_ingot", "bread", "diamond",
+                        "oak_log", "torch", "iron_pickaxe", "gold_ingot"));
+    }
+
+    private static Arbitrary<Stack> stacks(Arbitrary<String> items) {
+        return Combinators.combine(items, Arbitraries.integers().between(0, 1))
+                .flatAs((item, variant) -> Arbitraries.integers().between(1, maxStackOf(item))
+                        .map(count -> new Stack(item, variant, count, maxStackOf(item))));
     }
 
     @Provide
@@ -118,16 +116,15 @@ class OverflowPolicyProperties {
         if (decision.action() != OverflowPolicy.Action.DROP) {
             return;
         }
-        Stack dropped = inventory.get(decision.slot());
 
         assertEquals(null, dropGivenAway(inventory, decision).get(decision.slot()),
                 "После DROP слот " + decision.slot() + " пуст: кучка '" + incoming.item() + "' должна "
                         + "занять его место, иначе обмен не освобождает место и перенос некуда делать. "
                         + "Инвентарь " + inventory + ", кучка " + incoming);
-        assertTrue(incoming.count() <= dropped.maxStack(),
-                "Кучка '" + incoming.item() + "' × " + incoming.count() + " должна поместиться в слот, "
-                        + "из которого ушла стопка вместимостью " + dropped.maxStack() + ": иначе выброс "
-                        + "не освобождает место и перенос некуда делать. Инвентарь " + inventory);
+        assertTrue(incoming.count() <= incoming.maxStack(),
+                "Кучка '" + incoming.item() + "' × " + incoming.count() + " обязана влезать в свой максимум "
+                        + incoming.maxStack() + ": пустой слот принимает любую корректную стопку, и обмен "
+                        + "освобождает место именно под неё. Инвентарь " + inventory);
     }
 
     private static int countOfRule(List<Stack> inventory, KitRule rule) {
