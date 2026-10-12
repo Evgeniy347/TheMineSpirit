@@ -6,10 +6,13 @@ import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmJob;
+import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.Ground;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.CropRegistry;
 import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
@@ -20,9 +23,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
@@ -48,6 +54,13 @@ public final class FarmGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final int ARENA_SIZE = 11;
     private static final int ARENA_HEIGHT = 8;
+    private static final int LIGHT_SETTLE_TICKS = 20;
+    private static final int FALL_SETTLE_TICKS = 30;
+    private static final int VIEW_READS_PER_CELL_PER_CALL = 200;
+    private static final int SAFETY_READS_PER_CELL_PER_CALL = 324;
+    private static final BlockPos START = new BlockPos(1, 1, 1);
+    private static final BlockPos TILL_SPIRIT = new BlockPos(5, 1, 7);
+    private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmGameTests() {
     }
@@ -311,6 +324,610 @@ public final class FarmGameTests {
                     "земля в 5 блоках от воды обязана остаться землёй: вспаханная там пашня пересохла бы");
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "farm_till_no_hoe", timeoutTicks = 100)
+    public static void till_WithoutHoe_FailsWithinTwoTicksAndLeavesWorldUnchanged(GameTestHelper helper) {
+        arenaFloor(helper);
+        fillGround(helper, Blocks.DIRT);
+        helper.setBlock(WATER, Blocks.WATER);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 4));
+        Map<BlockPos, Block> before = snapshot(helper);
+        SpiritRun run = launch(helper, spirit, tillCall(6, 5));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "мотыги");
+            helper.assertTrue(run.spiritTicks() <= 2,
+                    "без мотыги отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
+            helper.assertTrue(changedBlocks(helper, before) == 0,
+                    "при отказе мир не меняется, изменилось блоков: " + changedBlocks(helper, before));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_till_weed", timeoutTicks = 400)
+    public static void till_WeedAboveDirt_CutsWeedAndTills(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        helper.setBlock(new BlockPos(4, FLOOR_Y, 4), Blocks.DIRT);
+        helper.setBlock(new BlockPos(4, FLOOR_Y + 1, 4), Blocks.SHORT_GRASS);
+        helper.setBlock(new BlockPos(5, FLOOR_Y, 4), Blocks.DIRT);
+        SpiritEntity spirit = spawnWith(helper, TILL_SPIRIT, new ItemStack(Items.IRON_HOE));
+        SpiritRun run = launch(helper, spirit, tillCall(4, 2));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "обе клетки, и с травой, и без, обязаны вспахаться");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, FLOOR_Y, 4)).is(Blocks.FARMLAND),
+                    "земля под сорной травой обязана стать пашней");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, FLOOR_Y + 1, 4)).isAir(),
+                    "сорная трава обязана быть срублена рукой");
+            helper.assertTrue(helper.getBlockState(new BlockPos(5, FLOOR_Y, 4)).is(Blocks.FARMLAND),
+                    "чистая земля обязана стать пашней");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_till_stone", timeoutTicks = 200)
+    public static void till_StoneAboveDirt_SkipsCellAndCountsIt(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        helper.setBlock(new BlockPos(4, FLOOR_Y, 4), Blocks.DIRT);
+        helper.setBlock(new BlockPos(4, FLOOR_Y + 1, 4), Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper, TILL_SPIRIT, new ItemStack(Items.IRON_HOE));
+        SpiritRun run = launch(helper, spirit, tillCall(4, 1));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "не подходит: ");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, FLOOR_Y, 4)).is(Blocks.DIRT),
+                    "земля под камнем не вспахивается");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, FLOOR_Y + 1, 4)).is(Blocks.STONE),
+                    "камень над землёй дух не ломает");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_plant_wheat", timeoutTicks = 800)
+    public static void plantCrop_WheatOnNineFarmland_PlantsNineAndKeepsOneSeed(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            helper.setBlock(cell, Blocks.FARMLAND);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 10));
+        SpiritRun run = launch(helper, spirit, plantCall(CropKind.WHEAT, 64));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "девять клеток пашни обязаны засадиться");
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell.above()).is(Blocks.WHEAT) && cropAge(helper, cell) == 0,
+                        "над пашней " + cell + " обязана расти пшеница возраста 0, а там "
+                                + helper.getBlockState(cell.above()).getBlock());
+            }
+            int seeds = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS);
+            helper.assertTrue(seeds == 1, "из 10 семян должно остаться ровно 1, фактически " + seeds);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_plant_no_seeds", timeoutTicks = 100)
+    public static void plantCrop_WithoutSeeds_FailsFastAndLeavesWorldUnchanged(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        for (BlockPos cell : bed()) {
+            helper.setBlock(cell, Blocks.FARMLAND);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.IRON_HOE));
+        Map<BlockPos, Block> before = snapshot(helper);
+        SpiritRun run = launch(helper, spirit, plantCall(CropKind.WHEAT, 64));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "нет семян");
+            helper.assertTrue(run.spiritTicks() <= 2,
+                    "без семян отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
+            helper.assertTrue(changedBlocks(helper, before) == 0,
+                    "при отказе мир не меняется, изменилось блоков: " + changedBlocks(helper, before));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_plant_dark", timeoutTicks = 400)
+    public static void plantCrop_CellWithoutLight_IsNotPlantedAndCounted(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(new BlockPos(4, FLOOR_Y, 6), Blocks.WATER);
+        BlockPos lit = new BlockPos(2, FLOOR_Y, 6);
+        BlockPos dark = new BlockPos(6, FLOOR_Y, 6);
+        helper.setBlock(lit, Blocks.FARMLAND);
+        helper.setBlock(dark, Blocks.FARMLAND);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx != 0 || dz != 0) {
+                    helper.setBlock(dark.offset(dx, 1, dz), Blocks.STONE);
+                }
+                helper.setBlock(dark.offset(dx, 2, dz), Blocks.STONE);
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit, plantCall(CropKind.WHEAT, 64), LIGHT_SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            int brightness = helper.getLevel().getRawBrightness(helper.absolutePos(dark.above()), 0);
+            helper.assertTrue(brightness < 8,
+                    "подготовка: замурованная клетка обязана быть тёмной, а яркость " + brightness);
+            assertFailedWith(helper, spirit, "не подходит: 1");
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("посажено 1 из 2"),
+                    "причина обязана назвать одну посаженную клетку из двух, фактически: " + reason);
+            helper.assertTrue(helper.getBlockState(lit.above()).is(Blocks.WHEAT),
+                    "освещённая клетка обязана быть засажена");
+            helper.assertTrue(helper.getBlockState(dark.above()).isAir(),
+                    "в тёмной клетке посев не удержится: она обязана остаться пустой");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 3,
+                    "семя на тёмную клетку не списывается: из 4 должно остаться 3");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_wheat", timeoutTicks = 800)
+    public static void harvestCrop_MixedWheat_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
+        harvestMixed(helper, CropKind.WHEAT);
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_carrot", timeoutTicks = 800)
+    public static void harvestCrop_MixedCarrots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
+        harvestMixed(helper, CropKind.CARROT);
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_potato", timeoutTicks = 800)
+    public static void harvestCrop_MixedPotatoes_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
+        harvestMixed(helper, CropKind.POTATO);
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_beetroot", timeoutTicks = 800)
+    public static void harvestCrop_MixedBeetroots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
+        harvestMixed(helper, CropKind.BEETROOT);
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_filter", timeoutTicks = 600)
+    public static void harvestCrop_WheatFilter_LeavesMatureCarrotsAlone(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        BlockPos wheat = new BlockPos(3, FLOOR_Y, 3);
+        BlockPos carrot = new BlockPos(5, FLOOR_Y, 5);
+        setCrop(helper, wheat, CropKind.WHEAT, 7);
+        setCrop(helper, carrot, CropKind.CARROT, 7);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "зрелая пшеница обязана собраться");
+            helper.assertTrue(cropAge(helper, wheat) == 0, "собранная пшеница обязана быть пересажена");
+            helper.assertTrue(cropAge(helper, carrot) == 7 && helper.getBlockState(carrot.above()).is(Blocks.CARROTS),
+                    "морковь при crop = wheat обязана остаться нетронутой и зрелой");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.CARROT) == 0,
+                    "морковь не должна попасть в инвентарь");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_harvest_no_replant", timeoutTicks = 800)
+    public static void harvestCrop_ReplantFalse_LeavesCellsEmptyAndFarmlandIntact(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "девять зрелых клеток обязаны собраться");
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell.above()).isAir(),
+                        "при replant = false клетка " + cell + " обязана остаться пустой, а там "
+                                + helper.getBlockState(cell.above()).getBlock());
+            }
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) >= 3,
+                    "без пересадки семена только прибавляются: было 3, стало "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_bone_meal_grow", timeoutTicks = 400)
+    public static void boneMeal_ImmatureAndMatureWheat_GrowsOnlyImmature(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        BlockPos young = new BlockPos(3, FLOOR_Y, 3);
+        BlockPos mature = new BlockPos(3, FLOOR_Y, 5);
+        setCrop(helper, young, CropKind.WHEAT, 0);
+        setCrop(helper, mature, CropKind.WHEAT, 7);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.BONE_MEAL, 16));
+        SpiritRun run = launch(helper, spirit, boneMealCall(CropKind.WHEAT, 16));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "недозрелая пшеница обязана дорасти, зрелая муку не просит");
+            helper.assertTrue(cropAge(helper, young) == 7,
+                    "костная мука обязана довести недозрелую пшеницу до зрелости, возраст " + cropAge(helper, young));
+            int spent = 16 - GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL);
+            helper.assertTrue(spent >= 2 && spent <= 4,
+                    "возраст растёт на 2..5 за единицу, поэтому до зрелости хватит 2..4 единиц, потрачено " + spent);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_bone_meal_one", timeoutTicks = 400)
+    public static void boneMeal_CountOne_SpendsExactlyOneUnit(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        setCrop(helper, new BlockPos(3, FLOOR_Y, 3), CropKind.WHEAT, 0);
+        setCrop(helper, new BlockPos(3, FLOOR_Y, 5), CropKind.WHEAT, 0);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.BONE_MEAL, 5));
+        SpiritRun run = launch(helper, spirit, boneMealCall(CropKind.WHEAT, 1));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "одна единица муки обязана быть потрачена, задача успешна");
+            int left = GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL);
+            helper.assertTrue(left == 4, "при count = 1 тратится ровно одна единица: из 5 остаться 4, осталось " + left);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_bone_meal_none", timeoutTicks = 100)
+    public static void boneMeal_WithoutMeal_FailsFastAndLeavesWorldUnchanged(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        setCrop(helper, new BlockPos(3, FLOOR_Y, 3), CropKind.WHEAT, 0);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        Map<BlockPos, Block> before = snapshot(helper);
+        SpiritRun run = launch(helper, spirit, boneMealCall(CropKind.WHEAT, 4));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "костной муки");
+            helper.assertTrue(run.spiritTicks() <= 2,
+                    "без муки отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
+            helper.assertTrue(changedBlocks(helper, before) == 0 && cropAge(helper, new BlockPos(3, FLOOR_Y, 3)) == 0,
+                    "при отказе мир не меняется");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_bone_meal_mature", timeoutTicks = 200)
+    public static void boneMeal_OnlyMatureCrops_FailsAndSpendsNothing(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        for (BlockPos cell : bed()) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.BONE_MEAL, 5));
+        SpiritRun run = launch(helper, spirit, boneMealCall(CropKind.WHEAT, 4));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "недозрелых посевов нет");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL) == 5,
+                    "на зрелые посевы мука не тратится: обязано остаться 5, осталось "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_cycle", timeoutTicks = 3600)
+    public static void farmCycle_PlantGrowHarvestThreeTimes_KeepsFarmlandAndSeeds(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            helper.setBlock(cell, Blocks.FARMLAND);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 17),
+                new ItemStack(Items.BONE_MEAL, 64), new ItemStack(Items.BONE_MEAL, 64));
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(plantCall(CropKind.WHEAT, 64));
+        for (int round = 0; round < 3; round++) {
+            steps.add(boneMealCall(CropKind.WHEAT, 256));
+            steps.add(harvestCall(CropKind.WHEAT, true));
+        }
+        SpiritRun.launch(helper, spirit, new SequenceNode(steps), SETTLE_TICKS);
+        int seedsAfterPlanting = 17 - 9;
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "цикл посадка, подкормка и три сбора обязан завершиться успехом: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int seeds = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS);
+            helper.assertTrue(seeds >= seedsAfterPlanting,
+                    "после трёх кругов семян обязано быть не меньше, чем после посадки (" + seedsAfterPlanting
+                            + "): самоподдерживающаяся грядка не теряет семян, а осталось " + seeds);
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell.above()).is(Blocks.WHEAT),
+                        "после цикла пустых клеток быть не должно, а над " + cell + " "
+                                + helper.getBlockState(cell.above()).getBlock());
+            }
+            int wheat = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT);
+            helper.assertTrue(wheat == 27, "за три сбора по 9 клеток обязано быть собрано 27 пшеницы, фактически "
+                    + wheat);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_trample", timeoutTicks = 800)
+    public static void harvestCrop_SpiritFallsOntoBed_DoesNotTrampleFarmland(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(4, 4, 4), new ItemStack(Items.WHEAT_SEEDS, 3));
+        SpiritRun run = SpiritRun.launch(helper, spirit, harvestCall(CropKind.WHEAT, true), FALL_SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "девять зрелых клеток обязаны собраться");
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "дух упал на грядку с высоты и ходил по ней: пашни обязано остаться 9, осталось "
+                            + countBlock(helper, Blocks.FARMLAND) + " (растоптанная пашня превращается в землю)");
+            for (BlockPos cell : cells) {
+                helper.assertTrue(cropAge(helper, cell) == 0, "каждая клетка обязана быть собрана и пересажена");
+            }
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_cancel", timeoutTicks = 600)
+    public static void harvestCrop_CancelledMidWork_StopsWorldAndNavigation(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        for (BlockPos cell : bed()) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, true));
+        AtomicInteger cancelTick = new AtomicInteger(-1);
+        AtomicReference<Map<BlockPos, Block>> frozen = new AtomicReference<>();
+        AtomicInteger frozenWheat = new AtomicInteger();
+        AtomicBoolean navigationStoppedAtCancel = new AtomicBoolean(false);
+
+        helper.onEachTick(() -> {
+            if (cancelTick.get() >= 0 || spirit.tickCount < SETTLE_TICKS) {
+                return;
+            }
+            if (GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) >= 1
+                    && !spirit.getNavigation().isDone()) {
+                spirit.cancelTask();
+                navigationStoppedAtCancel.set(spirit.getNavigation().isDone());
+                frozen.set(snapshot(helper));
+                frozenWheat.set(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
+                cancelTick.set(spirit.tickCount);
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(cancelTick.get() >= 0 && spirit.tickCount >= cancelTick.get() + 40,
+                    "нужно дождаться отмены и переждать 40 тиков: тик отмены " + cancelTick.get() + ", тик духа "
+                            + spirit.tickCount);
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
+                    "отменённая задача обязана быть CANCELLED, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(changedBlocks(helper, frozen.get()) == 0,
+                    "через 40 тиков после отмены мир обязан остаться прежним, изменилось блоков "
+                            + changedBlocks(helper, frozen.get()));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == frozenWheat.get(),
+                    "после отмены инвентарь не пополняется");
+            helper.assertTrue(navigationStoppedAtCancel.get(),
+                    "отмена в движении обязана остановить навигацию сразу, а не дать духу дойти до цели");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 600)
+    public static void harvestCrop_InventoryFull_FailsAndKeepsItems(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        setCrop(helper, new BlockPos(3, FLOOR_Y, 3), CropKind.WHEAT, 7);
+        setCrop(helper, new BlockPos(5, FLOOR_Y, 5), CropKind.WHEAT, 7);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), START);
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+        int dirtBefore = GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT);
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "инвентарь полон: не помещается");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == dirtBefore,
+                    "содержимое инвентаря не теряется");
+            int wheatInWorld = GameTestFixtures.countInWorld(helper, Items.WHEAT);
+            helper.assertTrue(wheatInWorld == 1,
+                    "собранная клетка дала 1 пшеницу, и она обязана лежать в мире нетронутой: инвентарь плюс мир, "
+                            + "фактически в мире " + wheatInWorld);
+            int standing = countBlock(helper, Blocks.WHEAT);
+            helper.assertTrue(standing == 1,
+                    "вторая зрелая клетка до сбора не дошла: пшеницы на корню обязано остаться 1, осталось " + standing);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_scale_harvest", timeoutTicks = 800)
+    public static void farmSession_FullHarvestWithReplant_StaysWithinReadAndTickBudgets(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        AtomicReference<FarmSession> session = drive(helper, spirit,
+                ctx -> FarmSession.harvestCrop(ctx, CropKind.WHEAT, 8, true));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "сбор девяти зрелых клеток обязан завершиться успехом: " + run.outcome() + ", "
+                            + run.failureReason());
+            helper.assertTrue(FarmPlanner.MAX_SAFETY_READS_PER_TARGET == 324,
+                    "предел чтений безопасности на цель в production изменился с 324: пересмотри K в этом тесте");
+            long viewBudget = (long) VIEW_READS_PER_CELL_PER_CALL * cells.size() * run.planCalls();
+            helper.assertTrue(run.viewReads() <= viewBudget,
+                    "чтений мира видом грядки обязано быть не больше " + viewBudget + " (K = "
+                            + VIEW_READS_PER_CELL_PER_CALL + " на клетку на вызов планировщика), прочитано "
+                            + run.viewReads() + " за " + run.planCalls() + " вызовов");
+            long safetyBudget = (long) SAFETY_READS_PER_CELL_PER_CALL * cells.size() * run.planCalls();
+            helper.assertTrue(run.safetyReads() <= safetyBudget,
+                    "чтений безопасности обязано быть не больше " + safetyBudget + ", прочитано " + run.safetyReads());
+            assertPerTickBudgets(helper, run);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_scale_till", timeoutTicks = 800)
+    public static void farmSession_TillWithWeeds_StaysWithinPerTickBudgets(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        for (BlockPos cell : bed()) {
+            helper.setBlock(cell, Blocks.DIRT);
+            helper.setBlock(cell.above(), Blocks.SHORT_GRASS);
+        }
+        SpiritEntity spirit = spawnWith(helper, TILL_SPIRIT, new ItemStack(Items.IRON_HOE));
+        AtomicReference<FarmSession> session = drive(helper, spirit, ctx -> FarmSession.till(ctx, 4, 9));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "вспашка девяти клеток под травой обязана завершиться успехом: " + run.outcome() + ", "
+                            + run.failureReason());
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9, "обязано получиться 9 пашни");
+            assertPerTickBudgets(helper, run);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static void harvestMixed(GameTestHelper helper, CropKind kind) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        int matureAge = kind.maxAge();
+        int youngAge = kind == CropKind.BEETROOT ? 1 : 3;
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? matureAge : youngAge);
+        }
+        Item plantItem = CropRegistry.plantItem(kind);
+        Item produceItem = CropRegistry.produceItem(kind);
+        int initial = 6;
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(plantItem, initial));
+        SpiritRun run = launch(helper, spirit, harvestCall(kind, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "пять зрелых клеток " + kind + " обязаны собраться, недозрелые не мешают");
+            for (int i = 0; i < cells.size(); i++) {
+                int expectedAge = i % 2 == 0 ? 0 : youngAge;
+                helper.assertTrue(cropAge(helper, cells.get(i)) == expectedAge,
+                        "клетка " + i + " обязана иметь возраст " + expectedAge
+                                + " (зрелая пересажена, недозрелая нетронута), фактически "
+                                + cropAge(helper, cells.get(i)));
+            }
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            int produce = GameTestFixtures.countInInventory(spirit.getInventory(), produceItem);
+            int plant = GameTestFixtures.countInInventory(spirit.getInventory(), plantItem);
+            if (produceItem == plantItem) {
+                helper.assertTrue(plant >= initial,
+                        "посадочный предмет и урожай — один предмет: после пересадки пяти клеток не меньше исходных "
+                                + initial + ", фактически " + plant);
+            } else {
+                helper.assertTrue(produce >= 5, "урожая обязано быть не меньше 5, фактически " + produce);
+                helper.assertTrue(plant >= initial - 5,
+                        "семян не меньше исходных за вычетом пяти пересаженных (" + (initial - 5)
+                                + "), фактически " + plant);
+            }
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static void assertPerTickBudgets(GameTestHelper helper, FarmSession run) {
+        helper.assertTrue(run.maxSlicesPerTick() <= 4,
+                "за тик поиск берёт не больше 4 срезов, максимум за тик: " + run.maxSlicesPerTick());
+        helper.assertTrue(run.maxActionsPerTick() <= 1,
+                "за тик скрипт делает не больше одного действия (удар, вспашка, посадка, мука), максимум за тик: "
+                        + run.maxActionsPerTick());
+        helper.assertTrue(run.maxEntityQueriesPerTick() <= 1,
+                "за тик запрос сущностей не больше одного, максимум за тик: " + run.maxEntityQueriesPerTick());
+    }
+
+    private static void arenaFloor(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+    }
+
+    private static void fillGround(GameTestHelper helper, Block block) {
+        for (BlockPos cell : bed()) {
+            helper.setBlock(cell, block);
+        }
+    }
+
+    private static List<BlockPos> bed() {
+        List<BlockPos> cells = new ArrayList<>();
+        for (int x = 3; x <= 5; x++) {
+            for (int z = 3; z <= 5; z++) {
+                cells.add(new BlockPos(x, FLOOR_Y, z));
+            }
+        }
+        return cells;
+    }
+
+    private static SpiritRun launch(GameTestHelper helper, SpiritEntity spirit, TaskNode call) {
+        return SpiritRun.launch(helper, spirit, call, SETTLE_TICKS);
+    }
+
+    private static void assertSucceeded(GameTestHelper helper, SpiritEntity spirit, String expectation) {
+        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                expectation + ": статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
+                        + ", причина " + spirit.taskFailureReason().orElse("нет"));
+    }
+
+    private static void assertFailedWith(GameTestHelper helper, SpiritEntity spirit, String fragment) {
+        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                "задача обязана провалиться, а статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+        String reason = spirit.taskFailureReason().orElse("");
+        helper.assertTrue(reason.contains(fragment),
+                "причина провала обязана содержать «" + fragment + "», фактически: " + reason);
+    }
+
+    private static ScriptCall plantCall(CropKind crop, int count) {
+        return new ScriptCall("plant_crop", Map.of("crop", name(crop), "radius", 8, "count", count));
+    }
+
+    private static ScriptCall harvestCall(CropKind crop, boolean replant) {
+        return new ScriptCall("harvest_crop", Map.of("crop", name(crop), "radius", 8, "replant", replant));
+    }
+
+    private static ScriptCall boneMealCall(CropKind crop, int count) {
+        return new ScriptCall("bone_meal", Map.of("crop", name(crop), "radius", 8, "count", count));
+    }
+
+    private static String name(CropKind crop) {
+        return crop.name().toLowerCase(Locale.ROOT);
     }
 
     private static ScriptCall tillCall(int radius, int count) {

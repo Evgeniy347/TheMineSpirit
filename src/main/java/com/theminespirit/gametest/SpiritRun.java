@@ -1,24 +1,24 @@
 package com.theminespirit.gametest;
 
-import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.gametest.framework.GameTestHelper;
 
 final class SpiritRun {
     private final GameTestHelper helper;
     private final SpiritEntity spirit;
-    private final ScriptCall call;
+    private final TaskNode call;
     private final int settleTicks;
     private int startTickCount = -1;
 
-    private SpiritRun(GameTestHelper helper, SpiritEntity spirit, ScriptCall call, int settleTicks) {
+    private SpiritRun(GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks) {
         this.helper = helper;
         this.spirit = spirit;
         this.call = call;
         this.settleTicks = settleTicks;
     }
 
-    static SpiritRun launch(GameTestHelper helper, SpiritEntity spirit, ScriptCall call, int settleTicks) {
+    static SpiritRun launch(GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks) {
         SpiritRun run = new SpiritRun(helper, spirit, call, settleTicks);
         helper.onEachTick(run::startWhenSettled);
         return run;
