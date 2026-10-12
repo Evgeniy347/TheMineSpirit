@@ -13,9 +13,7 @@ import org.junit.jupiter.api.Test;
 class CatalogDefaultGuardTests {
     private static final Map<String, String> OPTIONAL_WITHOUT_DEFAULT = Map.of(
             "scan.filter", "отсутствие фильтра значит «все блоки» — это не подставленное значение",
-            "collect_drops.filter", "пусто — все предметы, это не подставленное значение",
-            "harvest_crop.area", "скрипт ещё не реализован: умолчание решается вместе с ним",
-            "plant_crop.area", "скрипт ещё не реализован: умолчание решается вместе с ним");
+            "collect_drops.filter", "пусто — все предметы, это не подставленное значение");
 
     @Test
     void defaultCatalog_OptionalParams_DeclareDefaultInCatalog() {
