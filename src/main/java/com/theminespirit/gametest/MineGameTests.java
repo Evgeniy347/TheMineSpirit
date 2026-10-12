@@ -40,6 +40,7 @@ public final class MineGameTests {
     private static final int SHELL_TOP = 4;
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos SPIRIT_CORNER = new BlockPos(0, 1, 0);
+    private static final BlockPos ARENA_START = new BlockPos(4, 1, 4);
     private static final int TOOL_SLOT = 0;
     private static final int SETTLE_TICKS = 5;
     private static final int RADIUS = 16;
@@ -600,16 +601,17 @@ public final class MineGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "mine_persist", timeoutTicks = 280)
+    @GameTest(template = "arena", batch = "mine_persist", timeoutTicks = 280)
     public static void gatherCobblestone_SavedMidway_ResumesWithoutExtraMining(GameTestHelper helper) {
-        buildCave(helper);
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
         for (int x = 1; x <= 3; x++) {
-            for (int z = 1; z <= 3; z++) {
+            for (int z = 4; z <= 6; z++) {
                 helper.setBlock(x, 1, z, Blocks.COBBLESTONE);
             }
         }
         int heapBefore = countBlock(helper, Blocks.COBBLESTONE);
-        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        SpiritEntity spirit = spawnWith(helper, ARENA_START, Items.IRON_PICKAXE);
         AtomicReference<SpiritEntity> live = new AtomicReference<>(spirit);
         AtomicBoolean saved = new AtomicBoolean(false);
         SpiritRun.launch(helper, spirit, gatherCall("cobblestone", 6), SETTLE_TICKS);
@@ -643,16 +645,17 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "mine_persist_last", timeoutTicks = 260)
+    @GameTest(template = "arena", batch = "mine_persist_last", timeoutTicks = 260)
     public static void gatherCobblestone_SavedAfterLastBlock_RestoresAsSucceeded(GameTestHelper helper) {
-        buildCave(helper);
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
         for (int x = 1; x <= 3; x++) {
-            for (int z = 1; z <= 2; z++) {
+            for (int z = 4; z <= 5; z++) {
                 helper.setBlock(x, 1, z, Blocks.COBBLESTONE);
             }
         }
         int heapBefore = countBlock(helper, Blocks.COBBLESTONE);
-        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        SpiritEntity spirit = spawnWith(helper, ARENA_START, Items.IRON_PICKAXE);
         AtomicReference<SpiritEntity> live = new AtomicReference<>(spirit);
         AtomicBoolean saved = new AtomicBoolean(false);
         SpiritRun.launch(helper, spirit, gatherCall("cobblestone", 6), SETTLE_TICKS);
