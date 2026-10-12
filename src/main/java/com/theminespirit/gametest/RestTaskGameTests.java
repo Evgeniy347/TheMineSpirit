@@ -4,15 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.plan.RepeatNode;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
@@ -34,7 +30,7 @@ public final class RestTaskGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos FAR_CORNER = new BlockPos(7, 1, 7);
     private static final BlockPos NEAR_CORNER = new BlockPos(2, 1, 1);
-    private static final int LONG_PLAN_REPEATS = 64;
+    private static final BlockPos PLAYER_AT = new BlockPos(5, 1, 5);
     private static final int RELOAD_AFTER_TICKS = 30;
     private static final int GONE_MIN_TICKS = 98;
     private static final int GONE_MAX_TICKS = 104;
@@ -47,10 +43,12 @@ public final class RestTaskGameTests {
             throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         String botPath = "/v1/bots/" + spirit.getStringUUID();
         String requestId = UUID.randomUUID().toString();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks", longBody(helper, requestId))
+        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks",
+                RestFixture.followGoalBody(requestId, player))
                 .thenCompose(accepted -> {
                     JsonNode json = accepted.json();
                     problems.expect(accepted.status() == 202,
@@ -67,7 +65,8 @@ public final class RestTaskGameTests {
                                         + bot.body());
                         problems.expect(bot.json().path("state").asText().equals("busy"),
                                 "Дух с запущенной задачей обязан быть busy: " + bot.body());
-                        return rest.post(botPath + "/tasks", longBody(helper, UUID.randomUUID().toString()))
+                        return rest.post(botPath + "/tasks",
+                                RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
                                 .thenApply(second -> {
                                     problems.expect(second.status() == 409,
                                             "Второй POST с новым request_id к занятому духу обязан давать 409, получен "
@@ -86,9 +85,10 @@ public final class RestTaskGameTests {
             throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         String botPath = "/v1/bots/" + spirit.getStringUUID();
         String requestId = UUID.randomUUID().toString();
-        String body = longBody(helper, requestId);
+        String body = RestFixture.followGoalBody(requestId, player);
         String changedBody = gotoBody(helper, requestId, NEAR_CORNER);
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks", body).thenCompose(first -> {
@@ -122,7 +122,7 @@ public final class RestTaskGameTests {
             throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        spirit.startTask(longCommandPlan(helper));
+        spirit.startTask(RestFixture.followPlan(rest.mockPlayer(helper, PLAYER_AT)));
         String botPath = "/v1/bots/" + spirit.getStringUUID();
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest
@@ -228,6 +228,7 @@ public final class RestTaskGameTests {
             throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         TaskPoller poller = TaskPoller.start(helper, rest);
         AtomicLong discardedAt = new AtomicLong(-1);
         AtomicBoolean discard = new AtomicBoolean();
@@ -240,7 +241,7 @@ public final class RestTaskGameTests {
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest
                 .post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        gotoBody(helper, UUID.randomUUID().toString(), FAR_CORNER))
+                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
                 .thenApply(accepted -> {
                     poller.follow(accepted.json().path("task_id").asText());
                     discard.set(true);
@@ -267,14 +268,16 @@ public final class RestTaskGameTests {
             throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         TaskPoller poller = TaskPoller.start(helper, rest);
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks", longBody(helper, UUID.randomUUID().toString()))
+                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
                 .thenCompose(accepted -> {
                     poller.follow(accepted.json().path("task_id").asText());
                     return rest.onServer(() -> {
-                        spirit.startTask(longCommandPlan(helper));
+                        spirit.startTask(RestFixture.followPlan(player));
                         return problems.found();
                     });
                 });
@@ -360,28 +363,6 @@ public final class RestTaskGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         return RestFixture.start(helper.getLevel().getServer());
-    }
-
-    private static TaskNode longCommandPlan(GameTestHelper helper) {
-        return new RepeatNode(LONG_PLAN_REPEATS, new SequenceNode(List.of(gotoCall(helper, FAR_CORNER),
-                gotoCall(helper, SPIRIT_START))));
-    }
-
-    private static ScriptCall gotoCall(GameTestHelper helper, BlockPos relativeTarget) {
-        BlockPos target = helper.absolutePos(relativeTarget);
-        return new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ()));
-    }
-
-    private static String longBody(GameTestHelper helper, String requestId) {
-        return "{\"request_id\":\"" + requestId + "\",\"plan\":{\"type\":\"repeat\",\"times\":" + LONG_PLAN_REPEATS
-                + ",\"step\":{\"type\":\"sequence\",\"steps\":[" + gotoJson(helper, FAR_CORNER) + ","
-                + gotoJson(helper, SPIRIT_START) + "]}}}";
-    }
-
-    private static String gotoJson(GameTestHelper helper, BlockPos relativeTarget) {
-        BlockPos target = helper.absolutePos(relativeTarget);
-        return "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":" + target.getX() + ",\"y\":"
-                + target.getY() + ",\"z\":" + target.getZ() + "}}";
     }
 
     private static String gotoBody(GameTestHelper helper, String requestId, BlockPos relativeTarget) {

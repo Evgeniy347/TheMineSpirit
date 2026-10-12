@@ -31,7 +31,7 @@ public final class RestPlanGameTests {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
         SpiritEntity follower = rest.spawn(helper, SPIRIT_START);
-        ServerPlayer player = mockPlayer(helper);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         String path = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
         String followerPath = "/v1/bots/" + follower.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -60,7 +60,7 @@ public final class RestPlanGameTests {
                                     + accepted.status() + ": " + accepted.body());
                     return problems.found();
                 });
-        RestFixture.await(helper, rest, scenario, () -> removePlayer(helper, player));
+        RestFixture.await(helper, rest, scenario);
     }
 
     @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
@@ -131,20 +131,6 @@ public final class RestPlanGameTests {
             steps.append("{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":1}}");
         }
         return "{\"type\":\"sequence\",\"steps\":[" + steps + "]}";
-    }
-
-    // NeoForge 21.1 не даёт иного способа получить ServerPlayer, попавшего в players() уровня; метод помечен
-    // deprecated, но в этой версии работает и удаления не произошло.
-    @SuppressWarnings("removal")
-    private static ServerPlayer mockPlayer(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        BlockPos absolute = helper.absolutePos(PLAYER_AT);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        return player;
-    }
-
-    private static void removePlayer(GameTestHelper helper, ServerPlayer player) {
-        helper.getLevel().getServer().getPlayerList().remove(player);
     }
 
     private static RestFixture arena(GameTestHelper helper) throws IOException {

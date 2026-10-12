@@ -24,8 +24,8 @@ public final class RestEventsGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos FAR_CORNER = new BlockPos(7, 1, 7);
     private static final BlockPos IN_THE_AIR = new BlockPos(4, 12, 4);
-    private static final int LEGS = 30;
-    private static final int LONG_LEGS = 64;
+    private static final int LEGS = 4;
+    private static final int LONG_LEGS = 16;
     private static final int MAX_STREAMS = 4;
     private static final int BURST_REQUESTS = 100;
     private static final int BUCKET_CAPACITY = 40;
@@ -38,7 +38,7 @@ public final class RestEventsGameTests {
     public static void events_SequenceOfGotos_StateFirstThenProgressThenFinalSucceededAndStreamCloses(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        SpiritEntity spirit = rest.spawnHeldUntilStreamsOpen(helper, SPIRIT_START, 1);
         AtomicReference<RestFixture.SseCapture> stream = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LEGS).thenApply(accepted -> {
@@ -72,7 +72,7 @@ public final class RestEventsGameTests {
     public static void events_ReconnectWithLastEventId_ReceivesOnlyLaterFramesThenFinalState(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        SpiritEntity spirit = rest.spawnHeldUntilStreamsOpen(helper, SPIRIT_START, 1);
         AtomicReference<String> eventsPath = new AtomicReference<>();
         AtomicReference<RestFixture.SseCapture> first = new AtomicReference<>();
         AtomicReference<RestFixture.SseCapture> second = new AtomicReference<>();
@@ -153,7 +153,7 @@ public final class RestEventsGameTests {
     public static void events_FifthConcurrentStream_Returns429ThenSlotFreedAfterClientLeaves(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        SpiritEntity spirit = rest.spawnHeldUntilStreamsOpen(helper, SPIRIT_START, MAX_STREAMS);
         List<RestFixture.SseCapture> open = new ArrayList<>();
         AtomicReference<String> eventsPath = new AtomicReference<>();
         AtomicReference<RestFixture.SseCapture> fifth = new AtomicReference<>();

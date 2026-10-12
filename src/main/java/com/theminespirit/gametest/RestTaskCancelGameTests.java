@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -22,9 +23,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RestTaskCancelGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
-    private static final BlockPos FAR_CORNER = new BlockPos(7, 1, 7);
+    private static final BlockPos PLAYER_FAR = new BlockPos(7, 1, 7);
+    private static final BlockPos PLAYER_NEAR = new BlockPos(1, 1, 7);
     private static final BlockPos MINER_START = new BlockPos(4, 1, 4);
-    private static final int LONG_PLAN_REPEATS = 64;
+    private static final int PLAYER_SHUTTLE_TICKS = 40;
     private static final double MOVED_ENOUGH_BLOCKS = 1.5;
     private static final double STILL_WITHIN_BLOCKS = 0.5;
     private static final int STILL_TICKS = 20;
@@ -43,6 +45,9 @@ public final class RestTaskCancelGameTests {
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_FAR);
+        helper.onEachTick(() -> RestFixture.moveTo(helper, player,
+                helper.getTick() / PLAYER_SHUTTLE_TICKS % 2 == 0 ? PLAYER_FAR : PLAYER_NEAR));
         String botPath = "/v1/bots/" + spirit.getStringUUID();
         Vec3 start = spirit.position();
         CompletableFuture<Void> moved = new CompletableFuture<>();
@@ -53,7 +58,8 @@ public final class RestTaskCancelGameTests {
         });
         AtomicReference<Stopped> stopped = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks", longGotoBody(helper))
+        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks",
+                RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
                 .thenCompose(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
                     String taskPath = "/v1/tasks/" + accepted.json().path("task_id").asText();
@@ -171,19 +177,6 @@ public final class RestTaskCancelGameTests {
 
     private static String worldSnapshot(GameTestHelper helper, SpiritEntity spirit) {
         return blocksLeft(helper) + " целых, булыжника " + cobbleTotal(helper, spirit);
-    }
-
-    private static String longGotoBody(GameTestHelper helper) {
-        BlockPos far = helper.absolutePos(FAR_CORNER);
-        BlockPos near = helper.absolutePos(SPIRIT_START);
-        return "{\"request_id\":\"" + UUID.randomUUID() + "\",\"plan\":{\"type\":\"repeat\",\"times\":"
-                + LONG_PLAN_REPEATS + ",\"step\":{\"type\":\"sequence\",\"steps\":[" + gotoJson(far) + ","
-                + gotoJson(near) + "]}}}";
-    }
-
-    private static String gotoJson(BlockPos target) {
-        return "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":" + target.getX() + ",\"y\":" + target.getY()
-                + ",\"z\":" + target.getZ() + "}}";
     }
 
     private static RestFixture arena(GameTestHelper helper) throws IOException {

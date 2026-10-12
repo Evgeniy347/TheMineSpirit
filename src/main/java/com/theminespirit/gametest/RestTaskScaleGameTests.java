@@ -112,7 +112,7 @@ public final class RestTaskScaleGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        SpiritEntity spirit = rest.spawnHeldUntilStreamsOpen(helper, SPIRIT_START, STREAMS);
         List<RestFixture.SseCapture> streams = new ArrayList<>();
         AtomicReference<String> taskId = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();

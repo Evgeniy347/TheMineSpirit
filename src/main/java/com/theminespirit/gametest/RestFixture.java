@@ -2,6 +2,9 @@ package com.theminespirit.gametest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -33,12 +36,14 @@ import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 
 final class RestFixture {
     // Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа считается
     // в секундах (REPLY_DEADLINE), потолок тиков только запасной и заведомо больше любого честного ожидания.
     static final int TIMEOUT_TICKS = 20_000;
+    static final int FOLLOW_RADIUS = 2;
     static final Duration REPLY_DEADLINE = Duration.ofSeconds(30);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -153,6 +158,8 @@ final class RestFixture {
     private final RestServer server;
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
+    private final List<ServerPlayer> players = new ArrayList<>();
+    private final SseSlots slots;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ExecutorService readers = Executors.newCachedThreadPool(task -> {
         Thread thread = new Thread(task, "rest-gametest-sse-reader");
@@ -160,8 +167,10 @@ final class RestFixture {
         return thread;
     });
 
-    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
+    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server,
+            SseSlots slots) {
         this.minecraft = minecraft;
+        this.slots = slots;
         this.index = index;
         this.gateway = gateway;
         this.server = server;
@@ -175,8 +184,9 @@ final class RestFixture {
         SpiritIndex index = new SpiritIndex(minecraft);
         index.register(NeoForge.EVENT_BUS);
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS, new TaskRegistry());
-        RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway), gateway::stop);
-        return new RestFixture(minecraft, index, gateway, server);
+        SseSlots slots = new SseSlots();
+        RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway, slots), gateway::stop);
+        return new RestFixture(minecraft, index, gateway, server, slots);
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
@@ -262,6 +272,40 @@ final class RestFixture {
         return spirit;
     }
 
+    SpiritEntity spawnHeldUntilStreamsOpen(GameTestHelper helper, BlockPos relative, int streams) {
+        SpiritEntity spirit = spawn(helper, relative);
+        spirit.setNoAi(true);
+        AtomicBoolean released = new AtomicBoolean();
+        helper.onEachTick(() -> {
+            if (slots.open() >= streams && released.compareAndSet(false, true)) {
+                spirit.setNoAi(false);
+            }
+        });
+        return spirit;
+    }
+
+    @SuppressWarnings("removal") // NeoForge 21.1: иного способа получить ServerPlayer в players() уровня нет
+    ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        moveTo(helper, player, relative);
+        players.add(player);
+        return player;
+    }
+
+    static void moveTo(GameTestHelper helper, ServerPlayer player, BlockPos relative) {
+        BlockPos absolute = helper.absolutePos(relative);
+        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
+    }
+
+    static String followGoalBody(String requestId, ServerPlayer player) {
+        return "{\"request_id\":\"" + requestId + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\""
+                + player.getName().getString() + "\"}}";
+    }
+
+    static TaskNode followPlan(ServerPlayer player) {
+        return new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", FOLLOW_RADIUS));
+    }
+
     SpiritEntity track(SpiritEntity spirit) {
         spirits.add(spirit);
         return spirit;
@@ -272,6 +316,7 @@ final class RestFixture {
             return;
         }
         spirits.forEach(SpiritEntity::discard);
+        players.forEach(player -> minecraft.getPlayerList().remove(player));
         index.unregister(NeoForge.EVENT_BUS);
         server.stop();
         client.shutdownNow();
