@@ -69,7 +69,7 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
 
 ## Часть А — ядро (`core/inventory`, без Minecraft)
 
-- [ ] 1. **`Stack` и `ValueTable`** — `Stack(item, variant, count, maxStack)` (`variant` — номер класса эквивалентности по
+- [x] 1. **`Stack` и `ValueTable`** — `Stack(item, variant, count, maxStack)` (`variant` — номер класса эквивалентности по
       компонентам: одинаковые `item` и `variant` сливаются). `ValueTable` читает `item_values.json`: упорядоченные правила
       `{"match":["*_ingot", …], "value":int}`, первое совпавшее выигрывает, `default` — для остальных; `valueOf(item)`,
       `stackValue(stack) = value × count`. Загрузчик в `core` берёт файл с classpath; битый JSON, неизвестное поле,
@@ -84,7 +84,7 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
       файл — по тексту исключения) и **тест на сам файл**: он читается, все шаблоны валидны, ни одно правило не перекрыто
       предыдущим целиком (мёртвое правило — ошибка), ценности меньше 100 000. Свойство: `valueOf` не бросает ничего на любой
       строке id.
-- [ ] 2. **`BaseKit`** — `base_kit.json`: правила набора `{"match":[…], "keep":N, "mode":"best"|"any"}` (предварительно):
+- [x] 2. **`BaseKit`** — `base_kit.json`: правила набора `{"match":[…], "keep":N, "mode":"best"|"any"}` (предварительно):
       по одному лучшему `*_pickaxe`, `*_axe`, `*_shovel`, `*_sword`, `*_hoe` (`best` = максимум ценности из п. 1); `bucket`,
       `water_bucket` по 1; еда (`mode: any`, группа `food`) — 16 штук; `torch` — 16; строительный блок для опоры
       (`cobblestone`, `dirt`) — 32; `crafting_table` — 1. `BaseKit.surplus(List<Stack>, ValueTable)` → `List<Slice(slot, count)>`
@@ -92,19 +92,19 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
       Тесты: примеры (два топора — остаётся лучший; 20 хлеба — 4 лишних; 3 кирки с разными материалами; пустой инвентарь);
       свойства на случайных инвентарях: излишек никогда не затрагивает квоту, инвентарь после вычитания излишка
       удовлетворяет набору (идемпотентность: повторный расчёт даёт пусто), сумма излишка не превышает наличия.
-- [ ] 3. **`ChestSorter`** — `ChestSorter.sort(List<Stack>)` → итоговая раскладка (по слотам; пустые в конце): слить частичные
+- [x] 3. **`ChestSorter`** — `ChestSorter.sort(List<Stack>)` → итоговая раскладка (по слотам; пустые в конце): слить частичные
       стопки с равными `item+variant` (не больше `maxStack`), порядок — категория (инструменты и оружие, броня, еда, руды и
       слитки, блоки, прочее — правила-данные в `item_values.json` → `categories`), затем id, `variant`, количество по убыванию.
       Тесты: примеры (3+5+7 булыжника → 15; 64+64+3 → 64,64,3; разные `variant` не сливаются); свойства на случайных
       наборах: сумма по `(item, variant)` сохраняется; ни одна стопка больше `maxStack`; число занятых слотов минимально;
       **идемпотентность** `sort(sort(x)) = sort(x)`; результат не зависит от исходного порядка; пустые слоты только в конце.
-- [ ] 4. **`TransferPlanner`** — `plan(from, to, filter, maxCount)` → `List<Move(fromSlot, toSlot, count)>`, `moved`, `leftover`:
+- [x] 4. **`TransferPlanner`** — `plan(from, to, filter, maxCount)` → `List<Move(fromSlot, toSlot, count)>`, `moved`, `leftover`:
       сначала доливает частичные стопки получателя того же `item+variant`, потом пустые слоты; не больше `maxCount`;
       фильтр — `IdFilter`. Тесты: примеры (получатель полон — `moved = 0`; частично — доливка; нужное больше, чем есть);
       свойства: сохранение предметов (получатель + источник до = после), ни одна стопка > `maxStack`, `moved ≤ maxCount`,
       ходов не больше `слотов источника + слотов получателя`, источник и получатель обрабатываются за O(n + m) (счётчик
       обращений к слотам ≤ 3 × (n + m)).
-- [ ] 5. **`OverflowPolicy`** — `decide(List<Stack> inventory, Stack incoming, ValueTable, Protected)` →
+- [x] 5. **`OverflowPolicy`** — `decide(List<Stack> inventory, Stack incoming, ValueTable, Protected)` →
       `TAKE_INTO_FREE_SLOT | DROP(slot, count) | REFUSE(причина)`. `Protected` — набор шаблонов: базовый набор (по `BaseKit`) и
       нужное плану. Правила: есть свободный слот или место в частичной стопке — берём; иначе берём, только если ценность
       новой стопки **больше** самой дешёвой выбрасываемой (ничья — не берём); выбрасывается целиком самый дешёвый слот,
@@ -112,11 +112,11 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
       → REFUSE», «новая дешевле → REFUSE», «ничья → REFUSE», частичная стопка принимает без выброса); свойства: выбрасываемый
       слот никогда не защищён; решение детерминировано; после `DROP` и приёма инвентарь не превышает `слотов` и
       суммарная ценность не уменьшилась.
-- [ ] 6. **`NeedsOfPlan`** — `NeedsOfPlan.collect(TaskNode plan, ResourceKnowledge)` → шаблоны предметов, нужных оставшемуся плану:
+- [x] 6. **`NeedsOfPlan`** — `NeedsOfPlan.collect(TaskNode plan, ResourceKnowledge)` → шаблоны предметов, нужных оставшемуся плану:
       параметры `item` у `craft`/`smelt`/`equip`/`deposit`/`acquire`, `block` у `gather`, ингредиенты рецептов через
       `ingredientsFor` (рекурсивно, с защитой от циклов, глубина ≤ 8). Тесты: примеры по узлам `sequence/repeat/fallback/
       parallel/condition`; цикл рецептов не зависает; свойство «результат ⊇ все `item` скриптов плана».
-- [ ] 7. **Параметры и каталог** — `core/script/{EquipParams,ContainerTarget,TransferParams}`: `ContainerTarget.parse("nearest" |
+- [x] 7. **Параметры и каталог** — `core/script/{EquipParams,ContainerTarget,TransferParams}`: `ContainerTarget.parse("nearest" |
       "x,y,z")` (границы мира из `CatalogLimits`, ошибка с примером формата), `radius`, `count`, `force`.
       `CoreScripts`: `deposit`/`withdraw` — `container` необязателен (`nearest`), `item`, `count`, `radius`
       (`CatalogLimits.CONTAINER_RADIUS_MIN = 1`, `MAX = 16`, по умолчанию 8); `sort_chest` — `container`, `radius`; `unload` —
@@ -126,26 +126,26 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
 
 ## Часть Б — адаптер (после слияния основы чеклиста 10)
 
-- [ ] 8. **Преобразования и доступ к контейнеру** — `neoforge/inventory/{StackMapper,ContainerAccess}`: `StackMapper` строит `Stack`
+- [x] 8. **Преобразования и доступ к контейнеру** — `neoforge/inventory/{StackMapper,ContainerAccess}`: `StackMapper` строит `Stack`
       из `ItemStack`; `variant` — порядковый номер класса эквивалентности по `ItemStack.isSameItemSameComponents` (точное
       сравнение, не хэш); при применении раскладки слияние проверяется ещё раз. `ContainerAccess.open(level, pos)` →
       `Container` или отказ с причиной: `ChestBlock.getContainer(...)` для двойного сундука, `BaseContainerBlockEntity` для
       бочек и шалкеров; запрещённые виды из «Что должно получиться»; нераскрытая таблица добычи — отказ. Допустимость вида —
       правило-данные (`IdFilter`), тип блока решается здесь один раз.
-- [ ] 9. **`TransferRunner`** — применяет `TransferPlanner.plan` не больше `TRANSFER_MOVES_PER_TICK = 4` перемещений за тик
+- [x] 9. **`TransferRunner`** — применяет `TransferPlanner.plan` не больше `TRANSFER_MOVES_PER_TICK = 4` перемещений за тик
       (предварительно); перед каждым перемещением сверяет, что слот источника ещё содержит ожидаемое, иначе один раз
       пересчитывает план, второй раз — `FAILED` «содержимое контейнера изменилось». Отмена оставляет состояние целым:
       каждое перемещение — целая операция, предметы не теряются и не дублируются (инвентарь + контейнер = исходное).
-- [ ] 10. **Скрипты контейнеров** — `DepositScript`, `WithdrawScript`, `SortChestScript`, `UnloadScript` (регистрация в
+- [x] 10. **Скрипты контейнеров** — `DepositScript`, `WithdrawScript`, `SortChestScript`, `UnloadScript` (регистрация в
       `SpiritScripts`): найти контейнер (`nearest` — `BlockLocator` по допустимым видам, порциями), `Approach` на ≤ 3.0 от
       центра блока (досягаемость контейнера 4.5), перенос `TransferRunner`, в конце сортировка `ChestSorter` одним
       применением раскладки (≤ 90 слотов, один тик). `UnloadScript`: проверка триггера, `BaseKit.surplus`, перенос излишка.
       Причины провалов называют предмет, число и контейнер.
-- [ ] 11. **`EquipScript`** — по шаблону выбирает слот-источник (максимум ценности), слот назначения — штатным
+- [x] 11. **`EquipScript`** — по шаблону выбирает слот-источник (максимум ценности), слот назначения — штатным
       `Mob.getEquipmentSlotForItem(stack)` (единое место решения по типу), иначе основная рука; обмен с инвентарём;
       `setDropChance(slot, 1.0F)`; идемпотентен (предмет уже надет → успех). `BlockBreaker`: основная рука входит в варианты
       `ToolChoice` (износ списывается с неё).
-- [ ] 12. **GameTest `InventoryGameTests`** (шаблон `empty`, площадка из камня; сундук ставит тест `helper.setBlock`; сценарии ≤ 120 тиков):
+- [x] 12. **GameTest `InventoryGameTests`** (шаблон `empty`, площадка из камня; сундук ставит тест `helper.setBlock`; сценарии ≤ 120 тиков):
       (а) `deposit` 10 булыжника: в сундуке 10, у духа 0, сундук отсортирован; (б) `withdraw` 5 `iron_ingot` из беспорядочного
       сундука: 5 у духа, остальное в сундуке слито и упорядочено; (в) сундук полон (27 разных стопок): `FAILED` «контейнер полон:
       перенесено 0 из N», инвентарь не изменился; (г) `count = 10` при 6 в инвентаре: перенесено 6, `FAILED` «только 6 из 10»;
@@ -159,19 +159,19 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
       используется `BlockBreaker` (ломка камня железной киркой из руки быстрее, чем рукой); (л) сундук с таблицей добычи
       — отказ; печь — отказ; (м) сторож таблиц: все точные id из `item_values.json`/`base_kit.json` есть в реестрах игры.
       Подлоги, что краснеют: слияние `variant` разных компонентов — (д); отсутствие сверки слота — (з); триггер 24 → 0 — (и).
-- [ ] 13. **Тест на масштаб** (числа, не время): `ChestSorter` и `TransferPlanner` — счётчики обращений (пп. 3–4); за тик скрипт
+- [x] 13. **Тест на масштаб** (числа, не время): `ChestSorter` и `TransferPlanner` — счётчики обращений (пп. 3–4); за тик скрипт
       контейнера делает ≤ 4 перемещения и 0 обходов мира (`getEntities`, `BlockLocator` ≤ 4 среза); поиск `nearest` порциями;
       `ValueTable` читается один раз за процесс (кэш), не на каждый подбор (счётчик загрузок == 1).
-- [ ] 14. **Правило fallback (по желанию)** — «разгруз|склад|сложи» → `unload` (данные в `FallbackPlanner.RULES`); тест рядом с
+- [x] 14. **Правило fallback (по желанию)** — «разгруз|склад|сложи» → `unload` (данные в `FallbackPlanner.RULES`); тест рядом с
       `FallbackPlannerTests`.
 
 ## Часть В — переполнение при подборе (после слияния всего чеклиста 10)
 
-- [ ] 15. **`OverflowHandler`** в `DropCollector`: перед `inventory.addItem` — `OverflowPolicy.decide` (инвентарь из `StackMapper`,
+- [x] 15. **`OverflowHandler`** в `DropCollector`: перед `inventory.addItem` — `OverflowPolicy.decide` (инвентарь из `StackMapper`,
       `Protected` = `BaseKit` + `NeedsOfPlan.collect(spirit.brain().plan(), knowledge)`; `SpiritBrain.plan()` — геттер); `DROP` —
       выбросить слот `ItemEntity` у ног с `setThrower(spirit)` и задержкой подбора `PickupTuning.SELF_DROP_DELAY_TICKS = 400`
       (предварительно); коллектор пропускает кучки, выброшенные самим духом за последние 6000 тиков. `OverflowMode.FAIL` — прежний путь.
-- [ ] 16. **GameTest переполнения** (в `CollectDropsGameTests`/`InventoryGameTests`): (а) инвентарь из 36 стопок булыжника, рядом
+- [x] 16. **GameTest переполнения** (в `CollectDropsGameTests`/`InventoryGameTests`): (а) инвентарь из 36 стопок булыжника, рядом
       алмаз, `overflow = by_value`: алмаз подобран, одна стопка булыжника выброшена, булыжник не подобран обратно за 100 тиков,
       предметов всего на один слот больше нигде нет (сохранение); (б) `overflow = fail`: `FAILED` «инвентарь полон» — как в чеклисте 10;
       (в) инвентарь из 36 стопок `iron_ingot`, рядом булыжник: `FAILED` (новое дешевле), ничего не выброшено; (г) инвентарь целиком из базового
@@ -192,10 +192,10 @@ SpiritBrain}`, `core/script/CoreScripts` (описания `equip`, `deposit`, `
 
 ## Завершение
 
-- [ ] 17. **Состояние при перезапуске (если слит 13)**: `saveState/restoreState` у `deposit` и `withdraw` (`moved`) — после восстановления
+- [x] 17. **Состояние при перезапуске (если слит 13)**: `saveState/restoreState` у `deposit` и `withdraw` (`moved`) — после восстановления
       переносят `count − moved`; `sort_chest`, `equip`, `unload` идемпотентны и состояния не хранят. GameTest: `deposit` ×10, прерван на 6,
       дух перезагружен — итого 10 в сундуке, не 16.
-- [ ] 18. `./gradlew test` и `./gradlew runGameTestServer` зелёные. Коммиты по пунктам (`test:`/`feat:`/`refactor:`). `todo.md` не править.
+- [x] 18. `./gradlew test` и `./gradlew runGameTestServer` зелёные. Коммиты по пунктам (`test:`/`feat:`/`refactor:`). `todo.md` не править.
       Отчёт: хэши; сколько тестов прошло и упало; красные до реализации; время самого медленного GameTest; что не сделано (напр. пп. 14, 17).
 
 ## Не входит
@@ -218,14 +218,14 @@ reflection нет.
       `fc2c821`); `git diff main -- …/IdFilter*` пуст, единственный источник — `main`.
 - [x] R2. **Стиль: комментарии-ссылки на чеклист** — убраны из `CatalogLimits`; сторож `TaskReferenceCommentGuardTests`
       зелёный.
-- [ ] R3. **Дефект: при переполнении выбрасывается базовый набор** — заменён на R7 (правка R3 сама была неверной:
-      частичный выброс не освобождает слот).
+- [x] R3. **Дефект: при переполнении выбрасывается базовый набор** — заменён на R7 (правка R3 сама была неверной:
+      частичный выброс не освобождает слот); в адаптере набор защищён `BaseKit` в `OverflowDecider`, GameTest `drops_overflow_kit`.
 - [x] R4. **Дефект данных: дорогое оценено как мусор** — правила для блоков хранения (≥ 9 слитков), сырых блоков,
       редких предметов и `golden_apple`; пары «блок — слиток» и таблица дорогих id (≥ 100) в `ItemValuesFileTests`.
       Защита шалкера — отдельным замечанием R8.
 - [x] R5. **Стоимость: категория пересчитывается в каждом сравнении** — ранг считается один раз на стопку, ценности и
       ранги с кэшем, счётчик обращений на 90 слотов ≤ 90; `ChestSorterProperties` в прогоне suite 0.22 c.
-- [ ] R6. **Структура: загрузчик JSON написан дважды** — частично (общий `JsonResource`), остаток — в R9.
+- [x] R6. **Структура: загрузчик JSON написан дважды** — общий `JsonResource`, остаток закрыт в R9; таблицы в адаптере читает один `InventoryTables` (счётчик загрузок == 1).
 
 ## Повторное ревью (R7–R10)
 
