@@ -667,6 +667,31 @@ public final class InventoryGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "inv_equip_upgrade", timeoutTicks = 400)
+    public static void equip_WornWoodenPickaxeWithIronInInventory_SwapsToIron(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_PICKAXE));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("equip", Map.of("item", "minecraft:*_pickaxe")), 1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "equip по шаблону обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(spirit.getMainHandItem().is(Items.IRON_PICKAXE),
+                    "в руке деревянная кирка, а в инвентаре железная подходит под тот же шаблон: берётся более "
+                            + "ценная, иначе дух вечно работал бы худшим инструментом. В руке "
+                            + spirit.getMainHandItem());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE) == 1,
+                    "прежняя деревянная кирка обязана вернуться в инвентарь");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "inv_equip_missing", timeoutTicks = 400)
     public static void equip_MissingItem_FailsWithoutChanges(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
