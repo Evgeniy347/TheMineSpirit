@@ -57,7 +57,7 @@ public final class FarmGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final int ARENA_SIZE = 11;
     private static final int ARENA_HEIGHT = 8;
-    private static final int LIGHT_SETTLE_TICKS = 20;
+    private static final int CROP_MIN_LIGHT = 8;
     private static final int FALL_SETTLE_TICKS = 30;
     private static final int VIEW_READS_PER_CELL_PER_CALL = 200;
     private static final int SAFETY_READS_PER_CELL_PER_CALL = 324;
@@ -456,12 +456,13 @@ public final class FarmGameTests {
             }
         }
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit, plantCall(CropKind.WHEAT, 64), LIGHT_SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, plantCall(CropKind.WHEAT, 64), SETTLE_TICKS,
+                () -> brightnessAbove(helper, lit) >= CROP_MIN_LIGHT && brightnessAbove(helper, dark) < CROP_MIN_LIGHT);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            int brightness = helper.getLevel().getRawBrightness(helper.absolutePos(dark.above()), 0);
-            helper.assertTrue(brightness < 8,
+            int brightness = brightnessAbove(helper, dark);
+            helper.assertTrue(brightness < CROP_MIN_LIGHT,
                     "подготовка: замурованная клетка обязана быть тёмной, а яркость " + brightness);
             assertFailedWith(helper, spirit, "не подходит: 1");
             String reason = spirit.taskFailureReason().orElse("");
@@ -946,6 +947,10 @@ public final class FarmGameTests {
             throw new IllegalStateException("перезагруженный дух не добавлен в мир: uuid " + reloaded.getUUID());
         }
         return reloaded;
+    }
+
+    private static int brightnessAbove(GameTestHelper helper, BlockPos ground) {
+        return helper.getLevel().getRawBrightness(helper.absolutePos(ground.above()), 0);
     }
 
     private static void arenaFloor(GameTestHelper helper) {
