@@ -1,6 +1,7 @@
 package com.theminespirit.core.script;
 
 import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
 import java.util.List;
@@ -35,8 +36,11 @@ public final class CoreScripts {
                 spec("flee", "убежать от угрозы",
                         List.of(), List.of("поблизости есть угроза"), List.of("дух вне опасности")),
                 spec("chop_tree", "срубить деревья",
-                        List.of(ParamSpec.text("species", false, "any"),
-                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1)),
+                        List.of(ParamSpec.enumeration("species", false, TreeSpecies.names(), TreeSpecies.ANY),
+                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
+                                ParamSpec.integer("radius", false, CatalogLimits.CHOP_RADIUS_MIN,
+                                        CatalogLimits.CHOP_RADIUS_MAX, 16),
+                                ParamSpec.bool("replant", false, false)),
                         List.of("в радиусе есть подходящие брёвна"),
                         List.of("брёвна срублены", "предметы подобраны в инвентарь")),
                 spec("mine_vein", "добыть жилу руды",

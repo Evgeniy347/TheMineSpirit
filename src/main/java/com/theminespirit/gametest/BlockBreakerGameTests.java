@@ -119,21 +119,21 @@ public final class BlockBreakerGameTests {
         BlockBreaker breaker = new BlockBreaker(spirit);
 
         BlockBreaker.Begin bedrock = breaker.begin(helper.absolutePos(TARGET));
-        helper.assertTrue(refusedWith(bedrock, "неразрушим"),
+        helper.assertTrue(refusedWith(bedrock, BlockBreaker.RefuseReason.UNBREAKABLE),
                 "бедрок обязан отвергаться как неразрушимый, получено " + bedrock);
         BlockBreaker.Begin air = breaker.begin(helper.absolutePos(new BlockPos(2, 3, 2)));
-        helper.assertTrue(refusedWith(air, "воздух"),
+        helper.assertTrue(refusedWith(air, BlockBreaker.RefuseReason.AIR),
                 "воздух обязан отвергаться, получено " + air);
         helper.setBlock(8, 1, 2, Blocks.DIRT);
         BlockBreaker.Begin far = breaker.begin(helper.absolutePos(new BlockPos(8, 1, 2)));
-        helper.assertTrue(refusedWith(far, "дальше"),
+        helper.assertTrue(refusedWith(far, BlockBreaker.RefuseReason.OUT_OF_REACH),
                 "блок дальше досягаемости " + BlockBreaker.REACH + " обязан отвергаться, получено " + far);
         BlockPos base = helper.absolutePos(SPIRIT_START);
         BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
         helper.assertTrue(unloaded != null, "рядом должна найтись незагруженная область для проверки отказа");
         int loadedBefore = helper.getLevel().getChunkSource().getLoadedChunksCount();
         BlockBreaker.Begin notLoaded = breaker.begin(unloaded);
-        helper.assertTrue(refusedWith(notLoaded, "не загружен"),
+        helper.assertTrue(refusedWith(notLoaded, BlockBreaker.RefuseReason.CHUNK_NOT_LOADED),
                 "блок в незагруженном чанке обязан отвергаться, получено " + notLoaded);
         helper.assertTrue(helper.getLevel().getChunkSource().getLoadedChunksCount() == loadedBefore,
                 "проверка блока в незагруженном чанке не должна грузить чанк");
@@ -169,8 +169,8 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    private static boolean refusedWith(BlockBreaker.Begin begin, String fragment) {
-        return begin instanceof BlockBreaker.Refused refused && refused.reason().contains(fragment);
+    private static boolean refusedWith(BlockBreaker.Begin begin, BlockBreaker.RefuseReason reason) {
+        return begin instanceof BlockBreaker.Refused refused && refused.reason() == reason;
     }
 
     private static SpiritEntity prepare(GameTestHelper helper, Block target) {

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
@@ -27,6 +28,7 @@ public final class SpiritScripts {
         table.put("scan", spirit -> params -> new ScanScript(spirit, ScanParams.from(params)));
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
+        table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
         table.put("gather", spirit -> params -> new GatherScript(spirit, GatherParams.from(params)));

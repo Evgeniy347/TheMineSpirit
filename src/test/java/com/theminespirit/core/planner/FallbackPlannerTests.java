@@ -238,7 +238,8 @@ class FallbackPlannerTests {
     private static TaskNode chopPlan(int radius, String species, int count) {
         return new SequenceNode(List.of(
                 new ScriptCall("scan", Map.of("radius", radius, "filter", List.of("*_log"))),
-                new ScriptCall("chop_tree", Map.of("species", species, "count", count))));
+                new ScriptCall("chop_tree", Map.of("species", species, "count", count,
+                        "radius", 16, "replant", false))));
     }
 
     private static TaskNode minePlan(int radius, String ore, int count) {

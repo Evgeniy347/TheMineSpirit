@@ -30,13 +30,20 @@ public final class BlockBreaker {
         GONE
     }
 
+    public enum RefuseReason {
+        CHUNK_NOT_LOADED,
+        AIR,
+        UNBREAKABLE,
+        OUT_OF_REACH
+    }
+
     public sealed interface Begin permits Started, Refused {
     }
 
     public record Started() implements Begin {
     }
 
-    public record Refused(String reason) implements Begin {
+    public record Refused(RefuseReason reason, String message) implements Begin {
     }
 
     private final SpiritEntity spirit;
@@ -61,20 +68,20 @@ public final class BlockBreaker {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
-            return new Refused("чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
+            return new Refused(RefuseReason.CHUNK_NOT_LOADED, "чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
         }
         BlockState targetState = level.getBlockState(target);
         if (targetState.isAir()) {
-            return new Refused("в " + target.toShortString() + " воздух: ломать нечего");
+            return new Refused(RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
         }
         double hardness = targetState.getDestroySpeed(level, target);
         if (hardness < 0) {
-            return new Refused("блок " + blockId(targetState) + " в " + target.toShortString()
+            return new Refused(RefuseReason.UNBREAKABLE, "блок " + blockId(targetState) + " в " + target.toShortString()
                     + " неразрушим: твёрдость " + hardness);
         }
         double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
         if (distance > REACH) {
-            return new Refused("блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
+            return new Refused(RefuseReason.OUT_OF_REACH, "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
                     + distance + "): сначала подойти");
         }
         pos = target.immutable();

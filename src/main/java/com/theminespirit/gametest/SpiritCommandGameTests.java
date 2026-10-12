@@ -34,6 +34,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SpiritCommandGameTests {
     private static final String SPIRIT_SELECTOR = spiritSelector(1);
 
+    // Цель, под которую нет правила в FallbackPlanner и нет скрипта в каталоге: тест отказа не должен
+    // ломаться, когда очередной скрипт начнёт реализовывать «сруби дерево» или «добудь руду».
+    private static final String UNPLANNABLE_GOAL = "построй дом";
+
     private SpiritCommandGameTests() {
     }
 
@@ -103,10 +107,10 @@ public final class SpiritCommandGameTests {
                     "После /spirit goal дух обязан быть в состоянии «выполняется»: команда не запустила задачу. "
                             + "Состояние=" + spirit.taskStatus() + ", причина=" + spirit.taskFailureReason());
 
-            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " сруби дерево", source);
+            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " " + UNPLANNABLE_GOAL, source);
             helper.assertTrue(rejected == 0,
-                    "Цель, чья схема не реализована в каталоге духа (scan/chop_tree отсутствуют), обязана вернуть 0 и не "
-                            + "заменить выполняемую задачу: результат=" + rejected);
+                    "Цель '" + UNPLANNABLE_GOAL + "', которую не умеет планировщик и не реализует ни один скрипт, "
+                            + "обязана вернуть 0 и не заменить выполняемую задачу: результат=" + rejected);
             helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
                     "Отклонённая команда goal не должна трогать уже выполняемую задачу: статус духа изменился");
 
@@ -135,9 +139,10 @@ public final class SpiritCommandGameTests {
                     .getCommands().getDispatcher();
             String both = spiritSelector(2);
 
-            int rejected = dispatcher.execute("spirit goal " + both + " сруби дерево", source);
+            int rejected = dispatcher.execute("spirit goal " + both + " " + UNPLANNABLE_GOAL, source);
             helper.assertTrue(rejected == 0,
-                    "Цель, не реализуемая в каталоге духов, обязана вернуть 0: результат=" + rejected);
+                    "Цель '" + UNPLANNABLE_GOAL + "', которую не умеет планировщик и не реализует ни один скрипт, "
+                            + "обязана вернуть 0: результат=" + rejected);
             helper.assertTrue(first.taskStatus().isEmpty() && second.taskStatus().isEmpty(),
                     "При отказе планирования ни один дух не должен получить задачу: первый=" + first.taskStatus()
                             + ", второй=" + second.taskStatus());

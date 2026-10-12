@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.OreKind;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -85,6 +86,40 @@ class ScriptCatalogTests {
                 "species в chop_tree необязателен: без него рубят любое дерево (default any)");
     }
 
+@Test
+    void defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults() {
+        ScriptSpec chopTree = CoreScripts.defaultCatalog().find("chop_tree").orElseThrow();
+
+        ParamSpec species = param(chopTree, "species");
+        ParamSpec radius = param(chopTree, "radius");
+        ParamSpec replant = param(chopTree, "replant");
+
+        assertEquals(ParamType.ENUM, species.type(),
+                "species в chop_tree — enum: список пород объявляется из TreeSpecies один раз, "
+                        + "иначе каталог и ядро разойдутся при добавлении новой породы");
+        assertEquals(TreeSpecies.names(), species.values(),
+                "Список допустимых пород enum обязан браться из TreeSpecies, а не копироваться: "
+                        + "копия лишней породы молча принимает несуществующую");
+        assertEquals("any", species.defaultValue(),
+                "species в chop_tree по умолчанию any: рубить без указания породы можно, а вот несуществующую "
+                        + "породу нельзя");
+        assertEquals(ParamType.INT, radius.type(),
+                "radius в chop_tree — целое: дробный радиус бессмыслен");
+        assertEquals(false, radius.required(),
+                "radius в chop_tree необязателен: умолчание 16 из каталога достаточно для обычной рубки");
+        assertEquals(16, radius.defaultValue(),
+                "radius в chop_tree по умолчанию 16: каталог задаёт умолчание, чтобы шаблон fallback его не дублировал");
+        assertEquals((double) CatalogLimits.CHOP_RADIUS_MIN, radius.min(),
+                "radius в chop_tree не может быть ниже минимума каталога: под духом всегда есть хоть одна клетка поиска");
+        assertEquals((double) CatalogLimits.CHOP_RADIUS_MAX, radius.max(),
+                "radius в chop_tree не может быть выше максимума каталога: границы заданы в одном месте "
+                        + "и ядро и каталог читают их вместе");
+        assertEquals(ParamType.BOOL, replant.type(),
+                "replant в chop_tree — булев флаг: посадить саженец или нет, третьего не дано");
+        assertEquals(false, replant.defaultValue(),
+                "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
+    }
+
     static Stream<Arguments> scriptSpecRows() {
         List<ScriptExpectation> rows = List.of(
                 spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
@@ -95,7 +130,7 @@ class ScriptCatalogTests {
                 spec("return_home", List.of(), Map.of()),
                 spec("patrol", List.of(), Map.of()),
                 spec("flee", List.of(), Map.of()),
-                spec("chop_tree", List.of(), Map.of("count", new long[]{1, 256})),
+                spec("chop_tree", List.of(), Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("mine_vein", List.of(), Map.of("count", new long[]{1, 256})),
                 spec("dig_area", List.of("x", "y", "z", "size"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},

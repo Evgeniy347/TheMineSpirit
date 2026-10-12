@@ -31,6 +31,7 @@ public final class BlockLocator {
         private final SectionCursor cursor;
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
+        private int maxExaminedPerStep;
         private long countedTick = Long.MIN_VALUE;
         private int slicesThisTick;
         private int maxSlicesPerTick;
@@ -44,6 +45,7 @@ public final class BlockLocator {
         }
 
         public List<BlockPos> step(int maxSlices) {
+            int examinedBefore = examinedPositions;
             long tick = level.getGameTime();
             if (tick != countedTick) {
                 countedTick = tick;
@@ -59,6 +61,7 @@ public final class BlockLocator {
                         .thenComparing(Comparator.naturalOrder()));
                 found.addAll(inSlice);
             }
+            maxExaminedPerStep = Math.max(maxExaminedPerStep, examinedPositions - examinedBefore);
             return found;
         }
 
@@ -72,6 +75,10 @@ public final class BlockLocator {
 
         public int examinedPositions() {
             return examinedPositions;
+        }
+
+        public int maxExaminedPerStep() {
+            return maxExaminedPerStep;
         }
 
         public int skippedChunks() {

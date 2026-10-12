@@ -68,8 +68,11 @@
 { "scripts": [
   { "id": "chop_tree", "summary": "срубить деревья",
     "params": { "type": "object", "properties": {
-      "species": { "type": "string", "default": "any" },
-      "count": { "type": "integer", "minimum": 1, "maximum": 256, "default": 1 } },
+      "species": { "type": "string", "default": "any",
+        "enum": ["any", "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry"] },
+      "count": { "type": "integer", "minimum": 1, "maximum": 256, "default": 1 },
+      "radius": { "type": "integer", "minimum": 1, "maximum": 32, "default": 16 },
+      "replant": { "type": "boolean", "default": false } },
       "required": [] },
     "preconditions": ["есть подходящие блоки в радиусе сканирования"],
     "effects": ["брёвна срублены", "предметы подобраны в инвентарь"] } ] }
