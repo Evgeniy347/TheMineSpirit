@@ -166,15 +166,9 @@ public final class DropCollector {
     private boolean canStepOnItem() {
         BlockPos itemCell = target.blockPosition();
         BlockPos feet = spirit.blockPosition();
-        if (itemCell.getY() != feet.getY()) {
-            return false;
-        }
-        int dx = Math.abs(itemCell.getX() - feet.getX());
-        int dz = Math.abs(itemCell.getZ() - feet.getZ());
-        if (dx > 1 || dz > 1 || (dx == 0 && dz == 0)) {
-            return false;
-        }
-        return MiningSafety.canStand(new BlockCoord(itemCell.getX(), itemCell.getY(), itemCell.getZ()), safety);
+        return MiningSafety.canStepFrom(
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                new BlockCoord(itemCell.getX(), itemCell.getY(), itemCell.getZ()), safety);
     }
 
     private boolean addressedToAnyone(ItemEntity drop) {
