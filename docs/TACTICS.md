@@ -15,11 +15,14 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 3. Жёсткие правила (`rules.json → hard`): первое подходящее по убыванию `priority` с `decision` решает; `exclude`
    вычёркивает варианты; вычеркнуто всё — `RETREAT` при наличии способа отхода, иначе `FIGHT`. Любое `RETREAT` (правило
    или оценка) без единого способа отхода подменяется правилами `then.noRoute` (первое подходящее, невычеркнутое):
-   `no_route_fight_targeted` — FIGHT, если враг целится в духа; иначе `no_route_ignore` — IGNORE (враг вплотную
-   обрабатывает `cornered_fight`). Подмена hold не наследует (`HoldStatus.NONE`). Крипер:
-   `explosive_close_retreat` отводит на 5 блоках, `explosive_band_retreat` (приоритет 84) держит отход, пока дух в
-   состоянии RETREATING и крипер ближе 8 блоков — полоса гистерезиса данными против качки на границе 5/6 блоков;
-   `shoot_explosive` стреляет по взрывчатке от 3 блоков при луке.
+    `no_route_fight_targeted` — FIGHT, если враг целится в духа; иначе `no_route_ignore` — IGNORE (враг вплотную
+    обрабатывает `cornered_fight`). Крипер без оружия ближнего боя (`self.dps <= 1` — урон голой руки):
+    `explosive_close_retreat` отводит на 5 блоках, `explosive_band_retreat` (приоритет 84) держит отход, пока дух в
+    состоянии RETREATING и крипер ближе 8 блоков — полоса гистерезиса 5/8 данными против качки на границе 5/6 блоков.
+    С мечом и без лука действует тактика «ударил–отошёл»: `explosive_strike_retreat` (приоритет 86) держит отход, пока
+    с последнего удара духа (`time.sinceStrike`) прошло не больше 30 тиков (запал крипера) и крипер ближе 6 блоков, —
+    отход по таймеру удара, а не по дистанции 5; без недавнего удара дух подходит счётом вплотную (≤3), чтобы ударить;
+    `shoot_explosive` стреляет по взрывчатке от 3 блоков при луке.
 4. Оценка `score(вариант) = Σ вес × фактор` для `FIGHT / RETREAT / IGNORE`, ничья — по `tieBreak`.
 5. Гистерезис: прежнее решение держится `holdTicks` (кроме жёсткого правила, потери HP больше `hpDropRelease` за окно
    или вычёркивания) и получает `stickiness` к счёту после окна. Удерживается только решение, принятое оценкой
@@ -66,7 +69,7 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 ближайший взрывной, суммарные HP и урон, быстрейший, флаги стреляет/взрывается/плавает/летает/целится в нас),
 `env.*` (лава, обрыв, свет, ночь, дом, укрытие, вода, `escapeAvailability` = число доступных способов отхода),
 `order.*` (режим, приказанный режим, инициирует ли, зона, `leashLeft`, `engageLeft`, подопечный, помощь), `time.*`
-(`sinceHit`, `sinceEnemySeen`, `inState`), `state.tactical`, `derived.winMargin`, `derived.speedRatio`.
+(`sinceHit`, `sinceStrike`, `sinceEnemySeen`, `inState`), `state.tactical`, `derived.winMargin`, `derived.speedRatio`.
 `leashLeft = pursuit − расстояние от якоря до цели` (лучшая из целей), `engageLeft` аналогично для радиуса реакции;
 «нет ограничения» — `Assessment.UNBOUNDED` (1000).
 
