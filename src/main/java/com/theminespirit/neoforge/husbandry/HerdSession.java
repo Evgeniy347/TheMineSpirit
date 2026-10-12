@@ -13,6 +13,7 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.Approach;
@@ -913,7 +914,7 @@ public final class HerdSession {
 
     private void startCollect(IdFilter filter, BlockPos at, int radius) {
         collector = new DropCollector(spirit, filter, new BlockCoord(at.getX(), at.getY(), at.getZ()), radius,
-                PickupTuning.DEFAULT);
+                PickupTuning.DEFAULT, OverflowMode.FAIL);
         state = State.COLLECT;
     }
 

@@ -5,9 +5,6 @@ import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.UnloadParams;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.inventory.InventoryTables;
-import com.theminespirit.neoforge.inventory.StackMapper;
-
 import java.util.List;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;

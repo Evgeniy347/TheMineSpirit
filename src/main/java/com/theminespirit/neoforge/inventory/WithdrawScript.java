@@ -4,7 +4,6 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
-
 import java.util.List;
 import net.minecraft.world.Container;
 

@@ -3,7 +3,6 @@ package com.theminespirit.neoforge.inventory;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.SortChestParams;
 import com.theminespirit.neoforge.SpiritEntity;
-
 import net.minecraft.world.Container;
 
 public final class SortChestScript extends ContainerTask {
