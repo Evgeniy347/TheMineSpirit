@@ -353,6 +353,18 @@
      "enemies": [{"type": "phantom", "distance": 30, "targeting": false}],
      "env": {"time": "NIGHT", "light": 4},
      "orders": {"mode": "passive"},
-     "expect": {"decision": "IGNORE", "action": "CONTINUE", "rule": "no_route_ignore", "retreat": "NONE"}}
+     "expect": {"decision": "IGNORE", "action": "CONTINUE", "rule": "no_route_ignore", "retreat": "NONE"}},
+    {"name": "срочно: HP 15 %, зомби в 6, укрытие в 5",
+     "why": "Тот же относительный перевес r=2 (убьём за 0.5 с, умрём за 1 с), что в честном бою, но абсолютная срочность другая: при HP 15 % отход решает правило critical_hp_retreat, а счёт с URGENCY=0.9 тоже за отход. Пара к «не срочно при том же перевесе».",
+     "self": {"hpFraction": 0.15},
+     "enemies": [{"type": "zombie", "distance": 6, "hp": 0.15}],
+     "env": {"cover": 5},
+     "expect": {"decision": "RETREAT", "action": "RETREAT", "retreat": "COVER", "rule": "critical_hp_retreat"}},
+    {"name": "не срочно при том же перевесе r=2: HP 100 %, паук в 6, укрытие в 5",
+     "why": "Тот же r=2 (убьём за 5 с, умрём за 10 с), но URGENCY=0 и HP полное: дух дерётся счётом, а не отходит. Абсолютное время до смерти различает решения при равной доле перевеса. Пара к «срочно: HP 15 %».",
+     "self": {"dps": 3.2},
+     "enemies": [{"type": "spider", "distance": 6}],
+     "env": {"cover": 5},
+     "expect": {"decision": "FIGHT", "action": "ENGAGE", "rule": "score", "state": "ENGAGED"}}
   ]
 }
