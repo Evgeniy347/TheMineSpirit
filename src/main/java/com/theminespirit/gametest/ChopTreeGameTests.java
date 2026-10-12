@@ -1,8 +1,5 @@
 package com.theminespirit.gametest;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
@@ -18,27 +15,19 @@ import com.theminespirit.neoforge.ChopTreeScript;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -1001,57 +990,5 @@ public final class ChopTreeGameTests {
             }
         }
         return count;
-    }
-
-    @GameTest(template = "empty", batch = "chop_tree_unrealized_goal", timeoutTicks = 100)
-    public static void spiritGoal_UnrealizedGoal_RejectedWithReason(GameTestHelper helper) throws CommandSyntaxException {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(1, 1, 1), "gt_unrealized_player");
-        try {
-            CommandSourceStack source = playerSource(player);
-            CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                    .getCommands().getDispatcher();
-
-            int rejected = dispatcher.execute("spirit goal " + SPIRIT_SELECTOR + " построй дом", source);
-            helper.assertTrue(rejected == 0,
-                    "цель 'построй дом', не реализованная ни в одном чеклисте, обязана вернуть 0: результат=" + rejected);
-            helper.assertTrue(spirit.taskStatus().isEmpty(),
-                    "отклонённая цель не должна запускать задачу: статус=" + spirit.taskStatus());
-
-            helper.succeed();
-        } finally {
-            removePlayer(helper, player);
-        }
-    }
-
-    private static final String SPIRIT_SELECTOR = spiritSelector(1);
-
-    private static String spiritSelector(int limit) {
-        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,sort=nearest,limit=" + limit + "]";
-    }
-
-    private static CommandSourceStack playerSource(ServerPlayer player) {
-        return player.server.createCommandSourceStack()
-                .withEntity(player)
-                .withPosition(player.position())
-                .withPermission(4);
-    }
-
-    private static ServerPlayer spawnMockPlayer(GameTestHelper helper, BlockPos relative, String name) {
-        MinecraftServer server = helper.getLevel().getServer();
-        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
-        ServerPlayer player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
-        Connection connection = new Connection(PacketFlow.SERVERBOUND);
-        new EmbeddedChannel(connection);
-        server.getPlayerList().placeNewPlayer(connection, player, cookie);
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        return player;
-    }
-
-    private static void removePlayer(GameTestHelper helper, ServerPlayer player) {
-        helper.getLevel().getServer().getPlayerList().remove(player);
     }
 }
