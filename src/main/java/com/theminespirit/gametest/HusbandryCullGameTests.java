@@ -104,7 +104,7 @@ public final class HusbandryCullGameTests {
     public static void hunt_WildPigsOutsideHomePen_AllCulledOwnAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        HusbandryGameTests.spawnStill(helper, EntityType.PIG, new BlockPos(3, 1, 1));
+        Pig own = HusbandryGameTests.spawnStill(helper, EntityType.PIG, new BlockPos(3, 1, 1));
         HusbandryGameTests.spawnStill(helper, EntityType.PIG, new BlockPos(8, 1, 8));
         HusbandryGameTests.spawnStill(helper, EntityType.PIG, new BlockPos(8, 1, 6));
         HusbandryGameTests.spawnStill(helper, EntityType.PIG, new BlockPos(6, 1, 8));
@@ -116,9 +116,9 @@ public final class HusbandryCullGameTests {
             run.assertStarted();
             HusbandryGameTests.assertSucceeded(helper, spirit, "трое диких обязаны забиться");
             List<Pig> pigs = HusbandryGameTests.alive(helper, Pig.class);
-            helper.assertTrue(pigs.size() == 1,
-                    "своя свинья внутри домашнего круга обязана остаться жива, а диких — не остаться: фактически "
-                            + pigs.size());
+            helper.assertTrue(pigs.size() == 1 && pigs.get(0) == own,
+                    "жива обязана остаться ровно своя свинья внутри домашнего круга, а диких — не остаться: "
+                            + "фактически живых " + pigs.size() + ", своя жива: " + own.isAlive());
             int pork = GameTestFixtures.countInInventory(spirit.getInventory(), Items.PORKCHOP);
             helper.assertTrue(pork >= 1,
                     "свинина с диких обязана подобраться, фактически " + pork);

@@ -32,6 +32,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class HusbandryGameTests {
     private static final int SETTLE_TICKS = 5;
+    private static final int BABY_AGE = -24000;
+    private static final int FEED_GROWTH_FLOOR = 1000;
     private static final BlockPos START = new BlockPos(1, 1, 1);
 
     private HusbandryGameTests() {
@@ -91,8 +93,9 @@ public final class HusbandryGameTests {
             helper.assertTrue(grown.size() == 2,
                     "цыплят обязано остаться 2 (кормление растит, а не убивает), фактически " + grown.size());
             for (Chicken chick : grown) {
-                helper.assertTrue(chick.getAge() > -24000,
-                        "цыплёнок обязан подрасти после кормления (возраст больше -24000): иначе кормили ближних кур, "
+                helper.assertTrue(chick.getAge() > BABY_AGE + FEED_GROWTH_FLOOR,
+                        "цыплёнок обязан подрасти после корма больше чем на " + FEED_GROWTH_FLOOR
+                                + " тиков (естественный рост за тест меньше): иначе кормили ближних кур, "
                                 + "а не дальних цыплят, возраст " + chick.getAge());
             }
             GameTestFixtures.reset(helper);
@@ -272,7 +275,7 @@ public final class HusbandryGameTests {
     static void spawnBaby(GameTestHelper helper, EntityType<? extends AgeableMob> type,
             BlockPos relative, boolean still) {
         AgeableMob baby = type.create(helper.getLevel());
-        baby.setAge(-24000);
+        baby.setAge(BABY_AGE);
         baby.setNoAi(still);
         Vec3 at = helper.absoluteVec(new Vec3(relative.getX() + 0.5, relative.getY(), relative.getZ() + 0.5));
         baby.moveTo(at.x, at.y, at.z, 0.0f, 0.0f);
