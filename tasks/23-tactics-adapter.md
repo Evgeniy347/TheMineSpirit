@@ -58,6 +58,14 @@ fallback запрещён), `docs/TESTING.md` (GameTest-пачки, `GameTestFix
 
 ## Часть А — ядро адаптера (`core/tactics/adapter`, без Minecraft)
 
+**Поправки главного агента (обязательны, перекрывают текст пунктов ниже):**
+- п. 3: нового автомата не заводить — в ядре уже есть `core/tactics/StateMachine` (CALM → ENGAGED → RETREATING → RECOVERING)
+  и `RetreatSelector`; адаптер хранит только исполняемый сейчас способ отхода и его прогресс.
+- п. 4: имя `TacticsConfig` занято (загрузчик данных тактики, чеклист 19) — назвать `TacticsAdapterSettings`; числа держит
+  конструктор записи, а не парсер (правило чеклиста 19, R4).
+- п. 8: поводок (leash) и радиусы режимов уже в ядре (`modes.json`); адаптер только меряет расстояние от якоря и отдаёт факт.
+- Зависимость: части Б–В — после слияния чеклиста 20 (`LayerArbiter`, `SpiritPolicies`); часть А — сразу.
+
 - [ ] 1. **`FactCollector`** — интерфейс снятия фактов: `collect(SituationContext ctx) → Situation`. `SituationContext` —
       входные данные (позиция дуга, список врагов, окружение, приказы, тики с урона/удара). Разделение на части: `SelfFacts`,
       `List<EnemyFact>`, `EnvFacts`, `Orders`, `ticksSinceHit`, `ticksSinceStrike`. Тесты (красными до реализации): таблица
