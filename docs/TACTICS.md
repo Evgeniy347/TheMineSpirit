@@ -86,7 +86,8 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 | `PROXIMITY` | `clamp01(1 − ближайший / proximityRange)` |
 | `RANGED_EXPOSURE` | `clamp01(стрелков / rangedFull) × clamp01(1 − ближайший стрелок / rangedRange)` |
 | `EXPLOSIVE_NEAR` | `clamp01(1 − ближайший взрывной / explosiveRange)` |
-| `ALLY_SUPPORT`, `HEALING_AVAILABLE`, `ESCAPE_ROUTE` | `clamp01(число / allyFull, healFull, routesFull)` |
+| `ALLY_SUPPORT`, `HEALING_AVAILABLE` | `clamp01(число / allyFull, healFull)` |
+| `ESCAPE_ROUTE` | наибольшая полезность среди доступных способов отхода (0, если способов нет) |
 | `TERRAIN_RISK` | максимум риска лавы `1 − лава/lavaRange` и обрыва `(высота − dropSafe)/dropRange` |
 | `DARKNESS` | `max(1 − свет/15, ночью nightFloor)` |
 | `HUNGER` | `clamp01((hungerThreshold − еда) / hungerThreshold)` |
@@ -114,8 +115,12 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 Полезность и условия — в `rules.json → retreat.methods`, числа взяты из п. 11 задания (tasks/19-tactics-core.md), ревью их приняло как есть:
 `HOME` 1 − дистанция/160, `COVER` 0.4 (0.8 против стрелков), `KITE` 0.7, `WATER` 0.6 (ведро 0.55), `BARRICADE` 0.5, `PILLAR` 0.4.
 `AWAY` (бег прочь по открытой местности, полезность 0.2, ниже любого другого) добавлен ревью R6: условие — дух не медленнее
-врага, враг дальше 3 блоков и нет стрелков (в спину бьют из лука) (ближе — `cornered_fight` обязан оставаться возможным). Фактор `ESCAPE_ROUTE` считает все способы,
-поэтому его вес RETREAT снижен с 0.6 до 0.3: открытое поле не должно подталкивать к отходу так же, как укрытие.
+врага, враг дальше 3 блоков и нет стрелков (в спину бьют из лука) (ближе — `cornered_fight` обязан оставаться возможным).
+Фактор `ESCAPE_ROUTE` — наибольшая полезность среди доступных способов (`RetreatOptions.bestUtility`, 0 при пустом
+наборе): укрытие рядом толкает к отходу сильнее, чем голое поле. Масштаб `routesFull` в формуле больше не участвует.
+Вес RETREAT оставлен 0.3; возврат к 0.6 из спецификации — СПОРНО, на согласовании: при 0.6 два сценария с ведьмой
+(«укрытие в 4, полное HP и меч», «укрытие в 4, есть лук») меняют решение FIGHT → RETREAT, ожидания оставлены,
+сценарии помечены `boundary` с парой.
 
 ## Как читать trace
 
