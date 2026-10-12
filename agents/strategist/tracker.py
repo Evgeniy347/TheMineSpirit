@@ -1,4 +1,8 @@
-"""Отслеживание поставленных задач: опрос GET /v1/tasks/{id}, смена state в журнал, терминальное состояние - стражу."""
+"""Отслеживание поставленных задач: опрос GET /v1/tasks/{id}, смена state в журнал, терминальное состояние - стражу.
+
+Расписание опросов (`_next_poll`) живёт в памяти процесса, а не в state.json: запись state не меняется от опроса
+к опросу, а после перезапуска активная задача опрашивается сразу.
+"""
 
 from __future__ import annotations
 
@@ -12,19 +16,21 @@ POLL_ERRORS_BEFORE_ALERT = 6
 class Tracker:
     def __init__(self, rt: Runtime):
         self.rt = rt
+        self._next_poll: dict[str, float] = {}
 
     def add(self, task_id: str, bot: str, goal: str, request_id: str, fingerprint: str, cycle: int, now: float) -> None:
         self.rt.state["active"][task_id] = {
             "bot": bot, "goal": goal, "request_id": request_id, "fingerprint": fingerprint, "cycle": cycle,
-            "posted_at": now, "next_poll": now + self.rt.config.task_poll, "last_state": "accepted", "poll_errors": 0,
+            "posted_at": now, "last_state": "accepted", "poll_errors": 0,
         }
+        self._next_poll[task_id] = now + self.rt.config.task_poll
 
     def poll(self) -> int:
         rt = self.rt
         now = rt.clock.now()
         finished = 0
         for task_id, entry in list(rt.state["active"].items()):
-            if now >= entry["next_poll"]:
+            if now >= self._next_poll.get(task_id, now):
                 finished += self._poll_one(task_id, entry, now)
         if finished or rt.state["active"]:
             rt.save()
@@ -32,7 +38,7 @@ class Tracker:
 
     def _poll_one(self, task_id: str, entry: dict, now: float) -> int:
         rt = self.rt
-        entry["next_poll"] = now + rt.config.task_poll
+        self._next_poll[task_id] = now + rt.config.task_poll
         try:
             view = rt.client.get(f"/v1/tasks/{task_id}")
         except ApiError as error:
@@ -81,6 +87,7 @@ class Tracker:
     def _finish(self, task_id: str, entry: dict, outcome: str, error: str | None, now: float) -> int:
         rt = self.rt
         del rt.state["active"][task_id]
+        self._next_poll.pop(task_id, None)
         rt.log("task_done", cycle=entry["cycle"], bot=entry["bot"], task_id=task_id, goal=entry["goal"], outcome=outcome,
                error=error, fingerprint=entry["fingerprint"], request_id=entry["request_id"],
                seconds=round(now - entry["posted_at"], 1))
