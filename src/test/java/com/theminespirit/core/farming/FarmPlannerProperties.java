@@ -141,12 +141,17 @@ class FarmPlannerProperties {
         FarmPlanner.Next best = null;
         long bestStandSquared = Long.MAX_VALUE;
         int ineligible = 0;
+        int dry = 0;
         int noStand = 0;
         for (BlockCoord target : ordered) {
             FarmTile tile = farm.tileAt(target);
             boolean watered = job == FarmJob.TILL && hydration.watered(target);
             if (!job.eligible(tile, filter, watered)) {
-                ineligible++;
+                if (job == FarmJob.TILL && !watered) {
+                    dry++;
+                } else {
+                    ineligible++;
+                }
                 continue;
             }
             List<BlockCoord> stands = FarmStandSpots.of(target, from, cached, farm);
@@ -160,7 +165,7 @@ class FarmPlannerProperties {
                 bestStandSquared = distanceSquared(from, candidate.stand());
             }
         }
-        return best == null ? new FarmPlanner.Exhausted(ineligible, noStand) : best;
+        return best == null ? new FarmPlanner.Exhausted(ineligible, noStand, dry) : best;
     }
 
     private static boolean closer(FarmPlanner.Next candidate, FarmPlanner.Next current, BlockCoord from) {

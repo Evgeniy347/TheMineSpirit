@@ -157,7 +157,7 @@ class FarmPlannerTests {
         FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM, bedCells(), farm,
                 openField(), Hydration.of(water));
 
-        assertEquals(new FarmPlanner.Exhausted(25, 0), outcome,
+        assertEquals(new FarmPlanner.Exhausted(25, 0, 0), outcome,
                 "Грядка с посевами не пашется: все 25 клеток считаются в ineligible");
         assertEquals(0, water.lookups,
                 "Непригодная без воды клетка отсеивается до проверки увлажнения: иначе каждая такая клетка стоит "
@@ -192,7 +192,7 @@ class FarmPlannerTests {
                 List.of(new BlockCoord(0, 0, 0)), farm, safety,
                 Hydration.of(Set.of(new BlockCoord(1, 0, 1))));
 
-        assertEquals(new FarmPlanner.Exhausted(0, 1), outcome,
+        assertEquals(new FarmPlanner.Exhausted(0, 1, 0), outcome,
                 "Цель в лавовом кольце обязана считаться в noStand: стоянки рядом с лавой отвергаются все");
     }
 
@@ -207,19 +207,19 @@ class FarmPlannerTests {
                 List.of(new BlockCoord(0, 0, 0)), farm, safety,
                 Hydration.of(Set.of(new BlockCoord(1, 0, 1))));
 
-        assertEquals(new FarmPlanner.Exhausted(0, 1), outcome,
+        assertEquals(new FarmPlanner.Exhausted(0, 1, 0), outcome,
                 "Замурованная цель обязана считаться в noStand: без числа непонятно, почему работа встала");
     }
 
     @Test
-    void next_DryDirtBed_ReturnsIneligible() {
+    void next_DryDirtBed_ReturnsDryNotIneligible() {
         MapFarmView farm = new MapFarmView().fillBed(0, 0, 0, 4, 4, DIRT_AIR);
 
         FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM, bedCells(), farm,
                 openField(), Hydration.of(Set.of()));
 
-        assertEquals(new FarmPlanner.Exhausted(25, 0), outcome,
-                "Сухая земля не пашется: все 25 клеток считаются в ineligible, а не в noStand");
+        assertEquals(new FarmPlanner.Exhausted(0, 0, 25), outcome,
+                "Сухая земля не пашется: все 25 клеток считаются в dry, а не в ineligible");
     }
 
     @Test

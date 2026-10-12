@@ -31,6 +31,7 @@ public final class FarmPlanner {
         Next best = null;
         long bestStandSquared = Long.MAX_VALUE;
         int ineligible = 0;
+        int dry = 0;
         int noStand = 0;
         for (BlockCoord target : ordered) {
             if (best != null && cannotBeat(from, target, bestStandSquared)) {
@@ -43,7 +44,11 @@ public final class FarmPlanner {
             }
             boolean watered = job == FarmJob.TILL && hydration.watered(target);
             if (!job.eligible(tile, filter, watered)) {
-                ineligible++;
+                if (job == FarmJob.TILL && !watered) {
+                    dry++;
+                } else {
+                    ineligible++;
+                }
                 continue;
             }
             List<BlockCoord> stands = FarmStandSpots.of(target, from, cached, view);
@@ -57,7 +62,7 @@ public final class FarmPlanner {
                 bestStandSquared = distanceSquared(from, candidate.stand());
             }
         }
-        return best == null ? new Exhausted(ineligible, noStand) : best;
+        return best == null ? new Exhausted(ineligible, noStand, dry) : best;
     }
 
     private static boolean cannotBeat(BlockCoord from, BlockCoord target, long bestStandSquared) {
@@ -99,11 +104,11 @@ public final class FarmPlanner {
         }
     }
 
-    public record Exhausted(int ineligible, int noStand) implements Outcome {
+    public record Exhausted(int ineligible, int noStand, int dry) implements Outcome {
         public Exhausted {
-            if (ineligible < 0 || noStand < 0) {
+            if (ineligible < 0 || noStand < 0 || dry < 0) {
                 throw new IllegalArgumentException("Счётчики пропущенных целей не могут быть отрицательными: ineligible="
-                        + ineligible + ", noStand=" + noStand);
+                        + ineligible + ", noStand=" + noStand + ", dry=" + dry);
             }
         }
     }
