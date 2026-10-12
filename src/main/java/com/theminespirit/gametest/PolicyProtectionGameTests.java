@@ -28,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -97,6 +98,32 @@ public final class PolicyProtectionGameTests {
         BlockBreaker.Begin frame = breaker.begin(helper.absolutePos(target));
         helper.assertTrue(!(frame instanceof BlockBreaker.Started) && helper.getBlockState(target).is(Blocks.END_PORTAL_FRAME),
                 "рамка портала Края неразрушима и защищена: ломка не начата, блок цел, ответ " + frame);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "protect_tended", timeoutTicks = 40)
+    public static void breaker_WheatInFarmlandMarkedByPlayer_TendedBreakAllowedUntendedRefused(GameTestHelper helper) {
+        prepare(helper);
+        for (int x = 3; x <= 5; x++) {
+            for (int z = 3; z <= 5; z++) {
+                helper.setBlock(x, 0, z, Blocks.FARMLAND);
+                helper.setBlock(x, 1, z, Blocks.WHEAT.defaultBlockState().setValue(CropBlock.AGE, CropBlock.MAX_AGE));
+            }
+        }
+        BlockPos crop = new BlockPos(4, 1, 4);
+        BlockPos absolute = helper.absolutePos(crop);
+        PlacedBlocksData.get(helper.getLevel()).mark(absolute);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 2));
+        BlockBreaker breaker = new BlockBreaker(spirit);
+
+        BlockBreaker.Begin untended = breaker.begin(absolute);
+        helper.assertTrue(isProtected(untended, PolicyId.PLAYER_BUILDINGS),
+                "пшеница, поставленная игроком в поле: обычная ломка обязана быть отвергнута как постройка игрока, ответ " + untended);
+        BlockBreaker.Begin tended = breaker.begin(absolute, true);
+        helper.assertTrue(tended instanceof BlockBreaker.Started,
+                "сбор урожая — задача фермы: поле игрока (отметка, соседи-грядки) не повод отказа, ответ " + tended);
+        PlacedBlocksData.get(helper.getLevel()).unmark(absolute);
         GameTestFixtures.reset(helper);
         helper.succeed();
     }

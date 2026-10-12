@@ -14,6 +14,7 @@ import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class ProtectionGate {
     private static final BlockProtection PROTECTION = ProtectionConfig.load();
+    private static final String AIR_ID = "minecraft:air";
 
     private final SpiritEntity spirit;
     private int neighbourReads;
@@ -34,6 +36,14 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
+        return decideBreak(pos, state, false);
+    }
+
+    public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {
+        return decideBreak(pos, state, true);
+    }
+
+    private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
@@ -41,9 +51,14 @@ public final class ProtectionGate {
             return outside;
         }
         Level level = spirit.level();
-        boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
         boolean inProtectedZone = PolicyConfig.zones().contains(level.dimension().location().toString(), coord);
-        BlockProtection.Decision decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone);
+        BlockProtection.Decision decision;
+        if (tended) {
+            decision = PROTECTION.check(blockId(state), Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID), false, inProtectedZone);
+        } else {
+            boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
+            decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone);
+        }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
         }

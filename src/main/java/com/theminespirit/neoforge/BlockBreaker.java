@@ -70,6 +70,10 @@ public final class BlockBreaker {
     }
 
     public Begin begin(BlockPos target) {
+        return begin(target, false);
+    }
+
+    public Begin begin(BlockPos target, boolean tended) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
@@ -89,7 +93,9 @@ public final class BlockBreaker {
             return new Refused(RefuseReason.OUT_OF_REACH, "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
                     + distance + "): сначала подойти");
         }
-        if (spirit.protectionGate().checkBreak(target, targetState) instanceof BlockProtection.Refused refused) {
+        BlockProtection.Decision decision = tended ? spirit.protectionGate().checkHarvest(target, targetState)
+                : spirit.protectionGate().checkBreak(target, targetState);
+        if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
         pos = target.immutable();

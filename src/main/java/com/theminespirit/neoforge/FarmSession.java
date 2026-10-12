@@ -352,7 +352,7 @@ public final class FarmSession {
     }
 
     private void beginBreak(BlockPos target) {
-        if (breaker.begin(target) instanceof BlockBreaker.Started) {
+        if (breaker.begin(target, true) instanceof BlockBreaker.Started) {
             state = State.BREAK;
         } else {
             noStand++;
