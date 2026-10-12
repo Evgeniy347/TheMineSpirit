@@ -149,8 +149,8 @@ class TacticsAdapterSettingsTests {
                 () -> TacticsAdapterSettings.fromJson("[]"),
                 "Корень adapter.json — объект, а не массив: иначе поля неоткуда взять");
 
-        assertTrue(error.getMessage().contains("adapter.json"),
-                "Сообщение называет файл; получили: " + error.getMessage());
+        assertTrue(error.getMessage().contains("adapter.json") && error.getMessage().contains("объект"),
+                "Сообщение называет файл и требует объект в корне; получили: " + error.getMessage());
     }
 
     private static TacticsAdapterSettings with(String field, int value) {
