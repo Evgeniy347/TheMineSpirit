@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Сторож истории (docs/GIT.md → «Запрещённые команды»): ветки только растут вперёд, stash запрещён.
 # Ловит --amend, rebase, reset назад, branch -f, stash — всё, что переписывает или прячет работу. Не обходится --no-verify.
+# Исключение одно: ветка task/*, перенесённая на текущий main (rebase перед финальными тестами).
 [ "${1:-}" = "prepared" ] || exit 0
+
+rebase_in_progress() {
+    [ -d "$(git rev-parse --git-path rebase-merge)" ] || [ -d "$(git rev-parse --git-path rebase-apply)" ]
+}
 
 rewritten=()
 stashed=0
@@ -12,7 +17,12 @@ while read -r old new ref; do
             ;;
         refs/heads/*)
             [[ "$old" =~ ^0+$ || "$new" =~ ^0+$ || "$old" == "$new" ]] && continue
-            git merge-base --is-ancestor "$old" "$new" 2>/dev/null || rewritten+=("$ref")
+            git merge-base --is-ancestor "$old" "$new" 2>/dev/null && continue
+            # Финал ветки задания: перенос task/* на текущий main (docs/GIT.md → «Финал ветки: rebase на main»).
+            if [[ "$ref" == refs/heads/task/* ]] && rebase_in_progress && git merge-base --is-ancestor refs/heads/main "$new" 2>/dev/null; then
+                continue
+            fi
+            rewritten+=("$ref")
             ;;
     esac
 done
