@@ -77,6 +77,7 @@
 - [x] Техдолг: скан читает только загруженные чанки (getChunkNow), сторож ChunkAccessGuardTests запрещает getChunk(..., ChunkStatus) в neoforge
 - [x] Техдолг: GameTest REST ждут ответ моста по реальному времени (30 с), потолок тиков запасной; посадка в тёмную клетку стартует по условию света (Sonnet, 13.10)
 - [x] Чеклист 18: тесты быстрее и легче (C1/SerialGC, тиры test/slowTest/propertyTest, подсветка долгих, сторожа tries/timeoutTicks, чистый мир GameTest, флек ChunkLoading)
+- [x] Техдолг: итог фермы — радиус в тексте harvest_crop, отдельный счётчик dry (нет воды), requested = min(count, найдено) (nemotron, 13.10)
 
 ## В работе и техдолг
 
@@ -84,9 +85,6 @@
 
 - [ ] Ферма (ревью 21Б): досягаемость в FarmSession (BlockBreaker.REACH 4.5) и в планировщике стоянок (4.0) — одно
       число; проверка мотыги/семян/муки перед каждым действием, а не только на первом тике (мотыга сломалась посреди работы).
-- [ ] Фермерство, часть Б (ревью 21А, R10): текст `FarmTally` для `harvest_crop` без зрелого — «зрелых посевов в радиусе R
-      нет; растёт: n» (радиус не передаётся в `FarmTally`); `dry` отделить от `ineligible` (`FarmPlanner.Exhausted`);
-      `requested` для `till` и `plant_crop` = min(count, найдено), иначе при найденном больше count итог `FAILED`.
 - [ ] GameTest: `prepareGameTestServerRun` удаляет `run/world` перед каждым прогоном (ревью 11Б): мир переживает прогоны,
       духи с восстановленными задачами пишут «провалил задачу», остаются блоки над и под площадками.
 - [ ] Игровой `ResourceKnowledge`: время горения из data map NeoForge `furnace_fuels` (переопределить `burnTicks`), `FuelTable` —
