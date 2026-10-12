@@ -56,4 +56,25 @@ public final class CatalogLimits {
     public static final int TILL_COUNT_DEFAULT = 16;
     public static final int PLANT_COUNT_DEFAULT = 64;
     public static final int BONE_MEAL_COUNT_DEFAULT = 16;
+
+    public static final int NAV_RADIUS_MIN = 1;
+    public static final int NAV_RADIUS_MAX = 32;
+    public static final int NAV_RADIUS_DEFAULT = 16;
+
+    public static final int NAV_PATROL_POINTS_MAX = 16;
+
+    public static final int NAV_PATROL_LOOPS_MIN = 1;
+    public static final int NAV_PATROL_LOOPS_MAX = 16;
+    public static final int NAV_PATROL_LOOPS_DEFAULT = 1;
+    public static final String NAV_PATROL_MODE_DEFAULT = "loop";
+
+    public static final int NAV_WANDER_DURATION_MIN = 20;
+    public static final int NAV_WANDER_DURATION_MAX = 6000;
+    public static final int NAV_WANDER_DURATION_DEFAULT = 600;
+
+    public static final int NAV_KEEP_DISTANCE_MIN = 1;
+    public static final int NAV_KEEP_DISTANCE_MAX = 16;
+    public static final int NAV_KEEP_DISTANCE_DEFAULT = 5;
+
+    public static final double NAV_ARRIVAL_TOLERANCE = 1.25;
 }

@@ -36,6 +36,19 @@ final class ScriptArgs {
         return flag;
     }
 
+    static List<String> requireStringList(Map<String, Object> params, String name) {
+        Object value = require(params, name);
+        if (!(value instanceof List<?> list)) {
+            throw stringListError(name, value);
+        }
+        for (Object element : list) {
+            if (!(element instanceof String)) {
+                throw stringListError(name, value);
+            }
+        }
+        return list.stream().map(String.class::cast).toList();
+    }
+
     static Optional<List<String>> optionalStringList(Map<String, Object> params, String name) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);

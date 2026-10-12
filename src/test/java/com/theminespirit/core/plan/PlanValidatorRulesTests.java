@@ -199,6 +199,40 @@ class PlanValidatorRulesTests {
     }
 
     @Test
+    void patrolUnknownMode_Plan_IsRejectedWithAllowedList() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse("{\"type\":\"script\",\"script\":\"patrol\","
+                        + "\"params\":{\"points\":[\"0,64,0\"],\"mode\":\"circle\",\"loops\":1}}", CATALOG),
+                "mode=\"circle\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые режимы");
+
+        assertTrue(error.getMessage().contains("circle"),
+                "Отказ обязан называть неизвестный режим 'circle'. Фактическое: " + error.getMessage());
+        assertTrue(error.getMessage().contains("loop") && error.getMessage().contains("ping_pong"),
+                "Отказ обязан перечислять допустимые режимы 'loop' и 'ping_pong': по списку правят план. "
+                        + "Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void patrolWithoutModeAndLoops_Plan_ContainsCatalogDefaults() {
+        TaskNode plan = PlanParser.parse(
+                "{\"type\":\"script\",\"script\":\"patrol\",\"params\":{\"points\":[\"0,64,0\"]}}", CATALOG);
+
+        assertEquals(new ScriptCall("patrol", Map.of("points", List.of("0,64,0"), "mode", "loop", "loops", 1)),
+                plan,
+                "Валидатор обязан подставлять умолчания каталога для отсутствующих mode и loops: "
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без режима");
+    }
+
+    @Test
+    void comeToPlayerWithoutPlayer_Plan_ContainsNearestDefault() {
+        TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"come_to_player\"}", CATALOG);
+
+        assertEquals(new ScriptCall("come_to_player", Map.of("player", "nearest")), plan,
+                "Валидатор обязан подставлять default 'nearest' для отсутствующего player: без имени "
+                        + "дух идёт к ближайшему игроку, а не стоит");
+    }
+
+    @Test
     void booleanAndEnumDefaults_ParamsOmitted_AreSubstitutedIntoPlan() {
         TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\"}", DEFAULTS_CATALOG);
 

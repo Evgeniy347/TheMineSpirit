@@ -128,7 +128,21 @@ class ScriptCatalogTests {
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
                 spec("follow", List.of("target"), Map.of("radius", new long[]{0, 16})),
                 spec("return_home", List.of(), Map.of()),
-                spec("patrol", List.of(), Map.of()),
+                spec("patrol", List.of("points"), Map.of("loops", new long[]{1, 16})),
+                spec("goto_block", List.of("block"),
+                        Map.of("radius", new long[]{1, 32}, "count", new long[]{1, 256})),
+                spec("come_to_player", List.of(), Map.of()),
+                spec("wander", List.of(),
+                        Map.of("radius", new long[]{1, 32}, "duration_ticks", new long[]{20, 6000})),
+                spec("keep_distance", List.of("target"), Map.of("distance", new long[]{1, 16})),
+                spec("walk_careful", List.of("x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("step_over", List.of("dx", "dz"),
+                        Map.of("dx", new long[]{-1, 1}, "dz", new long[]{-1, 1})),
+                spec("approach", List.of("x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
                 spec("flee", List.of(), Map.of()),
                 spec("chop_tree", List.of(), Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("mine_vein", List.of(), Map.of("count", new long[]{1, 256})),
@@ -433,6 +447,72 @@ class ScriptCatalogTests {
         assertEquals(List.of("item"), equip.params().stream().map(ParamSpec::name).toList(),
                 "У equip один обязательный параметр item: по его шаблону ('*_pickaxe') дух выбирает, "
                         + "что надевать, и берёт самый ценный подходящий");
+    }
+
+    @Test
+    void defaultCatalog_NavScripts_ParamsAndDefaults() {
+        ScriptSpec gotoBlock = CoreScripts.defaultCatalog().find("goto_block").orElseThrow();
+        ScriptSpec comeToPlayer = CoreScripts.defaultCatalog().find("come_to_player").orElseThrow();
+        ScriptSpec patrol = CoreScripts.defaultCatalog().find("patrol").orElseThrow();
+        ScriptSpec wander = CoreScripts.defaultCatalog().find("wander").orElseThrow();
+        ScriptSpec keepDistance = CoreScripts.defaultCatalog().find("keep_distance").orElseThrow();
+
+        assertEquals(16, param(gotoBlock, "radius").defaultValue(),
+                "radius в goto_block по умолчанию 16: каталог задаёт умолчание, чтобы маппинг его не дублировал");
+        assertEquals(1, param(gotoBlock, "count").defaultValue(),
+                "count в goto_block по умолчанию 1: без числа дух идёт к ближайшему блоку вида");
+        assertEquals("nearest", param(comeToPlayer, "player").defaultValue(),
+                "player в come_to_player по умолчанию 'nearest': без имени дух идёт к ближайшему игроку");
+        assertEquals(ParamType.ENUM, param(patrol, "mode").type(),
+                "mode в patrol — enum: опечатка в режиме обязана отклоняться валидатором до запуска");
+        assertEquals(List.of("loop", "ping_pong"), param(patrol, "mode").values(),
+                "У patrol два режима обхода: loop — по кругу, ping_pong — туда-обратно");
+        assertEquals("loop", param(patrol, "mode").defaultValue(),
+                "mode в patrol по умолчанию 'loop': умолчание живёт в каталоге, а не в маппинге");
+        assertEquals(1, param(patrol, "loops").defaultValue(),
+                "loops в patrol по умолчанию 1: без числа кругов патруль проходит маршрут один раз");
+        assertEquals(ParamType.STRING_LIST, param(patrol, "points").type(),
+                "points в patrol — список строк 'x,y,z': точки маршрута задаются параметрами");
+        assertEquals(16, param(wander, "radius").defaultValue(),
+                "radius в wander по умолчанию 16: значение задаёт каталог, чтобы маппинг его не дублировал");
+        assertEquals(600, param(wander, "duration_ticks").defaultValue(),
+                "duration_ticks в wander по умолчанию 600: без длительности блуждание не знает, когда кончить");
+        assertEquals(5, param(keepDistance, "distance").defaultValue(),
+                "distance в keep_distance по умолчанию 5: без дистанции дух не знает, где встать");
+    }
+
+    @Test
+    void defaultCatalog_NavLimits_MatchAgreedBounds() {
+        assertEquals(1, CatalogLimits.NAV_RADIUS_MIN,
+                "Нижняя граница радиуса навигации — 1: нулевой радиус искал бы только под ногами духа");
+        assertEquals(32, CatalogLimits.NAV_RADIUS_MAX,
+                "Верхняя граница радиуса навигации — 32: больший поиск кладёт серверный тик");
+        assertEquals(16, CatalogLimits.NAV_RADIUS_DEFAULT,
+                "Радиус навигации по умолчанию — 16: значение задаёт каталог, чтобы маппинги его не дублировали");
+        assertEquals(16, CatalogLimits.NAV_PATROL_POINTS_MAX,
+                "Точек маршрута patrol — не больше 16: длинный маршрут режется на части");
+        assertEquals(1, CatalogLimits.NAV_PATROL_LOOPS_MIN,
+                "Кругов patrol — не меньше 1: ноль кругов завершается сразу и врёт стратегу");
+        assertEquals(16, CatalogLimits.NAV_PATROL_LOOPS_MAX,
+                "Кругов patrol — не больше 16: лимит держит патруль в разумном времени");
+        assertEquals(1, CatalogLimits.NAV_PATROL_LOOPS_DEFAULT,
+                "Кругов patrol по умолчанию — 1: без числа патруль проходит маршрут один раз");
+        assertEquals("loop", CatalogLimits.NAV_PATROL_MODE_DEFAULT,
+                "Режим patrol по умолчанию — 'loop': умолчание живёт в каталоге и подставляется валидатором");
+        assertEquals(20, CatalogLimits.NAV_WANDER_DURATION_MIN,
+                "Блуждание короче 20 тиков бессмысленно: за секунду дух не успевает сдвинуться");
+        assertEquals(6000, CatalogLimits.NAV_WANDER_DURATION_MAX,
+                "Блуждание дольше 6000 тиков (5 минут) не планируется одним шагом");
+        assertEquals(600, CatalogLimits.NAV_WANDER_DURATION_DEFAULT,
+                "Длительность блуждания по умолчанию — 600 тиков: без неё скрипт не знает, когда кончить");
+        assertEquals(1, CatalogLimits.NAV_KEEP_DISTANCE_MIN,
+                "Дистанция keep_distance — не меньше 1: нулевая дистанция — стояние внутри цели");
+        assertEquals(16, CatalogLimits.NAV_KEEP_DISTANCE_MAX,
+                "Дистанция keep_distance — не больше 16: дальше дух уходит из тикающей зоны");
+        assertEquals(5, CatalogLimits.NAV_KEEP_DISTANCE_DEFAULT,
+                "Дистанция keep_distance по умолчанию — 5: без неё дух не знает, где встать");
+        assertEquals(1.25, CatalogLimits.NAV_ARRIVAL_TOLERANCE,
+                "Допуск прибытия навигации — 1.25 блока, как у goto: иначе прибытие считается то здесь, то там");
     }
 
     private static ParamSpec param(ScriptSpec spec, String name) {
