@@ -44,6 +44,10 @@ public final class FuelTable {
     }
 
     public static int fuelNeeded(int count, int burnTicks) {
+        return fuelNeeded(count, burnTicks, COOK_TICKS);
+    }
+
+    public static int fuelNeeded(int count, int burnTicks, int cookTicks) {
         if (count <= 0) {
             throw new IllegalArgumentException(
                     "Количество плавки должно быть больше 0, а получено " + count + ": топлива на ноль предметов не нужно");
@@ -52,7 +56,11 @@ public final class FuelTable {
             throw new IllegalArgumentException(
                     "Время горения топлива должно быть больше 0, а получено " + burnTicks + ": таким топливом печь не топится");
         }
-        return (int) ((count * (long) COOK_TICKS + burnTicks - 1) / burnTicks);
+        if (cookTicks <= 0) {
+            throw new IllegalArgumentException(
+                    "Время плавки должно быть больше 0, а получено " + cookTicks + ": по нему считается расход топлива");
+        }
+        return (int) ((count * (long) cookTicks + burnTicks - 1) / burnTicks);
     }
 
     private record FuelSpec(String item, int burnTicks) {
