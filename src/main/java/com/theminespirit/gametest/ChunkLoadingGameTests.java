@@ -29,8 +29,8 @@ public final class ChunkLoadingGameTests {
     private ChunkLoadingGameTests() {
     }
 
-    // Флак под нагрузкой: дух ждёт сдвиг набора через succeedWhen, тик духа не гарантирован (R2)
-    @GameTest(template = "empty", timeoutTicks = 600)
+    // thenWaitUntil, а не succeedAfter: дух может быть удалён чужим reset структуры
+    @GameTest(template = "arena", timeoutTicks = 200)
     public static void chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         int radius = SpiritConfig.radiusFor(level);
@@ -49,6 +49,10 @@ public final class ChunkLoadingGameTests {
             spirit.teleportTo(spirit.getX() + 16.0, spirit.getY(), spirit.getZ());
             helper.startSequence()
                     .thenWaitUntil(() -> {
+                        helper.assertTrue(!spirit.isRemoved(),
+                                "Дух удалён до сдвига набора: телепорт на +16 уводит его в структуру "
+                                        + "соседнего теста, её reset удаляет духа. Исправление: шаблон arena "
+                                        + "или телепорт в сторону от сетки");
                         ChunkPos moved = spirit.chunkPosition();
                         helper.assertTrue(moved.x == center.x + 1 && moved.z == center.z,
                                 "Дух обязан оказаться в соседнем по X чанке: был (" + center.x + ", " + center.z
@@ -61,7 +65,7 @@ public final class ChunkLoadingGameTests {
                                         + ". Сдвиг делает SpiritChunkLoader в тик духа, а после телепорта движок "
                                         + "переводит духа в секцию чанка назначения: пока её статус не TICKING, "
                                         + "дух не тикает (tickCount замирает) и набор стоит. Ждём тик духа "
-                                        + "succeedWhen, а не фиксированные 20 тиков");
+                                        + "thenWaitUntil, а не фиксированные 20 тиков");
                     })
                     .thenExecute(() -> {
                         long ticketsBeforeDiscard = ticketCount(level);
