@@ -89,7 +89,7 @@ class BreedPlannerTests {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void next_FeedIssued_InventoryCoversPair(@ForAll @IntRange(min = 0, max = 6) int wheat,
             @ForAll @IntRange(min = 2, max = 5) int cows) {
         List<AnimalRef> herd = new ArrayList<>();
@@ -110,7 +110,7 @@ class BreedPlannerTests {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void next_SameHerd_ResultIsDeterministic(@ForAll @IntRange(min = 2, max = 6) int cows) {
         List<AnimalRef> herd = new ArrayList<>();
         for (int i = 0; i < cows; i++) {

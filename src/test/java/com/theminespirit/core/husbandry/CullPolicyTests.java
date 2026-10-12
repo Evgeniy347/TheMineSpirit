@@ -124,7 +124,7 @@ class CullPolicyTests {
                 "Пустая рука обязана быть в таблице ниже дерева");
     }
 
-    @Property(tries = 200)
+    @Property
     void pick_AnyHerd_PickedAreAdultsAndKeepRemains(@ForAll @IntRange(min = 0, max = 8) int adults,
             @ForAll @IntRange(min = 0, max = 8) int babies, @ForAll @IntRange(min = 2, max = 5) int keep) {
         List<AnimalRef> herd = new ArrayList<>();
@@ -147,7 +147,7 @@ class CullPolicyTests {
                 "После забоя выбранных взрослых обязано остаться ровно keep (" + keep + "): иначе норма не держится");
     }
 
-    @Property(tries = 100)
+    @Property
     void pick_SameHerd_ResultIsDeterministic(@ForAll @IntRange(min = 3, max = 8) int adults) {
         List<AnimalRef> herd = new ArrayList<>();
         for (int i = 0; i < adults; i++) {

@@ -79,7 +79,7 @@ class PenBoundsTests {
                 "Загон радиуса 17 обязан отвергаться: такой загон духу не удержать");
     }
 
-    @Property(tries = 200)
+    @Property
     void nearestInside_AnyOutsidePoint_LandsInside(@ForAll @IntRange(min = -40, max = 40) int dx,
             @ForAll @IntRange(min = -40, max = 40) int dz) {
         PenBounds pen = new PenBounds(CENTER, 5);

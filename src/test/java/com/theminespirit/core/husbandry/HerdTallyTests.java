@@ -64,7 +64,7 @@ class HerdTallyTests {
                         + "ли, нести ли корм. Фактический: " + ((HerdTally.Failed) outcome).text());
     }
 
-    @Property(tries = 200)
+    @Property
     void outcome_AnyText_ContainsEveryNonZeroCounter(@ForAll HerdJob job,
             @ForAll @IntRange(min = 0, max = 9) int fed, @ForAll @IntRange(min = 0, max = 9) int babiesFed,
             @ForAll @IntRange(min = 0, max = 9) int born, @ForAll @IntRange(min = 0, max = 9) int sheared,

@@ -77,7 +77,7 @@ class HerdCensusTests {
                 "Сводка обязана покрывать всё стадо (" + reason + "): потерянное животное не покормят и не защитят");
     }
 
-    @Property(tries = 300)
+    @Property
     void summarize_AnyHerd_TotalsMatchInputs(@ForAll @IntRange(min = 0, max = 30) int cows,
             @ForAll @IntRange(min = 0, max = 30) int sheep, @ForAll boolean baby, @ForAll boolean inPen) {
         List<AnimalRef> herd = new ArrayList<>();
