@@ -399,7 +399,6 @@ class ResourceResolverTests {
                         + "лимита 256: иначе валидатор ронял бы весь план внутренней ошибкой, а дух оставался бы "
                         + "без плана на достижимую цель. Финальный крафт при этом один, на 8");
     }
-    }
 
     private static ScriptCall gather(String block, int count) {
         return new ScriptCall("gather", Map.of("block", block, "count", count,
