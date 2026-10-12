@@ -60,11 +60,9 @@ public final class HarvestSession {
     private int noStand;
     private int noTool;
     private int planCalls;
-    private int findTicks;
     private int collectTicks;
     private int collectRuns;
     private int ticks;
-    private int breakerTicks;
     private int entityQueries;
 
     private HarvestSession(SpiritEntity spirit, HarvestTargets targets, String label, int count, int radius,
@@ -157,10 +155,6 @@ public final class HarvestSession {
         return targets.slicesUsed();
     }
 
-    public int findTicks() {
-        return findTicks;
-    }
-
     public int collectTicks() {
         return collectTicks;
     }
@@ -175,10 +169,6 @@ public final class HarvestSession {
 
     public int entityQueries() {
         return entityQueries;
-    }
-
-    public int breakerTicks() {
-        return breakerTicks;
     }
 
     public int maxSlicesPerTick() {
@@ -198,7 +188,6 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
-        findTicks++;
         buffer.offer(targets.advance());
         if (!buffer.isEmpty()) {
             state = State.PICK;
@@ -280,7 +269,6 @@ public final class HarvestSession {
     }
 
     private void breakTick() {
-        breakerTicks++;
         switch (breaker.tick()) {
             case BREAKING -> {
             }

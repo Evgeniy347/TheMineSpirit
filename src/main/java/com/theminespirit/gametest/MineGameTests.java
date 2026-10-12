@@ -317,7 +317,7 @@ public final class MineGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 0, 2)).is(Blocks.STONE),
                     "пол под кучей обязан остаться: блок под ногами не ломается");
             helper.assertTrue(run.spiritTicks() <= 720,
-                    "куча из 18 булыжника обязана собраться за 720 тиков (замерено 481, тайм-аут в 2 раза: 1000), "
+                    "куча из 18 булыжника обязана собраться за 720 тиков (замерено 486, порог ≈1.5×), "
                             + "заняло " + run.spiritTicks());
             GameTestFixtures.reset(helper);
         });
@@ -600,7 +600,7 @@ public final class MineGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "mine_persist", timeoutTicks = 2400)
+    @GameTest(template = "empty", batch = "mine_persist", timeoutTicks = 280)
     public static void gatherCobblestone_SavedMidway_ResumesWithoutExtraMining(GameTestHelper helper) {
         buildCave(helper);
         for (int x = 1; x <= 3; x++) {
