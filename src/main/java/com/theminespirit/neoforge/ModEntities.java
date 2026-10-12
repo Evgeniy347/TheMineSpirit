@@ -37,6 +37,7 @@ public final class ModEntities {
         return Mob.createMobAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.FOLLOW_RANGE, 32.0)
+                .add(Attributes.ATTACK_DAMAGE, 1.0)
                 .add(Attributes.STEP_HEIGHT, 1.0)
                 .build();
     }

@@ -23,11 +23,13 @@ import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
 import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
 import com.theminespirit.neoforge.tactics.SpiritGear;
+import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -45,6 +47,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final SpiritPolicies policies = new SpiritPolicies(this);
     private final ProtectionGate protectionGate = new ProtectionGate(this);
     private final SpiritGear gear = new SpiritGear(this);
+    private final TacticsService tactics = new TacticsService(this);
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -66,7 +69,12 @@ public final class SpiritEntity extends PathfinderMob {
         applyPendingRestore();
         chunkLoader.tick();
         policies.tick();
-        if (brain != null && !policies.isOverriding()) {
+        if (policies.isOverriding()) {
+            tactics.pause();
+            return;
+        }
+        tactics.tick();
+        if (brain != null && !tactics.wantsControl()) {
             brain.tick();
         }
     }
@@ -86,8 +94,21 @@ public final class SpiritEntity extends PathfinderMob {
         return policies.exemptions().has(PolicyId.PORTAL) && super.canUsePortal(allowPassengers);
     }
 
+    public TacticsService tactics() {
+        return tactics;
+    }
+
     public SpiritGear gear() {
         return gear;
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        boolean hurt = super.hurt(source, amount);
+        if (hurt) {
+            tactics.onHurt(source);
+        }
+        return hurt;
     }
 
     public SpiritPolicies policies() {

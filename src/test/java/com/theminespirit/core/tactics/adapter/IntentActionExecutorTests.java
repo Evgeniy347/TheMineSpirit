@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.EnemyFact;
+import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.TacticalAction;
 import com.theminespirit.core.tactics.TacticalOption;
@@ -73,6 +74,11 @@ class IntentActionExecutorTests {
                 new Row("невидимую цель не берём", AdapterFixtures.outcome(TacticalOption.FIGHT, TacticalAction.ENGAGE,
                         RetreatMethod.NONE),
                         AdapterFixtures.context(List.of(AdapterFixtures.enemy(ZOMBIE, "z2", 1, 0, false), near)),
+                        new ExecutionResult.Attacking(near)),
+                new Row("цель, бьющая духа, важнее ближайшей мирной", AdapterFixtures.outcome(TacticalOption.FIGHT,
+                        TacticalAction.ENGAGE, RetreatMethod.NONE),
+                        AdapterFixtures.context(List.of(new EnemyFact(ZOMBIE, "idle", new Point(1, 0, 0), 1, 0, true, false),
+                                near)),
                         new ExecutionResult.Attacking(near)));
     }
 

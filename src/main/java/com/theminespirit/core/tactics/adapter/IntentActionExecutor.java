@@ -46,8 +46,8 @@ public final class IntentActionExecutor implements ActionExecutor {
     }
 
     private static EnemyFact primaryTarget(List<EnemyFact> enemies, Point self) {
-        Comparator<EnemyFact> preference = Comparator.comparing(EnemyFact::visible).reversed()
-                .thenComparingDouble(enemy -> enemy.pos().distanceTo(self)).thenComparing(EnemyFact::type)
+        Comparator<EnemyFact> preference = Comparator.comparing((EnemyFact enemy) -> !enemy.visible())
+                .thenComparing(enemy -> !enemy.targetingSelf()).thenComparingDouble(enemy -> enemy.pos().distanceTo(self)).thenComparing(EnemyFact::type)
                 .thenComparing(EnemyFact::id);
         return enemies.stream().min(preference).orElse(null);
     }

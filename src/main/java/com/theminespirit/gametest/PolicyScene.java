@@ -37,6 +37,10 @@ final class PolicyScene {
         helper.assertTrue(startTick >= 0, "дух ещё не начал тикать, сцена не запущена: тик духа " + spirit.tickCount);
     }
 
+    boolean started() {
+        return startTick >= 0;
+    }
+
     int ticks() {
         return spirit.tickCount - startTick;
     }
