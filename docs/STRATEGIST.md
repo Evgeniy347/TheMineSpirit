@@ -99,4 +99,8 @@ can only be used from within OpenCode»), если запретить `read/edit
 `scripts/strategist.sh start|stop|status|pause|resume|once|smoke [модель]|logs [N]` (tmux-сессия `mc-strategist`, второй экземпляр
 отказывается). `strategist.py … --fixtures agents/strategist/tests/fixtures` поднимает фейковый REST из записанных наблюдений. Тесты:
 `scripts/testing/check-strategist.sh` (все строки `OK`) или `cd agents/strategist && python3 -m unittest discover -s tests -t .`.
+Сценарии (`tests/scenarios/*.json`) и свойство случайных сценариев идут **без сети**: один и тот же фейковый REST зовётся
+внутри процесса (`InProcessClient` вместо сокета), поэтому оба прогона укладываются в предел 10 с, записанный в самих
+тестах (чеклист 22, п. 11). Сам фейк по HTTP проверяется `tests/test_fake_rest.py`, чтобы сценарии не зеленели вхолостую.
+
 `smoke` не входит в проверку: он пишет `STRATEGIST_HOME/smoke-<время>.md` (доли валидных ответов, время, колонка для оценки глазами).
