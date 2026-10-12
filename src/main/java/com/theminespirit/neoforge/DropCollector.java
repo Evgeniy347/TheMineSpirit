@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.DropRef;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -29,6 +31,7 @@ public final class DropCollector {
     private final AABB area;
     private final PickupTuning tuning;
     private final Approach approach;
+    private final LevelSafetyView safety;
     private final Set<String> skipped = new HashSet<>();
     private List<ItemEntity> nearby = List.of();
     private ItemEntity target;
@@ -45,6 +48,7 @@ public final class DropCollector {
         this.items = items;
         this.tuning = tuning;
         this.approach = new Approach(spirit);
+        this.safety = new LevelSafetyView(spirit.level());
         this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
                 center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
     }
@@ -140,18 +144,31 @@ public final class DropCollector {
     }
 
     private State pursue() {
-        if (spirit.position().distanceTo(target.position()) <= tuning.pickupReach()) {
+        if (spirit.getBoundingBox().distanceToSqr(target.position())
+                <= tuning.pickupReach() * tuning.pickupReach()) {
             approach.cancel();
             return pickUp();
         }
         if (!approach.isActive()) {
             approach.begin(target, tuning.pickupReach());
         }
-        return switch (approach.tick()) {
+        Approach.State state = approach.tick();
+        if (state == Approach.State.MOVING && spirit.getNavigation().isDone() && canStepOnItem()) {
+            spirit.getMoveControl().setWantedPosition(target.getX(), spirit.getY(), target.getZ(), 1.0);
+        }
+        return switch (state) {
             case MOVING -> State.RUNNING;
             case ARRIVED -> pickUp();
             case STUCK, TIMEOUT -> giveUpOnTarget();
         };
+    }
+
+    private boolean canStepOnItem() {
+        BlockPos itemCell = target.blockPosition();
+        BlockPos feet = spirit.blockPosition();
+        return MiningSafety.canStepFrom(
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                new BlockCoord(itemCell.getX(), itemCell.getY(), itemCell.getZ()), safety);
     }
 
     private boolean addressedToAnyone(ItemEntity drop) {

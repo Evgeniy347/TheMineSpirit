@@ -31,6 +31,9 @@ public final class BlockLocator {
         private final SectionCursor cursor;
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
+        private long countedTick = Long.MIN_VALUE;
+        private int slicesThisTick;
+        private int maxSlicesPerTick;
 
         private Search(Level level, BlockPos center, int radius, Set<Block> blocks) {
             this.level = level;
@@ -41,8 +44,15 @@ public final class BlockLocator {
         }
 
         public List<BlockPos> step(int maxSlices) {
+            long tick = level.getGameTime();
+            if (tick != countedTick) {
+                countedTick = tick;
+                slicesThisTick = 0;
+            }
             List<BlockPos> found = new ArrayList<>();
             for (SectionSlice slice : cursor.next(maxSlices)) {
+                slicesThisTick++;
+                maxSlicesPerTick = Math.max(maxSlicesPerTick, slicesThisTick);
                 List<BlockPos> inSlice = new ArrayList<>();
                 scan(slice, inSlice);
                 inSlice.sort(Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(center))
@@ -54,6 +64,10 @@ public final class BlockLocator {
 
         public boolean done() {
             return cursor.isDone();
+        }
+
+        public int maxSlicesPerTick() {
+            return maxSlicesPerTick;
         }
 
         public int examinedPositions() {

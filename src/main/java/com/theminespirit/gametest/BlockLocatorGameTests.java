@@ -70,11 +70,11 @@ public final class BlockLocatorGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         BlockPos center = helper.absolutePos(new BlockPos(4, 1, 4));
         BlockLocator.Search search = BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS,
-                Set.of(Blocks.DIAMOND_ORE));
+                Set.of(Blocks.LODESTONE));
 
         List<BlockPos> found = drain(search);
 
-        helper.assertTrue(found.isEmpty(), "в каменном полу нет алмазной руды: найдено " + found);
+        helper.assertTrue(found.isEmpty(), "в каменном полу нет магнетита: найдено " + found);
         helper.assertTrue(search.examinedPositions() == 0,
                 "секция с камнем, но без искомого блока, обязана пропускаться по палитре, а прочитано "
                         + search.examinedPositions() + " позиций");
