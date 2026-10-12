@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public final class ExplosionAvoidance {
     public static final double CREEPER_HOLD = 7.0;
-    public static final double CHARGED_CREEPER_HOLD = 10.0;
+    public static final double CHARGED_CREEPER_HOLD = 13.0;
     public static final double PRIMED_TNT_HOLD = 9.0;
     public static final double SWELLING_EXTRA = 3.0;
 

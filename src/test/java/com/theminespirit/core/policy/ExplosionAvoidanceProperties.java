@@ -19,7 +19,7 @@ class ExplosionAvoidanceProperties {
     private static double expectedHold(ThreatFact fact) {
         double base = switch (fact.type()) {
             case CREEPER -> 7.0;
-            case CHARGED_CREEPER -> 10.0;
+            case CHARGED_CREEPER -> 13.0;
             case PRIMED_TNT -> 9.0;
         };
         return fact.swelling() ? base + 3.0 : base;
