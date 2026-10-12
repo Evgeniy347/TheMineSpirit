@@ -10,7 +10,7 @@ class DeciderTests {
     private static final String LAVA_RULE = "\"then\": {\"exclude\": [\"FIGHT\"]}";
 
     private static Decision decide(TacticsConfig config, Situation situation, int routes) {
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(routes);
+        Assessment assessment = Assessments.withRoutes(situation, routes);
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
         return decider.decide(FactMap.from(situation, assessment), scores, routes, Memories.fresh(situation), 0);
@@ -88,7 +88,7 @@ class DeciderTests {
     void decide_HeldRetreatReplacedWithoutRoute_HasNoHold() {
         TacticsConfig config = TacticsConfig.loadDefault();
         Situation situation = SituationBuilder.create().enemy("zombie", 6).build();
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(0);
+        Assessment assessment = Assessments.withRoutes(situation, 0);
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
 

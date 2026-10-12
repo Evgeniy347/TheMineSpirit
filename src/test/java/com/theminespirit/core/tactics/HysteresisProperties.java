@@ -37,7 +37,7 @@ class HysteresisProperties {
     void decide_PreviousFromRule_EqualsDecisionWithoutMemory(@ForAll("healthy") Situation situation,
             @ForAll("options") TacticalOption previous, @ForAll @IntRange(min = 0, max = 100) int decidedAgo) {
         Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(1);
+        Assessment assessment = Assessments.withRoutes(situation, 1);
         Scores scores = new Scorer().score(situation, assessment, CONFIG.weights());
         FactMap facts = FactMap.from(situation, assessment);
 

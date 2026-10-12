@@ -9,8 +9,8 @@ import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.constraints.DoubleRange;
 import net.jqwik.api.constraints.IntRange;
-
 class FactorProperties {
     private static final double SLACK = 1e-12;
 
@@ -29,11 +29,12 @@ class FactorProperties {
 
     @Property(tries = 200)
     void factors_AnyAdmissibleSituation_AreFiniteAndWithinRange(@ForAll("situations") Situation situation,
-            @ForAll @IntRange(min = 0, max = 7) int routes, @ForAll @IntRange(min = -20, max = 40) int leash) {
+            @ForAll @IntRange(min = 0, max = 7) int routes, @ForAll @IntRange(min = -20, max = 40) int leash,
+            @ForAll @DoubleRange(min = 0, max = 1) double quality) {
         double leashLeft = leash == 40 ? Assessment.UNBOUNDED : leash;
         EnemyMetrics metrics = metrics(situation);
         Assessment assessment = new Assessment(metrics, WinMargin.of(situation.self(), metrics, Scales.defaults()),
-                routes, situation.orders().mode(), true, 0, leashLeft, 100, 10,
+                routes, routes == 0 ? 0.0 : quality, situation.orders().mode(), true, 0, leashLeft, 100, 10,
                 TacticalState.CALM, 0, 1000);
 
         for (Factor factor : Factor.values()) {

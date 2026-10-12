@@ -179,7 +179,7 @@ class HysteresisTests {
     void decide_PreviousFromRuleInsideWindow_EqualsDecisionWithoutMemory() {
         Situation zombie = SituationBuilder.create().enemy("zombie", 3).build();
         Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());
-        Assessment assessment = Assessments.full(zombie).withEscapeRoutes(1);
+        Assessment assessment = Assessments.withRoutes(zombie, 1);
         Scores scores = new Scorer().score(zombie, assessment, CONFIG.weights());
         FactMap facts = FactMap.from(zombie, assessment);
 
