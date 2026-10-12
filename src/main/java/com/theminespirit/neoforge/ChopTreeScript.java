@@ -317,7 +317,7 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus startCollect() {
         collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS,
-                PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                PickupTuning.DEFAULT, OverflowMode.FAIL);
         phase = Phase.COLLECT;
         return ScriptStatus.RUNNING;
     }

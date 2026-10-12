@@ -775,6 +775,10 @@ public final class FarmGameTests {
             assertFailedWith(helper, spirit, "инвентарь полон: не помещается");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == dirtBefore,
                     "содержимое инвентаря не теряется");
+            int dirtInWorld = GameTestFixtures.countInWorld(helper, Items.DIRT);
+            helper.assertTrue(dirtInWorld == 0,
+                    "отказ обязан оставить всё при духе: выброшенного грунта в мире быть не должно, фактически "
+                            + dirtInWorld);
             int wheatInWorld = GameTestFixtures.countInWorld(helper, Items.WHEAT);
             helper.assertTrue(wheatInWorld == 1,
                     "собранная клетка дала 1 пшеницу, и она обязана лежать в мире нетронутой: инвентарь плюс мир, "

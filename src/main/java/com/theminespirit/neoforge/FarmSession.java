@@ -390,7 +390,7 @@ public final class FarmSession {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
         collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT,
-                OverflowMode.BY_VALUE);
+                OverflowMode.FAIL);
         state = State.COLLECT;
     }
 
