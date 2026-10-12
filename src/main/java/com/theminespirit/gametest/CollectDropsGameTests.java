@@ -153,7 +153,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "drops_pit", timeoutTicks = 400)
+    @GameTest(template = "arena", batch = "drops_pit", timeoutTicks = 400)
     public static void collectDrops_ItemAtBottomOfFourDeepPit_IsSkippedWithoutDescending(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
