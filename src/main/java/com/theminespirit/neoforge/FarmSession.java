@@ -10,6 +10,7 @@ import com.theminespirit.core.farming.SeedPolicy;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
 import java.util.Map;
@@ -388,7 +389,8 @@ public final class FarmSession {
     private void startCollect() {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
-        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT);
+        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT,
+                OverflowMode.BY_VALUE);
         state = State.COLLECT;
     }
 

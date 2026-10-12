@@ -104,6 +104,10 @@ public final class ChopTreeGameTests {
             helper.assertTrue(logsInWorld == 0,
                     "в мире не должно остаться дубовых брёвен, осталось " + logsInWorld);
 
+            int droppedLogs = GameTestFixtures.countInWorld(helper, Items.OAK_LOG);
+            helper.assertTrue(droppedLogs == 0,
+                    "сборщик обязан подобрать все выпавшие брёвна, осталось валяться " + droppedLogs);
+
             int leavesInWorld = countBlocksInWorld(helper, Blocks.OAK_LEAVES);
             helper.assertTrue(leavesInWorld > 0,
                     "листва должна остаться целой, осталось " + leavesInWorld + " блоков листьев");

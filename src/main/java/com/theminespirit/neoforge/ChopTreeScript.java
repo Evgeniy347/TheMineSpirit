@@ -14,6 +14,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.ChopTreeParams;
 import java.util.LinkedHashSet;
@@ -315,7 +316,8 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus startCollect() {
-        collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS, PickupTuning.DEFAULT);
+        collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS,
+                PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
         phase = Phase.COLLECT;
         return ScriptStatus.RUNNING;
     }
