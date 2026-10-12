@@ -9,8 +9,8 @@ import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.constraints.DoubleRange;
 import net.jqwik.api.constraints.IntRange;
-
 class FactorProperties {
     private static final double SLACK = 1e-12;
 
@@ -29,11 +29,12 @@ class FactorProperties {
 
     @Property(tries = 200)
     void factors_AnyAdmissibleSituation_AreFiniteAndWithinRange(@ForAll("situations") Situation situation,
-            @ForAll @IntRange(min = 0, max = 7) int routes, @ForAll @IntRange(min = -20, max = 40) int leash) {
+            @ForAll @IntRange(min = 0, max = 7) int routes, @ForAll @IntRange(min = -20, max = 40) int leash,
+            @ForAll @DoubleRange(min = 0, max = 1) double quality) {
         double leashLeft = leash == 40 ? Assessment.UNBOUNDED : leash;
         EnemyMetrics metrics = metrics(situation);
         Assessment assessment = new Assessment(metrics, WinMargin.of(situation.self(), metrics, Scales.defaults()),
-                routes, situation.orders().mode(), true, 0, leashLeft, 100, 10,
+                routes, routes == 0 ? 0.0 : quality, situation.orders().mode(), true, 0, leashLeft, 100, 10,
                 TacticalState.CALM, 0, 1000);
 
         for (Factor factor : Factor.values()) {
@@ -72,6 +73,23 @@ class FactorProperties {
 
     private static double pressure(Situation situation) {
         return WinMargin.pressure(situation.self(), metrics(situation), Scales.defaults());
+    }
+
+    private static double urgency(Situation situation) {
+        return WinMargin.urgency(situation.self(), metrics(situation), Scales.defaults());
+    }
+
+    @Property(tries = 200)
+    void urgency_LessOwnHp_NeverDecreases(@ForAll("situations") Situation situation,
+            @ForAll("steps") int hpStep) {
+        SelfFacts self = situation.self();
+        double hp = Math.max(0, self.hp() - hpStep);
+        Situation weaker = Situations.withSelf(situation, Situations.withStats(self, hp, self.armor(), self.dps()));
+
+        assertTrue(urgency(weaker) >= urgency(situation) - SLACK,
+                "Срочность считается от абсолютного времени до смерти: меньше HP при тех же врагах — время меньше, "
+                        + "срочность не убывает: " + urgency(situation) + " → " + urgency(weaker)
+                        + "; иначе дух спокойнее именно когда умирает быстрее");
     }
 
     @Provide

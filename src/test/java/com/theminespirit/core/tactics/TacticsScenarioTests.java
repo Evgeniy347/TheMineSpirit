@@ -19,7 +19,8 @@ class TacticsScenarioTests {
             "крипер в 3 блоках", "скелеты на дистанции 12", "passive, зомби в 2, отступать некуда",
             "guard_area, враг за leash", "protect, игрока бьют, HP полное", "protect, но HP 20 %",
             "ночь, орда, дом в 30", "лук есть, враг в 10", "утопленник", "врагов нет", "aggressive, вдвое сильнее",
-            "aggressive, HP ровно 25 %", "ravager против железной брони и меча", "воин слабее, но союзников 3");
+            "aggressive, HP ровно 25 %", "ravager против железной брони и меча", "воин слабее, но союзников 3",
+            "срочно: HP 15 %", "не срочно при том же перевесе", "срочно по счёту", "r=1.25");
 
     static Stream<Arguments> scenarios() {
         return ScenarioFile.load().stream().map(scenario -> Arguments.of(scenario.name(), scenario));

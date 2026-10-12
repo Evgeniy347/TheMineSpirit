@@ -79,13 +79,15 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 | Фактор | Определение |
 |---|---|
 | `BIAS` | 1 |
-| `WIN_MARGIN` | `clamp(log2(timeToDie / timeToKill) / winMarginDivisor)`; врагов нет — 0 |
+| `WIN_MARGIN` | `clamp(log2(r) / winMarginDivisor)`, где `r = timeToDie / timeToKill`; врагов нет — 0 |
 | `LOW_HP` | `clamp01((lowHpFloor − доля HP) / lowHpFloor)` |
-| `ENEMY_PRESSURE` | `clamp01(1 − timeToDie / timeToKill)`: 0, пока дух убивает врагов быстрее, чем они его |
+| `ENEMY_PRESSURE` | `clamp01(1 − r)`: 0, пока дух убивает врагов быстрее, чем они его; та же величина `r`, что у `WIN_MARGIN`, — её проигрышная половина |
+| `URGENCY` | `clamp01(1 − timeToDie / urgencyHorizon)` (`urgencyHorizon` = 10 с, `weights.json → scales`): абсолютное время до смерти; отличает «умру через секунду при равном перевесе» от «умру через минуту при том же перевесе» |
 | `PROXIMITY` | `clamp01(1 − ближайший / proximityRange)` |
 | `RANGED_EXPOSURE` | `clamp01(стрелков / rangedFull) × clamp01(1 − ближайший стрелок / rangedRange)` |
 | `EXPLOSIVE_NEAR` | `clamp01(1 − ближайший взрывной / explosiveRange)` |
-| `ALLY_SUPPORT`, `HEALING_AVAILABLE`, `ESCAPE_ROUTE` | `clamp01(число / allyFull, healFull, routesFull)` |
+| `ALLY_SUPPORT`, `HEALING_AVAILABLE` | `clamp01(число / allyFull, healFull)` |
+| `ESCAPE_ROUTE` | наибольшая полезность среди доступных способов отхода (0, если способов нет) |
 | `TERRAIN_RISK` | максимум риска лавы `1 − лава/lavaRange` и обрыва `(высота − dropSafe)/dropRange` |
 | `DARKNESS` | `max(1 − свет/15, ночью nightFloor)` |
 | `HUNGER` | `clamp01((hungerThreshold − еда) / hungerThreshold)` |
@@ -113,8 +115,12 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 Полезность и условия — в `rules.json → retreat.methods`, числа взяты из п. 11 задания (tasks/19-tactics-core.md), ревью их приняло как есть:
 `HOME` 1 − дистанция/160, `COVER` 0.4 (0.8 против стрелков), `KITE` 0.7, `WATER` 0.6 (ведро 0.55), `BARRICADE` 0.5, `PILLAR` 0.4.
 `AWAY` (бег прочь по открытой местности, полезность 0.2, ниже любого другого) добавлен ревью R6: условие — дух не медленнее
-врага, враг дальше 3 блоков и нет стрелков (в спину бьют из лука) (ближе — `cornered_fight` обязан оставаться возможным). Фактор `ESCAPE_ROUTE` считает все способы,
-поэтому его вес RETREAT снижен с 0.6 до 0.3: открытое поле не должно подталкивать к отходу так же, как укрытие.
+врага, враг дальше 3 блоков и нет стрелков (в спину бьют из лука) (ближе — `cornered_fight` обязан оставаться возможным).
+Фактор `ESCAPE_ROUTE` — наибольшая полезность среди доступных способов (`RetreatOptions.bestUtility`, 0 при пустом
+наборе): укрытие рядом толкает к отходу сильнее, чем голое поле. Масштаб `routesFull` в формуле больше не участвует.
+Вес RETREAT оставлен 0.3; возврат к 0.6 из спецификации — СПОРНО, на согласовании: при 0.6 два сценария с ведьмой
+(«укрытие в 4, полное HP и меч», «укрытие в 4, есть лук») меняют решение FIGHT → RETREAT, ожидания оставлены,
+сценарии помечены `boundary` с парой.
 
 ## Как читать trace
 
@@ -126,4 +132,4 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 ## Границы
 
 Не входят: адаптер (чтение мира, исполнение действий, `set_combat_mode`), стрельба, командная тактика, политики
-безопасности. Вызов не делает ввода-вывода и не меняет аргументы; стоимость — O(15 факторов + правила + враги ≤ 16).
+безопасности. Вызов не делает ввода-вывода и не меняет аргументы; стоимость — O(16 факторов + правила + враги ≤ 16).
