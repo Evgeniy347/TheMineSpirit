@@ -35,7 +35,7 @@ public final class RestTaskScaleGameTests {
     private RestTaskScaleGameTests() {
     }
 
-    @GameTest(batch = "rest_scale_watcher", template = "arena", timeoutTicks = 6000)
+    @GameTest(batch = "rest_scale_watcher", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty(
             GameTestHelper helper) throws IOException {
         GameTestFixtures.reset(helper);
@@ -106,7 +106,7 @@ public final class RestTaskScaleGameTests {
         });
     }
 
-    @GameTest(batch = "rest_scale_log", template = "arena", timeoutTicks = 6000)
+    @GameTest(batch = "rest_scale_log", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_FourOpenStreams_LogWrittenOncePerChangeNotPerStream(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);
@@ -145,7 +145,7 @@ public final class RestTaskScaleGameTests {
         });
     }
 
-    @GameTest(batch = "rest_scale_hops", template = "arena", timeoutTicks = 6000)
+    @GameTest(batch = "rest_scale_hops", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_OnePlanPost_CostsExactlyOneServerHopAndReadsCostNone(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);

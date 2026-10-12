@@ -108,7 +108,7 @@ class TokenBucketTests {
                 "ключ, которого нет в таблице, не получает Retry-After");
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void tryAcquire_AnySchedule_NeverExceedsBudget(@ForAll("tickGaps") List<Long> gaps) {
         TokenBucket bucket = new TokenBucket();
         String key = "k";

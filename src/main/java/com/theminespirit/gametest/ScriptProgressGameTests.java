@@ -71,6 +71,7 @@ public final class ScriptProgressGameTests {
         });
     }
 
+    // [флак] дух рубит два дуба, сценарий в сотни тиков духа; запас под нагрузкой
     @GameTest(template = "arena", batch = "progress_chop", timeoutTicks = 600)
     public static void chopTreeProgress_TwoOaks_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
