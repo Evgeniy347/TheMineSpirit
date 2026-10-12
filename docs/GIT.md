@@ -70,6 +70,8 @@ GameTest, — это `test:`, даже если правка родилась и
 1. Исполнитель, стоя на своей ветке `task/*`: `git rebase main` (конфликты — по смыслу, `git rebase --continue`).
 2. Там же: `./gradlew test` и GameTest (приёмка — 3 прогона подряд), итог — в отчёт.
 3. Главный агент: `git merge --ff-only task/<имя>` в main. Если main за это время ушёл вперёд — шаги 1–2 повторяются.
+   Исключение: если main ушёл вперёд только коммитами без `src/`, `build.gradle` и `gradle*` (документы, скрипты
+   надзора), достаточно повторить rebase — тесты проверяли тот же код.
 
 Хуки разрешают переписать только ветку `task/*` и только во время rebase, когда новая вершина содержит main
 (`scripts/git-hooks/pre-rebase`, `reference-transaction`; проверка — `scripts/testing/check-history-hooks.sh`).
