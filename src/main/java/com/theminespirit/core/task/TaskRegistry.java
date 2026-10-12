@@ -31,12 +31,6 @@ public final class TaskRegistry {
         return entry == null ? Optional.empty() : Optional.of(entry.record);
     }
 
-    /**
-     * Откат резерва: убирает только задачу, оставшуюся в accepted и не запущенную у платформы.
-     * Запущенную, наблюдаемую или завершённую задачу не трогает.
-     *
-     * @return true — резерв откатился; false — задача уже живёт своей жизнью, откатывать нечего
-     */
     public synchronized boolean discard(String taskId) {
         Entry entry = tasks.get(taskId);
         if (entry == null || entry.started || entry.record.state() != TaskState.ACCEPTED) {

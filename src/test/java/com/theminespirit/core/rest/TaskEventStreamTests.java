@@ -126,12 +126,16 @@ class TaskEventStreamTests {
             String state = stream.nextFrame();
             assertTrue(state.contains("event: state"),
                     "При потере окна обязана прийти текущая state: " + state);
+            long stateId = Long.parseLong(state.split("\n", 2)[0].substring(4));
             String later = stream.nextFrame();
             assertTrue(later.startsWith("id: "),
                     "После state обязаны идти оставшиеся события журнала: " + later);
             long id = Long.parseLong(later.split("\n", 2)[0].substring(4));
             assertTrue(id <= newest, "Догоняющие события не могут быть новее позиции журнала: " + id);
             assertTrue(id > 1, "Догонять обязаны записи новее Last-Event-ID: " + id);
+            assertTrue(stateId < id,
+                    "id кадров обязаны расти и после state при потере окна: клиент, запомнивший id кадра state, "
+                            + "не должен получить меньший id следом: state " + stateId + ", затем " + id);
         } finally {
             stream.close();
         }

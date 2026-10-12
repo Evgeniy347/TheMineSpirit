@@ -52,7 +52,7 @@ public final class SpiritTaskGateway implements TaskGateway {
     }
 
     @Override
-    public void cancel(String bot, String taskId) {
+    public void cancelIfPresent(String bot, String taskId) {
         serverCall.call(() -> {
             Optional<SpiritEntity> spirit = parse(bot).flatMap(index::find);
             spirit.ifPresent(SpiritEntity::cancelTask);

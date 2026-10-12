@@ -111,7 +111,7 @@ final class FakeTaskGateway implements TaskGateway {
     }
 
     @Override
-    public void cancel(String bot, String taskId) {
+    public void cancelIfPresent(String bot, String taskId) {
         hops++;
         cancels.add(taskId);
         if (onCancel != null) {

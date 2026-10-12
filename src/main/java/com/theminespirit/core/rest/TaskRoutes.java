@@ -16,9 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Маршруты задач: постановка, чтение, отмена, поток событий и сухой прогон плана.
- */
 public final class TaskRoutes {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -100,7 +97,7 @@ public final class TaskRoutes {
         String taskId = params.get("id");
         TaskRecord record = knownTask(taskId);
         if (record.active()) {
-            gateway.cancel(record.bot(), taskId);
+            gateway.cancelIfPresent(record.bot(), taskId);
             registry.cancelIfActive(taskId);
         }
         return RestResponse.ok(TaskJson.toJson(knownTask(taskId)));

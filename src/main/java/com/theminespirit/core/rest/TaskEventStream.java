@@ -16,9 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Поток событий одной задачи: первый кадр — текущее состояние, затем события журнала до закрытия.
- */
 public final class TaskEventStream implements SseStream {
     public static final Duration KEEPALIVE = Duration.ofSeconds(15);
 
@@ -41,10 +38,8 @@ public final class TaskEventStream implements SseStream {
         TaskEventLog.Catchup catchup = snapshot.catchup();
         if (lastEventId > 0 && lastEventId <= position) {
             if (catchup.gap()) {
-                // При потере окна сначала текущее состояние; id — свежая позиция, чтобы клиент
-                // не застрял на устаревшем Last-Event-ID и не gapил заново при каждом реконнекте.
-                long frameId = catchup.events().isEmpty() ? position : lastEventId;
-                pending.add(frame(frameId, TaskEvent.TYPE_STATE, stateData(snapshot.record())));
+                long stateFrameId = catchup.events().isEmpty() ? position : lastEventId;
+                pending.add(frame(stateFrameId, TaskEvent.TYPE_STATE, stateData(snapshot.record())));
             }
             this.lastId = lastEventId;
             for (TaskEvent event : catchup.events()) {
