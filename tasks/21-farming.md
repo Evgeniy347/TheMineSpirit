@@ -113,6 +113,9 @@
 
 ## Часть Б — адаптер (после слияния чеклиста 12)
 
+Часть А принята и влита в main (2026-10-12). Замечание ревью для части Б (R13): `FarmStandSpots.of` читает мир без своего
+кэша — адаптер вызывает его только через `FarmPlanner` или оборачивает `SafetyView` в `CachedSafetyView`.
+
 - [ ] 9. **Спайк: действия без игрока** (≤ 30 мин, результат в отчёт, не коммитится). Проверить на `runGameTestServer`, что у духа
       (`PathfinderMob`, не `Player`) работают: (а) вспашка мотыгой — путь игрока `HoeItem.useOn` с `UseOnContext` без игрока (износ
       — вручную `hurtAndBreak(1, spirit, MAINHAND)`, как в `BlockBreaker.complete`); (б) посадка — `BlockItem.place` с
