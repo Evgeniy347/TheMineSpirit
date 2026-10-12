@@ -6,6 +6,7 @@ import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.CollectDropsParams;
+import com.theminespirit.core.script.CraftParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.FollowParams;
@@ -17,6 +18,7 @@ import com.theminespirit.core.script.PlantCropParams;
 import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.TillParams;
+import com.theminespirit.neoforge.crafting.CraftScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -40,6 +42,7 @@ public final class SpiritScripts {
         table.put("plant_crop", spirit -> params -> new PlantCropScript(spirit, PlantCropParams.from(params)));
         table.put("harvest_crop", spirit -> params -> new HarvestCropScript(spirit, HarvestCropParams.from(params)));
         table.put("bone_meal", spirit -> params -> new BoneMealScript(spirit, BoneMealParams.from(params)));
+        table.put("craft", spirit -> params -> new CraftScript(spirit, CraftParams.from(params)));
         return table;
     }
 
