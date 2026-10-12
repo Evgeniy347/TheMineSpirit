@@ -29,6 +29,7 @@ import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.ShearParams;
 import com.theminespirit.core.script.SmeltParams;
 import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.SortChestParams;
 import com.theminespirit.core.script.TillParams;
 import com.theminespirit.core.script.FeedParams;
 import com.theminespirit.neoforge.crafting.CraftScript;
@@ -41,6 +42,12 @@ import com.theminespirit.neoforge.husbandry.HerdCheckScript;
 import com.theminespirit.neoforge.husbandry.HuntScript;
 import com.theminespirit.neoforge.husbandry.MilkScript;
 import com.theminespirit.neoforge.husbandry.ShearScript;
+import com.theminespirit.core.script.TransferParams;
+import com.theminespirit.core.script.UnloadParams;
+import com.theminespirit.neoforge.inventory.DepositScript;
+import com.theminespirit.neoforge.inventory.SortChestScript;
+import com.theminespirit.neoforge.inventory.UnloadScript;
+import com.theminespirit.neoforge.inventory.WithdrawScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -85,6 +92,10 @@ public final class SpiritScripts {
         table.put("cull", spirit -> params -> new CullScript(spirit, CullParams.from(params)));
         table.put("herd_check", spirit -> params -> new HerdCheckScript(spirit, HerdCheckParams.from(params)));
         table.put("hunt", spirit -> params -> new HuntScript(spirit, HuntParams.from(params)));
+        table.put("deposit", spirit -> params -> new DepositScript(spirit, TransferParams.from(params)));
+        table.put("withdraw", spirit -> params -> new WithdrawScript(spirit, TransferParams.from(params)));
+        table.put("sort_chest", spirit -> params -> new SortChestScript(spirit, SortChestParams.from(params)));
+        table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
         return table;
     }
 

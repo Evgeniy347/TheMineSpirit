@@ -1,12 +1,19 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.inventory.TransferRunner;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
@@ -17,6 +24,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -276,6 +284,328 @@ public final class InventoryGameTests {
             total += container.getItem(slot).getCount();
         }
         return total;
+    }
+
+    @GameTest(template = "arena", batch = "inv_deposit_basic", timeoutTicks = 400)
+    public static void deposit_TenCobblestone_MovesAllAndSorts(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deposit 10 булыжника обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(run.spiritTicks() <= 120,
+                    "сценарий обязан укладываться в 120 тиков духа, заняло " + run.spiritTicks());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "у духа не должно остаться булыжника: все 10 уехали в сундук");
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 10,
+                    "в сундуке обязано оказаться 10 булыжника, фактически " + chestCount(helper, Items.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_withdraw_messy", timeoutTicks = 400)
+    public static void withdraw_FiveIngotsFromMessyChest_TakesAndSorts(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        Container chest = accessChest(helper);
+        chest.setItem(0, new ItemStack(Items.DIRT, 64));
+        chest.setItem(2, new ItemStack(Items.IRON_INGOT, 4));
+        chest.setItem(5, new ItemStack(Items.IRON_INGOT, 3));
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("withdraw", Map.of("container", "nearest", "item", "minecraft:iron_ingot",
+                        "count", 5, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "withdraw 5 слитков обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT) == 5,
+                    "у духа обязано оказаться 5 слитков железа");
+            helper.assertTrue(chestCount(helper, Items.IRON_INGOT) == 2,
+                    "в сундуке обязаны остаться 2 слитка (было 7, забрали 5), фактически "
+                            + chestCount(helper, Items.IRON_INGOT));
+            helper.assertTrue(chest.getItem(0).is(Items.IRON_INGOT) && chest.getItem(0).getCount() == 2,
+                    "остаток слитков обязан быть слит в одну стопку и стоять первым (материалы раньше блоков), "
+                            + "иначе сундук не отсортирован: слот 0 — " + chest.getItem(0));
+            helper.assertTrue(chest.getItem(1).is(Items.DIRT) && chest.getItem(2).isEmpty(),
+                    "земля обязана стоять второй без дырок между стопками: слот 1 — " + chest.getItem(1)
+                            + ", слот 2 — " + chest.getItem(2));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_deposit_full", timeoutTicks = 400)
+    public static void deposit_ChestFull_FailsWithoutMoving(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        Container chest = accessChest(helper);
+        Item[] fillers = {Items.DIRT, Items.SAND, Items.GRAVEL, Items.OAK_LOG, Items.BIRCH_LOG, Items.SPRUCE_LOG,
+                Items.OAK_PLANKS, Items.STICK, Items.TORCH, Items.COAL, Items.CHARCOAL, Items.IRON_INGOT,
+                Items.GOLD_INGOT, Items.COPPER_INGOT, Items.REDSTONE, Items.LAPIS_LAZULI, Items.DIAMOND,
+                Items.EMERALD, Items.BREAD, Items.COOKED_BEEF, Items.APPLE, Items.ARROW, Items.BOW, Items.STONE,
+                Items.ANDESITE, Items.GRANITE, Items.DIORITE};
+        for (int slot = 0; slot < 27; slot++) {
+            chest.setItem(slot, new ItemStack(fillers[slot]));
+        }
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "полный сундук обязан провалить deposit, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("полон") && reason.contains("0 из 10"),
+                    "причина обязана говорить, что контейнер полон и перенесено 0 из 10, фактически: " + reason);
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 10,
+                    "инвентарь духа обязан остаться нетронутым: все 10 булыжника при нём");
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 0,
+                    "в полный сундук не должно попасть ни одного булыжника");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_deposit_short", timeoutTicks = 400)
+    public static void deposit_SixOfTenRequested_MovesSixAndFails(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 6));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "недостача обязана проваливать deposit, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("только 6 из 10"),
+                    "причина обязана называть недостачу «только 6 из 10», фактически: " + reason);
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 6,
+                    "уже перенесённое остаётся перенесённым: в сундуке обязано быть 6 булыжника, фактически "
+                            + chestCount(helper, Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "у духа не должно остаться булыжника: всё имевшееся уехало");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_sort_idempotent", timeoutTicks = 600)
+    public static void sortChest_MessyChest_MergesAndKeepsVariants(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        Container chest = accessChest(helper);
+        for (int slot = 0; slot < 20; slot++) {
+            chest.setItem(slot, new ItemStack(Items.COBBLESTONE, slot + 1));
+        }
+        chest.setItem(20, new ItemStack(Items.IRON_PICKAXE));
+        ItemStack worn = new ItemStack(Items.IRON_PICKAXE);
+        worn.setDamageValue(5);
+        chest.setItem(21, worn);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        Map<String, Object> params = Map.of("container", "nearest", "radius", 8);
+        SpiritRun first = SpiritRun.launch(helper, spirit, new ScriptCall("sort_chest", params), 1);
+        AtomicBoolean relaunched = new AtomicBoolean();
+        AtomicReference<SpiritRun> second = new AtomicReference<>();
+        AtomicReference<List<String>> afterFirst = new AtomicReference<>();
+
+        helper.succeedWhen(() -> {
+            first.assertStarted();
+            if (!relaunched.get()) {
+                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                        "первая sort_chest обязана завершиться успехом, причина: "
+                                + spirit.taskFailureReason().orElse("нет"));
+                afterFirst.set(snapshotChest(helper));
+                second.set(SpiritRun.launch(helper, spirit, new ScriptCall("sort_chest", params),
+                        spirit.tickCount));
+                relaunched.set(true);
+            }
+            helper.assertTrue(second.get() != null,
+                    "повторная сортировка обязана быть запущена после первой: иначе идемпотентность не проверена");
+            second.get().assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "повторный sort_chest обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(snapshotChest(helper).equals(afterFirst.get()),
+                    "повторная сортировка обязана ничего не менять (идемпотентность): иначе каждый вызов "
+                            + "тасовал бы сундук заново");
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 210,
+                    "сумма булыжника обязана сохраниться (1+…+20 = 210), фактически "
+                            + chestCount(helper, Items.COBBLESTONE));
+            helper.assertTrue(pickaxeStacks(helper) == 2,
+                    "целая и повреждённая кирки обязаны остаться разными стопками: слияние разных вариантов "
+                            + "потеряло бы вещь игрока");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_deposit_double", timeoutTicks = 400)
+    public static void deposit_DoubleChest_Uses54Slots(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(5, 1, 4, Blocks.CHEST);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 64));
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 36));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                        "count", 100, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deposit в двойной сундук обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 100,
+                    "в двойном сундуке обязано оказаться 100 булыжника, фактически "
+                            + chestCount(helper, Items.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_unload_surplus", timeoutTicks = 600)
+    public static void unload_FullInventory_MovesOnlySurplus(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        spirit.getInventory().setItem(1, new ItemStack(Items.STONE_PICKAXE));
+        for (int slot = 0; slot < 5; slot++) {
+            spirit.getInventory().setItem(2 + slot, new ItemStack(Items.BREAD, 4));
+        }
+        for (int slot = 0; slot < 16; slot++) {
+            spirit.getInventory().setItem(7 + slot, new ItemStack(Items.TORCH, 4));
+        }
+        for (int slot = 0; slot < 3; slot++) {
+            spirit.getInventory().setItem(23 + slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+        spirit.getInventory().setItem(26, new ItemStack(Items.DIAMOND, 5));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("unload", Map.of("container", "nearest", "radius", 8, "force", false)), 1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "unload обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(run.spiritTicks() <= 120,
+                    "сценарий обязан укладываться в 120 тиков духа, заняло " + run.spiritTicks());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) == 0,
+                    "лучшая (железная) кирка остаётся, каменная уходит");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 16
+                    && chestCount(helper, Items.BREAD) == 4,
+                    "из 20 хлеба 16 остаются, 4 лишних уходят: у духа "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD)
+                            + ", в сундуке " + chestCount(helper, Items.BREAD));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 16
+                    && chestCount(helper, Items.TORCH) == 48,
+                    "из 64 факелов 16 остаются, 48 уходят: у духа "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH)
+                            + ", в сундуке " + chestCount(helper, Items.TORCH));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 32
+                    && chestCount(helper, Items.COBBLESTONE) == 160,
+                    "из 192 булыжника опорные 32 остаются, 160 уходят: у духа "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE)
+                            + ", в сундуке " + chestCount(helper, Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND) == 0
+                    && chestCount(helper, Items.DIAMOND) == 5,
+                    "алмазы не входят в базовый набор и уходят целиком");
+            helper.assertTrue(chestCount(helper, Items.STONE_PICKAXE) == 1,
+                    "каменная кирка обязана оказаться в сундуке");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_unload_trigger", timeoutTicks = 400)
+    public static void unload_BelowTrigger_SucceedsWithoutTouching(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 64));
+        spirit.getInventory().setItem(1, new ItemStack(Items.DIAMOND, 5));
+        spirit.getInventory().setItem(2, new ItemStack(Items.BREAD, 20));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("unload", Map.of("container", "nearest", "radius", 8, "force", false)), 1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "при занятых слотах меньше 24 разгрузка не нужна и завершается успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 0
+                    && chestCount(helper, Items.DIAMOND) == 0
+                    && chestCount(helper, Items.BREAD) == 0,
+                    "без триггера сундук обязан остаться пустым: разгрузка ничего не делает");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 20,
+                    "инвентарь духа обязан остаться нетронутым");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static int chestCount(GameTestHelper helper, Item item) {
+        int total = 0;
+        Container chest = accessChest(helper);
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            if (chest.getItem(slot).is(item)) {
+                total += chest.getItem(slot).getCount();
+            }
+        }
+        return total;
+    }
+
+    private static List<String> snapshotChest(GameTestHelper helper) {
+        List<String> slots = new ArrayList<>();
+        Container chest = accessChest(helper);
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            ItemStack stack = chest.getItem(slot);
+            if (stack.isEmpty()) {
+                slots.add("empty");
+            } else {
+                slots.add(StackMapper.itemId(stack) + "x" + stack.getCount() + "d" + stack.getDamageValue());
+            }
+        }
+        return slots;
+    }
+
+    private static int pickaxeStacks(GameTestHelper helper) {
+        int stacks = 0;
+        Container chest = accessChest(helper);
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            if (chest.getItem(slot).is(Items.IRON_PICKAXE)) {
+                stacks++;
+            }
+        }
+        return stacks;
     }
 
     private static String describe(ContainerAccess.Open open) {
