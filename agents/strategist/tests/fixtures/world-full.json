@@ -1,0 +1,286 @@
+{
+ "name": "Дух-full",
+ "state": "idle",
+ "observation": {
+  "bot": "full",
+  "tick": 123456,
+  "pos": [
+   60,
+   66,
+   -120
+  ],
+  "radius": 32,
+  "inventory": [
+   {
+    "item": "item_00",
+    "count": 64
+   },
+   {
+    "item": "item_01",
+    "count": 64
+   },
+   {
+    "item": "item_02",
+    "count": 64
+   },
+   {
+    "item": "item_03",
+    "count": 64
+   },
+   {
+    "item": "item_04",
+    "count": 64
+   },
+   {
+    "item": "item_05",
+    "count": 64
+   },
+   {
+    "item": "item_06",
+    "count": 64
+   },
+   {
+    "item": "item_07",
+    "count": 64
+   },
+   {
+    "item": "item_08",
+    "count": 64
+   },
+   {
+    "item": "item_09",
+    "count": 64
+   },
+   {
+    "item": "item_10",
+    "count": 64
+   },
+   {
+    "item": "item_11",
+    "count": 64
+   },
+   {
+    "item": "item_12",
+    "count": 64
+   },
+   {
+    "item": "item_13",
+    "count": 64
+   },
+   {
+    "item": "item_14",
+    "count": 64
+   },
+   {
+    "item": "item_15",
+    "count": 64
+   },
+   {
+    "item": "item_16",
+    "count": 64
+   },
+   {
+    "item": "item_17",
+    "count": 64
+   },
+   {
+    "item": "item_18",
+    "count": 64
+   },
+   {
+    "item": "item_19",
+    "count": 64
+   },
+   {
+    "item": "item_20",
+    "count": 64
+   },
+   {
+    "item": "item_21",
+    "count": 64
+   },
+   {
+    "item": "item_22",
+    "count": 64
+   },
+   {
+    "item": "item_23",
+    "count": 64
+   },
+   {
+    "item": "item_24",
+    "count": 64
+   },
+   {
+    "item": "item_25",
+    "count": 64
+   },
+   {
+    "item": "item_26",
+    "count": 64
+   },
+   {
+    "item": "item_27",
+    "count": 64
+   },
+   {
+    "item": "item_28",
+    "count": 64
+   },
+   {
+    "item": "item_29",
+    "count": 64
+   },
+   {
+    "item": "item_30",
+    "count": 64
+   },
+   {
+    "item": "item_31",
+    "count": 64
+   },
+   {
+    "item": "item_32",
+    "count": 64
+   },
+   {
+    "item": "item_33",
+    "count": 64
+   },
+   {
+    "item": "iron_sword",
+    "count": 1
+   },
+   {
+    "item": "bread",
+    "count": 12
+   }
+  ],
+  "blocks": [
+   {
+    "item": "grass_block",
+    "count": 500
+   },
+   {
+    "item": "dirt",
+    "count": 200
+   },
+   {
+    "item": "oak_planks",
+    "count": 320
+   },
+   {
+    "item": "cobblestone",
+    "count": 150
+   },
+   {
+    "item": "glass",
+    "count": 20
+   },
+   {
+    "item": "oak_door",
+    "count": 6
+   },
+   {
+    "item": "white_bed",
+    "count": 4
+   },
+   {
+    "item": "oak_log",
+    "count": 10
+   }
+  ],
+  "entities": [
+   {
+    "type": "minecraft:cat",
+    "pos": [
+     57,
+     66,
+     -115
+    ],
+    "distance": 5.8
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     66,
+     66,
+     -118
+    ],
+    "distance": 6.3
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     51,
+     66,
+     -122
+    ],
+    "distance": 9.2
+   },
+   {
+    "type": "minecraft:iron_golem",
+    "pos": [
+     56,
+     66,
+     -111
+    ],
+    "distance": 9.8
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     50,
+     66,
+     -126
+    ],
+    "distance": 11.7
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     55,
+     66,
+     -106
+    ],
+    "distance": 14.9
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     70,
+     66,
+     -107
+    ],
+    "distance": 16.4
+   }
+  ],
+  "containers": [
+   {
+    "type": "minecraft:chest",
+    "pos": [
+     58,
+     66,
+     -118
+    ]
+   },
+   {
+    "type": "minecraft:chest",
+    "pos": [
+     62,
+     66,
+     -125
+    ]
+   },
+   {
+    "type": "minecraft:barrel",
+    "pos": [
+     64,
+     66,
+     -121
+    ]
+   }
+  ],
+  "hash": "89a8d1d94a798c86440f7f688b496e130351bbeb49dcf3f7a3d513a955ad1375"
+ }
+}

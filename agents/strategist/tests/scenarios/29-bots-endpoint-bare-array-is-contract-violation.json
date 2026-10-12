@@ -1,0 +1,54 @@
+{
+ "description": "GET /v1/bots вернул голый массив: контракт нарушен, цикл прерван с alert, модель не вызывается",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "bots_as_list": true
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 0
+  },
+  {
+   "journal": {
+    "alert": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "alert",
+    "code": "rest_unavailable"
+   }
+  }
+ ],
+ "name": "29-bots-endpoint-bare-array-is-contract-violation",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "description": "файл PAUSE: новых задач нет, отслеживание идёт",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 4
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "pause_file": true
+  },
+  {
+   "advance": 100
+  },
+  {
+   "expect": [
+    {
+     "journal": {
+      "task_done": 1
+     }
+    },
+    {
+     "posts": 1
+    }
+   ]
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm"
+    }
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 1
+    },
+    {
+     "brain_calls": 1
+    },
+    {
+     "journal_has": {
+      "event": "bot_skipped",
+      "reason_contains": "PAUSE"
+     }
+    }
+   ]
+  },
+  {
+   "pause_file": false
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "brain_calls": 2
+  }
+ ],
+ "name": "18-pause-file-no-new-tasks-tracking-continues",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

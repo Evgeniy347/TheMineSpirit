@@ -1,0 +1,45 @@
+{
+ "name": "Дух-empty",
+ "state": "idle",
+ "observation": {
+  "bot": "empty",
+  "tick": 123456,
+  "pos": [
+   500,
+   64,
+   500
+  ],
+  "radius": 32,
+  "inventory": [
+   {
+    "item": "oak_log",
+    "count": 3
+   }
+  ],
+  "blocks": [
+   {
+    "item": "sand",
+    "count": 2400
+   },
+   {
+    "item": "sandstone",
+    "count": 800
+   },
+   {
+    "item": "cactus",
+    "count": 12
+   },
+   {
+    "item": "dead_bush",
+    "count": 30
+   },
+   {
+    "item": "terracotta",
+    "count": 40
+   }
+  ],
+  "entities": [],
+  "containers": [],
+  "hash": "4029431efb7537561a2652ece941b69b4d56f379b38afacdce03a2edeb66d376"
+ }
+}

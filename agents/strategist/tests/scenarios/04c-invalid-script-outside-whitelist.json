@@ -1,0 +1,61 @@
+{
+ "description": "невалидный план: POST не отправлен, журнал rejected с причиной, одна попытка повтора",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "залить",
+    "plan": {
+     "type": "script",
+     "script": "fill",
+     "params": {
+      "block": "stone",
+      "x": 1,
+      "y": 1,
+      "z": 1
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "plan_calls": 0
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "bot": "forest",
+    "reason_contains": "белого списка"
+   }
+  },
+  {
+   "posted_scripts_allowed": true
+  }
+ ],
+ "name": "04c-invalid-script-outside-whitelist",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

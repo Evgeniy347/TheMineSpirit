@@ -1,0 +1,63 @@
+{
+ "description": "маршрута /v1/plan нет: полагаемся на локальную проверку и не долбим сервер",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 1
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "plan_route": false
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "plan_calls": 1
+  }
+ ],
+ "name": "28-plan-route-missing-local-check-only",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

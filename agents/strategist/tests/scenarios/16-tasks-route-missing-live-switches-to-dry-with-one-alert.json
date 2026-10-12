@@ -1,0 +1,87 @@
+{
+ "description": "маршрута задач нет в live: один alert, режим dry, больше POST не шлём",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "tasks_route": false
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 1
+    },
+    {
+     "journal": {
+      "alert": 1
+     }
+    },
+    {
+     "mode": "dry"
+    }
+   ]
+  },
+  {
+   "advance": 300
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "journal": {
+    "alert": 1,
+    "posted": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "dry": true
+   }
+  },
+  {
+   "mode": "dry"
+  },
+  {
+   "brain_calls": 2
+  }
+ ],
+ "name": "16-tasks-route-missing-live-switches-to-dry-with-one-alert",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

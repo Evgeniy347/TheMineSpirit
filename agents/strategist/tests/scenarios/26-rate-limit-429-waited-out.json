@@ -1,0 +1,45 @@
+{
+ "description": "429 с Retry-After: клиент ждёт и цикл проходит",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "rate_limited": [
+     7
+    ]
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "clock_slept_at_least": 7
+  }
+ ],
+ "name": "26-rate-limit-429-waited-out",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

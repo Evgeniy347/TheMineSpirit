@@ -1,0 +1,73 @@
+{
+ "description": "неотправленное решение старше срока годности сбрасывается с alert, повторного POST нет",
+ "config": {
+  "STRATEGIST_PENDING_TTL": 600
+ },
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 4
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "task_post_lose_response": 1
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "advance": 700
+  },
+  {
+   "restart": true
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "tasks_created": 1
+  },
+  {
+   "journal": {
+    "alert": 2
+   }
+  },
+  {
+   "journal_has": {
+    "event": "alert",
+    "code": "pending_expired",
+    "bot": "forest"
+   }
+  }
+ ],
+ "name": "34-pending-decision-expires-and-alerts",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

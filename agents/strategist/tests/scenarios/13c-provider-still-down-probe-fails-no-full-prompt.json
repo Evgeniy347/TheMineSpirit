@@ -1,0 +1,66 @@
+{
+ "description": "провайдер не вернулся: пробный вызов вместо полного промпта, интервал ×4",
+ "brains": {
+  "primary": {
+   "default": {
+    "unavailable": "provider",
+    "text": "Free usage exceeded"
+   },
+   "probe": [
+    {
+     "unavailable": "provider",
+     "text": "Free usage exceeded"
+    }
+   ]
+  },
+  "fallback": {
+   "default": {
+    "unavailable": "provider",
+    "text": "Rate limit exceeded"
+   },
+   "probe": [
+    {
+     "unavailable": "provider",
+     "text": "Rate limit exceeded"
+    }
+   ]
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 600
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "probes": 2
+  },
+  {
+   "interval": 1200
+  },
+  {
+   "journal": {
+    "brain_failure": 2
+   }
+  }
+ ],
+ "name": "13c-provider-still-down-probe-fails-no-full-prompt",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

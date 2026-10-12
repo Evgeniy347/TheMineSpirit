@@ -1,0 +1,70 @@
+{
+ "description": "тайм-аут задачи 30 мин: DELETE, исход timeout",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "never"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 1700
+  },
+  {
+   "expect": [
+    {
+     "deletes": 0
+    },
+    {
+     "active_tasks": 1
+    }
+   ]
+  },
+  {
+   "advance": 200
+  }
+ ],
+ "expect": [
+  {
+   "deletes": 1
+  },
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "timeout"
+   }
+  },
+  {
+   "active_tasks": 0
+  },
+  {
+   "fake_state": {
+    "forest": "idle"
+   }
+  }
+ ],
+ "name": "20-task-timeout-sends-delete",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
