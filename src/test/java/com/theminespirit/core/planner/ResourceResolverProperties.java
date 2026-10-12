@@ -73,7 +73,7 @@ class ResourceResolverProperties {
     }
 
     @Property
-    void resolve_KnowledgeWithStations_EachStationIsProducedAtMostOnce(
+    void resolve_KnowledgeWithStations_EachNeededStationIsProducedExactlyOnce(
             @ForAll @Size(max = MAX_ITEMS) List<Integer> decisions,
             @ForAll @IntRange(min = 1, max = 8) int count) {
         ResourceKnowledge knowledge = acyclic(decisions, true);
@@ -85,10 +85,11 @@ class ResourceResolverProperties {
 
         for (String station : List.of("bench", "oven")) {
             long produced = calls.stream().filter(call -> producesItem(call, station)).count();
-            assertTrue(produced <= 1,
-                    "Станция '" + station + "' обязана появляться в плане не более одного раза, а получена "
-                            + produced + " раз(а): лишний верстак или печь — потерянные материалы и время. Предмет="
-                            + root + ", количество=" + count);
+            boolean needed = calls.stream().anyMatch(call -> needsStation(call, station, knowledge));
+            assertEquals(needed ? 1 : 0, produced,
+                    "Станция '" + station + "' обязана появляться в плане ровно один раз, если она нужна, и ни разу, если нет: "
+                            + "лишний верстак или печь — потерянные материалы, отсутствующий — провал у станции. Нужна="
+                            + needed + ", получена " + produced + " раз(а). Предмет=" + root + ", количество=" + count);
         }
     }
 
@@ -116,6 +117,12 @@ class ResourceResolverProperties {
             throw new IllegalStateException("Свойство не знает узел " + node.getClass()
                     + ": молчаливый пропуск шага ослепит проверку станций");
         }
+    }
+
+    private static boolean needsStation(ScriptCall call, String station, ResourceKnowledge knowledge) {
+        boolean crafts = call.script().equals("craft") || call.script().equals("smelt");
+        return crafts && knowledge.stationFor(String.valueOf(call.params().get("item"))).filter(station::equals)
+                .isPresent();
     }
 
     private static boolean producesItem(ScriptCall call, String item) {
