@@ -16,7 +16,7 @@ import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 
 class StandChoiceProperties {
-    @Property(tries = 300)
+    @Property
     void choose_CandidateOrderShuffled_SameStand(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed,
             @ForAll @IntRange(min = -100, max = 100) int tx,
