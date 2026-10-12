@@ -7,6 +7,8 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PathingConfigurator;
+import com.theminespirit.neoforge.policy.SpiritNavigation;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -253,12 +255,15 @@ public final class PolicyHazardGameTests {
         cliff(helper, 2, RunStatus.SUCCEEDED);
     }
 
+    private static final List<PathType> CLOSED_TYPES = List.of(PathType.LAVA, PathType.DAMAGE_FIRE, PathType.DANGER_FIRE,
+            PathType.DAMAGE_OTHER, PathType.DANGER_OTHER, PathType.DAMAGE_CAUTIOUS, PathType.DANGER_POWDER_SNOW, PathType.POWDER_SNOW);
+
     @GameTest(template = "arena", batch = "policy_path_table", timeoutTicks = 20)
     public static void pathTable_RealSpirit_BlocksEveryHazardPathType(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);
         helper.runAfterDelay(2, () -> {
-            for (PathType type : PathingConfigurator.BLOCKED_TYPES) {
+            for (PathType type : CLOSED_TYPES) {
                 helper.assertTrue(spirit.getPathfindingMalus(type) < 0,
                         "тип клетки " + type + " обязан быть закрыт для пути духа, штраф " + spirit.getPathfindingMalus(type));
             }
@@ -270,26 +275,44 @@ public final class PolicyHazardGameTests {
         });
     }
 
+    private record HazardRow(Block block, Block floor, int classifyAbove, PathType expected) {
+    }
+
     @GameTest(template = "arena", batch = "policy_path_types", timeoutTicks = 20)
-    public static void pathTypes_HazardBlocks_AreClosedForTheSpirit(GameTestHelper helper) {
+    public static void pathTypes_HazardBlocks_AreClassifiedAndClosedByTheSpiritsOwnPlanner(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);
-        Block[][] cases = {{Blocks.LAVA, null}, {Blocks.FIRE, null}, {Blocks.CAMPFIRE, null}, {Blocks.CACTUS, Blocks.SAND},
-                {Blocks.SWEET_BERRY_BUSH, Blocks.DIRT}, {Blocks.COBWEB, null}, {Blocks.POWDER_SNOW, null}, {Blocks.MAGMA_BLOCK, null}};
+        List<HazardRow> rows = List.of(
+                new HazardRow(Blocks.LAVA, null, 0, PathType.LAVA),
+                new HazardRow(Blocks.FIRE, null, 0, PathType.DAMAGE_FIRE),
+                new HazardRow(Blocks.CAMPFIRE, null, 0, PathType.DAMAGE_FIRE),
+                new HazardRow(Blocks.CACTUS, Blocks.SAND, 0, PathType.DAMAGE_OTHER),
+                new HazardRow(Blocks.SWEET_BERRY_BUSH, Blocks.DIRT, 0, PathType.DAMAGE_OTHER),
+                new HazardRow(Blocks.COBWEB, null, 0, PathType.DAMAGE_OTHER),
+                new HazardRow(Blocks.POWDER_SNOW, null, 0, PathType.POWDER_SNOW),
+                new HazardRow(Blocks.MAGMA_BLOCK, null, 1, PathType.DAMAGE_FIRE));
         helper.runAfterDelay(2, () -> {
+            helper.assertTrue(spirit.getNavigation() instanceof SpiritNavigation, "навигация духа обязана быть SpiritNavigation, а не ванильной: "
+                    + spirit.getNavigation().getClass().getName());
+            SpiritNavigation navigation = (SpiritNavigation) spirit.getNavigation();
             StringBuilder report = new StringBuilder();
-            for (Block[] row : cases) {
-                BlockPos at = new BlockPos(6, row[0] == Blocks.MAGMA_BLOCK ? 0 : 1, 6);
-                if (row[1] != null) {
-                    helper.setBlock(6, 0, 6, row[1]);
+            for (HazardRow row : rows) {
+                BlockPos at = new BlockPos(6, row.classifyAbove() == 1 ? 0 : 1, 6);
+                if (row.floor() != null) {
+                    helper.setBlock(6, 0, 6, row.floor());
                 }
-                helper.setBlock(at, row[0]);
-                BlockPos absolute = helper.absolutePos(at);
-                PathType type = new PathfindingContext(helper.getLevel(), spirit).getPathTypeFromState(absolute.getX(), absolute.getY(), absolute.getZ());
+                helper.setBlock(at, row.block());
+                BlockPos probe = helper.absolutePos(at.above(row.classifyAbove()));
+                PathType type = navigation.classify(new PathfindingContext(helper.getLevel(), spirit), probe);
                 float malus = spirit.getPathfindingMalus(type);
-                report.append(row[0]).append("→").append(type).append("(").append(malus).append(") ");
-                helper.assertTrue(malus < 0 || type == PathType.OPEN || type == PathType.WALKABLE,
-                        "опасный блок " + row[0] + " имеет тип " + type + " со штрафом " + malus + ": путь пойдёт через него. Все: " + report);
+                report.append(row.block()).append("→").append(type).append("(").append(malus).append(") ");
+                helper.assertTrue(type == row.expected(),
+                        "опасный блок " + row.block() + " планировщик духа относит к типу " + type + ", ждали " + row.expected()
+                                + ": ванильная игра или SpiritNodeEvaluator поменяли классификацию. Все: " + report);
+                helper.assertTrue(malus < 0,
+                        "опасный блок " + row.block() + " (тип " + type + ") имеет штраф " + malus + ": путь пойдёт через него. Все: " + report);
+                helper.setBlock(at, Blocks.AIR);
+                helper.setBlock(6, 0, 6, Blocks.STONE);
             }
             LOGGER.info("PATHTYPES {}", report);
             GameTestFixtures.reset(helper);
