@@ -19,8 +19,9 @@ if tmux has-session -t "$tmux_name" 2>/dev/null; then
 fi
 resume=()
 [ -n "$session" ] && resume=(-s "$session")
-printf -v command 'cd %q && OPENCODE_ALLOW_DIRTY=1 OPENCODE_MODEL=%q OPENCODE_LOG_ROOT=%q scripts/opencode-task.sh %s "$(cat %q)" > %q 2>&1; echo EXIT=$? >> %q' \
-    "$worktree" "$model" "$results" "${resume[*]:-}" "$results/$task.msg" "$results/$task.out" "$results/$task.out"
+# Надзор всегда берётся из main: копии скрипта в worktree устаревают, а правки надзора нужны всем потокам сразу.
+printf -v command 'cd %q && OPENCODE_ALLOW_DIRTY=1 OPENCODE_REPO_DIR=%q OPENCODE_MODEL=%q OPENCODE_LOG_ROOT=%q %q %s "$(cat %q)" > %q 2>&1; echo EXIT=$? >> %q' \
+    "$worktree" "$worktree" "$model" "$results" "$main/scripts/opencode-task.sh" "${resume[*]:-}" "$results/$task.msg" "$results/$task.out" "$results/$task.out"
 tmux new-session -d -s "$tmux_name" "$command"
 echo "$task:$tmux_name" >> "$results/watch.list"
 echo "запущено: $tmux_name ($model) в $worktree"

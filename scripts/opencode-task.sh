@@ -70,7 +70,7 @@ if [ -z "$session" ] && [ -z "${OPENCODE_ALLOW_DIRTY:-}" ] && [ -n "$(git -C "$R
 fi
 
 log_root="${OPENCODE_LOG_ROOT:-$REPO_DIR/TestResults/opencode}"
-log_dir="$log_root/$(date +%Y%m%d-%H%M%S)"
+log_dir="$log_root/$(date +%Y%m%d-%H%M%S)-$$"
 failures_log="$log_root/failures.log"
 mkdir -p "$log_dir"
 failure_text=""
