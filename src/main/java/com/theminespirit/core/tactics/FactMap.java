@@ -15,6 +15,7 @@ public final class FactMap {
         map.putEnv(situation.env(), assessment.escapeRoutes());
         map.putOrders(situation.orders(), assessment);
         map.put(FactName.TIME_SINCE_HIT, situation.ticksSinceHit());
+        map.put(FactName.TIME_SINCE_STRIKE, situation.ticksSinceStrike());
         map.put(FactName.TIME_SINCE_ENEMY_SEEN, assessment.ticksSinceEnemySeen());
         map.put(FactName.TIME_IN_STATE, assessment.ticksInState());
         map.put(FactName.STATE_TACTICAL, assessment.state().id());

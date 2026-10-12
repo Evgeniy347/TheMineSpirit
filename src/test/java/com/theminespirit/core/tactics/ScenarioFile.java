@@ -44,7 +44,7 @@ public final class ScenarioFile {
         List<Scenario> scenarios = new ArrayList<>();
         for (ConfigNode item : root.get("scenarios").nonEmptyItems()) {
             item.fields(new String[] {"name", "expect"}, "self", "enemies", "env", "orders", "memory", "sinceHit",
-                    "tick", "why", "boundary", "pair");
+                    "sinceStrike", "tick", "why", "boundary", "pair");
             scenarios.add(scenario(item));
         }
         return scenarios;
@@ -69,6 +69,9 @@ public final class ScenarioFile {
         }
         if (item.has("sinceHit")) {
             builder.sinceHit(item.get("sinceHit").integer(0, Situation.MAX_TICKS));
+        }
+        if (item.has("sinceStrike")) {
+            builder.sinceStrike(item.get("sinceStrike").integer(0, Situation.MAX_TICKS));
         }
         Situation situation = builder.build();
         long tick = item.has("tick") ? item.get("tick").integer(0, Integer.MAX_VALUE) : DEFAULT_TICK;
