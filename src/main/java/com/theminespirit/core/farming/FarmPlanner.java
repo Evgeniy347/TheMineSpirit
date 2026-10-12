@@ -66,7 +66,7 @@ public final class FarmPlanner {
             return false;
         }
         double gap = Math.sqrt(targetSquared) - Math.sqrt(MAX_STAND_OFFSET_SQUARED);
-        return gap * gap > bestStandSquared;
+        return gap * gap > bestStandSquared + 1e-9;
     }
 
     private static boolean closer(Next candidate, Next current, BlockCoord from) {
