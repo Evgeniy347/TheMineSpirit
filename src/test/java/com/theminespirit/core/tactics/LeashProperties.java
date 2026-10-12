@@ -25,7 +25,7 @@ class LeashProperties {
         return Leash.check(MODES.of(mode), zone, ORIGIN, ORIGIN, new Point(distance, 0, 0));
     }
 
-    @Property(tries = 200)
+    @Property
     void check_FartherTarget_NeverLeavesMoreRoom(@ForAll("leashedModes") CombatMode mode,
             @ForAll @DoubleRange(min = 1, max = 50) double zone, @ForAll @DoubleRange(min = 0, max = 80) double near,
             @ForAll @DoubleRange(min = 0, max = 40) double extra) {
@@ -36,7 +36,7 @@ class LeashProperties {
                 "Чем дальше цель от якоря, тем меньше остаток поводка: " + nearLeft + " → " + farLeft);
     }
 
-    @Property(tries = 200)
+    @Property
     void check_TargetBeyondPursuitRadius_IsNeverPursued(@ForAll("leashedModes") CombatMode mode,
             @ForAll @DoubleRange(min = 1, max = 50) double zone,
             @ForAll @DoubleRange(min = 0.01, max = 40) double over) {
@@ -48,7 +48,7 @@ class LeashProperties {
                 "Цель дальше радиуса преследования (" + pursuit + " + " + over + ") не преследуется");
     }
 
-    @Property(tries = 200)
+    @Property
     void returnTarget_AfterCombat_PresentExactlyWhenFarAndModeReturns(@ForAll CombatMode mode,
             @ForAll @DoubleRange(min = 0, max = 60) double distance) {
         ModeParams params = MODES.of(mode);

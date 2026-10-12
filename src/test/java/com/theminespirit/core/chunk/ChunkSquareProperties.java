@@ -68,7 +68,7 @@ class ChunkSquareProperties {
         });
     }
 
-    @Property(tries = 200)
+    @Property
     void diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep(
             @ForAll @IntRange(min = 1, max = 64) int steps,
             @ForAll @IntRange(min = 0, max = 10) int radius) {

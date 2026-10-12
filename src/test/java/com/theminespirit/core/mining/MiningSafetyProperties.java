@@ -18,7 +18,7 @@ class MiningSafetyProperties {
     };
     private static final Cell[] CELLS = Cell.values();
 
-    @Property(tries = 200)
+    @Property
     void canBreak_RandomWorld_UnsafeExactlyWhenFluidOnFace(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         CellWorld world = randomWorld(new Random(seed));
 
@@ -31,7 +31,7 @@ class MiningSafetyProperties {
                 "Проверка ломки читает не более 6 граней. Чтений: " + world.reads());
     }
 
-    @Property(tries = 200)
+    @Property
     void of_RandomWorld_EverySpotPassesCanStandAndReadsBounded(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         CellWorld world = randomWorld(new Random(seed));
@@ -48,7 +48,7 @@ class MiningSafetyProperties {
                         + ": иначе планирование цели кладёт серверный тик. Чтений: " + reads);
     }
 
-    @Property(tries = 200)
+    @Property
     void of_RandomWorld_NoStandUnderFallingAboveTarget(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         CellWorld world = randomWorld(new Random(seed));
         if (world.peek(new BlockCoord(TARGET.x(), TARGET.y() + 1, TARGET.z())) != Cell.FALLING) {

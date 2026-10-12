@@ -38,7 +38,7 @@ class SituationProperties {
         return builder.build();
     }
 
-    @Property(tries = 200)
+    @Property
     void situation_AnyEnemyPermutation_IsEqual(@ForAll("enemyLists") List<EnemyFact> enemies, @ForAll long seed) {
         List<EnemyFact> shuffled = new ArrayList<>(enemies);
         Collections.shuffle(shuffled, new Random(seed));
@@ -48,7 +48,7 @@ class SituationProperties {
                         + "не должен менять решение. Если красно — сортировка Situation не полная (тай-брейк)");
     }
 
-    @Property(tries = 200)
+    @Property
     void situation_AnyEnemies_KeepsCountDamageAndHealth(@ForAll("enemyLists") List<EnemyFact> enemies) {
         Situation situation = situation(enemies);
 

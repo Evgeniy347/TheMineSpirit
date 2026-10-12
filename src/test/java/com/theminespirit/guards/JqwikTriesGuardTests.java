@@ -57,7 +57,7 @@ class JqwikTriesGuardTests {
     @Test
     void propertyTriesPattern_Tries200_NoSlowTag() {
         String sample = "class Sample {\n"
-                + "    @Property(tries = 200)\n"
+                + "    @Property\n"
                 + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
                 + "    }\n"
                 + "}\n";

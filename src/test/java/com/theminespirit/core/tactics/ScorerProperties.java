@@ -31,7 +31,7 @@ class ScorerProperties {
         return scores.best(ALL, WEIGHTS);
     }
 
-    @Property(tries = 200)
+    @Property
     void choose_MoreHp_NeverTurnsFightIntoRetreat(@ForAll("situations") Situation situation,
             @ForAll("steps") int step) {
         SelfFacts self = situation.self();
@@ -45,7 +45,7 @@ class ScorerProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void fightOverRetreat_MoreHp_NeverDecreases(@ForAll("situations") Situation situation, @ForAll("steps") int step) {
         SelfFacts self = situation.self();
         Situation recovered = Situations.withSelf(situation,
@@ -61,7 +61,7 @@ class ScorerProperties {
         return scores.total(TacticalOption.FIGHT) - scores.total(TacticalOption.RETREAT);
     }
 
-    @Property(tries = 200)
+    @Property
     void choose_MoreEnemiesOfSameKind_NeverTurnsRetreatIntoFight(@ForAll("situations") Situation situation) {
         if (situation.enemies().isEmpty()) {
             return;

@@ -18,7 +18,7 @@ class MiningPlannerProperties {
     private static final BlockCoord FROM = new BlockCoord(0, 0, 0);
     private static final Cell[] CELLS = Cell.values();
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_ReturnedTargetIsSafeWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         CellWorld world = randomWorld(random);
@@ -34,7 +34,7 @@ class MiningPlannerProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_IndependentOfTargetOrder(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         CellWorld world = randomWorld(random);
@@ -50,7 +50,7 @@ class MiningPlannerProperties {
                         + "добыча непредсказуемо выбирает разные блоки");
     }
 
-    @Property(tries = 200)
+    @Property
     void next_DenseWorld_MatchesFullScanWithoutEarlyExit(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -141,7 +141,7 @@ class MiningPlannerProperties {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_ReadsBoundedByTargetCount(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         CellWorld world = randomWorld(random);

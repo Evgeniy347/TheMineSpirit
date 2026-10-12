@@ -66,7 +66,7 @@ class FarmTallyTests {
                         + ((FarmTally.Failed) outcome).text());
     }
 
-    @Property(tries = 200)
+    @Property
     void outcome_FailedText_ContainsLabelledCounters(@ForAll FarmJob job,
             @ForAll @IntRange(min = 0, max = 20) int done, @ForAll @IntRange(min = 0, max = 20) int requested,
             @ForAll @IntRange(min = 0, max = 5) int ineligible, @ForAll @IntRange(min = 0, max = 5) int noStand,

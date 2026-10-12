@@ -17,7 +17,7 @@ class StateMachineProperties {
         return Situations.any();
     }
 
-    @Property(tries = 200)
+    @Property
     void next_AnyFacts_ResultIsDescribedByTable(@ForAll("situations") Situation situation, @ForAll TacticalState from,
             @ForAll TacticalOption decision, @ForAll @IntRange(min = 0, max = 1000) int inState,
             @ForAll @IntRange(min = 0, max = 1000) int sinceSeen) {

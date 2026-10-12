@@ -26,7 +26,7 @@ class FarmPlannerProperties {
     private static final Above[] ABOVES = {Above.AIR, Above.WEED, Above.BLOCKED};
     private static final CropKind[] CROPS = {CropKind.WHEAT, CropKind.CARROT, CropKind.POTATO, CropKind.BEETROOT};
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_ReturnedTargetIsEligibleWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         MapFarmView farm = randomFarm(random);
@@ -46,7 +46,7 @@ class FarmPlannerProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_IndependentOfCandidateOrder(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         MapFarmView farm = randomFarm(random);
@@ -65,7 +65,7 @@ class FarmPlannerProperties {
                         + "работа непредсказуемо выбирает разные клетки");
     }
 
-    @Property(tries = 200)
+    @Property
     void next_DenseTillWorld_MatchesFullScanWithoutEarlyExit(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -183,7 +183,7 @@ class FarmPlannerProperties {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    @Property(tries = 200)
+    @Property
     void next_RandomInput_SafetyReadsBoundedByTargetCount(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         MapFarmView farm = randomFarm(random);

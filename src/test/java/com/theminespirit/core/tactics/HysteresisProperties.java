@@ -33,7 +33,7 @@ class HysteresisProperties {
         return Arbitraries.of(TacticalOption.values());
     }
 
-    @Property(tries = 200)
+    @Property
     void decide_PreviousFromRule_EqualsDecisionWithoutMemory(@ForAll("healthy") Situation situation,
             @ForAll("options") TacticalOption previous, @ForAll @IntRange(min = 0, max = 100) int decidedAgo) {
         Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());
@@ -57,7 +57,7 @@ class HysteresisProperties {
         return Situations.any().map(HysteresisProperties::healthy);
     }
 
-    @Property(tries = 200)
+    @Property
     void decisions_RandomSeries_ChangeOnlyAfterWindowOrByHardReason(@ForAll("series") List<Situation> series) {
         DecisionRun run = new DecisionRun(CONFIG, series.get(0), 1);
         TacticalOption previous = null;

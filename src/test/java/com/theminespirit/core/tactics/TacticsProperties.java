@@ -104,7 +104,7 @@ class TacticsProperties {
         return new TacticsEngine(CONFIG).step(c.situation(), c.memory(), c.tick());
     }
 
-    @Property(tries = 200)
+    @Property
     void step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction(@ForAll("cases") Case c) {
         TacticalOutcome outcome = run(c);
 
@@ -117,7 +117,7 @@ class TacticsProperties {
                 "Зов на помощь - побочное действие отхода, при другом решении его нет");
     }
 
-    @Property(tries = 200)
+    @Property
     void step_AnyAdmissibleCase_RetreatAlwaysNamesAWay(@ForAll("cases") Case c) {
         TacticalOutcome outcome = run(c);
 
@@ -126,13 +126,13 @@ class TacticsProperties {
                         + "если способов нет совсем, замена по правилам noRoute");
     }
 
-    @Property(tries = 200)
+    @Property
     void step_TwoEnginesSameInput_ReturnEqualOutcomesIncludingTrace(@ForAll("cases") Case c) {
         assertEquals(run(c), run(c),
                 "Тактика детерминирована: те же факты и память дают побитово тот же результат вместе с trace");
     }
 
-    @Property(tries = 200)
+    @Property
     void step_ShuffledEnemies_ReturnSameOutcome(@ForAll("cases") Case c, @ForAll long seed) {
         List<EnemyFact> shuffled = new ArrayList<>(c.situation().enemies());
         Collections.shuffle(shuffled, new Random(seed));
@@ -144,7 +144,7 @@ class TacticsProperties {
                 "Порядок, в котором адаптер нашёл врагов, не должен менять решение");
     }
 
-    @Property(tries = 200)
+    @Property
     void step_CriticalHpWithEnemies_NeverFightsExceptCornered(@ForAll("criticalCases") Case c) {
         TacticalOutcome outcome = run(c);
 
@@ -156,7 +156,7 @@ class TacticsProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void step_PassiveMode_NeverFightsExceptCornered(@ForAll("passiveCases") Case c) {
         TacticalOutcome outcome = run(c);
 
@@ -167,7 +167,7 @@ class TacticsProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void step_BeyondLeashInGuardModes_DoesNotFightUnlessEnemyWithinThree(@ForAll("guardCases") Case c) {
         TacticalOutcome outcome = run(c);
         Situation situation = c.situation();
@@ -184,7 +184,7 @@ class TacticsProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void step_ConfigWithShuffledKeysAndWhitespace_GivesSameOutcome(@ForAll("cases") Case c, @ForAll long seed) {
         TacticsConfig shuffled = shuffledConfig(seed);
 

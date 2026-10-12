@@ -16,7 +16,7 @@ class RetreatSelectorProperties {
         return Situations.any();
     }
 
-    @Property(tries = 200)
+    @Property
     void choice_AnySituation_ChosenMethodSatisfiesItsOwnRequirements(@ForAll("situations") Situation situation) {
         FactMap facts = Assessments.facts(situation);
         RetreatOptions options = new RetreatSelector(CONFIG.rules().retreat(), new RuleCounter()).evaluate(facts);

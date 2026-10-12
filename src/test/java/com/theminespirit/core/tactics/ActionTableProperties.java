@@ -13,7 +13,7 @@ class ActionTableProperties {
         return Situations.any();
     }
 
-    @Property(tries = 200)
+    @Property
     void choose_AnySituationAndDecision_ActionIsDefinedAndMatchesDecision(@ForAll("situations") Situation situation,
             @ForAll TacticalOption decision) {
         ActionTable table = new ActionTable(TacticsConfig.loadDefault().rules().actions(), new RuleCounter());

@@ -43,7 +43,7 @@ class DeciderProperties {
                 shipped.hpDropRelease(), shipped.scales());
     }
 
-    @Property(tries = 200)
+    @Property
     void decide_NoRouteOrScore_NeverPicksExcludedOption(@ForAll("situations") Situation situation,
             @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
@@ -75,7 +75,7 @@ class DeciderProperties {
                 .anyMatch(rule -> rule.id().equals(ruleId) && rule.noRouteOption().isPresent());
     }
 
-    @Property(tries = 200)
+    @Property
     void decide_DecisiveHardRule_CannotBeOutbidByAnyWeights(@ForAll("situations") Situation situation,
             @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);

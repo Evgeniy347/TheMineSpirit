@@ -27,7 +27,7 @@ class FactorProperties {
         return WinMargin.of(situation.self(), metrics(situation), Scales.defaults());
     }
 
-    @Property(tries = 200)
+    @Property
     void factors_AnyAdmissibleSituation_AreFiniteAndWithinRange(@ForAll("situations") Situation situation,
             @ForAll @IntRange(min = 0, max = 7) int routes, @ForAll @IntRange(min = -20, max = 40) int leash,
             @ForAll @DoubleRange(min = 0, max = 1) double quality) {
@@ -45,7 +45,7 @@ class FactorProperties {
         }
     }
 
-    @Property(tries = 200)
+    @Property
     void winMargin_MoreArmorHpOrDamage_NeverDecreases(@ForAll("situations") Situation situation,
             @ForAll("steps") int armorStep, @ForAll("steps") int hpStep, @ForAll("steps") int dpsStep) {
         SelfFacts self = situation.self();
@@ -59,7 +59,7 @@ class FactorProperties {
                         + margin(stronger) + "; иначе дух отступает именно после усиления");
     }
 
-    @Property(tries = 200)
+    @Property
     void pressure_MoreArmorHpOrDamage_NeverIncreases(@ForAll("situations") Situation situation,
             @ForAll("steps") int armorStep, @ForAll("steps") int hpStep, @ForAll("steps") int dpsStep) {
         SelfFacts self = situation.self();
@@ -79,7 +79,7 @@ class FactorProperties {
         return WinMargin.urgency(situation.self(), metrics(situation), Scales.defaults());
     }
 
-    @Property(tries = 200)
+    @Property
     void urgency_LessOwnHp_NeverDecreases(@ForAll("situations") Situation situation,
             @ForAll("steps") int hpStep) {
         SelfFacts self = situation.self();
@@ -97,7 +97,7 @@ class FactorProperties {
         return Arbitraries.integers().between(0, 6);
     }
 
-    @Property(tries = 200)
+    @Property
     void winMargin_MoreEnemiesOfSameType_NeverIncreases(@ForAll("situations") Situation situation) {
         if (situation.enemies().isEmpty()) {
             return;

@@ -16,7 +16,7 @@ class VeinWalkerProperties {
     private static final int GRID_SIZE = 4;
     private static final int NO_LIMIT = 1000;
 
-    @Property(tries = 200)
+    @Property
     void collect_RandomWorld_MatchesConnectedComponent(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         CountingOreView view = randomView(new Random(seed));
         if (view.ores().isEmpty()) {
@@ -33,7 +33,7 @@ class VeinWalkerProperties {
                 "Пока блоков меньше предела, жила не помечается усечённой: иначе адаптер преждевременно ищет новую");
     }
 
-    @Property(tries = 200)
+    @Property
     void collect_RandomWorld_ReadsStayBounded(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         CountingOreView view = randomView(new Random(seed));
         if (view.ores().isEmpty()) {

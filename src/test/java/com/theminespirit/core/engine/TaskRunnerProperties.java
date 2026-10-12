@@ -34,7 +34,7 @@ class TaskRunnerProperties {
             YES, params -> true,
             NO, params -> false));
 
-    @Property(tries = 200)
+    @Property
     void run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         TaskNode plan = randomTree(new Random(seed), MAX_DEPTH);
