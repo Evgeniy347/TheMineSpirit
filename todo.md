@@ -78,6 +78,9 @@
 - [x] Техдолг: GameTest REST ждут ответ моста по реальному времени (30 с), потолок тиков запасной; посадка в тёмную клетку стартует по условию света (Sonnet, 13.10)
 - [x] Чеклист 18: тесты быстрее и легче (C1/SerialGC, тиры test/slowTest/propertyTest, подсветка долгих, сторожа tries/timeoutTicks, чистый мир GameTest, флек ChunkLoading)
 - [x] Техдолг: итог фермы — радиус в тексте harvest_crop, отдельный счётчик dry (нет воды), requested = min(count, найдено) (nemotron, 13.10)
+- [x] Восприятие: scan_blocks, scan_entities, sense_hazard (лава/вода/обрыв)
+- [x] Восприятие: locate_block, locate_tree, locate_container, look_at
+- [x] Память духа: remember/recall/recall_all/forget, NBT SpiritMemory, /spirit memory (чеклист 26, Sonnet 13.10)
 
 ## В работе и техдолг
 
@@ -102,6 +105,11 @@
       тайм-ауты по замерам тиков (testCostReport/лог GameTest), метку оставить только где флак доказан.
 - [ ] `scripts/gametest.sh` не работает в Git Bash на Windows (нет flock): на ПК — запуск без замка или через
       gametest-local.sh; строка в docs/TESTING.md.
+- [ ] Восприятие (ревью 26): результаты scan_blocks/sense_hazard/locate_*/look_at/recall лежат в духе
+      (`SpiritEntity.perceptionResult()`/`finding()`) — довести до REST (observe или итог задачи) и стратега: whitelist
+      `agents/strategist/policy.json`, docs/API.md. Связано с «общим каналом итога» `ScriptInstance.resultMessage()`.
+- [ ] `locate_tree` возвращает ближайшее бревно породы, не проверенное дерево (постройка из брёвен тоже подходит) —
+      подключить детектор формы дерева из рубки.
 - [ ] Сторож GameTest (повторяется в ревью 11Б, 12Б R15/R22): тест, который спавнит духа или ставит блоки, не
       использует шаблон `empty` 3×3×3 — дух или блок за его пределами попадает в соседний неактивный чанк (флеки ~1 из 8).
       Сторож сканирует gametest/*: метод с духом/setBlock → template "arena"; перевести существующие (52 empty в main).
@@ -139,9 +147,6 @@
 - [ ] `swim`, `cross_water`, `step_over`, `approach` (выбор стороны подхода)
 
 ### Восприятие
-- [ ] `scan`, `scan_blocks`, `scan_entities`, `sense_hazard` (лава/вода/обрыв)
-- [ ] `locate_block`, `locate_tree`, `locate_container`, `look_at`
-- [ ] `remember` / `recall` (запомнить точку)
 
 ### Добыча
 - [ ] `chop_target` (конкретное дерево/координата; `chop_tree` по виду — сделан)
