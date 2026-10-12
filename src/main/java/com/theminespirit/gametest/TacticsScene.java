@@ -25,14 +25,19 @@ final class TacticsScene {
     static final int SIZE = 11;
     static final float LOW_HP = 4.0F;
     static final int FOREVER = 1_000_000;
+    static final long NOON = 6000;
     private static final int SWEEP_MARGIN = 45;
     private static final int SWEEP_DEPTH = 8;
     private static final int SWEEP_HEIGHT = 24;
+
+    private static long savedDayTime;
 
     private TacticsScene() {
     }
 
     static void prepare(GameTestHelper helper) {
+        savedDayTime = helper.getLevel().getDayTime();
+        helper.getLevel().setDayTime(NOON);
         sweep(helper);
         GameTestFixtures.reset(helper);
         for (int x = 0; x < SIZE; x++) {
@@ -69,6 +74,7 @@ final class TacticsScene {
 
     static void finish(GameTestHelper helper, SpiritEntity spirit) {
         spirit.discard();
+        helper.getLevel().setDayTime(savedDayTime);
         sweep(helper);
         GameTestFixtures.reset(helper);
     }
