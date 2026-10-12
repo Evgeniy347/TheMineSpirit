@@ -48,6 +48,39 @@ public final class TransferPlanner {
         return new TransferPlan(moves, moved, available - moved);
     }
 
+    public static TransferPlan planSlices(List<Stack> from, List<Stack> to, List<Slice> slices) {
+        Objects.requireNonNull(from, "Слоты источника не могут быть null: излишек разгрузки брать негде");
+        Objects.requireNonNull(to, "Слоты приёмника не могут быть null: излишку разгрузки некуда лечь");
+        Objects.requireNonNull(slices, "Список излишка не может быть null: "
+                + "без него непонятно, какие слоты везти в контейнер");
+        Receiver receiver = new Receiver(to);
+        List<Move> moves = new ArrayList<>();
+        int moved = 0;
+        int total = 0;
+        for (Slice slice : slices) {
+            if (slice.slot() >= from.size()) {
+                throw new IllegalArgumentException("Излишек в слоте " + slice.slot()
+                        + " при источнике на " + from.size() + " слотов: везти нечего, излишек посчитан не по тем слотам");
+            }
+            total += slice.count();
+            Stack source = from.get(slice.slot());
+            int present = source == null ? 0 : Math.min(source.count(), slice.count());
+            int rest = present;
+            while (rest > 0) {
+                int target = receiver.slotFor(source);
+                if (target < 0) {
+                    break;
+                }
+                int count = Math.min(receiver.roomIn(target, source), rest);
+                receiver.place(target, source, count);
+                moves.add(new Move(slice.slot(), target, count));
+                moved += count;
+                rest -= count;
+            }
+        }
+        return new TransferPlan(moves, moved, total - moved);
+    }
+
     private static String key(Stack stack) {
         return stack.item() + "|" + stack.variant();
     }
