@@ -9,6 +9,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSession;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -227,6 +228,42 @@ public final class HusbandryGameTests {
                             + again.done());
             helper.assertTrue(alive(helper, Cow.class).size() == 6,
                     "после двух пар коров обязано стать 6, фактически " + alive(helper, Cow.class).size());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "husbandry_suspend", timeoutTicks = 200)
+    public static void feed_SuspendedMidApproach_StopsNavigationAtOnce(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        HusbandryGameTests.fencePerimeter(helper);
+        spawnStill(helper, EntityType.COW, new BlockPos(7, 1, 3));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 2));
+        AtomicReference<HerdSession> session = new AtomicReference<>();
+        AtomicBoolean suspended = new AtomicBoolean();
+        AtomicBoolean stoppedAtOnce = new AtomicBoolean();
+
+        helper.onEachTick(() -> {
+            if (spirit.tickCount < SETTLE_TICKS || suspended.get()) {
+                return;
+            }
+            if (session.get() == null) {
+                session.set(HerdSession.feed(spirit, Species.COW, 8, 1, false));
+            }
+            session.get().tick();
+            if (!spirit.getNavigation().isDone()) {
+                session.get().suspend();
+                stoppedAtOnce.set(spirit.getNavigation().isDone());
+                suspended.set(true);
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(suspended.get(),
+                    "дух обязан начать идти к корове: иначе приостанавливать нечего");
+            helper.assertTrue(stoppedAtOnce.get(),
+                    "после suspend навигация духа обязана остановиться в тот же тик: иначе рефлекс политики не "
+                            + "перехватит движение к стаду");
             GameTestFixtures.reset(helper);
         });
     }

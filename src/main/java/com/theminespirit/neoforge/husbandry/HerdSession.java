@@ -195,6 +195,16 @@ public final class HerdSession {
         return outcome;
     }
 
+    public void suspend() {
+        approach.suspend();
+        if (collector != null) {
+            collector.suspend();
+        }
+        if (lureTarget != null) {
+            actions.stopLeading(lureTarget);
+        }
+    }
+
     public void cancel() {
         approach.cancel();
         if (collector != null) {

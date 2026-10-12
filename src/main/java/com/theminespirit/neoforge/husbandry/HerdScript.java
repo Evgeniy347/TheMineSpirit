@@ -21,6 +21,11 @@ public class HerdScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        session.suspend();
+    }
+
+    @Override
     public void cancel() {
         session.cancel();
     }
