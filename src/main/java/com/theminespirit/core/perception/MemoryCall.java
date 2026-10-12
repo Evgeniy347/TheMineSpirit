@@ -9,8 +9,16 @@ public sealed interface MemoryCall {
 
     MemoryOutcome apply(MemoryStore store, String dimension);
 
+    String describe(Finding finding);
+
     static Sighting sightingOf(MemoryPoint point) {
         return new Sighting(point.type().id(), point.name(), point.pos(), point.dimension());
+    }
+
+    static String line(Sighting sighting) {
+        BlockCoord pos = sighting.pos();
+        return sighting.label() + ": " + sighting.kind() + " (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") в "
+                + sighting.detail();
     }
 
     record Remember(String name, MemoryType type, BlockCoord pos) implements MemoryCall {
@@ -30,6 +38,11 @@ public sealed interface MemoryCall {
             MemoryPoint point = new MemoryPoint(name, type, dimension, pos);
             return new MemoryOutcome(store.remember(point), new Finding(script(), List.of(sightingOf(point))));
         }
+
+        @Override
+        public String describe(Finding finding) {
+            return "Запомнена точка " + line(finding.sightings().get(0));
+        }
     }
 
     record Recall(String name) implements MemoryCall {
@@ -48,6 +61,11 @@ public sealed interface MemoryCall {
             List<Sighting> sightings = point == null ? List.of() : List.of(sightingOf(point));
             return new MemoryOutcome(store, new Finding(script(), sightings));
         }
+
+        @Override
+        public String describe(Finding finding) {
+            return finding.isEmpty() ? "Точки '" + name + "' в памяти нет" : line(finding.sightings().get(0));
+        }
     }
 
     record RecallAll(MemoryType type) implements MemoryCall {
@@ -64,6 +82,16 @@ public sealed interface MemoryCall {
         public MemoryOutcome apply(MemoryStore store, String dimension) {
             List<Sighting> sightings = store.recallAll(type).stream().map(MemoryCall::sightingOf).toList();
             return new MemoryOutcome(store, new Finding(script(), sightings));
+        }
+
+        @Override
+        public String describe(Finding finding) {
+            if (finding.isEmpty()) {
+                return "Точек типа " + type.id() + " в памяти нет";
+            }
+            StringBuilder text = new StringBuilder("Точек типа " + type.id() + ": " + finding.sightings().size());
+            finding.sightings().forEach(sighting -> text.append('\n').append(line(sighting)));
+            return text.toString();
         }
     }
 
@@ -82,6 +110,13 @@ public sealed interface MemoryCall {
             MemoryPoint forgotten = store.recall(name);
             List<Sighting> sightings = forgotten == null ? List.of() : List.of(sightingOf(forgotten));
             return new MemoryOutcome(store.forget(name), new Finding(script(), sightings));
+        }
+
+        @Override
+        public String describe(Finding finding) {
+            return finding.isEmpty()
+                    ? "Точки '" + name + "' в памяти нет, забывать нечего"
+                    : "Забыта точка " + line(finding.sightings().get(0));
         }
     }
 }

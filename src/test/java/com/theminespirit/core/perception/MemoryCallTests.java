@@ -114,4 +114,35 @@ class MemoryCallTests {
         assertEquals("minecraft:the_nether", outcome.finding().sightings().get(0).detail(),
                 "находка обязана назвать измерение точки");
     }
+
+    static Stream<Arguments> reports() {
+        MemoryPoint iron = point("iron", MemoryType.RESOURCE, MINE);
+        MemoryPoint lake = point("lava_lake", MemoryType.DANGER, LAVA);
+        return Stream.of(
+                Arguments.of("recall найден", new MemoryCall.Recall("iron"), store(iron),
+                        "iron: resource (-20, 12, 30) в minecraft:overworld"),
+                Arguments.of("recall не найден", new MemoryCall.Recall("gold"), store(iron),
+                        "Точки 'gold' в памяти нет"),
+                Arguments.of("all с точками", new MemoryCall.RecallAll(MemoryType.DANGER), store(iron, lake),
+                        "Точек типа danger: 1\nlava_lake: danger (5, 8, -7) в minecraft:overworld"),
+                Arguments.of("all без точек", new MemoryCall.RecallAll(MemoryType.BASE), store(iron, lake),
+                        "Точек типа base в памяти нет"),
+                Arguments.of("forget найден", new MemoryCall.Forget("iron"), store(iron),
+                        "Забыта точка iron: resource (-20, 12, 30) в minecraft:overworld"),
+                Arguments.of("forget не найден", new MemoryCall.Forget("gold"), store(iron),
+                        "Точки 'gold' в памяти нет, забывать нечего"),
+                Arguments.of("remember", new MemoryCall.Remember("home", MemoryType.BASE, HOME), MemoryStore.empty(),
+                        "Запомнена точка home: base (10, 64, 10) в minecraft:overworld"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("reports")
+    void describe_OutcomeOfCall_ReadsAsOneLinePerPoint(String scene, MemoryCall call, MemoryStore before,
+            String expected) {
+        MemoryOutcome outcome = call.apply(before, OVERWORLD);
+
+        assertEquals(expected, call.describe(outcome.finding()),
+                scene + ": ответ команды /spirit memory обязан называть имя, тип, позицию и измерение точки, а "
+                        + "отсутствие точки — прямо говорить, что её нет");
+    }
 }

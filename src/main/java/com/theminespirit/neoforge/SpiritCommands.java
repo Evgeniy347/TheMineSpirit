@@ -18,6 +18,7 @@ public final class SpiritCommands {
         SpiritSpawnCommand.register(spirit);
         SpiritObserveCommand.register(spirit);
         SpiritTaskCommands.register(spirit);
+        SpiritMemoryCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }
