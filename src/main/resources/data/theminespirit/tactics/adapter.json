@@ -1,0 +1,7 @@
+{
+  "evalIntervalTicks": 10,
+  "maxEnemies": 16,
+  "factRadius": 32,
+  "factChunkBudget": 64,
+  "retreatHoldTicks": 200
+}
