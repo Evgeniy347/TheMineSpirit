@@ -16,6 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -27,6 +29,8 @@ public final class ScriptProgressGameTests {
     private static final int COBBLE_TARGET = 6;
     private static final int ORE_TARGET = 3;
     private static final int RADIUS = 16;
+    private static final int CHOP_TARGET = 2;
+    private static final int TRUNK_HEIGHT = 5;
 
     private ScriptProgressGameTests() {
     }
@@ -63,6 +67,28 @@ public final class ScriptProgressGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             assertCountedProgress(helper, seen, "mine_vein", ORE_TARGET);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "progress_chop", timeoutTicks = 600)
+    public static void chopTreeProgress_TwoOaks_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.DIRT);
+        buildOak(helper, 3, 3);
+        buildOak(helper, 6, 3);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
+        List<RunProgress> seen = recordProgress(helper, spirit);
+        SpiritRun.launch(helper, spirit, new ScriptCall("chop_tree",
+                Map.of("species", "any", "count", CHOP_TARGET, "radius", 8, "replant", false)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "chop_tree двух дубов обязан завершиться успехом: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            assertCountedProgress(helper, seen, "chop_tree", CHOP_TARGET);
             GameTestFixtures.reset(helper);
         });
     }
@@ -125,6 +151,22 @@ public final class ScriptProgressGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
         return spirit;
+    }
+
+    private static void buildOak(GameTestHelper helper, int x, int z) {
+        for (int y = 1; y <= TRUNK_HEIGHT; y++) {
+            helper.setBlock(x, y, z, Blocks.OAK_LOG);
+        }
+        BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                helper.setBlock(x + dx, TRUNK_HEIGHT + 1, z + dz, leaves);
+            }
+        }
+        helper.setBlock(x + 1, TRUNK_HEIGHT, z, leaves);
+        helper.setBlock(x - 1, TRUNK_HEIGHT, z, leaves);
+        helper.setBlock(x, TRUNK_HEIGHT, z + 1, leaves);
+        helper.setBlock(x, TRUNK_HEIGHT, z - 1, leaves);
     }
 
     private static void heap(GameTestHelper helper, Block block, int fromX, int toX, int fromZ, int toZ) {

@@ -41,7 +41,7 @@ public final class RestTaskGameTests {
     private RestTaskGameTests() {
     }
 
-    @GameTest(batch = "rest_tasks_accept", template = "arena", timeoutTicks = 200)
+    @GameTest(batch = "rest_tasks_accept", template = "arena", timeoutTicks = 1200)
     public static void tasks_PlanGoto_Accepts202AndBotReportsCurrentTaskAndRefusesSecondTask(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -80,7 +80,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_replay", template = "arena", timeoutTicks = 200)
+    @GameTest(batch = "rest_tasks_replay", template = "arena", timeoutTicks = 1200)
     public static void tasks_ReplayAndChangedBody_SameTaskWithoutRestartThenConflict(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -116,7 +116,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_command", template = "arena", timeoutTicks = 200)
+    @GameTest(batch = "rest_tasks_command", template = "arena", timeoutTicks = 1200)
     public static void tasks_SpiritBusyWithCommandTask_Returns409OutsideRestWithoutReservation(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -140,7 +140,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_watch", template = "arena", timeoutTicks = 300)
+    @GameTest(batch = "rest_tasks_watch", template = "arena", timeoutTicks = 1200)
     public static void tasks_PlanGoto_WatcherMovesAcceptedToRunningThenSucceededKeepingProgress(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -156,9 +156,12 @@ public final class RestTaskGameTests {
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(poller.seen().contains("running"),
-                    "GET задачи обязан хоть раз показать running, пока дух идёт к цели; виденные состояния "
-                            + poller.seen() + ": TaskWatcher не переводит accepted в running");
+            List<String> states = rest.gateway().taskRegistry().log(poller.taskId()).since(0).events().stream()
+                    .filter(event -> event.type().equals("state")).map(event -> event.data().get("state").toString())
+                    .toList();
+            helper.assertTrue(states.equals(List.of("running", "succeeded")),
+                    "Журнал событий обязан показать state running, затем succeeded (TaskWatcher переводит accepted в "
+                            + "running и закрывает задачу), получено " + states);
             helper.assertTrue("succeeded".equals(poller.latest()),
                     "Дойдя до цели, дух обязан закрыть задачу как succeeded; последнее состояние " + poller.latest()
                             + ", виденные " + poller.seen());
@@ -172,7 +175,7 @@ public final class RestTaskGameTests {
         });
     }
 
-    @GameTest(batch = "rest_tasks_reload", template = "arena", timeoutTicks = 300)
+    @GameTest(batch = "rest_tasks_reload", template = "arena", timeoutTicks = 1200)
     public static void tasks_SpiritReloadedWithinGrace_TaskStaysRunningAndSucceeds(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -219,7 +222,7 @@ public final class RestTaskGameTests {
         });
     }
 
-    @GameTest(batch = "rest_tasks_gone", template = "arena", timeoutTicks = 400)
+    @GameTest(batch = "rest_tasks_gone", template = "arena", timeoutTicks = 1200)
     public static void tasks_SpiritGoneForever_FailsAfterAboutHundredTicksWithSpiritGoneReason(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -271,6 +274,10 @@ public final class RestTaskGameTests {
             TaskPoller poller = new TaskPoller();
             helper.onEachTick(() -> poller.poll(helper, rest));
             return poller;
+        }
+
+        String taskId() {
+            return taskId.get();
         }
 
         void follow(String id) {

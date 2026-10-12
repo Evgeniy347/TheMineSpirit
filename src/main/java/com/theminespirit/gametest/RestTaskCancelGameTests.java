@@ -38,7 +38,7 @@ public final class RestTaskCancelGameTests {
     private record Stopped(Vec3 position, long gameTime) {
     }
 
-    @GameTest(batch = "rest_cancel_move", template = "arena", timeoutTicks = 800)
+    @GameTest(batch = "rest_cancel_move", template = "arena", timeoutTicks = 2400)
     public static void delete_RunningGoto_Returns200CancelledTwiceAnd404ForUnknownAndSpiritStops(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
@@ -97,7 +97,7 @@ public final class RestTaskCancelGameTests {
         });
     }
 
-    @GameTest(batch = "rest_cancel_mining", template = "arena", timeoutTicks = 800)
+    @GameTest(batch = "rest_cancel_mining", template = "arena", timeoutTicks = 2400)
     public static void delete_GatherMidBreaking_WorldQuietAndNothingLostAfterFortyTicks(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);

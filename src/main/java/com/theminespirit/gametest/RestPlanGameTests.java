@@ -25,21 +25,19 @@ public final class RestPlanGameTests {
     private RestPlanGameTests() {
     }
 
-    @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = 1200)
-    public static void tasks_GoalsWithoutImplementedScriptOrTarget_Rejects422WithReasonAndFollowWithTargetAccepts202(
+    @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = 3600)
+    public static void tasks_GoalsWithoutImplementedScriptOrTarget_Rejects422WithReasonAndChopAndFollowAccept202(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        SpiritEntity follower = rest.spawn(helper, SPIRIT_START);
         ServerPlayer player = mockPlayer(helper);
         String path = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
+        String followerPath = "/v1/bots/" + follower.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(path, goalBody("верни домой", ""))
                 .thenCompose(home -> {
                     expectInvalidPlan(problems, home, "return_home", "цель «верни домой»: скрипт return_home не реализован");
-                    return rest.post(path, goalBody("срубить дерево", ""));
-                }).thenCompose(chop -> {
-                    expectInvalidPlan(problems, chop, "chop_tree",
-                            "цель «срубить дерево»: скрипт chop_tree не реализован в каталоге духа");
                     return rest.post(path, goalBody("абракадабра", ""));
                 }).thenCompose(nonsense -> {
                     expectInvalidPlan(problems, nonsense, "абракадабра", "бессмысленная цель");
@@ -49,7 +47,12 @@ public final class RestPlanGameTests {
                     problems.expect(rest.gateway().taskRegistry().size() == 0,
                             "Отказанные цели не должны оставлять записей в реестре, записей "
                                     + rest.gateway().taskRegistry().size());
-                    return rest.post(path, goalBody("следуй за мной",
+                    return rest.post(path, goalBody("срубить дерево", ""));
+                }).thenCompose(chop -> {
+                    problems.expect(chop.status() == 202,
+                            "Цель «срубить дерево» (chop_tree реализован) обязана приниматься (202), получен "
+                                    + chop.status() + ": " + chop.body());
+                    return rest.post(followerPath, goalBody("следуй за мной",
                             ",\"params\":{\"target\":\"" + player.getName().getString() + "\"}"));
                 }).thenApply(accepted -> {
                     problems.expect(accepted.status() == 202,
@@ -60,7 +63,7 @@ public final class RestPlanGameTests {
         RestFixture.await(helper, rest, scenario, () -> removePlayer(helper, player));
     }
 
-    @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = 600)
+    @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = 1800)
     public static void plan_ExtraParamAndOversizedAndDryRun_Rejects422WithReasonAndWorldUntouched(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

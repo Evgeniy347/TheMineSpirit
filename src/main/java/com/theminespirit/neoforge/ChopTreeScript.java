@@ -99,6 +99,11 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     @Override
+    public Optional<Progress> progress() {
+        return Optional.of(new Progress(Math.min(chopped, params.count()), params.count()));
+    }
+
+    @Override
     public void cancel() {
         breaker.cancel();
         approach.cancel();
