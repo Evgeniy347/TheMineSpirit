@@ -4,6 +4,7 @@ import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
@@ -63,19 +64,23 @@ public final class ResourceResolver {
         }
 
         private TaskNode resolve(String item, int count) {
+            return resolve(item, count, true);
+        }
+
+        private TaskNode resolve(String item, int count, boolean topLevel) {
             if (!path.add(item)) {
                 throw new UnplannableGoalException(item, "Зацикленный способ добычи предмета '" + item
                         + "': предмет снова встретился на цепочке рецептов");
             }
             try {
                 if (knowledge.isCraftable(item)) {
-                    return craftPlan(item, count);
+                    return craftPlan(item, count, topLevel);
                 }
                 if (knowledge.isSmeltable(item)) {
-                    return smeltPlan(item, count);
+                    return smeltPlan(item, count, topLevel);
                 }
                 if (knowledge.isGatherable(item)) {
-                    return new ScriptCall("gather", Map.of("block", item, "count", count));
+                    return batched("gather", item, count, topLevel);
                 }
                 throw new UnplannableGoalException(item, "Для предмета '" + item
                         + "' не найден способ добычи: добавьте его в знания как gatherable, smeltable или craftable");
@@ -84,7 +89,31 @@ public final class ResourceResolver {
             }
         }
 
-        private TaskNode craftPlan(String item, int count) {
+        private static TaskNode batched(String script, String item, int count, boolean topLevel) {
+            if (topLevel || count <= CatalogLimits.COUNT_MAX) {
+                return single(script, item, count);
+            }
+            List<TaskNode> batches = new ArrayList<>();
+            int left = count;
+            while (left > 0) {
+                int batch = Math.min(left, CatalogLimits.COUNT_MAX);
+                batches.add(single(script, item, batch));
+                left -= batch;
+            }
+            return new SequenceNode(batches);
+        }
+
+        private static ScriptCall single(String script, String item, int count) {
+            return switch (script) {
+                case "gather" -> new ScriptCall("gather", Map.of("block", item, "count", count));
+                case "craft" -> new ScriptCall("craft", Map.of("item", item, "count", count));
+                case "smelt" -> new ScriptCall("smelt", Map.of("item", item, "count", count));
+                default -> throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
+                        + "батчинг знает только gather, craft и smelt");
+            };
+        }
+
+        private TaskNode craftPlan(String item, int count, boolean topLevel) {
             int output = knowledge.outputCount(item);
             if (output <= 0) {
                 throw new UnplannableGoalException(item, "Рецепт предмета '" + item + "' даёт " + output
@@ -93,20 +122,20 @@ public final class ResourceResolver {
             long crafts = (count + (long) output - 1) / output;
             List<TaskNode> steps = new ArrayList<>();
             for (Ingredient ingredient : knowledge.ingredientsFor(item)) {
-                steps.add(resolve(ingredient.item(), ingredientCount(ingredient, crafts, item)));
+                steps.add(resolve(ingredient.item(), ingredientCount(ingredient, crafts, item), false));
             }
             stationStep(item).ifPresent(steps::add);
-            steps.add(new ScriptCall("craft", Map.of("item", item, "count", count)));
+            steps.add(batched("craft", item, count, topLevel));
             return new SequenceNode(steps);
         }
 
-        private TaskNode smeltPlan(String item, int count) {
+        private TaskNode smeltPlan(String item, int count, boolean topLevel) {
             List<TaskNode> steps = new ArrayList<>(4);
-            steps.add(resolve(knowledge.smeltInputFor(item), count));
+            steps.add(resolve(knowledge.smeltInputFor(item), count, false));
             FuelPlanner.select(item, count, knowledge, path, remaining)
-                    .ifPresent(fuel -> steps.add(resolve(fuel.fuel(), fuel.count())));
+                    .ifPresent(fuel -> steps.add(resolve(fuel.fuel(), fuel.count(), false)));
             stationStep(item).ifPresent(steps::add);
-            steps.add(new ScriptCall("smelt", Map.of("item", item, "count", count)));
+            steps.add(batched("smelt", item, count, topLevel));
             return new SequenceNode(steps);
         }
 

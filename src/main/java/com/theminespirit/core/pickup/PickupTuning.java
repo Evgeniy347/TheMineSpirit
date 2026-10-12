@@ -7,6 +7,8 @@ public record PickupTuning(int refreshTicks, double pickupReach, int totalTimeou
     public static final int MAX_DELAY_WAIT_TICKS = 40;
     public static final PickupTuning DEFAULT =
             new PickupTuning(REFRESH_TICKS, PICKUP_REACH, TOTAL_TIMEOUT_TICKS, MAX_DELAY_WAIT_TICKS);
+    public static final int SELF_DROP_DELAY_TICKS = 400;
+    public static final int OWN_DROP_SKIP_TICKS = 6000;
 
     public PickupTuning {
         if (refreshTicks < 1) {

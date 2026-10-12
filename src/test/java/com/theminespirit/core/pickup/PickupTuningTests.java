@@ -14,6 +14,16 @@ class PickupTuningTests {
     }
 
     @Test
+    void overflowDelays_Constants_MatchChecklist() {
+        assertEquals(400, PickupTuning.SELF_DROP_DELAY_TICKS,
+                "Выброшенное при переполнении лежит 400 тиков, прежде чем дух сможет его подобрать: иначе дух "
+                        + "тут же подбирал бы выброшенное обратно");
+        assertEquals(6000, PickupTuning.OWN_DROP_SKIP_TICKS,
+                "Свои выброшенные кучки сборщик пропускает 6000 тиков: иначе разгрузка превращалась бы "
+                        + "в цикл выбросил-подобрал");
+    }
+
+    @Test
     void constructor_NonPositiveValues_AreRejected() {
         assertThrows(IllegalArgumentException.class, () -> new PickupTuning(0, 1.5, 2400, 40),
                 "Период опроса 0 обязан отвергаться: опрос каждый тик нагружает сервер");

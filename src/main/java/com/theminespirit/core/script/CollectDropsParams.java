@@ -1,11 +1,12 @@
 package com.theminespirit.core.script;
 
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.pickup.OverflowMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public record CollectDropsParams(int radius, IdFilter items) {
+public record CollectDropsParams(int radius, IdFilter items, OverflowMode overflow) {
     public CollectDropsParams {
         if (radius < CatalogLimits.DROP_RADIUS_MIN || radius > CatalogLimits.DROP_RADIUS_MAX) {
             throw new IllegalArgumentException("Радиус подбора " + radius + " вне диапазона ["
@@ -19,6 +20,19 @@ public record CollectDropsParams(int radius, IdFilter items) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new CollectDropsParams(
                 ScriptArgs.requireInt(params, "radius"),
-                IdFilter.of(ScriptArgs.optionalStringList(params, "filter").orElse(List.of())));
+                IdFilter.of(ScriptArgs.optionalStringList(params, "filter").orElse(List.of())),
+                overflowOf(params.get("overflow")));
+    }
+
+    private static OverflowMode overflowOf(Object value) {
+        if (value == null) {
+            return OverflowMode.BY_VALUE;
+        }
+        if (!(value instanceof String text)) {
+            throw new IllegalArgumentException("Параметр 'overflow' скрипта должен быть строкой 'fail' или "
+                    + "'by_value', а получено " + value.getClass().getSimpleName()
+                    + ": тип параметра обеспечивает валидатор плана до запуска");
+        }
+        return OverflowMode.parse(text);
     }
 }

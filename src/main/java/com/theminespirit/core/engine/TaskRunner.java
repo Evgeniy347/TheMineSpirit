@@ -66,6 +66,10 @@ public final class TaskRunner {
         return status;
     }
 
+    public TaskNode plan() {
+        return plan;
+    }
+
     public Optional<String> failureReason() {
         return Optional.ofNullable(reason);
     }

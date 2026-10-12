@@ -208,6 +208,10 @@ public final class SpiritEntity extends PathfinderMob {
         return brain == null ? Optional.empty() : brain.status();
     }
 
+    public Optional<TaskNode> currentPlan() {
+        return brain == null ? Optional.empty() : brain.plan();
+    }
+
     public Optional<String> currentTaskScript() {
         return brain == null ? Optional.empty() : brain.currentScript();
     }

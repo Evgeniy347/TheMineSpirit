@@ -385,6 +385,22 @@ class ResourceResolverTests {
         return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 
+    @Test
+    void resolve_IntermediateDemandOverLimit_BatchesIntoValidCalls() {
+        ResourceKnowledge knowledge = new StubKnowledge(Set.of("oak_log"),
+                Map.of("stick", List.of(new Ingredient("oak_log", 40))), Map.of());
+
+        TaskNode plan = ResourceResolver.resolve("stick", 8, knowledge);
+
+        assertEquals(new SequenceNode(List.of(
+                new SequenceNode(List.of(gather("oak_log", 256), gather("oak_log", 64))),
+                craft("stick", 8))), plan,
+                "Промежуточное требование 320 (8 крафтов по 40 бревна) обязано разбиваться на вызовы в пределах "
+                        + "лимита 256: иначе валидатор ронял бы весь план внутренней ошибкой, а дух оставался бы "
+                        + "без плана на достижимую цель. Финальный крафт при этом один, на 8");
+    }
+    }
+
     private static ScriptCall gather(String block, int count) {
         return new ScriptCall("gather", Map.of("block", block, "count", count,
                 "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));

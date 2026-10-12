@@ -1,11 +1,14 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.inventory.OverflowPolicy;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.DropRef;
 import com.theminespirit.core.pickup.DropRoute;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.neoforge.inventory.OverflowDecider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +21,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public final class DropCollector {
     public enum State {
@@ -30,6 +34,8 @@ public final class DropCollector {
     private final IdFilter items;
     private final AABB area;
     private final PickupTuning tuning;
+    private final OverflowMode overflow;
+    private final OverflowDecider decider;
     private final Approach approach;
     private final LevelSafetyView safety;
     private final Set<String> skipped = new HashSet<>();
@@ -43,10 +49,13 @@ public final class DropCollector {
     private int delayWaited;
     private boolean queriedThisTick;
 
-    public DropCollector(SpiritEntity spirit, IdFilter items, BlockCoord center, int radius, PickupTuning tuning) {
+    public DropCollector(SpiritEntity spirit, IdFilter items, BlockCoord center, int radius, PickupTuning tuning,
+            OverflowMode overflow) {
         this.spirit = spirit;
         this.items = items;
         this.tuning = tuning;
+        this.overflow = overflow;
+        this.decider = new OverflowDecider(spirit);
         this.approach = new Approach(spirit);
         this.safety = new LevelSafetyView(spirit.level());
         this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
@@ -105,7 +114,8 @@ public final class DropCollector {
 
     private void refresh() {
         nearby = spirit.level().getEntitiesOfClass(ItemEntity.class, area,
-                drop -> !drop.isRemoved() && addressedToAnyone(drop) && items.matches(itemId(drop.getItem())));
+                drop -> !drop.isRemoved() && addressedToAnyone(drop) && !isOwnRecentDrop(drop)
+                        && items.matches(itemId(drop.getItem())));
         entityQueries++;
         ticksSinceQuery = 0;
         queriedThisTick = true;
@@ -192,6 +202,9 @@ public final class DropCollector {
         ItemStack stack = target.getItem();
         ItemStack rest = spirit.getInventory().addItem(stack.copy());
         int taken = stack.getCount() - rest.getCount();
+        if (taken == 0 && overflow == OverflowMode.BY_VALUE) {
+            return overflowPickUp(stack);
+        }
         if (taken == 0) {
             return fail("инвентарь полон: не помещается " + itemId(stack));
         }
@@ -209,7 +222,44 @@ public final class DropCollector {
     private DropRef toRef(ItemEntity drop) {
         ItemStack stack = drop.getItem();
         return new DropRef(drop.getStringUUID(), itemId(stack), stack.getCount(), drop.getX(), drop.getY(), drop.getZ(),
-                spirit.getInventory().canAddItem(stack));
+                pickable(stack));
+    }
+
+    private boolean pickable(ItemStack stack) {
+        if (spirit.getInventory().canAddItem(stack)) {
+            return true;
+        }
+        return overflow == OverflowMode.BY_VALUE
+                && decider.decide(stack).action() != OverflowPolicy.Action.REFUSE;
+    }
+
+    private State overflowPickUp(ItemStack stack) {
+        OverflowPolicy.Decision decision = decider.decide(stack);
+        return switch (decision.action()) {
+            case TAKE_INTO_FREE_SLOT -> fail("инвентарь полон: не помещается " + itemId(stack));
+            case DROP -> dropAndTake(stack, decision.slot());
+            case REFUSE -> fail(decision.reason());
+        };
+    }
+
+    private State dropAndTake(ItemStack stack, int slot) {
+        ItemStack exile = spirit.getInventory().removeItemNoUpdate(slot);
+        ItemEntity dropped = new ItemEntity(spirit.level(), spirit.getX(), spirit.getY(), spirit.getZ(), exile);
+        dropped.setThrower(spirit);
+        dropped.setPickUpDelay(PickupTuning.SELF_DROP_DELAY_TICKS);
+        dropped.setDeltaMovement(Vec3.ZERO);
+        spirit.level().addFreshEntity(dropped);
+        spirit.getInventory().setItem(slot, stack.copy());
+        spirit.take(target, stack.getCount());
+        collected += stack.getCount();
+        target.discard();
+        target = null;
+        return State.RUNNING;
+    }
+
+    private boolean isOwnRecentDrop(ItemEntity drop) {
+        return drop.getOwner() != null && drop.getOwner().getUUID().equals(spirit.getUUID())
+                && drop.getAge() < PickupTuning.OWN_DROP_SKIP_TICKS;
     }
 
     private double distanceToSpirit(DropRef ref) {

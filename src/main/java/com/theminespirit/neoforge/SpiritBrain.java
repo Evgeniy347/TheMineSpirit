@@ -75,6 +75,10 @@ public final class SpiritBrain {
         return Optional.ofNullable(lastStatus);
     }
 
+    public Optional<TaskNode> plan() {
+        return runner == null ? Optional.empty() : Optional.of(runner.plan());
+    }
+
     public Optional<String> failureReason() {
         return Optional.ofNullable(lastReason);
     }

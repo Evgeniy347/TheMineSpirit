@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
 import java.util.Locale;
@@ -301,7 +302,7 @@ public final class HarvestSession {
                 mined++;
                 collectRuns++;
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
-                        PickupTuning.DEFAULT);
+                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
                 state = State.COLLECT;
             }
             case GONE -> {

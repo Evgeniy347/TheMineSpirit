@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.DropCollector;
@@ -98,8 +99,8 @@ public final class CollectDropsGameTests {
         }
         ItemEntity heap = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 5, 2.5, 1, 2.5);
         int totalBefore = totalItems(helper, spirit);
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
-                SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("collect_drops", Map.of("radius", 6, "overflow", "fail")), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -291,7 +292,8 @@ public final class CollectDropsGameTests {
         GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 4.5, 1, 7.5);
         BlockPos start = helper.absolutePos(SPIRIT_START);
         DropCollector collector = new DropCollector(spirit, IdFilter.matchAll(),
-                new BlockCoord(start.getX(), start.getY(), start.getZ()), 6, PickupTuning.DEFAULT);
+                new BlockCoord(start.getX(), start.getY(), start.getZ()), 6, PickupTuning.DEFAULT,
+                OverflowMode.FAIL);
         AtomicInteger ticks = new AtomicInteger();
         AtomicInteger lastSpiritTick = new AtomicInteger(SETTLE_TICKS - 1);
         AtomicReference<DropCollector.State> state = new AtomicReference<>(DropCollector.State.RUNNING);
