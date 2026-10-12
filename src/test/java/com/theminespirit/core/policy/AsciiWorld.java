@@ -38,6 +38,7 @@ final class AsciiWorld implements SafetyView {
             case 'F' -> cells.put(at, Cell.FIRE);
             case 'H' -> cells.put(at, Cell.HAZARD);
             case 'S' -> cells.put(at, Cell.FALLING);
+            case 'P' -> cells.put(at, Cell.PORTAL);
             case '.' -> cells.put(at, Cell.PASSABLE);
             default -> {
                 cells.put(at, Cell.PASSABLE);

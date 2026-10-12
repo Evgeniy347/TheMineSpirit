@@ -7,5 +7,6 @@ public enum Cell {
     LAVA,
     FIRE,
     HAZARD,
-    FALLING
+    FALLING,
+    PORTAL
 }
