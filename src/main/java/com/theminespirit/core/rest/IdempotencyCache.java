@@ -36,10 +36,29 @@ public final class IdempotencyCache {
         Objects.requireNonNull(fingerprint, "fingerprint не может быть null: сравнение тел требует отпечатка");
         Entry entry = entries.get(requestId);
         if (entry == null) {
+            entries.put(requestId, Entry.claimed(fingerprint));
             return new Result.New();
         }
         if (!entry.fingerprint.equals(fingerprint)) {
             return new Result.Conflict();
+        }
+        while (entry.inProgress()) {
+            try {
+                wait();
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new ApiException(ErrorCode.INTERNAL,
+                        "Ожидание идемпотентного повтора request_id " + requestId + " прервано: мост останавливается",
+                        Map.of("request_id", requestId));
+            }
+            entry = entries.get(requestId);
+            if (entry == null) {
+                entries.put(requestId, Entry.claimed(fingerprint));
+                return new Result.New();
+            }
+            if (!entry.fingerprint.equals(fingerprint)) {
+                return new Result.Conflict();
+            }
         }
         return new Result.Replay(entry.response);
     }
@@ -48,12 +67,24 @@ public final class IdempotencyCache {
         Objects.requireNonNull(requestId, "requestId не может быть null: идемпотентность держится на UUID клиента");
         Objects.requireNonNull(fingerprint, "fingerprint не может быть null: сравнение тел требует отпечатка");
         Objects.requireNonNull(response, "response не может быть null: повтор обязан вернуть прежний ответ дословно");
-        if (!entries.containsKey(requestId)) {
+        Entry entry = entries.get(requestId);
+        if (entry == null) {
             entries.put(requestId, new Entry(fingerprint, response));
-            while (entries.size() > CAPACITY) {
-                entries.remove(entries.keySet().iterator().next());
-            }
+        } else if (entry.inProgress()) {
+            entry.complete(response);
         }
+        while (entries.size() > CAPACITY) {
+            entries.remove(entries.keySet().iterator().next());
+        }
+        notifyAll();
+    }
+
+    public synchronized void release(String requestId) {
+        Entry entry = entries.get(requestId);
+        if (entry != null && entry.inProgress()) {
+            entries.remove(requestId);
+        }
+        notifyAll();
     }
 
     public synchronized int size() {
@@ -117,11 +148,23 @@ public final class IdempotencyCache {
 
     private static final class Entry {
         private final String fingerprint;
-        private final String response;
+        private String response;
 
         Entry(String fingerprint, String response) {
             this.fingerprint = fingerprint;
             this.response = response;
+        }
+
+        static Entry claimed(String fingerprint) {
+            return new Entry(fingerprint, null);
+        }
+
+        boolean inProgress() {
+            return response == null;
+        }
+
+        void complete(String stored) {
+            response = stored;
         }
     }
 }

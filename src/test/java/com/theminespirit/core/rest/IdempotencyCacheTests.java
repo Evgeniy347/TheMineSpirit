@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -51,6 +53,29 @@ class IdempotencyCacheTests {
 
         assertInstanceOf(IdempotencyCache.Result.New.class, cache.check(UUID.randomUUID().toString(), FP_ONE),
                 "Неизвестный request_id обязан считаться новым запросом");
+    }
+
+    @Test
+    void check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse() throws Exception {
+        IdempotencyCache cache = new IdempotencyCache();
+        String requestId = UUID.randomUUID().toString();
+        assertInstanceOf(IdempotencyCache.Result.New.class, cache.check(requestId, FP_ONE),
+                "Первый запрос обязан бронировать request_id как взятый в работу");
+
+        AtomicReference<IdempotencyCache.Result> waited = new AtomicReference<>();
+        Thread duplicate = new Thread(() -> waited.set(cache.check(requestId, FP_ONE)));
+        duplicate.setDaemon(true);
+        duplicate.start();
+        ThreadStates.awaitState(duplicate, Thread.State.WAITING,
+                "Дубликат обязан ждать завершения первого запроса, а не получить New");
+
+        cache.remember(requestId, FP_ONE, "{\"task_id\":\"t-1\"}");
+        duplicate.join(TimeUnit.SECONDS.toMillis(5));
+
+        IdempotencyCache.Result.Replay replay = assertInstanceOf(IdempotencyCache.Result.Replay.class, waited.get(),
+                "После завершения первого запроса дубликат обязан получить повтор");
+        assertEquals("{\"task_id\":\"t-1\"}", replay.storedResponse(),
+                "Повтор обязан нести ответ первого запроса дословно");
     }
 
     @Test

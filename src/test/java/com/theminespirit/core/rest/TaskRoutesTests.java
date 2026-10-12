@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -218,6 +218,105 @@ class TaskRoutesTests {
                 "Контроль: новый request_id к тому же занятому духу обязан давать 409, иначе тест не видит занятости: "
                         + fresh.body());
         assertTrue(fresh.body().contains(taskId), "409 обязан называть текущую задачу " + taskId + ": " + fresh.body());
+    }
+
+    @Test
+    void create_SecondIdenticalRequestWhileFirstInFlight_ReplaysInsteadOfConflict() throws Exception {
+        CountDownLatch firstInStart = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        gateway.runsOnStart(() -> {
+            firstInStart.countDown();
+            await(releaseFirst);
+        });
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        AtomicReference<RestResponse> firstOpened = new AtomicReference<>();
+        AtomicReference<Throwable> firstFailure = new AtomicReference<>();
+        Thread first = postInBackground(body, firstOpened, firstFailure);
+        first.start();
+        assertTrue(firstInStart.await(5, TimeUnit.SECONDS),
+                "Первый запрос обязан дойти до шлюза до старта дубликата");
+
+        AtomicReference<RestResponse> secondOpened = new AtomicReference<>();
+        AtomicReference<Throwable> secondFailure = new AtomicReference<>();
+        Thread second = postInBackground(body, secondOpened, secondFailure);
+        second.start();
+        ThreadStates.awaitState(second, Thread.State.WAITING,
+                "Дубликат с тем же request_id обязан ждать результат первого, а не получить 409 «дух занят»");
+
+        releaseFirst.countDown();
+        first.join(TimeUnit.SECONDS.toMillis(5));
+        second.join(TimeUnit.SECONDS.toMillis(5));
+
+        assertNull(firstFailure.get(), "Первый запрос обязан завершиться ответом: " + firstFailure.get());
+        assertNull(secondFailure.get(), "Дубликат обязан завершиться ответом: " + secondFailure.get());
+        assertEquals(202, firstOpened.get().status(), "Первый запрос обязан приняться: " + firstOpened.get().body());
+        assertEquals(202, secondOpened.get().status(),
+                "Дубликат обязан получить тот же ответ, а не 409: " + secondOpened.get().body());
+        assertEquals(firstOpened.get().body(), secondOpened.get().body(),
+                "Идемпотентный повтор обязан отдать исходный ответ дословно");
+        assertEquals(1, registry.size(), "Дубликат не должен резервировать вторую задачу");
+    }
+
+    @Test
+    void create_FirstRequestFailsWhileDuplicateWaits_SecondGoesItsOwnWay() throws Exception {
+        CountDownLatch firstInStart = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        AtomicInteger starts = new AtomicInteger();
+        gateway.runsOnStart(() -> {
+            int attempt = starts.incrementAndGet();
+            firstInStart.countDown();
+            await(releaseFirst);
+            if (attempt == 1) {
+                throw new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of());
+            }
+        });
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        AtomicReference<RestResponse> firstOpened = new AtomicReference<>();
+        AtomicReference<Throwable> firstFailure = new AtomicReference<>();
+        Thread first = postInBackground(body, firstOpened, firstFailure);
+        first.start();
+        assertTrue(firstInStart.await(5, TimeUnit.SECONDS),
+                "Первый запрос обязан дойти до шлюза до старта дубликата");
+
+        AtomicReference<RestResponse> secondOpened = new AtomicReference<>();
+        AtomicReference<Throwable> secondFailure = new AtomicReference<>();
+        Thread second = postInBackground(body, secondOpened, secondFailure);
+        second.start();
+        ThreadStates.awaitState(second, Thread.State.WAITING,
+                "Дубликат обязан ждать результат первого, пока тот не провалится");
+
+        releaseFirst.countDown();
+        first.join(TimeUnit.SECONDS.toMillis(5));
+        second.join(TimeUnit.SECONDS.toMillis(5));
+
+        assertNull(firstFailure.get(), "Первый запрос обязан завершиться ответом: " + firstFailure.get());
+        assertNull(secondFailure.get(), "Дубликат обязан завершиться ответом: " + secondFailure.get());
+        assertEquals(409, firstOpened.get().status(), "Провал шлюза обязан пройти клиенту как 409: "
+                + firstOpened.get().body());
+        assertEquals(202, secondOpened.get().status(),
+                "После снятия брони дубликат обязан идти своим ходом, а не ждать вечно: " + secondOpened.get().body());
+        assertEquals(1, registry.size(), "За дубликатом должна остаться одна задача");
+    }
+
+    private Thread postInBackground(String body, AtomicReference<RestResponse> opened,
+            AtomicReference<Throwable> failure) {
+        Thread worker = new Thread(() -> {
+            try {
+                opened.set(send("POST", "/v1/bots/" + BOT + "/tasks", body));
+            } catch (Throwable broken) {
+                failure.set(broken);
+            }
+        });
+        worker.setDaemon(true);
+        return worker;
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            latch.await();
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test
@@ -438,7 +537,7 @@ class TaskRoutesTests {
         });
         http.setDaemon(true);
         http.start();
-        awaitState(http, Thread.State.BLOCKED,
+        ThreadStates.awaitState(http, Thread.State.BLOCKED,
                 "HTTP-поток обязан ждать слот: запись задачи уже прочитана, позиция журнала ещё нет");
 
         registry.observe(taskId, TaskState.SUCCEEDED, null, null);
@@ -462,16 +561,6 @@ class TaskRoutesTests {
         assertTrue(frames.stream().anyMatch(frame -> frame.contains("\"state\":\"succeeded\"")),
                 "Пока HTTP-поток ждал слоты, watcher мог закрыть задачу: финальное состояние обязано дойти "
                         + "до клиента, а не потеряться за уже финальной позицией журнала: " + frames);
-    }
-
-    private static void awaitState(Thread thread, Thread.State expected, String message) throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (thread.getState() != expected) {
-            if (System.nanoTime() > deadline) {
-                fail(message + "; состояние потока: " + thread.getState());
-            }
-            Thread.sleep(1);
-        }
     }
 
     @Test

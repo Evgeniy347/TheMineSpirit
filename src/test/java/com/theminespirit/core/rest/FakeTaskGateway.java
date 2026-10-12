@@ -16,9 +16,15 @@ final class FakeTaskGateway implements TaskGateway {
     private RuntimeException startFailure;
     private RuntimeException observationFailure;
     private Runnable onCancel;
+    private Runnable onStart;
 
     FakeTaskGateway observing(WorldObservation observation) {
         this.observation = observation;
+        return this;
+    }
+
+    FakeTaskGateway runsOnStart(Runnable action) {
+        this.onStart = action;
         return this;
     }
 
@@ -63,6 +69,9 @@ final class FakeTaskGateway implements TaskGateway {
             throw startFailure;
         }
         starts.add(bot);
+        if (onStart != null) {
+            onStart.run();
+        }
     }
 
     @Override

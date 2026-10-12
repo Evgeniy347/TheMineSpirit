@@ -60,6 +60,18 @@ public final class TaskRoutes {
                             + "request_id или пришлите исходное тело",
                     Map.of("request_id", parsed.requestId().toString()));
         }
+        String response;
+        try {
+            response = acceptedJson(startTask(bot, parsed), bot, parsed.requestId().toString());
+        } catch (RuntimeException failure) {
+            idempotency.release(parsed.requestId().toString());
+            throw failure;
+        }
+        idempotency.remember(parsed.requestId().toString(), fingerprint, response);
+        return RestResponse.json(202, response);
+    }
+
+    private String startTask(String bot, TaskRequest parsed) {
         TaskNode plan = planFor(bot, parsed);
         String taskId;
         try {
@@ -75,9 +87,7 @@ public final class TaskRoutes {
             throw failure;
         }
         registry.markStarted(taskId);
-        String response = acceptedJson(taskId, bot, parsed.requestId().toString());
-        idempotency.remember(parsed.requestId().toString(), fingerprint, response);
-        return RestResponse.json(202, response);
+        return taskId;
     }
 
     private TaskNode planFor(String bot, TaskRequest parsed) {
