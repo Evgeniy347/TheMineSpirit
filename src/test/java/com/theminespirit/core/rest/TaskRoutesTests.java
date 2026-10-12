@@ -146,6 +146,18 @@ class TaskRoutesTests {
     }
 
     @Test
+    void create_AcceptedTask_RemembersGenerationReturnedByGateway() throws Exception {
+        String body = "{\"request_id\":\"" + uuid()
+                + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
+
+        String taskId = taskId(send("POST", "/v1/bots/" + BOT + "/tasks", body).body());
+
+        assertEquals(1, registry.startedGeneration(taskId),
+                "Поколение задачи духа, вернувшееся из шлюза, обязано сохраниться у записи: по нему наблюдатель "
+                        + "узнает вытеснение вне REST");
+    }
+
+    @Test
     void create_GoalRequest_ReservesTaskAndStartsGateway() throws Exception {
         String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
 

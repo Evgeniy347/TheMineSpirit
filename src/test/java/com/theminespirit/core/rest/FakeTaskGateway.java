@@ -75,7 +75,7 @@ final class FakeTaskGateway implements TaskGateway {
     }
 
     @Override
-    public void start(String bot, TaskNode plan) {
+    public long start(String bot, TaskNode plan) {
         hops++;
         if (startFailure != null) {
             throw startFailure;
@@ -84,10 +84,11 @@ final class FakeTaskGateway implements TaskGateway {
         if (onStart != null) {
             onStart.run();
         }
+        return starts.size();
     }
 
     @Override
-    public void startGoal(String bot, String goal, Map<String, Object> params) {
+    public long startGoal(String bot, String goal, Map<String, Object> params) {
         hops++;
         if (observationFailure != null) {
             throw observationFailure;
@@ -106,6 +107,7 @@ final class FakeTaskGateway implements TaskGateway {
         if (onStart != null) {
             onStart.run();
         }
+        return starts.size();
     }
 
     @Override

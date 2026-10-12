@@ -17,6 +17,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.DropPolicy;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.WorkZone;
+import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
@@ -199,6 +200,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void startTask(TaskNode plan) {
         brain().start(plan);
+    }
+
+    public long taskGeneration() {
+        return brain == null ? SpiritReading.UNKNOWN_GENERATION : brain.generation();
     }
 
     public void cancelTask() {

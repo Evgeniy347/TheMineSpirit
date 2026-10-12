@@ -31,23 +31,23 @@ public final class SpiritTaskGateway implements TaskGateway {
     }
 
     @Override
-    public void start(String bot, TaskNode plan) {
-        serverCall.call(() -> {
+    public long start(String bot, TaskNode plan) {
+        return serverCall.call(() -> {
             SpiritEntity spirit = living(bot);
             rejectIfBusy(spirit, bot);
             spirit.startTask(plan);
-            return null;
+            return spirit.taskGeneration();
         }, RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
-    public void startGoal(String bot, String goal, Map<String, Object> params) {
-        serverCall.call(() -> {
+    public long startGoal(String bot, String goal, Map<String, Object> params) {
+        return serverCall.call(() -> {
             SpiritEntity spirit = living(bot);
             rejectIfBusy(spirit, bot);
             WorldObservation observation = spirit.observation().orElseGet(() -> minimal(bot, spirit));
             spirit.startTask(planning.planGoal(goal, params, observation));
-            return null;
+            return spirit.taskGeneration();
         }, RestTuning.SERVER_CALL_TIMEOUT);
     }
 

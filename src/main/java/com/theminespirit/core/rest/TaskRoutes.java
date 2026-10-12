@@ -79,17 +79,15 @@ public final class TaskRoutes {
             throw new ApiException(ErrorCode.CONFLICT, busy.getMessage(),
                     Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
         }
+        long generation;
         try {
-            if (plan != null) {
-                gateway.start(bot, plan);
-            } else {
-                gateway.startGoal(bot, parsed.goal(), parsed.params());
-            }
+            generation = plan != null ? gateway.start(bot, plan)
+                    : gateway.startGoal(bot, parsed.goal(), parsed.params());
         } catch (RuntimeException failure) {
             registry.discard(taskId);
             throw failure;
         }
-        registry.markStarted(taskId);
+        registry.markStarted(taskId, generation);
         return taskId;
     }
 

@@ -129,6 +129,50 @@ class TaskReconcilerTests {
     }
 
     @Test
+    void reconcile_SpiritTaskReplacedOutsideRest_ClosesTaskAsCancelledWithDisplacedReason() {
+        registry.markStarted(taskId, 3);
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(3));
+
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(4));
+
+        assertEquals(TaskState.CANCELLED, record().state(),
+                "Задача духа заменена командой или планировщиком: REST-задача обязана закрыться, а не висеть "
+                        + "running над чужой работой");
+        assertTrue(record().error().contains("вытеснена вне REST"),
+                "Клиент обязан увидеть причину закрытия: вытеснена вне REST; получено " + record().error());
+    }
+
+    @Test
+    void reconcile_SpiritTaskReplacedAndAlreadyFinished_ClosesTaskAsCancelledNotSucceeded() {
+        registry.markStarted(taskId, 3);
+
+        reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null).withGeneration(4));
+
+        assertEquals(TaskState.CANCELLED, record().state(),
+                "Успех чужой задачи не может засчитываться REST-задаче: поколение не совпало");
+    }
+
+    @Test
+    void reconcile_SameGeneration_KeepsTaskRunning() {
+        registry.markStarted(taskId, 3);
+
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(3));
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_TWO, null).withGeneration(3));
+
+        assertEquals(TaskState.RUNNING, record().state(), "Поколение совпало: задача та же и продолжает идти");
+    }
+
+    @Test
+    void reconcile_SpiritRestoredWithUnknownGeneration_KeepsTaskRunning() {
+        registry.markStarted(taskId, 3);
+
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(SpiritReading.UNKNOWN_GENERATION));
+
+        assertEquals(TaskState.RUNNING, record().state(),
+                "После перезагрузки духа поколение неизвестно: это та же задача из снимка, а не вытеснение");
+    }
+
+    @Test
     void reconcile_CancelledOutsideRest_ClosesTaskAsCancelled() {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
 

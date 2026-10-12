@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -258,6 +259,35 @@ public final class RestTaskGameTests {
                             + " тиков после исчезновения духа (регистр читается тиком, без задержки HTTP), а провалилась через " + waited
                             + ": сторож отсутствия слишком короткий (задача падает при перезагрузке чанка) или "
                             + "слишком длинный (клиент долго видит running у мёртвой задачи)");
+        });
+    }
+
+    @GameTest(batch = "rest_tasks_displaced", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void tasks_CommandReplacesRestTask_RestTaskClosedAsCancelledOutsideRest(GameTestHelper helper)
+            throws IOException {
+        RestFixture rest = arena(helper);
+        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        TaskPoller poller = TaskPoller.start(helper, rest);
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest
+                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks", longBody(helper, UUID.randomUUID().toString()))
+                .thenCompose(accepted -> {
+                    poller.follow(accepted.json().path("task_id").asText());
+                    return rest.onServer(() -> {
+                        spirit.startTask(longCommandPlan(helper));
+                        return problems.found();
+                    });
+                });
+        RestFixture.await(helper, rest, scenario, () -> {
+            helper.assertTrue("cancelled".equals(poller.latest()),
+                    "Задача духа заменена командой: REST-задача обязана закрыться как cancelled, а не висеть running "
+                            + "над чужой работой; последнее состояние " + poller.latest() + ", виденные "
+                            + poller.seen());
+            String error = poller.lastJson().path("error").asText();
+            helper.assertTrue(error.contains("вытеснена вне REST"),
+                    "Клиент обязан увидеть причину: «вытеснена вне REST», получено: " + error);
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                    "Задача команды обязана продолжать идти: REST только закрывает свою запись, духа не трогает");
         });
     }
 

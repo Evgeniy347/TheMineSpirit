@@ -48,11 +48,21 @@ public final class TaskRegistry {
     }
 
     public synchronized void markStarted(String taskId) {
+        markStarted(taskId, SpiritReading.UNKNOWN_GENERATION);
+    }
+
+    public synchronized void markStarted(String taskId, long generation) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
             throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
         }
         entry.started = true;
+        entry.generation = generation;
+    }
+
+    public synchronized long startedGeneration(String taskId) {
+        Entry entry = tasks.get(taskId);
+        return entry == null ? SpiritReading.UNKNOWN_GENERATION : entry.generation;
     }
 
     public synchronized List<TaskRecord> watchableRecords() {
@@ -209,6 +219,7 @@ public final class TaskRegistry {
     private static final class Entry {
         private TaskRecord record;
         private boolean started;
+        private long generation = SpiritReading.UNKNOWN_GENERATION;
         private final TaskEventLog log = new TaskEventLog();
 
         Entry(TaskRecord record) {

@@ -10,6 +10,8 @@ public final class TaskReconciler {
     public static final int ABSENT_GRACE_TICKS = 100;
     static final String SPIRIT_GONE = "дух исчез: сущность не вернулась в мир за %d тиков, задача потеряна";
     static final String SPIRIT_DEAD = "дух исчез: он погиб, задача прервана";
+    static final String DISPLACED = "задача вытеснена вне REST: дух получил другую задачу командой /spirit или "
+            + "планировщиком ИИ, эта задача остановлена";
     static final String NO_REASON = "скрипт провалился без указания причины";
 
     private final TaskRegistry registry;
@@ -33,6 +35,10 @@ public final class TaskReconciler {
             finish(record, TaskState.FAILED, SPIRIT_DEAD);
             return;
         }
+        if (displaced(record, reading)) {
+            finish(record, TaskState.CANCELLED, DISPLACED);
+            return;
+        }
         RunStatus status = reading.status();
         if (status == null) {
             return;
@@ -44,6 +50,12 @@ public final class TaskReconciler {
             case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
                     reading.failureReason() == null ? NO_REASON : reading.failureReason());
         }
+    }
+
+    private boolean displaced(TaskRecord record, SpiritReading reading) {
+        long expected = registry.startedGeneration(record.taskId());
+        return expected != SpiritReading.UNKNOWN_GENERATION && reading.generation() != SpiritReading.UNKNOWN_GENERATION
+                && reading.generation() != expected;
     }
 
     private void running(TaskRecord record, RunProgress progress) {

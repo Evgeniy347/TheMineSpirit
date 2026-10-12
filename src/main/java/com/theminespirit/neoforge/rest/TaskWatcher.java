@@ -66,9 +66,11 @@ public final class TaskWatcher {
         }
         RunStatus status = spirit.taskStatus().orElse(null);
         if (status == RunStatus.FAILED) {
-            return SpiritReading.failed(spirit.taskFailureReason().orElse(null), spirit.taskFailedAt().orElse(null));
+            return SpiritReading.failed(spirit.taskFailureReason().orElse(null), spirit.taskFailedAt().orElse(null))
+                    .withGeneration(spirit.taskGeneration());
         }
-        return SpiritReading.living(status, spirit.taskProgress().orElse(null), spirit.taskFailureReason().orElse(null));
+        return SpiritReading.living(status, spirit.taskProgress().orElse(null), spirit.taskFailureReason().orElse(null))
+                .withGeneration(spirit.taskGeneration());
     }
 
     private static Optional<UUID> parse(String id) {

@@ -7,11 +7,15 @@ import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.task.SpiritReading;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 
 public final class SpiritBrain {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final AtomicLong GENERATIONS = new AtomicLong(SpiritReading.UNKNOWN_GENERATION);
 
     private final SpiritEntity spirit;
     private TaskRunner runner;
@@ -20,6 +24,7 @@ public final class SpiritBrain {
     private Throwable lastCause;
     private String suspendReason;
     private RunProgress lastFailedAt;
+    private long generation = SpiritReading.UNKNOWN_GENERATION;
 
     public SpiritBrain(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -30,11 +35,16 @@ public final class SpiritBrain {
             runner.cancel();
         }
         runner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
+        generation = GENERATIONS.incrementAndGet();
         suspendReason = null;
         lastStatus = RunStatus.RUNNING;
         lastReason = null;
         lastCause = null;
         lastFailedAt = null;
+    }
+
+    public long generation() {
+        return generation;
     }
 
     public void suspend(String reason) {
@@ -114,6 +124,7 @@ public final class SpiritBrain {
 
     public void restore(TaskSnapshot snapshot) {
         runner = TaskRunner.restore(snapshot, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
+        generation = SpiritReading.UNKNOWN_GENERATION;
         lastStatus = runner.status();
         lastFailedAt = null;
         if (lastStatus != RunStatus.RUNNING) {
@@ -127,6 +138,7 @@ public final class SpiritBrain {
 
     public void failRestore(String reason) {
         runner = null;
+        generation = SpiritReading.UNKNOWN_GENERATION;
         lastStatus = RunStatus.FAILED;
         lastReason = reason;
         lastCause = null;
