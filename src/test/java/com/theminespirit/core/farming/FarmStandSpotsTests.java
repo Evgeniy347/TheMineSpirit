@@ -133,6 +133,26 @@ class FarmStandSpotsTests {
     }
 
     @Test
+    void of_ReachCheckedFirst_OutOfReachCostsNoReads() {
+        CountingSafety safety = new CountingSafety()
+                .fillFloor(0, -5, -5, 5, 5)
+                .fill(1, -5, -5, 5, 5, Cell.SOLID);
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                if ((dx != 0 || dz != 0) && dx * dx + dz * dz <= 6) {
+                    safety.set(dx, 2, dz, Cell.SOLID);
+                }
+            }
+        }
+
+        FarmStandSpots.of(TARGET, FROM, safety, dirtPlane());
+
+        assertTrue(safety.reads() < 96,
+                "Досягаемость проверяется до чтения мира: кандидаты вне глаз 4.0 не стоят ни одного чтения, "
+                        + "иначе каждая из 96 клеток читается минимум по разу. Чтений: " + safety.reads());
+    }
+
+    @Test
     void of_WalledTarget_ReturnsEmpty() {
         CountingSafety safety = new CountingSafety()
                 .fillFloor(0, -5, -5, 5, 5)

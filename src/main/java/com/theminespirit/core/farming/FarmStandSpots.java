@@ -31,7 +31,7 @@ public final class FarmStandSpots {
                 }
                 for (int dy = 1; dy <= 2; dy++) {
                     BlockCoord feet = new BlockCoord(target.x() + dx, target.y() + dy, target.z() + dz);
-                    if (!canStand(feet, safety) || !withinReach(feet, target)) {
+                    if (!withinReach(feet, target) || !canStand(feet, safety)) {
                         continue;
                     }
                     BlockCoord floor = new BlockCoord(feet.x(), feet.y() - 1, feet.z());

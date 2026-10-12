@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -57,6 +59,31 @@ class FarmPlannerTests {
         long dy = (long) to.y() - from.y();
         long dz = (long) to.z() - from.z();
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    static final class CountingLookups extends AbstractSet<BlockCoord> {
+        private final Set<BlockCoord> cells;
+        int lookups;
+
+        CountingLookups(Set<BlockCoord> cells) {
+            this.cells = cells;
+        }
+
+        @Override
+        public boolean contains(Object cell) {
+            lookups++;
+            return cells.contains(cell);
+        }
+
+        @Override
+        public Iterator<BlockCoord> iterator() {
+            return cells.iterator();
+        }
+
+        @Override
+        public int size() {
+            return cells.size();
+        }
     }
 
     @Test
@@ -120,6 +147,21 @@ class FarmPlannerTests {
         assertTrue(outcome instanceof FarmPlanner.Next,
                 "Грядка с водным каналом посередине обязана пахаться: вода в 2 клетках достаёт каждый ряд. Итог: "
                         + outcome);
+    }
+
+    @Test
+    void next_TillIneligibleTiles_WaterNeverChecked() {
+        MapFarmView farm = new MapFarmView().fillBed(0, 0, 0, 4, 4, MATURE_WHEAT);
+        CountingLookups water = new CountingLookups(Set.of(new BlockCoord(0, 0, 0)));
+
+        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, FROM, bedCells(), farm,
+                openField(), Hydration.of(water));
+
+        assertEquals(new FarmPlanner.Exhausted(25, 0), outcome,
+                "Грядка с посевами не пашется: все 25 клеток считаются в ineligible");
+        assertEquals(0, water.lookups,
+                "Непригодная без воды клетка отсеивается до проверки увлажнения: иначе каждая такая клетка стоит "
+                        + "162 обращения к множеству воды. Обращений: " + water.lookups);
     }
 
     @Test

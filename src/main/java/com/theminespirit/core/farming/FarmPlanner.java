@@ -37,6 +37,10 @@ public final class FarmPlanner {
                 break;
             }
             FarmTile tile = view.tileAt(target);
+            if (job == FarmJob.TILL && !job.eligible(tile, filter, true)) {
+                ineligible++;
+                continue;
+            }
             boolean watered = job == FarmJob.TILL && hydration.watered(target);
             if (!job.eligible(tile, filter, watered)) {
                 ineligible++;
