@@ -87,7 +87,7 @@ public final class CatalogLimits {
     public static final int PERCEPTION_RADIUS_MAX = ScanRadius.MAX;
     public static final int PERCEPTION_RADIUS_DEFAULT = ScanRadius.DEFAULT.value();
 
-    // Загон стада (чеклист 25): радиус загона 2..16, поиск скриптов стада 1..16
+    // Загон стада: радиус загона 2..16, поиск скриптов стада 1..16
     public static final int HERD_PEN_RADIUS_MIN = 2;
     public static final int HERD_PEN_RADIUS_MAX = 16;
 }
