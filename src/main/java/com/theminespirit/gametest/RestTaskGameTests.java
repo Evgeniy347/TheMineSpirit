@@ -35,8 +35,8 @@ public final class RestTaskGameTests {
     private static final BlockPos NEAR_CORNER = new BlockPos(2, 1, 1);
     private static final int LONG_PLAN_REPEATS = 64;
     private static final int RELOAD_AFTER_TICKS = 30;
-    private static final int GONE_MIN_TICKS = 95;
-    private static final int GONE_MAX_TICKS = 115;
+    private static final int GONE_MIN_TICKS = 98;
+    private static final int GONE_MAX_TICKS = 104;
 
     private RestTaskGameTests() {
     }
@@ -252,7 +252,7 @@ public final class RestTaskGameTests {
             long waited = poller.terminalSeenAt() - discardedAt.get();
             helper.assertTrue(waited >= GONE_MIN_TICKS && waited <= GONE_MAX_TICKS,
                     "Задача обязана провалиться через " + GONE_MIN_TICKS + ".." + GONE_MAX_TICKS
-                            + " тиков после исчезновения духа (запас на задержку ответа), а провалилась через " + waited
+                            + " тиков после исчезновения духа (регистр читается тиком, без задержки HTTP), а провалилась через " + waited
                             + ": сторож отсутствия слишком короткий (задача падает при перезагрузке чанка) или "
                             + "слишком длинный (клиент долго видит running у мёртвой задачи)");
         });
@@ -265,6 +265,7 @@ public final class RestTaskGameTests {
         private final AtomicReference<JsonNode> lastJson = new AtomicReference<>(MissingNode.getInstance());
         private final AtomicBoolean inFlight = new AtomicBoolean();
         private final AtomicLong terminalSeenAt = new AtomicLong(-1);
+        private final AtomicReference<String> taskId = new AtomicReference<>();
 
         static TaskPoller start(GameTestHelper helper, RestFixture rest) {
             TaskPoller poller = new TaskPoller();
@@ -272,8 +273,9 @@ public final class RestTaskGameTests {
             return poller;
         }
 
-        void follow(String taskId) {
-            path.set("/v1/tasks/" + taskId);
+        void follow(String id) {
+            taskId.set(id);
+            path.set("/v1/tasks/" + id);
         }
 
         Set<String> seen() {
@@ -293,11 +295,15 @@ public final class RestTaskGameTests {
         }
 
         private void poll(GameTestHelper helper, RestFixture rest) {
+            String id = taskId.get();
+            if (id != null && terminalSeenAt.get() < 0) {
+                rest.gateway().taskRegistry().get(id).filter(record -> !record.active())
+                        .ifPresent(record -> terminalSeenAt.set(helper.getLevel().getGameTime()));
+            }
             String target = path.get();
             if (target == null || !inFlight.compareAndSet(false, true)) {
                 return;
             }
-            long requestedAt = helper.getLevel().getGameTime();
             rest.get(target).whenComplete((reply, error) -> {
                 try {
                     if (reply != null && reply.status() == 200) {
@@ -305,9 +311,6 @@ public final class RestTaskGameTests {
                         seen.add(state);
                         latest.set(state);
                         lastJson.set(reply.json());
-                        if (!state.equals("accepted") && !state.equals("running")) {
-                            terminalSeenAt.compareAndSet(-1, requestedAt);
-                        }
                     }
                 } finally {
                     inFlight.set(false);
