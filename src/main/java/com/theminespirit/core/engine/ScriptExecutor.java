@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Map;
+import java.util.Optional;
 
 final class ScriptExecutor extends NodeExecutor {
     private final String scriptId;
@@ -67,6 +68,11 @@ final class ScriptExecutor extends NodeExecutor {
     @Override
     String currentScript() {
         return instance == null ? null : scriptId;
+    }
+
+    @Override
+    Optional<ScriptInstance.Progress> scriptProgress() {
+        return instance == null ? Optional.empty() : instance.progress();
     }
 
     @Override

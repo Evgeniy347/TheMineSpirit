@@ -107,6 +107,13 @@ public final class TaskRunner {
         return status == RunStatus.RUNNING ? root.exemptions() : PolicyExemptions.empty();
     }
 
+    public Optional<RunProgress> progress() {
+        if (status != RunStatus.RUNNING) {
+            return Optional.empty();
+        }
+        return Optional.of(root.progress());
+    }
+
     public void cancel() {
         if (status != RunStatus.RUNNING) {
             return;

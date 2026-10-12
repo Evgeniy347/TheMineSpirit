@@ -89,6 +89,25 @@ abstract class NodeExecutor {
 
     abstract String currentScript();
 
+    Optional<ScriptInstance.Progress> scriptProgress() {
+        return Optional.empty();
+    }
+
+    RunProgress progress() {
+        Optional<ScriptInstance.Progress> script = scriptProgress();
+        Integer done = script.map(ScriptInstance.Progress::done).orElse(null);
+        Integer target = script.map(ScriptInstance.Progress::target).orElse(null);
+        return new RunProgress(stepNumber(), totalSteps(), currentScript(), done, target);
+    }
+
+    int stepNumber() {
+        return 1;
+    }
+
+    int totalSteps() {
+        return 1;
+    }
+
     void cancel() {
     }
 

@@ -6,6 +6,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 final class ParallelExecutor extends NodeExecutor {
     private static final String STEP_FAILED = "Шаг параллельного узла провалился";
@@ -199,5 +200,21 @@ final class ParallelExecutor extends NodeExecutor {
             }
         }
         return null;
+    }
+
+    @Override
+    Optional<ScriptInstance.Progress> scriptProgress() {
+        if (children == null) {
+            return Optional.empty();
+        }
+        for (int i = 0; i < children.length; i++) {
+            if (results[i] == ScriptStatus.RUNNING) {
+                Optional<ScriptInstance.Progress> progress = children[i].scriptProgress();
+                if (progress.isPresent()) {
+                    return progress;
+                }
+            }
+        }
+        return Optional.empty();
     }
 }

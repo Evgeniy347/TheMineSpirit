@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import java.util.Map;
+import java.util.Optional;
 
 final class TestScripts {
     private TestScripts() {
@@ -12,6 +13,10 @@ final class TestScripts {
 
     static ScriptFactory failing(int ticks) {
         return params -> new TimedInstance(ticks, ScriptStatus.FAILED);
+    }
+
+    static ScriptFactory counting(int ticks) {
+        return params -> new CountingInstance(ticks);
     }
 
     static ScriptRegistry singleRegistry(String id, ScriptFactory factory) {
@@ -36,6 +41,26 @@ final class TestScripts {
         public ScriptStatus tick() {
             elapsed++;
             return elapsed >= total ? terminal : ScriptStatus.RUNNING;
+        }
+    }
+
+    private static final class CountingInstance implements ScriptInstance {
+        private final int target;
+        private int done;
+
+        CountingInstance(int ticks) {
+            this.target = ticks;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            done++;
+            return done >= target ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+        }
+
+        @Override
+        public Optional<Progress> progress() {
+            return Optional.of(new Progress(Math.min(done, target), target));
         }
     }
 }

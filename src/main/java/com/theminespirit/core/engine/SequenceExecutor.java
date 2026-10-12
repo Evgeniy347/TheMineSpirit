@@ -18,6 +18,17 @@ final class SequenceExecutor extends StepExecutor {
     }
 
     @Override
+    int stepNumber() {
+        int total = totalSteps();
+        return Math.min(index() + 1, total);
+    }
+
+    @Override
+    int totalSteps() {
+        return Math.max(steps.size(), 1);
+    }
+
+    @Override
     TaskProgress buildProgress() {
         return new TaskProgress.SequenceAt(index(), current() == null ? null : current().snapshot());
     }

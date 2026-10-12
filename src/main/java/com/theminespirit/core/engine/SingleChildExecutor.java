@@ -2,6 +2,7 @@ package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
+import java.util.Optional;
 
 abstract class SingleChildExecutor extends NodeExecutor {
     private final ScriptRegistry scripts;
@@ -28,6 +29,11 @@ abstract class SingleChildExecutor extends NodeExecutor {
     @Override
     final String currentScript() {
         return current == null ? null : current.currentScript();
+    }
+
+    @Override
+    final Optional<ScriptInstance.Progress> scriptProgress() {
+        return current == null ? Optional.empty() : current.scriptProgress();
     }
 
     @Override
