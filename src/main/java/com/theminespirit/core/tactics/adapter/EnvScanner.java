@@ -22,6 +22,10 @@ public final class EnvScanner {
 
     private final CellCache cache = new CellCache();
 
+    public CellCache cache() {
+        return cache;
+    }
+
     public EnvReading scan(Point self, BlockCoord feet, Optional<Point> threat, TerrainView world, ReadBudget budget,
             long now) {
         int total = budget.remaining();

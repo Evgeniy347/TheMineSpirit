@@ -26,6 +26,10 @@ public final class CellCache {
         entries.put(coord, new Entry(terrain, now));
     }
 
+    public void invalidate(BlockCoord coord) {
+        entries.remove(coord);
+    }
+
     public int size() {
         return entries.size();
     }

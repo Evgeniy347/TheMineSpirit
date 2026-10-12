@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
 import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
+import com.theminespirit.neoforge.tactics.SpiritGear;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
@@ -43,6 +44,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final SpiritChunkLoader chunkLoader = new SpiritChunkLoader(this);
     private final SpiritPolicies policies = new SpiritPolicies(this);
     private final ProtectionGate protectionGate = new ProtectionGate(this);
+    private final SpiritGear gear = new SpiritGear(this);
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -82,6 +84,10 @@ public final class SpiritEntity extends PathfinderMob {
     @Override
     public boolean canUsePortal(boolean allowPassengers) {
         return policies.exemptions().has(PolicyId.PORTAL) && super.canUsePortal(allowPassengers);
+    }
+
+    public SpiritGear gear() {
+        return gear;
     }
 
     public SpiritPolicies policies() {

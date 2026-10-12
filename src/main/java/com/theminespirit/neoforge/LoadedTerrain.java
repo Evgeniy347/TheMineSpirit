@@ -11,11 +11,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 
-final class LoadedTerrain implements TerrainView {
+public final class LoadedTerrain implements TerrainView {
     private final Level level;
     private int reads;
 
-    LoadedTerrain(Level level) {
+    public LoadedTerrain(Level level) {
         this.level = Objects.requireNonNull(level, "Уровень не может быть null: по нему читается местность");
     }
 
@@ -34,7 +34,7 @@ final class LoadedTerrain implements TerrainView {
         return toTerrain(chunk.getBlockState(pos), pos);
     }
 
-    int reads() {
+    public int reads() {
         return reads;
     }
 
