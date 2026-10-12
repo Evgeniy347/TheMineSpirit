@@ -271,7 +271,7 @@ class WorldRulesTests(unittest.TestCase):
         self.check(script("gather", block="stone", count=5))
         self.check(script("gather", block="minecraft:stone", count=5))
         self.check(script("gather", block="oak_log", count=5))
-        for bad in ("diamond_ore", "minecraft:diamond_ore", "*_log", "stone,oak_log", ""):
+        for bad in ("diamond_ore", "minecraft:iron_ore", "*_log", "stone,oak_log", ""):
             with self.subTest(block=bad):
                 with self.assertRaises(PlanError, msg=f"блок {bad!r} отсутствует в наблюдении") as ctx:
                     self.check(script("gather", block=bad, count=5))
@@ -279,9 +279,72 @@ class WorldRulesTests(unittest.TestCase):
                 self.assertIn("наблюдении", str(ctx.exception))
 
     def test_gather_ObservedBlocksUnknownOrEmpty(self):
-        self.check(script("gather", block="whatever", count=1), context=PlanContext((0, 0, 0), None))
+        self.check(script("gather", block="stone", count=1), context=PlanContext((0, 0, 0), None))
         with self.assertRaises(PlanError):
             self.check(script("gather", block="stone", count=1), context=PlanContext((0, 0, 0), frozenset()))
+
+    def test_gather_NotNaturalBlock_RejectedEvenWhenObservationUnknown(self):
+        with self.assertRaises(PlanError, msg="«whatever» не природный блок: отказ не зависит от наблюдения") as ctx:
+            self.check(script("gather", block="whatever", count=1), context=PlanContext((0, 0, 0), None))
+        self.assertIn("natural_blocks", str(ctx.exception))
+        self.check(script("gather", block="minecraft:stone", count=1), context=PlanContext((0, 0, 0), None))
+
+    def test_gather_NaturalBlockFromObservation_Accepted(self):
+        observed = frozenset({"stone", "iron_ore", "deepslate_iron_ore", "sand", "gravel", "clay", "dirt",
+                              "oak_log", "oak_leaves", "cactus"})
+        context = PlanContext((0, 64, 0), observed)
+        for block in ("stone", "minecraft:iron_ore", "deepslate_iron_ore", "sand", "gravel", "clay", "dirt",
+                      "oak_log", "oak_leaves", "cactus"):
+            with self.subTest(block=block):
+                self.check(script("gather", block=block, count=4), context=context)
+
+    def test_gather_PlayerMadeBlockFromObservation_RejectedNamingNaturalList(self):
+        observed = frozenset({"oak_planks", "glass", "bricks", "white_bed", "oak_door", "stone"})
+        context = PlanContext((0, 64, 0), observed)
+        for block in ("oak_planks", "minecraft:glass", "bricks", "white_bed", "oak_door"):
+            with self.subTest(block=block):
+                with self.assertRaises(PlanError, msg=f"блок {block!r} сделал игрок: gather.block его не примет") as ctx:
+                    self.check(script("gather", block=block, count=4), context=context)
+                text = str(ctx.exception)
+                self.assertIn("plan.params.block", text)
+                self.assertIn("natural_blocks", text)
+                self.assertIn(block.lower().replace("minecraft:", ""), text.lower())
+                self.assertTrue(any("а" <= ch.lower() <= "я" for ch in text), "текст ошибки по-русски")
+
+    def test_policy_NaturalBlocks_CoverNaturalGroupsAndExcludePlayerMade(self):
+        natural = self.policy.natural_blocks
+        self.assertGreaterEqual(len(natural), 100,
+                                "список природных блоков — данные правила: он должен покрывать ванильный мир 1.21.1, "
+                                "а не отдельные примеры")
+        for block in ("iron_ore", "deepslate_iron_ore", "diamond_ore", "coal_ore", "stone", "deepslate", "granite",
+                      "dirt", "grass_block", "sand", "red_sand", "gravel", "clay", "oak_log", "birch_log",
+                      "spruce_log", "oak_leaves", "birch_leaves", "cactus", "ice", "obsidian", "terracotta"):
+            with self.subTest(block=block):
+                self.assertIn(block, natural, f"природного блока {block!r} нет в natural_blocks: модельный gather его отвергнет")
+        for block in ("oak_planks", "spruce_planks", "glass", "glass_pane", "bricks", "cobblestone", "stone_bricks",
+                      "oak_door", "oak_fence", "white_bed", "crafting_table", "chest", "furnace", "torch",
+                      "white_wool", "oak_slab", "oak_sign", "bookshelf", "white_concrete", "smooth_stone"):
+            with self.subTest(block=block):
+                self.assertNotIn(block, natural, f"блок {block!r} делает игрок, а не природа: он не должен попадать "
+                                                 "в natural_blocks, иначе дух разберёт постройку игрока")
+
+    def test_policy_MalformedNaturalBlocks_RejectedWithClearText(self):
+        root = APP.parent / "TestResults" / "policy-tmp"
+        root.mkdir(parents=True, exist_ok=True)
+        for name, mutate in (("нет ключа", lambda d: d.pop("natural_blocks")),
+                             ("пустая группа", lambda d: d.update(natural_blocks={"руды": []})),
+                             ("не список", lambda d: d.update(natural_blocks={"руды": "coal_ore"})),
+                             ("с префиксом minecraft:", lambda d: d.update(natural_blocks={"руды": ["minecraft:coal_ore"]})),
+                             ("пустая строка", lambda d: d.update(natural_blocks={"руды": [""]}))):
+            with self.subTest(case=name):
+                data = json.loads((APP / "policy.json").read_text(encoding="utf-8"))
+                mutate(data)
+                path = root / f"policy-{abs(hash(name))}.json"
+                path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+                with self.assertRaises(ValueError, msg=f"policy.json без списка природных блоков ({name}) должен "
+                                                      "давать ошибку с именем файла, а не молчаливый пустой список") as ctx:
+                    load_policy(path)
+                self.assertIn("natural_blocks", str(ctx.exception))
 
     def test_otherScripts_BlockParamNotCheckedAgainstObservation(self):
         self.check(script("mine_vein", ore="diamond", count=1))

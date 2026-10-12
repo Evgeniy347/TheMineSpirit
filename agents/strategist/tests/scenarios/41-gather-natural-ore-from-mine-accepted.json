@@ -1,0 +1,45 @@
+{
+  "name": "41-gather-natural-ore-from-mine-accepted",
+  "description": "gather.block с рудой из наблюдения проходит и задача уходит: природный блок добывать можно",
+  "bots": [
+    {
+      "id": "mine",
+      "world": "mine"
+    }
+  ],
+  "brain": {
+    "default": {
+      "json": {
+        "reason": "Рядом железная жила, инструмент есть.",
+        "goal": "набрать железную руду",
+        "plan": {
+          "type": "script",
+          "script": "gather",
+          "params": {
+            "block": "minecraft:iron_ore",
+            "count": 6
+          }
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "cycle": true
+    }
+  ],
+  "expect": [
+    {
+      "posts": 1
+    },
+    {
+      "brain_calls": 1
+    },
+    {
+      "journal": {
+        "rejected": 0,
+        "posted": 1
+      }
+    }
+  ]
+}

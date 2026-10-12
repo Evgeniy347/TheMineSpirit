@@ -45,7 +45,7 @@ class RestClient:
         self.rate_limit_retries = rate_limit_retries
         self.backoff = backoff
         self.sent_at: list[float] = []
-        self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        self._opener: urllib.request.OpenerDirector | None = None
 
     def get(self, path: str) -> dict:
         return self._request("GET", path, None)
@@ -92,6 +92,8 @@ class RestClient:
         del self.sent_at[:-1000]
 
     def _send(self, method: str, path: str, body):
+        if self._opener is None:
+            self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(self.base + path, data=data, method=method,
                                          headers={"Content-Type": "application/json; charset=utf-8",

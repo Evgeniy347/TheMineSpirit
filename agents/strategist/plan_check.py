@@ -51,6 +51,7 @@ class Policy:
     max_list_items: int = 32
     max_goto_distance: int = 256
     observed_block_params: tuple = (("gather", "block"),)
+    natural_blocks: frozenset = frozenset()
 
 
 @dataclass(frozen=True)
@@ -84,8 +85,17 @@ def load_policy(path: Path) -> Policy:
     block_params = data.get("observed_block_params", {"gather": "block"})
     if not isinstance(block_params, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in block_params.items()):
         raise ValueError(f"{path}: observed_block_params должен быть объектом вида {{\"скрипт\": \"параметр\"}}")
+    natural = data.get("natural_blocks")
+    if not isinstance(natural, dict) or not natural or not all(
+            isinstance(group, str) and group and isinstance(items, list) and items
+            and all(isinstance(item, str) and item and ":" not in item for item in items)
+            for group, items in natural.items()):
+        raise ValueError(f"{path}: natural_blocks должен быть объектом вида {{\"группа\": [\"блок\", …]}} с непустыми "
+                         "списками имён блоков без префикса minecraft: — по нему gather.block отличает природный блок "
+                         "от постройки игрока")
+    natural_blocks = frozenset(item for items in natural.values() for item in items)
     return Policy(frozenset(allowed), int(data.get("max_string_length", 200)), int(data.get("max_list_items", 32)),
-                  int(data.get("max_goto_distance", 256)), tuple(sorted(block_params.items())))
+                  int(data.get("max_goto_distance", 256)), tuple(sorted(block_params.items())), natural_blocks)
 
 
 class Catalog:
@@ -227,6 +237,11 @@ class _Checker:
             if script == name and unknown:
                 shown = ", ".join(sorted(context.observed_blocks)[:12]) or "в наблюдении нет блоков"
                 self._error(f"{path}.params.{param}: блока {value!r} нет в последнем наблюдении (есть, например: {shown})")
+            elif script == name and isinstance(value, str) and normalize_block(value) not in self.policy.natural_blocks:
+                self._error(f"{path}.params.{param}: блок {value!r} в природе не встречается, его сделал игрок "
+                            f"(природные блоки перечислены в natural_blocks файла policy.json): собирайте только "
+                            f"руду, камень, землю, песок, гравий, глину, брёвна, листву и растения — доски, стекло, "
+                            f"кирпич и прочие постройки игрока не разбираются")
 
     def _params(self, params, schema: dict, path: str, owner: str) -> None:
         if params is None:

@@ -1,16 +1,21 @@
 """Фейковый REST мода (docs/API.md) для тестов стратега: http.server в потоке, порт 0.
 
 Каждая ручка сценария меняет ответ; test_fake_rest.py проверяет это отдельно, чтобы сценарии не зеленели вхолостую.
+Разбор запроса живёт в `exchange()`: его зовут и HTTP-обработчик, и in-process клиент (сценарии без сети).
 """
 
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import threading
 import time
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from rest_client import RestClient
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
@@ -33,6 +38,26 @@ def observation_hash(observation: dict) -> str:
 
 def error_body(code: str, message: str, details: dict | None = None) -> dict:
     return {"error": {"code": code, "message": message, "details": details or {}}}
+
+
+GARBAGE_BODY = "<html>не json</html>".encode("utf-8")
+
+
+def response_bytes(payload: dict | None) -> bytes:
+    """Байты ответа: мусор отдаётся теми же байтами и по сокету, и внутри процесса, иначе клиенты разойдутся."""
+    return GARBAGE_BODY if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+
+@dataclass(frozen=True)
+class Exchange:
+    """Ответ фейка: статус, разобранное тело (None — ответ-мусор), байты ответа, заголовки и признак «соединение
+    закрыто без ответа»."""
+
+    status: int | None
+    payload: dict | None
+    raw: bytes
+    headers: dict
+    closed: bool
 
 
 class FakeRest:
@@ -148,11 +173,26 @@ class FakeRest:
     def _handle(self, handler: BaseHTTPRequestHandler, method: str) -> None:
         length = int(handler.headers.get("Content-Length") or 0)
         raw = handler.rfile.read(length) if length else b""
-        path = handler.path.split("?", 1)[0]
+        path = handler.path
         try:
             body = json.loads(raw.decode("utf-8")) if raw else None
         except ValueError:
             body = {"_unparsable": raw.decode("utf-8", "replace")}
+        result = self.exchange(method, path, body)
+        if result.closed:
+            handler.connection.close()
+            return
+        handler.send_response(result.status)
+        handler.send_header("Content-Type", "application/json; charset=utf-8")
+        handler.send_header("Content-Length", str(len(result.raw)))
+        for name, value in result.headers.items():
+            handler.send_header(name, value)
+        handler.end_headers()
+        handler.wfile.write(result.raw)
+
+    def exchange(self, method: str, path: str, body) -> Exchange:
+        """Запрос без сети: журнал, ручки, обрыв и мусорный ответ. Зовут HTTP-обработчик и in-process клиент."""
+        path = path.split("?", 1)[0]
         with self._lock:
             entry = {"method": method, "path": path, "body": body, "t": time.monotonic(), "status": None}
             if self.clock is not None:
@@ -165,8 +205,7 @@ class FakeRest:
             time.sleep(delay)
         if drop:
             entry["status"] = "dropped"
-            handler.connection.close()
-            return
+            return Exchange(None, None, b"", {}, True)
         with self._lock:
             status, payload, headers = self._route(method, path, body)
             entry["status"] = status
@@ -174,19 +213,11 @@ class FakeRest:
             if is_task_post and self.task_post_lose_response and status == 202:
                 self.task_post_lose_response -= 1
                 entry["status"] = "response_lost"
-                handler.connection.close()
-                return
+                return Exchange(None, None, b"", {}, True)
             if self.garbage_next:
                 self.garbage_next -= 1
                 payload = None
-        raw_out = "<html>не json</html>".encode("utf-8") if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        handler.send_response(status)
-        handler.send_header("Content-Type", "application/json; charset=utf-8")
-        handler.send_header("Content-Length", str(len(raw_out)))
-        for name, value in headers.items():
-            handler.send_header(name, value)
-        handler.end_headers()
-        handler.wfile.write(raw_out)
+        return Exchange(status, payload, response_bytes(payload), headers, False)
 
     def _route(self, method: str, path: str, body):
         if self.rate_limited:
@@ -334,3 +365,23 @@ class FakeRest:
             for bot in self.bots.values():
                 bot["state"] = "idle"
                 bot["current_task"] = None
+
+
+class InProcessClient(RestClient):
+    """Тот же фейковый REST, но без сокета: запрос идёт прямо в FakeRest.exchange().
+
+    Вся логика клиента (лимитер, повторы GET, 429, ApiError) остаётся боевой RestClient — меняется только
+    транспорт. Тесты сценариев и свойств идут внутри процесса и заметно быстрее, а сами ручки фейка проверяет
+    test_fake_rest.py по-настоящему, чтобы сценарии не зеленели вхолостую."""
+
+    def __init__(self, fake: FakeRest, clock=None, rps: int = 5, timeout: float = 10.0, get_retries: int = 2,
+                 rate_limit_retries: int = 3, backoff: float = 1.0):
+        super().__init__("http://in-process", clock=clock, rps=rps, timeout=timeout, get_retries=get_retries,
+                         rate_limit_retries=rate_limit_retries, backoff=backoff)
+        self.fake = fake
+
+    def _send(self, method: str, path: str, body):
+        result = self.fake.exchange(method, path, body)
+        if result.closed:
+            raise http.client.RemoteDisconnected(f"{method} {path}: фейк закрыл соединение без ответа")
+        return result.status, result.headers, result.raw

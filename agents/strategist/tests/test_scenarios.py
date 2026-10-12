@@ -8,11 +8,13 @@ from unittest import mock
 from datetime import datetime
 from pathlib import Path
 
+from tests.fake_rest import FakeRest
 from tests.scenario_runner import ScenarioRun, load_scenarios, scripts_in
 
 SCENARIOS = Path(__file__).resolve().parent / "scenarios"
 HOUR = 3600
 NO_SLEEP = "в сценарии вызван настоящий time.sleep: часы подделаны, ожидание обязано идти через FakeClock"
+NO_HTTP = "сценарии идут на InProcessClient внутри процесса: HTTP-сервер фейка (сокет, поток, SSL) им не нужен"
 REQUIRED_TOPICS = (
     "idle-valid-plan", "all-busy", "skip", "invalid-script-not-in-catalog", "invalid-param-out-of-bounds",
     "invalid-script-outside-whitelist", "invalid-plan-too-large", "not-json", "fenced-json-accepted",
@@ -35,13 +37,16 @@ class ScenarioTableTests(unittest.TestCase):
         started = time.monotonic()
         for scenario in load_scenarios(SCENARIOS):
             with self.subTest(scenario=scenario["name"]):
-                with tempfile.TemporaryDirectory() as tmp, mock.patch("time.sleep", side_effect=AssertionError(NO_SLEEP)):
+                with tempfile.TemporaryDirectory() as tmp, mock.patch("time.sleep", side_effect=AssertionError(NO_SLEEP)), \
+                        mock.patch.object(FakeRest, "start", side_effect=AssertionError(NO_HTTP)):
                     run = ScenarioRun(scenario, Path(tmp))
                     try:
                         run.run()
                     finally:
                         run.close()
-        self.assertLess(time.monotonic() - started, 30, "набор сценариев завис: он идёт на подделанных часах, секунды, не минуты")
+        self.assertLess(time.monotonic() - started, 10,
+                       "набор сценариев идёт на подделанных часах и без HTTP (чеклист 22, п. 11: весь набор ≤ 10 с): "
+                       "замедление означает, что в него вернулся настоящий сокет или ожидание")
 
 
 PLANS = [
@@ -121,7 +126,8 @@ class ScenarioPropertyTests(unittest.TestCase):
         total_posts = 0
         for seed in range(25):
             scenario = random_scenario(seed)
-            with tempfile.TemporaryDirectory() as tmp, mock.patch("time.sleep", side_effect=AssertionError(NO_SLEEP)):
+            with tempfile.TemporaryDirectory() as tmp, mock.patch("time.sleep", side_effect=AssertionError(NO_SLEEP)), \
+                    mock.patch.object(FakeRest, "start", side_effect=AssertionError(NO_HTTP)):
                 run = ScenarioRun(copy.deepcopy(scenario), Path(tmp))
                 try:
                     run.run()
@@ -129,7 +135,9 @@ class ScenarioPropertyTests(unittest.TestCase):
                 finally:
                     run.close()
         self.assertGreater(total_posts, 10, "случайные сценарии должны реально ставить задачи, иначе свойство проверяет пустоту")
-        self.assertLess(time.monotonic() - started, 60, "свойство зависло")
+        self.assertLess(time.monotonic() - started, 10,
+                       "свойство идёт внутри процесса на подделанных часах (чеклист 22, п. 11: весь набор ≤ 10 с): "
+                       "медленный прогон означает настоящий сокет, ожидание или лишние записи на диск")
 
     def assert_invariants(self, run, scenario, seed):
         posts = [r for r in run.task_posts() if r["status"] in (202, "response_lost")]
