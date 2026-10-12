@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.ChopPlan;
@@ -25,8 +26,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 public final class ChopTreeScript implements ScriptInstance {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String CHOPPED_KEY = "chopped";
 
     private enum Phase {
@@ -34,7 +37,8 @@ public final class ChopTreeScript implements ScriptInstance {
         APPROACH,
         CHOP,
         APPROACH_LOG,
-        COLLECT
+        COLLECT,
+        REPLANT
     }
 
     private final SpiritEntity spirit;
@@ -50,6 +54,12 @@ public final class ChopTreeScript implements ScriptInstance {
     private Tree tree;
     private ChopPlan plan;
     private DropCollector collector;
+    private Replanter replanter;
+    private TreeSpecies treeSpecies;
+    private int standingLogs;
+    private int plantedSaplings;
+    private int skippedCells;
+    private boolean lackedSaplings;
     private int planIndex;
     private int chopped;
     private int rejected;
@@ -82,6 +92,7 @@ public final class ChopTreeScript implements ScriptInstance {
             case CHOP -> chop();
             case APPROACH_LOG -> approachLog();
             case COLLECT -> collect();
+            case REPLANT -> replant();
         };
     }
 
@@ -91,6 +102,9 @@ public final class ChopTreeScript implements ScriptInstance {
         approach.cancel();
         if (collector != null) {
             collector.cancel();
+        }
+        if (replanter != null) {
+            replanter.cancel();
         }
     }
 
@@ -116,6 +130,17 @@ public final class ChopTreeScript implements ScriptInstance {
                     + ": снимок задачи повреждён или записан другой версией мода, проверьте его");
         }
         chopped = number.intValue();
+    }
+
+    public String summary() {
+        StringBuilder text = new StringBuilder("срублено ").append(chopped).append(" из ").append(params.count());
+        if (standingLogs > 0) {
+            text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
+        }
+        if (params.replant()) {
+            text.append("; replant: ").append(replantText());
+        }
+        return text.toString();
     }
 
     public long treeBlockReads() {
@@ -163,6 +188,7 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus startChop(Tree found) {
         tree = found;
+        treeSpecies = speciesOf(found);
         plan = ChopPlan.of(tree, ChopTuning.REACH_ABOVE_BASE);
         planIndex = 0;
         approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
@@ -253,23 +279,60 @@ public final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus collect() {
         return switch (collector.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
-            case DONE -> finishTree();
+            case DONE -> params.replant() ? startReplant() : finishTree();
             case FAILED -> fail("подбор дропа после рубки: " + collector.failureReason());
         };
+    }
+
+    private ScriptStatus startReplant() {
+        collector = null;
+        int baseY = tree.base().y();
+        List<BlockPos> cells = tree.logs().stream().filter(log -> log.y() == baseY).map(ChopTreeScript::toPos).toList();
+        replanter = new Replanter(spirit, treeSpecies, cells);
+        phase = Phase.REPLANT;
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus replant() {
+        if (replanter.tick() == Replanter.State.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        plantedSaplings += replanter.planted();
+        skippedCells += replanter.skipped();
+        lackedSaplings |= replanter.lackedSaplings();
+        replanter = null;
+        return finishTree();
     }
 
     private ScriptStatus finishTree() {
         collector = null;
         chopped++;
+        standingLogs += plan.leftStanding();
         consecutiveUnreachable = 0;
         candidates.markKnown(tree.logs());
         tree = null;
         plan = null;
         if (chopped >= params.count()) {
+            LOGGER.info("Дух {} завершил chop_tree: {}", spirit.getUUID(), summary());
             return ScriptStatus.SUCCEEDED;
         }
         phase = Phase.FIND;
         return ScriptStatus.RUNNING;
+    }
+
+    private String replantText() {
+        if (lackedSaplings) {
+            return "нет саженцев" + (plantedSaplings > 0 ? ", посажено " + plantedSaplings : "");
+        }
+        String text = "посажено " + plantedSaplings;
+        return skippedCells > 0 ? text + ", клеток пропущено " + skippedCells : text;
+    }
+
+    private TreeSpecies speciesOf(Tree found) {
+        BlockCoord base = found.base();
+        String blockId = BuiltInRegistries.BLOCK.getKey(spirit.level().getBlockState(toPos(base)).getBlock()).toString();
+        return TreeSpecies.ofLog(blockId).orElseThrow(() -> new IllegalStateException("Основание дерева " + base
+                + " — блок '" + blockId + "', а не бревно известной породы: поиск брал только брёвна из TreeSpecies"));
     }
 
     private ScriptStatus outOfTrees() {

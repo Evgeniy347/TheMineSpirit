@@ -497,6 +497,9 @@ public final class ChopTreeGameTests {
                             + ". Раздельные вопросы isLog/isNaturalLeaves/isArtificial к одной клетке обязаны "
                             + "делить одно чтение");
 
+            helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)),
+                    "итог обязан назвать число оставленных брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)
+                            + ", а он: " + script.summary());
             LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, предел {}",
                     TALL_TREE_LOGS, reads, 27L * TALL_TREE_LOGS);
 
@@ -595,6 +598,107 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_replant_oak", timeoutTicks = 400)
+    public static void chopTree_ReplantWithOneSapling_PlantsItAtTrunkBase(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+        spirit.getInventory().setItem(1, new ItemStack(Items.OAK_SAPLING));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1, true), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "рубка с replant и одним саженцем успешна, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.OAK_SAPLING),
+                    "на месте ствола обязан стоять саженец дуба, а стоит "
+                            + helper.getBlockState(new BlockPos(4, 1, 4)).getBlock());
+            int saplings = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_SAPLING);
+            helper.assertTrue(saplings == 0,
+                    "посаженный саженец списывается из инвентаря, осталось " + saplings);
+            int logs = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(logs == 5, "5 брёвен в инвентаре, фактически " + logs);
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_replant_none", timeoutTicks = 400)
+    public static void chopTree_ReplantWithoutSaplings_SucceedsAndReportsNoSaplings(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1, true));
+        ScriptStatus[] status = driveScript(helper, spirit, script);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "нехватка саженцев не ошибка: рубка успешна, статус " + status[0] + ", причина: "
+                            + script.failureReason());
+            helper.assertTrue(script.summary().contains("replant: нет саженцев"),
+                    "итоговое сообщение обязано сказать «replant: нет саженцев», а оно: " + script.summary());
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).isAir(),
+                    "без саженцев на месте ствола ничего не появляется");
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_replant_dark_oak", timeoutTicks = 900)
+    public static void chopTree_ReplantDarkOakWithFourSaplings_PlantsAllFourCells(GameTestHelper helper) {
+        prepareField(helper);
+        buildDarkOakTree(helper, 4, 4, 4);
+        SpiritEntity spirit = spawnChopper(helper);
+        spirit.getInventory().setItem(1, new ItemStack(Items.DARK_OAK_SAPLING, 4));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("dark_oak", 1, true), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "тёмный дуб 2x2 срублен с посадкой, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            for (BlockPos cell : List.of(new BlockPos(4, 1, 4), new BlockPos(5, 1, 4), new BlockPos(4, 1, 5),
+                    new BlockPos(5, 1, 5))) {
+                helper.assertTrue(helper.getBlockState(cell).is(Blocks.DARK_OAK_SAPLING),
+                        "в клетке ствола " + cell + " обязан стоять саженец тёмного дуба, а стоит "
+                                + helper.getBlockState(cell).getBlock());
+            }
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DARK_OAK_SAPLING) == 0,
+                    "четыре саженца потрачены на четыре клетки");
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_replant_short", timeoutTicks = 900)
+    public static void chopTree_ReplantDarkOakWithThreeSaplings_PlantsNothing(GameTestHelper helper) {
+        prepareField(helper);
+        buildDarkOakTree(helper, 4, 4, 4);
+        SpiritEntity spirit = spawnChopper(helper);
+        spirit.getInventory().setItem(1, new ItemStack(Items.DARK_OAK_SAPLING, 3));
+        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("dark_oak", 1, true));
+        ScriptStatus[] status = driveScript(helper, spirit, script);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "рубка успешна и при нехватке саженцев, статус " + status[0] + ", причина: "
+                            + script.failureReason());
+            helper.assertTrue(script.summary().contains("replant: нет саженцев"),
+                    "три саженца на четыре клетки: нехватка названа в итоге, а он: " + script.summary());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DARK_OAK_SAPLING) == 3,
+                    "саженцы сажаются сразу на все клетки или никак: три остаются в инвентаре");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).isAir(),
+                    "ни одной клетки не засажено частично");
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);
@@ -654,8 +758,12 @@ public final class ChopTreeGameTests {
     }
 
     private static ChopTreeParams chopParams(String species, int count) {
+        return chopParams(species, count, false);
+    }
+
+    private static ChopTreeParams chopParams(String species, int count, boolean replant) {
         return ChopTreeParams.from(
-                Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", false));
+                Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", replant));
     }
 
     private static ScriptStatus[] driveScript(GameTestHelper helper, SpiritEntity spirit, ChopTreeScript script) {
@@ -713,8 +821,12 @@ public final class ChopTreeGameTests {
     }
 
     private static ScriptCall chopCall(String species, int count) {
+        return chopCall(species, count, false);
+    }
+
+    private static ScriptCall chopCall(String species, int count, boolean replant) {
         return new ScriptCall("chop_tree",
-                Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", false));
+                Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", replant));
     }
 
     private static void prepareField(GameTestHelper helper) {
@@ -771,6 +883,22 @@ public final class ChopTreeGameTests {
 
     private static void buildOakTree(GameTestHelper helper, int x, int z, int height) {
         buildTree(helper, x, z, height, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
+    }
+
+    private static void buildDarkOakTree(GameTestHelper helper, int x, int z, int height) {
+        for (int y = 1; y <= height; y++) {
+            for (int dx = 0; dx <= 1; dx++) {
+                for (int dz = 0; dz <= 1; dz++) {
+                    helper.setBlock(x + dx, y, z + dz, Blocks.DARK_OAK_LOG);
+                }
+            }
+        }
+        var leaves = Blocks.DARK_OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        for (int dx = -1; dx <= 2; dx++) {
+            for (int dz = -1; dz <= 2; dz++) {
+                helper.setBlock(x + dx, height + 1, z + dz, leaves);
+            }
+        }
     }
 
     private static void buildBirchTree(GameTestHelper helper, int x, int z, int height) {
