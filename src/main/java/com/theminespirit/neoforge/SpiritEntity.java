@@ -13,6 +13,10 @@ import com.theminespirit.core.perception.MemoryFormatException;
 import com.theminespirit.core.perception.MemoryStore;
 import com.theminespirit.core.perception.PerceptionResult;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.DropPolicy;
+import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.neoforge.policy.SpiritNavigation;
+import com.theminespirit.neoforge.policy.SpiritPolicies;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
@@ -21,6 +25,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
@@ -30,6 +35,7 @@ public final class SpiritEntity extends PathfinderMob {
 
     private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
     private final SpiritChunkLoader chunkLoader = new SpiritChunkLoader(this);
+    private final SpiritPolicies policies = new SpiritPolicies(this);
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -50,9 +56,33 @@ public final class SpiritEntity extends PathfinderMob {
         super.customServerAiStep();
         applyPendingRestore();
         chunkLoader.tick();
-        if (brain != null) {
+        policies.tick();
+        if (brain != null && !policies.isOverriding()) {
             brain.tick();
         }
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new SpiritNavigation(this, level);
+    }
+
+    @Override
+    public int getMaxFallDistance() {
+        return DropPolicy.MAX_DROP;
+    }
+
+    @Override
+    public boolean canUsePortal(boolean allowPassengers) {
+        return policies.exemptions().has(PolicyId.PORTAL) && super.canUsePortal(allowPassengers);
+    }
+
+    public SpiritPolicies policies() {
+        return policies;
+    }
+
+    public Optional<SpiritBrain> brainIfPresent() {
+        return Optional.ofNullable(brain);
     }
 
     @Override

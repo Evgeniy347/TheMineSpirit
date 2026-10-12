@@ -10,7 +10,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.level.block.EndPortalBlock;
 import net.minecraft.world.level.block.MagmaBlock;
+import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.level.block.PowderSnowBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.WebBlock;
@@ -54,6 +56,9 @@ public final class LevelSafetyView implements SafetyView {
                 || state.getBlock() instanceof SweetBerryBushBlock || state.getBlock() instanceof WebBlock
                 || state.getBlock() instanceof PowderSnowBlock) {
             return Cell.HAZARD;
+        }
+        if (state.getBlock() instanceof NetherPortalBlock || state.getBlock() instanceof EndPortalBlock) {
+            return Cell.PORTAL;
         }
         if (state.getBlock() instanceof FallingBlock) {
             return Cell.FALLING;
