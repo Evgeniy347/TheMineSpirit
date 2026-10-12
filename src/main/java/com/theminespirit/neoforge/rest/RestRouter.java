@@ -17,9 +17,9 @@ public final class RestRouter {
 
     public static Router create(SpiritBotGateway gateway) {
         List<Route> routes = new ArrayList<>(V1Routes.routes(gateway, SpiritScripts.catalog()));
-        SpiritTaskGateway taskGateway = new SpiritTaskGateway(gateway.index(), gateway.serverCall());
-        TaskRoutes taskRoutes = new TaskRoutes(gateway.taskRegistry(), taskGateway,
-                new PlanningService(SpiritScripts.catalog(), SpiritScripts.conditionCatalog()),
+        PlanningService planning = new PlanningService(SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
+        SpiritTaskGateway taskGateway = new SpiritTaskGateway(gateway.index(), gateway.serverCall(), planning);
+        TaskRoutes taskRoutes = new TaskRoutes(gateway.taskRegistry(), taskGateway, planning,
                 new IdempotencyCache(), new SseSlots());
         routes.addAll(taskRoutes.routes());
         return Router.of(routes);

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.task.TaskJson;
 import com.theminespirit.core.task.TaskRecord;
@@ -72,7 +71,7 @@ public final class TaskRoutes {
     }
 
     private String startTask(String bot, TaskRequest parsed) {
-        TaskNode plan = planFor(bot, parsed);
+        TaskNode plan = parsed.plan() == null ? null : planning.validatePlan(parsed.plan());
         String taskId;
         try {
             taskId = registry.reserve(bot, parsed.goal());
@@ -81,21 +80,17 @@ public final class TaskRoutes {
                     Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
         }
         try {
-            gateway.start(bot, plan);
+            if (plan != null) {
+                gateway.start(bot, plan);
+            } else {
+                gateway.startGoal(bot, parsed.goal(), parsed.params());
+            }
         } catch (RuntimeException failure) {
             registry.discard(taskId);
             throw failure;
         }
         registry.markStarted(taskId);
         return taskId;
-    }
-
-    private TaskNode planFor(String bot, TaskRequest parsed) {
-        if (parsed.plan() != null) {
-            return planning.validatePlan(parsed.plan());
-        }
-        WorldObservation observation = gateway.observation(bot);
-        return planning.planGoal(parsed, observation);
     }
 
     private RestResponse get(RestRequest request, PathParams params) {

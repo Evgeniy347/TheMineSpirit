@@ -5,6 +5,7 @@ import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.ErrorCode;
+import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
 import com.theminespirit.core.engine.RunStatus;
@@ -21,31 +22,31 @@ import net.minecraft.core.BlockPos;
 public final class SpiritTaskGateway implements TaskGateway {
     private final SpiritIndex index;
     private final ServerThreadCall serverCall;
+    private final PlanningService planning;
 
-    public SpiritTaskGateway(SpiritIndex index, ServerThreadCall serverCall) {
+    public SpiritTaskGateway(SpiritIndex index, ServerThreadCall serverCall, PlanningService planning) {
         this.index = index;
         this.serverCall = serverCall;
-    }
-
-    @Override
-    public WorldObservation observation(String bot) {
-        return serverCall.call(() -> {
-            SpiritEntity spirit = living(bot);
-            return spirit.observation().orElseGet(() -> minimal(bot, spirit));
-        }, RestTuning.SERVER_CALL_TIMEOUT);
+        this.planning = planning;
     }
 
     @Override
     public void start(String bot, TaskNode plan) {
         serverCall.call(() -> {
             SpiritEntity spirit = living(bot);
-            if (spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()) {
-                throw new ApiException(ErrorCode.CONFLICT,
-                        "Дух '" + bot + "' уже выполняет задачу, поставленную вне REST (команда или планировщик "
-                                + "ИИ): отмените её или дождитесь завершения, вытеснения нет",
-                        Map.of("id", bot));
-            }
+            rejectIfBusy(spirit, bot);
             spirit.startTask(plan);
+            return null;
+        }, RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
+    public void startGoal(String bot, String goal, Map<String, Object> params) {
+        serverCall.call(() -> {
+            SpiritEntity spirit = living(bot);
+            rejectIfBusy(spirit, bot);
+            WorldObservation observation = spirit.observation().orElseGet(() -> minimal(bot, spirit));
+            spirit.startTask(planning.planGoal(goal, params, observation));
             return null;
         }, RestTuning.SERVER_CALL_TIMEOUT);
     }
@@ -61,6 +62,15 @@ public final class SpiritTaskGateway implements TaskGateway {
 
     public ServerThreadCall serverCall() {
         return serverCall;
+    }
+
+    private static void rejectIfBusy(SpiritEntity spirit, String bot) {
+        if (spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()) {
+            throw new ApiException(ErrorCode.CONFLICT,
+                    "Дух '" + bot + "' уже выполняет задачу, поставленную вне REST (команда или планировщик "
+                            + "ИИ): отмените её или дождитесь завершения, вытеснения нет",
+                    Map.of("id", bot));
+        }
     }
 
     private SpiritEntity living(String bot) {

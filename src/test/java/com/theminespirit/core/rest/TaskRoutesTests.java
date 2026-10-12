@@ -53,8 +53,8 @@ class TaskRoutesTests {
     @BeforeEach
     void setUp() {
         registry = new TaskRegistry();
-        gateway = new FakeTaskGateway().observing(OBSERVATION);
         planning = new PlanningService(CATALOG, ConditionCatalog.empty());
+        gateway = new FakeTaskGateway().observing(OBSERVATION).planning(planning);
         idempotency = new IdempotencyCache();
         slots = new SseSlots();
         router = Router.of(new TaskRoutes(registry, gateway, planning, idempotency, slots).routes());
@@ -193,6 +193,44 @@ class TaskRoutesTests {
         assertTrue(response.body().contains(activeId),
                 "409 обязан называть текущую задачу " + activeId + ": " + response.body());
         assertEquals(1, registry.size(), "Конфликт занятости не должен резервировать вторую задачу");
+    }
+
+    @Test
+    void create_GoalRequest_StartsGoalInSingleServerHop() throws Exception {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, response.status(), "Цель обязана приниматься: " + response.body());
+        assertEquals(1, gateway.hops(),
+                "Наблюдение, планирование FallbackPlanner и старт цели обязаны идти одним переходом на серверный "
+                        + "поток (п. 13г), а не двумя: " + response.body());
+    }
+
+    @Test
+    void create_PlanRequest_StartsPlanInSingleServerHop() throws Exception {
+        String body = "{\"request_id\":\"" + uuid()
+                + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, response.status(), "План обязана приниматься: " + response.body());
+        assertEquals(1, gateway.hops(),
+                "Старт присланного плана — один переход на серверный поток: " + response.body());
+    }
+
+    @Test
+    void create_BotBusy_ConflictsBeforeAnyServerHop() throws Exception {
+        postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}");
+        int hopsBefore = gateway.hops();
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(409, response.status(), "Занятый дух обязан давать 409: " + response.body());
+        assertEquals(hopsBefore, gateway.hops(),
+                "409 по брони реестра обязан приходить до любого перехода на серверный поток, а не после "
+                        + "наблюдения: " + response.body());
     }
 
     @Test

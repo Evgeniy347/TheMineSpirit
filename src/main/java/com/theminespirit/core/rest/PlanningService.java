@@ -35,14 +35,18 @@ public final class PlanningService {
 
     public TaskNode planGoal(TaskRequest request, WorldObservation observation) {
         Objects.requireNonNull(request, "request не может быть null: у цели есть текст и параметры");
+        return planGoal(request.goal(), request.params(), observation);
+    }
+
+    public TaskNode planGoal(String goal, Map<String, Object> params, WorldObservation observation) {
         Objects.requireNonNull(observation, "observation не может быть null: планировщик выбирает сценарий по миру");
-        if (request.goal() == null || request.goal().isBlank()) {
+        if (goal == null || goal.isBlank()) {
             throw new ApiException(ErrorCode.INVALID_REQUEST,
                     "Цель пуста: для planGoal нужен непустой goal, а для плана — поле plan в теле POST tasks",
                     Map.of("field", "goal"));
         }
         try {
-            return planner.plan(new Goal(request.goal(), request.params()), observation).plan();
+            return planner.plan(new Goal(goal, params), observation).plan();
         } catch (UnplannableGoalException | PlanValidationException rejected) {
             throw new ApiException(ErrorCode.INVALID_PLAN, rejected.getMessage(), Map.of(), rejected);
         }
