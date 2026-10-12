@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -205,6 +206,24 @@ class TaskRoutesTests {
         assertTrue(response.body().contains(activeId),
                 "409 обязан называть текущую задачу " + activeId + ": " + response.body());
         assertEquals(1, registry.size(), "Конфликт занятости не должен резервировать вторую задачу");
+    }
+
+    @Test
+    void create_BotIdInUpperCase_ReservesUnderCanonicalLowerCaseId() throws Exception {
+        String upperPath = "/v1/bots/" + BOT.toUpperCase(Locale.ROOT) + "/tasks";
+        String firstBody = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        String secondBody = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse first = send("POST", upperPath, firstBody);
+        RestResponse second = send("POST", "/v1/bots/" + BOT + "/tasks", secondBody);
+
+        assertEquals(202, first.status(), "Постановка по id в верхнем регистре обязана приниматься: " + first.body());
+        assertEquals(BOT, registry.get(taskId(first.body())).orElseThrow().bot(),
+                "Запись обязана храниться под каноническим нижним регистром UUID: current_task в GET bots ищет по нему");
+        assertEquals(409, second.status(),
+                "Тот же дух по id в нижнем регистре обязан быть занят задачей, а не получать вторую: "
+                        + second.body());
+        assertEquals(1, registry.size(), "Один дух — одна активная задача независимо от регистра id в пути");
     }
 
     @Test

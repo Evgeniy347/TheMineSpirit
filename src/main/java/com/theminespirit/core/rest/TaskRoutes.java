@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Маршруты задач: постановка, чтение, отмена, поток событий и сухой прогон плана.
@@ -46,7 +47,7 @@ public final class TaskRoutes {
     }
 
     private RestResponse create(RestRequest request, PathParams params) {
-        String bot = params.get("id");
+        String bot = canonicalBotId(params.get("id"));
         TaskRequest parsed = TaskRequest.parse(request.body());
         String fingerprint = fingerprint(bot, parsed);
         IdempotencyCache.Result verdict = idempotency.check(parsed.requestId().toString(), fingerprint);
@@ -172,6 +173,14 @@ public final class TaskRoutes {
         return registry.get(taskId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
                 "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при перезапуске",
                 Map.of("task_id", taskId)));
+    }
+
+    private static String canonicalBotId(String raw) {
+        try {
+            return UUID.fromString(raw).toString();
+        } catch (IllegalArgumentException notUuid) {
+            return raw;
+        }
     }
 
     private static long lastEventId(RestRequest request) {
