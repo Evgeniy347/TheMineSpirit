@@ -68,7 +68,7 @@ final class GatherTargets implements HarvestTargets {
 
     private static String exactRefusal(IdFilter filter) {
         for (String pattern : filter.patterns()) {
-            if (pattern.indexOf('*') >= 0) {
+            if (IdFilter.isPattern(pattern)) {
                 continue;
             }
             if (GatherPolicy.check(pattern) instanceof GatherPolicy.Refused refused) {

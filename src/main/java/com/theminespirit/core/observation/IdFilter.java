@@ -51,6 +51,11 @@ public final class IdFilter {
         return patterns;
     }
 
+    public static boolean isPattern(String id) {
+        Objects.requireNonNull(id, "Шаблон фильтра не может быть null: подстановку проверяют у заданного значения");
+        return id.indexOf('*') >= 0;
+    }
+
     private static String normalizePattern(String pattern) {
         Objects.requireNonNull(pattern, "Шаблон фильтра не может быть null: пустое значение в списке — ошибка плана");
         if (pattern.isEmpty()) {

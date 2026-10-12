@@ -100,6 +100,15 @@ class IdFilterTests {
     }
 
     @Test
+    void isPattern_WildcardAndExact_ReportsWildcardOnly() {
+        assertTrue(IdFilter.isPattern("*_ore") && IdFilter.isPattern("minecraft:*_ore"),
+                "Шаблон со '*' обязан распознаваться как подстановка независимо от namespace: по этому признаку "
+                        + "gather не требует инструмент, а gather точного блока требует");
+        assertTrue(!IdFilter.isPattern("minecraft:iron_ore"),
+                "Точный id без '*' — не шаблон: иначе добыча доверяла бы инструменту вслепую");
+    }
+
+    @Test
     void matches_PathologicalPattern_FinishesWithoutBacktrackingExplosion() {
         String pattern = "*a*a*a*a*a*a*a*a*a*a*a*a*b";
         String id = "minecraft:" + "a".repeat(200);

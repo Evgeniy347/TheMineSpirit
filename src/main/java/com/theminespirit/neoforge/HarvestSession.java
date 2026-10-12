@@ -87,7 +87,7 @@ public final class HarvestSession {
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
         return new HarvestSession(spirit, new GatherTargets(spirit.level(), spirit.blockPosition(), radius,
-                IdFilter.of(List.of(block))), block, count, radius, block.indexOf('*') >= 0);
+                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block));
     }
 
     public Outcome tick() {
