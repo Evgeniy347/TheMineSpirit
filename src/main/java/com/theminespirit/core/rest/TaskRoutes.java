@@ -97,7 +97,7 @@ public final class TaskRoutes {
         TaskRecord record = knownTask(taskId);
         if (record.active()) {
             gateway.cancel(record.bot(), taskId);
-            registry.observe(taskId, TaskState.CANCELLED, record.progress(), null);
+            registry.cancelIfActive(taskId);
         }
         return RestResponse.ok(TaskJson.toJson(knownTask(taskId)));
     }

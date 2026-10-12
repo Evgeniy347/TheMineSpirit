@@ -335,6 +335,21 @@ class TaskRoutesTests {
     }
 
     @Test
+    void delete_GatewayFinishesTaskDuringCancel_ReturnsCurrentRecordWithoutIllegalTransition() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        gateway.runsOnCancel(() -> registry.observe(taskId, TaskState.SUCCEEDED, null, null));
+
+        RestResponse response = send("DELETE", "/v1/tasks/" + taskId, "");
+
+        assertEquals(200, response.status(),
+                "Между чтением записи и отменой watcher мог успеть закрыть задачу: DELETE обязан вернуть текущую "
+                        + "запись, а не упасть недопустимым переходом cancelled, который сервер отдаёт как 500: "
+                        + response.body());
+        assertTrue(response.body().contains("\"state\":\"succeeded\""),
+                "Ответ обязан нести текущее состояние задачи, а не отменённую копию: " + response.body());
+    }
+
+    @Test
     void delete_UnknownTask_ReturnsNotFound() {
         RestResponse response = send("DELETE", "/v1/tasks/t-404", "");
 

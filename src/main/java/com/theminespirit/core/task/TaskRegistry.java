@@ -125,6 +125,15 @@ public final class TaskRegistry {
         return true;
     }
 
+    public synchronized Optional<TaskRecord> cancelIfActive(String taskId) {
+        Entry entry = tasks.get(taskId);
+        if (entry == null || !entry.record.active()) {
+            return Optional.empty();
+        }
+        observe(taskId, TaskState.CANCELLED, entry.record.progress(), null);
+        return Optional.of(entry.record);
+    }
+
     public synchronized int size() {
         return tasks.size();
     }

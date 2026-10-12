@@ -15,9 +15,15 @@ final class FakeTaskGateway implements TaskGateway {
     private WorldObservation observation;
     private RuntimeException startFailure;
     private RuntimeException observationFailure;
+    private Runnable onCancel;
 
     FakeTaskGateway observing(WorldObservation observation) {
         this.observation = observation;
+        return this;
+    }
+
+    FakeTaskGateway runsOnCancel(Runnable action) {
+        this.onCancel = action;
         return this;
     }
 
@@ -62,5 +68,8 @@ final class FakeTaskGateway implements TaskGateway {
     @Override
     public void cancel(String bot, String taskId) {
         cancels.add(taskId);
+        if (onCancel != null) {
+            onCancel.run();
+        }
     }
 }
