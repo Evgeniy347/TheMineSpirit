@@ -110,6 +110,29 @@ class StandSpotsTests {
     }
 
     @Test
+    void of_DeepestStandBelowTarget_MaxOffsetIsNine() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, -4, 0, Cell.SOLID);
+        BlockCoord target = new BlockCoord(0, 0, 0);
+
+        List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0));
+
+        assertEquals(List.of(new BlockCoord(0, -3, 0)), spots,
+                "Самая глубокая стоянка обязана быть на 3 ниже цели: соседи дают не дальше (1,-2,0)=√5, "
+                        + "низ даёт (0,-3,0)=3; иначе ранний выход планировщика вычитает неверный радиус");
+        long maxOffset = spots.stream()
+                .mapToLong(stand -> (long) (stand.x() - target.x()) * (stand.x() - target.x())
+                        + (long) (stand.y() - target.y()) * (stand.y() - target.y())
+                        + (long) (stand.z() - target.z()) * (stand.z() - target.z()))
+                .max()
+                .orElseThrow();
+        assertEquals(9, maxOffset,
+                "Наибольшее смещение стоянки обязано равняться 9 = 3² (столб под целью): по нему планировщик "
+                        + "вычитает 3 в раннем выходе. Стоянок: " + spots.size());
+    }
+
+    @Test
     void of_TargetReading_StaysWithinLimit() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
