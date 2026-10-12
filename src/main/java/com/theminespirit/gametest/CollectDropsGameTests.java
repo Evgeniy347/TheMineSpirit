@@ -470,6 +470,10 @@ public final class CollectDropsGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "изумруд дешевле железа, а доски нужны плану: подбор обязан провалиться, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("инвентарь полон"),
+                    "провалиться обязан именно collect_drops с переполнением, а не следующий шаг плана: "
+                            + "иначе защита планом не доказана. Причина: "
+                            + spirit.taskFailureReason().orElse("нет причины"));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_PLANKS) == 64,
                     "доски обязаны остаться все 64: план sequence[collect_drops, craft stick] защищает их "
                             + "через ингредиенты, хотя они дешевле изумруда");
