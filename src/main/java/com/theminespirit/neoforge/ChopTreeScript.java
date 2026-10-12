@@ -17,6 +17,7 @@ import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.ChopTreeParams;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -26,6 +27,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 
 public final class ChopTreeScript implements ScriptInstance {
+    private static final String CHOPPED_KEY = "chopped";
+
     private enum Phase {
         FIND,
         APPROACH,
@@ -96,6 +99,25 @@ public final class ChopTreeScript implements ScriptInstance {
         return failureReason;
     }
 
+    @Override
+    public Map<String, Object> saveState() {
+        return Map.of(CHOPPED_KEY, chopped);
+    }
+
+    @Override
+    public void restoreState(Map<String, Object> state) {
+        Object saved = state.get(CHOPPED_KEY);
+        if (saved == null) {
+            return;
+        }
+        if (!(saved instanceof Number number) || number.intValue() < 0 || number.intValue() > params.count()) {
+            throw new IllegalArgumentException("Состояние chop_tree: '" + CHOPPED_KEY + "' = " + saved
+                    + ", а ожидалось целое число от 0 до count=" + params.count()
+                    + ": снимок задачи повреждён или записан другой версией мода, проверьте его");
+        }
+        chopped = number.intValue();
+    }
+
     public long treeBlockReads() {
         return treeView.blockReads();
     }
@@ -109,6 +131,9 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus find() {
+        if (chopped >= params.count()) {
+            return ScriptStatus.SUCCEEDED;
+        }
         locate();
         Optional<BlockCoord> start = candidates.nearest(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
         if (start.isEmpty()) {

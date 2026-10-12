@@ -7,6 +7,8 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.engine.TaskProgress;
+import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
@@ -30,6 +32,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
@@ -536,6 +539,57 @@ public final class ChopTreeGameTests {
             LOGGER.info("chop_tree, поиск радиуса {}: прочитано {} позиций, ожидалось {} (куб {}), "
                             + "максимум за тик {}",
                     SEARCH_RADIUS, examined, expected, cubeVolume, script.searchMaxExaminedPositionsPerTick());
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 900)
+    public static void chopTree_ReloadedAfterFirstTree_ChopsExactlyThreeTrees(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 3, 3, 5);
+        buildOakTree(helper, 6, 3, 5);
+        buildOakTree(helper, 9, 3, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 3), SETTLE_TICKS);
+
+        SpiritEntity[] current = { spirit };
+        boolean[] reloaded = { false };
+        helper.onEachTick(() -> {
+            if (reloaded[0] || current[0].taskSnapshot().isEmpty()) {
+                return;
+            }
+            TaskProgress progress = TaskSnapshotCodec.decode(current[0].taskSnapshot().get()).progress();
+            if (progress instanceof TaskProgress.ScriptAt at && at.state().get("chopped") instanceof Number chopped
+                    && chopped.intValue() == 1) {
+                reloaded[0] = true;
+                CompoundTag tag = new CompoundTag();
+                current[0].saveWithoutId(tag);
+                current[0].discard();
+                SpiritEntity fresh = ModEntities.SPIRIT.get().create(helper.getLevel());
+                fresh.load(tag);
+                helper.getLevel().addFreshEntity(fresh);
+                current[0] = fresh;
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(reloaded[0],
+                    "после первого срубленного дерева снимок задачи обязан показать chopped=1: иначе прогресс "
+                            + "рубки не сохраняется и перезапуск начинает счёт заново");
+            SpiritEntity now = current[0];
+            helper.assertTrue(now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "после перезагрузки рубка продолжается с chopped=1 и срубает ровно два оставшихся дерева: "
+                            + "SUCCEEDED, а не FAILED «срублено 2 из 3». Статус: "
+                            + now.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + now.taskFailureReason().orElse("нет"));
+            int logs = GameTestFixtures.countInInventory(now.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(logs == 15,
+                    "три дерева по 5 брёвен: 15 в инвентаре, фактически " + logs);
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.OAK_LOG) == 0,
+                    "в мире не должно остаться брёвен трёх деревьев");
 
             clearField(helper);
         });
