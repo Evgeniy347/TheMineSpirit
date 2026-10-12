@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Запуск задания opencode в tmux для главного агента: сессия переживает обрыв ssh, вывод — в TestResults/opencode/<задание>.out,
 # в конце строка EXIT=<код>, задание добавляется в watch.list (его читает монитор главного агента).
-# Использование: scripts/opencode-start.sh <worktree> <модель> <задание> <файл-сообщения> [<id сессии opencode>]
+# Использование: scripts/opencode-start.sh <worktree> <модель|auto> <задание> <файл-сообщения> [<id сессии opencode>]
 # Пример: scripts/opencode-start.sh /opt/minecraft/wt/12-mine opencode/big-pickle task12r4 /tmp/msg.txt ses_ed40…
 set -euo pipefail
 [ $# -ge 4 ] || { sed -n 2,5p "$0" >&2; exit 2; }
 worktree="$1" model="$2" task="$3" message="$4" session="${5:-}"
 main="$(cd "$(dirname "$0")/.." && pwd)"
+# Модель auto — выбрать по свежим сбоям и загрузке (scripts/opencode-pick-model.sh).
+[ "$model" = auto ] && model="$("$main/scripts/opencode-pick-model.sh")"
 results="$main/TestResults/opencode"
 mkdir -p "$results"
 [ -d "$worktree" ] || { echo "Нет worktree: $worktree" >&2; exit 2; }

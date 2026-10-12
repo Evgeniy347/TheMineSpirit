@@ -8,6 +8,7 @@
 # FAKE_INFO_LOG=1   — в логе INFO команда со словами «rate limit»; это не сбой.
 # FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
 #                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
+# FAKE_UNFINISHED=N — первые N запусков заканчивают ход оборванной фразой «Теперь посмотрю тесты:».
 state="${FAKE_STATE:?}"
 case "$*" in
     *"ответь OK"*)
@@ -45,5 +46,9 @@ if [ "$count" -lt "${FAKE_FAILURES:-0}" ]; then
         echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Free usage exceeded"}}}'
     fi
     exec sleep 600
+fi
+if [ "$count" -lt "${FAKE_UNFINISHED:-0}" ]; then
+    echo '{"type":"text","sessionID":"ses_fake123","part":{"type":"text","text":"Теперь посмотрю тесты:"}}'
+    exit 0
 fi
 echo '{"type":"text","sessionID":"ses_fake123","part":{"type":"text","text":"готово"}}'
