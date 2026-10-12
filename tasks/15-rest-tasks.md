@@ -102,13 +102,13 @@
 - [x] 9. **`TaskWatcher`** — на `ServerTickEvent.Post` опрашивает **только активные** записи реестра: статус, текущий
       скрипт, причина, `TaskRunner.progress()` → `TaskEventDiff` → обновление реестра и журнала событий. Дух исчез или
       погиб — `failed` «дух исчез». Стоимость O(активных задач), у пустого реестра — ноль работы.
-- [x] 10. **Прогресс у скриптов** (сделано для `mine_vein` и `gather`; скрипта `chop_tree` в моде нет) — `progress()` у `chop_tree` (срублено деревьев/`count`), `mine_vein` и `gather`
+- [x] 10. **Прогресс у скриптов** (сделано для `chop_tree`, `mine_vein` и `gather`) — `progress()` у `chop_tree` (срублено деревьев/`count`), `mine_vein` и `gather`
       (добыто блоков/`count`); у `goto`, `follow`, `scan`, `collect_drops` — пусто.
 - [x] 11. **SSE и лимиты в `RestServer`** — стриминговый ответ (`sendResponseHeaders(200, 0)`, запись и `flush` по кадру,
       `: keepalive` каждые 15 с, закрытие после финального `state`; `IOException` при отключении клиента — тихий выход
       на DEBUG без стека, слот освобождается); счётчик открытых потоков ≤ 4; `TokenBucket` по IP клиента (адрес в лог
       не пишется), 429 с `Retry-After`. Поток ожидает на `TaskEventLog.awaitAfter`, а не опрашивает мир.
-- [x] 12. **GameTest `RestTaskGameTests`** (сделано в классах RestTask*, RestEvents*, RestPlan* на шаблоне arena; «срубить дерево» отвечает 422: chop_tree не реализован) (шаблон `empty`; свой `RestServer` на `127.0.0.1:0`; **все запросы асинхронные**
+- [x] 12. **GameTest `RestTaskGameTests`** (сделано в классах RestTask*, RestEvents*, RestPlan* на шаблоне arena; «срубить дерево» — 202, chop_tree есть в main) (шаблон `empty`; свой `RestServer` на `127.0.0.1:0`; **все запросы асинхронные**
       — синхронный `send` на серверном потоке блокирует тик, на котором ждёт обработчик; проверки в
       `helper.succeedWhen(...)`; SSE читается `BodyHandlers.ofLines()` в потокобезопасный список):
       (а) `POST tasks` с планом `goto` → 202, `state=accepted`; `GET` → `running`, затем `succeeded`; `GET bots/{id}` показывает
@@ -147,7 +147,7 @@ SSE-потоки, лимитер, реестр и разбор тел живут
 
 ## Завершение
 
-- [ ] 15. `./gradlew test` и `./gradlew runGameTestServer` зелёные. Коммиты по пунктам (`feat:`/`test:`/`docs:`). `todo.md` не
+- [x] 15. `./gradlew test` и `./gradlew runGameTestServer` зелёные. Коммиты по пунктам (`feat:`/`test:`/`docs:`). `todo.md` не
       править. Отчёт: хэши; сколько тестов прошло и упало; красные до реализации; поведение п. 12к; время самого
       медленного GameTest; что не сделано.
 
