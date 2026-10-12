@@ -6,8 +6,10 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public final class BatchPlanner {
     private BatchPlanner() {
@@ -22,6 +24,14 @@ public final class BatchPlanner {
         if (catalogs.size() != observations.size()) {
             throw new IllegalArgumentException("Каталогов " + catalogs.size() + ", а наблюдений "
                     + observations.size() + ": каждому духу нужны свой каталог и своё наблюдение");
+        }
+        Set<String> seen = new HashSet<>();
+        for (WorldObservation observation : observations) {
+            if (!seen.add(observation.botId())) {
+                throw new IllegalArgumentException("Наблюдение духа '" + observation.botId()
+                        + "' передано дважды: каждому духу нужно своё наблюдение, общее скрывает чужие "
+                        + "позицию и инвентарь");
+            }
         }
         List<TaskNode> plans = new ArrayList<>(catalogs.size());
         for (int i = 0; i < catalogs.size(); i++) {

@@ -9,9 +9,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.ScanRadius;
-import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.BatchPlanException;
@@ -21,23 +20,20 @@ import com.theminespirit.core.planner.Goal;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 
 final class SpiritTaskCommands {
-    private static final Set<UUID> EVIDENCE_SCANS = new HashSet<>();
-
     private SpiritTaskCommands() {
     }
 
@@ -71,111 +67,53 @@ final class SpiritTaskCommands {
             return 0;
         }
         Map<String, Object> goalParams = speakerParams(speaker);
-        Map<SpiritEntity, WorldObservation> observations = new LinkedHashMap<>();
+        List<ScriptCatalog> catalogs = new ArrayList<>(spirits.size());
+        List<WorldObservation> observations = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
-            observations.put(spirit, storeMinimalObservation(spirit));
-        }
-        Map<SpiritEntity, String> refusals = refuseWithoutEvidence(spirits, text);
-        List<SpiritEntity> candidates = new ArrayList<>();
-        List<ScriptCatalog> catalogs = new ArrayList<>();
-        List<WorldObservation> candidateObservations = new ArrayList<>();
-        for (SpiritEntity spirit : spirits) {
-            if (!refusals.containsKey(spirit)) {
-                candidates.add(spirit);
-                catalogs.add(SpiritScripts.catalogFor(spirit));
-                candidateObservations.add(observations.get(spirit));
-            }
-        }
-        if (candidates.isEmpty()) {
-            source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: "
-                    + describeRefusals(refusals)));
-            return 0;
+            catalogs.add(SpiritScripts.catalogFor(spirit));
+            observations.add(goalObservation(spirit));
         }
         List<TaskNode> plans;
         try {
-            plans = BatchPlanner.planAll(catalogs, new Goal(text, goalParams), candidateObservations);
+            plans = BatchPlanner.planAll(catalogs, new Goal(text, goalParams), observations);
         } catch (BatchPlanException e) {
-            SpiritEntity failed = candidates.get(e.index());
+            SpiritEntity failed = spirits.get(e.index());
             source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: дух '"
-                    + failed.getStringUUID() + "' не смог её принять: " + e.getMessage()
-                    + refusalsSuffix(refusals)));
+                    + failed.getStringUUID() + "' не смог её принять: " + e.getMessage()));
+            return 0;
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: "
+                    + e.getMessage()));
             return 0;
         }
-        List<String> assigned = new ArrayList<>(candidates.size());
-        for (int i = 0; i < candidates.size(); i++) {
-            candidates.get(i).startTask(plans.get(i));
-            assigned.add(candidates.get(i).getStringUUID());
+        List<String> assigned = new ArrayList<>(spirits.size());
+        for (int i = 0; i < spirits.size(); i++) {
+            spirits.get(i).startTask(plans.get(i));
+            assigned.add(spirits.get(i).getStringUUID());
         }
         source.sendSuccess(() -> Component.literal("Цель '" + text + "' поставлена духам: "
-                + String.join(", ", assigned) + ". Состояние — /spirit status" + refusalsSuffix(refusals)), true);
-        return candidates.size();
+                + String.join(", ", assigned) + ". Состояние — /spirit status"), true);
+        return spirits.size();
     }
 
-    private static WorldObservation storeMinimalObservation(SpiritEntity spirit) {
-        WorldObservation observation = emptyObservation(spirit);
-        spirit.updateObservation(observation);
-        return observation;
-    }
-
-    private static Map<SpiritEntity, String> refuseWithoutEvidence(List<SpiritEntity> spirits, String text) {
-        Map<SpiritEntity, String> refusals = new LinkedHashMap<>();
-        for (SpiritEntity spirit : spirits) {
-            checkEvidence(spirit, text).ifPresent(reason -> refusals.put(spirit, reason));
-        }
-        return refusals;
-    }
-
-    private static Optional<String> checkEvidence(SpiritEntity spirit, String text) {
-        List<String> filter;
-        String missing;
-        if (FallbackPlanner.requiresLogEvidence(text)) {
-            filter = List.of("*_log");
-            missing = "рядом в радиусе " + ScanRadius.DEFAULT.value() + " нет подходящих брёвен: рубить нечего";
-        } else if (FallbackPlanner.requiresOreEvidence(text)) {
-            filter = List.of("*_ore");
-            missing = "рядом в радиусе " + ScanRadius.DEFAULT.value() + " нет подходящей руды: добывать нечего";
-        } else {
-            return Optional.empty();
-        }
-        if (!EVIDENCE_SCANS.add(spirit.getUUID())) {
-            return Optional.of("дух уже сканируется для планирования: дождитесь завершения текущей команды");
-        }
-        try {
-            WorldObservation evidence = scanEvidence(spirit, filter);
-            return evidence.blocks().isEmpty() ? Optional.of(missing) : Optional.empty();
-        } finally {
-            EVIDENCE_SCANS.remove(spirit.getUUID());
-        }
-    }
-
-    private static WorldObservation scanEvidence(SpiritEntity spirit, List<String> filter) {
+    private static WorldObservation goalObservation(SpiritEntity spirit) {
         BlockPos pos = spirit.blockPosition();
-        WorldScanner.Session session = new WorldScanner.Session(spirit.level(), "spirit_" + spirit.getStringUUID(),
-                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), ScanRadius.DEFAULT, IdFilter.of(filter),
-                spirit.getInventory());
-        while (!session.done()) {
-            session.step(ScanTuning.SLICES_PER_TICK);
-        }
-        return session.result().observation();
+        return new WorldObservation("spirit_" + spirit.getStringUUID(), spirit.level().getGameTime(),
+                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), inventoryEntries(spirit),
+                List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
     }
 
-    private static String describeRefusals(Map<SpiritEntity, String> refusals) {
-        List<String> parts = new ArrayList<>(refusals.size());
-        for (Map.Entry<SpiritEntity, String> refusal : refusals.entrySet()) {
-            parts.add("дух '" + refusal.getKey().getStringUUID() + "' не смог её принять: " + refusal.getValue());
+    private static List<ItemCount> inventoryEntries(SpiritEntity spirit) {
+        List<ItemCount> entries = new ArrayList<>();
+        SimpleContainer inventory = spirit.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!stack.isEmpty()) {
+                entries.add(new ItemCount(
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), stack.getCount()));
+            }
         }
-        return String.join("; ", parts);
-    }
-
-    private static String refusalsSuffix(Map<SpiritEntity, String> refusals) {
-        if (refusals.isEmpty()) {
-            return "";
-        }
-        List<String> parts = new ArrayList<>(refusals.size());
-        for (Map.Entry<SpiritEntity, String> refusal : refusals.entrySet()) {
-            parts.add("дух '" + refusal.getKey().getStringUUID() + "' (" + refusal.getValue() + ")");
-        }
-        return ". Без задачи остались: " + String.join("; ", parts);
+        return entries;
     }
 
     private static int status(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -239,13 +177,6 @@ final class SpiritTaskCommands {
             }
         }
         return spirits;
-    }
-
-    private static WorldObservation emptyObservation(SpiritEntity spirit) {
-        BlockPos pos = spirit.blockPosition();
-        return new WorldObservation("spirit_" + spirit.getStringUUID(), spirit.level().getGameTime(),
-                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
-                List.of(), List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
     }
 
     private static String describe(SpiritEntity spirit) {
