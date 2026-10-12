@@ -273,6 +273,34 @@ class OverflowPolicyTests {
                         + "понимает, что дух не стал брать мусор. Фактическая причина: " + decision.reason());
     }
 
+    @Test
+    void decide_KitQuotasAndShulkersWithValuableHeap_RefusesWithoutDropping() {
+        List<Stack> inventory = new ArrayList<>();
+        inventory.add(new Stack("iron_pickaxe", 0, 1, 1));
+        inventory.add(new Stack("iron_axe", 0, 1, 1));
+        inventory.add(new Stack("iron_shovel", 0, 1, 1));
+        inventory.add(new Stack("iron_sword", 0, 1, 1));
+        inventory.add(new Stack("iron_hoe", 0, 1, 1));
+        inventory.add(new Stack("bucket", 0, 1, 1));
+        inventory.add(new Stack("water_bucket", 0, 1, 1));
+        inventory.add(new Stack("lava_bucket", 0, 1, 1));
+        inventory.add(new Stack("crafting_table", 0, 1, 64));
+        inventory.add(new Stack("bread", 0, 16, 64));
+        inventory.add(new Stack("torch", 0, 16, 64));
+        inventory.add(new Stack("cobblestone", 0, 32, 64));
+        for (int slot = 12; slot < 36; slot++) {
+            inventory.add(new Stack("shulker_box", 0, 1, 1));
+        }
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 2, 64),
+                VALUES, List.of(), KIT);
+
+        assertEquals(OverflowPolicy.Action.REFUSE, decision.action(),
+                "Инвентарь из квот базового набора и шалкеров не отдаёт ничего даже за два алмаза (1000 "
+                        + "против 500 за шалкер): квоты защищены набором, шалкеры — never_give_away. Причина "
+                        + decision.reason());
+    }
+
     private static int countOfRule(List<Stack> inventory, KitRule rule) {
         int total = 0;
         for (Stack stack : inventory) {
