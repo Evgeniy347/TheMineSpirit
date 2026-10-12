@@ -14,4 +14,12 @@ public interface ResourceKnowledge {
     boolean isSmeltable(String item);
 
     String smeltInputFor(String item);
+
+    default int burnTicks(String item) {
+        return FuelTable.burnTicks(item);
+    }
+
+    default List<String> fuelCandidates() {
+        return FuelTable.preferenceOrder();
+    }
 }

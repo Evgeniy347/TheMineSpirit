@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class ResourceResolverTests {
     private static final ResourceKnowledge KNOWLEDGE = new StubKnowledge(
-            Set.of("oak_log", "iron_ore"),
+            Set.of("oak_log", "iron_ore", "coal"),
             Map.of(
                     "stick", List.of(new Ingredient("oak_log", 2)),
                     "iron_pickaxe", List.of(new Ingredient("stick", 2), new Ingredient("iron_ingot", 3))),
@@ -32,14 +32,16 @@ class ResourceResolverTests {
     }
 
     @Test
-    void resolve_SmeltableItem_ReturnsInputAndSmeltSequence() {
+    void resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE);
 
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 2),
+                gather("coal", 1),
                 new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 2)))), plan,
-                "Smeltable предмет обязан резолвиться в добычу входа и переплавку: без шага smelt дух получит "
-                        + "руду вместо слитка и цель не будет исполнена");
+                "Smeltable предмет обязан резолвиться в добычу входа, добычу топлива и переплавку: без шага топлива "
+                        + "дух положит руду в холодную печь и цель не будет исполнена. 2 слитка углём (8 за штуку) "
+                        + "требуют 1 угля");
     }
 
     @Test
@@ -113,6 +115,7 @@ class ResourceResolverTests {
                         new ScriptCall("craft", Map.of("item", "stick", "count", 2)))),
                 new SequenceNode(List.of(
                         gather("iron_ore", 3),
+                        gather("coal", 1),
                         new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 3)))),
                 new ScriptCall("craft", Map.of("item", "iron_pickaxe", "count", 1)))), plan,
                 "Вложенный craft обязан рекурсивно резолвить каждый ингредиент с учётом количества: иначе план "
@@ -211,6 +214,115 @@ class ResourceResolverTests {
         assertThrows(PlanValidationException.class,
                 () -> ResourceResolver.resolve("oak_log", 300, knowledge),
                 "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
+    }
+
+    @Test
+    void resolve_EightIngotsWithCoal_PlansSingleCoal() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, KNOWLEDGE);
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 8),
+                gather("coal", 1),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                "8 слитков углём (8 предметов за уголь) требуют ровно 1 уголь: недобор остановит печь, перебор "
+                        + "оставит духа без топлива на следующую плавку");
+    }
+
+    @Test
+    void resolve_EightIngotsWithoutCoal_PlansSixLogs() {
+        ResourceKnowledge logsOnly = new StubKnowledge(
+                Set.of("oak_log", "iron_ore"),
+                Map.of(),
+                Map.of("iron_ingot", "iron_ore"));
+
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, logsOnly);
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 8),
+                gather("oak_log", 6),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                "Без угля резолвер обязан взять следующее доступное топливо — брёвна (1.5 предмета за бревно, "
+                        + "ceil(8 / 1.5) = 6): иначе плавка без угольной жилы не планируется вовсе");
+    }
+
+    @Test
+    void resolve_SmeltedFuel_PlansInputAndFuelSeparately() {
+        ResourceKnowledge charcoalOnly = new StubKnowledge(
+                Set.of("oak_log", "iron_ore"),
+                Map.of(),
+                Map.of("iron_ingot", "iron_ore", "charcoal", "oak_log"));
+
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, charcoalOnly);
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 8),
+                new SequenceNode(List.of(
+                        gather("oak_log", 1),
+                        gather("oak_log", 1),
+                        new ScriptCall("smelt", Map.of("item", "charcoal", "count", 1)))),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                "Топливо-древесный уголь планируется своей плавкой: вход (1 бревно) и топливо под него (1 бревно) — "
+                        + "два независимых шага, счёт не схлопывается. Иначе дух сожжёт входной запас вместо топлива");
+    }
+
+    @Test
+    void resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted() {
+        ResourceKnowledge noFuel = new StubKnowledge(
+                Set.of("iron_ore"),
+                Map.of(),
+                Map.of("iron_ingot", "iron_ore"));
+
+        UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
+                () -> ResourceResolver.resolve("iron_ingot", 2, noFuel),
+                "Плавка без доступного топлива обязана отвергаться: молчаливый план без топлива выглядит готовым, "
+                        + "а печь встанет на первом же предмете");
+
+        assertEquals("iron_ingot", error.item(),
+                "Исключение обязано нести плавимый предмет 'iron_ingot': по нему правят знания о топливе");
+        assertTrue(error.getMessage().contains("iron_ingot"),
+                "Сообщение обязано называть 'iron_ingot'. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void resolve_InventoryCoversFuel_OmitsFuelGather() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE, Map.of("coal", 5));
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 2),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 2)))), plan,
+                "Топливо из инвентаря (5 угля при нужде в 1) обязано гасить шаг добычи: иначе дух потащит лишний "
+                        + "уголь, хотя печь уже заправлена");
+    }
+
+    @Test
+    void resolve_InventoryPartiallyCoversFuel_GathersRemainder() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 9, KNOWLEDGE, Map.of("coal", 1));
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 9),
+                gather("coal", 1),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 9)))), plan,
+                "9 слитков требуют 2 угля, 1 уже в инвентаре — добыть надо ровно 1: полный недобор остановит печь, "
+                        + "полный перебор проигнорирует запас");
+    }
+
+    @Test
+    void resolve_InventoryHoldsLogs_PrefersLogsOverAbsentCoal() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, KNOWLEDGE, Map.of("oak_log", 2));
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 8),
+                gather("oak_log", 4),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан топить брёвнами и добрать 4, а не переключаться "
+                        + "на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа");
+    }
+
+    @Test
+    void resolve_NullInventory_ThrowsNullPointerException() {
+        assertThrows(NullPointerException.class,
+                () -> ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE, null),
+                "Null-инвентарь обязан отвергаться: молчаливое чтение null превратит выбор топлива в падение в тике");
     }
 
     private static ScriptCall gather(String block, int count) {
