@@ -103,7 +103,7 @@ public final class JsonResource {
         return node.asInt();
     }
 
-    public static List<JsonNode> items(JsonNode node) {
+    static List<JsonNode> items(JsonNode node) {
         List<JsonNode> items = new ArrayList<>(node.size());
         for (int index = 0; index < node.size(); index++) {
             items.add(node.get(index));

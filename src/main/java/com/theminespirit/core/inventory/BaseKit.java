@@ -188,7 +188,11 @@ public final class BaseKit {
     }
 
     private static List<KitRule> parseRules(JsonNode node, String origin) {
-        List<JsonNode> nodes = JsonResource.array(node, origin, "списка rules");
+        if (node == null || !node.isArray() || node.isEmpty()) {
+            throw new IllegalStateException("Файл базового набора '" + origin
+                    + "' без списка rules: без правил набор пуст и разгрузка отдала бы всё подряд");
+        }
+        List<JsonNode> nodes = JsonResource.items(node);
         List<KitRule> rules = new ArrayList<>(nodes.size());
         for (int index = 0; index < nodes.size(); index++) {
             JsonNode ruleNode = nodes.get(index);

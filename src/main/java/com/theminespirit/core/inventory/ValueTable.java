@@ -116,7 +116,7 @@ public final class ValueTable {
             throw new IllegalStateException("Файл ценностей '" + origin
                     + "' без списка rules: без правил все предметы получили бы одно значение default");
         }
-        List<JsonNode> nodes = JsonResource.array(node, origin, "списка rules");
+        List<JsonNode> nodes = JsonResource.items(node);
         List<ValueRule> rules = new ArrayList<>(nodes.size());
         for (int index = 0; index < nodes.size(); index++) {
             JsonNode ruleNode = nodes.get(index);
@@ -141,7 +141,7 @@ public final class ValueTable {
             throw new IllegalStateException("Файл ценностей '" + origin
                     + "' без списка categories: сортёру сундука не по чем расставить группы предметов");
         }
-        List<JsonNode> nodes = JsonResource.array(node, origin, "списка categories");
+        List<JsonNode> nodes = JsonResource.items(node);
         List<Category> categories = new ArrayList<>(nodes.size());
         Set<String> names = new LinkedHashSet<>();
         for (int index = 0; index < nodes.size(); index++) {

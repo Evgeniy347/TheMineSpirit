@@ -187,6 +187,23 @@ class OverflowPolicyTests {
     }
 
     @Test
+    void decide_PartialSurplusSlot_IsSkippedForWholeSurplusSlot() {
+        List<Stack> inventory = inventory("bread:20;bread:16*35");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT);
+
+        assertEquals(OverflowPolicy.Action.DROP, decision.action(),
+                "Инвентарь из хлеба всегда найдёт, чем погасить алмаз: 35 стопок целиком вне квоты еды");
+        assertEquals(35, decision.slot(),
+                "Слот с частичным излишком (20 хлеба при квоте 16) не выбирается: выбросив из него 4, "
+                        + "дух оставляет слот занятым и алмазу некуда деться. Выбирается стопка, "
+                        + "которая целиком лишняя");
+        assertEquals(16, decision.count(),
+                "Выбранная стопка уходит целиком: в ней 16 хлебов, все за пределами квоты еды (16)");
+    }
+
+    @Test
     void decide_SlotInsideKitQuota_IsNeverDropped() {
         List<Stack> inventory = inventory("bread:16;cobblestone:64*35");
         Protected protection = Protected.of(List.of(), inventory, KIT, VALUES);
