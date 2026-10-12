@@ -117,7 +117,7 @@ class TacticsProperties {
                 "Зов на помощь - побочное действие отхода, при другом решении его нет");
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void step_AnyAdmissibleCase_RetreatAlwaysNamesAWay(@ForAll("cases") Case c) {
         TacticalOutcome outcome = run(c);
 

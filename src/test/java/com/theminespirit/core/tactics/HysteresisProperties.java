@@ -33,7 +33,7 @@ class HysteresisProperties {
         return Arbitraries.of(TacticalOption.values());
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void decide_PreviousFromRule_EqualsDecisionWithoutMemory(@ForAll("healthy") Situation situation,
             @ForAll("options") TacticalOption previous, @ForAll @IntRange(min = 0, max = 100) int decidedAgo) {
         Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());

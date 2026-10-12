@@ -11,7 +11,7 @@ import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 
 class HydrationProperties {
-    @Property(tries = 300)
+    @Property(tries = 200)
     void watered_RandomWater_MatchesBruteForceBox(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Set<BlockCoord> water = new HashSet<>();

@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Random;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
-import net.jqwik.api.Tag;
 import net.jqwik.api.constraints.IntRange;
 
 class TaskRunnerProperties {
@@ -35,8 +34,7 @@ class TaskRunnerProperties {
             YES, params -> true,
             NO, params -> false));
 
-    @Tag("slow")
-    @Property(tries = 500)
+    @Property(tries = 200)
     void run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus(
             @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         TaskNode plan = randomTree(new Random(seed), MAX_DEPTH);

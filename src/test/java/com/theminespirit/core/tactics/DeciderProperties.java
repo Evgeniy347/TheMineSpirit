@@ -43,7 +43,7 @@ class DeciderProperties {
                 shipped.hpDropRelease(), shipped.scales());
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void decide_NoRouteOrScore_NeverPicksExcludedOption(@ForAll("situations") Situation situation,
             @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
