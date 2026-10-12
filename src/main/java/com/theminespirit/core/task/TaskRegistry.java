@@ -151,6 +151,12 @@ public final class TaskRegistry {
             long lastEventId) {
     }
 
+    public synchronized void closeAll() {
+        for (Entry entry : tasks.values()) {
+            entry.log.close();
+        }
+    }
+
     public synchronized int size() {
         return tasks.size();
     }

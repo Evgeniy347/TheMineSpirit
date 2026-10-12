@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -194,6 +195,23 @@ class TaskRegistryTests {
                         + "к чужой задаче духа раньше, чем откат убрал запись");
         assertEquals(List.of(reserved), afterStart.stream().map(TaskRecord::taskId).toList(),
                 "После успешного старта запись обязана опрашиваться watcher");
+    }
+
+    @Test
+    void closeAll_ActiveTasks_ClosesEveryLogSoWaitingStreamsEndAtOnce() throws Exception {
+        TaskRegistry registry = new TaskRegistry();
+        String first = registry.reserve(BOT, null);
+        String second = registry.reserve("bot-2", null);
+        registry.observe(first, TaskState.RUNNING, null, null);
+
+        registry.closeAll();
+
+        assertEquals(TaskEventLog.Kind.CLOSED,
+                registry.log(first).awaitAfter(registry.log(first).lastId(), Duration.ofSeconds(10)).kind(),
+                "Остановка сервера обязана закрыть журнал идущей задачи: иначе открытый поток событий ждёт "
+                        + "кипалайва и держит остановку HTTP-сервера");
+        assertEquals(TaskEventLog.Kind.CLOSED, registry.log(second).awaitAfter(0, Duration.ofSeconds(10)).kind(),
+                "Журнал принятой, но не начавшейся задачи тоже обязан закрыться");
     }
 
     @Test

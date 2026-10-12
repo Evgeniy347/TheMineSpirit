@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -26,6 +28,8 @@ public final class RestEventsGameTests {
     private static final BlockPos IN_THE_AIR = new BlockPos(4, 12, 4);
     private static final int LEGS = 4;
     private static final int LONG_LEGS = 16;
+    private static final long STOP_CLOSE_SECONDS = 5;
+    private static final BlockPos PLAYER_AT = new BlockPos(5, 1, 5);
     private static final int MAX_STREAMS = 4;
     private static final int BURST_REQUESTS = 100;
     private static final int BUCKET_CAPACITY = 40;
@@ -193,6 +197,35 @@ public final class RestEventsGameTests {
                             + retries.get() + ", последний статус "
                             + (retry.get().status().isDone() ? retry.get().status().join() : "нет ответа"));
         });
+    }
+
+    @GameTest(batch = "rest_events_stop", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void events_GatewayStopped_OpenStreamEndsWithoutWaitingForKeepalive(GameTestHelper helper)
+            throws IOException {
+        RestFixture rest = arena(helper);
+        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest.post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                RestFixture.followGoalBody(UUID.randomUUID().toString(), player)).thenCompose(accepted -> {
+                    RestFixture.SseCapture stream = rest.stream(
+                            "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events", Map.of());
+                    return stream.status().thenCompose(status -> {
+                        problems.expect(status == 200, "Поток событий обязан открыться со статусом 200: " + status);
+                        return rest.onServer(() -> {
+                            rest.gateway().stop();
+                            return null;
+                        });
+                    }).thenCompose(stopped -> stream.whenFinished().orTimeout(STOP_CLOSE_SECONDS, TimeUnit.SECONDS))
+                            .handle((finished, error) -> {
+                                problems.expect(error == null,
+                                        "Остановка шлюза обязана закрывать открытые потоки событий за "
+                                                + STOP_CLOSE_SECONDS + " с, а не ждать кипалайва: поток остался "
+                                                + "открытым, " + error);
+                                return problems.found();
+                            });
+                });
+        RestFixture.await(helper, rest, scenario);
     }
 
     @GameTest(batch = "rest_events_burst", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)

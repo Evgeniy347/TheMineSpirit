@@ -86,6 +86,10 @@ final class RestFixture {
             return finished.isDone();
         }
 
+        CompletableFuture<Void> whenFinished() {
+            return finished;
+        }
+
         String contentType() {
             return contentType;
         }

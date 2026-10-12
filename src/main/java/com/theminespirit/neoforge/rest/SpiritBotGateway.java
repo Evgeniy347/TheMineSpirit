@@ -76,6 +76,7 @@ public final class SpiritBotGateway implements BotGateway {
         serverCall.stop();
         jobs.close();
         watcher.close();
+        tasks.closeAll();
     }
 
     @Override
