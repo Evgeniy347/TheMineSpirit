@@ -54,8 +54,10 @@ class TestCostReporterTests {
     void report_Cpu499_NotMarkedSlow() {
         List<String> report = TestCostReporter.report(List.of(line("a", "junit", 499, false)), thresholds());
 
-        assertFalse(report.stream().anyMatch(text -> text.contains("МЕДЛЕННЫЙ") && text.contains("499")),
-                "499 мс ниже порога 500 — не МЕДЛЕННЫЙ: " + report);
+        assertFalse(report.stream().anyMatch(text -> text.contains("499") && text.contains("ДОЛГИЙ")),
+                "499 мс ниже порога 500 — не ДОЛГИЙ: " + report);
+        assertTrue(report.stream().anyMatch(text -> text.contains("a — 499 мс CPU (порог 100 мс)")),
+                "499 мс выше warn 100 — строка с порогом: " + report);
     }
 
     @Test
