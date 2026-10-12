@@ -55,6 +55,8 @@ class ConditionTests {
                 row("стрелок среди врагов", skeleton, "enemy.anyRanged", "==", "true", true),
                 row("дом недостижим по умолчанию", plain, "env.homeReachable", "==", "false", true),
                 row("давно не били", plain, "time.sinceHit", ">=", "100", true),
+                row("только что ударили", builder -> builder.sinceStrike(5), "time.sinceStrike", "<=", "30", true),
+                row("давно не били врага", plain, "time.sinceStrike", ">=", "100", true),
                 row("голод", builder -> builder.food(0.4), "self.food", "<", "0.5", true));
     }
 

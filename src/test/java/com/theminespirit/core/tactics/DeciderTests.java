@@ -75,13 +75,14 @@ class DeciderTests {
 
     @Test
     void decide_DecisiveRule_CarriesRuleIdAndExcludedFromHigherRules() {
-        Situation burning = SituationBuilder.create().enemy("creeper", 4).build();
+        Situation burning = SituationBuilder.create().dps(1).enemy("creeper", 4).build();
 
         Decision decision = decide(TacticsConfig.loadDefault(), burning, 1);
 
         assertEquals(List.of(TacticalOption.RETREAT, "explosive_close_retreat"),
                 List.of(decision.option(), decision.rule()),
-                "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало");
+                "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало "
+                        + "(крипер в 4 блоках, дух без меча)");
     }
 
     @Test

@@ -138,7 +138,7 @@ class TacticsProperties {
         Collections.shuffle(shuffled, new Random(seed));
         Situation original = c.situation();
         Situation permuted = new Situation(original.self(), shuffled, original.env(), original.orders(),
-                original.ticksSinceHit());
+                original.ticksSinceHit(), original.ticksSinceStrike());
 
         assertEquals(run(c), run(new Case(permuted, c.memory(), c.tick())),
                 "Порядок, в котором адаптер нашёл врагов, не должен менять решение");

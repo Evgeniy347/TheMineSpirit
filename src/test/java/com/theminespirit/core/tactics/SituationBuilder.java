@@ -32,6 +32,7 @@ final class SituationBuilder {
     private boolean wardThreatened;
     private boolean help;
     private int sinceHit = Situation.MAX_TICKS;
+    private int sinceStrike = Situation.MAX_TICKS;
     private int nextId;
 
     static SituationBuilder create() {
@@ -178,13 +179,18 @@ final class SituationBuilder {
         return this;
     }
 
+    SituationBuilder sinceStrike(int ticks) {
+        sinceStrike = ticks;
+        return this;
+    }
+
     Situation build() {
         SelfFacts self = new SelfFacts(pos, hp, maxHp, armor, dps, speed, food, blocks, ammo, bucket, allies,
                 healItems);
         EnvFacts env = new EnvFacts(lava, drop, light, time, homeDistance, homeReachable, coverDistance,
                 waterDistance);
         Orders orders = new Orders(mode, zoneCenter, zoneRadius, ward, wardThreatened, help);
-        return new Situation(self, enemies, env, orders, sinceHit);
+        return new Situation(self, enemies, env, orders, sinceHit, sinceStrike);
     }
 
     private static String qualified(String type) {

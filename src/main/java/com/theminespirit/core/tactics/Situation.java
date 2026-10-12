@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit) {
+public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit,
+        int ticksSinceStrike) {
     public static final int MAX_ENEMIES = 16;
     public static final int MAX_TICKS = 1_000_000;
 
@@ -16,6 +17,7 @@ public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, O
         FactChecks.required("Situation.env", env);
         FactChecks.required("Situation.orders", orders);
         FactChecks.range("Situation.ticksSinceHit", ticksSinceHit, 0, MAX_TICKS);
+        FactChecks.range("Situation.ticksSinceStrike", ticksSinceStrike, 0, MAX_TICKS);
         enemies = canonical(self.pos(), enemies);
     }
 

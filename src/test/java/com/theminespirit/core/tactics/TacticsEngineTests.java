@@ -42,7 +42,7 @@ class TacticsEngineTests {
 
     @Test
     void step_CreeperCloseWithCoverAndBlocks_RetreatsByHardRuleToCover() {
-        Situation situation = SituationBuilder.create().enemy("creeper", 3).cover(4).blocks(10).build();
+        Situation situation = SituationBuilder.create().dps(1).enemy("creeper", 3).cover(4).blocks(10).build();
 
         TacticalOutcome outcome = first(situation);
 
@@ -50,7 +50,7 @@ class TacticsEngineTests {
                 TacticalState.RETREATING, "explosive_close_retreat", "решило правило explosive_close_retreat"),
                 List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(), outcome.state(),
                         outcome.trace().rule(), outcome.trace().whyNotFight()),
-                "Крипер в 3 блоках: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
+                "Крипер в 3 блоках без меча: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
                         + "по порядку способов, баррикада закрыта взрывчаткой");
     }
 
@@ -168,7 +168,7 @@ class TacticsEngineTests {
         TacticsMemory memory = null;
         List<TacticalOption> decisions = new ArrayList<>();
         for (int i = 0; i < distances.length; i++) {
-            Situation situation = SituationBuilder.create().enemy("creeper", distances[i]).cover(5).build();
+            Situation situation = SituationBuilder.create().dps(1).enemy("creeper", distances[i]).cover(5).build();
             memory = memory == null ? Memories.fresh(situation) : memory;
             TacticalOutcome outcome = engine.step(situation, memory, 1000 + 10L * i);
             decisions.add(outcome.decision());
@@ -178,7 +178,7 @@ class TacticsEngineTests {
         assertEquals(List.of(TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.RETREAT,
                 TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT),
                 decisions,
-                "Крипер подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
+                "Крипер без меча подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
                         + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву");
     }
 }

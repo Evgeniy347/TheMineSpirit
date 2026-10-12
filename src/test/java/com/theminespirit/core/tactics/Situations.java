@@ -20,7 +20,7 @@ final class Situations {
 
     static Arbitrary<Situation> anyWith(Arbitrary<CombatMode> modes, int maxEnemies) {
         return Combinators.combine(self(), enemies(maxEnemies), env(), orders(modes),
-                Arbitraries.integers().between(0, 400)).as(Situation::new);
+                Arbitraries.integers().between(0, 400), Arbitraries.integers().between(0, 400)).as(Situation::new);
     }
 
     static Arbitrary<SelfFacts> self() {
@@ -65,11 +65,13 @@ final class Situations {
     }
 
     static Situation withSelf(Situation base, SelfFacts self) {
-        return new Situation(self, new ArrayList<>(base.enemies()), base.env(), base.orders(), base.ticksSinceHit());
+        return new Situation(self, new ArrayList<>(base.enemies()), base.env(), base.orders(), base.ticksSinceHit(),
+                base.ticksSinceStrike());
     }
 
     static Situation withEnemies(Situation base, List<EnemyFact> enemies) {
-        return new Situation(base.self(), enemies, base.env(), base.orders(), base.ticksSinceHit());
+        return new Situation(base.self(), enemies, base.env(), base.orders(), base.ticksSinceHit(),
+                base.ticksSinceStrike());
     }
 
     static SelfFacts withStats(SelfFacts self, double hp, double armor, double dps) {
