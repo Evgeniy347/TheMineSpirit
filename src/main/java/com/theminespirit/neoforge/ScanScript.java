@@ -3,21 +3,37 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.ScanTuning;
+import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.perception.PerceptionQuery;
+import com.theminespirit.core.perception.ScanFocus;
 import com.theminespirit.core.script.ScanParams;
 import net.minecraft.core.BlockPos;
 
-final class ScanScript implements ScriptInstance {
+public final class ScanScript implements ScriptInstance {
     private final SpiritEntity spirit;
+    private final ScanFocus focus;
+    private final ScanRadius radius;
     private final WorldScanner.Session session;
     private String failureReason;
 
-    ScanScript(SpiritEntity spirit, ScanParams params) {
+    public ScanScript(SpiritEntity spirit, ScanParams params) {
+        this(spirit, ScanFocus.ALL, params);
+    }
+
+    public ScanScript(SpiritEntity spirit, PerceptionQuery query) {
+        this(spirit, ScanFocus.of(query.type()), new ScanParams(query.radius(), query.filter()));
+    }
+
+    private ScanScript(SpiritEntity spirit, ScanFocus focus, ScanParams params) {
         this.spirit = spirit;
+        this.focus = focus;
+        this.radius = params.radius();
         BlockPos position = spirit.blockPosition();
         this.session = new WorldScanner.Session(spirit.level(), spirit.getUUID().toString(),
                 new BlockCoord(position.getX(), position.getY(), position.getZ()), params.radius(), params.filter(),
-                spirit.getInventory());
+                spirit.getInventory(), focus);
     }
 
     @Override
@@ -30,12 +46,26 @@ final class ScanScript implements ScriptInstance {
         if (!session.done()) {
             return ScriptStatus.RUNNING;
         }
-        spirit.updateObservation(session.result().observation());
+        WorldObservation observation = session.result().observation();
+        focus.resultOf(observation, radius).ifPresentOrElse(spirit::updatePerceptionResult,
+                () -> spirit.updateObservation(observation));
         return ScriptStatus.SUCCEEDED;
     }
 
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    public int examinedPositions() {
+        return session.examinedPositions();
+    }
+
+    public int stepCalls() {
+        return session.stepCalls();
+    }
+
+    public int entityQueries() {
+        return session.entityQueries();
     }
 }

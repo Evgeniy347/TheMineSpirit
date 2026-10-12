@@ -16,6 +16,12 @@ public final class CoreScripts {
                         List.of(ParamSpec.integer("radius", false, ScanRadius.MIN, ScanRadius.MAX,
                                 ScanRadius.DEFAULT.value()), ParamSpec.textList("filter", false)),
                         List.of(), List.of("обновлена карта блоков, сущностей и контейнеров")),
+                spec("scan_blocks", "просканировать только блоки вокруг духа",
+                        List.of(perceptionRadius(), ParamSpec.textList("filter", false)),
+                        List.of(), List.of("блоки по фильтру в радиусе найдены, сущности и контейнеры не собирались")),
+                spec("scan_entities", "просканировать только сущности вокруг духа",
+                        List.of(perceptionRadius(), ParamSpec.textList("filter", false)),
+                        List.of(), List.of("сущности по фильтру в радиусе найдены, блоки и контейнеры не собирались")),
                 spec("goto", "пройти к заданной точке",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
@@ -255,6 +261,11 @@ public final class CoreScripts {
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
             List<String> effects) {
         return new ScriptSpec(id, summary, params, preconditions, effects);
+    }
+
+    private static ParamSpec perceptionRadius() {
+        return ParamSpec.integer("radius", false, CatalogLimits.PERCEPTION_RADIUS_MIN,
+                CatalogLimits.PERCEPTION_RADIUS_MAX, CatalogLimits.PERCEPTION_RADIUS_DEFAULT);
     }
 
     private static ParamSpec stationRadius() {

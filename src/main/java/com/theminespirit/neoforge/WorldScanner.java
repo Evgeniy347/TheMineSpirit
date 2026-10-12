@@ -10,6 +10,7 @@ import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.SectionCursor;
 import com.theminespirit.core.observation.SectionSlice;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.perception.ScanFocus;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -58,27 +59,39 @@ public final class WorldScanner {
         private final Container inventory;
         private final Optional<BlockBox> box;
         private final SectionCursor cursor;
+        private final ScanFocus focus;
+        private final IdFilter entityFilter;
         private final Set<Block> filteredBlocks;
         private final Map<Block, int[]> blockCounts = new IdentityHashMap<>();
         private final List<ContainerRef> containers = new ArrayList<>();
         private final Set<Long> visitedChunks = new HashSet<>();
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
+        private int stepCalls;
+        private int entityQueries;
         private Scan result;
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter blockFilter,
                 Container inventory) {
+            this(level, botId, center, radius, blockFilter, inventory, ScanFocus.ALL);
+        }
+
+        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
+                Container inventory, ScanFocus focus) {
             this.level = level;
             this.botId = botId;
             this.center = center;
             this.radius = radius.value();
             this.inventory = inventory;
             this.box = LoadedWorld.cube(level, center, this.radius);
-            this.cursor = LoadedWorld.cursor(box, center);
-            this.filteredBlocks = blockFilter.matchesAll() ? null : BlockSets.resolve(blockFilter);
+            this.cursor = focus.needsSlices() ? LoadedWorld.cursor(box, center) : SectionCursor.empty();
+            this.focus = focus;
+            this.entityFilter = focus.filtersEntities() ? filter : IdFilter.matchAll();
+            this.filteredBlocks = focus.collectsBlocks() && !filter.matchesAll() ? BlockSets.resolve(filter) : null;
         }
 
         public void step(int maxSlices) {
+            stepCalls++;
             for (SectionSlice slice : cursor.next(maxSlices)) {
                 scan(slice);
             }
@@ -90,6 +103,14 @@ public final class WorldScanner {
 
         public int examinedPositions() {
             return examinedPositions;
+        }
+
+        public int stepCalls() {
+            return stepCalls;
+        }
+
+        public int entityQueries() {
+            return entityQueries;
         }
 
         public Scan result() {
@@ -108,8 +129,11 @@ public final class WorldScanner {
             if (chunk == null) {
                 return;
             }
-            if (visitedChunks.add(chunk.getPos().toLong())) {
+            if (visitedChunks.add(chunk.getPos().toLong()) && focus.collectsContainers()) {
                 collectContainers(chunk);
+            }
+            if (!focus.collectsBlocks()) {
+                return;
             }
             LevelChunkSection section = chunk.getSection(chunk.getSectionIndexFromSectionY(slice.sectionY()));
             if (section.hasOnlyAir()
@@ -153,12 +177,14 @@ public final class WorldScanner {
             List<ItemCount> blocks = new ArrayList<>();
             blockCounts.forEach((block, count) ->
                     blocks.add(new ItemCount(BuiltInRegistries.BLOCK.getKey(block).toString(), count[0])));
+            List<EntityRef> entities = focus.collectsEntities() ? findEntities() : List.of();
             WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
-                    inventoryEntries(inventory), blocks, findEntities(), containers, radius);
+                    inventoryEntries(inventory), blocks, entities, containers, radius);
             return new Scan(observation, examinedPositions, skippedChunks.size());
         }
 
         private List<EntityRef> findEntities() {
+            entityQueries++;
             List<EntityRef> entities = new ArrayList<>();
             if (box.isEmpty()) {
                 return entities;
@@ -169,6 +195,9 @@ public final class WorldScanner {
                     cube.max().x() + 1.0, cube.max().y() + 1.0, cube.max().z() + 1.0);
             for (Entity entity : level.getEntities((Entity) null, bounds, e -> !e.isRemoved())) {
                 String type = EntityType.getKey(entity.getType()).toString();
+                if (!entityFilter.matches(type)) {
+                    continue;
+                }
                 entities.add(new EntityRef(type, toCore(entity.blockPosition()),
                         entity.position().distanceTo(centerPos)));
             }

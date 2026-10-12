@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 class CatalogDefaultGuardTests {
     private static final Map<String, String> OPTIONAL_WITHOUT_DEFAULT = Map.of(
             "scan.filter", "отсутствие фильтра значит «все блоки» — это не подставленное значение",
+            "scan_blocks.filter", "отсутствие фильтра значит «все блоки» — это не подставленное значение",
+            "scan_entities.filter", "отсутствие фильтра значит «все сущности» — это не подставленное значение",
             "collect_drops.filter", "пусто — все предметы, это не подставленное значение");
 
     @Test

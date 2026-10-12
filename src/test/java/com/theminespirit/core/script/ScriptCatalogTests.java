@@ -123,6 +123,8 @@ class ScriptCatalogTests {
     static Stream<Arguments> scriptSpecRows() {
         List<ScriptExpectation> rows = List.of(
                 spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
+                spec("scan_blocks", List.of(), Map.of("radius", new long[]{1, 32})),
+                spec("scan_entities", List.of(), Map.of("radius", new long[]{1, 32})),
                 spec("goto", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

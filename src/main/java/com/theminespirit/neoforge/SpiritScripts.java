@@ -14,6 +14,7 @@ import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.HarvestCropParams;
 import com.theminespirit.core.script.MineVeinParams;
+import com.theminespirit.core.script.PerceptionParams;
 import com.theminespirit.core.script.PlantCropParams;
 import com.theminespirit.core.script.ScanParams;
 import com.theminespirit.core.script.SmeltParams;
@@ -34,6 +35,8 @@ public final class SpiritScripts {
     private static Map<String, Function<SpiritEntity, ScriptFactory>> implemented() {
         Map<String, Function<SpiritEntity, ScriptFactory>> table = new LinkedHashMap<>();
         table.put("scan", spirit -> params -> new ScanScript(spirit, ScanParams.from(params)));
+        table.put("scan_blocks", spirit -> params -> new ScanScript(spirit, PerceptionParams.blocks(params)));
+        table.put("scan_entities", spirit -> params -> new ScanScript(spirit, PerceptionParams.entities(params)));
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));

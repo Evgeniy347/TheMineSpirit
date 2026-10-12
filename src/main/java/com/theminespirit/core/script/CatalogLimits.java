@@ -82,4 +82,8 @@ public final class CatalogLimits {
     public static final int NAV_KEEP_DISTANCE_DEFAULT = 5;
 
     public static final double NAV_ARRIVAL_TOLERANCE = 1.25;
+
+    public static final int PERCEPTION_RADIUS_MIN = ScanRadius.MIN;
+    public static final int PERCEPTION_RADIUS_MAX = ScanRadius.MAX;
+    public static final int PERCEPTION_RADIUS_DEFAULT = ScanRadius.DEFAULT.value();
 }
