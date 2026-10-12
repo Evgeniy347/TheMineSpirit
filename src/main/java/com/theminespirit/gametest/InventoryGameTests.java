@@ -2,10 +2,15 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.ContainerTarget;
+import com.theminespirit.core.script.TransferParams;
+import com.theminespirit.neoforge.inventory.ContainerSort;
+import com.theminespirit.neoforge.inventory.DepositScript;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -847,6 +852,53 @@ public final class InventoryGameTests {
                         + "иначе ценность и набор ссылаются на несуществующие предметы. Отсутствуют: " + missing);
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "inv_scale", timeoutTicks = 400)
+    public static void deposit_ManyStacks_LimitedMovesSlicesAndCachedTables(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        for (int slot = 0; slot < 10; slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+        DepositScript script = new DepositScript(spirit, new TransferParams(ContainerTarget.NEAREST,
+                "minecraft:cobblestone", 640, 8));
+        AtomicInteger ticks = new AtomicInteger();
+        AtomicReference<ScriptStatus> state = new AtomicReference<>(ScriptStatus.RUNNING);
+        helper.onEachTick(() -> {
+            if (state.get() == ScriptStatus.RUNNING) {
+                ticks.incrementAndGet();
+                state.set(script.tick());
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(state.get() == ScriptStatus.SUCCEEDED,
+                    "перенос 640 булыжника обязан завершиться успехом, причина: " + script.failureReason());
+            helper.assertTrue(ticks.get() >= 3,
+                    "10 перемещений порциями не укладываются в один тик: тиков должно быть не меньше 3, "
+                            + "а прошло " + ticks.get());
+            helper.assertTrue(TransferRunner.TRANSFER_MOVES_PER_TICK == 4,
+                    "лимит перемещений за тик равен 4: больше вешало бы серверный тик. Фактически "
+                            + TransferRunner.TRANSFER_MOVES_PER_TICK);
+            helper.assertTrue(script.maxMovesPerTick() <= TransferRunner.TRANSFER_MOVES_PER_TICK,
+                    "скрипт контейнера делает не больше 4 перемещений за тик: иначе долгий перенос вешал бы "
+                            + "серверный тик. Максимум за тик: " + script.maxMovesPerTick());
+            helper.assertTrue(script.maxSlicesPerTick() <= 4,
+                    "поиск ближайшего контейнера идёт порциями не больше 4 срезов за тик: иначе поиск "
+                            + "в радиусе вешал бы тик. Максимум за тик: " + script.maxSlicesPerTick());
+            helper.assertTrue(ContainerSort.MAX_SLOTS == 90,
+                    "раскладка сортёра применяется одним проходом на контейнеры до 90 слотов. Фактически "
+                            + ContainerSort.MAX_SLOTS);
+            helper.assertTrue(InventoryTables.valueLoads() == 1,
+                    "таблица ценностей читается один раз за процесс, а не на каждый перенос: иначе каждый "
+                            + "подбор и разгрузка парсили бы JSON заново. Загрузок: " + InventoryTables.valueLoads());
+            helper.assertTrue(InventoryTables.kitLoads() == 1,
+                    "базовый набор читается один раз за процесс. Загрузок: " + InventoryTables.kitLoads());
+            GameTestFixtures.reset(helper);
+        });
     }
 
     private static String coordsOf(BlockPos absolute) {
