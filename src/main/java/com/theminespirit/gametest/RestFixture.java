@@ -16,15 +16,21 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
 
 final class RestFixture {
+    // Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа считается
+    // в секундах (REPLY_DEADLINE), потолок тиков только запасной и заведомо больше любого честного ожидания.
+    static final int TIMEOUT_TICKS = 20_000;
+    static final Duration REPLY_DEADLINE = Duration.ofSeconds(30);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     record Reply(int status, String body, HttpHeaders headers) {
@@ -56,6 +62,7 @@ final class RestFixture {
     private final RestServer server;
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     private RestFixture(SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
         this.index = index;
@@ -78,6 +85,18 @@ final class RestFixture {
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
         CompletableFuture<List<String>> outcome = scenario.exceptionally(
                 error -> List.of("сценарий завершился исключением: " + error));
+        long started = System.nanoTime();
+        helper.onEachTick(() -> {
+            if (outcome.isDone() && !outcome.join().isEmpty()) {
+                rest.close();
+                throw new IllegalStateException("REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
+            }
+            if (!outcome.isDone() && System.nanoTime() - started > REPLY_DEADLINE.toNanos()) {
+                rest.close();
+                throw new IllegalStateException("REST-сценарий не завершился за " + REPLY_DEADLINE.toSeconds()
+                        + " с реального времени: ответ моста не пришёл, серверный поток не отвечает или запрос завис");
+            }
+        });
         helper.succeedWhen(() -> {
             helper.assertTrue(outcome.isDone(),
                     "REST-сценарий не завершился: ответ моста не пришёл, серверный поток не отвечает или запрос завис");
@@ -114,6 +133,9 @@ final class RestFixture {
     }
 
     void close() {
+        if (!closed.compareAndSet(false, true)) {
+            return;
+        }
         spirits.forEach(SpiritEntity::discard);
         index.unregister(NeoForge.EVENT_BUS);
         server.stop();
