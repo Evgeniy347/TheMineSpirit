@@ -689,6 +689,74 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 500)
+    public static void chopTree_SecondOakVanishesDuringFirst_FailsWithTreesRanOut(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 3, 3, 5);
+        buildOakTree(helper, 7, 3, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 2), SETTLE_TICKS);
+
+        boolean[] removed = { false };
+        helper.onEachTick(() -> {
+            if (!removed[0] && countBlocksInWorld(helper, Blocks.OAK_LOG) < 10) {
+                removed[0] = true;
+                for (int y = 1; y <= 5; y++) {
+                    helper.setBlock(7, y, 3, Blocks.AIR);
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(removed[0], "второй дуб убирается, как только первый начал рубиться");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "второго дуба больше нет: FAILED «деревья закончились», статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.startsWith("срублено 1 из 2") && reason.contains("закончились"),
+                    "исчезнувшее бревно кандидата не должно ронять скрипт («скрипт упал»), а причина должна быть "
+                            + "«срублено 1 из 2 … закончились»: " + reason);
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 700)
+    public static void chopTree_BranchOverShallowPit_LeftLogsAreCountedInSummary(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        for (int x = 5; x <= 9; x++) {
+            helper.setBlock(x, 6, 4, Blocks.OAK_LOG);
+        }
+        // Стена за дальними брёвнами ветки, шире платформы: они недосягаемы, подход встаёт,
+        // брёвна остаются стоять. Ближние брёвна ветки перед стеной: дроп с них достижим.
+        for (int z = -2; z <= 12; z++) {
+            for (int y = 1; y <= 5; y++) {
+                helper.setBlock(8, y, z, Blocks.STONE);
+            }
+        }
+        SpiritEntity spirit = spawnChopper(helper);
+        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1));
+        ScriptStatus[] status = driveScript(helper, spirit, script);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "дерево срублено, недосягаемое бревно ветки осталось, статус " + status[0] + ", причина: "
+                            + script.failureReason());
+            int left = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(left == 1,
+                    "бревно ветки над ямой недосягаемо (подход встаёт) и остаётся стоять, а осталось "
+                            + left + " брёвен");
+            helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + left),
+                    "итог обязан называть все оставленные брёвна, в том числе пропущенные после повторного "
+                            + "приближения: в мире " + left + ", а итог: " + script.summary());
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);

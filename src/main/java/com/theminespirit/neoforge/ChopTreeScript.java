@@ -164,6 +164,10 @@ public final class ChopTreeScript implements ScriptInstance {
         if (start.isEmpty()) {
             return search.done() ? outOfTrees() : ScriptStatus.RUNNING;
         }
+        if (!treeView.isLog(start.get())) {
+            candidates.markKnown(List.of(start.get()));
+            return ScriptStatus.RUNNING;
+        }
         TreeDetection detection = TreeShape.detect(start.get(), treeView);
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
@@ -209,7 +213,7 @@ public final class ChopTreeScript implements ScriptInstance {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> resumeChop();
             case STUCK, TIMEOUT -> {
-                skipLog();
+                leaveStanding();
                 yield resumeChop();
             }
         };
@@ -256,9 +260,18 @@ public final class ChopTreeScript implements ScriptInstance {
                 phase = Phase.APPROACH_LOG;
                 return ScriptStatus.RUNNING;
             }
-            skipLog();
+            if (refused.reason() == BlockBreaker.RefuseReason.AIR) {
+                skipLog();
+            } else {
+                leaveStanding();
+            }
         }
         return startCollect();
+    }
+
+    private void leaveStanding() {
+        standingLogs++;
+        skipLog();
     }
 
     private void skipLog() {
