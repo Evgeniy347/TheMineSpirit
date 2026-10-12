@@ -291,6 +291,7 @@ public final class ChopTreeGameTests {
             helper.assertTrue(run.spiritTicks() <= 150,
                     "недоступное дерево обязано определяться за ≤150 тиков, заняло " + run.spiritTicks());
 
+            LOGGER.info("chop_tree, остров за ямой: дерево признано недоступным за {} тиков духа", run.spiritTicks());
             BlockPos spiritCell = helper.relativePos(spirit.blockPosition());
             helper.assertTrue(spiritCell.getY() >= 1 && (spiritCell.getX() == 0 || spiritCell.getZ() == 0),
                     "дух не должен оказаться в яме: он обязан остаться на кромке (x=0 или z=0, y>=1), "
