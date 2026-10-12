@@ -210,6 +210,9 @@ public final class HarvestSession {
             state = State.FIND;
             return;
         }
+        if (buffer.needsRefill() && !targets.done()) {
+            buffer.offer(targets.advance());
+        }
         planCalls++;
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());

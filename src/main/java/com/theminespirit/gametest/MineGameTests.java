@@ -322,6 +322,52 @@ public final class MineGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "gather_refill", timeoutTicks = 400)
+    public static void gather_FewTargetsLeft_KeepsRefillingSearchEachTick(GameTestHelper helper) {
+        buildCave(helper);
+        for (int x = 1; x <= 2; x++) {
+            for (int z = 0; z <= 2; z++) {
+                helper.setBlock(x, 1, z, Blocks.COBBLESTONE);
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        AtomicReference<HarvestSession> session = new AtomicReference<>();
+        AtomicInteger slicesAtFirstFind = new AtomicInteger(-1);
+        AtomicBoolean refilledWhileSearching = new AtomicBoolean(false);
+
+        helper.onEachTick(() -> {
+            HarvestSession run = session.get();
+            if (run == null) {
+                if (spirit.tickCount >= SETTLE_TICKS) {
+                    session.set(HarvestSession.gather(spirit, "cobblestone", 6, RADIUS));
+                }
+                return;
+            }
+            if (run.outcome() == HarvestSession.Outcome.RUNNING) {
+                run.tick();
+                if (run.mined() == 0) {
+                    if (slicesAtFirstFind.get() < 0) {
+                        slicesAtFirstFind.set(run.slicesUsed());
+                    } else if (run.slicesUsed() > slicesAtFirstFind.get()) {
+                        refilledWhileSearching.set(true);
+                    }
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            HarvestSession run = session.get();
+            helper.assertTrue(run != null, "сессия обязана стартовать");
+            helper.assertTrue(run.outcome() != HarvestSession.Outcome.RUNNING,
+                    "сессия обязана завершиться, а висит в RUNNING");
+            helper.assertTrue(refilledWhileSearching.get(),
+                    "при остатке меньше 8 целей и незаконченном поиске сессия обязана за тик дочитать новую порцию: "
+                            + "иначе правило «осталось меньше восьми — искать ещё» мёртвое; срезов у первого поиска "
+                            + slicesAtFirstFind.get() + ", всего " + run.slicesUsed());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "empty", batch = "gather_logs", timeoutTicks = 600)
     public static void gather_WildcardLogFilter_CollectsAllMatchingLogs(GameTestHelper helper) {
         buildCave(helper);
