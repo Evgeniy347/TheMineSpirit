@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.PolicyExemptions;
 
 abstract class SingleChildExecutor extends NodeExecutor {
     private final ScriptRegistry scripts;
@@ -34,5 +35,24 @@ abstract class SingleChildExecutor extends NodeExecutor {
         if (current != null) {
             current.cancel();
         }
+    }
+
+    @Override
+    final void suspend() {
+        if (current != null) {
+            current.suspend();
+        }
+    }
+
+    @Override
+    final void resume() {
+        if (current != null) {
+            current.resume();
+        }
+    }
+
+    @Override
+    final PolicyExemptions exemptions() {
+        return current == null ? PolicyExemptions.empty() : current.exemptions();
     }
 }

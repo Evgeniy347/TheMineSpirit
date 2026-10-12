@@ -110,4 +110,19 @@ class PolicyExemptionsTests {
         assertThrows(UnsupportedOperationException.class, () -> ex.all().add(PolicyId.AIR),
                 "изменение набора снаружи обошло бы запрет исключений для LAVA_FIRE, AIR и EXPLOSIVE");
     }
+
+    @Test
+    void union_TwoSets_ContainsBoth() {
+        PolicyExemptions merged = PolicyExemptions.of(PolicyId.WATER).union(PolicyExemptions.of(PolicyId.PORTAL));
+
+        assertEquals(Set.of(PolicyId.WATER, PolicyId.PORTAL), merged.all(), "Объединение параллельных скриптов даёт оба исключения");
+    }
+
+    @Test
+    void union_WithEmpty_ReturnsTheSameSet() {
+        PolicyExemptions water = PolicyExemptions.of(PolicyId.WATER);
+
+        assertEquals(water, water.union(PolicyExemptions.empty()), "Пустое исключение ничего не добавляет");
+        assertEquals(water, PolicyExemptions.empty().union(water), "К пустому исключению добавляется всё");
+    }
 }

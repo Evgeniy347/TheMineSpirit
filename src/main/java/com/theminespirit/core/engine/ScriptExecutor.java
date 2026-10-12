@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Map;
 
 final class ScriptExecutor extends NodeExecutor {
@@ -78,6 +79,25 @@ final class ScriptExecutor extends NodeExecutor {
         TaskProgress.ScriptAt at = (TaskProgress.ScriptAt) progress;
         instance = createInstance();
         instance.restoreState(at.state());
+    }
+
+    @Override
+    void suspend() {
+        if (instance != null) {
+            instance.suspend();
+        }
+    }
+
+    @Override
+    void resume() {
+        if (instance != null) {
+            instance.resume();
+        }
+    }
+
+    @Override
+    PolicyExemptions exemptions() {
+        return instance == null ? PolicyExemptions.empty() : instance.policyExemptions();
     }
 
     @Override

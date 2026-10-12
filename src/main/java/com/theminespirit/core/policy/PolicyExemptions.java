@@ -36,6 +36,19 @@ public final class PolicyExemptions {
         return exemptions.contains(id);
     }
 
+    public PolicyExemptions union(PolicyExemptions other) {
+        Objects.requireNonNull(other, "Исключения для объединения не могут быть null: пустые задаются PolicyExemptions.empty()");
+        if (other.exemptions.isEmpty()) {
+            return this;
+        }
+        if (exemptions.isEmpty()) {
+            return other;
+        }
+        EnumSet<PolicyId> merged = EnumSet.copyOf(exemptions);
+        merged.addAll(other.exemptions);
+        return new PolicyExemptions(merged);
+    }
+
     public Set<PolicyId> all() {
         return exemptions;
     }

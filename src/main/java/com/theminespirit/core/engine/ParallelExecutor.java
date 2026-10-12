@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.ParallelMode;
 import com.theminespirit.core.plan.ParallelNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +119,35 @@ final class ParallelExecutor extends NodeExecutor {
     @Override
     void cancel() {
         cancelAll();
+    }
+
+    @Override
+    void suspend() {
+        for (int i = 0; children != null && i < children.length; i++) {
+            if (results[i] == ScriptStatus.RUNNING) {
+                children[i].suspend();
+            }
+        }
+    }
+
+    @Override
+    void resume() {
+        for (int i = 0; children != null && i < children.length; i++) {
+            if (results[i] == ScriptStatus.RUNNING) {
+                children[i].resume();
+            }
+        }
+    }
+
+    @Override
+    PolicyExemptions exemptions() {
+        PolicyExemptions union = PolicyExemptions.empty();
+        for (int i = 0; children != null && i < children.length; i++) {
+            if (results[i] == ScriptStatus.RUNNING) {
+                union = union.union(children[i].exemptions());
+            }
+        }
+        return union;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ public final class TaskRunner {
     private final TaskNode plan;
     private final NodeExecutor root;
     private RunStatus status = RunStatus.RUNNING;
+    private boolean suspended;
     private String reason;
     private Throwable cause;
 
@@ -46,7 +48,7 @@ public final class TaskRunner {
     }
 
     public RunStatus tick() {
-        if (status != RunStatus.RUNNING) {
+        if (status != RunStatus.RUNNING || suspended) {
             return status;
         }
         ScriptStatus node = root.tick();
@@ -79,11 +81,34 @@ public final class TaskRunner {
         return Optional.ofNullable(root.currentScript());
     }
 
+    public void suspend() {
+        if (status == RunStatus.RUNNING && !suspended) {
+            suspended = true;
+            root.suspend();
+        }
+    }
+
+    public void resume() {
+        if (status == RunStatus.RUNNING && suspended) {
+            suspended = false;
+            root.resume();
+        }
+    }
+
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public PolicyExemptions policyExemptions() {
+        return status == RunStatus.RUNNING ? root.exemptions() : PolicyExemptions.empty();
+    }
+
     public void cancel() {
         if (status != RunStatus.RUNNING) {
             return;
         }
         status = RunStatus.CANCELLED;
+        suspended = false;
         root.cancel();
     }
 }
