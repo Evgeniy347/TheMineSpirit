@@ -2,9 +2,12 @@ package com.theminespirit.neoforge.tactics;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.Situation;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalOutcome;
@@ -15,6 +18,10 @@ import com.theminespirit.core.tactics.adapter.CoreFactCollector;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
+import com.theminespirit.core.tactics.adapter.RetreatCommitment;
+import com.theminespirit.core.tactics.adapter.RetreatPlan;
+import com.theminespirit.core.tactics.adapter.RetreatPlanner;
+import com.theminespirit.core.tactics.adapter.RetreatTracker;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.tactics.adapter.TacticsSchedule;
 import com.theminespirit.core.tactics.adapter.TacticsTrace;
@@ -22,8 +29,10 @@ import com.theminespirit.core.tactics.adapter.TargetDesignation;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -47,17 +56,22 @@ public final class TacticsService {
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
     private final Approach approach;
     private final CombatActuator combat;
+    private final RetreatExecutor retreating;
 
     private CombatMode ordered = DEFAULT_MODE;
     private Optional<OrdersBuilder.Zone> zone = Optional.empty();
     private Optional<UUID> ward = Optional.empty();
 
     private TacticsMemory memory;
+    private RetreatTracker retreat = RetreatTracker.IDLE;
     private TacticalOutcome outcome;
     private ExecutionResult result = ExecutionResult.idle();
     private WorldFactCollector.Collected facts;
+    private Optional<RetreatPlan> plan = Optional.empty();
+    private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
     private String targetId;
+    private String shootTargetId;
     private boolean active;
     private boolean paused;
     private boolean forced;
@@ -65,6 +79,7 @@ public final class TacticsService {
     private boolean returned;
     private int lastHurtTick = NEVER;
     private long suspendedUntil = Long.MIN_VALUE;
+    private RetreatExecutor.Progress progress = RetreatExecutor.Progress.DONE;
 
     private int stepCalls;
     private int blockReads;
@@ -76,6 +91,7 @@ public final class TacticsService {
         this.spirit = spirit;
         this.approach = new Approach(spirit);
         this.combat = new CombatActuator(spirit, approach);
+        this.retreating = new RetreatExecutor(spirit, approach, combat, collector);
     }
 
     public void tick() {
@@ -117,6 +133,7 @@ public final class TacticsService {
     public void pause() {
         if (!paused) {
             paused = true;
+            retreating.reset();
             combat.stop();
         }
     }
@@ -155,6 +172,11 @@ public final class TacticsService {
         return active;
     }
 
+    public PolicyExemptions exemptions() {
+        return active && retreat.method() == RetreatMethod.WATER ? PolicyExemptions.of(PolicyId.WATER)
+                : PolicyExemptions.empty();
+    }
+
     public Optional<TacticalOutcome> lastOutcome() {
         return Optional.ofNullable(outcome);
     }
@@ -163,8 +185,20 @@ public final class TacticsService {
         return result;
     }
 
+    public RetreatTracker retreat() {
+        return retreat;
+    }
+
+    public RetreatExecutor.Progress progress() {
+        return progress;
+    }
+
     public CombatActuator combat() {
         return combat;
+    }
+
+    public RetreatExecutor retreatExecutor() {
+        return retreating;
     }
 
     public int stepCalls() {
@@ -205,10 +239,15 @@ public final class TacticsService {
         stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
+        retreat = RetreatCommitment.next(retreat, next, now, settings, progress == RetreatExecutor.Progress.BUILDING);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
         targetId = designated.map(EnemyFact::id).orElse(null);
         spirit.setTarget(designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null));
+        shootTargetId = collected.context().enemies().stream().filter(EnemyFact::visible)
+                .min(Comparator.comparingDouble(enemy -> enemy.pos().distanceTo(situation.self().pos())))
+                .map(EnemyFact::id).orElse(null);
+        replan(collected, situation);
         returnTarget = next.returnTo();
         returned = false;
         logChange(next);
@@ -216,13 +255,40 @@ public final class TacticsService {
         facts = collected;
     }
 
+    private void replan(WorldFactCollector.Collected collected, Situation situation) {
+        if (!retreat.retreating()) {
+            plan = Optional.empty();
+            planMethod = RetreatMethod.NONE;
+            return;
+        }
+        boolean stale = plan.isEmpty() || planMethod != retreat.method() || plan.get() instanceof RetreatPlan.Walk;
+        if (stale) {
+            plan = planFor(collected, situation);
+            planMethod = retreat.method();
+        }
+    }
+
+    private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
+        BlockPos feet = spirit.blockPosition();
+        RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
+                collected.home(), situation.self().blocks());
+        return RetreatPlanner.plan(retreat.method(), input);
+    }
+
     private void execute() {
         if (outcome == null) {
+            return;
+        }
+        if (retreat.retreating() && plan.isPresent()) {
+            active = true;
+            progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
         LivingEntity target = entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
+            retreating.reset();
             if (result instanceof ExecutionResult.Shooting && spirit.gear().arrows() > 0) {
                 combat.shoot(target);
             } else {
@@ -239,6 +305,7 @@ public final class TacticsService {
     }
 
     private void returnToAnchor(Point point) {
+        retreating.reset();
         spirit.gear().holdNothing();
         Vec3 target = new Vec3(point.x(), point.y(), point.z());
         if (spirit.position().distanceTo(target) <= RETURN_ARRIVAL) {
@@ -254,6 +321,7 @@ public final class TacticsService {
 
     private void release() {
         if (active) {
+            retreating.reset();
             combat.stop();
             spirit.gear().holdNothing();
             spirit.setTarget(null);

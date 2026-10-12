@@ -136,7 +136,8 @@ public final class SpiritPolicies {
     }
 
     private void refreshExemptions() {
-        exemptions = spirit.brainIfPresent().map(SpiritBrain::policyExemptions).orElse(PolicyExemptions.empty());
+        exemptions = spirit.brainIfPresent().map(SpiritBrain::policyExemptions).orElse(PolicyExemptions.empty())
+                .union(spirit.tactics().exemptions());
         if (!exemptions.equals(configured)) {
             PathingConfigurator.apply(spirit, exemptions);
             configured = exemptions;
@@ -144,7 +145,7 @@ public final class SpiritPolicies {
     }
 
     private BodyFlags bodyFlags() {
-        boolean swimmingAllowed = hasRunningTask();
+        boolean swimmingAllowed = hasRunningTask() || spirit.tactics().exemptions().has(PolicyId.WATER);
         return new BodyFlags(spirit.isInLava(), spirit.isOnFire(), spirit.isInWater() && !swimmingAllowed, spirit.hurtTime > 0);
     }
 
