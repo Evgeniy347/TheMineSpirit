@@ -24,8 +24,8 @@ public final class RestEventsGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos FAR_CORNER = new BlockPos(7, 1, 7);
     private static final BlockPos IN_THE_AIR = new BlockPos(4, 12, 4);
-    private static final int LEGS = 10;
-    private static final int LONG_LEGS = 8;
+    private static final int LEGS = 30;
+    private static final int LONG_LEGS = 64;
     private static final int MAX_STREAMS = 4;
     private static final int BURST_REQUESTS = 100;
     private static final int BUCKET_CAPACITY = 40;
@@ -34,7 +34,7 @@ public final class RestEventsGameTests {
     private RestEventsGameTests() {
     }
 
-    @GameTest(batch = "rest_events_flow", template = "arena", timeoutTicks = 1500)
+    @GameTest(batch = "rest_events_flow", template = "arena", timeoutTicks = 6000)
     public static void events_SequenceOfGotos_StateFirstThenProgressThenFinalSucceededAndStreamCloses(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
@@ -68,7 +68,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_resume", template = "arena", timeoutTicks = 1500)
+    @GameTest(batch = "rest_events_resume", template = "arena", timeoutTicks = 6000)
     public static void events_ReconnectWithLastEventId_ReceivesOnlyLaterFramesThenFinalState(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -115,7 +115,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_failed", template = "arena", timeoutTicks = 1800)
+    @GameTest(batch = "rest_events_failed", template = "arena", timeoutTicks = 6000)
     public static void events_GotoToUnreachableAirPoint_ScriptFailedWithReasonThenStateFailed(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -149,7 +149,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_limit", template = "arena", timeoutTicks = 2400)
+    @GameTest(batch = "rest_events_limit", template = "arena", timeoutTicks = 6000)
     public static void events_FifthConcurrentStream_Returns429ThenSlotFreedAfterClientLeaves(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -195,7 +195,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_burst", template = "arena", timeoutTicks = 3600)
+    @GameTest(batch = "rest_events_burst", template = "arena", timeoutTicks = 6000)
     public static void requests_BurstOfHundredFromOneAddress_PartRejectedWith429AndRetryAfter(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

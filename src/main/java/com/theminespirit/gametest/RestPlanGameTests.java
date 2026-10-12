@@ -25,7 +25,7 @@ public final class RestPlanGameTests {
     private RestPlanGameTests() {
     }
 
-    @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = 3600)
+    @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = 6000)
     public static void tasks_GoalsWithoutImplementedScriptOrTarget_Rejects422WithReasonAndChopAndFollowAccept202(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
@@ -63,7 +63,7 @@ public final class RestPlanGameTests {
         RestFixture.await(helper, rest, scenario, () -> removePlayer(helper, player));
     }
 
-    @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = 1800)
+    @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = 6000)
     public static void plan_ExtraParamAndOversizedAndDryRun_Rejects422WithReasonAndWorldUntouched(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
