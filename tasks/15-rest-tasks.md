@@ -56,59 +56,59 @@
 
 ## Часть А — ядро (`core/rest`, `core/task`, без HTTP и Minecraft)
 
-- [ ] 1. **Реестр задач** — `core/task/{TaskState,TaskRecord,TaskRegistry}`: монотонные id `t-<n>`, переходы
+- [x] 1. **Реестр задач** — `core/task/{TaskState,TaskRecord,TaskRegistry}`: монотонные id `t-<n>`, переходы
       `accepted → running → succeeded|failed|cancelled` (недопустимый — `IllegalStateException` с текстом),
       хранит не более 256 завершённых (активные не вытесняются), все методы `synchronized` (читают HTTP-потоки,
       пишет серверный). JSON задачи — по примеру из `docs/API.md`. Тесты (красными до реализации): жизненный цикл,
       недопустимые переходы (таблица), JSON задачи равен эталону; свойства: размер ≤ 256 + активные, id уникальны
       и растут, активная задача не вытесняется ни при каком порядке завершений.
-- [ ] 2. **`IdempotencyCache`** — `check(requestId, fingerprint)` → `New | Replay(storedResponse) | Conflict`; `fingerprint`
+- [x] 2. **`IdempotencyCache`** — `check(requestId, fingerprint)` → `New | Replay(storedResponse) | Conflict`; `fingerprint`
       = SHA-256 от канонического (`bot` + `goal` + `plan` + `params`); ёмкость 1024, вытеснение старейшего.
       Тесты: повтор даёт тот же ответ; другое тело — `Conflict`; вытесненный — `New`; свойство «размер ≤ ёмкости,
       недавний запрос никогда не вытесняется раньше более старого».
-- [ ] 3. **`TaskRequest`** — разбор тела `POST tasks`: `request_id` — UUID (иначе `invalid_request` с названием поля); `goal`
+- [x] 3. **`TaskRequest`** — разбор тела `POST tasks`: `request_id` — UUID (иначе `invalid_request` с названием поля); `goal`
       строка ≤ 500 символов; `plan` объект; `params` — объект из строк и целых; нужен `goal` или `plan`; неизвестное поле —
       `invalid_request` с перечнем допустимых. План — через `PlanParser` с каталогом реализованных скриптов
       (`SpiritScripts.catalog()`), `PlanValidationException` → `invalid_plan` с тем же текстом. `PlanningService` — цель →
       план через `FallbackPlanner(catalog, условия)`; `UnplannableGoalException` → `invalid_plan`.
       Тесты — таблица ≥ 25 строк (валидные, каждое нарушение, юникод, пустые строки, `null`, лишние поля, граница 500);
       свойство «никогда не бросает ничего, кроме `ApiException`».
-- [ ] 4. **События и SSE** — `core/task/{TaskEvent,TaskEventDiff,TaskEventLog}` и `core/rest/SseFormat`.
+- [x] 4. **События и SSE** — `core/task/{TaskEvent,TaskEventDiff,TaskEventLog}` и `core/rest/SseFormat`.
       `TaskEventDiff.between(прежний, текущий)` → события `progress`/`script_failed`/`state`; `TaskEventLog` — ограниченный
       (256) журнал с возрастающими id и блокирующим `awaitAfter(lastId, Duration)`; `SseFormat` — кадр `id:/event:/data:`
       (данные — одна строка JSON) и `: keepalive`. Тесты: таблица диффов; свойство «любая строка в payload даёт ровно одну
       `data:`-строку, кадр заканчивается пустой строкой, перевод строки внутри данных невозможен»; конкурентный тест
       (писатель 200 событий, читатель в другом потоке получает все, по порядку, без повторов — синхронизация
       защёлками, не `sleep`); `Last-Event-ID` старше окна — читатель получает текущее `state` и всё, что осталось.
-- [ ] 5. **Прогресс выполнения** — `core/engine`: `ScriptInstance.progress()` → `Optional<Progress(done, target)>`;
+- [x] 5. **Прогресс выполнения** — `core/engine`: `ScriptInstance.progress()` → `Optional<Progress(done, target)>`;
       `TaskRunner.progress()` → `RunProgress(step, totalSteps, currentScript, done, target)` (для корня-`sequence`: номер
       шага с 1 и число шагов; для других корней — 1 из 1; `done/target` — от текущего скрипта).
       Тесты на `TestScripts`: `sequence[a,b,c]` на втором шаге → `2/3`; счётный скрипт отдаёт `done/target`; свойство
       «`1 ≤ step ≤ totalSteps` и не убывает за время выполнения».
-- [ ] 6. **`TokenBucket`** — `tryAcquire(key, long nowNanos)` (время — значением, не поставщиком), ёмкость 40, пополнение
+- [x] 6. **`TokenBucket`** — `tryAcquire(key, long nowNanos)` (время — значением, не поставщиком), ёмкость 40, пополнение
       20/с, не более 256 ключей (вытесняется старейший), `retryAfterSeconds`. Тесты: всплеск и отказ, пополнение со
       временем, изоляция ключей; свойство «выдано ≤ ёмкость + скорость × прошедшее время».
-- [ ] 7. **Обработчики** — `tasks` (POST), `task` (GET), `task` (DELETE), `events` (стриминг: ответ типа `Stream` с
+- [x] 7. **Обработчики** — `tasks` (POST), `task` (GET), `task` (DELETE), `events` (стриминг: ответ типа `Stream` с
       источником кадров), `plan` (POST) поверх `TaskGateway` (интерфейс платформы: `start`, `cancel`) и `TaskRegistry`.
       Тесты с фальшивым шлюзом (≥ 25 случаев): 202/200/404/409/422/429; идемпотентный повтор; конфликт занятого духа;
       `DELETE` дважды; `plan` валиден/невалиден/нет поля; `events` у неизвестной задачи — 404.
 
 ## Часть Б — адаптер
 
-- [ ] 8. **`SpiritTaskGateway`** — на серверном потоке (`ServerThreadCall`): найти дух по `SpiritIndex`; занят → `conflict`;
+- [x] 8. **`SpiritTaskGateway`** — на серверном потоке (`ServerThreadCall`): найти дух по `SpiritIndex`; занят → `conflict`;
       наблюдение для планировщика — `spirit.observation()` (скан, чеклист 10) либо минимальное (позиция и инвентарь,
       без блоков); планирование; `spirit.startTask(plan)`; запись в реестр; `cancel` — `spirit.cancelTask()` и
       состояние `cancelled`. `GET /v1/bots/{id}` берёт `current_task` из реестра.
-- [ ] 9. **`TaskWatcher`** — на `ServerTickEvent.Post` опрашивает **только активные** записи реестра: статус, текущий
+- [x] 9. **`TaskWatcher`** — на `ServerTickEvent.Post` опрашивает **только активные** записи реестра: статус, текущий
       скрипт, причина, `TaskRunner.progress()` → `TaskEventDiff` → обновление реестра и журнала событий. Дух исчез или
       погиб — `failed` «дух исчез». Стоимость O(активных задач), у пустого реестра — ноль работы.
-- [ ] 10. **Прогресс у скриптов** — `progress()` у `chop_tree` (срублено деревьев/`count`), `mine_vein` и `gather`
+- [x] 10. **Прогресс у скриптов** (сделано для `mine_vein` и `gather`; скрипта `chop_tree` в моде нет) — `progress()` у `chop_tree` (срублено деревьев/`count`), `mine_vein` и `gather`
       (добыто блоков/`count`); у `goto`, `follow`, `scan`, `collect_drops` — пусто.
-- [ ] 11. **SSE и лимиты в `RestServer`** — стриминговый ответ (`sendResponseHeaders(200, 0)`, запись и `flush` по кадру,
+- [x] 11. **SSE и лимиты в `RestServer`** — стриминговый ответ (`sendResponseHeaders(200, 0)`, запись и `flush` по кадру,
       `: keepalive` каждые 15 с, закрытие после финального `state`; `IOException` при отключении клиента — тихий выход
       на DEBUG без стека, слот освобождается); счётчик открытых потоков ≤ 4; `TokenBucket` по IP клиента (адрес в лог
       не пишется), 429 с `Retry-After`. Поток ожидает на `TaskEventLog.awaitAfter`, а не опрашивает мир.
-- [ ] 12. **GameTest `RestTaskGameTests`** (шаблон `empty`; свой `RestServer` на `127.0.0.1:0`; **все запросы асинхронные**
+- [x] 12. **GameTest `RestTaskGameTests`** (сделано в классах RestTask*, RestEvents*, RestPlan* на шаблоне arena; «срубить дерево» отвечает 422: chop_tree не реализован) (шаблон `empty`; свой `RestServer` на `127.0.0.1:0`; **все запросы асинхронные**
       — синхронный `send` на серверном потоке блокирует тик, на котором ждёт обработчик; проверки в
       `helper.succeedWhen(...)`; SSE читается `BodyHandlers.ofLines()` в потокобезопасный список):
       (а) `POST tasks` с планом `goto` → 202, `state=accepted`; `GET` → `running`, затем `succeeded`; `GET bots/{id}` показывает
@@ -126,11 +126,11 @@
       чеклисты 11/12 влиты): через 40 тиков блок цел либо сломан с дропом, мир не меняется дальше; (к) перезагрузка
       духа (как в чеклисте 13) во время REST-задачи: реестр держит её `running`, пока дух жив, и ставит `failed`
       «дух исчез», если сущность не вернулась за 100 тиков (проверь на своей реализации и опиши поведение в отчёте).
-- [ ] 13. **Тест на масштаб** — числа, не время: (а) реестр после 10 000 завершённых задач ≤ 256 + активные (ядро);
+- [x] 13. **Тест на масштаб** (г: один переход проверен для POST с планом; цель без плана стоит два — наблюдение и старт) — числа, не время: (а) реестр после 10 000 завершённых задач ≤ 256 + активные (ядро);
       (б) `TaskWatcher` при 30 духах с активными задачами делает ровно 30 опросов за тик, при пустом реестре — 0 (счётчик);
       (в) 4 открытых SSE-потока не добавляют работы серверному потоку: события пишутся один раз на изменение, а не на
       поток (счётчик записей журнала); (г) одна задача `POST` — ровно один переход на серверный поток.
-- [ ] 14. **Документы.** `docs/API.md`: `params` в теле `POST tasks`; 409 при занятом духе и при несовпадении тела с
+- [x] 14. **Документы.** `docs/API.md`: `params` в теле `POST tasks`; 409 при занятом духе и при несовпадении тела с
       `request_id`; кадр `state` и `Last-Event-ID` в SSE; `Retry-After` и лимиты (таблицей); реестр в памяти и `404` после
       перезапуска; идемпотентный `DELETE`. `README.md` — примеры `curl` для задачи, событий и отмены.
 
