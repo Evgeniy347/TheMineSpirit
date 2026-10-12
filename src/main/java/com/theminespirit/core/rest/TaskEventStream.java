@@ -39,7 +39,7 @@ public final class TaskEventStream implements SseStream {
         long lastEventId = snapshot.lastEventId();
         long position = snapshot.position();
         TaskEventLog.Catchup catchup = snapshot.catchup();
-        if (lastEventId > 0) {
+        if (lastEventId > 0 && lastEventId <= position) {
             if (catchup.gap()) {
                 // При потере окна сначала текущее состояние; id — свежая позиция, чтобы клиент
                 // не застрял на устаревшем Last-Event-ID и не gapил заново при каждом реконнекте.

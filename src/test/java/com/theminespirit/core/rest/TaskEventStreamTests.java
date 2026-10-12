@@ -90,6 +90,28 @@ class TaskEventStreamTests {
     }
 
     @Test
+    void nextFrame_LastEventIdAheadOfLog_EmitsStateAtLogPositionAndContinuesWithNewEvents() throws Exception {
+        TaskEventLog log = new TaskEventLog();
+        log.append(events(TaskEvent.TYPE_PROGRESS, 2));
+
+        TaskEventStream stream = fresh(RUNNING, log, 50, new AtomicInteger());
+        try {
+            String state = stream.nextFrame();
+            assertTrue(state.startsWith("id: 2\n") && state.contains("event: state"),
+                    "Клиент с Last-Event-ID впереди журнала обязан получить текущий state на позиции журнала (id 2), "
+                            + "а не ждать события с несуществующим id: " + state);
+
+            log.append(events(TaskEvent.TYPE_PROGRESS, 1));
+            String next = stream.nextFrame();
+            assertTrue(next.startsWith("id: 3\n") && next.contains("event: progress"),
+                    "После state поток обязан продолжаться с позиции журнала и отдать новое событие id 3, а не "
+                            + "ждать id > 50 и слать одни кипалайвы: " + next);
+        } finally {
+            stream.close();
+        }
+    }
+
+    @Test
     void nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents() throws Exception {
         TaskEventLog log = new TaskEventLog();
         List<TaskEvent> bulk = new ArrayList<>();
