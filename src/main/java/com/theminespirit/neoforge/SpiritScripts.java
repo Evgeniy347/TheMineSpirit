@@ -12,6 +12,7 @@ import com.theminespirit.core.script.CraftParams;
 import com.theminespirit.core.script.CullParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.EquipParams;
 import com.theminespirit.core.script.FollowParams;
 import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoParams;
@@ -45,6 +46,7 @@ import com.theminespirit.neoforge.husbandry.ShearScript;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.core.script.UnloadParams;
 import com.theminespirit.neoforge.inventory.DepositScript;
+import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
@@ -96,6 +98,7 @@ public final class SpiritScripts {
         table.put("withdraw", spirit -> params -> new WithdrawScript(spirit, TransferParams.from(params)));
         table.put("sort_chest", spirit -> params -> new SortChestScript(spirit, SortChestParams.from(params)));
         table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
+        table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         return table;
     }
 

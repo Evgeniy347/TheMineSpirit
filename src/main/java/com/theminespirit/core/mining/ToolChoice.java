@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public final class ToolChoice {
     public static final int HAND = -1;
+    public static final int MAIN_HAND = -2;
     public static final double HAND_SPEED = 1.0;
 
     private ToolChoice() {

@@ -20,6 +20,18 @@ class ToolChoiceTests {
     }
 
     @Test
+    void best_MainHandTool_CompetesAsOption() {
+        Choice choice = ToolChoice.best(List.of(
+                new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, true),
+                new ToolOption(ToolChoice.MAIN_HAND, 6.0, true),
+                new ToolOption(3, 4.0, true)));
+
+        assertEquals(new Choice(ToolChoice.MAIN_HAND, 6.0, true), choice,
+                "Кирка в основной руке обязана участвовать в выборе инструмента наравне с инвентарём: "
+                        + "иначе надетая кирка игнорировалась бы и дух ломал бы рукой при кирке в руке");
+    }
+
+    @Test
     void best_TwoCorrectTools_ChoosesFasterOne() {
         Choice choice = ToolChoice.best(List.of(
                 new ToolOption(0, 2.0, true),

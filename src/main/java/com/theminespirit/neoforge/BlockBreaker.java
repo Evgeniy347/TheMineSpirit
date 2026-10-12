@@ -101,7 +101,9 @@ public final class BlockBreaker {
         pos = target.immutable();
         state = targetState;
         choice = ToolChoice.best(toolOptions(targetState));
-        tool = choice.slot() == ToolChoice.HAND ? ItemStack.EMPTY : spirit.getInventory().getItem(choice.slot());
+        tool = choice.slot() == ToolChoice.HAND ? ItemStack.EMPTY
+                : choice.slot() == ToolChoice.MAIN_HAND ? spirit.getMainHandItem()
+                        : spirit.getInventory().getItem(choice.slot());
         requiredTicks = BreakTiming.ticks(hardness, choice.speed(), choice.dropsAllowed());
         elapsed = 0;
         active = true;
@@ -174,6 +176,11 @@ public final class BlockBreaker {
         boolean needsTool = targetState.requiresCorrectToolForDrops();
         List<ToolOption> options = new ArrayList<>();
         options.add(new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool));
+        ItemStack hand = spirit.getMainHandItem();
+        if (!hand.isEmpty()) {
+            options.add(new ToolOption(ToolChoice.MAIN_HAND, hand.getDestroySpeed(targetState),
+                    !needsTool || hand.isCorrectToolForDrops(targetState)));
+        }
         Container inventory = spirit.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);

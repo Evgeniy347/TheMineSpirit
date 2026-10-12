@@ -27,6 +27,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
@@ -189,6 +190,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public SimpleContainer getInventory() {
         return inventory;
+    }
+
+    public float equipmentDropChance(EquipmentSlot slot) {
+        return getEquipmentDropChance(slot);
     }
 
     public void startTask(TaskNode plan) {

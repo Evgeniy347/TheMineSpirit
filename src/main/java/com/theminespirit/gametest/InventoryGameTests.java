@@ -3,8 +3,10 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
@@ -24,6 +26,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -570,6 +573,150 @@ public final class InventoryGameTests {
                     "инвентарь духа обязан остаться нетронутым");
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "inv_equip_chest", timeoutTicks = 400)
+    public static void equip_IronChestplate_SwapsAndPinsDropChance(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_CHESTPLATE));
+        Map<String, Object> params = Map.of("item", "minecraft:iron_chestplate");
+        SpiritRun first = SpiritRun.launch(helper, spirit, new ScriptCall("equip", params), 1);
+        AtomicBoolean relaunched = new AtomicBoolean();
+        AtomicReference<SpiritRun> second = new AtomicReference<>();
+        AtomicReference<List<String>> afterFirst = new AtomicReference<>();
+
+        helper.succeedWhen(() -> {
+            first.assertStarted();
+            if (!relaunched.get()) {
+                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                        "equip железного нагрудника обязан завершиться успехом, причина: "
+                                + spirit.taskFailureReason().orElse("нет"));
+                helper.assertTrue(first.spiritTicks() <= 120,
+                        "сценарий обязан укладываться в 120 тиков духа");
+                afterFirst.set(snapshotInventory(spirit));
+                second.set(SpiritRun.launch(helper, spirit, new ScriptCall("equip", params), spirit.tickCount));
+                relaunched.set(true);
+            }
+            helper.assertTrue(second.get() != null
+                    && spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "повторный equip обязан завершиться успехом без изменений, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            second.get().assertStarted();
+            helper.assertTrue(spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.IRON_CHESTPLATE),
+                    "железный нагрудник обязан остаться надетым");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER_CHESTPLATE)
+                    == 1,
+                    "прежний кожаный нагрудник обязан вернуться в инвентарь, а не исчезнуть");
+            helper.assertTrue(spirit.equipmentDropChance(EquipmentSlot.CHEST) == 1.0F,
+                    "шанс выпадения надетого обязан быть 1.0, а не ванильные 8.5%: иначе дух терял бы броню "
+                            + "при смерти. Фактически " + spirit.equipmentDropChance(EquipmentSlot.CHEST));
+            helper.assertTrue(snapshotInventory(spirit).equals(afterFirst.get()),
+                    "повторный вызов обязан ничего не менять (идемпотентность)");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_equip_pattern", timeoutTicks = 400)
+    public static void equip_PickaxePattern_TakesMostValuable(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
+        spirit.getInventory().setItem(1, new ItemStack(Items.STONE_PICKAXE));
+        spirit.getInventory().setItem(2, new ItemStack(Items.IRON_PICKAXE));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("equip", Map.of("item", "minecraft:*_pickaxe")), 1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "equip по шаблону обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(spirit.getMainHandItem().is(Items.IRON_PICKAXE),
+                    "по шаблону *_pickaxe берётся самая ценная (железная), а не первая попавшаяся: в руке "
+                            + spirit.getMainHandItem());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 0,
+                    "остальные кирки обязаны остаться в инвентаре");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_equip_missing", timeoutTicks = 400)
+    public static void equip_MissingItem_FailsWithoutChanges(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("equip", Map.of("item", "minecraft:diamond_sword")), 1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "отсутствующий предмет обязан проваливать equip, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("нет предмета"),
+                    "причина обязана говорить, что предмета нет в инвентаре, фактически: "
+                            + spirit.taskFailureReason().orElse("нет причины"));
+            helper.assertTrue(spirit.getMainHandItem().isEmpty(),
+                    "при провале рука обязана остаться пустой: ничего не перемещено");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_breaker_hand", timeoutTicks = 400)
+    public static void blockBreaker_MainHandPickaxe_BreaksFasterAndWears(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos stone = helper.absolutePos(new BlockPos(6, 1, 4));
+        BlockBreaker breaker = new BlockBreaker(spirit);
+        helper.assertTrue(breaker.begin(stone) instanceof BlockBreaker.Started,
+                "камень в досягаемости обязан начинать ломаться");
+        int bareTicks = breaker.requiredTicks();
+        spirit.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+        helper.assertTrue(breaker.begin(stone) instanceof BlockBreaker.Started,
+                "камень с киркой в руке обязан начинать ломаться");
+        int fastTicks = breaker.requiredTicks();
+        helper.assertTrue(ToolChoice.MAIN_HAND == -2,
+                "Слот основной руки в выборе инструмента равен -2 (рядом с рукой -1): при смене значения "
+                        + "пересмотреть разбор выбора, фактически " + ToolChoice.MAIN_HAND);
+        helper.assertTrue(breaker.choice().slot() == ToolChoice.MAIN_HAND,
+                "ломка обязана выбрать кирку из основной руки, а не руку или инвентарь: слот "
+                        + breaker.choice().slot());
+        helper.assertTrue(fastTicks < bareTicks,
+                "ломка камня железной киркой из руки обязана быть быстрее, чем рукой: рукой " + bareTicks
+                        + " тиков, киркой " + fastTicks);
+        AtomicReference<BlockBreaker.Progress> progress =
+                new AtomicReference<>(BlockBreaker.Progress.BREAKING);
+        helper.onEachTick(() -> {
+            if (progress.get() == BlockBreaker.Progress.BREAKING) {
+                progress.set(breaker.tick());
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(progress.get() == BlockBreaker.Progress.BROKEN,
+                    "кирка из руки обязана доломать камень до конца, состояние " + progress.get());
+            helper.assertTrue(spirit.getMainHandItem().getDamageValue() == 1,
+                    "износ обязан списываться с кирки в руке: урон должен быть 1, фактически "
+                            + spirit.getMainHandItem().getDamageValue());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static List<String> snapshotInventory(SpiritEntity spirit) {
+        List<String> slots = new ArrayList<>();
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            slots.add(stack.isEmpty() ? "empty" : StackMapper.itemId(stack) + "x" + stack.getCount());
+        }
+        return slots;
     }
 
     private static int chestCount(GameTestHelper helper, Item item) {
