@@ -379,6 +379,22 @@
      "self": {"dps": 2.0, "allies": 2},
      "enemies": [{"type": "spider", "distance": 6}],
      "env": {"cover": 5},
+     "expect": {"decision": "FIGHT", "action": "ENGAGE", "rule": "score", "state": "ENGAGED"}},
+    {"name": "зомби в 8, HP 64 %, дом в 10: отход домой",
+     "why": "Качество отхода решает: лучший способ — дом в 10 блоках с полезностью 0.9375, вклад в RETREAT 0.28; при том же бое, но с худшим отходом дух дерётся (пара «только бег прочь» и пара «бежать некуда»).",
+     "self": {"hpFraction": 0.64},
+     "enemies": [{"type": "zombie", "distance": 8}],
+     "env": {"home": 10},
+     "expect": {"decision": "RETREAT", "action": "RETREAT", "retreat": "HOME", "rule": "score", "state": "RETREATING"}},
+    {"name": "зомби в 8, HP 64 %, только бег прочь: бой",
+     "why": "Тот же бой, но лучший способ отхода — бег прочь с полезностью 0.2, вклад в RETREAT всего 0.06: худший отход боя не перевешивает, дух дерётся счётом. Пара к «дом в 10».",
+     "self": {"hpFraction": 0.64},
+     "enemies": [{"type": "zombie", "distance": 8}],
+     "expect": {"decision": "FIGHT", "action": "ENGAGE", "rule": "score", "state": "ENGAGED"}},
+    {"name": "зомби в 8, HP 64 %, бежать некуда: бой",
+     "why": "Тот же бой, но способов отхода нет совсем (дух медленнее зомби — 0.2 против 0.23, бег и дом недоступны): ESCAPE_ROUTE 0, дух дерётся счётом, а не подменой noRoute. Пара к «дом в 10».",
+     "self": {"hpFraction": 0.64, "speed": 0.2},
+     "enemies": [{"type": "zombie", "distance": 8}],
      "expect": {"decision": "FIGHT", "action": "ENGAGE", "rule": "score", "state": "ENGAGED"}}
   ]
 }
