@@ -326,7 +326,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_take", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "drops_overflow_take", timeoutTicks = 400)
     public static void collectDrops_FullOfCobblestoneByValue_SwapsInDiamond(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

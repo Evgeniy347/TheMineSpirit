@@ -439,7 +439,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_sort_idempotent", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "inv_sort_idempotent", timeoutTicks = 400)
     public static void sortChest_MessyChest_MergesAndKeepsVariants(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -514,7 +514,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_unload_surplus", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "inv_unload_surplus", timeoutTicks = 400)
     public static void unload_FullInventory_MovesOnlySurplus(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -902,7 +902,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_persist_deposit", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "inv_persist_deposit", timeoutTicks = 400)
     public static void deposit_ReloadedMidway_CompletesCountNotMore(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
