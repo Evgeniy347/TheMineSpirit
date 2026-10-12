@@ -20,7 +20,7 @@ class ExplosionAvoidanceProperties {
         double base = switch (fact.type()) {
             case CREEPER -> 7.0;
             case CHARGED_CREEPER -> 10.0;
-            case PRIMED_TNT -> 8.0;
+            case PRIMED_TNT -> 9.0;
         };
         return fact.swelling() ? base + 3.0 : base;
     }
@@ -60,7 +60,7 @@ class ExplosionAvoidanceProperties {
 
         boolean allKept = worstSlack(self, facts) >= 0;
         assertEquals(allKept, verdict instanceof PolicyVerdict.Clear,
-                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 8, +3 при набухании). Угрозы: " + facts);
+                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 9, +3 при набухании). Угрозы: " + facts);
     }
 
     @Property(tries = 400)
