@@ -27,7 +27,8 @@ class InventoryParamsTests {
         assertEquals(10, transfer.count(),
                 "count переноса — приказ плана: сколько предметов кладём в контейнер");
         assertEquals(8, transfer.radius(),
-                "radius переноса берётся из плана: по умолчанию это CatalogLimits.CONTAINER_RADIUS_DEFAULT");
+                "radius переноса берётся из плана: по умолчанию 8 — ближайший контейнер "
+                        + "обычно рядом с духом");
     }
 
     @Test
@@ -51,12 +52,12 @@ class InventoryParamsTests {
         params.put("container", "nearest");
         params.put("item", "dirt");
         params.put("count", 1);
-        params.put("radius", CatalogLimits.CONTAINER_RADIUS_MAX + 1);
+        params.put("radius", 17);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> TransferParams.from(params),
-                "Радиус вне [" + CatalogLimits.CONTAINER_RADIUS_MIN + ", " + CatalogLimits.CONTAINER_RADIUS_MAX
-                        + "] обязан быть отказом: план мог обойти валидатор, а дух ушёл бы из базовой зоны");
+                "Радиус вне [1, 16] оборот быть отказом: план мог обойти валидатор, "
+                        + "а дух ушёл бы из базовой зоны");
 
         assertTrue(error.getMessage().contains("Радиус") && error.getMessage().contains("16"),
                 "Сообщение обязано называть параметр radius и его предел 16: по нему правят план. "
@@ -68,12 +69,12 @@ class InventoryParamsTests {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("container", "nearest");
         params.put("item", "dirt");
-        params.put("count", CatalogLimits.COUNT_MAX + 1);
+        params.put("count", 257);
         params.put("radius", 8);
 
         assertThrows(IllegalArgumentException.class, () -> TransferParams.from(params),
-                "Число предметов вне [" + CatalogLimits.COUNT_MIN + ", " + CatalogLimits.COUNT_MAX
-                        + "] обязательно отказом: перенос тысяч стопок занял бы серверный тик");
+                "Число предметов вне [1, 256] обязательно отказом: перенос тысяч стопок "
+                        + "занял бы серверный тик");
     }
 
     @Test
@@ -88,8 +89,7 @@ class InventoryParamsTests {
         assertEquals(ContainerTarget.NEAREST, unload.container(),
                 "container разгрузки по умолчанию ближайший: база обычно стоит рядом с духом");
         assertEquals(8, unload.radius(),
-                "radius разгрузки по умолчанию " + CatalogLimits.CONTAINER_RADIUS_DEFAULT
-                        + ": контейнер ищется в базовой зоне");
+                "radius разгрузки по умолчанию 8: контейнер ищется в базовой зоне");
         assertEquals(false, unload.force(),
                 "force=false значит «разгрузка только при заполненном инвентаре»: "
                         + "иначе дух носил бы в сундук каждый лишний камешек");

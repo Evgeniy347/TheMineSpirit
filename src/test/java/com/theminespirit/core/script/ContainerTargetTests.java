@@ -60,10 +60,8 @@ class ContainerTargetTests {
 
     @Test
     void parse_WorldBoundaryCoordinates_AreAccepted() {
-        assertEquals(new ContainerTarget.Position(CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                CatalogLimits.WORLD_Y_MAX, -CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                ContainerTarget.parse(CatalogLimits.WORLD_HORIZONTAL_LIMIT + "," + CatalogLimits.WORLD_Y_MAX
-                        + "," + -CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+        assertEquals(new ContainerTarget.Position(30_000_000, 319, -30_000_000),
+                ContainerTarget.parse("30000000,319,-30000000"),
                 "Границы мира принимаются: блок на границе существует, и отказ по нему сломал бы "
                         + "склад на краю карты");
     }

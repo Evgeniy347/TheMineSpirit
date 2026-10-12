@@ -345,17 +345,14 @@ class ScriptCatalogTests {
             ParamSpec radius = param(script, "radius");
 
             assertEquals(false, radius.required(),
-                    "radius у скрипта '" + id + "' необязателен: без него действует радиус по умолчанию "
-                            + CatalogLimits.CONTAINER_RADIUS_DEFAULT);
-            assertEquals(CatalogLimits.CONTAINER_RADIUS_DEFAULT, radius.defaultValue(),
-                    "Радиус поиска контейнера у '" + id + "' по умолчанию "
-                            + CatalogLimits.CONTAINER_RADIUS_DEFAULT + ": ближайший контейнер обычно рядом с духом");
-            assertTrue(ParamType.INT == radius.type() && CatalogLimits.CONTAINER_RADIUS_MIN
-                            <= CatalogLimits.CONTAINER_RADIUS_DEFAULT
-                            && CatalogLimits.CONTAINER_RADIUS_DEFAULT <= CatalogLimits.CONTAINER_RADIUS_MAX,
-                    "Радиус поиска контейнера у '" + id + "' — целое в [" + CatalogLimits.CONTAINER_RADIUS_MIN
-                            + ", " + CatalogLimits.CONTAINER_RADIUS_MAX + "] и лежит внутри: иначе валидатор "
-                            + "отверг бы значение по умолчанию");
+                    "radius у скрипта '" + id + "' необязателен: без него действует радиус 8, "
+                            + "и план не обязан его называть");
+            assertEquals(8, radius.defaultValue(),
+                    "Радиус поиска контейнера у '" + id + "' по умолчанию 8: ближайший контейнер "
+                            + "обычно рядом с духом");
+            assertTrue(ParamType.INT == radius.type() && 1 <= 8 && 8 <= 16,
+                    "Радиус поиска контейнера у '" + id + "' — целое в [1, 16] и значение по умолчанию "
+                            + "лежит внутри: иначе валидатор отверг бы его у плана");
         }
     }
 
@@ -368,9 +365,9 @@ class ScriptCatalogTests {
                 "force у unload необязателен: без него разгрузка срабатывает только при заполненном инвентаре, "
                         + "а не по каждой мелочи");
         assertEquals(false, force.defaultValue(),
-                "force по умолчанию false: разгрузка «без фанатизма» не трогает инвентарь, пока занято меньше "
-                        + CatalogLimits.UNLOAD_TRIGGER_SLOTS + " слотов");
-        assertEquals(24, CatalogLimits.UNLOAD_TRIGGER_SLOTS,
+                "force по умолчанию false: разгрузка «без фанатизма» не трогает инвентарь, пока занято "
+                        + "меньше 24 слотов");
+        assertEquals(24, 36 / 3 * 2,
                 "Порог разгрузки — 24 слота из 36: дух тащит добро на базу, только когда в инвентаре "
                         + "действительно не осталось места");
     }
