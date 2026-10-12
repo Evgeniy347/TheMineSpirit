@@ -221,6 +221,10 @@ public final class SpiritEntity extends PathfinderMob {
         return brain == null ? Optional.empty() : brain.progress();
     }
 
+    public Optional<RunProgress> taskFailedAt() {
+        return brain == null ? Optional.empty() : brain.failedAt();
+    }
+
     public Optional<String> taskFailureReason() {
         return brain == null ? Optional.empty() : brain.failureReason();
     }

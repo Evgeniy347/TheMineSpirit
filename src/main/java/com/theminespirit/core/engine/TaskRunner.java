@@ -12,6 +12,7 @@ public final class TaskRunner {
     private boolean suspended;
     private String reason;
     private Throwable cause;
+    private RunProgress failedAt;
 
     private TaskRunner(TaskNode plan, NodeExecutor root) {
         this.plan = plan;
@@ -58,6 +59,7 @@ public final class TaskRunner {
             status = RunStatus.FAILED;
             reason = root.failureReason();
             cause = root.failureCause().orElse(null);
+            failedAt = root.progress();
         }
         return status;
     }
@@ -112,6 +114,10 @@ public final class TaskRunner {
             return Optional.empty();
         }
         return Optional.of(root.progress());
+    }
+
+    public Optional<RunProgress> failedAt() {
+        return Optional.ofNullable(failedAt);
     }
 
     public void cancel() {

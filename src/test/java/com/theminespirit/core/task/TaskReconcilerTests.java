@@ -91,6 +91,22 @@ class TaskReconcilerTests {
                 "Провал обязан дать script_failed с именем скрипта goto и причиной: " + events.events());
     }
 
+
+    @Test
+    void reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript() {
+        RunProgress failedAt = new RunProgress(2, 3, "goto", null, null);
+
+        reconcile(SpiritReading.failed("путь не найден", failedAt));
+
+        assertEquals(TaskState.FAILED, record().state(), "Провал до первого опроса обязан закрыть задачу как failed");
+        assertEquals(failedAt, record().progress(),
+                "Прогресс провалившейся задачи обязан показывать шаг и скрипт, на которых она упала");
+        TaskEventLog.Catchup events = registry.log(taskId).since(0);
+        assertTrue(events.events().stream().anyMatch(event -> event.type().equals(TaskEvent.TYPE_SCRIPT_FAILED)
+                && "goto".equals(event.data().get("script")) && "путь не найден".equals(event.data().get("reason"))),
+                "script_failed обязан назвать скрипт goto, даже если наблюдатель не видел его выполняющимся: "
+                        + events.events());
+    }
     @Test
     void reconcile_FailedWithoutReason_StillExplainsFailure() {
         reconcile(SpiritReading.living(RunStatus.FAILED, null, null));

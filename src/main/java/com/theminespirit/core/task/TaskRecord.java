@@ -11,6 +11,10 @@ public record TaskRecord(String taskId, String bot, TaskState state, String goal
         Objects.requireNonNull(state, "state не может быть null: состояние — ось жизненного цикла задачи");
     }
 
+    public TaskRecord withProgress(RunProgress replacement) {
+        return replacement == null ? this : new TaskRecord(taskId, bot, state, goal, replacement, result, error);
+    }
+
     public boolean active() {
         return !state.isTerminal();
     }

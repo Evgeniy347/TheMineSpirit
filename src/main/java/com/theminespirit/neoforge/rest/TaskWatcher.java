@@ -65,6 +65,9 @@ public final class TaskWatcher {
             return SpiritReading.dead();
         }
         RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.FAILED) {
+            return SpiritReading.failed(spirit.taskFailureReason().orElse(null), spirit.taskFailedAt().orElse(null));
+        }
         return SpiritReading.living(status, spirit.taskProgress().orElse(null), spirit.taskFailureReason().orElse(null));
     }
 

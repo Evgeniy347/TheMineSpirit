@@ -20,7 +20,8 @@ public final class TaskEventDiff {
         }
         if (current.state() == TaskState.FAILED && previous.state() != TaskState.FAILED) {
             Map<String, Object> data = new LinkedHashMap<>();
-            data.put("script", previous.progress() == null ? null : previous.progress().currentScript());
+            RunProgress failedAt = current.progress() != null ? current.progress() : previous.progress();
+            data.put("script", failedAt == null ? null : failedAt.currentScript());
             data.put("reason", current.error());
             events.add(new TaskEvent(0, TaskEvent.TYPE_SCRIPT_FAILED, data));
         }

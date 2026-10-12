@@ -41,7 +41,7 @@ public final class TaskReconciler {
             case RUNNING -> running(record, reading.progress());
             case SUCCEEDED -> finish(record, TaskState.SUCCEEDED, null);
             case CANCELLED -> finish(record, TaskState.CANCELLED, null);
-            case FAILED -> finish(record, TaskState.FAILED,
+            case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
                     reading.failureReason() == null ? NO_REASON : reading.failureReason());
         }
     }

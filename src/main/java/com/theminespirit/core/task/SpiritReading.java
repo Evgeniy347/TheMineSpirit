@@ -4,9 +4,9 @@ import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 
 public record SpiritReading(boolean present, boolean alive, RunStatus status, RunProgress progress,
-        String failureReason) {
-    private static final SpiritReading ABSENT = new SpiritReading(false, false, null, null, null);
-    private static final SpiritReading DEAD = new SpiritReading(true, false, null, null, null);
+        String failureReason, RunProgress failedAt) {
+    private static final SpiritReading ABSENT = new SpiritReading(false, false, null, null, null, null);
+    private static final SpiritReading DEAD = new SpiritReading(true, false, null, null, null, null);
 
     public static SpiritReading absent() {
         return ABSENT;
@@ -17,6 +17,10 @@ public record SpiritReading(boolean present, boolean alive, RunStatus status, Ru
     }
 
     public static SpiritReading living(RunStatus status, RunProgress progress, String failureReason) {
-        return new SpiritReading(true, true, status, progress, failureReason);
+        return new SpiritReading(true, true, status, progress, failureReason, null);
+    }
+
+    public static SpiritReading failed(String failureReason, RunProgress failedAt) {
+        return new SpiritReading(true, true, RunStatus.FAILED, null, failureReason, failedAt);
     }
 }

@@ -19,6 +19,7 @@ public final class SpiritBrain {
     private String lastReason;
     private Throwable lastCause;
     private String suspendReason;
+    private RunProgress lastFailedAt;
 
     public SpiritBrain(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -33,6 +34,7 @@ public final class SpiritBrain {
         lastStatus = RunStatus.RUNNING;
         lastReason = null;
         lastCause = null;
+        lastFailedAt = null;
     }
 
     public void suspend(String reason) {
@@ -92,6 +94,10 @@ public final class SpiritBrain {
         return runner == null ? Optional.empty() : runner.currentScript();
     }
 
+    public Optional<RunProgress> failedAt() {
+        return Optional.ofNullable(lastFailedAt);
+    }
+
     public Optional<RunProgress> progress() {
         return runner == null ? Optional.empty() : runner.progress();
     }
@@ -109,6 +115,7 @@ public final class SpiritBrain {
     public void restore(TaskSnapshot snapshot) {
         runner = TaskRunner.restore(snapshot, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
         lastStatus = runner.status();
+        lastFailedAt = null;
         if (lastStatus != RunStatus.RUNNING) {
             lastReason = runner.failureReason().orElse(null);
             lastCause = runner.failureCause().orElse(null);
@@ -123,6 +130,7 @@ public final class SpiritBrain {
         lastStatus = RunStatus.FAILED;
         lastReason = reason;
         lastCause = null;
+        lastFailedAt = null;
     }
 
     public void tick() {
@@ -140,6 +148,7 @@ public final class SpiritBrain {
         lastStatus = runner.status();
         lastReason = runner.failureReason().orElse(null);
         lastCause = runner.failureCause().orElse(null);
+        lastFailedAt = runner.failedAt().orElse(null);
         if (lastStatus == RunStatus.FAILED) {
             LOGGER.warn("Дух {} провалил задачу: {}", spirit.getUUID(), lastReason, lastCause);
         }

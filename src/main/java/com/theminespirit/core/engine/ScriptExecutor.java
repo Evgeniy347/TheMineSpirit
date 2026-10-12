@@ -10,6 +10,7 @@ final class ScriptExecutor extends NodeExecutor {
     private final Map<String, Object> params;
     private final ScriptRegistry registry;
     private ScriptInstance instance;
+    private boolean failed;
 
     ScriptExecutor(ScriptCall call, ScriptRegistry registry) {
         this.scriptId = call.script();
@@ -29,6 +30,7 @@ final class ScriptExecutor extends NodeExecutor {
                 instance = null;
             }
             if (result == ScriptStatus.FAILED) {
+                failed = true;
                 String scriptReason = live.failureReason();
                 fail(scriptReason == null || scriptReason.isBlank()
                         ? "скрипт '" + scriptId + "' завершился с ошибкой"
@@ -37,10 +39,12 @@ final class ScriptExecutor extends NodeExecutor {
             return result;
         } catch (UnknownScriptException error) {
             cancelLive(error);
+            failed = true;
             fail(error.getMessage(), error);
             return ScriptStatus.FAILED;
         } catch (RuntimeException error) {
             cancelLive(error);
+            failed = true;
             fail("скрипт '" + scriptId + "' упал: " + NodeExecutor.describe(error), error);
             return ScriptStatus.FAILED;
         }
@@ -67,7 +71,7 @@ final class ScriptExecutor extends NodeExecutor {
 
     @Override
     String currentScript() {
-        return instance == null ? null : scriptId;
+        return instance == null && !failed ? null : scriptId;
     }
 
     @Override

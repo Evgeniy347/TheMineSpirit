@@ -90,6 +90,66 @@ class TaskRunnerProgressTests {
                 "после терминального статуса прогресса нет: замороженные цифры выглядели бы как работающая задача");
     }
 
+    @Test
+    void failedAt_ScriptFailsOnFirstTick_NamesFailedScript() {
+        TaskRunner runner = TaskRunner.start(new ScriptCall(FAST, Map.of()),
+                TestScripts.singleRegistry(FAST, TestScripts.failing(1)),
+                TestScripts.condition("yes", true));
+
+        assertEquals(RunStatus.FAILED, runner.tick(), "скрипт, провалившийся на первом тике, закрывает задачу");
+
+        RunProgress failedAt = runner.failedAt().orElseThrow();
+        assertEquals(FAST, failedAt.currentScript(),
+                "script_failed обязан назвать скрипт даже при провале на первом тике, пока наблюдатель не успел его увидеть");
+        assertTrue(runner.progress().isEmpty(), "у завершённой задачи текущего прогресса нет: он только в failedAt");
+    }
+
+    @Test
+    void failedAt_SequenceFailsOnSecondStep_ReportsStepTwoOfThreeAndItsScript() {
+        TaskRunner runner = TaskRunner.start(sequence(
+                new ScriptCall(FAST, Map.of()),
+                new ScriptCall(SLOW, Map.of()),
+                new ScriptCall(FAST, Map.of())),
+                ScriptRegistry.of(Map.of(FAST, TestScripts.succeeding(1), SLOW, TestScripts.failing(2))),
+                TestScripts.condition("yes", true));
+
+        RunStatus status = RunStatus.RUNNING;
+        for (int tick = 0; tick < 10 && status == RunStatus.RUNNING; tick++) {
+            status = runner.tick();
+        }
+
+        assertEquals(RunStatus.FAILED, status, "второй шаг проваливается — вся sequence падает");
+        RunProgress failedAt = runner.failedAt().orElseThrow();
+        assertEquals(2, failedAt.step(), "провал на втором шаге обязан показывать шаг 2");
+        assertEquals(3, failedAt.totalSteps(), "всего шагов три");
+        assertEquals(SLOW, failedAt.currentScript(), "провалился скрипт второго шага");
+    }
+
+    @Test
+    void failedAt_UnknownScript_NamesRequestedScript() {
+        TaskRunner runner = TaskRunner.start(new ScriptCall("missing", Map.of()),
+                TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)),
+                TestScripts.condition("yes", true));
+
+        runner.tick();
+
+        assertEquals("missing", runner.failedAt().orElseThrow().currentScript(),
+                "незарегистрированный скрипт провалил задачу: его имя обязано попасть в failedAt");
+    }
+
+    @Test
+    void failedAt_RunningOrSucceeded_IsEmpty() {
+        TaskRunner running = TaskRunner.start(new ScriptCall(SLOW, Map.of()),
+                TestScripts.singleRegistry(SLOW, TestScripts.succeeding(5)), TestScripts.condition("yes", true));
+        running.tick();
+        TaskRunner done = TaskRunner.start(new ScriptCall(FAST, Map.of()),
+                TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)), TestScripts.condition("yes", true));
+        done.tick();
+
+        assertTrue(running.failedAt().isEmpty(), "идущая задача не провалена");
+        assertTrue(done.failedAt().isEmpty(), "успешная задача не провалена");
+    }
+
     @Property(tries = 200)
     void progress_WhileRunning_StepWithinBoundsAndNonDecreasing(
             @ForAll @IntRange(min = 1, max = 8) int steps,
