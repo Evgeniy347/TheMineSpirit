@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.StringJoiner;
 
 public final class ResourceResolver {
     private ResourceResolver() {
@@ -104,95 +103,9 @@ public final class ResourceResolver {
             Map<String, Integer> remaining) {
         List<TaskNode> steps = new ArrayList<>(3);
         steps.add(resolve(knowledge.smeltInputFor(item), count, knowledge, path, remaining));
-        TaskNode fuel = fuelPlan(item, count, knowledge, path, remaining);
-        if (fuel != null) {
-            steps.add(fuel);
-        }
+        FuelPlanner.select(item, count, knowledge, path, remaining)
+                .ifPresent(fuel -> steps.add(resolve(fuel.fuel(), fuel.count(), knowledge, path, remaining)));
         steps.add(new ScriptCall("smelt", Map.of("item", item, "count", count)));
         return new SequenceNode(steps);
-    }
-
-    private static TaskNode fuelPlan(String smelted, int count, ResourceKnowledge knowledge, Set<String> path,
-            Map<String, Integer> remaining) {
-        List<String> candidates = fuelCandidates(knowledge, smelted);
-        for (String fuel : candidates) {
-            if (path.contains(fuel)) {
-                continue;
-            }
-            int burn = knowledge.burnTicks(fuel);
-            if (burn <= 0) {
-                continue;
-            }
-            int need = FuelTable.fuelNeeded(count, burn);
-            int have = remaining.getOrDefault(fuel, 0);
-            if (have >= need) {
-                remaining.put(fuel, have - need);
-                return null;
-            }
-        }
-        for (String fuel : candidates) {
-            if (path.contains(fuel)) {
-                continue;
-            }
-            int burn = knowledge.burnTicks(fuel);
-            if (burn <= 0) {
-                continue;
-            }
-            int have = remaining.getOrDefault(fuel, 0);
-            if (have > 0 && canProvide(fuel, knowledge, new HashSet<>())) {
-                int need = FuelTable.fuelNeeded(count, burn);
-                remaining.put(fuel, 0);
-                return resolve(fuel, need - have, knowledge, path, remaining);
-            }
-        }
-        for (String fuel : candidates) {
-            if (path.contains(fuel)) {
-                continue;
-            }
-            int burn = knowledge.burnTicks(fuel);
-            if (burn <= 0) {
-                continue;
-            }
-            if (canProvide(fuel, knowledge, new HashSet<>())) {
-                return resolve(fuel, FuelTable.fuelNeeded(count, burn), knowledge, path, remaining);
-            }
-        }
-        StringJoiner names = new StringJoiner(", ");
-        for (String fuel : candidates) {
-            names.add(fuel);
-        }
-        throw new UnplannableGoalException(smelted, "Для плавки '" + smelted + "' ×" + count
-                + " нет доступного топлива (" + names + "): добавьте топливо в знания как gatherable, craftable или "
-                + "smeltable либо выдайте духу топливо в инвентарь");
-    }
-
-    private static List<String> fuelCandidates(ResourceKnowledge knowledge, String smelted) {
-        List<String> candidates = knowledge.fuelCandidates();
-        if (candidates == null || candidates.isEmpty()) {
-            throw new UnplannableGoalException(smelted, "Для плавки '" + smelted
-                    + "' знания не дали ни одного кандидата в топливо: верните порядок предпочтения топлива");
-        }
-        return candidates;
-    }
-
-    private static boolean canProvide(String item, ResourceKnowledge knowledge, Set<String> path) {
-        if (!path.add(item)) {
-            return false;
-        }
-        try {
-            if (knowledge.isGatherable(item)) {
-                return true;
-            }
-            if (knowledge.isCraftable(item)) {
-                return knowledge.ingredientsFor(item).stream()
-                        .allMatch(ingredient -> canProvide(ingredient.item(), knowledge, path));
-            }
-            if (knowledge.isSmeltable(item)) {
-                return canProvide(knowledge.smeltInputFor(item), knowledge, path);
-            }
-            return false;
-        } finally {
-            path.remove(item);
-        }
     }
 }
