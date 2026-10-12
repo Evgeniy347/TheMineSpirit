@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -31,6 +32,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -57,8 +60,7 @@ public final class InventoryGameTests {
     @GameTest(template = "arena", batch = "inv_access_double", timeoutTicks = 200)
     public static void containerAccess_AdjacentChests_OpenAsDouble(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
-        helper.setBlock(5, 1, 4, Blocks.CHEST);
-        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        placeDoubleChest(helper, 5, 6, 1, 4);
         ContainerAccess.Open open = ContainerAccess.open(helper.getLevel(), helper.absolutePos(new BlockPos(5, 1, 4)));
 
         helper.assertTrue(open instanceof ContainerAccess.Opened opened && opened.container().getContainerSize() == 54,
@@ -272,6 +274,19 @@ public final class InventoryGameTests {
         });
     }
 
+    private static void placeDoubleChest(GameTestHelper helper, int westX, int eastX, int y, int z) {
+        BlockPos west = helper.absolutePos(new BlockPos(westX, y, z));
+        BlockPos east = helper.absolutePos(new BlockPos(eastX, y, z));
+        helper.getLevel().setBlock(west,
+                Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH)
+                        .setValue(ChestBlock.TYPE, ChestType.LEFT),
+                3);
+        helper.getLevel().setBlock(east,
+                Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH)
+                        .setValue(ChestBlock.TYPE, ChestType.RIGHT),
+                3);
+    }
+
     private static Container accessChest(GameTestHelper helper) {
         ContainerAccess.Open open = ContainerAccess.open(helper.getLevel(),
                 helper.absolutePos(new BlockPos(6, 1, 4)));
@@ -471,8 +486,7 @@ public final class InventoryGameTests {
     public static void deposit_DoubleChest_Uses54Slots(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        helper.setBlock(5, 1, 4, Blocks.CHEST);
-        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        placeDoubleChest(helper, 5, 6, 1, 4);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 4));
         spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 64));
         spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 36));

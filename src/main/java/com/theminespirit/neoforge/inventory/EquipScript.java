@@ -31,6 +31,9 @@ public final class EquipScript implements ScriptInstance {
             return fail("дух исчез во время надевания");
         }
         IdFilter filter = IdFilter.of(List.of(params.item()));
+        if (wornMatches(filter)) {
+            return succeed();
+        }
         int source = bestSource(filter, InventoryTables.values());
         if (source < 0) {
             return fail("в инвентаре нет предмета '" + params.item() + "': надевать нечего");
@@ -38,9 +41,6 @@ public final class EquipScript implements ScriptInstance {
         ItemStack stack = spirit.getInventory().getItem(source);
         EquipmentSlot slot = spirit.getEquipmentSlotForItem(stack);
         ItemStack worn = spirit.getItemBySlot(slot);
-        if (!worn.isEmpty() && filter.matches(StackMapper.itemId(worn))) {
-            return succeed();
-        }
         ItemStack piece = spirit.getInventory().removeItem(source, 1);
         if (!worn.isEmpty() && !storeBack(worn, source)) {
             ItemStack rest = spirit.getInventory().getItem(source);
@@ -66,8 +66,17 @@ public final class EquipScript implements ScriptInstance {
         return reason;
     }
 
-    private int bestSource(IdFilter filter, ValueTable values) {
-        Container inventory = spirit.getInventory();
+    private boolean wornMatches(IdFilter filter) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            ItemStack worn = spirit.getItemBySlot(slot);
+            if (!worn.isEmpty() && filter.matches(StackMapper.itemId(worn))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int bestSource(IdFilter filter, ValueTable values) {        Container inventory = spirit.getInventory();
         int best = -1;
         int bestValue = 0;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {

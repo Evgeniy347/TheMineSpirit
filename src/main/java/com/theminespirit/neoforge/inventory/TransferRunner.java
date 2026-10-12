@@ -55,7 +55,7 @@ public final class TransferRunner {
     }
 
     public static TransferRunner filtered(Container from, Container to, IdFilter filter, int maxCount) {
-        return new TransferRunner(from, to, filter, maxCount, Map.of());
+        return new TransferRunner(from, to, filter, maxCount, new HashMap<>());
     }
 
     public static TransferRunner slices(Container from, Container to, List<Slice> slices) {
