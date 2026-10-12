@@ -117,6 +117,36 @@ class IdempotencyCacheTests {
     }
 
     @Test
+    void fingerprint_NewlineInGoalVersusNewlineInBot_DifferentDigests() {
+        String newlineInGoal = IdempotencyCache.fingerprint("дух", "цель\nx", null, Map.of());
+        String newlineInBot = IdempotencyCache.fingerprint("дух\nцель", "x", null, Map.of());
+
+        assertNotEquals(newlineInGoal, newlineInBot,
+                "Перевод строки в поле не должен сдвигать границы полей: разные тела не могут давать один отпечаток, "
+                        + "иначе чужой запрос будет принят за повтор");
+    }
+
+    @Test
+    void fingerprint_SamePlanWithOtherKeyOrder_SameDigest() {
+        String first = IdempotencyCache.fingerprint(BOT, null,
+                "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64}}", Map.of());
+        String reserialized = IdempotencyCache.fingerprint(BOT, null,
+                "{\"params\":{\"y\":64,\"x\":1},\"script\":\"goto\",\"type\":\"script\"}", Map.of());
+
+        assertEquals(first, reserialized,
+                "Тот же план, сериализованный клиентом с другим порядком ключей, обязан давать тот же отпечаток: "
+                        + "иначе повтор запроса получит ложный 409");
+    }
+
+    @Test
+    void fingerprint_GoalAbsentVersusEmpty_DifferentDigests() {
+        String absent = IdempotencyCache.fingerprint(BOT, null, null, Map.of());
+        String empty = IdempotencyCache.fingerprint(BOT, "", null, Map.of());
+
+        assertNotEquals(absent, empty, "Отсутствующая цель и пустая цель — разные тела");
+    }
+
+    @Test
     void fingerprint_UnicodeAndEmptyParts_AreStableHexSha256() {
         String first = IdempotencyCache.fingerprint("дух", "срубить дерево 🌲", null, Map.of("target", "Стив"));
         String second = IdempotencyCache.fingerprint("дух", "срубить дерево 🌲", null, Map.of("target", "Стив"));

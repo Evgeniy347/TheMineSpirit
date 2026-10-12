@@ -227,6 +227,24 @@ class TaskRoutesTests {
     }
 
     @Test
+    void create_ReplayWithPlanKeysReordered_ReturnsSameTaskNotConflict() throws Exception {
+        String requestId = uuid();
+        String plan = "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}";
+        String reorderedPlan = "{\"params\":{\"z\":2,\"y\":64,\"x\":1},\"script\":\"goto\",\"type\":\"script\"}";
+
+        RestResponse first = send("POST", "/v1/bots/" + BOT + "/tasks",
+                "{\"request_id\":\"" + requestId + "\",\"plan\":" + plan + "}");
+        RestResponse replay = send("POST", "/v1/bots/" + BOT + "/tasks",
+                "{\"plan\":" + reorderedPlan + ",\"request_id\":\"" + requestId + "\"}");
+
+        assertEquals(202, replay.status(),
+                "Повтор с пересериализованным планом (другой порядок ключей) обязан быть повтором, а не 409: "
+                        + replay.body());
+        assertEquals(first.body(), replay.body(), "Повтор обязан вернуть прежний ответ дословно");
+        assertEquals(1, gateway.starts().size(), "Повтор не должен второй раз стартовать духа");
+    }
+
+    @Test
     void create_GoalRequest_StartsGoalInSingleServerHop() throws Exception {
         String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
 

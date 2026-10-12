@@ -2,21 +2,20 @@ package com.theminespirit.core.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class IdempotencyCache {
     public static final int CAPACITY = 1024;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper CANONICAL = new ObjectMapper()
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
     public sealed interface Result {
         record New() implements Result {
@@ -92,57 +91,29 @@ public final class IdempotencyCache {
     }
 
     public static String fingerprint(String bot, String goal, String planJson, Map<String, Object> params) {
-        String canonical = canonicalPart(bot) + '\n' + canonicalPart(goal) + '\n' + canonicalPart(planJson)
-                + '\n' + canonicalParams(params);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("bot", bot);
+        body.put("goal", goal);
+        body.put("plan", planJson == null ? null : readPlan(planJson));
+        body.put("params", params == null ? Map.of() : params);
         try {
+            String canonical = CANONICAL.writeValueAsString(body);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(canonical.getBytes(StandardCharsets.UTF_8)));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Тело запроса не сериализуется в канонический JSON для отпечатка: "
+                    + "проверьте типы значений params", e);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 недоступен в этой JVM: идемпотентность REST не может "
                     + "сравнивать тела запросов", e);
         }
     }
 
-    private static String canonicalPart(String value) {
-        return value == null ? "" : value;
-    }
-
-    private static String canonicalParams(Map<String, Object> params) {
-        if (params == null || params.isEmpty()) {
-            return "{}";
-        }
-        List<String> names = new ArrayList<>(params.keySet());
-        names.sort(Comparator.naturalOrder());
-        StringBuilder canonical = new StringBuilder("{");
-        for (int i = 0; i < names.size(); i++) {
-            if (i > 0) {
-                canonical.append(',');
-            }
-            canonical.append(quote(names.get(i))).append(':').append(canonicalValue(params.get(names.get(i))));
-        }
-        return canonical.append('}').toString();
-    }
-
-    private static String canonicalValue(Object value) {
-        if (value == null) {
-            return "null";
-        }
-        if (value instanceof String text) {
-            return quote(text);
-        }
-        if (value instanceof Map<?, ?> nested) {
-            Map<String, Object> asStringKeys = new LinkedHashMap<>();
-            nested.forEach((key, item) -> asStringKeys.put(String.valueOf(key), item));
-            return canonicalParams(asStringKeys);
-        }
-        return String.valueOf(value);
-    }
-
-    private static String quote(String text) {
+    private static Object readPlan(String planJson) {
         try {
-            return MAPPER.writeValueAsString(text);
+            return CANONICAL.readValue(planJson, Object.class);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Строка параметра не сериализуется в канонический JSON: " + text, e);
+            throw new IllegalArgumentException("План для отпечатка не разобран как JSON: " + planJson, e);
         }
     }
 
