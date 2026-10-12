@@ -48,8 +48,10 @@ public final class SpiritBrain {
     }
 
     public void suspend(String reason) {
-        if (runner != null && runner.status() == RunStatus.RUNNING && !runner.isSuspended()) {
-            runner.suspend();
+        if (runner != null && runner.status() == RunStatus.RUNNING) {
+            if (!runner.isSuspended()) {
+                runner.suspend();
+            }
             suspendReason = reason;
         }
     }

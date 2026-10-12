@@ -17,6 +17,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.DropPolicy;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.WorkZone;
+import com.theminespirit.core.tactics.Layer;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
@@ -74,7 +75,7 @@ public final class SpiritEntity extends PathfinderMob {
             return;
         }
         tactics.tick();
-        if (brain != null && !tactics.wantsControl()) {
+        if (brain != null && !tactics.wantsControl() && policies.owner() != Layer.TACTICS) {
             brain.tick();
         }
     }

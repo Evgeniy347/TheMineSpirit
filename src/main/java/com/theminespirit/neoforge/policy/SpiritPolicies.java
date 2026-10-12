@@ -47,7 +47,7 @@ public final class SpiritPolicies {
     private Optional<BlockCoord> waterTarget = Optional.empty();
     private long waterSearchedAt = -ReflexSchedule.PERIOD_TICKS;
     private WorkZone workZone;
-    private boolean overriding;
+    private Layer suspendedBy;
     private boolean hadReflex;
     private String reflexKey;
     private int reflexTicks;
@@ -82,7 +82,7 @@ public final class SpiritPolicies {
             scanThreats();
         }
         verdict = guardTimeout(combine(), now);
-        Layer owner = arbiter.step(verdict, false, hasRunningTask());
+        Layer owner = arbiter.step(verdict, spirit.tactics().wantsControl(), hasRunningTask());
         updateSuspension(owner);
         if (verdict instanceof PolicyVerdict.Reflex reflex) {
             executor.execute(spirit, reflex.action());
@@ -98,6 +98,10 @@ public final class SpiritPolicies {
 
     public boolean isOverriding() {
         return arbiter.owner() == Layer.POLICY;
+    }
+
+    public Layer owner() {
+        return arbiter.owner();
     }
 
     public PolicyExemptions exemptions() {
@@ -231,14 +235,21 @@ public final class SpiritPolicies {
     }
 
     private void updateSuspension(Layer owner) {
-        boolean policyOwns = owner == Layer.POLICY;
-        if (policyOwns && !overriding) {
-            String reason = verdict instanceof PolicyVerdict.Reflex reflex ? reflex.policy() + ": " + reflex.reason() : "политика безопасности";
+        Layer controller = owner == Layer.POLICY || owner == Layer.TACTICS ? owner : null;
+        if (controller != null && controller != suspendedBy) {
+            String reason = suspendReason(controller);
             spirit.brainIfPresent().ifPresent(brain -> brain.suspend(reason));
-        } else if (!policyOwns && overriding) {
+        } else if (controller == null && suspendedBy != null) {
             spirit.brainIfPresent().ifPresent(SpiritBrain::resume);
         }
-        overriding = policyOwns;
+        suspendedBy = controller;
+    }
+
+    private String suspendReason(Layer owner) {
+        if (owner == Layer.TACTICS) {
+            return "тактика: бой или отход";
+        }
+        return verdict instanceof PolicyVerdict.Reflex reflex ? reflex.policy() + ": " + reflex.reason() : "политика безопасности";
     }
 
     private BlockCoord feetCoord() {
