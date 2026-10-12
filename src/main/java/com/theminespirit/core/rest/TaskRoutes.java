@@ -104,8 +104,12 @@ public final class TaskRoutes {
 
     private RestResponse events(RestRequest request, PathParams params) {
         String taskId = params.get("id");
-        TaskRecord record = knownTask(taskId);
         long lastEventId = lastEventId(request);
+        TaskRegistry.Snapshot snapshot = registry.snapshot(taskId, lastEventId).orElseThrow(
+                () -> new ApiException(ErrorCode.NOT_FOUND,
+                        "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при "
+                                + "перезапуске",
+                        Map.of("task_id", taskId)));
         if (!slots.tryAcquire()) {
             throw new ApiException(ErrorCode.RATE_LIMITED,
                     "Одновременно открыто уже " + SseSlots.MAX_STREAMS + " потоков событий: закройте один из них "
@@ -114,8 +118,7 @@ public final class TaskRoutes {
         }
         boolean handedOff = false;
         try {
-            SseStream stream = new TaskEventStream(record, registry.log(taskId), lastEventId,
-                    TaskEventStream.KEEPALIVE, slots::release);
+            SseStream stream = new TaskEventStream(snapshot, TaskEventStream.KEEPALIVE, slots::release);
             handedOff = true;
             return RestResponse.stream(stream);
         } finally {

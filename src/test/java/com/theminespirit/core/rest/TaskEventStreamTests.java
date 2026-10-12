@@ -8,6 +8,7 @@ import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.task.TaskEvent;
 import com.theminespirit.core.task.TaskEventLog;
 import com.theminespirit.core.task.TaskRecord;
+import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.core.task.TaskState;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -30,7 +31,9 @@ class TaskEventStreamTests {
     }
 
     private static TaskEventStream fresh(TaskRecord record, TaskEventLog log, long lastEventId, AtomicInteger closes) {
-        return new TaskEventStream(record, log, lastEventId, NO_WAIT, closes::incrementAndGet);
+        TaskRegistry.Snapshot snapshot = new TaskRegistry.Snapshot(record, log, log.since(lastEventId), log.lastId(),
+                lastEventId);
+        return new TaskEventStream(snapshot, NO_WAIT, closes::incrementAndGet);
     }
 
     @Test

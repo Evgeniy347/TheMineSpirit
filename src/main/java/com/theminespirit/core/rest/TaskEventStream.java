@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.task.TaskEvent;
 import com.theminespirit.core.task.TaskEventLog;
 import com.theminespirit.core.task.TaskRecord;
+import com.theminespirit.core.task.TaskRegistry;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -30,19 +31,20 @@ public final class TaskEventStream implements SseStream {
     private final AtomicBoolean closed = new AtomicBoolean();
     private long lastId;
 
-    public TaskEventStream(TaskRecord current, TaskEventLog log, long lastEventId, Duration keepalive,
-            Runnable onClose) {
-        this.log = Objects.requireNonNull(log, "log не может быть null: поток читает события из журнала задачи");
+    public TaskEventStream(TaskRegistry.Snapshot snapshot, Duration keepalive, Runnable onClose) {
         this.keepalive = Objects.requireNonNull(keepalive, "keepalive не может быть null: интервал кипалайва задают явно");
         this.onClose = Objects.requireNonNull(onClose, "onClose не может быть null: закрытие обязано освобождать слот");
-        Objects.requireNonNull(current, "current не может быть null: первый кадр несёт текущее состояние задачи");
-        TaskEventLog.Catchup catchup = log.since(lastEventId);
+        Objects.requireNonNull(snapshot, "snapshot не может быть null: первый кадр несёт согласованное состояние задачи");
+        this.log = snapshot.log();
+        long lastEventId = snapshot.lastEventId();
+        long position = snapshot.position();
+        TaskEventLog.Catchup catchup = snapshot.catchup();
         if (lastEventId > 0) {
             if (catchup.gap()) {
                 // При потере окна сначала текущее состояние; id — свежая позиция, чтобы клиент
                 // не застрял на устаревшем Last-Event-ID и не gapил заново при каждом реконнекте.
-                long position = catchup.events().isEmpty() ? log.lastId() : lastEventId;
-                pending.add(frame(position, TaskEvent.TYPE_STATE, stateData(current)));
+                long frameId = catchup.events().isEmpty() ? position : lastEventId;
+                pending.add(frame(frameId, TaskEvent.TYPE_STATE, stateData(snapshot.record())));
             }
             this.lastId = lastEventId;
             for (TaskEvent event : catchup.events()) {
@@ -50,8 +52,8 @@ public final class TaskEventStream implements SseStream {
                 this.lastId = event.id();
             }
         } else {
-            this.lastId = log.lastId();
-            pending.add(frame(this.lastId, TaskEvent.TYPE_STATE, stateData(current)));
+            this.lastId = position;
+            pending.add(frame(this.lastId, TaskEvent.TYPE_STATE, stateData(snapshot.record())));
         }
     }
 

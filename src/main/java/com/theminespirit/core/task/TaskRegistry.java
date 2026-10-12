@@ -134,6 +134,19 @@ public final class TaskRegistry {
         return Optional.of(entry.record);
     }
 
+    public synchronized Optional<Snapshot> snapshot(String taskId, long lastEventId) {
+        Entry entry = tasks.get(taskId);
+        if (entry == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new Snapshot(entry.record, entry.log, entry.log.since(lastEventId), entry.log.lastId(),
+                lastEventId));
+    }
+
+    public record Snapshot(TaskRecord record, TaskEventLog log, TaskEventLog.Catchup catchup, long position,
+            long lastEventId) {
+    }
+
     public synchronized int size() {
         return tasks.size();
     }

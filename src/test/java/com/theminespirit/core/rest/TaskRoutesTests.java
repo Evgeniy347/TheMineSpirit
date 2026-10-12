@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +25,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -399,6 +403,75 @@ class TaskRoutesTests {
             response.stream().close();
         }
         assertEquals(0, slots.open(), "Закрытие потока обязано освобождать слот");
+    }
+
+    @Test
+    void events_WatcherFinishesTaskWhileRequestWaitsForSlot_DeliversFinalState() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        registry.observe(taskId, TaskState.RUNNING, null, null);
+        CountDownLatch slotsLocked = new CountDownLatch(1);
+        CountDownLatch proceed = new CountDownLatch(1);
+        Thread locker = new Thread(() -> {
+            synchronized (slots) {
+                slotsLocked.countDown();
+                try {
+                    proceed.await();
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        locker.setDaemon(true);
+        locker.start();
+        assertTrue(slotsLocked.await(5, TimeUnit.SECONDS),
+                "Тест обязан удерживать монитор слотов до старта HTTP-запроса");
+
+        AtomicReference<RestResponse> opened = new AtomicReference<>();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Thread http = new Thread(() -> {
+            try {
+                opened.set(router.handle(
+                        new RestRequest("GET", "/v1/tasks/" + taskId + "/events", Map.of(), Map.of(), utf8(""))));
+            } catch (Throwable broken) {
+                failure.set(broken);
+            }
+        });
+        http.setDaemon(true);
+        http.start();
+        awaitState(http, Thread.State.BLOCKED,
+                "HTTP-поток обязан ждать слот: запись задачи уже прочитана, позиция журнала ещё нет");
+
+        registry.observe(taskId, TaskState.SUCCEEDED, null, null);
+        proceed.countDown();
+        http.join(TimeUnit.SECONDS.toMillis(5));
+        locker.join(TimeUnit.SECONDS.toMillis(5));
+        assertFalse(http.isAlive(), "HTTP-запрос обязан завершиться после освобождения слотов");
+        assertNull(failure.get(), "HTTP-запрос обязан вернуть ответ, а не упасть исключением: " + failure.get());
+        assertEquals(200, opened.get().status(), "HTTP-запрос обязан открывать поток событий: " + opened.get().body());
+
+        SseStream stream = opened.get().stream();
+        List<String> frames = new ArrayList<>();
+        try {
+            String frame;
+            while ((frame = stream.nextFrame()) != null) {
+                frames.add(frame);
+            }
+        } finally {
+            stream.close();
+        }
+        assertTrue(frames.stream().anyMatch(frame -> frame.contains("\"state\":\"succeeded\"")),
+                "Пока HTTP-поток ждал слоты, watcher мог закрыть задачу: финальное состояние обязано дойти "
+                        + "до клиента, а не потеряться за уже финальной позицией журнала: " + frames);
+    }
+
+    private static void awaitState(Thread thread, Thread.State expected, String message) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (thread.getState() != expected) {
+            if (System.nanoTime() > deadline) {
+                fail(message + "; состояние потока: " + thread.getState());
+            }
+            Thread.sleep(1);
+        }
     }
 
     @Test
