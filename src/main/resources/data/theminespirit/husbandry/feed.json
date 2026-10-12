@@ -1,0 +1,6 @@
+{
+  "cow": [ "minecraft:wheat" ],
+  "sheep": [ "minecraft:wheat" ],
+  "pig": [ "minecraft:carrot" ],
+  "chicken": [ "minecraft:wheat_seeds" ]
+}
