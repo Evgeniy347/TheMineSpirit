@@ -616,6 +616,48 @@ public final class MineGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "mine_persist_last", timeoutTicks = 260)
+    public static void gatherCobblestone_SavedAfterLastBlock_RestoresAsSucceeded(GameTestHelper helper) {
+        buildCave(helper);
+        for (int x = 1; x <= 3; x++) {
+            for (int z = 1; z <= 2; z++) {
+                helper.setBlock(x, 1, z, Blocks.COBBLESTONE);
+            }
+        }
+        int heapBefore = countBlock(helper, Blocks.COBBLESTONE);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        AtomicReference<SpiritEntity> live = new AtomicReference<>(spirit);
+        AtomicBoolean saved = new AtomicBoolean(false);
+        SpiritRun.launch(helper, spirit, gatherCall("cobblestone", 6), SETTLE_TICKS);
+        helper.onEachTick(() -> {
+            if (saved.get()) {
+                return;
+            }
+            SpiritEntity current = live.get();
+            if (current.taskStatus().orElse(null) == RunStatus.RUNNING
+                    && countBlock(helper, Blocks.COBBLESTONE) == heapBefore - 6) {
+                saved.set(true);
+                CompoundTag tag = new CompoundTag();
+                current.saveWithoutId(tag);
+                live.set(reload(helper, current, tag));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            SpiritEntity current = live.get();
+            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "снимок в момент сбора последнего блока обязан восстановиться успехом, а не искать "
+                            + "седьмой блок или падать «добыто 6 из 6»: статус "
+                            + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + current.taskFailureReason().orElse("нет"));
+            helper.assertTrue(saved.get(), "снимок обязан быть сделан после шестого блока");
+            helper.assertTrue(countBlock(helper, Blocks.COBBLESTONE) == heapBefore - 6,
+                    "после восстановления нельзя добывать ещё: в куче обязано остаться " + (heapBefore - 6)
+                            + ", стало " + countBlock(helper, Blocks.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     private static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
         original.discard();
         SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());

@@ -99,6 +99,10 @@ public final class HarvestSession {
         if (spirit.isRemoved()) {
             return fail("дух исчез во время добычи");
         }
+        if (mined >= count && collector == null) {
+            outcome = Outcome.SUCCEEDED;
+            return outcome;
+        }
         ticks++;
         switch (state) {
             case FIND -> find();
