@@ -96,6 +96,96 @@ class SucceedWhenReturnGuardTests {
                 "Сторож ложно срабатывает: ссылка на метод вне succeedWhen — не нарушение, условие там не прячется");
     }
 
+    @Test
+    void bracesAndEscapedQuoteInString_RealReturnAfterwards_IsReported() {
+        String sample = "helper.succeedWhen(() -> {\n"
+                + "    String hint = \"нажми (A), скажи \\\"готово } жди\\\"\";\n"
+                + "    if (status == RUNNING) {\n"
+                + "        return;\n"
+                + "    }\n"
+                + "    helper.assertTrue(done, \"готово\");\n"
+                + "});\n";
+
+        assertEquals(List.of(4), bareReturnLines(sample),
+                "Сторож ослеп: скобка } внутри строкового литерала закрыла тело лямбды раньше времени, "
+                        + "и настоящий return после неё не найден — тест с ложным успехом пройдёт мимо сторожа. "
+                        + "Если разбор меняли осознанно, перепроверь его на строке с экранированной кавычкой");
+    }
+
+    @Test
+    void returnWordInStringLiteral_InsideMessage_IsIgnored() {
+        String sample = "helper.succeedWhen(() -> {\n"
+                + "    helper.assertTrue(done, \"без return; не засчитает\");\n"
+                + "});\n";
+
+        assertEquals(List.of(), bareReturnLines(sample),
+                "Сторож ложно срабатывает: слово return; внутри строкового литерала — текст сообщения, "
+                        + "а не выход из лямбды");
+    }
+
+    @Test
+    void bracesInComments_RealReturnAfterwards_IsReported() {
+        String sample = "helper.succeedWhen(() -> {\n"
+                + "    // ждём } пока не готово\n"
+                + "    /* { проверка */\n"
+                + "    if (status == RUNNING) {\n"
+                + "        return;\n"
+                + "    }\n"
+                + "    helper.assertTrue(done, \"готово\");\n"
+                + "});\n";
+
+        assertEquals(List.of(5), bareReturnLines(sample),
+                "Сторож ослеп: скобка в комментарии закрыла тело лямбды раньше времени, и настоящий return "
+                        + "после неё не найден. Если разбор меняли осознанно, перепроверь его на комментариях "
+                        + "со скобками");
+    }
+
+    @Test
+    void commentedOutSucceedWhen_InLineComments_IsIgnored() {
+        String sample = "// helper.succeedWhen(() -> {\n"
+                + "//     return;\n"
+                + "// });\n"
+                + "helper.succeedWhen(() -> {\n"
+                + "    helper.assertTrue(done, \"готово\");\n"
+                + "});\n";
+
+        assertEquals(List.of(), bareReturnLines(sample),
+                "Сторож ложно срабатывает: закомментированный succeedWhen с return — мёртвый код, "
+                        + "а не нарушение");
+    }
+
+    @Test
+    void braceInCharLiteral_RealReturnAfterwards_IsReported() {
+        String sample = "helper.succeedWhen(() -> {\n"
+                + "    char closing = '}';\n"
+                + "    if (status == RUNNING) {\n"
+                + "        return;\n"
+                + "    }\n"
+                + "    helper.assertTrue(done, \"готово\");\n"
+                + "});\n";
+
+        assertEquals(List.of(4), bareReturnLines(sample),
+                "Сторож ослеп: скобка в символьном литерале '}' закрыла тело лямбды раньше времени, "
+                        + "и настоящий return после неё не найден");
+    }
+
+    @Test
+    void braceInTextBlock_RealReturnAfterwards_IsReported() {
+        String sample = "helper.succeedWhen(() -> {\n"
+                + "    String shape = \"\"\"\n"
+                + "        блок } внутри\n"
+                + "        \"\"\";\n"
+                + "    if (status == RUNNING) {\n"
+                + "        return;\n"
+                + "    }\n"
+                + "    helper.assertTrue(done, \"готово\");\n"
+                + "});\n";
+
+        assertEquals(List.of(6), bareReturnLines(sample),
+                "Сторож ослеп: скобка в текстовом блоке закрыла тело лямбды раньше времени, "
+                        + "и настоящий return после неё не найден");
+    }
+
     private static void collect(Map<Path, String> sources, List<String> offenders) {
         sources.forEach((file, text) -> {
             for (int line : bareReturnLines(text)) {
@@ -105,26 +195,94 @@ class SucceedWhenReturnGuardTests {
     }
 
     private static List<Integer> bareReturnLines(String text) {
+        String clean = stripNoise(text);
         List<Integer> lines = new ArrayList<>();
-        Matcher lambda = SUCCEED_WHEN_LAMBDA.matcher(text);
+        Matcher lambda = SUCCEED_WHEN_LAMBDA.matcher(clean);
         while (lambda.find()) {
             int bodyStart = lambda.end() - 1;
-            int bodyEnd = matchingBrace(text, bodyStart);
-            Matcher bare = BARE_RETURN.matcher(text).region(bodyStart, bodyEnd);
+            int bodyEnd = matchingBrace(clean, bodyStart);
+            Matcher bare = BARE_RETURN.matcher(clean).region(bodyStart, bodyEnd);
             while (bare.find()) {
-                lines.add(SourceFiles.lineOf(text, bare.start()));
+                lines.add(SourceFiles.lineOf(clean, bare.start()));
             }
         }
         return lines;
     }
 
     private static List<Integer> methodRefLines(String text) {
+        String clean = stripNoise(text);
         List<Integer> lines = new ArrayList<>();
-        Matcher ref = SUCCEED_WHEN_METHOD_REF.matcher(text);
+        Matcher ref = SUCCEED_WHEN_METHOD_REF.matcher(clean);
         while (ref.find()) {
-            lines.add(SourceFiles.lineOf(text, ref.start()));
+            lines.add(SourceFiles.lineOf(clean, ref.start()));
         }
         return lines;
+    }
+
+    private static String stripNoise(String text) {
+        StringBuilder clean = new StringBuilder(text.length());
+        int i = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (c == '/' && i + 1 < text.length() && text.charAt(i + 1) == '/') {
+                i = blankUntil(clean, text, i, '\n', false);
+            } else if (c == '/' && i + 1 < text.length() && text.charAt(i + 1) == '*') {
+                i = blankUntil(clean, text, i, '*', true);
+                clean.append("  ");
+                i += 2;
+            } else if (c == '"' && text.startsWith("\"\"\"", i)) {
+                clean.append("   ");
+                i = blankUntil(clean, text, i + 3, '"', true);
+                clean.append("   ");
+                i += 3;
+            } else if (c == '"' || c == '\'') {
+                clean.append(' ');
+                i = blankQuoted(clean, text, i + 1, c);
+            } else {
+                clean.append(c);
+                i++;
+            }
+        }
+        return clean.toString();
+    }
+
+    private static int blankUntil(StringBuilder clean, String text, int i, char end, boolean block) {
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (block && end == '*' && c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '/') {
+                return i;
+            }
+            if (block && end == '"' && text.startsWith("\"\"\"", i)) {
+                return i;
+            }
+            if (!block && c == end) {
+                return i;
+            }
+            clean.append(c == '\n' ? '\n' : ' ');
+            i++;
+        }
+        return i;
+    }
+
+    private static int blankQuoted(StringBuilder clean, String text, int i, char quote) {
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (c == '\n') {
+                return i;
+            }
+            if (c == '\\' && i + 1 < text.length()) {
+                clean.append(text.charAt(i + 1) == '\n' ? " \n" : "  ");
+                i += 2;
+                continue;
+            }
+            if (c == quote) {
+                clean.append(' ');
+                return i + 1;
+            }
+            clean.append(' ');
+            i++;
+        }
+        return i;
     }
 
     private static int matchingBrace(String text, int open) {
