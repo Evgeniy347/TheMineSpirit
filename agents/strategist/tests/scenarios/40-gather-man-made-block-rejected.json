@@ -1,0 +1,51 @@
+{
+  "name": "40-gather-man-made-block-rejected",
+  "description": "gather.block с блоком из постройки игрока (дубовые доски в наблюдении) отвергается и текст называет natural_blocks",
+  "bots": [
+    {
+      "id": "full",
+      "world": "full"
+    }
+  ],
+  "brain": {
+    "default": {
+      "json": {
+        "reason": "В доме игрока полно досок, наберу их для стройки.",
+        "goal": "собрать доски",
+        "plan": {
+          "type": "script",
+          "script": "gather",
+          "params": {
+            "block": "minecraft:oak_planks",
+            "count": 8
+          }
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "cycle": true
+    }
+  ],
+  "expect": [
+    {
+      "posts": 0
+    },
+    {
+      "brain_calls": 2
+    },
+    {
+      "journal": {
+        "rejected": 2
+      }
+    },
+    {
+      "journal_has": {
+        "event": "rejected",
+        "stage": "plan_check",
+        "reason_contains": "natural_blocks"
+      }
+    }
+  ]
+}
