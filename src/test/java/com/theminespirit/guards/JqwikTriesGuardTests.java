@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class JqwikTriesGuardTests {
     private static final Pattern PROPERTY_WITH_TRIES = Pattern.compile(
-            "((?:[ \\t]*@[^\\n]*\\n)*)[ \\t]*@Property\\s*\\(\\s*tries\\s*=\\s*(\\d+)\\s*\\)[^\\n]*\\n((?:[ \\t]*@[^\\n]*\\n)*)",
+            "((?:[ \\t]*@[^\\n]*\\n)*)[ \\t]*@Property\\s*\\([^)]*tries\\s*=\\s*(\\d+)[^)]*\\)[^\\n]*\\n((?:[ \\t]*@[^\\n]*\\n)*)",
             Pattern.MULTILINE);
     private static final Pattern JQWIK_SLOW_TAG = Pattern.compile("@Tag\\s*\\(\\s*\"slow\"\\s*\\)");
     private static final int FAST_TIER_MAX_TRIES = 200;
@@ -64,6 +64,18 @@ class JqwikTriesGuardTests {
 
         assertEquals(List.of(), triesOf(sample),
                 "Сторож ложно срабатывает: tries = 200 — граница быстрого тира, тег не нужен");
+    }
+
+    @Test
+    void propertyTriesPattern_TriesNotFirstArgument_IsReported() {
+        String sample = "class Sample {\n"
+                + "    @Property(seed = \"abc\", tries = 1000)\n"
+                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
+                + "    }\n"
+                + "}\n";
+
+        assertEquals(List.of("tries=1000"), triesOf(sample),
+                "Сторож ослеп: tries = 1000 не первым аргументом должно попадать в нарушители");
     }
 
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {

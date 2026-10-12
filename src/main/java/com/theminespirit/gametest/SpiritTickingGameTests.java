@@ -24,7 +24,7 @@ public final class SpiritTickingGameTests {
     private SpiritTickingGameTests() {
     }
 
-    // Флак под нагрузкой: дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
+    // [флак] дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
     @GameTest(template = "arena", batch = "ticking_beyond", timeoutTicks = 600)
     public static void spirit_GotoBeyondStructureChunks_KeepsTickingAndArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

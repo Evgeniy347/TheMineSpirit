@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class GameTestTimeoutGuardTests {
     private static final Pattern GAMETEST_WITH_TIMEOUT = Pattern.compile(
-            "@GameTest\\s*\\([^\\n]*timeoutTicks\\s*=\\s*(\\d+)[^\\n]*\\)", Pattern.MULTILINE);
+            "@GameTest\\s*\\([^)]*timeoutTicks\\s*=\\s*(\\d+)[^)]*\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final int SANE_TIMEOUT_LIMIT = 400;
 
     @Test
@@ -41,7 +41,7 @@ class GameTestTimeoutGuardTests {
     @Test
     void gameTestTimeoutPattern_Ticks600_WithFlakComment() {
         String sample = "class Sample {\n"
-                + "    // Флак под нагрузкой: ждём сдвиг набора через succeedWhen\n"
+                + "    // [флак] под нагрузкой: ждём сдвиг набора через succeedWhen\n"
                 + "    @GameTest(template = \"empty\", timeoutTicks = 600)\n"
                 + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
                 + "    }\n"
@@ -63,6 +63,32 @@ class GameTestTimeoutGuardTests {
                 "Сторож ложно срабатывает: timeoutTicks = 400 — граница, комментарий не нужен");
     }
 
+    @Test
+    void gameTestTimeoutPattern_MultilineAnnotation_IsReported() {
+        String sample = "class Sample {\n"
+                + "    @GameTest(template = \"empty\",\n"
+                + "            timeoutTicks = 600)\n"
+                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
+                + "    }\n"
+                + "}\n";
+
+        assertEquals(List.of("timeoutTicks=600"), timeoutsOf(sample),
+                "Сторож ослеп: многострочная @GameTest( с timeoutTicks = 600 без комментария должна попадать в нарушители");
+    }
+
+    @Test
+    void gameTestTimeoutPattern_Ticks600_WithFlakMarker() {
+        String sample = "class Sample {\n"
+                + "    // [флак] под нагрузкой: ждём сдвиг набора через thenWaitUntil\n"
+                + "    @GameTest(template = \"empty\", timeoutTicks = 600)\n"
+                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
+                + "    }\n"
+                + "}\n";
+
+        assertEquals(List.of(), timeoutsOf(sample),
+                "Сторож ложно срабатывает: timeoutTicks = 600 с меткой [флак] — законно");
+    }
+
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {
         sources.forEach((file, text) -> {
             Matcher matcher = GAMETEST_WITH_TIMEOUT.matcher(text);
@@ -80,7 +106,7 @@ class GameTestTimeoutGuardTests {
         for (int i = lines.length - 1; i >= Math.max(0, lines.length - 12); i--) {
             String line = lines[i].trim();
             if (line.startsWith("/*") || line.startsWith("*") || line.startsWith("//")) {
-                if (line.toLowerCase().contains("флак")) {
+                if (line.contains("[флак]")) {
                     return true;
                 }
             } else if (!line.isEmpty() && !line.startsWith("@")) {
