@@ -11,6 +11,7 @@ public final class ExplosionAvoidance {
     public static final double CHARGED_CREEPER_HOLD = 13.0;
     public static final double PRIMED_TNT_HOLD = 9.0;
     public static final double SWELLING_EXTRA = 3.0;
+    public static final double SCAN_RADIUS = CHARGED_CREEPER_HOLD + SWELLING_EXTRA + 1.0;
 
     private ExplosionAvoidance() {
     }

@@ -46,6 +46,7 @@ class ExplosionAvoidanceTests {
                 Arguments.of("крипер по диагонали (5;5): 7.07", ThreatType.CREEPER, 5, 5, false, 7.0, false),
                 Arguments.of("заряженный крипер в 8", ThreatType.CHARGED_CREEPER, 8, 0, false, 13.0, true),
                 Arguments.of("заряженный крипер в 10", ThreatType.CHARGED_CREEPER, 10, 0, false, 13.0, true),
+                Arguments.of("заряженный крипер в 12: на границе радиуса урона", ThreatType.CHARGED_CREEPER, 12, 0, false, 13.0, true),
                 Arguments.of("заряженный крипер в 13", ThreatType.CHARGED_CREEPER, 13, 0, false, 13.0, false),
                 Arguments.of("TNT в 7", ThreatType.PRIMED_TNT, 7, 0, false, 9.0, true),
                 Arguments.of("TNT в 8: радиус урона 8 по центру, нужен запас на смещение духа в клетке", ThreatType.PRIMED_TNT, 8, 0, false, 9.0, true),
@@ -77,6 +78,24 @@ class ExplosionAvoidanceTests {
         ReflexAction.Flee flee = assertInstanceOf(ReflexAction.Flee.class, reflex.action(), "Строка «" + name + "»: в открытой комнате бегство возможно, причина: " + reflex.reason());
         assertTrue(distance(flee.cell(), fact.pos()) >= expectedHold,
                 "Строка «" + name + "»: после бегства расстояние до угрозы не меньше " + expectedHold + ". Цель: " + flee.cell());
+    }
+
+    @Test
+    void chargedCreeperHold_Constant_IsNotLessThanDamageRadiusWithMargin() {
+        double damageRadius = 2 * 6.0;
+
+        assertTrue(ExplosionAvoidance.CHARGED_CREEPER_HOLD >= damageRadius + 1.0,
+                "Заряженный крипер бьёт на 2 × 6 = 12 блоков; держание " + ExplosionAvoidance.CHARGED_CREEPER_HOLD
+                        + " меньше радиуса с запасом в 1 блок, дух простоял бы в зоне урона и не побежал. Если меняешь число осознанно, сверь радиус взрыва в игре");
+    }
+
+    @Test
+    void scanRadius_Constant_CoversTheLargestHoldOfSwellingChargedCreeper() {
+        double largestHold = 13.0 + 3.0;
+
+        assertTrue(ExplosionAvoidance.SCAN_RADIUS >= largestHold,
+                "Радиус опроса угроз " + ExplosionAvoidance.SCAN_RADIUS + " меньше наибольшего держания " + largestHold
+                        + ": набухающий заряженный крипер не попал бы в список, и рефлекс не сработал бы. Перепроверь ThreatScanner.RADIUS");
     }
 
     @Test

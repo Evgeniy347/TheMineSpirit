@@ -8,6 +8,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
@@ -26,6 +27,7 @@ public final class PolicyDangerGameTests {
     private static final int HOLD_AFTER_FLEE_TICKS = 40;
     private static final double CREEPER_HOLD = 7.0;
     private static final double TNT_HOLD = 9.0;
+    private static final double CHARGED_MOVED_AWAY = 11.0;
 
     private PolicyDangerGameTests() {
     }
@@ -69,6 +71,39 @@ public final class PolicyDangerGameTests {
                             + cellDistance(helper, spirit, creeperAt));
             helper.assertTrue(spirit.tickCount >= farSince[0] + HOLD_AFTER_FLEE_TICKS, "ещё не прошло 40 тиков после отхода");
             helper.assertTrue(closestAfter[0] >= CREEPER_HOLD, "после отхода дух не должен возвращаться ближе 7 блоков, самое близкое " + closestAfter[0]);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static Creeper chargedCreeper(GameTestHelper helper, BlockPos at) {
+        Creeper creeper = idleCreeper(helper, at);
+        CompoundTag tag = new CompoundTag();
+        creeper.saveWithoutId(tag);
+        tag.putBoolean("powered", true);
+        creeper.load(tag);
+        return creeper;
+    }
+
+    @GameTest(template = "arena", batch = "policy_charged_creeper", timeoutTicks = 200)
+    public static void chargedCreeper_TenBlocksAway_SpiritMovesAwayAlongTheEdge(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        for (int x = 0; x <= 10; x++) {
+            for (int z = 0; z <= 10; z++) {
+                helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 5));
+        BlockPos creeperAt = new BlockPos(10, 1, 5);
+        Creeper creeper = chargedCreeper(helper, creeperAt);
+        helper.assertTrue(creeper.isPowered(), "заряженный крипер не заряжен: сцена не проверяет то, что заявлено");
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
+        });
+
+        helper.succeedWhen(() -> {
+            scene.assertStarted();
+            helper.assertTrue(cellDistance(helper, spirit, creeperAt) >= CHARGED_MOVED_AWAY,
+                    "заряженный крипер в 10 блоках: радиус урона ~12, дух обязан отойти вдоль края хотя бы до "
+                            + CHARGED_MOVED_AWAY + " блоков, сейчас " + cellDistance(helper, spirit, creeperAt));
             GameTestFixtures.reset(helper);
         });
     }

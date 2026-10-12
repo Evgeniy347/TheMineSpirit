@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.policy;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.ExplosionAvoidance;
 import com.theminespirit.core.policy.ExplosionAvoidance.ThreatFact;
 import com.theminespirit.core.policy.ExplosionAvoidance.ThreatType;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -13,7 +14,7 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.phys.AABB;
 
 final class ThreatScanner {
-    static final double RADIUS = 8.0;
+    static final double RADIUS = ExplosionAvoidance.SCAN_RADIUS;
 
     private ThreatScanner() {
     }
