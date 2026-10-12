@@ -7,6 +7,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
@@ -62,6 +63,16 @@ final class CraftTestSupport {
     static void assertCount(GameTestHelper helper, SpiritEntity spirit, Item item, int expected, String what) {
         int actual = GameTestFixtures.countInInventory(spirit.getInventory(), item);
         helper.assertTrue(actual == expected, what + ": ожидалось " + expected + ", в инвентаре " + actual);
+    }
+
+    static SpiritEntity reload(GameTestHelper helper, SpiritEntity original) {
+        CompoundTag tag = new CompoundTag();
+        original.saveWithoutId(tag);
+        original.discard();
+        SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
+        reloaded.load(tag);
+        helper.getLevel().addFreshEntity(reloaded);
+        return reloaded;
     }
 
     static void cleanup(GameTestHelper helper, SpiritEntity spirit) {

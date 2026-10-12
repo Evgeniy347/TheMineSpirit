@@ -9,6 +9,7 @@ import static com.theminespirit.gametest.CraftTestSupport.cleanup;
 import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.launch;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
+import static com.theminespirit.gametest.CraftTestSupport.reload;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
@@ -147,6 +148,36 @@ public final class SmeltGameTests {
                             + ingots + " должно быть 8");
             assertFurnaceEmpty(helper);
             cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "smelt_reload", timeoutTicks = TIMEOUT)
+    public static void smelt_SpiritReloadedMidway_AdoptsItsFurnaceAndFinishesExactly(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
+        SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 8), stack(Items.COAL, 3));
+        speedUpFurnaces(helper);
+        launch(helper, spirit, "smelt", "iron_ingot", 8);
+        SpiritEntity[] current = {spirit};
+        boolean[] reloaded = {false};
+        helper.onEachTick(() -> {
+            if (!reloaded[0] && firstIngotReady(helper)) {
+                current[0] = reload(helper, spirit);
+                reloaded[0] = true;
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(reloaded[0], "перезагрузка духа ещё не выполнена");
+            SpiritEntity now = current[0];
+            helper.assertTrue(now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленная плавка обязана завершиться успехом, статус: " + now.taskStatus().orElse(null)
+                            + ", причина: " + now.taskFailureReason().orElse("нет"));
+            assertCount(helper, now, Items.IRON_INGOT, 8, "слитки после перезапуска: готовое из печи забрано, "
+                    + "новый вход не положен поверх");
+            assertCount(helper, now, Items.RAW_IRON, 0, "сырое железо после перезапуска");
+            assertFurnaceEmpty(helper);
+            cleanup(helper, now);
         });
     }
 

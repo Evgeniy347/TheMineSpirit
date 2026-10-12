@@ -38,7 +38,6 @@ public final class FurnaceSession {
     private final BlockPos pos;
     private final Item input;
     private final int wanted;
-    private final int outputPerInput;
     private final Deque<FuelPortion> fuelQueue = new ArrayDeque<>();
     private final int timeoutTicks;
     private int inputQueue;
@@ -48,18 +47,26 @@ public final class FurnaceSession {
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
 
-    public FurnaceSession(SpiritEntity spirit, BlockPos pos, Item input, int inputCount, int outputPerInput,
-            List<FuelLoad.Portion> fuel, int cookTicks, int alreadyCollected) {
+    public record Contents(int input, int fuel, int result) {
+        public boolean isEmpty() {
+            return input == 0 && fuel == 0 && result == 0;
+        }
+    }
+
+    public record Job(Item input, int inputToFeed, int outputPerInput, List<FuelLoad.Portion> fuel, int cookTicks,
+            int inputsInPlay, int collectedSoFar, int wantedTotal) {
+    }
+
+    public FurnaceSession(SpiritEntity spirit, BlockPos pos, Job job) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.pos = pos;
-        this.input = input;
-        this.inputQueue = inputCount;
-        this.outputPerInput = outputPerInput;
-        this.wanted = inputCount * outputPerInput + alreadyCollected;
-        this.collected = alreadyCollected;
-        this.timeoutTicks = SmeltTiming.timeoutTicks(inputCount, cookTicks);
-        for (FuelLoad.Portion portion : fuel) {
+        this.input = job.input();
+        this.inputQueue = job.inputToFeed();
+        this.wanted = job.wantedTotal();
+        this.collected = job.collectedSoFar();
+        this.timeoutTicks = SmeltTiming.timeoutTicks(Math.max(1, job.inputsInPlay()), job.cookTicks());
+        for (FuelLoad.Portion portion : job.fuel()) {
             ItemIds.item(portion.fuel()).ifPresent(item -> fuelQueue.add(new FuelPortion(item, portion.count())));
         }
     }
@@ -199,9 +206,13 @@ public final class FurnaceSession {
         }
     }
 
-    public boolean holdsForeignItems() {
-        return furnaceAt().map(furnace -> !furnace.getItem(SLOT_INPUT).isEmpty() || !furnace.getItem(SLOT_FUEL).isEmpty()
-                || !furnace.getItem(SLOT_RESULT).isEmpty()).orElse(false);
+    public static Optional<Contents> contentsAt(Level level, BlockPos pos) {
+        BlockEntity entity = level.getBlockEntity(pos);
+        if (level.getBlockState(pos).is(Blocks.FURNACE) && entity instanceof AbstractFurnaceBlockEntity furnace) {
+            return Optional.of(new Contents(furnace.getItem(SLOT_INPUT).getCount(), furnace.getItem(SLOT_FUEL).getCount(),
+                    furnace.getItem(SLOT_RESULT).getCount()));
+        }
+        return Optional.empty();
     }
 
     private Optional<AbstractFurnaceBlockEntity> furnaceAt() {

@@ -9,6 +9,7 @@ import static com.theminespirit.gametest.CraftTestSupport.cleanup;
 import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.launch;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
+import static com.theminespirit.gametest.CraftTestSupport.reload;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
@@ -178,6 +179,32 @@ public final class CraftGameTests {
                                 + " тиков, между крафтами " + (i - 1) + " и " + i + " прошло " + gap);
             }
             cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "craft_reload", timeoutTicks = TIMEOUT)
+    public static void craft_SpiritReloadedMidway_ContinuesWithRemainingCount(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 32));
+        launch(helper, spirit, "craft", "stick", 64);
+        SpiritEntity[] current = {spirit};
+        boolean[] reloaded = {false};
+        helper.onEachTick(() -> {
+            if (!reloaded[0] && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STICK) >= 16) {
+                current[0] = reload(helper, spirit);
+                reloaded[0] = true;
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(reloaded[0], "перезагрузка духа ещё не выполнена");
+            SpiritEntity now = current[0];
+            helper.assertTrue(now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленный craft обязан завершиться успехом, статус: " + now.taskStatus().orElse(null)
+                            + ", причина: " + now.taskFailureReason().orElse("нет"));
+            assertCount(helper, now, Items.STICK, 64, "палки после перезапуска: недостающее число, а не заново 64");
+            assertCount(helper, now, Items.OAK_PLANKS, 0, "доски после перезапуска");
+            cleanup(helper, now);
         });
     }
 
