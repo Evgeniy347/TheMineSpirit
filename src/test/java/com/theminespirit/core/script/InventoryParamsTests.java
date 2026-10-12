@@ -56,7 +56,7 @@ class InventoryParamsTests {
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> TransferParams.from(params),
-                "Радиус вне [1, 16] оборот быть отказом: план мог обойти валидатор, "
+                "Радиус вне [1, 16] обязан быть отказом: план мог обойти валидатор, "
                         + "а дух ушёл бы из базовой зоны");
 
         assertTrue(error.getMessage().contains("Радиус") && error.getMessage().contains("16"),
