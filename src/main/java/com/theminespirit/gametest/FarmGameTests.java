@@ -2,6 +2,8 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.TaskProgress;
+import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.CropState;
@@ -34,6 +36,7 @@ import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -768,6 +771,55 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "farm_persist", timeoutTicks = 900)
+    public static void harvestCrop_SpiritReloadedMidWork_KeepsDoneAndFinishes(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 3));
+        AtomicReference<SpiritEntity> live = new AtomicReference<>(spirit);
+        AtomicBoolean saved = new AtomicBoolean(false);
+        AtomicInteger doneAfterReload = new AtomicInteger(-1);
+        launch(helper, spirit, harvestCall(CropKind.WHEAT, true));
+
+        helper.onEachTick(() -> {
+            if (saved.get()) {
+                return;
+            }
+            SpiritEntity current = live.get();
+            if (GameTestFixtures.countInInventory(current.getInventory(), Items.WHEAT) >= 3) {
+                saved.set(true);
+                CompoundTag tag = new CompoundTag();
+                current.saveWithoutId(tag);
+                SpiritEntity reloaded = reload(helper, current, tag);
+                live.set(reloaded);
+                helper.runAfterDelay(2, () -> doneAfterReload.set(savedDone(helper, reloaded)));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            SpiritEntity current = live.get();
+            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленный сбор обязан дойти до конца: статус "
+                            + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + current.taskFailureReason().orElse("нет"));
+            helper.assertTrue(doneAfterReload.get() >= 3,
+                    "после перезагрузки счётчик done обязан сохраниться (не меньше 3 собранных), а он "
+                            + doneAfterReload.get());
+            int wheat = GameTestFixtures.countInInventory(current.getInventory(), Items.WHEAT);
+            helper.assertTrue(wheat == 9,
+                    "каждая клетка собрана ровно раз: пшеницы обязано быть 9, а пересаженное не собрано повторно, "
+                            + "фактически " + wheat);
+            for (BlockPos cell : cells) {
+                helper.assertTrue(cropAge(helper, cell) == 0, "каждая клетка обязана быть пересажена");
+            }
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "farm_scale_harvest", timeoutTicks = 800)
     public static void farmSession_FullHarvestWithReplant_StaysWithinReadAndTickBudgets(GameTestHelper helper) {
         arenaFloor(helper);
@@ -873,6 +925,27 @@ public final class FarmGameTests {
                         + run.maxActionsPerTick());
         helper.assertTrue(run.maxEntityQueriesPerTick() <= 1,
                 "за тик запрос сущностей не больше одного, максимум за тик: " + run.maxEntityQueriesPerTick());
+    }
+
+    private static int savedDone(GameTestHelper helper, SpiritEntity spirit) {
+        Optional<String> json = spirit.taskSnapshot();
+        helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
+        TaskProgress progress = TaskSnapshotCodec.decode(json.get()).progress();
+        helper.assertTrue(progress instanceof TaskProgress.ScriptAt,
+                "снимок одиночного скрипта обязан нести состояние скрипта, а там " + progress);
+        Object done = ((TaskProgress.ScriptAt) progress).state().get("done");
+        helper.assertTrue(done instanceof Number, "в состоянии скрипта обязан быть счётчик done, а там " + done);
+        return ((Number) done).intValue();
+    }
+
+    private static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
+        original.discard();
+        SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
+        reloaded.load(tag);
+        if (!helper.getLevel().addFreshEntity(reloaded)) {
+            throw new IllegalStateException("перезагруженный дух не добавлен в мир: uuid " + reloaded.getUUID());
+        }
+        return reloaded;
     }
 
     private static void arenaFloor(GameTestHelper helper) {

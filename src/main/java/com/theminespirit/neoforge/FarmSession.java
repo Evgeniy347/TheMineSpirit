@@ -37,6 +37,10 @@ public final class FarmSession {
     private static final int COLLECT_RADIUS = 3;
     private static final int UNLIMITED = Integer.MAX_VALUE;
     private static final String DONE_KEY = "done";
+    private static final String REPLANT_X_KEY = "replantX";
+    private static final String REPLANT_Y_KEY = "replantY";
+    private static final String REPLANT_Z_KEY = "replantZ";
+    private static final String REPLANT_KIND_KEY = "replantKind";
 
     private final SpiritEntity spirit;
     private final FarmJob job;
@@ -153,12 +157,24 @@ public final class FarmSession {
     }
 
     public Map<String, Object> saveState() {
-        return Map.of(DONE_KEY, done);
+        boolean replantPending = replant && currentGround != null && currentKind != null
+                && (state == State.COLLECT || state == State.REPLANT);
+        if (!replantPending) {
+            return Map.of(DONE_KEY, done);
+        }
+        return Map.of(DONE_KEY, done, REPLANT_X_KEY, currentGround.x(), REPLANT_Y_KEY, currentGround.y(),
+                REPLANT_Z_KEY, currentGround.z(), REPLANT_KIND_KEY, currentKind.name());
     }
 
     public void restoreState(Map<String, Object> saved) {
         if (saved.get(DONE_KEY) instanceof Number number) {
             done = Math.max(done, number.intValue());
+        }
+        if (saved.get(REPLANT_KIND_KEY) instanceof String kind && saved.get(REPLANT_X_KEY) instanceof Number x
+                && saved.get(REPLANT_Y_KEY) instanceof Number y && saved.get(REPLANT_Z_KEY) instanceof Number z) {
+            currentGround = new BlockCoord(x.intValue(), y.intValue(), z.intValue());
+            currentKind = CropKind.parse(kind);
+            startCollect();
         }
     }
 
@@ -364,6 +380,10 @@ public final class FarmSession {
             return;
         }
         done++;
+        startCollect();
+    }
+
+    private void startCollect() {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
         collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT);
