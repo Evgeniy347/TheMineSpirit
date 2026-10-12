@@ -12,19 +12,23 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public enum StationType {
-    CRAFTING_TABLE(Stations.CRAFTING_TABLE, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE, false),
-    FURNACE(Stations.FURNACE, Blocks.FURNACE, Items.FURNACE, true);
+    CRAFTING_TABLE(Stations.CRAFTING_TABLE, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE, false, "верстак", "нужен верстак"),
+    FURNACE(Stations.FURNACE, Blocks.FURNACE, Items.FURNACE, true, "печь", "нужна печь");
 
     private final String id;
     private final Block block;
     private final Item item;
     private final boolean facesPlacer;
+    private final String noun;
+    private final String needed;
 
-    StationType(String id, Block block, Item item, boolean facesPlacer) {
+    StationType(String id, Block block, Item item, boolean facesPlacer, String noun, String needed) {
         this.id = id;
         this.block = block;
         this.item = item;
         this.facesPlacer = facesPlacer;
+        this.noun = noun;
+        this.needed = needed;
     }
 
     public static Optional<StationType> byId(String id) {
@@ -41,6 +45,14 @@ public enum StationType {
 
     public Item item() {
         return item;
+    }
+
+    public String noun() {
+        return noun;
+    }
+
+    public String needed() {
+        return needed;
     }
 
     public BlockState placedState(Direction towardPlacer) {

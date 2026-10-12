@@ -16,9 +16,11 @@ import com.theminespirit.core.script.HarvestCropParams;
 import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.PlantCropParams;
 import com.theminespirit.core.script.ScanParams;
+import com.theminespirit.core.script.SmeltParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.TillParams;
 import com.theminespirit.neoforge.crafting.CraftScript;
+import com.theminespirit.neoforge.crafting.SmeltScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -43,6 +45,7 @@ public final class SpiritScripts {
         table.put("harvest_crop", spirit -> params -> new HarvestCropScript(spirit, HarvestCropParams.from(params)));
         table.put("bone_meal", spirit -> params -> new BoneMealScript(spirit, BoneMealParams.from(params)));
         table.put("craft", spirit -> params -> new CraftScript(spirit, CraftParams.from(params)));
+        table.put("smelt", spirit -> params -> new SmeltScript(spirit, SmeltParams.from(params)));
         return table;
     }
 

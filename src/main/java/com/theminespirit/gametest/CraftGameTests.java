@@ -1,18 +1,25 @@
 package com.theminespirit.gametest;
 
+import static com.theminespirit.gametest.CraftTestSupport.FIELD;
+import static com.theminespirit.gametest.CraftTestSupport.TIMEOUT;
+import static com.theminespirit.gametest.CraftTestSupport.assertCount;
+import static com.theminespirit.gametest.CraftTestSupport.assertFinished;
+import static com.theminespirit.gametest.CraftTestSupport.assertReason;
+import static com.theminespirit.gametest.CraftTestSupport.cleanup;
+import static com.theminespirit.gametest.CraftTestSupport.field;
+import static com.theminespirit.gametest.CraftTestSupport.launch;
+import static com.theminespirit.gametest.CraftTestSupport.prepare;
+import static com.theminespirit.gametest.CraftTestSupport.stack;
+
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -22,12 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class CraftGameTests {
-    private static final String FIELD = "arena";
-    private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos TABLE_FAR = new BlockPos(5, 1, 1);
-    private static final int SETTLE_TICKS = 1;
-    private static final int RADIUS = 16;
-    private static final int TIMEOUT = 200;
     private static final int PLAYER_SLOTS = 36;
 
     private CraftGameTests() {
@@ -37,7 +39,7 @@ public final class CraftGameTests {
     public static void craft_TwoLogsEightPlanks_ConsumesLogsExactly(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_LOG, 2));
-        SpiritRun run = launch(helper, spirit, "oak_planks", 8);
+        SpiritRun run = launch(helper, spirit, "craft", "oak_planks", 8);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -51,7 +53,7 @@ public final class CraftGameTests {
     public static void craft_FourSticksFromTwoPlanks_NoStationNeeded(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 2));
-        SpiritRun run = launch(helper, spirit, "stick", 4);
+        SpiritRun run = launch(helper, spirit, "craft", "stick", 4);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -67,7 +69,7 @@ public final class CraftGameTests {
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
         double startX = spirit.getX();
-        SpiritRun run = launch(helper, spirit, "wooden_pickaxe", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -87,7 +89,7 @@ public final class CraftGameTests {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 3),
                 stack(Items.STICK, 2));
-        SpiritRun run = launch(helper, spirit, "wooden_pickaxe", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -103,7 +105,7 @@ public final class CraftGameTests {
     public static void craft_NoTableAnywhere_FailsBeforeSpendingMaterials(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
-        SpiritRun run = launch(helper, spirit, "wooden_pickaxe", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
@@ -120,7 +122,7 @@ public final class CraftGameTests {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 2), stack(Items.STICK, 2));
-        SpiritRun run = launch(helper, spirit, "wooden_pickaxe", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
@@ -137,7 +139,7 @@ public final class CraftGameTests {
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
         SpiritEntity spirit = prepare(helper, stack(Items.BIRCH_PLANKS, 1), stack(Items.OAK_PLANKS, 2),
                 stack(Items.STICK, 2));
-        SpiritRun run = launch(helper, spirit, "wooden_pickaxe", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -152,7 +154,7 @@ public final class CraftGameTests {
     public static void craft_SixtyFourSticks_AtMostOneCraftPerTwoTicks(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 32));
-        SpiritRun run = launch(helper, spirit, "stick", 64);
+        SpiritRun run = launch(helper, spirit, "craft", "stick", 64);
         List<Integer> craftTicks = new ArrayList<>();
         int[] lastSticks = {0};
         helper.onEachTick(() -> {
@@ -185,7 +187,7 @@ public final class CraftGameTests {
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
         SpiritEntity spirit = prepare(helper, stack(Items.MILK_BUCKET, 3), stack(Items.SUGAR, 2),
                 stack(Items.EGG, 1), stack(Items.WHEAT, 3));
-        SpiritRun run = launch(helper, spirit, "cake", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "cake", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
@@ -203,7 +205,7 @@ public final class CraftGameTests {
         for (int slot = 1; slot < PLAYER_SLOTS; slot++) {
             spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
         }
-        SpiritRun run = launch(helper, spirit, "oak_planks", 4);
+        SpiritRun run = launch(helper, spirit, "craft", "oak_planks", 4);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
@@ -218,7 +220,7 @@ public final class CraftGameTests {
     public static void craft_WrittenBook_FailsNoRecipe(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.BOOK, 1), stack(Items.INK_SAC, 1));
-        SpiritRun run = launch(helper, spirit, "written_book", 1);
+        SpiritRun run = launch(helper, spirit, "craft", "written_book", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
@@ -226,49 +228,6 @@ public final class CraftGameTests {
             assertCount(helper, spirit, Items.BOOK, 1, "книга при отказе без рецепта");
             cleanup(helper, spirit);
         });
-    }
-
-    private static void field(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-    }
-
-    private static SpiritEntity prepare(GameTestHelper helper, ItemStack... stacks) {
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
-        for (ItemStack stack : stacks) {
-            int pieces = stack.getMaxStackSize() == 1 ? stack.getCount() : 1;
-            for (int piece = 0; piece < pieces; piece++) {
-                spirit.getInventory().addItem(pieces == 1 ? stack.copy() : stack.copyWithCount(1));
-            }
-        }
-        return spirit;
-    }
-
-    private static ItemStack stack(Item item, int count) {
-        return new ItemStack(item, count);
-    }
-
-    private static SpiritRun launch(GameTestHelper helper, SpiritEntity spirit, String item, int count) {
-        ScriptCall call = new ScriptCall("craft", Map.of("item", item, "count", count, "radius", RADIUS));
-        return SpiritRun.launch(helper, spirit, call, SETTLE_TICKS);
-    }
-
-    private static void assertFinished(GameTestHelper helper, SpiritEntity spirit, SpiritRun run, RunStatus expected) {
-        run.assertStarted();
-        RunStatus actual = spirit.taskStatus().orElse(null);
-        helper.assertTrue(actual == expected, "задача craft обязана завершиться статусом " + expected + ", статус: "
-                + actual + ", причина: " + spirit.taskFailureReason().orElse("нет"));
-    }
-
-    private static void assertReason(GameTestHelper helper, SpiritEntity spirit, String fragment) {
-        String reason = spirit.taskFailureReason().orElse("");
-        helper.assertTrue(reason.contains(fragment),
-                "причина провала обязана содержать '" + fragment + "', фактическая: '" + reason + "'");
-    }
-
-    private static void assertCount(GameTestHelper helper, SpiritEntity spirit, Item item, int expected, String what) {
-        int actual = GameTestFixtures.countInInventory(spirit.getInventory(), item);
-        helper.assertTrue(actual == expected, what + ": ожидалось " + expected + ", в инвентаре " + actual);
     }
 
     private static int tablesOnField(GameTestHelper helper) {
@@ -281,10 +240,5 @@ public final class CraftGameTests {
             }
         }
         return tables;
-    }
-
-    private static void cleanup(GameTestHelper helper, SpiritEntity spirit) {
-        spirit.discard();
-        GameTestFixtures.reset(helper);
     }
 }

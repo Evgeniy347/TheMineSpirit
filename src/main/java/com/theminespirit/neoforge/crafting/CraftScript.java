@@ -7,14 +7,12 @@ import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CraftParams;
-import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.SimpleContainer;
@@ -25,15 +23,13 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.phys.Vec3;
 
 public final class CraftScript implements ScriptInstance {
     private static final String CRAFTED_KEY = "crafted";
 
     private enum Phase {
         PREPARE,
-        FIND_STATION,
-        APPROACH_STATION,
+        STATION,
         CRAFT
     }
 
@@ -42,21 +38,17 @@ public final class CraftScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final CraftParams params;
-    private final Approach approach;
     private Phase phase = Phase.PREPARE;
     private String failureReason;
     private int crafted;
     private List<Step> steps = List.of();
     private int nextStep;
     private int ticksSinceCraft = CraftTuning.CRAFT_INTERVAL_TICKS;
-    private StationType station;
-    private StationFinder finder;
-    private BlockPos stationPos;
+    private StationAccess station;
 
     public CraftScript(SpiritEntity spirit, CraftParams params) {
         this.spirit = spirit;
         this.params = params;
-        this.approach = new Approach(spirit);
     }
 
     @Override
@@ -66,15 +58,16 @@ public final class CraftScript implements ScriptInstance {
         }
         return switch (phase) {
             case PREPARE -> prepare();
-            case FIND_STATION -> findStation();
-            case APPROACH_STATION -> approachStation();
+            case STATION -> useStation();
             case CRAFT -> craft();
         };
     }
 
     @Override
     public void cancel() {
-        approach.cancel();
+        if (station != null) {
+            station.cancel();
+        }
     }
 
     @Override
@@ -119,13 +112,13 @@ public final class CraftScript implements ScriptInstance {
         if (refusal.isPresent()) {
             return fail(refusal.get());
         }
-        station = Stations.forRecipe(spec).flatMap(StationType::byId).orElse(null);
-        if (station == null) {
+        Optional<StationType> needed = Stations.forRecipe(spec).flatMap(StationType::byId);
+        if (needed.isEmpty()) {
             phase = Phase.CRAFT;
             return craft();
         }
-        finder = new StationFinder(spirit.level(), spirit.blockPosition(), params.radius(), station);
-        phase = Phase.FIND_STATION;
+        station = new StationAccess(spirit, needed.get(), params.radius());
+        phase = Phase.STATION;
         return ScriptStatus.RUNNING;
     }
 
@@ -186,43 +179,14 @@ public final class CraftScript implements ScriptInstance {
                 .filter(CraftingRecipe.class::isInstance).map(CraftingRecipe.class::cast);
     }
 
-    private ScriptStatus findStation() {
-        if (!finder.step()) {
-            return ScriptStatus.RUNNING;
-        }
-        Optional<BlockPos> existing = finder.found();
-        if (existing.isPresent()) {
-            return headTo(existing.get());
-        }
-        if (spirit.getInventory().countItem(station.item()) < 1) {
-            return fail("нужен " + stationName() + ": рядом (" + params.radius() + ") нет, в инвентаре нет");
-        }
-        Optional<BlockPos> placed = StationPlacer.place(spirit, station);
-        if (placed.isEmpty()) {
-            return fail("негде поставить " + stationName() + ": вокруг духа нет свободной клетки на твёрдом полу");
-        }
-        return headTo(placed.get());
-    }
-
-    private ScriptStatus headTo(BlockPos pos) {
-        stationPos = pos;
-        approach.begin(Vec3.atCenterOf(pos), CraftTuning.STATION_REACH);
-        phase = Phase.APPROACH_STATION;
-        return approachStation();
-    }
-
-    private ScriptStatus approachStation() {
-        if (!spirit.level().getBlockState(stationPos).is(station.block())) {
-            approach.cancel();
-            return fail(stationName() + " в " + stationPos.toShortString() + " исчез до начала крафта");
-        }
-        return switch (approach.tick()) {
-            case MOVING -> ScriptStatus.RUNNING;
-            case ARRIVED -> {
+    private ScriptStatus useStation() {
+        return switch (station.tick()) {
+            case WORKING -> ScriptStatus.RUNNING;
+            case READY -> {
                 phase = Phase.CRAFT;
                 yield craft();
             }
-            case STUCK, TIMEOUT -> fail("не дошёл до станции " + stationName() + " в " + stationPos.toShortString());
+            case FAILED -> fail(station.failureReason());
         };
     }
 
@@ -230,8 +194,8 @@ public final class CraftScript implements ScriptInstance {
         if (nextStep >= steps.size()) {
             return ScriptStatus.SUCCEEDED;
         }
-        if (stationPos != null && !spirit.level().getBlockState(stationPos).is(station.block())) {
-            return fail(stationName() + " в " + stationPos.toShortString() + " исчез: скрафчено " + crafted + " из "
+        if (station != null && !station.stillStanding()) {
+            return fail("станция в " + station.pos().toShortString() + " исчезла: скрафчено " + crafted + " из "
                     + params.count());
         }
         ticksSinceCraft++;
@@ -248,10 +212,6 @@ public final class CraftScript implements ScriptInstance {
         nextStep++;
         crafted += step.output();
         return nextStep >= steps.size() ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
-    }
-
-    private String stationName() {
-        return station == StationType.FURNACE ? "печь" : "верстак";
     }
 
     private static String shortage(CraftPlan plan) {
