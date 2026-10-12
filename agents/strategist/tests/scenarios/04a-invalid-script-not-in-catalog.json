@@ -1,0 +1,60 @@
+{
+ "description": "невалидный план: POST не отправлен, журнал rejected с причиной, одна попытка повтора",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "телепорт",
+    "plan": {
+     "type": "script",
+     "script": "teleport",
+     "params": {
+      "x": 1,
+      "y": 64,
+      "z": 1
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "plan_calls": 0
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "bot": "forest",
+    "reason_contains": "teleport"
+   }
+  },
+  {
+   "posted_scripts_allowed": true
+  }
+ ],
+ "name": "04a-invalid-script-not-in-catalog",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

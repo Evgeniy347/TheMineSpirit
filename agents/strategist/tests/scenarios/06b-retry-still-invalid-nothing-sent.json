@@ -1,0 +1,76 @@
+{
+ "description": "повтор снова невалиден: POST нет, третьего вызова модели в цикле нет",
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "телепорт",
+     "plan": {
+      "type": "script",
+      "script": "teleport",
+      "params": {
+       "x": 1,
+       "y": 64,
+       "z": 1
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "телепорт",
+     "plan": {
+      "type": "script",
+      "script": "teleport",
+      "params": {
+       "x": 1,
+       "y": 64,
+       "z": 1
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  }
+ ],
+ "name": "06b-retry-still-invalid-nothing-sent",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

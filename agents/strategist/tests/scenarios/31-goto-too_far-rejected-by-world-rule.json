@@ -1,0 +1,55 @@
+{
+ "description": "goto дальше 256 блоков по горизонтали от духа не уходит на сервер",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "уйти далеко",
+    "plan": {
+     "type": "script",
+     "script": "goto",
+     "params": {
+      "x": 500,
+      "y": 70,
+      "z": 500
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "plan_calls": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "reason_contains": "по горизонтали"
+   }
+  }
+ ],
+ "name": "31-goto-too_far-rejected-by-world-rule",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

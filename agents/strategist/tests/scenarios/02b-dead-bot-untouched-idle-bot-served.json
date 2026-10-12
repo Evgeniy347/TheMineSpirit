@@ -1,0 +1,59 @@
+{
+ "description": "мёртвого духа стратег не трогает никогда, свободного обслуживает",
+ "bots": [
+  {
+   "id": "ghost",
+   "world": "forest",
+   "state": "dead"
+  },
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "journal_has": [
+    {
+     "event": "bot_skipped",
+     "bot": "ghost",
+     "reason_contains": "dead"
+    },
+    {
+     "event": "posted",
+     "bot": "forest"
+    }
+   ]
+  },
+  {
+   "journal_lacks": {
+    "event": "observed",
+    "bot": "ghost"
+   }
+  }
+ ],
+ "name": "02b-dead-bot-untouched-idle-bot-served"
+}

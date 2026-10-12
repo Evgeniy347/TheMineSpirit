@@ -45,4 +45,12 @@ public final class CatalogLimits {
     public static final int HARVEST_RADIUS_MIN = 1;
     public static final int HARVEST_RADIUS_MAX = 32;
     public static final int HARVEST_RADIUS_DEFAULT = 16;
+
+    public static final int FARM_RADIUS_MIN = 1;
+    public static final int FARM_RADIUS_MAX = 16;
+    public static final int FARM_RADIUS_DEFAULT = 8;
+
+    public static final int TILL_COUNT_DEFAULT = 16;
+    public static final int PLANT_COUNT_DEFAULT = 64;
+    public static final int BONE_MEAL_COUNT_DEFAULT = 16;
 }

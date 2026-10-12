@@ -1,0 +1,51 @@
+{
+ "description": "gather.block, которого нет в последнем наблюдении, отвергается",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "набрать алмазы",
+    "plan": {
+     "type": "script",
+     "script": "gather",
+     "params": {
+      "block": "minecraft:diamond_ore",
+      "count": 4
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "reason_contains": "нет в последнем наблюдении"
+   }
+  }
+ ],
+ "name": "32-gather-block-absent-in-observation-rejected",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ConditionSpec;
@@ -98,6 +99,47 @@ class PlanValidatorRulesTests {
                     "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
                             + error.getMessage());
         }
+    }
+
+    @Test
+    void harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList() {
+        PlanValidationException error = assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"harvest_crop\",\"params\":{\"crop\":\"melon\"}}", CATALOG),
+                "crop=\"melon\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
+
+        assertTrue(error.getMessage().contains("melon"),
+                "Отказ обязан называть неизвестный вид 'melon'. Фактическое: " + error.getMessage());
+        for (String allowed : CropKind.names()) {
+            assertTrue(error.getMessage().contains(allowed),
+                    "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
+                            + error.getMessage());
+        }
+    }
+
+    @Test
+    void plantCropWithoutCrop_Plan_IsRejected() {
+        assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"plant_crop\",\"params\":{\"radius\":8}}", CATALOG),
+                "plant_crop без crop обязан отвергаться: вид обязателен, без него неизвестно, какие семена тратить");
+    }
+
+    @Test
+    void plantCropAnyCrop_Plan_IsRejected() {
+        assertThrows(PlanValidationException.class,
+                () -> PlanParser.parse(
+                        "{\"type\":\"script\",\"script\":\"plant_crop\",\"params\":{\"crop\":\"any\"}}", CATALOG),
+                "plant_crop с crop=any обязан отвергаться: каталог разрешает только сажаемые виды без any");
+    }
+
+    @Test
+    void harvestCropWithoutParams_Plan_ContainsCatalogDefaults() {
+        TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_crop\"}", CATALOG);
+
+        assertEquals(new ScriptCall("harvest_crop", Map.of("crop", "any", "radius", 8, "replant", true)), plan,
+                "Валидатор обязан подставлять умолчания каталога для отсутствующих необязательных параметров: "
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без вида");
     }
 
     @Test

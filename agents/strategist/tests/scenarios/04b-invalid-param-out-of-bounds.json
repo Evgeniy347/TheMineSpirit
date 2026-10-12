@@ -1,0 +1,58 @@
+{
+ "description": "невалидный план: POST не отправлен, журнал rejected с причиной, одна попытка повтора",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 999
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "plan_calls": 0
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "bot": "forest",
+    "reason_contains": "count"
+   }
+  },
+  {
+   "posted_scripts_allowed": true
+  }
+ ],
+ "name": "04b-invalid-param-out-of-bounds",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

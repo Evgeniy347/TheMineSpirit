@@ -1,0 +1,147 @@
+{
+ "description": "три провала подряд: пауза духа на 30 мин и alert; потом возврат",
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "В радиусе есть железная жила.",
+     "goal": "добыть железо",
+     "plan": {
+      "type": "script",
+      "script": "mine_vein",
+      "params": {
+       "ore": "iron",
+       "count": 2
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Нужен камень.",
+     "goal": "набрать камень",
+     "plan": {
+      "type": "script",
+      "script": "gather",
+      "params": {
+       "block": "minecraft:stone",
+       "count": 8
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом зрелая пшеница.",
+     "goal": "собрать пшеницу",
+     "plan": {
+      "type": "script",
+      "script": "harvest_crop",
+      "params": {
+       "crop": "wheat",
+       "radius": 8
+      }
+     }
+    }
+   }
+  ]
+ },
+ "fates": {
+  "*": {
+   "outcome": "failed",
+   "after_polls": 1,
+   "error": "не вышло"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "expect": [
+    {
+     "posts": 3
+    },
+    {
+     "journal": {
+      "alert": 1
+     }
+    },
+    {
+     "journal_has": {
+      "event": "alert",
+      "reason_contains": "пауз"
+     }
+    }
+   ]
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 3
+    },
+    {
+     "brain_calls": 3
+    },
+    {
+     "journal_has": {
+      "event": "bot_skipped",
+      "reason_contains": "паузе"
+     }
+    }
+   ]
+  },
+  {
+   "advance": 1600
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 4
+  },
+  {
+   "brain_calls": 4
+  }
+ ],
+ "name": "11b-three-failures-pause-and-alert",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

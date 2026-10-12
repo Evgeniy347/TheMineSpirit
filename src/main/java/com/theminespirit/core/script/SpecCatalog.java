@@ -45,13 +45,16 @@ public final class SpecCatalog<T> {
     public SpecCatalog<T> restrictedTo(Set<String> ids, String missingMessage) {
         Objects.requireNonNull(ids, "ids не может быть null: для отбора нужен набор ключей");
         Objects.requireNonNull(missingMessage, "missingMessage не может быть null");
-        LinkedHashMap<String, T> selected = new LinkedHashMap<>();
         for (String id : ids) {
-            T spec = byId.get(id);
-            if (spec == null) {
+            if (!byId.containsKey(id)) {
                 throw new IllegalArgumentException(missingMessage.replace("{id}", id));
             }
-            selected.put(id, spec);
+        }
+        LinkedHashMap<String, T> selected = new LinkedHashMap<>();
+        for (Map.Entry<String, T> entry : byId.entrySet()) {
+            if (ids.contains(entry.getKey())) {
+                selected.put(entry.getKey(), entry.getValue());
+            }
         }
         return new SpecCatalog<>(selected, idGetter);
     }

@@ -1,0 +1,58 @@
+{
+ "description": "дух стал busy между наблюдением и отправкой: решение отброшено (latest-wins)",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "busy_after_observe": [
+     "forest"
+    ]
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "decision": 1,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "bot_skipped",
+    "bot": "forest",
+    "reason_contains": "busy"
+   }
+  }
+ ],
+ "name": "09-bot-became-busy-before-post-decision-dropped",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

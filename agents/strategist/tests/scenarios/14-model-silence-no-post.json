@@ -1,0 +1,38 @@
+{
+ "description": "молчание модели: POST нет, сбой в журнале",
+ "brain": {
+  "default": {
+   "unavailable": "silence",
+   "text": "нет ответа за 240 с, процесс убит"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "interval": 600
+  },
+  {
+   "journal_has": {
+    "event": "brain_failure",
+    "kind": "silence"
+   }
+  }
+ ],
+ "name": "14-model-silence-no-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

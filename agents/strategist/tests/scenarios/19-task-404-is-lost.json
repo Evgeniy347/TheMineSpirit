@@ -1,0 +1,57 @@
+{
+ "description": "задача пропала (мод перезапущен): исход lost",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "never"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "fake": {
+    "forget_tasks": true
+   }
+  },
+  {
+   "advance": 20
+  }
+ ],
+ "expect": [
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "lost"
+   }
+  },
+  {
+   "active_tasks": 0
+  },
+  {
+   "deletes": 0
+  }
+ ],
+ "name": "19-task-404-is-lost",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

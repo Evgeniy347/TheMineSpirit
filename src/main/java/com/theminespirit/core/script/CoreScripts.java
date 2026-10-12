@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
 import java.util.List;
@@ -68,11 +69,31 @@ public final class CoreScripts {
                         List.of("в инвентаре есть место"),
                         List.of("предметы по фильтру в радиусе подобраны", "предметов по фильтру в радиусе не осталось")),
                 spec("harvest_crop", "собрать урожай",
-                        List.of(ParamSpec.text("crop", true), ParamSpec.integer("area", false)),
+                        List.of(ParamSpec.enumeration("crop", false, CropKind.names(), "any"),
+                                ParamSpec.integer("radius", false, CatalogLimits.FARM_RADIUS_MIN,
+                                        CatalogLimits.FARM_RADIUS_MAX, CatalogLimits.FARM_RADIUS_DEFAULT),
+                                ParamSpec.bool("replant", false, true)),
                         List.of("посевы созрели"), List.of("урожай собран")),
                 spec("plant_crop", "посадить культуру",
-                        List.of(ParamSpec.text("crop", true), ParamSpec.integer("area", false)),
+                        List.of(ParamSpec.enumeration("crop", true, CropKind.plantableNames()),
+                                ParamSpec.integer("radius", false, CatalogLimits.FARM_RADIUS_MIN,
+                                        CatalogLimits.FARM_RADIUS_MAX, CatalogLimits.FARM_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX,
+                                        CatalogLimits.PLANT_COUNT_DEFAULT)),
                         List.of("есть семена", "есть подготовленная земля"), List.of("культура посажена")),
+                spec("till", "вспахать землю под грядку",
+                        List.of(ParamSpec.integer("radius", false, CatalogLimits.FARM_RADIUS_MIN,
+                                        CatalogLimits.FARM_RADIUS_MAX, CatalogLimits.FARM_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX,
+                                        CatalogLimits.TILL_COUNT_DEFAULT)),
+                        List.of("есть мотыга", "рядом есть вода"), List.of("земля вспахана")),
+                spec("bone_meal", "подкормить посевы костной мукой",
+                        List.of(ParamSpec.enumeration("crop", false, CropKind.names(), "any"),
+                                ParamSpec.integer("radius", false, CatalogLimits.FARM_RADIUS_MIN,
+                                        CatalogLimits.FARM_RADIUS_MAX, CatalogLimits.FARM_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX,
+                                        CatalogLimits.BONE_MEAL_COUNT_DEFAULT)),
+                        List.of("есть костная мука", "посевы растут"), List.of("посевы подкормлены")),
                 spec("craft", "скрафтить предмет",
                         List.of(ParamSpec.text("item", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
