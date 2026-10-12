@@ -65,6 +65,7 @@ public final class FarmSession {
 
     private int done;
     private int ineligible;
+    private int dry;
     private int noStand;
     private int noSeeds;
     private int rejected;
@@ -255,6 +256,7 @@ public final class FarmSession {
                 targets.hydration());
         if (result instanceof FarmPlanner.Exhausted exhausted) {
             ineligible += exhausted.ineligible();
+            dry += exhausted.dry();
             noStand += exhausted.noStand();
             buffer.clearActive();
             state = State.FIND;
@@ -436,8 +438,8 @@ public final class FarmSession {
         maxActionsPerTick = Math.max(maxActionsPerTick, actionsThisTick);
     }
 
-    private Outcome refuseWithoutSupplies() {
-        FarmTally.Outcome refusal = new FarmTally(0, 0, 0, 0, 0, 1, 0, 0).outcome(job);
+private Outcome refuseWithoutSupplies() {
+        FarmTally.Outcome refusal = new FarmTally(0, 0, 0, 0, 0, 1, 0, 0, 0).outcome(job);
         return fail(((FarmTally.Failed) refusal).text());
     }
 
@@ -447,10 +449,11 @@ public final class FarmSession {
     }
 
     private void concludeExhausted() {
-        int requested = Math.min(count, done + noStand + rejected);
-        FarmTally tally = new FarmTally(done, requested, ineligible + rejected, noStand, noSeeds, 0, 0, unreachable);
+        int eligibleAndBlocking = done + noStand + noSeeds + rejected + unreachable;
+        int requested = Math.min(count, eligibleAndBlocking);
+        FarmTally tally = new FarmTally(done, requested, ineligible + rejected, noStand, noSeeds, 0, dry, unreachable, radius);
         if (tally.outcome(job) instanceof FarmTally.Failed failed) {
-            fail(failed.text() + "; радиус поиска " + radius);
+            fail(failed.text());
         } else {
             outcome = Outcome.SUCCEEDED;
         }

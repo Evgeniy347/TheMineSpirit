@@ -15,35 +15,35 @@ import org.junit.jupiter.params.provider.MethodSource;
 class FarmTallyTests {
     static Stream<Arguments> tallyRows() {
         return Stream.of(
-                Arguments.of(FarmJob.TILL, new FarmTally(12, 12, 0, 0, 0, 0, 0, 0), true,
+                Arguments.of(FarmJob.TILL, new FarmTally(12, 12, 0, 0, 0, 0, 0, 0, 0), true,
                         "всё вспахано", ""),
-                Arguments.of(FarmJob.TILL, new FarmTally(5, 12, 0, 4, 0, 0, 3, 0), false,
+                Arguments.of(FarmJob.TILL, new FarmTally(5, 12, 0, 4, 0, 0, 3, 0, 0), false,
                         "частичная вспашка", "вспахано 5 из 12"),
-                Arguments.of(FarmJob.TILL, new FarmTally(0, 5, 0, 0, 0, 2, 0, 0), false,
+                Arguments.of(FarmJob.TILL, new FarmTally(0, 5, 0, 0, 0, 2, 0, 0, 0), false,
                         "отказ без мотыги до первого действия", "нет мотыги"),
-                Arguments.of(FarmJob.TILL, new FarmTally(0, 0, 4, 0, 0, 0, 2, 0), false,
+                Arguments.of(FarmJob.TILL, new FarmTally(0, 0, 4, 0, 0, 0, 2, 0, 0), false,
                         "пахать нечего", "подходящей земли для вспашки нет"),
-                Arguments.of(FarmJob.PLANT, new FarmTally(9, 9, 0, 0, 0, 0, 0, 0), true,
+                Arguments.of(FarmJob.PLANT, new FarmTally(9, 9, 0, 0, 0, 0, 0, 0, 0), true,
                         "всё посажено", ""),
-                Arguments.of(FarmJob.PLANT, new FarmTally(3, 9, 0, 0, 6, 0, 0, 0), false,
+                Arguments.of(FarmJob.PLANT, new FarmTally(3, 9, 0, 0, 6, 0, 0, 0, 0), false,
                         "семян не хватило", "посажено 3 из 9"),
-                Arguments.of(FarmJob.PLANT, new FarmTally(0, 0, 2, 0, 0, 0, 0, 0), false,
+                Arguments.of(FarmJob.PLANT, new FarmTally(0, 0, 2, 0, 0, 0, 0, 0, 0), false,
                         "сажать некуда", "пустой вспаханной земли нет"),
-                Arguments.of(FarmJob.HARVEST, new FarmTally(5, 9, 4, 0, 0, 0, 0, 0), false,
+                Arguments.of(FarmJob.HARVEST, new FarmTally(5, 9, 4, 0, 0, 0, 0, 0, 5), false,
                         "собрано меньше зрелого", "собрано 5 из 9 зрелых клеток"),
-                Arguments.of(FarmJob.HARVEST, new FarmTally(0, 0, 4, 0, 0, 0, 0, 0), false,
-                        "зрелого нет", "зрелых посевов нет"),
-                Arguments.of(FarmJob.HARVEST, new FarmTally(9, 9, 4, 0, 0, 0, 0, 0), true,
+                Arguments.of(FarmJob.HARVEST, new FarmTally(0, 0, 4, 0, 0, 0, 0, 0, 5), false,
+                        "зрелого нет", "зрелых посевов в радиусе 5 нет; растёт: 4"),
+                Arguments.of(FarmJob.HARVEST, new FarmTally(9, 9, 4, 0, 0, 0, 0, 0, 5), true,
                         "всё зрелое собрано, растущее не мешает успеху", ""),
-                Arguments.of(FarmJob.HARVEST, new FarmTally(7, 9, 0, 0, 2, 0, 0, 0), false,
+                Arguments.of(FarmJob.HARVEST, new FarmTally(7, 9, 0, 0, 2, 0, 0, 0, 5), false,
                         "две клетки остались пустыми без семян", "нет семян: 2"),
-                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(16, 16, 0, 0, 0, 0, 0, 0), true,
+                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(16, 16, 0, 0, 0, 0, 0, 0, 0), true,
                         "всё подкормлено", ""),
-                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(2, 5, 0, 0, 3, 0, 0, 0), false,
+                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(2, 5, 0, 0, 3, 0, 0, 0, 0), false,
                         "муки не хватило", "подкормлено 2 из 5"),
-                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(0, 0, 3, 0, 0, 0, 0, 0), false,
+                Arguments.of(FarmJob.BONE_MEAL, new FarmTally(0, 0, 3, 0, 0, 0, 0, 0, 0), false,
                         "растущих нет", "недозрелых посевов нет"),
-                Arguments.of(FarmJob.TILL, new FarmTally(0, 3, 0, 0, 0, 0, 0, 3), false,
+                Arguments.of(FarmJob.TILL, new FarmTally(0, 3, 0, 0, 0, 0, 0, 3, 0), false,
                         "до клеток не дойти", "недостижимо: 3"));
     }
 
@@ -71,16 +71,19 @@ class FarmTallyTests {
             @ForAll @IntRange(min = 0, max = 20) int done, @ForAll @IntRange(min = 0, max = 20) int requested,
             @ForAll @IntRange(min = 0, max = 5) int ineligible, @ForAll @IntRange(min = 0, max = 5) int noStand,
             @ForAll @IntRange(min = 0, max = 5) int noSeeds, @ForAll @IntRange(min = 0, max = 5) int noTool,
-            @ForAll @IntRange(min = 0, max = 5) int dry, @ForAll @IntRange(min = 0, max = 5) int unreachable) {
-        FarmTally tally = new FarmTally(done, requested, ineligible, noStand, noSeeds, noTool, dry, unreachable);
+            @ForAll @IntRange(min = 0, max = 5) int dry, @ForAll @IntRange(min = 0, max = 5) int unreachable,
+            @ForAll @IntRange(min = 0, max = 10) int radius) {
+        FarmTally tally = new FarmTally(done, requested, ineligible, noStand, noSeeds, noTool, dry, unreachable, radius);
 
         if (!(tally.outcome(job) instanceof FarmTally.Failed failed)) {
             return;
         }
         String text = failed.text();
-        assertTrue(text.contains(done + " из " + requested),
-                "Прогресс обязан связывать сделано и запрошено одной связкой: иначе «2» из «нет семян: 2» "
-                        + "сойдёт за «2 из 12». Текст: " + text);
+        if (requested > 0 || job != FarmJob.HARVEST) {
+            assertTrue(text.contains(done + " из " + requested),
+                    "Прогресс обязан связывать сделано и запрошено одной связкой: иначе «2» из «нет семян: 2» "
+                            + "сойдёт за «2 из 12». Текст: " + text);
+        }
         assertPair(text, job == FarmJob.HARVEST ? "ещё растёт" : "не подходит", ineligible);
         assertPair(text, "без места для духа", noStand);
         assertPair(text, job == FarmJob.BONE_MEAL ? "нет костной муки" : "нет семян", noSeeds);
@@ -99,8 +102,9 @@ class FarmTallyTests {
 
     @Property
     void outcome_FullWorkWithoutBlocks_IsSucceeded(@ForAll FarmJob job,
-            @ForAll @IntRange(min = 1, max = 100) int requested) {
-        FarmTally tally = new FarmTally(requested, requested, 0, 0, 0, 0, 0, 0);
+            @ForAll @IntRange(min = 1, max = 100) int requested,
+            @ForAll @IntRange(min = 0, max = 10) int radius) {
+        FarmTally tally = new FarmTally(requested, requested, 0, 0, 0, 0, 0, 0, radius);
 
         assertEquals(new FarmTally.Succeeded(), tally.outcome(job),
                 "Вся подходящая работа без блокировок обязана завершиться успехом: иначе стратег зациклит "

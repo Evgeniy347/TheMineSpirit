@@ -1,13 +1,14 @@
 package com.theminespirit.core.farming;
 
 public record FarmTally(int done, int requested, int ineligible, int noStand, int noSeeds, int noTool, int dry,
-        int unreachable) {
+        int unreachable, int radius) {
     public FarmTally {
         if (done < 0 || requested < 0 || ineligible < 0 || noStand < 0 || noSeeds < 0 || noTool < 0 || dry < 0
-                || unreachable < 0) {
+                || unreachable < 0 || radius < 0) {
             throw new IllegalArgumentException("Счётчики итога работы не могут быть отрицательными: done=" + done
                     + ", requested=" + requested + ", ineligible=" + ineligible + ", noStand=" + noStand
-                    + ", noSeeds=" + noSeeds + ", noTool=" + noTool + ", dry=" + dry + ", unreachable=" + unreachable);
+                    + ", noSeeds=" + noSeeds + ", noTool=" + noTool + ", dry=" + dry + ", unreachable=" + unreachable
+                    + ", radius=" + radius);
         }
     }
 
@@ -19,9 +20,12 @@ public record FarmTally(int done, int requested, int ineligible, int noStand, in
             return new Failed(missingTool(job) + progressSuffix() + counters(job));
         }
         if (requested <= 0) {
+            if (job == FarmJob.HARVEST) {
+                return new Failed(nothingToDo(job) + counters(job));
+            }
             return new Failed(nothingToDo(job) + progressSuffix() + counters(job));
         }
-        if (done >= requested && noStand == 0 && noSeeds == 0 && dry == 0 && unreachable == 0) {
+        if (done >= requested && noStand == 0 && noSeeds == 0 && unreachable == 0) {
             return new Succeeded();
         }
         return new Failed(progress(job) + counters(job));
@@ -41,7 +45,7 @@ public record FarmTally(int done, int requested, int ineligible, int noStand, in
         return switch (job) {
             case TILL -> "подходящей земли для вспашки нет";
             case PLANT -> "пустой вспаханной земли нет";
-            case HARVEST -> "зрелых посевов нет";
+            case HARVEST -> "зрелых посевов в радиусе " + radius + " нет; растёт: " + ineligible;
             case BONE_MEAL -> "недозрелых посевов нет";
         };
     }
