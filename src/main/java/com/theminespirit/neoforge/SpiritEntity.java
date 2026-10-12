@@ -8,6 +8,9 @@ import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.Finding;
+import com.theminespirit.core.perception.MemoryCodec;
+import com.theminespirit.core.perception.MemoryFormatException;
+import com.theminespirit.core.perception.MemoryStore;
 import com.theminespirit.core.perception.PerceptionResult;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
@@ -31,6 +34,7 @@ public final class SpiritEntity extends PathfinderMob {
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
     private Finding finding;
+    private MemoryStore memory = MemoryStore.empty();
     private int pathBuilds;
     private int snapshotBuilds;
     private String pendingTaskJson;
@@ -69,6 +73,7 @@ public final class SpiritEntity extends PathfinderMob {
         super.addAdditionalSaveData(compound);
         compound.put("SpiritInventory", inventory.createTag(registryAccess()));
         SpiritTaskStore.write(compound, taskJsonForSave());
+        SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
     }
 
     private String taskJsonForSave() {
@@ -96,6 +101,7 @@ public final class SpiritEntity extends PathfinderMob {
         if (compound.contains("SpiritInventory", Tag.TAG_LIST)) {
             inventory.fromTag(compound.getList("SpiritInventory", Tag.TAG_COMPOUND), registryAccess());
         }
+        memory = SpiritMemoryStore.read(compound).map(this::decodeMemory).orElse(MemoryStore.empty());
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
             try {
@@ -104,6 +110,25 @@ public final class SpiritEntity extends PathfinderMob {
                 pendingRestoreFailure = "не удалось восстановить задачу: " + e.getMessage();
             }
         });
+    }
+
+    private MemoryStore decodeMemory(String json) {
+        try {
+            return MemoryCodec.decode(json);
+        } catch (MemoryFormatException e) {
+            SpiritMemoryStore.countCorruptLoad();
+            LOGGER.error("Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
+                    getUUID(), e.getMessage(), e);
+            return MemoryStore.empty();
+        }
+    }
+
+    public MemoryStore memory() {
+        return memory;
+    }
+
+    public void updateMemory(MemoryStore updated) {
+        this.memory = updated;
     }
 
     public SimpleContainer getInventory() {

@@ -4,6 +4,7 @@ import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
+import com.theminespirit.core.perception.MemoryType;
 import java.util.List;
 
 public final class CoreScripts {
@@ -43,6 +44,25 @@ public final class CoreScripts {
                                 ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
                         List.of(), List.of("описание клетки получено, чанк не загружался")),
+                spec("remember", "запомнить точку под именем",
+                        List.of(ParamSpec.text("name", true),
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.enumeration("type", true, MemoryType.ids())),
+                        List.of("в памяти есть место для точки этого типа"),
+                        List.of("точка записана в память духа и переживёт перезапуск")),
+                spec("recall", "вспомнить точку по имени",
+                        List.of(ParamSpec.text("name", true)),
+                        List.of(), List.of("точка найдена в памяти или сообщено, что её нет")),
+                spec("recall_all", "вспомнить все точки типа",
+                        List.of(ParamSpec.enumeration("type", true, MemoryType.ids())),
+                        List.of(), List.of("список точек типа получен")),
+                spec("forget", "забыть точку по имени",
+                        List.of(ParamSpec.text("name", true)),
+                        List.of(), List.of("точки с таким именем в памяти нет")),
                 spec("goto", "пройти к заданной точке",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
