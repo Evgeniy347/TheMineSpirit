@@ -97,9 +97,26 @@ run_gradle() {
     return 12
 }
 
+# Рабочий python 3: на Windows `python3` может быть заглушкой Microsoft Store.
+pick_python() {
+    local cand
+    for cand in python3 python python3.exe python.exe; do
+        if command -v "$cand" >/dev/null 2>&1 \
+                && "$cand" -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >/dev/null 2>&1; then
+            echo "$cand"
+            return 0
+        fi
+    done
+    return 1
+}
+PYTHON="$(pick_python)" || {
+    echo "Не найден рабочий python 3.8+ (нужен для разбора XML-отчётов test)" >&2
+    exit 2
+}
+
 # Статус каждого класса по XML: red | green | none. Печатает «класс статус».
 class_statuses() {
-    python3 -I - "$work/TestResults/unit/xml" "$@" <<'PY'
+    "$PYTHON" -I - "$work/TestResults/unit/xml" "$@" <<'PY'
 import glob, sys, xml.etree.ElementTree as ET
 xml_dir, wanted = sys.argv[1], sys.argv[2:]
 stats = {}
