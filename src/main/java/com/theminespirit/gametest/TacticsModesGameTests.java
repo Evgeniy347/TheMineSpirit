@@ -91,6 +91,7 @@ public final class TacticsModesGameTests {
         ward.tactics().setCombatMode(CombatMode.PASSIVE);
         SpiritEntity protector = TacticsScene.spirit(helper, new BlockPos(3, 1, 5));
         protector.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
+        TacticsScene.giveHome(helper, protector, new BlockPos(0, 1, 0));
         protector.tactics().setCombatMode(CombatMode.PROTECT);
         protector.tactics().setWard(ward.getUUID());
         BlockPos huskAt = new BlockPos(9, 1, 9);
@@ -119,13 +120,16 @@ public final class TacticsModesGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, post);
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
         BlockPos absolute = helper.absolutePos(post);
+        TacticsScene.wearIronArmor(spirit);
+        TacticsScene.giveHome(helper, spirit, new BlockPos(1, 1, 9));
         spirit.tactics().setGuardZone(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()), GUARD_ZONE_RADIUS);
         spirit.tactics().setCombatMode(CombatMode.GUARD_AREA);
         Husk inside = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(2, 1, 5));
         Husk outside = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(9, 1, 5));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(dead(inside), "враг в зоне охраны обязан пасть, здоровье " + inside.getHealth());
+            helper.assertTrue(dead(inside), "враг в зоне охраны обязан пасть, здоровье " + inside.getHealth() + ", решение "
+                    + spirit.tactics().explain().orElse("нет"));
             helper.assertTrue(outside.getHealth() == outside.getMaxHealth(),
                     "враг далеко за зоной и поводком не тронут, здоровье " + outside.getHealth());
             helper.assertTrue(TacticsScene.distance(helper, spirit, post) <= GUARD_LEASH,
