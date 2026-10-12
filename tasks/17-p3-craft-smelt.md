@@ -166,7 +166,7 @@
 
 ## Часть В — полный цикл
 
-- [ ] 17. **GameTest `FullCycleGameTests`** (после слияния 10, 11/12, 16; допускается дольше 5 с — вся цепочка по ваниле: назови
+- [x] 17. **GameTest `FullCycleGameTests`** (после слияния 10, 11/12, 16; допускается дольше 5 с — вся цепочка по ваниле: назови
       это в отчёте): (а) цикл вручную собранным планом `sequence[ chop_tree(oak, 1), craft(oak_planks ×8), craft(stick ×4),
       craft(wooden_pickaxe ×1), deposit(container = "x,y,z", item = wooden_pickaxe, count = 1) ]`; мир: дуб из 3 брёвен, верстак в
       4 блоках, сундук на 5 блоков; духу выдан `iron_axe`. Ожидаемо за ≤ 400 тиков: в сундуке `wooden_pickaxe` ровно 1, у духа его нет, в
