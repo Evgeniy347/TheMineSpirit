@@ -80,6 +80,18 @@ public final class FallbackPlanner implements Planner {
                 .orElse(false);
     }
 
+    public static boolean requiresLogEvidence(String text) {
+        return match(text)
+                .map(rule -> rule.steps().stream().anyMatch(step -> step.script().equals("chop_tree")))
+                .orElse(false);
+    }
+
+    public static boolean requiresOreEvidence(String text) {
+        return match(text)
+                .map(rule -> rule.steps().stream().anyMatch(step -> step.script().equals("mine_vein")))
+                .orElse(false);
+    }
+
     private static Optional<Rule> match(String text) {
         List<String> tokens = tokenize(text);
         Rule best = null;

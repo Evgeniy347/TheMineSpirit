@@ -13,15 +13,21 @@ public final class BatchPlanner {
     private BatchPlanner() {
     }
 
-    public static List<TaskNode> planAll(List<ScriptCatalog> catalogs, Goal goal, WorldObservation observation) {
+    public static List<TaskNode> planAll(List<ScriptCatalog> catalogs, Goal goal,
+            List<WorldObservation> observations) {
         Objects.requireNonNull(catalogs, "catalogs не может быть null: без каталогов планировать нечего");
         Objects.requireNonNull(goal, "goal не может быть null: план строится по цели");
-        Objects.requireNonNull(observation, "observation не может быть null: план строится по наблюдению");
+        Objects.requireNonNull(observations,
+                "observations не может быть null: каждому духу нужно своё наблюдение");
+        if (catalogs.size() != observations.size()) {
+            throw new IllegalArgumentException("Каталогов " + catalogs.size() + ", а наблюдений "
+                    + observations.size() + ": каждому духу нужны свой каталог и своё наблюдение");
+        }
         List<TaskNode> plans = new ArrayList<>(catalogs.size());
         for (int i = 0; i < catalogs.size(); i++) {
             try {
                 plans.add(new FallbackPlanner(catalogs.get(i), ConditionCatalog.empty())
-                        .plan(goal, observation).plan());
+                        .plan(goal, observations.get(i)).plan());
             } catch (UnplannableGoalException | PlanValidationException rejection) {
                 throw new BatchPlanException(i, rejection);
             }

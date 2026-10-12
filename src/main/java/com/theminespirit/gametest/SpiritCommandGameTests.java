@@ -5,6 +5,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -22,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -31,6 +34,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SpiritCommandGameTests {
     private static final String SPIRIT_SELECTOR = spiritSelector(1);
+    // Суффикс уникален на запуск: мир переживает прогоны, и духи с прошлым тегом попали бы в селектор.
+    private static final String OBSERVE_EACH_TAG = "observe_each_" + System.nanoTime();
 
     private SpiritCommandGameTests() {
     }
@@ -152,6 +157,130 @@ public final class SpiritCommandGameTests {
         } finally {
             removePlayer(helper, player);
         }
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void commandGoal_TwoSpiritsApart_PlansFromEachOwnObservation(GameTestHelper helper)
+            throws CommandSyntaxException {
+        buildFloor(helper);
+        setDistantBlock(helper, 2, 30, 1, Blocks.DIRT);
+        setDistantBlock(helper, 2, 31, 1, Blocks.OAK_LOG);
+        setDistantBlock(helper, 2, 32, 1, Blocks.OAK_LOG);
+        setDistantBlock(helper, 2, 33, 1, Blocks.OAK_LOG);
+        setDistantBlock(helper, 2, 34, 1, Blocks.OAK_LOG);
+        SpiritEntity bare = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        bare.addTag(OBSERVE_EACH_TAG);
+        SpiritEntity nearTree = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 30, 1));
+        nearTree.addTag(OBSERVE_EACH_TAG);
+        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(4, 1, 1), "gt_observe_each");
+        try {
+            CommandSourceStack source = playerSource(player);
+            CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                    .getCommands().getDispatcher();
+            String both = observeEachSelector();
+            BlockPos barePos = bare.blockPosition();
+            BlockPos treePos = nearTree.blockPosition();
+
+            int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
+            helper.assertTrue(accepted == 2,
+                    "Одна команда на двух духов обязана ставить задачу обоим: иначе наблюдение первого духа "
+                            + "решает за всех. Результат=" + accepted);
+            helper.assertTrue(bare.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
+                            && nearTree.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+                    "После /spirit goal оба духа обязаны выполняться: первый=" + bare.taskStatus()
+                            + ", второй=" + nearTree.taskStatus());
+            WorldObservation bareObservation = bare.observation().orElse(null);
+            WorldObservation treeObservation = nearTree.observation().orElse(null);
+            helper.assertTrue(bareObservation != null && treeObservation != null,
+                    "Команда goal обязана класть свежее наблюдение в каждого духа: без него ИИ-планировщик "
+                            + "получит окружение первого духа за всех");
+            helper.assertTrue(bareObservation.position().equals(toCoord(barePos)),
+                    "Наблюдение обязано строиться вокруг своего духа: позиция из чужого наблюдения уводит план "
+                            + "к чужим координатам. Ожидалось " + barePos + ", фактически "
+                            + bareObservation.position());
+            helper.assertTrue(treeObservation.position().equals(toCoord(treePos)),
+                    "Наблюдение обязано строиться вокруг своего духа: ствол в 29 блоках выше виден только духу "
+                            + "у дерева. Ожидалось " + treePos + ", фактически " + treeObservation.position());
+            helper.assertTrue(bareObservation.blocks().isEmpty() && treeObservation.blocks().isEmpty(),
+                    "Минимальное наблюдение команды не несёт блоков: блочный скан для цели без проверки окружения "
+                            + "лишь греет серверный тик. Блоков: " + bareObservation.blocks().size() + " и "
+                            + treeObservation.blocks().size());
+
+            List<String> failures = new ArrayList<>();
+            CommandSourceStack capture = captureFailures(helper, failures);
+            int rejected = dispatcher.execute("spirit goal " + both + " сруби дерево", capture);
+            helper.assertTrue(rejected == 0,
+                    "Рубка обязана вернуть 0: одному рубить нечего, другому нечем (скрипт не реализован). "
+                            + "Результат=" + rejected);
+            String report = String.join("\n", failures);
+            helper.assertTrue(report.contains("брёвен"),
+                    "Дух в пустом месте обязан получить отказ про брёвна: общее наблюдение первого духа даёт всем "
+                            + "один ответ. Получено: " + report);
+            helper.assertTrue(report.contains("chop_tree"),
+                    "Дух у дерева обязан пройти проверку окружения и упереться в каталог "
+                            + "(«Неизвестный скрипт 'chop_tree'»): иначе проверка окружения работает не на каждом "
+                            + "духе. Получено: " + report);
+            helper.assertTrue(bare.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
+                            && nearTree.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+                    "Отклонённая рубка не должна трогать выполняемое сопровождение: первый=" + bare.taskStatus()
+                            + ", второй=" + nearTree.taskStatus());
+
+            clearDistantTree(helper);
+            helper.succeed();
+        } finally {
+            removePlayer(helper, player);
+        }
+    }
+
+    private static String observeEachSelector() {
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + OBSERVE_EACH_TAG + "]";
+    }
+
+    private static BlockCoord toCoord(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private static void setDistantBlock(GameTestHelper helper, int x, int y, int z, Block block) {
+        BlockPos absolute = helper.absolutePos(new BlockPos(x, y, z));
+        helper.assertTrue(helper.getLevel().hasChunk(absolute.getX() >> 4, absolute.getZ() >> 4),
+                "Чанк ствола дерева обязан быть загружен: иначе доказательство наблюдений строится на пустоте. "
+                        + "Позиция=" + absolute);
+        helper.getLevel().setBlock(absolute, block.defaultBlockState(), 2);
+    }
+
+    private static void clearDistantTree(GameTestHelper helper) {
+        setDistantBlock(helper, 2, 30, 1, Blocks.AIR);
+        setDistantBlock(helper, 2, 31, 1, Blocks.AIR);
+        setDistantBlock(helper, 2, 32, 1, Blocks.AIR);
+        setDistantBlock(helper, 2, 33, 1, Blocks.AIR);
+        setDistantBlock(helper, 2, 34, 1, Blocks.AIR);
+    }
+
+    private static CommandSourceStack captureFailures(GameTestHelper helper, List<String> failures) {
+        CommandSourceStack base = helper.getLevel().getServer().createCommandSourceStack()
+                .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(1, 1, 1))))
+                .withPermission(4);
+        return base.withSource(new CommandSource() {
+            @Override
+            public void sendSystemMessage(Component message) {
+                failures.add(message.getString());
+            }
+
+            @Override
+            public boolean acceptsSuccess() {
+                return base.source.acceptsSuccess();
+            }
+
+            @Override
+            public boolean acceptsFailure() {
+                return true;
+            }
+
+            @Override
+            public boolean shouldInformAdmins() {
+                return false;
+            }
+        });
     }
 
     @GameTest(template = "empty", timeoutTicks = 100)

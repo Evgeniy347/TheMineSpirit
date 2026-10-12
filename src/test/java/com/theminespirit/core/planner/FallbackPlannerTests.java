@@ -91,6 +91,54 @@ class FallbackPlannerTests {
     }
 
     @Test
+    void requiresLogEvidence_ChopGoal_ReturnsTrue() {
+        assertTrue(FallbackPlanner.requiresLogEvidence("срубить деревья возле дома"),
+                "Рубка без брёвен рядом обречена: команда обязана сначала проверить наблюдение духа, иначе дух "
+                        + "получит задачу, которую провалит на первом же шаге");
+    }
+
+    @Test
+    void requiresLogEvidence_TreeWordGoal_ReturnsTrue() {
+        assertTrue(FallbackPlanner.requiresLogEvidence("валить деревья"),
+                "Синоним рубки обязан требовать ту же проверку окружения: иначе формулировка без слова 'сруб' "
+                        + "обходит проверку и ставит безнадёжную задачу");
+    }
+
+    @Test
+    void requiresLogEvidence_FollowGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresLogEvidence("следуй за мной"),
+                "Сопровождение от деревьев не зависит: лишняя проверка окружения отклоняла бы рабочую цель "
+                        + "в чистом поле");
+    }
+
+    @Test
+    void requiresLogEvidence_UnknownGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresLogEvidence("полететь на луну"),
+                "Незнакомая цель и так отклоняется планировщиком: проверка окружения для неё бессмысленна "
+                        + "и лишь запутала бы причину отказа");
+    }
+
+    @Test
+    void requiresOreEvidence_MineGoal_ReturnsTrue() {
+        assertTrue(FallbackPlanner.requiresOreEvidence("добыть руду из шахты"),
+                "Добыча без жилы рядом обречена: команда обязана сначала проверить наблюдение духа, иначе дух "
+                        + "получит задачу, которую провалит на первом же шаге");
+    }
+
+    @Test
+    void requiresOreEvidence_ChopGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresOreEvidence("срубить дерево"),
+                "Рубке нужна древесина, а не руда: чуждая проверка отклоняла бы рубку в лесу без единой жилы");
+    }
+
+    @Test
+    void requiresOreEvidence_UnknownGoal_ReturnsFalse() {
+        assertFalse(FallbackPlanner.requiresOreEvidence("полететь на луну"),
+                "Незнакомая цель и так отклоняется планировщиком: проверка окружения для неё бессмысленна "
+                        + "и лишь запутала бы причину отказа");
+    }
+
+    @Test
     void plan_AttackGoalWithSpeaker_DoesNotTargetSpeaker() {
         TaskNode plan = plan(new Goal("убей зомби", Map.of("speaker", "Steve")));
 
