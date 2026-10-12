@@ -52,8 +52,6 @@ trap '[ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null' EXIT
 trap 'exit 143' TERM HUP INT
 # На Windows python3 — заглушка магазина: там задают PYTHON=python.
 PYTHON="${PYTHON:-python3}"
-# Без этого Python на Windows печатает ответ модели в cp1251 — отчёт превращается в «����».
-export PYTHONIOENCODING=utf-8
 EXIT_PROVIDER_EXHAUSTED=75
 EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
@@ -202,6 +200,7 @@ for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
         continue
     if event.get("type") == "text":
         last = (event.get("part") or {}).get("text") or last
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 print(last)
 ' "$1"
 }
