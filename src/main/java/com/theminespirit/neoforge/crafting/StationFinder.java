@@ -5,17 +5,25 @@ import com.theminespirit.neoforge.BlockLocator;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 public final class StationFinder {
+    private static final AtomicInteger CREATED = new AtomicInteger();
+
     private final BlockLocator.Search search;
     private final BlockPos center;
     private BlockPos nearest;
 
     public StationFinder(Level level, BlockPos center, int radius, StationType type) {
         this.center = center;
+        CREATED.incrementAndGet();
         this.search = BlockLocator.search(level, center, radius, Set.of(type.block()));
+    }
+
+    public static int created() {
+        return CREATED.get();
     }
 
     public boolean step() {
