@@ -38,6 +38,10 @@ public final class WinMargin {
         return clamp(1 - timeToDie(self, enemies, scales) / timeToKill, 0, 1);
     }
 
+    public static double urgency(SelfFacts self, EnemyMetrics enemies, FactorScales scales) {
+        return clamp(1 - timeToDie(self, enemies, scales) / scales.urgencyHorizon(), 0, 1);
+    }
+
     static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
