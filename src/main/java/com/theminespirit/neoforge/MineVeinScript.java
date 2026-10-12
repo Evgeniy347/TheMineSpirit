@@ -4,6 +4,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.MineVeinParams;
 import java.util.Map;
+import java.util.Optional;
 
 final class MineVeinScript implements ScriptInstance {
     private final HarvestSession session;
@@ -19,6 +20,11 @@ final class MineVeinScript implements ScriptInstance {
             case SUCCEEDED -> ScriptStatus.SUCCEEDED;
             case FAILED -> ScriptStatus.FAILED;
         };
+    }
+
+    @Override
+    public Optional<Progress> progress() {
+        return Optional.of(session.progress());
     }
 
     @Override

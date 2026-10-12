@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
@@ -145,6 +146,10 @@ public final class HarvestSession {
 
     public String failureReason() {
         return failureReason;
+    }
+
+    public ScriptInstance.Progress progress() {
+        return new ScriptInstance.Progress(Math.min(mined, count), count);
     }
 
     public int mined() {
