@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -88,7 +88,11 @@ public final class HerdActions {
 
     public boolean feedAdult(Animal animal, Item feed) {
         Objects.requireNonNull(animal, "Животное не может быть null: без него неизвестно, кого кормить");
-        return consumeOne(feed);
+        if (!consumeOne(feed)) {
+            return false;
+        }
+        animal.setInLove(null);
+        return true;
     }
 
     public boolean feedBaby(AgeableMob baby, Item feed) {
@@ -144,20 +148,13 @@ public final class HerdActions {
         animal.getNavigation().stop();
     }
 
-    public AgeableMob birthBaby(Animal parent, BlockPos at) {
+    public void breedPair(Animal parent, Animal partner) {
         Objects.requireNonNull(parent, "Родитель не может быть null: без него неизвестно, чьё дитя рождается");
-        Objects.requireNonNull(at, "Позиция не может быть null: без неё неизвестно, куда класть детёныша");
-        EntityType<?> type = parent.getType();
-        Entity entity = type.create(level);
-        if (!(entity instanceof AgeableMob baby)) {
-            throw new IllegalStateException("Тип " + type + " не даёт детёныша: разводить можно только стадо из "
-                    + "коров, овец, свиней и кур");
+        Objects.requireNonNull(partner, "Пара не может быть null: детёныш рождается от двух голов");
+        if (!(level instanceof ServerLevel server)) {
+            throw new IllegalStateException("Разводить можно только на сервере: клиентский мир детёнышей не создаёт");
         }
-        baby.setAge(-24000);
-        baby.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0.0f, 0.0f);
-        level.addFreshEntity(baby);
-        parent.setAge(6000);
-        return baby;
+        parent.spawnChildFromBreeding(server, partner);
     }
 
     public ItemStack shearsStack() {

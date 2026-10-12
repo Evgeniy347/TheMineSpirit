@@ -120,4 +120,7 @@ public final class CatalogLimits {
 
     // Охота не трогает животных в домашнем круге старта духа
     public static final int HERD_HOME_RADIUS = 8;
+
+    // Дух замечает отбившихся чуть дальше края загона
+    public static final int HERD_SIGHT_MARGIN = 4;
 }

@@ -326,12 +326,15 @@ public final class HerdSession {
         Species species = wanted.get(0);
         planCalls++;
         BreedPlanner.Outcome result = BreedPlanner.next(unhandled(inPenOf(species)), spiritCoord(), species,
-                feedCounts(species), true);
+                feedCounts(species), false);
         if (result instanceof BreedPlanner.Feed feed) {
             Animal first = live.get(feed.targetId());
             Animal partner = live.get(feed.partnerId());
             if (first == null || partner == null || first.isRemoved() || partner.isRemoved()) {
                 refreshSnapshot(true);
+                return;
+            }
+            if (deferEndangeredId(feed.targetId()) | deferEndangeredId(feed.partnerId())) {
                 return;
             }
             current = first;
@@ -446,9 +449,13 @@ public final class HerdSession {
             return;
         }
         Species species = wanted.get(0);
-        List<AnimalRef> candidates = unhandled(inPenOf(species));
+        List<AnimalRef> candidates = inPenOf(species);
         if (adultsAtStart < 0) {
             adultsAtStart = adults(candidates);
+        }
+        if (liveAdults(candidates) <= goal) {
+            finishWithTally();
+            return;
         }
         planCalls++;
         CullPolicy.Outcome result = CullPolicy.pick(candidates, home, species, goal, swordTier);
@@ -456,7 +463,7 @@ public final class HerdSession {
             fail(refused.reason() + ": забито " + culled);
             return;
         }
-        AnimalRef victim = firstStrikable(((CullPolicy.Picked) result).ids());
+        AnimalRef victim = selectVictim(candidates, ((CullPolicy.Picked) result).ids());
         if (victim == null) {
             finishWithTally();
             return;
@@ -505,16 +512,32 @@ public final class HerdSession {
         beginApproach(animal);
     }
 
-    private AnimalRef firstStrikable(List<String> ids) {
-        List<String> ordered = preferTargetFirst(ids);
-        for (String id : ordered) {
+    private AnimalRef selectVictim(List<AnimalRef> candidates, List<String> preferred) {
+        List<AnimalRef> ordered = new ArrayList<>();
+        for (String id : preferTargetFirst(preferred)) {
             AnimalRef ref = refOf(id);
-            if (ref == null || !live.containsKey(id)) {
+            if (ref != null) {
+                ordered.add(ref);
+            }
+        }
+        List<AnimalRef> rest = new ArrayList<>(candidates);
+        rest.sort(this::byDistanceToHome);
+        rest = rest.reversed();
+        for (AnimalRef animal : rest) {
+            if (!animal.baby() && ordered.stream().noneMatch(placed -> placed.id().equals(animal.id()))) {
+                ordered.add(animal);
+            }
+        }
+        for (AnimalRef ref : ordered) {
+            if (!live.containsKey(ref.id()) || handledIds.contains(ref.id())) {
                 continue;
             }
             if (HerdSafety.watchedByBaby(ref, herd)) {
                 skipped++;
-                handledIds.add(id);
+                handledIds.add(ref.id());
+                continue;
+            }
+            if (deferEndangered(ref)) {
                 continue;
             }
             return ref;
@@ -522,9 +545,20 @@ public final class HerdSession {
         return null;
     }
 
+    private int liveAdults(List<AnimalRef> candidates) {
+        int count = 0;
+        for (AnimalRef animal : candidates) {
+            Animal liveAnimal = live.get(animal.id());
+            if (!animal.baby() && liveAnimal != null && !liveAnimal.isRemoved() && liveAnimal.isAlive()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private AnimalRef firstStrikableIds(List<AnimalRef> refs) {
         for (AnimalRef ref : refs) {
-            if (!live.containsKey(ref.id())) {
+            if (!live.containsKey(ref.id()) || deferEndangered(ref)) {
                 continue;
             }
             if (HerdSafety.watchedByBaby(ref, herd)) {
@@ -556,6 +590,7 @@ public final class HerdSession {
                     state = State.ACT;
                 } else {
                     skipped++;
+                    handledIds.add(currentId);
                     current = null;
                     currentId = null;
                     state = State.PICK;
@@ -630,13 +665,17 @@ public final class HerdSession {
         }
         recordAction();
         handledIds.add(currentId);
-        BlockPos at = current.blockPosition();
-        Animal parent = firstParent != null && !firstParent.isRemoved() && firstParent.isAlive() ? firstParent
-                : current;
-        actions.birthBaby(parent, at);
-        if (current != parent && !current.isRemoved() && current.isAlive()) {
-            current.setAge(6000);
+        Animal parent = firstParent;
+        if (parent == null || parent.isRemoved() || !parent.isAlive()) {
+            firstParent = null;
+            current = null;
+            currentId = null;
+            pendingSecondId = null;
+            refreshSnapshot(true);
+            state = State.PICK;
+            return;
         }
+        actions.breedPair(parent, current);
         born++;
         done++;
         firstParent = null;
@@ -691,7 +730,7 @@ public final class HerdSession {
         done++;
         handledIds.add(currentId);
         String woolId = "minecraft:" + sheep.getColor().getName() + "_wool";
-        startCollect(IdFilter.of(List.of(woolId)), current.blockPosition());
+        startCollect(IdFilter.of(List.of(woolId)), current.blockPosition(), COLLECT_RADIUS);
     }
 
     private void milkOne() {
@@ -718,7 +757,7 @@ public final class HerdSession {
             current = null;
             currentId = null;
             refreshSnapshot(true);
-            startCollect(IdFilter.matchAll(), at);
+            startCollect(IdFilter.matchAll(), at, COLLECT_RADIUS);
         } else {
             beginApproach(current);
         }
@@ -739,6 +778,11 @@ public final class HerdSession {
         if (job == HerdJob.COLLECT_EGGS) {
             eggsPicked += collector.collected();
             done = eggsPicked;
+            collector = null;
+            current = null;
+            currentId = null;
+            finishWithTally();
+            return;
         }
         collector = null;
         current = null;
@@ -783,7 +827,9 @@ public final class HerdSession {
             approach.begin(new Vec3(returnPoint.x() + 0.5, returnPoint.y(), returnPoint.z() + 0.5), 1.5);
         }
         approach.tick();
-        actions.directTowards(lureTarget, spirit.position(), LURE_SPEED);
+        if (lureTarget.getNavigation().isDone()) {
+            actions.directTowards(lureTarget, spirit.position(), LURE_SPEED);
+        }
     }
 
     private void findEggs() {
@@ -801,7 +847,7 @@ public final class HerdSession {
             fail("яиц в загоне нет: куры несутся медленно, мир не изменён");
             return;
         }
-        startCollect(IdFilter.of(List.of("minecraft:egg")), new BlockPos(home.x(), home.y(), home.z()));
+        startCollect(IdFilter.of(List.of("minecraft:egg")), new BlockPos(home.x(), home.y(), home.z()), searchRadius);
     }
 
     private void finishCheck() {
@@ -855,9 +901,9 @@ public final class HerdSession {
         return spirit.getEyePosition().distanceTo(animal.position()) <= REACH;
     }
 
-    private void startCollect(IdFilter filter, BlockPos at) {
-        collector = new DropCollector(spirit, filter,
-                new BlockCoord(at.getX(), at.getY(), at.getZ()), COLLECT_RADIUS, PickupTuning.DEFAULT);
+    private void startCollect(IdFilter filter, BlockPos at, int radius) {
+        collector = new DropCollector(spirit, filter, new BlockCoord(at.getX(), at.getY(), at.getZ()), radius,
+                PickupTuning.DEFAULT);
         state = State.COLLECT;
     }
 
@@ -865,7 +911,8 @@ public final class HerdSession {
         if (!event && ticks - lastRefresh < CatalogLimits.HERD_REFRESH_TICKS && !herd.isEmpty()) {
             return;
         }
-        List<Animal> animals = HerdSurvey.query(spirit.level(), spirit.position(), searchRadius);
+        List<Animal> animals = HerdSurvey.query(spirit.level(), spirit.position(),
+                searchRadius + CatalogLimits.HERD_SIGHT_MARGIN);
         List<AnimalRef> refs = new ArrayList<>(animals.size());
         live.clear();
         for (Animal animal : animals) {
@@ -938,8 +985,7 @@ public final class HerdSession {
     }
 
     private AnimalRef nearestOf(Species species, boolean adultsOnly, boolean woolOnly) {
-        AnimalRef best = null;
-        long bestDistance = Long.MAX_VALUE;
+        List<AnimalRef> candidates = new ArrayList<>();
         for (AnimalRef animal : herd) {
             if (animal.species() != species || !animal.inPen() || !live.containsKey(animal.id())
                     || handledIds.contains(animal.id())) {
@@ -954,14 +1000,37 @@ public final class HerdSession {
             if (preferredTarget != null && !preferredTarget.equals(animal.id())) {
                 continue;
             }
-            long distance = distanceSquared(home, animal.pos());
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = animal;
-            }
+            candidates.add(animal);
         }
         preferredTarget = null;
-        return best;
+        candidates.sort(this::byDistanceToHome);
+        for (AnimalRef candidate : candidates) {
+            if (deferEndangered(candidate)) {
+                continue;
+            }
+            return candidate;
+        }
+        return null;
+    }
+
+    private boolean deferEndangeredId(String id) {
+        AnimalRef ref = refOf(id);
+        return ref != null && deferEndangered(ref);
+    }
+
+    private boolean deferEndangered(AnimalRef ref) {
+        Animal animal = live.get(ref.id());
+        if (animal == null || animal.isRemoved()) {
+            return true;
+        }
+        Optional<String> danger = HerdSafety.dangerReason(animal.isInLava(), animal.isOnFire(),
+                animal.isInWater());
+        if (danger.isPresent()) {
+            skipped++;
+            handledIds.add(ref.id());
+            return true;
+        }
+        return false;
     }
 
     private AnimalRef applyPreferred(List<AnimalRef> ordered) {
@@ -969,12 +1038,17 @@ public final class HerdSession {
             for (AnimalRef animal : ordered) {
                 if (animal.id().equals(preferredTarget)) {
                     preferredTarget = null;
-                    return animal;
+                    return deferEndangered(animal) ? null : animal;
                 }
             }
             preferredTarget = null;
         }
-        return ordered.get(0);
+        for (AnimalRef animal : ordered) {
+            if (!deferEndangered(animal)) {
+                return animal;
+            }
+        }
+        return null;
     }
 
     private List<String> preferTargetFirst(List<String> ids) {
