@@ -31,6 +31,7 @@ public final class BlockLocator {
         private final SectionCursor cursor;
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
+        private int maxExaminedPerStep;
 
         private Search(Level level, BlockPos center, int radius, Set<Block> blocks) {
             this.level = level;
@@ -41,6 +42,7 @@ public final class BlockLocator {
         }
 
         public List<BlockPos> step(int maxSlices) {
+            int examinedBefore = examinedPositions;
             List<BlockPos> found = new ArrayList<>();
             for (SectionSlice slice : cursor.next(maxSlices)) {
                 List<BlockPos> inSlice = new ArrayList<>();
@@ -49,6 +51,7 @@ public final class BlockLocator {
                         .thenComparing(Comparator.naturalOrder()));
                 found.addAll(inSlice);
             }
+            maxExaminedPerStep = Math.max(maxExaminedPerStep, examinedPositions - examinedBefore);
             return found;
         }
 
@@ -58,6 +61,10 @@ public final class BlockLocator {
 
         public int examinedPositions() {
             return examinedPositions;
+        }
+
+        public int maxExaminedPerStep() {
+            return maxExaminedPerStep;
         }
 
         public int skippedChunks() {

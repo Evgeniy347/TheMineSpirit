@@ -3,19 +3,22 @@ package com.theminespirit.gametest;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.forestry.TreeShape;
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.neoforge.BlockLocator;
+import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.neoforge.ChopTreeScript;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,7 @@ import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -43,8 +47,11 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.slf4j.Logger;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -459,6 +466,81 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 600)
+    public static void chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog(GameTestHelper helper) {
+        prepareField(helper);
+        buildTree(helper, 4, 4, TALL_TREE_LOGS, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
+        SpiritEntity spirit = spawnChopper(helper);
+        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1));
+        ScriptStatus[] status = driveScript(helper, spirit, script);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "дерево из " + TALL_TREE_LOGS + " брёвен: достижимые срублены, скрипт успешен, статус "
+                            + status[0] + ", причина: " + script.failureReason());
+            long reads = script.treeBlockReads();
+            helper.assertTrue(reads >= TALL_TREE_LOGS,
+                    "разбор обязан прочитать хотя бы каждое бревно, а прочитал " + reads
+                            + ": нулевой счётчик означал бы, что скрипт читает мир мимо LevelTreeView");
+            helper.assertTrue(reads <= 27L * TALL_TREE_LOGS,
+                    "разбор одного дерева из " + TALL_TREE_LOGS + " брёвен читает не больше 27 клеток на бревно ("
+                            + 27L * TALL_TREE_LOGS + "), прочитано " + reads
+                            + ": повторное чтение соседей или новый вид на каждый разбор завешивают тик");
+            long distinctCells = 9L * (TALL_TREE_LOGS + 2);
+            helper.assertTrue(reads <= distinctCells + 1,
+                    "ствол в одну клетку окружён " + distinctCells + " различными клетками (3x3 на "
+                            + (TALL_TREE_LOGS + 2) + " слоёв): каждая читается из мира не больше одного раза, плюс "
+                            + "одно повторное чтение почвы под основанием после обхода, а прочитано " + reads
+                            + ". Раздельные вопросы isLog/isNaturalLeaves/isArtificial к одной клетке обязаны "
+                            + "делить одно чтение");
+
+            LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, предел {}",
+                    TALL_TREE_LOGS, reads, 27L * TALL_TREE_LOGS);
+
+            clearField(helper, TALL_TREE_LOGS + 10);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_scale_search", timeoutTicks = 400)
+    public static void chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick(GameTestHelper helper) {
+        prepareField(helper);
+        // Акация: ни один другой тест не строит акации. Палитра секции не сжимается после удаления блока,
+        // а поиск пропускает секцию по палитре, поэтому следы дубов из соседних тестов в тех же чанках
+        // арены дали бы лишние прочитанные секции.
+        buildTree(helper, 4, 4, 5, Blocks.ACACIA_LOG, Blocks.ACACIA_LEAVES);
+        SpiritEntity spirit = spawnChopper(helper);
+        BlockPos center = spirit.blockPosition();
+        int expected = positionsInSectionsWithLogs(helper.getLevel(), center, SEARCH_RADIUS, Blocks.ACACIA_LOG);
+        int cubeVolume = (2 * SEARCH_RADIUS + 1) * (2 * SEARCH_RADIUS + 1) * (2 * SEARCH_RADIUS + 1);
+        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("acacia", 1));
+        ScriptStatus[] status = driveScript(helper, spirit, script);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "рубка одной акации успешна, статус " + status[0] + ", причина: " + script.failureReason());
+            int examined = script.searchExaminedPositions();
+            helper.assertTrue(expected > 0 && expected < cubeVolume,
+                    "в кубе поиска есть секции без брёвен (ожидание " + expected + " < куба " + cubeVolume
+                            + "), иначе проверка «читает только секции с брёвнами» ничего не доказывает");
+            helper.assertTrue(examined == expected,
+                    "поиск читает позиции куба только в секциях, где есть брёвна породы: ожидалось " + expected
+                            + ", прочитано " + examined + ". Больше — читаются секции без брёвен, меньше — "
+                            + "секция с брёвнами пропущена и дерево может не найтись. Расчёт «27 клеток на бревно» "
+                            + "к поиску не относится: поиск читает срез секции целиком, а не соседей брёвен");
+            helper.assertTrue(script.searchMaxExaminedPositionsPerTick()
+                            <= ScanTuning.SLICES_PER_TICK * SECTION_POSITIONS,
+                    "за тик читается не больше " + ScanTuning.SLICES_PER_TICK + " срезов секций ("
+                            + ScanTuning.SLICES_PER_TICK * SECTION_POSITIONS + " позиций), а прочитано "
+                            + script.searchMaxExaminedPositionsPerTick());
+
+            LOGGER.info("chop_tree, поиск радиуса {}: прочитано {} позиций, ожидалось {} (куб {}), "
+                            + "максимум за тик {}",
+                    SEARCH_RADIUS, examined, expected, cubeVolume, script.searchMaxExaminedPositionsPerTick());
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);
@@ -517,6 +599,59 @@ public final class ChopTreeGameTests {
         throw new IllegalStateException("блока " + block + " нет в таблице теста");
     }
 
+    private static ChopTreeParams chopParams(String species, int count) {
+        return ChopTreeParams.from(
+                Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", false));
+    }
+
+    private static ScriptStatus[] driveScript(GameTestHelper helper, SpiritEntity spirit, ChopTreeScript script) {
+        ScriptStatus[] status = { ScriptStatus.RUNNING };
+        helper.onEachTick(() -> {
+            if (status[0] == ScriptStatus.RUNNING && spirit.tickCount >= SETTLE_TICKS) {
+                status[0] = script.tick();
+            }
+        });
+        return status;
+    }
+
+    private static int positionsInSectionsWithLogs(Level level, BlockPos center, int radius, Block log) {
+        int minY = Math.max(center.getY() - radius, level.getMinBuildHeight());
+        int maxY = Math.min(center.getY() + radius, level.getMaxBuildHeight() - 1);
+        Map<String, Boolean> sectionHasLog = new HashMap<>();
+        int count = 0;
+        for (int x = center.getX() - radius; x <= center.getX() + radius; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = center.getZ() - radius; z <= center.getZ() + radius; z++) {
+                    int chunkX = x >> 4;
+                    int chunkZ = z >> 4;
+                    int sectionY = y >> 4;
+                    if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk)) {
+                        continue;
+                    }
+                    String key = chunkX + "," + sectionY + "," + chunkZ;
+                    if (sectionHasLog.computeIfAbsent(key, k -> sectionContains(level, chunkX, sectionY, chunkZ, log))) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    private static boolean sectionContains(Level level, int chunkX, int sectionY, int chunkZ, Block block) {
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dy = 0; dy < 16; dy++) {
+                for (int dz = 0; dz < 16; dz++) {
+                    BlockPos pos = new BlockPos(chunkX * 16 + dx, sectionY * 16 + dy, chunkZ * 16 + dz);
+                    if (level.getBlockState(pos).is(block)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private static SpiritEntity spawnChopper(GameTestHelper helper) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
@@ -538,7 +673,11 @@ public final class ChopTreeGameTests {
     }
 
     private static void clearField(GameTestHelper helper) {
-        GameTestFixtures.reset(helper, FIELD_HEIGHT);
+        clearField(helper, FIELD_HEIGHT);
+    }
+
+    private static void clearField(GameTestHelper helper, int height) {
+        GameTestFixtures.reset(helper, height);
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
                 for (int y = 1 - PIT_DEPTH; y < 0; y++) {
@@ -608,6 +747,9 @@ public final class ChopTreeGameTests {
     }
 
     private static final int HUT_POST_LOGS = 12;
+    private static final int TALL_TREE_LOGS = 60;
+    private static final int SECTION_POSITIONS = 16 * 16 * 16;
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
 
     private static void buildPlankHutOnLedge(GameTestHelper helper, int x, int z) {
@@ -679,40 +821,6 @@ public final class ChopTreeGameTests {
         return count;
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_scale", timeoutTicks = 400)
-    public static void chopTree_ScaleSixtyLogs_ReadsWithinBudget(GameTestHelper helper) {
-        prepareField(helper);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 3));
-        buildTallOakTree(helper, 3, 3, 60);
-        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
-
-        BlockPos spiritPos = spirit.blockPosition();
-        LevelTreeView view = new LevelTreeView(spirit.level(), Set.of(Blocks.OAK_LOG));
-        BlockCoord start = new BlockCoord(spiritPos.getX(), spiritPos.getY(), spiritPos.getZ());
-        TreeShape.detect(start, view);
-        long reads = view.blockReads();
-
-        helper.assertTrue(reads <= 27L * 60,
-                "разбор 60 брёвен читает ≤ 27×60=1620 клеток, фактически " + reads);
-
-        BlockLocator.Search search = BlockLocator.search(spirit.level(), spirit.blockPosition(), 16, Set.of(Blocks.OAK_LOG));
-        int totalExamined = 0;
-        int steps = 0;
-        while (!search.done()) {
-            int before = search.examinedPositions();
-            search.step(ScanTuning.SLICES_PER_TICK);
-            totalExamined = search.examinedPositions();
-            steps++;
-        }
-        helper.assertTrue(totalExamined <= 60 * 27 * 6,
-                "общее число прочитанных позиций ограничено: " + totalExamined);
-        helper.assertTrue(steps <= (16 + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK * 4,
-                "скан радиуса 16 заканчивается за разумное число шагов, шагов " + steps);
-
-        GameTestFixtures.reset(helper, 70);
-        helper.succeed();
-    }
-
     @GameTest(template = "empty", batch = "chop_tree_unrealized_goal", timeoutTicks = 100)
     public static void spiritGoal_UnrealizedGoal_RejectedWithReason(GameTestHelper helper) throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -734,13 +842,6 @@ public final class ChopTreeGameTests {
         } finally {
             removePlayer(helper, player);
         }
-    }
-
-    private static void buildTallOakTree(GameTestHelper helper, int x, int z, int height) {
-        for (int y = 1; y <= height; y++) {
-            helper.setBlock(x, y, z, Blocks.OAK_LOG);
-        }
-        addLeavesCrown(helper, x, z, height, Blocks.OAK_LEAVES);
     }
 
     private static final String SPIRIT_SELECTOR = spiritSelector(1);

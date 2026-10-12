@@ -10,7 +10,6 @@ import com.theminespirit.core.forestry.TreeCandidates;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
-import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
@@ -26,7 +25,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 
-final class ChopTreeScript implements ScriptInstance {
+public final class ChopTreeScript implements ScriptInstance {
     private enum Phase {
         FIND,
         APPROACH,
@@ -40,6 +39,7 @@ final class ChopTreeScript implements ScriptInstance {
     private final Set<Block> logBlocks;
     private final IdFilter logFilter;
     private final BlockLocator.Search search;
+    private final LevelTreeView treeView;
     private final Approach approach;
     private final BlockBreaker breaker;
     private final TreeCandidates candidates = new TreeCandidates(ChopTuning.SEARCH_MAX_LOGS);
@@ -56,13 +56,14 @@ final class ChopTreeScript implements ScriptInstance {
     private boolean movedCloser;
     private String failureReason;
 
-    ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
+    public ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
         this.spirit = spirit;
         this.params = params;
         this.logBlocks = logBlocks(params.species());
         this.logFilter = IdFilter.of(params.species().stream().map(TreeSpecies::logId).toList());
         BlockPos center = spirit.blockPosition();
         this.search = BlockLocator.search(spirit.level(), center, params.radius(), Set.copyOf(logBlocks));
+        this.treeView = new LevelTreeView(spirit.level(), logBlocks);
         this.approach = new Approach(spirit);
         this.breaker = new BlockBreaker(spirit);
     }
@@ -95,13 +96,25 @@ final class ChopTreeScript implements ScriptInstance {
         return failureReason;
     }
 
+    public long treeBlockReads() {
+        return treeView.blockReads();
+    }
+
+    public int searchExaminedPositions() {
+        return search.examinedPositions();
+    }
+
+    public int searchMaxExaminedPositionsPerTick() {
+        return search.maxExaminedPerStep();
+    }
+
     private ScriptStatus find() {
         locate();
         Optional<BlockCoord> start = candidates.nearest(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
         if (start.isEmpty()) {
             return search.done() ? outOfTrees() : ScriptStatus.RUNNING;
         }
-        TreeDetection detection = TreeShape.detect(start.get(), view());
+        TreeDetection detection = TreeShape.detect(start.get(), treeView);
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
         }
@@ -248,10 +261,6 @@ final class ChopTreeScript implements ScriptInstance {
 
     private String speciesText() {
         return params.species().size() == 1 ? params.species().get(0).id() : TreeSpecies.ANY;
-    }
-
-    private TreeView view() {
-        return new LevelTreeView(spirit.level(), logBlocks);
     }
 
     private static BlockPos toPos(BlockCoord coord) {
