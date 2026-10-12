@@ -32,6 +32,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -897,6 +898,54 @@ public final class InventoryGameTests {
                             + "подбор и разгрузка парсили бы JSON заново. Загрузок: " + InventoryTables.valueLoads());
             helper.assertTrue(InventoryTables.kitLoads() == 1,
                     "базовый набор читается один раз за процесс. Загрузок: " + InventoryTables.kitLoads());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_persist_deposit", timeoutTicks = 600)
+    public static void deposit_ReloadedMidway_CompletesCountNotMore(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        for (int slot = 0; slot < 20; slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 1));
+        }
+        Map<String, Object> params = Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                "count", 10, "radius", 8);
+        AtomicReference<SpiritEntity> current = new AtomicReference<>(spirit);
+        AtomicBoolean launched = new AtomicBoolean();
+        AtomicBoolean reloaded = new AtomicBoolean();
+        helper.onEachTick(() -> {
+            SpiritEntity live = current.get();
+            if (!launched.get() && live.tickCount >= 1) {
+                launched.set(true);
+                live.startTask(new ScriptCall("deposit", params));
+            } else if (launched.get() && !reloaded.get() && chestCount(helper, Items.COBBLESTONE) >= 4) {
+                reloaded.set(true);
+                CompoundTag tag = new CompoundTag();
+                live.saveWithoutId(tag);
+                live.discard();
+                SpiritEntity next = ModEntities.SPIRIT.get().create(helper.getLevel());
+                next.load(tag);
+                helper.getLevel().addFreshEntity(next);
+                current.set(next);
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(reloaded.get(),
+                    "дух обязан быть перезагружен посередине переноса: иначе возобновление не проверено");
+            SpiritEntity live = current.get();
+            helper.assertTrue(live.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленный deposit обязан завершиться успехом, причина: "
+                            + live.taskFailureReason().orElse("нет"));
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 10,
+                    "итого в сундуке обязано оказаться 10, а не 14: после восстановления переносят "
+                            + "count − moved, фактически " + chestCount(helper, Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(live.getInventory(), Items.COBBLESTONE) == 10,
+                    "у духа обязано остаться 10 булыжника из 20: перенесены только недостающие 6, фактически "
+                            + GameTestFixtures.countInInventory(live.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.reset(helper);
         });
     }

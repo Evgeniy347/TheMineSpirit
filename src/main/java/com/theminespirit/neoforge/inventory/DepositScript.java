@@ -22,6 +22,11 @@ public final class DepositScript extends ContainerTask {
     }
 
     @Override
+    protected boolean persistsProgress() {
+        return true;
+    }
+
+    @Override
     protected TransferRunner beginTransfer(Container container) {
         if (transferRemaining() <= 0) {
             return null;

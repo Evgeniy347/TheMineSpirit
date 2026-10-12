@@ -5,6 +5,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.phys.Vec3;
@@ -45,6 +46,10 @@ abstract class ContainerTask implements ScriptInstance {
         return 0;
     }
 
+    protected boolean persistsProgress() {
+        return false;
+    }
+
     protected boolean skipAsDone() {
         return false;
     }
@@ -74,6 +79,28 @@ abstract class ContainerTask implements ScriptInstance {
         approach.cancel();
         if (runner != null) {
             runner.cancel();
+        }
+    }
+
+    @Override
+    public Map<String, Object> saveState() {
+        return persistsProgress() ? Map.of("moved", movedTotal()) : Map.of();
+    }
+
+    @Override
+    public void restoreState(Map<String, Object> state) {
+        if (!persistsProgress()) {
+            return;
+        }
+        Object value = state.get("moved");
+        if (value instanceof Number number) {
+            restoredMoved(Math.max(0, number.intValue()));
+        }
+        if (container != null && phase == Phase.TRANSFER) {
+            if (runner != null) {
+                runner.cancel();
+            }
+            runner = transferRemaining() > 0 ? beginTransfer(container) : null;
         }
     }
 
