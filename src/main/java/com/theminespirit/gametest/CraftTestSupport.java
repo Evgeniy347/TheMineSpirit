@@ -11,6 +11,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 final class CraftTestSupport {
     static final String FIELD = "arena";
@@ -18,6 +20,7 @@ final class CraftTestSupport {
     static final int RADIUS = 16;
     static final int TIMEOUT = 200;
     private static final int SETTLE_TICKS = 1;
+    private static final int SERVER_TICKS_PER_ITEM = 200;
 
     private CraftTestSupport() {
     }
@@ -63,6 +66,23 @@ final class CraftTestSupport {
     static void assertCount(GameTestHelper helper, SpiritEntity spirit, Item item, int expected, String what) {
         int actual = GameTestFixtures.countInInventory(spirit.getInventory(), item);
         helper.assertTrue(actual == expected, what + ": ожидалось " + expected + ", в инвентаре " + actual);
+    }
+
+    static void speedUpFurnaces(GameTestHelper helper) {
+        helper.onEachTick(() -> {
+            for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
+                for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
+                    BlockPos cell = helper.absolutePos(new BlockPos(x, 1, z));
+                    BlockEntity entity = helper.getLevel().getBlockEntity(cell);
+                    if (entity instanceof AbstractFurnaceBlockEntity furnace) {
+                        for (int i = 0; i < SERVER_TICKS_PER_ITEM; i++) {
+                            AbstractFurnaceBlockEntity.serverTick(helper.getLevel(), cell,
+                                    helper.getLevel().getBlockState(cell), furnace);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     static SpiritEntity reload(GameTestHelper helper, SpiritEntity original) {

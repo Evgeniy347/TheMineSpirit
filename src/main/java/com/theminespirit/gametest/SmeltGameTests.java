@@ -10,6 +10,7 @@ import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.launch;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
 import static com.theminespirit.gametest.CraftTestSupport.reload;
+import static com.theminespirit.gametest.CraftTestSupport.speedUpFurnaces;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
@@ -31,7 +32,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SmeltGameTests {
     private static final BlockPos FURNACE_CELL = new BlockPos(3, 1, 1);
-    private static final int SERVER_TICKS_PER_ITEM = 200;
 
     private SmeltGameTests() {
     }
@@ -248,23 +248,6 @@ public final class SmeltGameTests {
     private static int totalOf(GameTestHelper helper, SpiritEntity spirit, Item item) {
         return GameTestFixtures.countInInventory(spirit.getInventory(), item)
                 + GameTestFixtures.countInWorld(helper, item);
-    }
-
-    private static void speedUpFurnaces(GameTestHelper helper) {
-        helper.onEachTick(() -> {
-            for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
-                for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
-                    BlockPos cell = helper.absolutePos(new BlockPos(x, 1, z));
-                    BlockEntity entity = helper.getLevel().getBlockEntity(cell);
-                    if (entity instanceof AbstractFurnaceBlockEntity furnace) {
-                        for (int i = 0; i < SERVER_TICKS_PER_ITEM; i++) {
-                            AbstractFurnaceBlockEntity.serverTick(helper.getLevel(), cell,
-                                    helper.getLevel().getBlockState(cell), furnace);
-                        }
-                    }
-                }
-            }
-        });
     }
 
     private static int furnaceCount(GameTestHelper helper) {
