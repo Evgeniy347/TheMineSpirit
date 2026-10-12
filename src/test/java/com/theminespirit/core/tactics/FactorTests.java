@@ -91,9 +91,36 @@ class FactorTests {
     void factors_DeclarationOrder_IsFixed() {
         assertEquals(List.of("BIAS", "WIN_MARGIN", "LOW_HP", "ENEMY_PRESSURE", "PROXIMITY", "RANGED_EXPOSURE",
                 "EXPLOSIVE_NEAR", "ALLY_SUPPORT", "ESCAPE_ROUTE", "TERRAIN_RISK", "DARKNESS", "HUNGER",
-                "PROTECT_URGENCY", "LEASH_PRESSURE", "HEALING_AVAILABLE"),
+                "PROTECT_URGENCY", "LEASH_PRESSURE", "HEALING_AVAILABLE", "URGENCY"),
                 Arrays.stream(Factor.values()).map(Enum::name).toList(),
                 "Порядок объявления факторов — порядок членов суммы: перестановка меняет округление счёта в последнем знаке");
+    }
+
+    @Test
+    void scales_UrgencyHorizon_IsTenSeconds() {
+        assertEquals(10, Scales.defaults().urgencyHorizon(), 0.0,
+                "Горизонт срочности 10 с — стартовое значение из задания: таблицы URGENCY ниже посчитаны от него; "
+                        + "меняете горизонт — пересчитайте таблицы и вес URGENCY в weights.json");
+    }
+
+    static Stream<Arguments> urgencies() {
+        return Stream.of(
+                Arguments.of("смерть сейчас", SituationBuilder.create().hp(0).enemy("zombie", 4).build(), 1),
+                Arguments.of("умрёт за 5 с", SituationBuilder.create().enemy("skeleton", 4).build(), 0.5),
+                Arguments.of("умрёт за 10 с", SituationBuilder.create().enemy("spider", 4).build(), 0),
+                Arguments.of("врагов нет", SituationBuilder.create().build(), 0),
+                Arguments.of("враг без урона", SituationBuilder.create().enemy("creeper", 4).build(), 0));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("urgencies")
+    void urgency_KnownTimeToDie_MatchesAbsoluteUrgency(String name, Situation situation, double expected) {
+        Assessment assessment = assessment(situation, 0, Assessment.UNBOUNDED);
+
+        assertEquals(expected, Factor.URGENCY.value(situation, assessment, Scales.defaults()), TOLERANCE,
+                "Ситуация «" + name + "»: URGENCY = clamp01(1 − timeToDie / 10 с) — абсолютное время до смерти, "
+                        + "а не доля перевеса как у ENEMY_PRESSURE; «враг без урона» проверяет, что dps 0 "
+                        + "идёт через minDps и деления на ноль нет");
     }
 
     @Test

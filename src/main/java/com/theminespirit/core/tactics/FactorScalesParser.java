@@ -4,7 +4,7 @@ final class FactorScalesParser {
     private static final String[] FIELDS = {"armorPerPoint", "armorCap", "minDps", "winMarginDivisor", "lowHpFloor",
             "proximityRange", "rangedRange", "rangedFull", "explosiveRange", "allyFull", "routesFull",
             "lavaRange", "dropSafe", "dropRange", "nightFloor", "hungerThreshold", "healFull", "leashMargin",
-            "speedRatioCap"};
+            "speedRatioCap", "urgencyHorizon"};
 
     private FactorScalesParser() {
     }
@@ -30,6 +30,7 @@ final class FactorScalesParser {
                 node.get("hungerThreshold").number(),
                 node.get("healFull").number(),
                 node.get("leashMargin").number(),
-                node.get("speedRatioCap").number()));
+                node.get("speedRatioCap").number(),
+                node.get("urgencyHorizon").number()));
     }
 }

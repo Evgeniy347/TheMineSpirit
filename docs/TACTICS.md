@@ -79,9 +79,10 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 | Фактор | Определение |
 |---|---|
 | `BIAS` | 1 |
-| `WIN_MARGIN` | `clamp(log2(timeToDie / timeToKill) / winMarginDivisor)`; врагов нет — 0 |
+| `WIN_MARGIN` | `clamp(log2(r) / winMarginDivisor)`, где `r = timeToDie / timeToKill`; врагов нет — 0 |
 | `LOW_HP` | `clamp01((lowHpFloor − доля HP) / lowHpFloor)` |
-| `ENEMY_PRESSURE` | `clamp01(1 − timeToDie / timeToKill)`: 0, пока дух убивает врагов быстрее, чем они его |
+| `ENEMY_PRESSURE` | `clamp01(1 − r)`: 0, пока дух убивает врагов быстрее, чем они его; та же величина `r`, что у `WIN_MARGIN`, — её проигрышная половина |
+| `URGENCY` | `clamp01(1 − timeToDie / urgencyHorizon)` (`urgencyHorizon` = 10 с, `weights.json → scales`): абсолютное время до смерти; отличает «умру через секунду при равном перевесе» от «умру через минуту при том же перевесе» |
 | `PROXIMITY` | `clamp01(1 − ближайший / proximityRange)` |
 | `RANGED_EXPOSURE` | `clamp01(стрелков / rangedFull) × clamp01(1 − ближайший стрелок / rangedRange)` |
 | `EXPLOSIVE_NEAR` | `clamp01(1 − ближайший взрывной / explosiveRange)` |
@@ -126,4 +127,4 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 ## Границы
 
 Не входят: адаптер (чтение мира, исполнение действий, `set_combat_mode`), стрельба, командная тактика, политики
-безопасности. Вызов не делает ввода-вывода и не меняет аргументы; стоимость — O(15 факторов + правила + враги ≤ 16).
+безопасности. Вызов не делает ввода-вывода и не меняет аргументы; стоимость — O(16 факторов + правила + враги ≤ 16).

@@ -74,6 +74,23 @@ class FactorProperties {
         return WinMargin.pressure(situation.self(), metrics(situation), Scales.defaults());
     }
 
+    private static double urgency(Situation situation) {
+        return WinMargin.urgency(situation.self(), metrics(situation), Scales.defaults());
+    }
+
+    @Property(tries = 200)
+    void urgency_LessOwnHp_NeverDecreases(@ForAll("situations") Situation situation,
+            @ForAll("steps") int hpStep) {
+        SelfFacts self = situation.self();
+        double hp = Math.max(0, self.hp() - hpStep);
+        Situation weaker = Situations.withSelf(situation, Situations.withStats(self, hp, self.armor(), self.dps()));
+
+        assertTrue(urgency(weaker) >= urgency(situation) - SLACK,
+                "Срочность считается от абсолютного времени до смерти: меньше HP при тех же врагах — время меньше, "
+                        + "срочность не убывает: " + urgency(situation) + " → " + urgency(weaker)
+                        + "; иначе дух спокойнее именно когда умирает быстрее");
+    }
+
     @Provide
     Arbitrary<Integer> steps() {
         return Arbitraries.integers().between(0, 6);
