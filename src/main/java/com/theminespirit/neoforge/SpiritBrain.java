@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
@@ -89,6 +90,10 @@ public final class SpiritBrain {
 
     public Optional<String> currentScript() {
         return runner == null ? Optional.empty() : runner.currentScript();
+    }
+
+    public Optional<RunProgress> progress() {
+        return runner == null ? Optional.empty() : runner.progress();
     }
 
     public Optional<TaskSnapshot> snapshot() {

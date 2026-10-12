@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.chunk.ChunkCoord;
+import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
@@ -214,6 +215,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public Optional<String> currentTaskScript() {
         return brain == null ? Optional.empty() : brain.currentScript();
+    }
+
+    public Optional<RunProgress> taskProgress() {
+        return brain == null ? Optional.empty() : brain.progress();
     }
 
     public Optional<String> taskFailureReason() {

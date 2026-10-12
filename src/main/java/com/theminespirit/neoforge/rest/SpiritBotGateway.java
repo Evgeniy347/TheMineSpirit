@@ -30,12 +30,14 @@ public final class SpiritBotGateway implements BotGateway {
     private final ServerThreadCall serverCall;
     private final ObserveJobs jobs;
     private final TaskRegistry tasks;
+    private final TaskWatcher watcher;
 
     public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus, TaskRegistry tasks) {
         this.index = index;
         this.serverCall = new ServerThreadCall(server);
         this.jobs = new ObserveJobs(bus);
         this.tasks = Objects.requireNonNull(tasks, "tasks не может быть null: current_task живёт в реестре задач");
+        this.watcher = new TaskWatcher(bus, index, tasks);
     }
 
     public TaskRegistry taskRegistry() {
@@ -44,6 +46,10 @@ public final class SpiritBotGateway implements BotGateway {
 
     public SpiritIndex index() {
         return index;
+    }
+
+    public TaskWatcher taskWatcher() {
+        return watcher;
     }
 
     public ServerThreadCall serverCall() {
@@ -69,6 +75,7 @@ public final class SpiritBotGateway implements BotGateway {
     public void stop() {
         serverCall.stop();
         jobs.close();
+        watcher.close();
     }
 
     @Override

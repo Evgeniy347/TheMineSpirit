@@ -88,6 +88,11 @@ final class RestFixture {
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
+        await(helper, rest, scenario, () -> { });
+    }
+
+    static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario,
+            Runnable worldChecks) {
         CompletableFuture<List<String>> outcome = scenario.exceptionally(
                 error -> List.of("сценарий завершился исключением: " + error));
         long started = System.nanoTime();
@@ -105,6 +110,7 @@ final class RestFixture {
         helper.succeedWhen(() -> {
             helper.assertTrue(outcome.isDone(),
                     "REST-сценарий не завершился: ответ моста не пришёл, серверный поток не отвечает или запрос завис");
+            worldChecks.run();
             rest.close();
             helper.assertTrue(outcome.join().isEmpty(),
                     "REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
@@ -145,6 +151,11 @@ final class RestFixture {
 
     SpiritEntity spawn(GameTestHelper helper, BlockPos relative) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
+        spirits.add(spirit);
+        return spirit;
+    }
+
+    SpiritEntity track(SpiritEntity spirit) {
         spirits.add(spirit);
         return spirit;
     }

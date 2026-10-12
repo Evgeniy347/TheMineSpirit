@@ -32,19 +32,37 @@ public final class TaskRegistry {
     }
 
     /**
-     * Откат резерва: убирает только задачу, оставшуюся в accepted (старт у платформы не удался).
-     * Уже наблюдаемую или завершённую задачу не трогает.
+     * Откат резерва: убирает только задачу, оставшуюся в accepted и не запущенную у платформы.
+     * Запущенную, наблюдаемую или завершённую задачу не трогает.
      *
      * @return true — резерв откатился; false — задача уже живёт своей жизнью, откатывать нечего
      */
     public synchronized boolean discard(String taskId) {
         Entry entry = tasks.get(taskId);
-        if (entry == null || entry.record.state() != TaskState.ACCEPTED) {
+        if (entry == null || entry.started || entry.record.state() != TaskState.ACCEPTED) {
             return false;
         }
         tasks.remove(taskId);
         entry.log.close();
         return true;
+    }
+
+    public synchronized void markStarted(String taskId) {
+        Entry entry = tasks.get(taskId);
+        if (entry == null) {
+            throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
+        }
+        entry.started = true;
+    }
+
+    public synchronized List<TaskRecord> watchableRecords() {
+        List<TaskRecord> watchable = new ArrayList<>();
+        for (Entry entry : tasks.values()) {
+            if (entry.started && entry.record.active()) {
+                watchable.add(entry.record);
+            }
+        }
+        return List.copyOf(watchable);
     }
 
     public synchronized Optional<TaskRecord> activeForBot(String botId) {
@@ -96,6 +114,15 @@ public final class TaskRegistry {
             ensureCompletedCap();
         }
         return events;
+    }
+
+    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, String error) {
+        Entry entry = tasks.get(taskId);
+        if (entry == null || !entry.record.active()) {
+            return false;
+        }
+        observe(taskId, state, progress, error);
+        return true;
     }
 
     public synchronized int size() {
@@ -159,6 +186,7 @@ public final class TaskRegistry {
 
     private static final class Entry {
         private TaskRecord record;
+        private boolean started;
         private final TaskEventLog log = new TaskEventLog();
 
         Entry(TaskRecord record) {

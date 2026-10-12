@@ -217,6 +217,15 @@ class TaskRoutesTests {
     }
 
     @Test
+    void create_AcceptedTask_IsMarkedStartedSoWatcherPollsIt() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        assertEquals(List.of(taskId), registry.watchableRecords().stream().map(record -> record.taskId()).toList(),
+                "После успешного старта у шлюза задача обязана попасть к TaskWatcher, иначе её состояние не "
+                        + "обновится никогда");
+    }
+
+    @Test
     void create_GatewayStartFails_DiscardsReservation() {
         gateway.startFailsWith(new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of()));
         String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";

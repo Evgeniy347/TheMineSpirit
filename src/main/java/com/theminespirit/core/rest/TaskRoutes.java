@@ -74,6 +74,7 @@ public final class TaskRoutes {
             registry.discard(taskId);
             throw failure;
         }
+        registry.markStarted(taskId);
         String response = acceptedJson(taskId, bot, parsed.requestId().toString());
         idempotency.remember(parsed.requestId().toString(), fingerprint, response);
         return RestResponse.json(202, response);

@@ -181,6 +181,44 @@ class TaskRegistryTests {
     }
 
     @Test
+    void watchableRecords_ReservedButNotStarted_HiddenFromWatcherUntilMarkStarted() {
+        TaskRegistry registry = new TaskRegistry();
+        String reserved = registry.reserve(BOT, null);
+
+        List<TaskRecord> beforeStart = registry.watchableRecords();
+        registry.markStarted(reserved);
+        List<TaskRecord> afterStart = registry.watchableRecords();
+
+        assertEquals(List.of(), beforeStart,
+                "Бронь, чей старт у платформы ещё не удался, не должна попадать к TaskWatcher: иначе он привяжет её "
+                        + "к чужой задаче духа раньше, чем откат убрал запись");
+        assertEquals(List.of(reserved), afterStart.stream().map(TaskRecord::taskId).toList(),
+                "После успешного старта запись обязана опрашиваться watcher");
+    }
+
+    @Test
+    void discard_StartedTask_KeepsRecord() {
+        TaskRegistry registry = new TaskRegistry();
+        String started = registry.reserve(BOT, null);
+        registry.markStarted(started);
+
+        boolean discarded = registry.discard(started);
+
+        assertFalse(discarded, "Запущенную у платформы задачу откатывать нельзя: дух уже выполняет её план");
+        assertEquals(1, registry.size(), "Запись запущенной задачи обязана остаться в реестре");
+    }
+
+    @Test
+    void watchableRecords_StartedTerminal_Excluded() {
+        TaskRegistry registry = new TaskRegistry();
+        String finished = registry.reserve(BOT, null);
+        registry.markStarted(finished);
+        registry.observe(finished, TaskState.SUCCEEDED, null, null);
+
+        assertEquals(List.of(), registry.watchableRecords(), "Завершённая задача не опрашивается");
+    }
+
+    @Test
     void eviction_MoreThanCapCompleted_DropsOldestCompletedKeepsActive() {
         TaskRegistry registry = new TaskRegistry();
         for (int i = 0; i < TaskRegistry.MAX_COMPLETED + 10; i++) {
