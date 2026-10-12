@@ -58,6 +58,8 @@ fallback запрещён), `docs/TESTING.md` (GameTest-пачки, `GameTestFix
 
 ## Часть А — ядро адаптера (`core/tactics/adapter`, без Minecraft)
 
+Часть А (пп. 1–4) выполнена и влита в main 12.10 (big-pickle).
+
 **Поправки главного агента (обязательны, перекрывают текст пунктов ниже):**
 - п. 3: нового автомата не заводить — в ядре уже есть `core/tactics/StateMachine` (CALM → ENGAGED → RETREATING → RECOVERING)
   и `RetreatSelector`; адаптер хранит только исполняемый сейчас способ отхода и его прогресс.
