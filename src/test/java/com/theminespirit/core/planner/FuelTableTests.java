@@ -13,12 +13,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class FuelTableTests {
     @ParameterizedTest(name = "{0} горит {1} тиков")
-    @CsvSource({"coal, 1600", "charcoal, 1600", "oak_planks, 300", "oak_log, 300"})
+    @CsvSource({"coal, 1600", "charcoal, 1600", "stick, 100",
+            "oak_planks, 300", "spruce_planks, 300", "birch_planks, 300", "jungle_planks, 300",
+            "acacia_planks, 300", "dark_oak_planks, 300", "mangrove_planks, 300", "cherry_planks, 300",
+            "bamboo_planks, 300",
+            "oak_log, 300", "spruce_log, 300", "birch_log, 300", "jungle_log, 300",
+            "acacia_log, 300", "dark_oak_log, 300", "mangrove_log, 300", "cherry_log, 300"})
     void burnTicks_VanillaFuel_MatchesVanillaBurnTime(String item, int ticks) {
         assertEquals(ticks, FuelTable.burnTicks(item),
                 "Время горения обязано совпадать с ванилью 1.21.1 (уголь и древесный уголь 1600 тиков = 8 предметов, "
-                        + "доска и бревно 300 тиков = 1.5 предмета): иначе резолвер спланирует мало топлива и печь "
-                        + "встанет посреди плавки. Если ваниль поменяла значения — обновите таблицу и этот тест");
+                        + "доски и брёвна всех пород 300 тиков = 1.5 предмета, палка 100): иначе резолвер спланирует "
+                        + "мало топлива и печь встанет посреди плавки. "
+                        + "Если ваниль поменяла значения — обновите таблицу и этот тест");
     }
 
     @Test
@@ -29,10 +35,17 @@ class FuelTableTests {
     }
 
     @Test
-    void preferenceOrder_FuelTable_CoalFirstLogsBeforePlanks() {
-        assertEquals(List.of("coal", "charcoal", "oak_log", "oak_planks"), FuelTable.preferenceOrder(),
-                "Порядок предпочтения: сначала ёмкое топливо (уголь и древесный уголь по 8 предметов), затем "
-                        + "добываемое напрямую (брёвна), затем крафтовое (доски): иначе дух таскает лишнее топливо");
+    void preferenceOrder_FuelTable_CoalPlanksCharcoalLogsStick() {
+        assertEquals(List.of("coal",
+                "oak_planks", "spruce_planks", "birch_planks", "jungle_planks", "acacia_planks",
+                "dark_oak_planks", "mangrove_planks", "cherry_planks", "bamboo_planks",
+                "charcoal",
+                "oak_log", "spruce_log", "birch_log", "jungle_log", "acacia_log",
+                "dark_oak_log", "mangrove_log", "cherry_log",
+                "stick"), FuelTable.preferenceOrder(),
+                "Порядок добычи нового топлива: сначала ёмкий уголь (8 предметов), затем доски (из бревна 4 доски "
+                        + "по 300 тиков — в 4 раза больше горения, чем бревно), затем требующий плавки древесный уголь, "
+                        + "затем брёвна напрямую, последней палка (100 тиков): иначе дух таскает лишнее топливо");
     }
 
     @ParameterizedTest(name = "{0} предмета при горении {1} тиков требуют {2} топлива")

@@ -7,11 +7,27 @@ import java.util.Map;
 
 final class FuelBalance {
     private static final int COOK_TICKS = 200;
-    private static final Map<String, Integer> BURN_TICKS = Map.of(
-            "coal", 1600,
-            "charcoal", 1600,
-            "oak_log", 300,
-            "oak_planks", 300);
+    private static final Map<String, Integer> BURN_TICKS = Map.ofEntries(
+            Map.entry("coal", 1600),
+            Map.entry("charcoal", 1600),
+            Map.entry("stick", 100),
+            Map.entry("oak_planks", 300),
+            Map.entry("spruce_planks", 300),
+            Map.entry("birch_planks", 300),
+            Map.entry("jungle_planks", 300),
+            Map.entry("acacia_planks", 300),
+            Map.entry("dark_oak_planks", 300),
+            Map.entry("mangrove_planks", 300),
+            Map.entry("cherry_planks", 300),
+            Map.entry("bamboo_planks", 300),
+            Map.entry("oak_log", 300),
+            Map.entry("spruce_log", 300),
+            Map.entry("birch_log", 300),
+            Map.entry("jungle_log", 300),
+            Map.entry("acacia_log", 300),
+            Map.entry("dark_oak_log", 300),
+            Map.entry("mangrove_log", 300),
+            Map.entry("cherry_log", 300));
 
     private final long smelts;
     private final long cook;

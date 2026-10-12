@@ -307,15 +307,65 @@ class ResourceResolverTests {
     }
 
     @Test
-    void resolve_InventoryHoldsLogs_PrefersLogsOverAbsentCoal() {
+    void resolve_InventoryHoldsLogs_SpendsThemAndGathersRemainder() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, KNOWLEDGE, Map.of("oak_log", 2));
 
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 8),
                 gather("oak_log", 4),
                 new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
-                "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан топить брёвнами и добрать 4, а не переключаться "
-                        + "на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа");
+                "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан потратить имеющиеся и добрать 4 того же топлива, "
+                        + "а не переключаться на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа");
+    }
+
+    @Test
+    void resolve_ThreeSmeltsSharingInventoryFuel_EachConsumesItsShare() {
+        ResourceKnowledge forge = new StubKnowledge(
+                Set.of("iron_ore", "copper_ore", "gold_ore", "coal"),
+                Map.of("gear", List.of(
+                        new Ingredient("iron_ingot", 1),
+                        new Ingredient("copper_ingot", 9),
+                        new Ingredient("gold_ingot", 1))),
+                Map.of("iron_ingot", "iron_ore", "copper_ingot", "copper_ore", "gold_ingot", "gold_ore"));
+
+        TaskNode plan = ResourceResolver.resolve("gear", 1, forge, Map.of("coal", 2));
+
+        assertEquals(new SequenceNode(List.of(
+                new SequenceNode(List.of(
+                        gather("iron_ore", 1),
+                        new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 1)))),
+                new SequenceNode(List.of(
+                        gather("copper_ore", 9),
+                        gather("coal", 1),
+                        new ScriptCall("smelt", Map.of("item", "copper_ingot", "count", 9)))),
+                new SequenceNode(List.of(
+                        gather("gold_ore", 1),
+                        gather("coal", 1),
+                        new ScriptCall("smelt", Map.of("item", "gold_ingot", "count", 1)))),
+                new ScriptCall("craft", Map.of("item", "gear", "count", 1)))), plan,
+                "2 угля в инвентаре обязаны расходиться по плавкам: 1-й слиток тратит 1 (добычи нет), 9 медных тратят "
+                        + "последний и добирают 1, золоту добирается 1. Без расхода между плавками вторая и третья "
+                        + "посчитают чужой уголь своим и печь встанет");
+    }
+
+    @Test
+    void resolve_PlanksAvailable_PlansPlanksBeforeCharcoal() {
+        ResourceKnowledge sawmill = new StubKnowledge(
+                Set.of("iron_ore", "oak_log"),
+                Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
+                Map.of("iron_ingot", "iron_ore", "charcoal", "oak_log"));
+
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, sawmill);
+
+        assertEquals(new SequenceNode(List.of(
+                gather("iron_ore", 8),
+                new SequenceNode(List.of(
+                        gather("oak_log", 6),
+                        new ScriptCall("craft", Map.of("item", "oak_planks", "count", 6)))),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                "Без угля резолвер обязан топить досками раньше древесного угля: из бревна выходят 4 доски по 300 "
+                        + "тиков — в 4 раза больше горения, чем жечь бревно или плавить его в уголь. 8 слитков требуют "
+                        + "6 досок");
     }
 
     @Test
