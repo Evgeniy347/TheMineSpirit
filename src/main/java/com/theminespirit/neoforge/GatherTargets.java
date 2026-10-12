@@ -16,7 +16,6 @@ final class GatherTargets implements HarvestTargets {
     private final BlockLocator.Search search;
     private final String refusal;
     private int slices;
-    private int maxSlicesPerTick;
 
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter) {
         this.level = level;
@@ -26,10 +25,8 @@ final class GatherTargets implements HarvestTargets {
 
     @Override
     public List<BlockCoord> advance() {
-        int used = 0;
         for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {
             slices++;
-            used++;
             List<BlockPos> found = search.step(1);
             List<BlockCoord> allowed = new ArrayList<>();
             for (BlockPos pos : found) {
@@ -38,11 +35,9 @@ final class GatherTargets implements HarvestTargets {
                 }
             }
             if (!allowed.isEmpty()) {
-                maxSlicesPerTick = Math.max(maxSlicesPerTick, used);
                 return allowed;
             }
         }
-        maxSlicesPerTick = Math.max(maxSlicesPerTick, used);
         return List.of();
     }
 
@@ -58,7 +53,7 @@ final class GatherTargets implements HarvestTargets {
 
     @Override
     public int maxSlicesPerTick() {
-        return maxSlicesPerTick;
+        return search.maxSlicesPerTick();
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.BlockSets;
 import com.theminespirit.neoforge.HarvestSession;
 import com.theminespirit.neoforge.ModEntities;
@@ -682,6 +683,26 @@ public final class MineGameTests {
                             + ", стало " + countBlock(helper, Blocks.COBBLESTONE));
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "empty", batch = "mine_scale_search", timeoutTicks = 100)
+    public static void blockLocator_TwoStepsInOneTick_CountsSlicesPerTick(GameTestHelper helper) {
+        buildCave(helper);
+        BlockLocator.Search search = BlockLocator.search(helper.getLevel(), helper.absolutePos(SPIRIT_START), RADIUS,
+                BlockSets.resolve(IdFilter.of(List.of("minecraft:stone"))));
+
+        search.step(1);
+        int afterFirst = search.maxSlicesPerTick();
+        search.step(2);
+        int afterSecond = search.maxSlicesPerTick();
+
+        helper.assertTrue(afterFirst == 1,
+                "первый шаг в тик обязан посчитать один срез, а посчитал " + afterFirst);
+        helper.assertTrue(afterSecond == 3,
+                "второй шаг в том же тике обязан прибавить свои срезы к тику (1 + 2 = 3), а максимум стал "
+                        + afterSecond);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
     }
 
     private static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
