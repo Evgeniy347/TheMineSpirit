@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from brain import BrainError, BrainUnavailable, SandboxBreach
+from brain import BrainError, BrainStopped, BrainUnavailable, SandboxBreach
 from guard import ProviderHealth, fingerprint, request_id
 from parse import ReplyError, parse_reply
 from plan_check import Catalog, CatalogError, PlanError, PlanLimits, Policy, check_plan, context_from_observation
@@ -115,6 +115,9 @@ class CycleRunner:
     def _probe(self, cycle: int) -> bool:
         try:
             self.brain.probe()
+        except BrainStopped:
+            self.stop_requested = True
+            return False
         except BrainUnavailable as error:
             self.provider.failure()
             self.rt.log("brain_failure", cycle=cycle, kind=error.kind, reason=error.text, probe=True)
@@ -194,6 +197,9 @@ class CycleRunner:
             user = prompt.user if error_text is None else self._retry_user(prompt.user, error_text)
             try:
                 reply = self.brain.complete(prompt.system, user)
+            except BrainStopped:
+                self.stop_requested = True
+                return None
             except BrainUnavailable as error:
                 rt.guard.record_brain_call(rt.clock.now(), bot_id)
                 self._provider_failed(cycle, bot_id, error, summary)

@@ -73,6 +73,7 @@ class Strategist:
     def stop(self) -> None:
         self.stopping = True
         self.cycles.stop_requested = True
+        self.cycles.brain.request_stop()
         self._wake.set()
 
     def _pause(self, seconds: float) -> None:

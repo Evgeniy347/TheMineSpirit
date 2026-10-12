@@ -66,6 +66,10 @@ class BrainError(Exception):
     pass
 
 
+class BrainStopped(BrainError):
+    """Остановка агента прервала вызов: не сбой модели, поэтому ни backoff'а, ни записи brain_failure."""
+
+
 class SandboxBreach(BrainError):
     pass
 
@@ -194,6 +198,16 @@ def _kill_group(process: subprocess.Popen) -> None:
             stream.close()
 
 
+def _kill_group_now(process: subprocess.Popen | None) -> None:
+    # Вызывается из обработчика SIGTERM/SIGINT в главном потоке: wait() здесь мог бы ждать сам себя.
+    if process is None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+
+
 def _tail(text: str) -> str:
     flat = " ".join(text.split())
     return flat[-ERROR_TEXT_LIMIT:]
@@ -204,6 +218,12 @@ class OpencodeBrain:
         self.config = config
         self.model = model
         self.extra_env = env or {}
+        self._stop = False
+        self._process: subprocess.Popen | None = None
+
+    def request_stop(self) -> None:
+        self._stop = True
+        _kill_group_now(self._process)
 
     def subprocess_env(self) -> dict:
         return brain_env(self.extra_env, data_home=prepare_data_home(self.config.opencode_data))
@@ -240,6 +260,8 @@ class OpencodeBrain:
         return self._run(self.build_args(PROBE_PROMPT, agent=False), self.config.probe_timeout)
 
     def _run(self, args: list[str], timeout: float) -> BrainReply:
+        if self._stop:
+            raise BrainStopped(f"{self.model}: вызов не начат, стратег останавливается")
         runs = self.config.home / "runs"
         runs.mkdir(parents=True, exist_ok=True)
         out_path, err_path = runs / "last.out", runs / "last.err"
@@ -247,12 +269,20 @@ class OpencodeBrain:
         with open(out_path, "wb") as out, open(err_path, "wb") as err:
             process = subprocess.Popen(args, cwd=self.config.sandbox_dir, stdin=subprocess.DEVNULL, stdout=out, stderr=err,
                                        start_new_session=True, env=self.subprocess_env())
+            self._process = process
             try:
                 stdout, stderr, code = self._wait(process, out_path, err_path, started + timeout, timeout)
+            except BrainStopped:
+                _kill_group(process)
+                raise
             except BaseException:
                 _kill_group(process)
                 self._keep_failure(runs, out_path, err_path)
                 raise
+            finally:
+                self._process = None
+        if self._stop:
+            raise BrainStopped(f"{self.model}: стратег останавливается, ответ не разбирается")
         try:
             return self._interpret(stdout, stderr, code, time.monotonic() - started)
         except BrainError:
@@ -271,6 +301,9 @@ class OpencodeBrain:
 
     def _wait(self, process, out_path: Path, err_path: Path, deadline: float, timeout: float):
         while True:
+            if self._stop:
+                _kill_group(process)
+                raise BrainStopped(f"{self.model}: вызов прерван, группа процессов убита")
             code = process.poll()
             stdout = out_path.read_text(encoding="utf-8", errors="replace")
             stderr = err_path.read_text(encoding="utf-8", errors="replace")
@@ -321,6 +354,12 @@ class CommandBrain:
         self.config = config
         self.command = command
         self.model = model
+        self._stop = False
+        self._process: subprocess.Popen | None = None
+
+    def request_stop(self) -> None:
+        self._stop = True
+        _kill_group_now(self._process)
 
     def verify(self) -> None:
         return None
@@ -332,18 +371,30 @@ class CommandBrain:
         return self._call("", PROBE_PROMPT, self.config.probe_timeout)
 
     def _call(self, system: str, user: str, timeout: float) -> BrainReply:
+        if self._stop:
+            raise BrainStopped(f"{self.model}: вызов не начат, стратег останавливается")
         payload = json.dumps({"system": system, "user": user, "model": self.model}, ensure_ascii=False)
         started = time.monotonic()
         process = subprocess.Popen(shlex.split(self.command), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, start_new_session=True, text=True, encoding="utf-8")
+        self._process = process
         try:
+            if self._stop:
+                _kill_group_now(process)
+                raise BrainStopped(f"{self.model}: вызов прерван, группа процессов убита")
             stdout, stderr = process.communicate(payload, timeout=timeout)
         except subprocess.TimeoutExpired:
             _kill_group(process)
-            raise BrainUnavailable("silence", f"команда мозга не ответила за {int(timeout)} с, процесс убит") from None
+            if not self._stop:
+                raise BrainUnavailable("silence", f"команда мозга не ответила за {int(timeout)} с, процесс убит") from None
         except BaseException:
             _kill_group(process)
-            raise
+            if not self._stop:
+                raise
+        finally:
+            self._process = None
+        if self._stop:
+            raise BrainStopped(f"{self.model}: вызов прерван, группа процессов убита")
         if process.returncode == PROVIDER_EXIT_CODE:
             raise BrainUnavailable("provider", _tail(stderr) or "команда мозга сообщила о недоступности модели (код 75)")
         if process.returncode != 0:
@@ -363,6 +414,11 @@ class FallbackBrain:
         self.primary.verify()
         if self.fallback is not None:
             self.fallback.verify()
+
+    def request_stop(self) -> None:
+        self.primary.request_stop()
+        if self.fallback is not None:
+            self.fallback.request_stop()
 
     def complete(self, system: str, user: str) -> BrainReply:
         return self._with_fallback(lambda brain: brain.complete(system, user))

@@ -48,3 +48,6 @@ class ScriptedBrain:
     def probe(self) -> BrainReply:
         self.probes += 1
         return self._result(self._next(self.probe_script, self.probe_default, "probe"))
+
+    def request_stop(self) -> None:
+        """Подпроцессов нет: останавливать нечего, но интерфейс мозга обязан быть полным."""
