@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PolicyExemptionsTests {
@@ -79,5 +80,34 @@ class PolicyExemptionsTests {
         PolicyExemptions ex2 = PolicyExemptions.of(PolicyId.PORTAL);
 
         assertFalse(ex1.equals(ex2), "Разные исключения не равны");
+    }
+
+    @Test
+    void of_NoArguments_EqualsEmpty() {
+        PolicyExemptions none = PolicyExemptions.of();
+
+        assertEquals(PolicyExemptions.empty(), none, "of() без аргументов — те же пустые исключения, что и empty(); скрипт без исключений не должен падать при создании");
+        assertTrue(none.all().isEmpty(), "of() без аргументов не добавляет исключений");
+    }
+
+    @Test
+    void of_DuplicateIds_CollapsesToOne() {
+        PolicyExemptions ex = PolicyExemptions.of(PolicyId.WATER, PolicyId.WATER);
+
+        assertEquals(Set.of(PolicyId.WATER), ex.all(), "повтор политики в списке исключений — одно исключение, а не ошибка создания");
+    }
+
+    @Test
+    void of_NullId_ThrowsNullPointer() {
+        assertThrows(NullPointerException.class, () -> PolicyExemptions.of(PolicyId.WATER, null),
+                "null в списке исключений — ошибка вызывающего, а не тихий пропуск");
+    }
+
+    @Test
+    void all_ReturnedSet_IsImmutable() {
+        PolicyExemptions ex = PolicyExemptions.of(PolicyId.WATER);
+
+        assertThrows(UnsupportedOperationException.class, () -> ex.all().add(PolicyId.AIR),
+                "изменение набора снаружи обошло бы запрет исключений для LAVA_FIRE, AIR и EXPLOSIVE");
     }
 }

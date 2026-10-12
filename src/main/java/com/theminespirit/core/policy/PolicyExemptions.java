@@ -3,31 +3,33 @@ package com.theminespirit.core.policy;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 public final class PolicyExemptions {
-    private static final Set<PolicyId> NON_EXEMPTIBLE = EnumSet.of(
-            PolicyId.LAVA_FIRE,
-            PolicyId.AIR,
-            PolicyId.EXPLOSIVE
-    );
+    private static final Set<PolicyId> NON_EXEMPTIBLE = EnumSet.of(PolicyId.LAVA_FIRE, PolicyId.AIR, PolicyId.EXPLOSIVE);
+    private static final PolicyExemptions NONE = new PolicyExemptions(EnumSet.noneOf(PolicyId.class));
 
-    private final EnumSet<PolicyId> exemptions;
+    private final Set<PolicyId> exemptions;
 
     private PolicyExemptions(EnumSet<PolicyId> exemptions) {
-        this.exemptions = exemptions;
+        this.exemptions = Set.copyOf(exemptions);
     }
 
     public static PolicyExemptions of(PolicyId... ids) {
+        EnumSet<PolicyId> chosen = EnumSet.noneOf(PolicyId.class);
         for (PolicyId id : ids) {
+            Objects.requireNonNull(id, "Политика в списке исключений не может быть null: проверьте вызов PolicyExemptions.of");
             if (NON_EXEMPTIBLE.contains(id)) {
-                throw new IllegalArgumentException("Политика " + id + " не может иметь исключения: она защищает жизнь духа и работает всегда");
+                throw new IllegalArgumentException("Политика " + id + " не может иметь исключения: она защищает жизнь духа и работает всегда, "
+                        + "уберите её из policyExemptions() скрипта");
             }
+            chosen.add(id);
         }
-        return new PolicyExemptions(EnumSet.copyOf(Set.of(ids)));
+        return chosen.isEmpty() ? NONE : new PolicyExemptions(chosen);
     }
 
     public static PolicyExemptions empty() {
-        return new PolicyExemptions(EnumSet.noneOf(PolicyId.class));
+        return NONE;
     }
 
     public boolean has(PolicyId id) {
@@ -35,18 +37,21 @@ public final class PolicyExemptions {
     }
 
     public Set<PolicyId> all() {
-        return Set.copyOf(exemptions);
+        return exemptions;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PolicyExemptions that)) return false;
-        return Objects.equals(exemptions, that.exemptions);
+    public boolean equals(Object other) {
+        return other instanceof PolicyExemptions that && exemptions.equals(that.exemptions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(exemptions);
+        return exemptions.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "PolicyExemptions" + new TreeSet<>(exemptions);
     }
 }
