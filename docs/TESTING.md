@@ -142,3 +142,33 @@
 - `GameTestTimeoutGuardTests`: GameTest с `timeoutTicks > 400` обязан иметь комментарий-обоснование
   с словом «флак» перед аннотацией — иначе тайм-аут прячет зависший тест. `timeoutTicks ≈ 2×`
   фактических тиков.
+
+## Замеры до/после
+
+Замер — CPU (user+system time) и wall команды, медиана 3 зелёных прогонов. Упавший прогон в медиану не идёт.
+На общей машине числа плавают (load average 5-13 при параллельных исполнителях), поэтому замер —
+не эталон, а индикатор регрессии.
+
+Команда замера (из корня проекта, worktree на нужном коммите):
+
+```
+/usr/bin/time -v -o TestResults/perf/unit-before/timeN.txt \
+    bash -c "./gradlew test --no-daemon" > TestResults/perf/unit-before/runN.log 2>&1
+/usr/bin/time -v -o TestResults/perf/gametest-before/timeN.txt \
+    bash -c "./gradlew runGameTestServer --no-daemon" > TestResults/perf/gametest-before/runN.log 2>&1
+```
+
+`--no-daemon` обязателен: без него `/usr/bin/time` измеряет только CPU клиента Gradle, а не демон и не
+тестовую JVM. Для быстрого тира — `./gradlew test`, для GameTest — `./gradlew runGameTestServer`.
+Результат — `TestResults/perf/<прогон>/measure.csv` (строка на прогон: `run,cpu_s,wall_s,exit`).
+
+Замеры на этой машине (2026-10-12, load average 5-13):
+
+| Прогон | До (c07b0e2) | После (итоговое дерево) |
+|---|---|---|
+| unit (быстрый тир) | 22.0 с (2 валидных: 21.4, 22.6) | 24.5 с (3 прогона) |
+| gametest | 60.2 с (2 валидных: 57.0, 63.3) | 74.8 с (3 прогона) |
+
+Замеры «до» сняты на worktree `c07b0e2` (после слияния main, до R1-R9). По 2 валидных прогона
+вместо 3: машина перегружена параллельными исполнителями, часть прогонов падает (нет server.properties
+в чистом worktree) или даёт аномальный CPU (up-to-date). Замеры «после» — на итоговом дереве.
