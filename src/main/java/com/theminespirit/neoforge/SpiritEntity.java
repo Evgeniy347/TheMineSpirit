@@ -7,6 +7,7 @@ import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.PerceptionResult;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Optional;
@@ -29,6 +30,7 @@ public final class SpiritEntity extends PathfinderMob {
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
+    private Finding finding;
     private int pathBuilds;
     private int snapshotBuilds;
     private String pendingTaskJson;
@@ -149,6 +151,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void updatePerceptionResult(PerceptionResult result) {
         this.perceptionResult = result;
+    }
+
+    public Optional<Finding> finding() {
+        return Optional.ofNullable(finding);
+    }
+
+    public void updateFinding(Finding finding) {
+        this.finding = finding;
     }
 
 
