@@ -862,10 +862,10 @@ public final class InventoryGameTests {
         helper.setBlock(6, 1, 4, Blocks.CHEST);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
         for (int slot = 0; slot < 10; slot++) {
-            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
+            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 25));
         }
         DepositScript script = new DepositScript(spirit, new TransferParams(ContainerTarget.NEAREST,
-                "minecraft:cobblestone", 640, 8));
+                "minecraft:cobblestone", 250, 8));
         AtomicInteger ticks = new AtomicInteger();
         AtomicReference<ScriptStatus> state = new AtomicReference<>(ScriptStatus.RUNNING);
         helper.onEachTick(() -> {
