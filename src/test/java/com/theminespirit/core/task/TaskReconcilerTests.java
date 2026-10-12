@@ -57,6 +57,19 @@ class TaskReconcilerTests {
         assertEquals(STEP_TWO, record().progress(), "Запись обязана хранить последний прогресс");
     }
 
+
+    @Test
+    void reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent() {
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
+        long before = registry.appendedEventCount(taskId);
+
+        reconcile(SpiritReading.living(RunStatus.RUNNING, new RunProgress(2, 2, null, null, null), null));
+
+        assertEquals(before, registry.appendedEventCount(taskId),
+                "Момент между шагами sequence, когда следующий скрипт ещё не создан, не должен давать событие progress "
+                        + "с current_script=null: клиент увидит шаг вместе с именем скрипта");
+        assertEquals(STEP_ONE, record().progress(), "Запись обязана хранить последний прогресс с именем скрипта");
+    }
     @Test
     void reconcile_Succeeded_FinishesKeepingLastProgress() {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_TWO, null));

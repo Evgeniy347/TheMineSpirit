@@ -47,7 +47,8 @@ public final class TaskReconciler {
     }
 
     private void running(TaskRecord record, RunProgress progress) {
-        RunProgress next = progress == null ? record.progress() : progress;
+        boolean namesScript = progress != null && progress.currentScript() != null;
+        RunProgress next = namesScript ? progress : record.progress();
         if (record.state() == TaskState.RUNNING && Objects.equals(next, record.progress())) {
             return;
         }
