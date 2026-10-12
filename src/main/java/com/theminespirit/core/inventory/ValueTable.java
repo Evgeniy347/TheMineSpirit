@@ -197,13 +197,6 @@ public final class ValueTable {
         }
     }
 
-    private static int integerField(JsonNode node, String origin, String what) {        if (node == null || !node.isInt()) {
-            throw new IllegalStateException("Файл ценностей '" + origin + "': у " + what
-                    + " значение целое: ценность считается как целое число предметов");
-        }
-        return node.asInt();
-    }
-
     private static void checkNoDeadRule(List<ValueRule> rules, String origin) {
         for (int index = 0; index < rules.size(); index++) {
             if (coveredByEarlier(rules, index)) {

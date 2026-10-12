@@ -188,10 +188,6 @@ public final class BaseKit {
     }
 
     private static List<KitRule> parseRules(JsonNode node, String origin) {
-        if (node == null || !node.isArray() || node.isEmpty()) {
-            throw new IllegalStateException("Файл базового набора '" + origin
-                    + "' без списка rules: без правил набор пуст и разгрузка отдала бы всё подряд");
-        }
         List<JsonNode> nodes = JsonResource.array(node, origin, "списка rules");
         List<KitRule> rules = new ArrayList<>(nodes.size());
         for (int index = 0; index < nodes.size(); index++) {
@@ -203,7 +199,7 @@ public final class BaseKit {
             JsonResource.checkFields(ruleNode, RULE_FIELDS, origin, "правила №" + index);
             rules.add(rule(optionalStringsField(ruleNode.get("match"), origin, "поля match правила №" + index),
                     textField(ruleNode.get("category"), origin, "правила №" + index),
-                    JsonResource.integer(ruleNode.get("keep"), origin, "поля keep правила №" + index),
+                    keepField(ruleNode.get("keep"), origin, "поля keep правила №" + index),
                     modeField(ruleNode.get("mode"), origin, "правила №" + index), origin, "правила №" + index));
         }
         return rules;
@@ -232,26 +228,6 @@ public final class BaseKit {
         }
     }
 
-    private static List<String> stringsField(JsonNode node, String origin, String what) {
-        if (node == null) {
-            return null;
-        }
-        if (!node.isArray() || node.isEmpty()) {
-            throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
-                    + " поле match пусто или не список: без шаблонов правило не описывает предметы");
-        }
-        List<String> patterns = new ArrayList<>(node.size());
-        for (int index = 0; index < node.size(); index++) {
-            JsonNode pattern = node.get(index);
-            if (!pattern.isTextual()) {
-                throw new IllegalStateException("Файл базового набора '" + origin + "': шаблон №" + index + " у "
-                        + what + " — не строка: шаблон это текст вроде \"*_pickaxe\"");
-            }
-            patterns.add(pattern.asText());
-        }
-        return patterns;
-    }
-
     private static List<String> optionalStringsField(JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return null;
@@ -265,9 +241,19 @@ public final class BaseKit {
         }
         if (!node.isTextual() || node.asText().isBlank()) {
             throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
-                    + " поле category — не строка: имя категории берётся из файла ценностей");
+                    + " поле category — не строка: имя категории берётся из файла ценностей, "
+                    + "по нему решается, какие предметы в одну группу");
         }
         return node.asText();
+    }
+
+    private static int keepField(JsonNode node, String origin, String what) {
+        if (node == null || !node.isInt()) {
+            throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
+                    + " нет квоты keep или она не целая: квота это сколько предметов набора остаётся "
+                    + "у духа, без неё непонятно, что разгружать");
+        }
+        return node.asInt();
     }
 
 }

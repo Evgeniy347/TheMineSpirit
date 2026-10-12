@@ -25,8 +25,8 @@ public final class JsonResource {
         try (InputStream stream = JsonResource.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (stream == null) {
                 throw new IllegalStateException("Файл '" + resourcePath
-                        + "' не найден на classpath: проверьте, что он лежит в src/main/resources/"
-                        + resourcePath.substring(0, resourcePath.lastIndexOf('/')));
+                        + "' не найден на classpath: проверьте, что он лежит в src/main/resources "
+                        + "и путь указан от корня ресурсов");
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException error) {
@@ -58,7 +58,8 @@ public final class JsonResource {
     public static List<JsonNode> array(JsonNode node, String origin, String what) {
         if (node == null || !node.isArray() || node.isEmpty()) {
             throw new IllegalStateException("Файл '" + origin + "': у " + what
-                    + " ожидается непустой список: без него правило не описывает ничего");
+                    + " ожидается непустой список: пустой список ничего не описывает, "
+                    + "и правило без предметов не имело бы смысла");
         }
         List<JsonNode> items = new ArrayList<>(node.size());
         for (int index = 0; index < node.size(); index++) {
@@ -100,6 +101,14 @@ public final class JsonResource {
                     + " ожидается целое число: дробное или текстовое значение правила не имеет смысла");
         }
         return node.asInt();
+    }
+
+    public static List<JsonNode> items(JsonNode node) {
+        List<JsonNode> items = new ArrayList<>(node.size());
+        for (int index = 0; index < node.size(); index++) {
+            items.add(node.get(index));
+        }
+        return items;
     }
 
     public static void checkFields(JsonNode node, Set<String> allowed, String origin, String what) {

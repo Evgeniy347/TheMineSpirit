@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
@@ -61,7 +62,8 @@ class PlanParserTests {
         TaskNode node = PlanParser.parse(json, CATALOG);
 
         assertEquals(new FallbackNode(List.of(
-                new ScriptCall("sort_chest", Map.of("container", "nearest", "radius", 8)),
+                new ScriptCall("sort_chest", Map.of("container", "nearest", "radius",
+                        CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
                 new ScriptCall("return_home", Map.of()))), node,
                 "Узел fallback обязан нести шаги по порядку: потеря порядка ломает стратегию 'первый успешный'. "
                         + "Заодно видны подставленные умолчания sort_chest: без них скрипт контейнера не понял бы, "
