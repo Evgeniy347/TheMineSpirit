@@ -50,6 +50,12 @@ final class FollowScript implements ScriptInstance {
         Vec3 targetPos = target.position();
         boolean pathFinished = spirit.getNavigation().isDone();
         if (pathRefresh.shouldRefresh(targetPos.x, targetPos.y, targetPos.z, pathFinished)) {
+            if (spirit.protectionGate().checkPortalTarget(new BlockCoord(targetCell.getX(), targetCell.getY(), targetCell.getZ()))
+                    instanceof BlockProtection.Refused refused) {
+                stopNavigation();
+                failureReason = refused.reason();
+                return ScriptStatus.FAILED;
+            }
             spirit.getNavigation().moveTo(target, MOVE_SPEED);
             spirit.countPathBuild();
         }

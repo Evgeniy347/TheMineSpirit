@@ -8,9 +8,10 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Creeper;
@@ -192,6 +193,55 @@ public final class PolicyDangerGameTests {
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
             helper.assertTrue(!helper.getBlockState(cell).is(Blocks.NETHER_PORTAL) && !helper.getBlockState(cell.above()).is(Blocks.NETHER_PORTAL),
                     "через 100 тиков дух обязан стоять вне клетки портала, клетка " + cell.toShortString());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "policy_portal_goto_veto", timeoutTicks = 200)
+    public static void portal_GotoIntoPortalCell_FailsWithReasonAndSpiritStaysOutside(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        portalFrame(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 1));
+        BlockPos absolute = helper.absolutePos(new BlockPos(4, 1, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())), 2);
+        var home = spirit.level().dimension();
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "цель в клетке портала: goto обязан провалиться сразу, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал, а не «застрял»: «" + reason + "»");
+            helper.assertTrue(run.spiritTicks() >= 40, "ещё не прошло 40 тиков наблюдения за духом после отказа");
+            BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
+            helper.assertTrue(cell.getZ() <= 2 && spirit.level().dimension() == home,
+                    "после отказа дух не должен идти к порталу: клетка " + cell.toShortString() + ", измерение " + spirit.level().dimension().location());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @SuppressWarnings("removal")
+    @GameTest(template = "arena", batch = "policy_portal_follow_veto", timeoutTicks = 200)
+    public static void portal_FollowPlayerStandingInPortalCell_FailsWithReason(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        portalFrame(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        BlockPos inPortal = helper.absolutePos(new BlockPos(4, 1, 4));
+        player.moveTo(inPortal.getX() + 0.5, inPortal.getY(), inPortal.getZ() + 0.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", 2)), 2);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "игрок стоит в клетке портала: follow обязан отказаться идти туда, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал: «" + reason + "»");
+            helper.getLevel().getServer().getPlayerList().remove(player);
             GameTestFixtures.reset(helper);
         });
     }

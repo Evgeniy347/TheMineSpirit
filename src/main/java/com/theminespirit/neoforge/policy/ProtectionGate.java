@@ -3,7 +3,10 @@ package com.theminespirit.neoforge.policy;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.policy.BodyFlags;
 import com.theminespirit.core.policy.BreakVeto;
+import com.theminespirit.core.policy.LocalSurroundings;
+import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.WorkZone;
@@ -68,6 +71,15 @@ public final class ProtectionGate {
         Optional<WorkZone> zone = spirit.policies().workZone();
         if (zone.isPresent() && ZonePolicy.checkTarget(target, zone.get()) instanceof ZonePolicy.Refused refused) {
             return new BlockProtection.Refused(PolicyId.WORK_ZONE, refused.reason());
+        }
+        return new BlockProtection.Allowed();
+    }
+
+    public BlockProtection.Decision checkPortalTarget(BlockCoord target) {
+        LocalSurroundings around = LocalSurroundings.read(target, new LevelSafetyView(spirit.level()), BodyFlags.CALM, Optional.empty());
+        if (PortalPolicy.vetoesTarget(around, target, spirit.policies().exemptions())) {
+            return new BlockProtection.Refused(PolicyId.PORTAL, "цель (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
+                    + ") — клетка портала: без исключения PORTAL дух в порталы не заходит");
         }
         return new BlockProtection.Allowed();
     }

@@ -38,6 +38,11 @@ final class GotoScript implements ScriptInstance {
                 failureReason = refused.reason();
                 return ScriptStatus.FAILED;
             }
+            if (spirit.protectionGate().checkPortalTarget(goal) instanceof BlockProtection.Refused refused) {
+                approach.cancel();
+                failureReason = refused.reason();
+                return ScriptStatus.FAILED;
+            }
         }
         return switch (approach.tick()) {
             case ARRIVED -> ScriptStatus.SUCCEEDED;
