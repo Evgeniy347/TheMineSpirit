@@ -49,3 +49,7 @@ TestResults/
 
 # База jqwik: seed упавших прогонов, коммитить не нужно (docs/TESTING.md)
 .jqwik-database*
+
+# Python (агент-стратег)
+__pycache__/
+*.pyc

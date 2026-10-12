@@ -1,0 +1,70 @@
+{
+ "description": "выполненный инструмент в песочнице: alert, PAUSE, остановка, остальные духи не обрабатываются",
+ "bots": [
+  {
+   "id": "a",
+   "world": "forest"
+  },
+  {
+   "id": "b",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  },
+  "script": [
+   {
+    "breach": "bash"
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "brain_calls": 1
+  },
+  {
+   "posts": 0
+  },
+  {
+   "halted": true
+  },
+  {
+   "pause_exists": true
+  },
+  {
+   "journal": {
+    "alert": 1,
+    "cycle_start": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "alert",
+    "code": "sandbox_breach",
+    "bot": "a",
+    "reason_contains": "bash"
+   }
+  }
+ ],
+ "name": "30-sandbox-breach-halts-agent-with-alert-and-pause-file"
+}

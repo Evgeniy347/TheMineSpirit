@@ -1,0 +1,44 @@
+{
+ "description": "решение skip: POST нет, причина в журнале",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Ничего полезного рядом нет, лучше подождать.",
+    "skip": true
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "decision": 1,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "decision",
+    "skip": true,
+    "reason_contains": "Ничего полезного"
+   }
+  }
+ ],
+ "name": "03-skip-decision-no-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

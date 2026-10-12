@@ -1,0 +1,107 @@
+{
+ "description": "провал: тот же план в кулдауне, другой разрешён",
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "В радиусе есть железная жила.",
+     "goal": "добыть железо",
+     "plan": {
+      "type": "script",
+      "script": "mine_vein",
+      "params": {
+       "ore": "iron",
+       "count": 2
+      }
+     }
+    }
+   }
+  ]
+ },
+ "fates": {
+  "*": {
+   "outcome": "failed",
+   "after_polls": 1,
+   "error": "нет подходящих брёвен в радиусе"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 1
+    },
+    {
+     "journal_has": {
+      "event": "rejected",
+      "stage": "guard",
+      "reason_contains": "провал"
+     }
+    }
+   ]
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "brain_calls": 3
+  },
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "failed",
+    "error_contains": "нет подходящих брёвен"
+   }
+  }
+ ],
+ "name": "11a-failed-plan-cooldown-other-plan-allowed",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

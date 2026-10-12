@@ -1,0 +1,70 @@
+{
+ "description": "404 на POST tasks при исчезнувшем духе — не «нет маршрута»: режим остаётся live, причина в журнале",
+ "bots": [
+  {
+   "id": "a",
+   "world": "forest"
+  },
+  {
+   "id": "b",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "vanish_on_task_post": [
+     "a"
+    ]
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "mode": "live"
+  },
+  {
+   "journal": {
+    "alert": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posts": 2
+  },
+  {
+   "journal_has": [
+    {
+     "event": "rejected",
+     "stage": "post",
+     "bot": "a",
+     "reason_contains": "исчез"
+    },
+    {
+     "event": "posted",
+     "bot": "b",
+     "dry": false
+    }
+   ]
+  }
+ ],
+ "name": "37-bot-vanished-on-post-404-is-not-missing-route"
+}

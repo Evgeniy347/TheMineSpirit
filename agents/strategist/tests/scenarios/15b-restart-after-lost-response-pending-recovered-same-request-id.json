@@ -1,0 +1,71 @@
+{
+ "description": "ответ на POST потерян, агент перезапущен: повтор с тем же request_id, задача одна",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "fates": {
+  "*": {
+   "outcome": "succeeded",
+   "after_polls": 4
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "task_post_lose_response": 1
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "restart": true
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "tasks_created": 1
+  },
+  {
+   "distinct_request_ids": 1
+  },
+  {
+   "active_tasks": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "bot": "forest",
+    "recovered": true
+   }
+  }
+ ],
+ "name": "15b-restart-after-lost-response-pending-recovered-same-request-id",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

@@ -1,0 +1,515 @@
+{
+  "scripts": [
+    {
+      "id": "scan",
+      "summary": "просканировать мир вокруг духа",
+      "params": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32,
+            "default": 8
+          },
+          "filter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": []
+      },
+      "preconditions": [],
+      "effects": [
+        "обновлена карта блоков, сущностей и контейнеров"
+      ]
+    },
+    {
+      "id": "goto",
+      "summary": "пройти к заданной точке",
+      "params": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          },
+          "y": {
+            "type": "integer",
+            "minimum": -64,
+            "maximum": 319
+          },
+          "z": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ]
+      },
+      "preconditions": [
+        "точка достижима"
+      ],
+      "effects": [
+        "дух находится в точке"
+      ]
+    },
+    {
+      "id": "follow",
+      "summary": "следовать за целью на расстоянии",
+      "params": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16,
+            "default": 3
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "preconditions": [
+        "цель существует"
+      ],
+      "effects": [
+        "дух держит дистанцию до цели"
+      ]
+    },
+    {
+      "id": "chop_tree",
+      "summary": "срубить деревья",
+      "params": {
+        "type": "object",
+        "properties": {
+          "species": {
+            "type": "string",
+            "default": "any"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 1
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "в радиусе есть подходящие брёвна"
+      ],
+      "effects": [
+        "брёвна срублены",
+        "предметы подобраны в инвентарь"
+      ]
+    },
+    {
+      "id": "mine_vein",
+      "summary": "добыть жилу руды",
+      "params": {
+        "type": "object",
+        "properties": {
+          "ore": {
+            "type": "string",
+            "enum": [
+              "any",
+              "coal",
+              "iron",
+              "copper",
+              "gold",
+              "redstone",
+              "lapis",
+              "diamond",
+              "emerald",
+              "quartz",
+              "netherite"
+            ],
+            "default": "any"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 1
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32,
+            "default": 16
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "в радиусе есть подходящая жила"
+      ],
+      "effects": [
+        "руда добыта"
+      ]
+    },
+    {
+      "id": "gather",
+      "summary": "собрать блоки заданного типа",
+      "params": {
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32,
+            "default": 16
+          }
+        },
+        "required": [
+          "block",
+          "count"
+        ]
+      },
+      "preconditions": [
+        "в радиусе есть подходящие блоки"
+      ],
+      "effects": [
+        "блоки собраны"
+      ]
+    },
+    {
+      "id": "collect_drops",
+      "summary": "подобрать выпавшие предметы вокруг духа",
+      "params": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "filter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "в инвентаре есть место"
+      ],
+      "effects": [
+        "предметы по фильтру в радиусе подобраны",
+        "предметов по фильтру в радиусе не осталось"
+      ]
+    },
+    {
+      "id": "till",
+      "summary": "вспахать землю рядом с водой",
+      "params": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 16
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "в инвентаре есть мотыга",
+        "рядом есть вода"
+      ],
+      "effects": [
+        "клетки вспаханы"
+      ]
+    },
+    {
+      "id": "plant_crop",
+      "summary": "посадить культуру",
+      "params": {
+        "type": "object",
+        "properties": {
+          "crop": {
+            "type": "string",
+            "enum": [
+              "wheat",
+              "carrot",
+              "potato",
+              "beetroot"
+            ]
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 64
+          }
+        },
+        "required": [
+          "crop"
+        ]
+      },
+      "preconditions": [
+        "есть семена",
+        "есть вспаханная земля"
+      ],
+      "effects": [
+        "культура посажена"
+      ]
+    },
+    {
+      "id": "harvest_crop",
+      "summary": "собрать зрелый урожай",
+      "params": {
+        "type": "object",
+        "properties": {
+          "crop": {
+            "type": "string",
+            "enum": [
+              "any",
+              "wheat",
+              "carrot",
+              "potato",
+              "beetroot"
+            ],
+            "default": "any"
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "replant": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "посевы созрели"
+      ],
+      "effects": [
+        "урожай собран"
+      ]
+    },
+    {
+      "id": "bone_meal",
+      "summary": "удобрить недозрелые посевы костной мукой",
+      "params": {
+        "type": "object",
+        "properties": {
+          "crop": {
+            "type": "string",
+            "enum": [
+              "any",
+              "wheat",
+              "carrot",
+              "potato",
+              "beetroot"
+            ],
+            "default": "any"
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 16
+          }
+        },
+        "required": []
+      },
+      "preconditions": [
+        "есть костная мука",
+        "есть недозрелые посевы"
+      ],
+      "effects": [
+        "посевы подросли"
+      ]
+    },
+    {
+      "id": "craft",
+      "summary": "скрафтить предмет",
+      "params": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          }
+        },
+        "required": [
+          "item",
+          "count"
+        ]
+      },
+      "preconditions": [
+        "есть материалы и рецепт"
+      ],
+      "effects": [
+        "предмет скрафчен"
+      ]
+    },
+    {
+      "id": "place_block",
+      "summary": "поставить блок",
+      "params": {
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          },
+          "y": {
+            "type": "integer",
+            "minimum": -64,
+            "maximum": 319
+          },
+          "z": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          }
+        },
+        "required": [
+          "block",
+          "x",
+          "y",
+          "z"
+        ]
+      },
+      "preconditions": [
+        "место свободно"
+      ],
+      "effects": [
+        "блок поставлен"
+      ]
+    },
+    {
+      "id": "fill",
+      "summary": "заполнить область блоком",
+      "params": {
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          },
+          "y": {
+            "type": "integer",
+            "minimum": -64,
+            "maximum": 319
+          },
+          "z": {
+            "type": "integer",
+            "minimum": -30000000,
+            "maximum": 30000000
+          }
+        },
+        "required": [
+          "block",
+          "x",
+          "y",
+          "z"
+        ]
+      },
+      "preconditions": [],
+      "effects": [
+        "область заполнена"
+      ]
+    },
+    {
+      "id": "say",
+      "summary": "произнести сообщение",
+      "params": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "preconditions": [],
+      "effects": [
+        "сообщение отправлено"
+      ]
+    },
+    {
+      "id": "wait",
+      "summary": "ждать заданное число тиков",
+      "params": {
+        "type": "object",
+        "properties": {
+          "ticks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6000
+          }
+        },
+        "required": [
+          "ticks"
+        ]
+      },
+      "preconditions": [],
+      "effects": [
+        "время ожидания прошло"
+      ]
+    }
+  ]
+}

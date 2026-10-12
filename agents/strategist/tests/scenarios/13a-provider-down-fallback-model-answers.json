@@ -1,0 +1,55 @@
+{
+ "description": "основная модель недоступна: в том же цикле отвечает запасная",
+ "brains": {
+  "primary": {
+   "default": {
+    "unavailable": "provider",
+    "text": "Free usage exceeded"
+   }
+  },
+  "fallback": {
+   "default": {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "interval": 300
+  },
+  {
+   "journal_has": {
+    "event": "decision",
+    "model": "opencode/fallback-free"
+   }
+  }
+ ],
+ "name": "13a-provider-down-fallback-model-answers",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

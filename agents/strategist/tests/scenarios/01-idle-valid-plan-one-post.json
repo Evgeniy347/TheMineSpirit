@@ -1,0 +1,68 @@
+{
+ "description": "дух простаивает, модель дала валидный план: ровно один POST tasks, request_id — UUID, в журнале posted",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "tasks_created": 1
+  },
+  {
+   "request_id_uuid": true
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "plan_calls": 1
+  },
+  {
+   "journal": {
+    "posted": 1,
+    "decision": 1,
+    "observed": 1,
+    "cycle_start": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "bot": "forest",
+    "dry": false
+   }
+  },
+  {
+   "posted_scripts_allowed": true
+  },
+  {
+   "active_tasks": 1
+  }
+ ],
+ "name": "01-idle-valid-plan-one-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

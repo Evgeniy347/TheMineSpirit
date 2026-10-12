@@ -1,0 +1,81 @@
+{
+ "description": "dry никогда не шлёт POST tasks, решения только в журнал («отправил бы»)",
+ "config": {
+  "STRATEGIST_MODE": "dry"
+ },
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "repeat": 3,
+   "steps": [
+    {
+     "fake": {
+      "set_world": {
+       "bot": "forest",
+       "worlds": [
+        "forest",
+        "farm"
+       ]
+      }
+     }
+    },
+    {
+     "cycle": true
+    },
+    {
+     "advance": 300
+    }
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "tasks_created": 0
+  },
+  {
+   "mode": "dry"
+  },
+  {
+   "brain_calls": 3
+  },
+  {
+   "journal": {
+    "posted": 3
+   }
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "dry": true,
+    "outcome": "would_post"
+   }
+  },
+  {
+   "plan_calls": 3
+  }
+ ],
+ "name": "17-dry-mode-never-posts-tasks",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
