@@ -8,7 +8,7 @@
     "rail", "*_rail", "*torch", "*lantern", "ladder", "*_banner", "*item_frame"
   ],
   "natural": [
-    "air", "cave_air", "void_air", "water", "lava",
+    "air", "cave_air", "void_air", "water", "lava", "barrier", "light", "structure_void",
     "stone", "granite", "diorite", "andesite", "deepslate", "tuff", "calcite", "dripstone_block", "pointed_dripstone",
     "basalt", "blackstone", "netherrack", "end_stone", "bedrock", "obsidian", "magma_block", "ancient_debris",
     "dirt", "grass_block", "coarse_dirt", "podzol", "mycelium", "rooted_dirt", "mud", "clay", "moss_block",

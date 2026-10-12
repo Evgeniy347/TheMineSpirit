@@ -57,6 +57,7 @@ public final class ChopTreeScript implements ScriptInstance {
     private Replanter replanter;
     private TreeSpecies treeSpecies;
     private int standingLogs;
+    private int protectedLogs;
     private int plantedSaplings;
     private int skippedCells;
     private boolean lackedSaplings;
@@ -109,6 +110,21 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     @Override
+    public void suspend() {
+        approach.suspend();
+        if (breaking) {
+            breaker.cancel();
+            breaking = false;
+        }
+        if (collector != null) {
+            collector.suspend();
+        }
+        if (replanter != null) {
+            replanter.suspend();
+        }
+    }
+
+    @Override
     public String failureReason() {
         return failureReason;
     }
@@ -136,6 +152,9 @@ public final class ChopTreeScript implements ScriptInstance {
         StringBuilder text = new StringBuilder("срублено ").append(chopped).append(" из ").append(params.count());
         if (standingLogs > 0) {
             text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
+        }
+        if (protectedLogs > 0) {
+            text.append("; пропущено защищённых: ").append(protectedLogs);
         }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());
@@ -253,6 +272,9 @@ public final class ChopTreeScript implements ScriptInstance {
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
+            if (begin instanceof BlockBreaker.Protected) {
+                return protectedTree();
+            }
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
             if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloser) {
                 movedCloser = true;
@@ -267,6 +289,15 @@ public final class ChopTreeScript implements ScriptInstance {
             }
         }
         return startCollect();
+    }
+
+    private ScriptStatus protectedTree() {
+        protectedLogs++;
+        candidates.markKnown(tree.logs());
+        tree = null;
+        plan = null;
+        phase = Phase.FIND;
+        return ScriptStatus.RUNNING;
     }
 
     private void leaveStanding() {
@@ -351,7 +382,7 @@ public final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus outOfTrees() {
         return fail("срублено " + chopped + " из " + params.count() + ": деревья породы " + speciesText()
                 + " в радиусе " + params.radius() + " закончились (отвергнуто не-деревьев: " + rejected
-                + ", недоступных: " + unreachable + ")");
+                + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")");
     }
 
     private ScriptStatus fail(String reason) {

@@ -69,14 +69,16 @@ public final class BlockProtection {
             return new Refused(PolicyId.PLAYER_BUILDINGS, "блок '" + blockId + "' поставил игрок: чужие постройки дух не разбирает");
         }
         int artificial = 0;
+        String example = null;
         for (String neighbour : neighbours) {
             if (!natural.matches(neighbour)) {
                 artificial++;
+                example = example == null ? neighbour : example;
             }
         }
         if (artificial >= buildingThreshold) {
             return new Refused(PolicyId.PLAYER_BUILDINGS, "вокруг блока '" + blockId + "' " + artificial + " искусственных блоков из "
-                    + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + "): это постройка игрока");
+                    + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
         }
         return new Allowed();
     }

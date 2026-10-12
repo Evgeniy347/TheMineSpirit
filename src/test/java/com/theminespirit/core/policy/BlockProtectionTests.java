@@ -70,6 +70,7 @@ class BlockProtectionTests {
                 row("камень у стены из 26 блоков", "minecraft:stone", around(26, "minecraft:bricks", "minecraft:stone"), false, false, PolicyId.PLAYER_BUILDINGS),
                 row("неизвестный блок мода считается искусственным: 6 штук", "minecraft:stone", around(6, "othermod:weird_block", "minecraft:stone"), false, false, PolicyId.PLAYER_BUILDINGS),
                 row("неизвестный блок мода: 5 штук", "minecraft:stone", around(5, "othermod:weird_block", "minecraft:stone"), false, false, null),
+                row("технические невидимые блоки не считаются постройкой", "minecraft:oak_log", around(26, "minecraft:barrier", "minecraft:barrier"), false, false, null),
                 row("воздух вокруг не считается постройкой", "minecraft:stone", around(0, "", "minecraft:air"), false, false, null),
                 row("сундук в защищённой зоне: чёрный список раньше зоны", "minecraft:chest", cave, false, true, PolicyId.PROTECTED_BLOCKS),
                 row("камень в зоне, поставленный игроком: зона раньше игрока", "minecraft:stone", cave, true, true, PolicyId.PROTECTED_ZONE),
@@ -125,7 +126,7 @@ class BlockProtectionTests {
     void check_BuildingRefusal_NamesCountAndThreshold() {
         BlockProtection.Refused refused = (BlockProtection.Refused) protection.check("minecraft:oak_log", house(), false, false);
 
-        assertEquals("вокруг блока 'minecraft:oak_log' 14 искусственных блоков из 26 (порог 6): это постройка игрока", refused.reason(),
+        assertEquals("вокруг блока 'minecraft:oak_log' 14 искусственных блоков из 26 (порог 6, например 'minecraft:oak_planks'): это постройка игрока", refused.reason(),
                 "Отказ называет число искусственных соседей и порог: по итогу задачи видно, почему бревно пропущено");
     }
 

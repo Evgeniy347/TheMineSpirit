@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.ChopTreeScript;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -108,6 +109,31 @@ public final class ChopTreeGameTests {
                     "листва должна остаться целой, осталось " + leavesInWorld + " блоков листьев");
 
             clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_protected_zone", timeoutTicks = 300)
+    public static void chopTree_TreeInsideProtectedZone_LogsStayAndSummaryCountsThem(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+        BlockPos from = helper.absolutePos(new BlockPos(3, 1, 3));
+        BlockPos to = helper.absolutePos(new BlockPos(5, 8, 5));
+        PolicyConfig.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " " + from.getY() + " "
+                + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) != RunStatus.RUNNING,
+                    "chop_tree по защищённому дереву обязан завершиться, а не рубить его");
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.OAK_LOG) == 5,
+                    "брёвна в защищённой зоне обязаны уцелеть, осталось " + countBlocksInWorld(helper, Blocks.OAK_LOG));
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED
+                            && spirit.taskFailureReason().orElse("").contains("пропущено защищённых"),
+                    "итог называет число пропущенных защищённых брёвен: " + spirit.taskStatus() + ", " + spirit.taskFailureReason());
+            PolicyConfig.setProtectedZones(List.of());
+            GameTestFixtures.reset(helper);
         });
     }
 

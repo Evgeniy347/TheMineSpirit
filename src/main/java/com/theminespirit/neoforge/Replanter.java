@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.policy.BlockProtection;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -77,6 +78,10 @@ final class Replanter {
         return State.RUNNING;
     }
 
+    void suspend() {
+        approach.suspend();
+    }
+
     void cancel() {
         approach.cancel();
     }
@@ -109,7 +114,8 @@ final class Replanter {
         if (level.getChunkSource().getChunkNow(cell.getX() >> 4, cell.getZ() >> 4) == null) {
             return false;
         }
-        return level.getBlockState(cell).canBeReplaced() && saplingState.canSurvive(level, cell);
+        return level.getBlockState(cell).canBeReplaced() && saplingState.canSurvive(level, cell)
+                && spirit.protectionGate().checkPlace(cell) instanceof BlockProtection.Allowed;
     }
 
     private boolean withinReach(BlockPos cell) {
