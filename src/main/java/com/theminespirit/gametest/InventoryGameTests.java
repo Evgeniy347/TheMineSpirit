@@ -10,6 +10,7 @@ import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
+import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.inventory.TransferRunner;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -35,7 +37,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
-import net.minecraft.world.level.storage.loot.LootTable;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -767,6 +768,100 @@ public final class InventoryGameTests {
             }
         }
         return stacks;
+    }
+
+    @GameTest(template = "arena", batch = "inv_refuse_loot", timeoutTicks = 400)
+    public static void deposit_LootChestCoords_RefusesWithoutTouching(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        BlockPos chest = helper.absolutePos(new BlockPos(6, 1, 4));
+        RandomizableContainerBlockEntity entity =
+                (RandomizableContainerBlockEntity) helper.getLevel().getBlockEntity(chest);
+        entity.setLootTable(ResourceKey.create(Registries.LOOT_TABLE,
+                ResourceLocation.parse("minecraft:chests/simple_dungeon")));
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", coordsOf(chest), "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "сундук с нераскрытой таблицей добычи обязан проваливать deposit, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("добыч"),
+                    "причина обязана пояснять про нераскрытую добычу, фактически: "
+                            + spirit.taskFailureReason().orElse("нет причины"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 10,
+                    "инвентарь духа обязан остаться нетронутым: в запретный сундук ничего не кладут");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_refuse_furnace", timeoutTicks = 400)
+    public static void deposit_FurnaceCoords_RefusesWithoutTouching(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.FURNACE);
+        BlockPos furnace = helper.absolutePos(new BlockPos(6, 1, 4));
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", coordsOf(furnace), "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "печь обязана проваливать deposit, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("не допустимый контейнер"),
+                    "причина обязана пояснять, что печь не допустимый контейнер, фактически: "
+                            + spirit.taskFailureReason().orElse("нет причины"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 10,
+                    "инвентарь духа обязан остаться нетронутым");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "inv_registry_guard", timeoutTicks = 400)
+    public static void registryGuard_ExactIdsInTables_ExistInGameRegistry(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        List<String> matches = exactMatches();
+        List<String> missing = new ArrayList<>();
+        for (String match : matches) {
+            String id = match.contains(":") ? match : "minecraft:" + match;
+            if (!BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(id))) {
+                missing.add(id);
+            }
+        }
+
+        helper.assertTrue(!matches.isEmpty(),
+                "сторож бессмыслен без точных id: в таблицах обязаны быть не только шаблоны");
+        helper.assertTrue(missing.isEmpty(),
+                "все точные id из item_values.json и base_kit.json обязаны существовать в реестре предметов: "
+                        + "иначе ценность и набор ссылаются на несуществующие предметы. Отсутствуют: " + missing);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    private static String coordsOf(BlockPos absolute) {
+        return absolute.getX() + "," + absolute.getY() + "," + absolute.getZ();
+    }
+
+    private static List<String> exactMatches() {
+        List<String> exact = new ArrayList<>();
+        InventoryTables.values().rules().forEach(rule -> rule.match().stream()
+                .filter(match -> !IdFilter.isPattern(match)).forEach(exact::add));
+        InventoryTables.kit().rules().forEach(rule -> rule.match().stream()
+                .filter(match -> !IdFilter.isPattern(match)).forEach(exact::add));
+        InventoryTables.kit().neverGiveAway().stream()
+                .filter(match -> !IdFilter.isPattern(match)).forEach(exact::add);
+        return exact;
     }
 
     private static String describe(ContainerAccess.Open open) {
