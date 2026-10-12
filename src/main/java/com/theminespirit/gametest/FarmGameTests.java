@@ -9,18 +9,27 @@ import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.Ground;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.CropRegistry;
+import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
 import com.theminespirit.neoforge.LevelFarmView;
+import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,6 +42,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class FarmGameTests {
     private static final int GROUND_Y = 1;
+    private static final int FLOOR_Y = 0;
+    private static final int SETTLE_TICKS = 5;
+    private static final int ARENA_SIZE = 11;
+    private static final int ARENA_HEIGHT = 8;
 
     private FarmGameTests() {
     }
@@ -160,6 +173,162 @@ public final class FarmGameTests {
                     "поиск берёт не больше 4 срезов за тик, максимум за тик: " + targets.maxSlicesPerTick());
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "farm_session_till", timeoutTicks = 600)
+    public static void farmSession_TillFiveByFiveNearWater_TillsTwelveWearsHoeAndKeepsRest(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int x = 3; x <= 7; x++) {
+            for (int z = 3; z <= 7; z++) {
+                helper.setBlock(new BlockPos(x, FLOOR_Y, z), Blocks.DIRT);
+            }
+        }
+        helper.setBlock(new BlockPos(5, FLOOR_Y, 5), Blocks.WATER);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 1), new ItemStack(Items.IRON_HOE));
+        Map<BlockPos, Block> before = snapshot(helper);
+        AtomicReference<FarmSession> session = drive(helper, spirit, ctx -> FarmSession.till(ctx, 4, 12));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "двенадцать клеток земли в 4 блоках от воды обязаны вспахаться: " + run.outcome() + ", "
+                            + run.failureReason());
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 12,
+                    "обязано появиться ровно 12 пашни, фактически " + countBlock(helper, Blocks.FARMLAND));
+            helper.assertTrue(spirit.getInventory().getItem(0).getDamageValue() == 12,
+                    "износ мотыги обязан быть 12 (по единице на клетку, как у игрока), фактически "
+                            + spirit.getInventory().getItem(0).getDamageValue());
+            helper.assertTrue(changedBlocks(helper, before) == 12,
+                    "кроме 12 вспаханных клеток мир обязан остаться прежним, изменилось " + changedBlocks(helper, before));
+            helper.assertTrue(helper.getBlockState(new BlockPos(5, FLOOR_Y, 5)).is(Blocks.WATER),
+                    "вода обязана остаться на месте");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_session_harvest", timeoutTicks = 800)
+    public static void farmSession_HarvestMixedWheat_CollectsAndReplantsOnlyMature(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(new BlockPos(1, FLOOR_Y, 4), Blocks.WATER);
+        List<BlockPos> cells = new ArrayList<>();
+        for (int x = 3; x <= 5; x++) {
+            for (int z = 3; z <= 5; z++) {
+                cells.add(new BlockPos(x, FLOOR_Y, z));
+            }
+        }
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), CropKind.WHEAT, i % 2 == 0 ? 7 : 3);
+        }
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.WHEAT_SEEDS, 5));
+        AtomicReference<FarmSession> session = drive(helper, spirit,
+                ctx -> FarmSession.harvestCrop(ctx, CropKind.WHEAT, 8, true));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "пять зрелых клеток обязаны собраться, недозрелые не мешают: " + run.outcome() + ", "
+                            + run.failureReason());
+            for (int i = 0; i < cells.size(); i++) {
+                int expectedAge = i % 2 == 0 ? 0 : 3;
+                helper.assertTrue(cropAge(helper, cells.get(i)) == expectedAge,
+                        "клетка " + i + " обязана иметь возраст " + expectedAge + " (зрелая пересажена, недозрелая нетронута), "
+                                + "фактически " + cropAge(helper, cells.get(i)));
+            }
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 5,
+                    "с пяти зрелых клеток обязано быть собрано ровно 5 пшеницы, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
+        for (int slot = 0; slot < stacks.length; slot++) {
+            spirit.getInventory().setItem(slot, stacks[slot]);
+        }
+        return spirit;
+    }
+
+    private static AtomicReference<FarmSession> drive(GameTestHelper helper, SpiritEntity spirit,
+            Function<SpiritEntity, FarmSession> factory) {
+        AtomicReference<FarmSession> session = new AtomicReference<>();
+        helper.onEachTick(() -> {
+            FarmSession current = session.get();
+            if (current == null) {
+                if (spirit.tickCount >= SETTLE_TICKS) {
+                    session.set(factory.apply(spirit));
+                }
+                return;
+            }
+            if (current.outcome() == FarmSession.Outcome.RUNNING) {
+                current.tick();
+            }
+        });
+        return session;
+    }
+
+    private static FarmSession finished(GameTestHelper helper, AtomicReference<FarmSession> session) {
+        FarmSession run = session.get();
+        helper.assertTrue(run != null && run.outcome() != FarmSession.Outcome.RUNNING,
+                "сессия обязана завершиться, а не висеть в RUNNING: "
+                        + (run == null ? "сессия не стартовала" : run.outcome().name()));
+        return run;
+    }
+
+    private static void setCrop(GameTestHelper helper, BlockPos ground, CropKind kind, int age) {
+        helper.setBlock(ground, Blocks.FARMLAND);
+        Block block = CropRegistry.block(kind);
+        IntegerProperty ageProperty = (IntegerProperty) block.getStateDefinition().getProperty("age");
+        helper.setBlock(ground.above(), block.defaultBlockState().setValue(ageProperty, age));
+    }
+
+    private static int cropAge(GameTestHelper helper, BlockPos ground) {
+        BlockState state = helper.getBlockState(ground.above());
+        Property<?> age = state.getBlock().getStateDefinition().getProperty("age");
+        helper.assertTrue(age instanceof IntegerProperty, "над клеткой " + ground + " обязан расти посев, а там "
+                + state.getBlock());
+        return state.getValue((IntegerProperty) age);
+    }
+
+    private static Map<BlockPos, Block> snapshot(GameTestHelper helper) {
+        Map<BlockPos, Block> blocks = new HashMap<>();
+        for (int x = 0; x < ARENA_SIZE; x++) {
+            for (int y = 0; y < ARENA_HEIGHT; y++) {
+                for (int z = 0; z < ARENA_SIZE; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    blocks.put(pos, helper.getBlockState(pos).getBlock());
+                }
+            }
+        }
+        return blocks;
+    }
+
+    private static int changedBlocks(GameTestHelper helper, Map<BlockPos, Block> before) {
+        int changed = 0;
+        for (Map.Entry<BlockPos, Block> entry : before.entrySet()) {
+            if (helper.getBlockState(entry.getKey()).getBlock() != entry.getValue()) {
+                changed++;
+            }
+        }
+        return changed;
+    }
+
+    private static int countBlock(GameTestHelper helper, Block block) {
+        int total = 0;
+        for (int x = 0; x < ARENA_SIZE; x++) {
+            for (int y = 0; y < ARENA_HEIGHT; y++) {
+                for (int z = 0; z < ARENA_SIZE; z++) {
+                    if (helper.getBlockState(new BlockPos(x, y, z)).is(block)) {
+                        total++;
+                    }
+                }
+            }
+        }
+        return total;
     }
 
     private static BlockCoord coordOf(GameTestHelper helper, BlockPos relative) {
