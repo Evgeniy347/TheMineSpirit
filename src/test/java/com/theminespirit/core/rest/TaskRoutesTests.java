@@ -1,0 +1,503 @@
+package com.theminespirit.core.rest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.ScanRadius;
+import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.task.TaskRegistry;
+import com.theminespirit.core.task.TaskState;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class TaskRoutesTests {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String BOT = "6f1c2d3e-0000-4000-8000-000000000001";
+    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog()
+            .restrictedTo(Set.of("scan", "goto", "follow", "collect_drops", "wait"));
+    private static final WorldObservation OBSERVATION = new WorldObservation(BOT, 1, new BlockCoord(0, 64, 0),
+            List.of(), List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
+
+    private TaskRegistry registry;
+    private FakeTaskGateway gateway;
+    private PlanningService planning;
+    private IdempotencyCache idempotency;
+    private SseSlots slots;
+    private Router router;
+
+    @BeforeEach
+    void setUp() {
+        registry = new TaskRegistry();
+        gateway = new FakeTaskGateway().observing(OBSERVATION);
+        planning = new PlanningService(CATALOG, ConditionCatalog.empty());
+        idempotency = new IdempotencyCache();
+        slots = new SseSlots();
+        router = Router.of(new TaskRoutes(registry, gateway, planning, idempotency, slots).routes());
+    }
+
+    private static String uuid() {
+        return UUID.randomUUID().toString();
+    }
+
+    private static byte[] utf8(String text) {
+        return text.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private RestResponse send(String method, String path, String body, Map<String, String> headers) {
+        return router.handle(new RestRequest(method, path, Map.of(), headers, utf8(body)));
+    }
+
+    private RestResponse send(String method, String path, String body) {
+        return send(method, path, body, Map.of());
+    }
+
+    private String postTasks(String goalJson) {
+        String body = "{\"request_id\":\"" + uuid() + "\"," + goalJson + "}";
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+        assertEquals(202, response.status(), "Постановка задачи обязана приниматься: тело " + response.body());
+        return response.body();
+    }
+
+    private String taskId(String acceptedBody) throws Exception {
+        return MAPPER.readTree(acceptedBody).get("task_id").asText();
+    }
+
+    private String runToState(String taskId, TaskState state, String error) {
+        return registry.observe(taskId, state, null, error).toString();
+    }
+
+    static Stream<Arguments> table() {
+        return Stream.of(
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid()
+                        + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}",
+                        202, "\"state\":\"accepted\""),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}",
+                        202, "\"state\":\"accepted\""),
+                Arguments.of("POST", "tasks", "{", 400, "не разобрано как JSON"),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid() + "\"}", 400, "goal или plan"),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"не-uuid\",\"goal\":\"цель\"}", 400, "request_id"),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid() + "\",\"goal\":\"цель\",\"foo\":1}", 400,
+                        "'foo'"),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid() + "\",\"goal\":\"спой гимн\"}", 422,
+                        "не распознана"),
+                Arguments.of("POST", "tasks", "{\"request_id\":\"" + uuid()
+                        + "\",\"plan\":{\"type\":\"script\",\"script\":\"return_home\"}}", 422, "return_home"),
+                Arguments.of("POST", "plan", "{\"plan\":{\"type\":\"script\",\"script\":\"goto\","
+                        + "\"params\":{\"x\":1,\"y\":64,\"z\":2}}}", 200,
+                        "\"valid\":true"),
+                Arguments.of("POST", "plan", "{\"plan\":{\"type\":\"script\",\"script\":\"return_home\"}}", 422,
+                        "return_home"),
+                Arguments.of("POST", "plan", "{\"plan\":{\"type\":\"script\"}}", 422, "script"),
+                Arguments.of("POST", "plan", "{}", 400, "нет поля 'plan'"),
+                Arguments.of("POST", "plan", "[1]", 400, "JSON-объектом"),
+                Arguments.of("POST", "plan", "{", 400, "не разобрано как JSON"));
+    }
+
+    @ParameterizedTest(name = "{0} {1} → {3}")
+    @MethodSource("table")
+    void routes_Request_ReturnsExpectedStatusAndFragment(String method, String section, String body, int status,
+            String fragment) {
+        String path = section.equals("tasks") ? "/v1/bots/" + BOT + "/tasks" : "/v1/plan";
+
+        RestResponse response = send(method, path, body);
+
+        assertEquals(status, response.status(), "Статус обязан совпадать с чеклистом: " + response.body());
+        assertTrue(response.body().contains(fragment),
+                "Ответ обязан содержать '" + fragment + "': " + response.body());
+    }
+
+    @Test
+    void create_PlanRequest_ReservesTaskAndStartsGateway() throws Exception {
+        String body = "{\"request_id\":\"" + uuid()
+                + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, response.status(), "Валидный план обязан давать 202 Accepted: " + response.body());
+        assertEquals(BOT, gateway.starts().get(0), "План обязан уйти шлюзу именно для запрошенного духа");
+        assertEquals(1, registry.size(), "Резерв обязан создать ровно одну запись задачи");
+        assertEquals(TaskState.ACCEPTED, registry.get(taskId(response.body())).orElseThrow().state(),
+                "Новая задача обязана стоять в accepted до первого опроса наблюдателя");
+    }
+
+    @Test
+    void create_GoalRequest_ReservesTaskAndStartsGateway() throws Exception {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, response.status(), "Цель обязана планироваться и приниматься: " + response.body());
+        assertEquals(1, gateway.starts().size(), "После постановки цели шлюз обязан получить ровно один старт");
+    }
+
+    @Test
+    void create_ReplaySameBody_ReturnsSameTaskWithoutSecondStart() throws Exception {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        String first = send("POST", "/v1/bots/" + BOT + "/tasks", body).body();
+
+        RestResponse replay = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, replay.status(), "Повтор того же запроса обязан оставаться 202: " + replay.body());
+        assertEquals(first, replay.body(), "Идемпотентный повтор обязан возвращать исходный ответ байт в байт");
+        assertEquals(1, registry.size(), "Идемпотентный повтор не должен создавать вторую задачу");
+        assertEquals(1, gateway.starts().size(), "Идемпотентный повтор не должен второй раз стартовать духа");
+    }
+
+    @Test
+    void create_SameRequestIdDifferentBody_Conflicts() {
+        String first = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        send("POST", "/v1/bots/" + BOT + "/tasks", first);
+        String other = "{\"request_id\":\"" + jsonField(first, "request_id")
+                + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", other);
+
+        assertEquals(409, response.status(), "Тот же request_id с другим телом обязан давать 409: " + response.body());
+        assertTrue(response.body().contains("request_id"), "409 обязан называть request_id: " + response.body());
+    }
+
+    @Test
+    void create_BotBusy_ConflictsWithActiveTaskId() throws Exception {
+        String first = postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}");
+        String activeId = taskId(first);
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(409, response.status(), "Занятый дух обязан давать 409: " + response.body());
+        assertTrue(response.body().contains(activeId),
+                "409 обязан называть текущую задачу " + activeId + ": " + response.body());
+        assertEquals(1, registry.size(), "Конфликт занятости не должен резервировать вторую задачу");
+    }
+
+    @Test
+    void create_GatewayStartFails_DiscardsReservation() {
+        gateway.startFailsWith(new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of()));
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(409, response.status(), "Отказ шлюза обязан проходить клиенту как 409: " + response.body());
+        assertEquals(0, registry.size(), "Провал старта обязан откатывать резерв, иначе дух навсегда занят");
+        assertEquals(0, registry.completedCount(), "Откат не должен оставлять хвост в реестре");
+    }
+
+    @Test
+    void create_UnknownBotDuringGoal_ConflictsWithoutReservation() {
+        FakeTaskGateway empty = new FakeTaskGateway();
+        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots).routes());
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = fresh.handle(new RestRequest("POST", "/v1/bots/" + BOT + "/tasks", Map.of(), Map.of(),
+                utf8(body)));
+
+        assertEquals(404, response.status(), "Неизвестный дух обязан давать 404: " + response.body());
+        assertEquals(0, registry.size(), "404 не должен резервировать задачу");
+    }
+
+    @Test
+    void create_UnknownBotDuringPlan_ConflictsWithoutReservation() {
+        FakeTaskGateway empty = new FakeTaskGateway()
+                .startFailsWith(new ApiException(ErrorCode.NOT_FOUND, "Дух не найден", Map.of("id", BOT)));
+        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots).routes());
+        String body = "{\"request_id\":\"" + uuid()
+                + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
+
+        RestResponse response = fresh.handle(new RestRequest("POST", "/v1/bots/" + BOT + "/tasks", Map.of(), Map.of(),
+                utf8(body)));
+
+        assertEquals(404, response.status(), "Неизвестный дух обязан давать 404 и для плана: " + response.body());
+        assertEquals(0, registry.size(), "404 при плане не должен резервировать задачу");
+    }
+
+    @Test
+    void create_FollowWithParams_PlansAndStarts() throws Exception {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\","
+                + "\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, response.status(), "«Следуй за мной» с params.target обязан планироваться: "
+                + response.body());
+        assertEquals(1, gateway.starts().size(), "План follow обязан уйти шлюзу один раз");
+    }
+
+    @Test
+    void create_FollowWithoutParams_ReturnsInvalidPlan() {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\"}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(422, response.status(), "follow без params.target обязан давать 422: " + response.body());
+        assertTrue(response.body().contains("target"), "422 обязан пояснять про target: " + response.body());
+    }
+
+    @Test
+    void get_KnownTask_ReturnsStateAndBot() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        RestResponse response = send("GET", "/v1/tasks/" + taskId, "");
+
+        assertEquals(200, response.status(), "Известная задача обязана читаться: " + response.body());
+        assertTrue(response.body().contains("\"state\":\"accepted\""), "GET обязан отдавать состояние задачи: "
+                + response.body());
+        assertTrue(response.body().contains(BOT), "GET обязан отдавать духа: " + response.body());
+    }
+
+    @Test
+    void get_UnknownTask_ReturnsNotFound() {
+        RestResponse response = send("GET", "/v1/tasks/t-404", "");
+
+        assertEquals(404, response.status(), "Неизвестная задача обязана давать 404: " + response.body());
+        assertTrue(response.body().contains("t-404"), "404 обязан называть task_id: " + response.body());
+    }
+
+    @Test
+    void delete_ActiveTask_CancelsViaGatewayAndRegistry() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        RestResponse response = send("DELETE", "/v1/tasks/" + taskId, "");
+
+        assertEquals(200, response.status(), "Отмена обязана отвечать 200: " + response.body());
+        assertTrue(response.body().contains("\"state\":\"cancelled\""),
+                "200 обязан возвращать cancelled: " + response.body());
+        assertEquals(List.of(taskId), gateway.cancels(), "Активная задача обязана останавливать дух через шлюз");
+        assertEquals(TaskState.CANCELLED, registry.get(taskId).orElseThrow().state(),
+                "Реестр обязан перейти в cancelled");
+    }
+
+    @Test
+    void delete_Twice_ReturnsCancelledWithoutSecondCancel() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        RestResponse first = send("DELETE", "/v1/tasks/" + taskId, "");
+        RestResponse second = send("DELETE", "/v1/tasks/" + taskId, "");
+
+        assertEquals(200, second.status(), "Повторный DELETE обязан оставаться идемпотентным 200: " + second.body());
+        assertEquals(first.body(), second.body(), "Повторный DELETE обязан возвращать ту же запись задачи");
+        assertEquals(List.of(taskId), gateway.cancels(),
+                "Идемпотентный повтор DELETE не должен второй раз трогать духа");
+    }
+
+    @Test
+    void delete_UnknownTask_ReturnsNotFound() {
+        RestResponse response = send("DELETE", "/v1/tasks/t-404", "");
+
+        assertEquals(404, response.status(), "Отмена неизвестной задачи обязана давать 404: " + response.body());
+        assertTrue(gateway.cancels().isEmpty(), "404 не должен вызывать cancel у шлюза");
+    }
+
+    @Test
+    void delete_TerminalTask_ReturnsRecordWithoutCancel() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        runToState(taskId, TaskState.RUNNING, null);
+        runToState(taskId, TaskState.SUCCEEDED, null);
+
+        RestResponse response = send("DELETE", "/v1/tasks/" + taskId, "");
+
+        assertEquals(200, response.status(), "DELETE завершённой задачи обязан быть идемпотентным 200: "
+                + response.body());
+        assertTrue(response.body().contains("\"state\":\"succeeded\""),
+                "Завершённая задача обязана вернуть своё состояние: " + response.body());
+        assertTrue(gateway.cancels().isEmpty(), "Завершённой задаче отмена не нужна");
+    }
+
+    @Test
+    void events_UnknownTask_ReturnsNotFound() {
+        RestResponse response = send("GET", "/v1/tasks/t-404/events", "");
+
+        assertEquals(404, response.status(), "SSE у неизвестной задачи обязан давать 404: " + response.body());
+        assertNull(response.stream(), "404 не должен открывать поток кадров");
+    }
+
+    @Test
+    void events_KnownTask_OpensStreamWithStateFrame() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        RestResponse response = send("GET", "/v1/tasks/" + taskId + "/events", "");
+
+        assertEquals(200, response.status(), "SSE обязана открываться 200: " + response.body());
+        assertTrue(response.stream() != null, "Ответ обязан нести поток кадров");
+        assertEquals("text/event-stream", response.headers().get("Content-Type"),
+                "SSE обязана отдаваться с content-type text/event-stream");
+        try {
+            String frame = response.stream().nextFrame();
+            assertTrue(frame.startsWith("id: "), "Первый кадр обязан нести id: " + frame);
+            assertTrue(frame.contains("event: state"), "Первый кадр обязан быть state: " + frame);
+            assertTrue(frame.contains("\"state\":\"accepted\""), "Первый кадр обязан нести состояние: " + frame);
+        } finally {
+            response.stream().close();
+        }
+        assertEquals(0, slots.open(), "Закрытие потока обязано освобождать слот");
+    }
+
+    @Test
+    void events_FifthStream_ReturnsRateLimited() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        List<RestResponse> open = new ArrayList<>();
+        for (int i = 0; i < SseSlots.MAX_STREAMS; i++) {
+            RestResponse response = send("GET", "/v1/tasks/" + taskId + "/events", "");
+            assertEquals(200, response.status(), "Четыре потока обязаны открываться: " + response.body());
+            open.add(response);
+        }
+
+        RestResponse fifth = send("GET", "/v1/tasks/" + taskId + "/events", "");
+
+        assertEquals(429, fifth.status(), "Пятый поток обязан получать 429: " + fifth.body());
+        assertTrue(fifth.body().contains("rate_limited"), "429 обязан нести code rate_limited: " + fifth.body());
+        open.forEach(response -> response.stream().close());
+        assertEquals(0, slots.open(), "Все закрытые потоки обязаны освободить слоты");
+        RestResponse afterRelease = send("GET", "/v1/tasks/" + taskId + "/events", "");
+        assertEquals(200, afterRelease.status(), "После освобождения слота поток обязан открываться снова: "
+                + afterRelease.body());
+        afterRelease.stream().close();
+    }
+
+    @Test
+    void events_InvalidLastEventIdHeader_ReturnsBadRequest() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+
+        RestResponse response = send("GET", "/v1/tasks/" + taskId + "/events", "",
+                Map.of("Last-Event-ID", "abc"));
+
+        assertEquals(400, response.status(), "Нечисловой Last-Event-ID обязан давать 400: " + response.body());
+        assertNull(response.stream(), "400 не должен открывать поток кадров");
+        assertEquals(0, slots.open(), "Открытый и отклонённый поток не должен держать слот");
+    }
+
+    @Test
+    void events_InvalidLastEventId_DoesNotLeakSlot() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        RestResponse ok = send("GET", "/v1/tasks/" + taskId + "/events", "");
+        assertEquals(200, ok.status(), "Первый поток обязан открываться: " + ok.body());
+
+        RestResponse bad = send("GET", "/v1/tasks/" + taskId + "/events", "",
+                Map.of("last-event-id", "не-число"));
+
+        assertEquals(400, bad.status(), "Нечисловой заголовок обязан давать 400: " + bad.body());
+        assertEquals(1, slots.open(), "Отклонённый запрос не должен занимать слот: открыт только первый поток");
+        ok.stream().close();
+    }
+
+    @Test
+    void events_StreamingStateAndCancellation_FrameFlow() throws Exception {
+        String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
+        RestResponse response = send("GET", "/v1/tasks/" + taskId + "/events", "");
+        SseStream stream = response.stream();
+        try {
+            String first = stream.nextFrame();
+            assertTrue(first.contains("event: state"), "Первый кадр обязана быть state: " + first);
+
+            registry.observe(taskId, TaskState.RUNNING, null, null);
+
+            send("DELETE", "/v1/tasks/" + taskId, "");
+
+            String running = stream.nextFrame();
+            assertTrue(running.contains("event: state") && running.contains("running"),
+                    "Первым событием обязана идти смена состояния на running: " + running);
+
+            String cancelled = stream.nextFrame();
+            assertTrue(cancelled.contains("event: state") && cancelled.contains("cancelled"),
+                    "После отмены клиент обязан получить кадр state cancelled: " + cancelled);
+
+            assertNull(stream.nextFrame(), "Закрытый журнал обязан завершать поток значением null");
+        } finally {
+            stream.close();
+        }
+    }
+
+    @Test
+    void plan_ValidNode_ReturnsValidTrue() {
+        RestResponse response = send("POST", "/v1/plan",
+                "{\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}");
+
+        assertEquals(200, response.status(), "Валидный план обязана приниматься сухим прогоном: " + response.body());
+        assertEquals("{\"valid\":true}", response.body(), "Сухой прогон обязан отвечать ровно {\"valid\":true}");
+        assertEquals(0, registry.size(), "Сухой прогон не должен трогать реестр задач");
+        assertTrue(gateway.starts().isEmpty(), "Сухой прогон не должен стартовать духа");
+    }
+
+    @Test
+    void plan_UnknownScript_ReturnsInvalidPlan() {
+        RestResponse response = send("POST", "/v1/plan",
+                "{\"plan\":{\"type\":\"script\",\"script\":\"return_home\"}}");
+
+        assertEquals(422, response.status(), "Неизвестный скрипт обязан давать 422: " + response.body());
+        assertTrue(response.body().contains("return_home"), "422 обязан называть скрипт: " + response.body());
+        assertTrue(gateway.starts().isEmpty(), "Сухой прогон при 422 не должен стартовать духа");
+    }
+
+    @Test
+    void plan_MissingField_ReturnsBadRequest() {
+        RestResponse response = send("POST", "/v1/plan", "{}");
+
+        assertEquals(400, response.status(), "Отсутствие поля plan обязано давать 400: " + response.body());
+        assertTrue(response.body().contains("'plan'"), "400 обязан называть отсутствующее поле: " + response.body());
+    }
+
+    private static String jsonField(String json, String field) {
+        try {
+            return MAPPER.readTree(json).get(field).asText();
+        } catch (Exception e) {
+            throw new IllegalStateException("Тестовое тело запроса обязано быть валидным JSON: " + json, e);
+        }
+    }
+
+    @Test
+    void create_AcceptedResponse_EchoesRequestIdAndTaskId() throws Exception {
+        String requestId = uuid();
+        String body = "{\"request_id\":\"" + requestId + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+
+        RestResponse response = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        JsonNode parsed = MAPPER.readTree(response.body());
+        assertEquals(requestId, parsed.get("request_id").asText(),
+                "Ответ 202 обязан эхать request_id клиента: " + response.body());
+        assertTrue(parsed.get("task_id").asText().startsWith("t-"),
+                "Ответ 202 обязан содержать task_id в формате t-N: " + response.body());
+    }
+
+    @Test
+    void routes_AllFiveMethods_AreRegistered() {
+        Set<String> keys = new HashSet<>();
+        new TaskRoutes(registry, gateway, planning, idempotency, slots).routes()
+                .forEach(route -> keys.add(route.method() + " " + route.pattern()));
+
+        assertEquals(Set.of(
+                "POST /v1/bots/{id}/tasks",
+                "GET /v1/tasks/{id}",
+                "DELETE /v1/tasks/{id}",
+                "GET /v1/tasks/{id}/events",
+                "POST /v1/plan"), keys,
+                "Чеклист п.7 обязывает ровно пять маршрутов задач");
+    }
+
+    @Test
+    void routes_UnknownPath_ReturnsNotFound() {
+        RestResponse response = send("GET", "/v1/tasks", "");
+
+        assertEquals(404, response.status(), "Необъявленный путь обязан давать 404: " + response.body());
+        assertFalse(response.body().contains("stream"), "404 не должен открывать поток");
+    }
+}
