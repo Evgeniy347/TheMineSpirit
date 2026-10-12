@@ -41,6 +41,7 @@ class StateStore:
     def __init__(self, path: Path, clock):
         self.path = Path(path)
         self.clock = clock
+        self._written: str | None = None
 
     def load(self, journal=None) -> LoadResult:
         if not self.path.exists():
@@ -57,6 +58,7 @@ class StateStore:
         return self._quarantine(problem, journal)
 
     def _quarantine(self, problem: str, journal) -> LoadResult:
+        self._written = None
         stamp = datetime.fromtimestamp(self.clock.now(), timezone.utc).strftime("%Y%m%dT%H%M%S")
         target = self.path.with_name(f"{self.path.name}.corrupt-{stamp}")
         os.replace(self.path, target)
@@ -67,15 +69,18 @@ class StateStore:
         return LoadResult(default_state(), target, reason)
 
     def save(self, state: dict) -> None:
+        payload = json.dumps(copy.deepcopy(state), ensure_ascii=False, indent=1, sort_keys=True)
+        if payload == self._written:
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self.path.with_name(self.path.name + ".tmp")
-        payload = json.dumps(copy.deepcopy(state), ensure_ascii=False, indent=1, sort_keys=True)
         try:
             with open(temporary, "w", encoding="utf-8") as handle:
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary, self.path)
+            self._written = payload
         finally:
             if temporary.exists():
                 temporary.unlink()
