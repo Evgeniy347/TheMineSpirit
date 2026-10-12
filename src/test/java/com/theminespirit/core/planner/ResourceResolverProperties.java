@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.jqwik.api.Assume;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
@@ -71,6 +72,57 @@ class ResourceResolverProperties {
                         + balance.cook() + " тиков готовки. Количество=" + count);
     }
 
+    @Property
+    void resolve_KnowledgeWithStations_EachStationIsProducedAtMostOnce(
+            @ForAll @Size(max = MAX_ITEMS) List<Integer> decisions,
+            @ForAll @IntRange(min = 1, max = 8) int count) {
+        ResourceKnowledge knowledge = acyclic(decisions, true);
+        String root = item(decisions.size());
+        Assume.that(isObtainable(root, knowledge));
+
+        List<ScriptCall> calls = new ArrayList<>();
+        flatten(ResourceResolver.resolve(root, count, knowledge), calls);
+
+        for (String station : List.of("bench", "oven")) {
+            long produced = calls.stream().filter(call -> producesItem(call, station)).count();
+            assertTrue(produced <= 1,
+                    "Станция '" + station + "' обязана появляться в плане не более одного раза, а получена "
+                            + produced + " раз(а): лишний верстак или печь — потерянные материалы и время. Предмет="
+                            + root + ", количество=" + count);
+        }
+    }
+
+    @Property
+    void resolve_AnySmeltPlan_FuelIsGatheredBeforeEverySmelt(
+            @ForAll @Size(max = MAX_ITEMS) List<Integer> decisions,
+            @ForAll @IntRange(min = 1, max = 8) int count) {
+        ResourceKnowledge knowledge = acyclic(decisions);
+        String root = item(decisions.size());
+        Assume.that(isObtainable(root, knowledge));
+
+        TaskNode plan = ResourceResolver.resolve(root, count, knowledge);
+
+        assertTrue(FuelBalance.of(plan).fuelAheadOfEverySmelt(),
+                "Топливо обязано быть добыто до плавки, которой оно нужно: иначе печь встанет на первом же предмете, "
+                        + "а топливо пригодится только следующей плавке. Предмет=" + root + ", количество=" + count);
+    }
+
+    private static void flatten(TaskNode node, List<ScriptCall> calls) {
+        if (node instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> flatten(step, calls));
+        } else if (node instanceof ScriptCall call) {
+            calls.add(call);
+        } else {
+            throw new IllegalStateException("Свойство не знает узел " + node.getClass()
+                    + ": молчаливый пропуск шага ослепит проверку станций");
+        }
+    }
+
+    private static boolean producesItem(ScriptCall call, String item) {
+        return call.script().equals("gather") && item.equals(call.params().get("block"))
+                || call.script().equals("craft") && item.equals(call.params().get("item"));
+    }
+
     private static TaskNode finalStep(TaskNode plan) {
         TaskNode step = plan;
         while (step instanceof SequenceNode sequence) {
@@ -121,6 +173,10 @@ class ResourceResolverProperties {
     }
 
     private static ResourceKnowledge acyclic(List<Integer> decisions) {
+        return acyclic(decisions, false);
+    }
+
+    private static ResourceKnowledge acyclic(List<Integer> decisions, boolean withStations) {
         Set<String> gatherable = new HashSet<>();
         Map<String, List<Ingredient>> crafts = new LinkedHashMap<>();
         Map<String, String> smelts = new LinkedHashMap<>();
@@ -142,7 +198,21 @@ class ResourceResolverProperties {
                 }
             }
         }
-        return new StubKnowledge(gatherable, crafts, smelts);
+        Map<String, String> stations = new LinkedHashMap<>();
+        if (withStations) {
+            gatherable.add("bench");
+            crafts.put("oven", List.of(new Ingredient(item(0), 2)));
+            stations.put("oven", "bench");
+            for (String crafted : crafts.keySet()) {
+                if (!crafted.equals("oven") && crafted.hashCode() % 2 == 0) {
+                    stations.put(crafted, "bench");
+                }
+            }
+            for (String smelted : smelts.keySet()) {
+                stations.put(smelted, "oven");
+            }
+        }
+        return new StubKnowledge(gatherable, crafts, smelts, Map.of(), stations);
     }
 
     private static String item(int index) {

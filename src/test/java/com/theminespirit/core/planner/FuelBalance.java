@@ -32,17 +32,19 @@ final class FuelBalance {
     private final long smelts;
     private final long cook;
     private final long burn;
+    private final boolean fuelAhead;
 
-    private FuelBalance(long smelts, long cook, long burn) {
+    private FuelBalance(long smelts, long cook, long burn, boolean fuelAhead) {
         this.smelts = smelts;
         this.cook = cook;
         this.burn = burn;
+        this.fuelAhead = fuelAhead;
     }
 
     static FuelBalance of(TaskNode plan) {
         Accumulator accumulator = new Accumulator();
         walk(plan, accumulator);
-        return new FuelBalance(accumulator.smelts, accumulator.cook, accumulator.burn);
+        return new FuelBalance(accumulator.smelts, accumulator.cook, accumulator.burn, accumulator.fuelAhead);
     }
 
     long smelts() {
@@ -57,6 +59,10 @@ final class FuelBalance {
         return burn;
     }
 
+    boolean fuelAheadOfEverySmelt() {
+        return fuelAhead;
+    }
+
     private static void walk(TaskNode node, Accumulator accumulator) {
         if (node instanceof SequenceNode sequence) {
             for (TaskNode step : sequence.steps()) {
@@ -69,6 +75,7 @@ final class FuelBalance {
                 int count = number(call);
                 accumulator.smelts += count;
                 accumulator.cook += count * (long) COOK_TICKS;
+                accumulator.fuelAhead &= accumulator.burn >= accumulator.cook;
                 return;
             }
             if (call.script().equals("gather")) {
@@ -93,5 +100,6 @@ final class FuelBalance {
         private long smelts;
         private long cook;
         private long burn;
+        private boolean fuelAhead = true;
     }
 }
