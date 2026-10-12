@@ -67,7 +67,7 @@ class FarmTallyTests {
     }
 
     @Property(tries = 300)
-    void outcome_FailedText_ContainsEveryNonZeroCounter(@ForAll FarmJob job,
+    void outcome_FailedText_ContainsLabelledCounters(@ForAll FarmJob job,
             @ForAll @IntRange(min = 0, max = 20) int done, @ForAll @IntRange(min = 0, max = 20) int requested,
             @ForAll @IntRange(min = 0, max = 5) int ineligible, @ForAll @IntRange(min = 0, max = 5) int noStand,
             @ForAll @IntRange(min = 0, max = 5) int noSeeds, @ForAll @IntRange(min = 0, max = 5) int noTool,
@@ -77,13 +77,23 @@ class FarmTallyTests {
         if (!(tally.outcome(job) instanceof FarmTally.Failed failed)) {
             return;
         }
-        int[] counters = {done, requested, ineligible, noStand, noSeeds, noTool, dry, unreachable};
-        for (int count : counters) {
-            if (count > 0) {
-                assertTrue(failed.text().contains(String.valueOf(count)),
-                        "Каждое ненулевое число обязано входить в текст провала: стратег читает числа, "
-                                + "а не угадывает их. Число: " + count + ", текст: " + failed.text());
-            }
+        String text = failed.text();
+        assertTrue(text.contains(done + " из " + requested),
+                "Прогресс обязан связывать сделано и запрошено одной связкой: иначе «2» из «нет семян: 2» "
+                        + "сойдёт за «2 из 12». Текст: " + text);
+        assertPair(text, job == FarmJob.HARVEST ? "ещё растёт" : "не подходит", ineligible);
+        assertPair(text, "без места для духа", noStand);
+        assertPair(text, job == FarmJob.BONE_MEAL ? "нет костной муки" : "нет семян", noSeeds);
+        assertPair(text, "без инструмента", noTool);
+        assertPair(text, "без воды", dry);
+        assertPair(text, "недостижимо", unreachable);
+    }
+
+    private static void assertPair(String text, String label, int count) {
+        if (count > 0) {
+            assertTrue(text.contains(label + ": " + count),
+                    "Каждое ненулевое число обязано стоять при своей метке «" + label + "»: стратег читает числа, "
+                            + "а не угадывает их. Текст: " + text);
         }
     }
 
