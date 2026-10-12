@@ -27,6 +27,7 @@ public final class ObserveJobs {
     private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
     private final List<Job> active = new ArrayList<>();
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final AtomicInteger tickCalls = new AtomicInteger();
     private volatile int activeCount;
     private volatile int peakActive;
     private volatile int maxReadsPerTick;
@@ -58,8 +59,8 @@ public final class ObserveJobs {
         return activeCount;
     }
 
-    public int liveSubscriptions() {
-        return closed.get() ? 0 : 1;
+    public int tickCalls() {
+        return tickCalls.get();
     }
 
     public int peakActive() {
@@ -86,6 +87,7 @@ public final class ObserveJobs {
     }
 
     private void tick() {
+        tickCalls.incrementAndGet();
         for (Job job : List.copyOf(active)) {
             if (job.future.isDone()) {
                 active.remove(job);

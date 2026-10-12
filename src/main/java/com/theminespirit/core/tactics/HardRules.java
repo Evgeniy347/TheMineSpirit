@@ -35,13 +35,15 @@ public final class HardRules {
         return new HardVerdict(Optional.empty(), excluded, excluding);
     }
 
-    public Optional<HardRule> noRouteReplacement(FactMap facts) {
+    public NoRouteVerdict noRouteReplacement(FactMap facts) {
         Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
+        List<String> excluding = new ArrayList<>();
         for (HardRule rule : rules) {
             if (!rule.excludes().isEmpty()) {
                 counter.check();
                 if (rule.when().matches(facts)) {
                     excluded.addAll(rule.excludes());
+                    excluding.add(rule.id());
                 }
             }
         }
@@ -49,10 +51,10 @@ public final class HardRules {
             if (rule.noRouteOption().isPresent() && !excluded.contains(rule.noRouteOption().get())) {
                 counter.check();
                 if (rule.when().matches(facts)) {
-                    return Optional.of(rule);
+                    return new NoRouteVerdict(Optional.of(rule), excluded, excluding);
                 }
             }
         }
-        return Optional.empty();
+        return new NoRouteVerdict(Optional.empty(), excluded, excluding);
     }
 }

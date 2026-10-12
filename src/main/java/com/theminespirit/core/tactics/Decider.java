@@ -1,6 +1,8 @@
 package com.theminespirit.core.tactics;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,13 +24,28 @@ public final class Decider {
     public Decision decide(FactMap facts, Scores scores, int escapeRoutes, TacticsMemory memory, long now) {
         Decision decision = choose(facts, scores, escapeRoutes, memory, now);
         if (decision.option() == TacticalOption.RETREAT && escapeRoutes == 0) {
-            return hardRules.noRouteReplacement(facts)
-                    .map(rule -> new Decision(rule.noRouteOption().get(), rule.id(), decision.excluded(),
-                            decision.excludingRules(), HoldStatus.NONE))
-                    .orElseGet(() -> new Decision(TacticalOption.FIGHT, Decision.ALL_EXCLUDED, decision.excluded(),
-                            decision.excludingRules(), HoldStatus.NONE));
+            NoRouteVerdict replacement = hardRules.noRouteReplacement(facts);
+            Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
+            excluded.addAll(decision.excluded());
+            excluded.addAll(replacement.excluded());
+            List<String> excludingRules = mergeExcluding(decision, replacement);
+            return replacement.rule()
+                    .map(rule -> new Decision(rule.noRouteOption().get(), rule.id(), excluded, excludingRules,
+                            HoldStatus.NONE))
+                    .orElseGet(() -> new Decision(TacticalOption.FIGHT, Decision.ALL_EXCLUDED, excluded,
+                            excludingRules, HoldStatus.NONE));
         }
         return decision;
+    }
+
+    private static List<String> mergeExcluding(Decision decision, NoRouteVerdict replacement) {
+        List<String> merged = new ArrayList<>(decision.excludingRules());
+        for (String rule : replacement.excludingRules()) {
+            if (!merged.contains(rule)) {
+                merged.add(rule);
+            }
+        }
+        return merged;
     }
 
     private Decision choose(FactMap facts, Scores scores, int escapeRoutes, TacticsMemory memory, long now) {

@@ -144,6 +144,24 @@ class TacticsEngineTests {
     }
 
     @Test
+    void step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight() {
+        Situation situation = SituationBuilder.create().hpFraction(0.2).lava(1).enemy("pillager", 6).build();
+
+        TacticalOutcome outcome = first(situation);
+
+        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"),
+                List.of(outcome.decision(), outcome.trace().rule()),
+                "HP 20 % при лаве рядом и целящемся враге: отходить некуда (от быстрого стрелка не убежать), бой "
+                        + "вычеркнут, подмена noRoute выбирает IGNORE");
+        assertEquals(List.of("no_fight_near_lava"), outcome.trace().excludingRules(),
+                "Trace подмены обязан хранить вычёркивания, которые она учла: иначе вычеркнутый бой теряется "
+                        + "в Decision.excluded. Проверьте слияние вычёркиваний подмены в Decider");
+        assertEquals("бой вычеркнут правилами [no_fight_near_lava]", outcome.trace().whyNotFight(),
+                "Trace обязан объяснять, почему не FIGHT: игрок видит IGNORE и должен узнать про лаву, а не "
+                        + "«решило правило no_route_ignore» без причины");
+    }
+
+    @Test
     void step_CreeperHoversAroundFive_NeverSwingsBetweenRetreatAndFight() {
         double[] distances = {9, 7, 6, 5, 6, 7, 6, 7};
         TacticsEngine engine = engine();
