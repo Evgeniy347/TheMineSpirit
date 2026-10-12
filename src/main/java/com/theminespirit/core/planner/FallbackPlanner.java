@@ -30,6 +30,8 @@ public final class FallbackPlanner implements Planner {
                     new Step("follow", List.of("radius"), Map.of(SPEAKER, "target"), Map.of()))),
             new Rule(List.of("домой", "верни"), List.of(
                     new Step("return_home", List.of(), Map.of()))),
+            new Rule(List.of("разгруз", "склад", "сложи"), List.of(
+                    new Step("unload", List.of(), Map.of()))),
             new Rule(List.of("атак", "убей"), List.of(
                     new Step("attack", List.of("target"), Map.of()))));
 

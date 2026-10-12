@@ -109,6 +109,16 @@ class FallbackPlannerTests {
     }
 
     @Test
+    void plan_UnloadGoal_ReturnsUnloadCall() {
+        TaskNode plan = plan(new Goal("разгрузись в сундук на складе", Map.of()));
+
+        assertEquals(new ScriptCall("unload",
+                Map.of("container", "nearest", "radius", 8, "force", false)), plan,
+                "Просьба разгрузиться обязана давать unload: иначе дух таскает полный инвентарь вместо "
+                        + "того, чтобы сложить лишнее на базе");
+    }
+
+    @Test
     void plan_HomeGoal_ReturnsReturnHomeCall() {
         TaskNode plan = plan(new Goal("вернись домой", Map.of()));
 
