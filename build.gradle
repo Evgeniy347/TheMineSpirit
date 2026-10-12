@@ -294,7 +294,7 @@ tasks.register('propertyTest', Test) {
 tasks.register('testCostReport', JavaExec) {
     group = 'verification'
     description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV стоимости тестов'
-    dependsOn tasks.named('test')
+    mustRunAfter tasks.named('test')
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.theminespirit.testing.TestCostReporter'
     args 'TestResults/unit/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'
@@ -303,7 +303,7 @@ tasks.register('testCostReport', JavaExec) {
 tasks.register('slowTestCostReport', JavaExec) {
     group = 'verification'
     description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV медленного тира'
-    dependsOn tasks.named('slowTest')
+    mustRunAfter tasks.named('slowTest')
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.theminespirit.testing.TestCostReporter'
     args 'TestResults/slow/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'

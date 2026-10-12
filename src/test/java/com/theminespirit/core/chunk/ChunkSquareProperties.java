@@ -37,14 +37,14 @@ class ChunkSquareProperties {
 
         assertEquals(ChunkSquare.chunks(newCenter, radius), applied,
                 "Применённый diff обязан переводить старый квадрат в новый при любых центрах: билеты после "
-                        + "сдвига должны совпадать с зоне вокруг духа, ни больше ни меньше");
+                        + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше");
 
         Set<ChunkCoord> intersection = new HashSet<>(ChunkSquare.chunks(oldCenter, radius));
         intersection.retainAll(ChunkSquare.chunks(newCenter, radius));
         boolean overlaps = !intersection.isEmpty();
         Statistics.label("пересекаются").collect(overlaps);
         Statistics.collect(overlaps);
-        Statistics.coverage(coverage -> coverage.check(true).percentage(p -> p >= 30.0));
+        Statistics                .coverage(coverage -> coverage.check(true).percentage(p -> p >= 30.0));
     }
 
     // Центры почти всегда рядом (на один-два квадрата), а не случайные: diff проверяет пересечение квадратов,

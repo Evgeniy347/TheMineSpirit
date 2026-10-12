@@ -13,7 +13,7 @@
 |---|---|---|
 | `./gradlew build` | компиляция (`-Werror`), быстрые JUnit-тесты, сборка jar | `build/libs/theminespirit-<версия>.jar`, отчёты в `TestResults/unit/` |
 | `./gradlew test` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `BUILD SUCCESSFUL`, отчёты в `TestResults/unit/` |
-| `./gradlew slowTest` | только `@Tag("slow")`; сейчас таких тестов нет, поэтому задача падает на 0 тестов | отчёты в `TestResults/slow/` |
+| `./gradlew slowTest` | только `@Tag("slow")`; отчёты в `TestResults/slow/` |
 | `./gradlew check` | быстрый тир (`test`); `slowTest` запускается отдельно | зелёный прогон быстрых тестов |
 | `./gradlew jacocoTestReport` | отчёт покрытия JaCoCo | `TestResults/coverage/` |
 | `scripts/gametest.sh` | GameTest под `flock` (один сервер на машину): поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
