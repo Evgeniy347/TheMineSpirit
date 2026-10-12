@@ -23,10 +23,7 @@ public record HerdTally(int fed, int babiesFed, int born, int sheared, int milke
             case BREED -> born >= Math.max(1, target)
                     ? new Succeeded("сведено пар: " + born + " из " + target + counters())
                     : new Failed("сведено пар: " + born + " из " + target + counters());
-            case FEED -> fed >= Math.max(1, target)
-                    ? new Succeeded("покормлено " + fed + " из " + target + ", из них детёнышей " + babiesFed
-                            + counters())
-                    : new Failed("покормлено " + fed + " из " + target + counters());
+            case FEED -> feedOutcome();
             case SHEAR -> sheared >= Math.max(1, target)
                     ? new Succeeded("пострижено " + sheared + " из " + target + counters())
                     : new Failed("пострижено " + sheared + " из " + target + counters());
@@ -44,6 +41,16 @@ public record HerdTally(int fed, int babiesFed, int born, int sheared, int milke
                     ? new Succeeded("забито диких: " + culled + " из " + target + counters())
                     : new Failed("забито диких: " + culled + " из " + target + counters());
         };
+    }
+
+    private Outcome feedOutcome() {
+        if (fed >= Math.max(1, target)) {
+            return new Succeeded("покормлено " + fed + " из " + target + ", из них детёнышей " + babiesFed + counters());
+        }
+        if (fed == 0 && escapedReturned > 0) {
+            return new Succeeded("отбившиеся возвращены: " + escapedReturned + counters());
+        }
+        return new Failed("покормлено " + fed + " из " + target + counters());
     }
 
     private boolean hasWork() {

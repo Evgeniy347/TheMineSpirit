@@ -37,7 +37,9 @@ class HerdTallyTests {
                 Arguments.of(HerdJob.HERD_CHECK, new HerdTally(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0), true,
                         "отбившийся учтён", "возвращено: 1"),
                 Arguments.of(HerdJob.HUNT, new HerdTally(0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3), true,
-                        "дикие забиты", "забито диких: 3 из 3"));
+                        "дикие забиты", "забито диких: 3 из 3"),
+                Arguments.of(HerdJob.FEED, new HerdTally(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4), true,
+                        "кормить некого, отбившийся возвращён приманкой", "возвращены: 1"));
     }
 
     @ParameterizedTest(name = "{3}")
