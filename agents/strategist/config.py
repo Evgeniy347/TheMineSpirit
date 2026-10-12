@@ -74,6 +74,10 @@ class Config:
         return self.home / "sandbox"
 
     @property
+    def opencode_data(self) -> Path:
+        return self.home / "opencode-data"
+
+    @property
     def policy_path(self) -> Path:
         return APP_DIR / "policy.json"
 

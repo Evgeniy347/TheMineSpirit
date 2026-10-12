@@ -57,9 +57,12 @@ class ConfigTests(unittest.TestCase):
 
     def test_paths_DerivedFromHome(self):
         cfg = from_env({"STRATEGIST_HOME": "/srv/s"})
-        self.assertEqual(["state.json", "journal.jsonl", "PAUSE", "sandbox"],
-                         [cfg.state_path.name, cfg.journal_path.name, cfg.pause_path.name, cfg.sandbox_dir.name])
+        self.assertEqual(["state.json", "journal.jsonl", "PAUSE", "sandbox", "opencode-data"],
+                         [cfg.state_path.name, cfg.journal_path.name, cfg.pause_path.name, cfg.sandbox_dir.name,
+                          cfg.opencode_data.name])
         self.assertEqual("/srv/s", cfg.state_path.parent.as_posix())
+        self.assertEqual("/srv/s/opencode-data", cfg.opencode_data.as_posix(),
+                         "каталог данных мозга живёт в STRATEGIST_HOME, а не в общем ~/.local/share/opencode")
 
     def test_confirmLive_OneMeansTrue(self):
         self.assertTrue(from_env({"STRATEGIST_CONFIRM_LIVE": "1"}).confirm_live)

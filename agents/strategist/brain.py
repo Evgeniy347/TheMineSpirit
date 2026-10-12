@@ -16,6 +16,7 @@ import shlex
 import shutil
 import signal
 import subprocess
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,11 +106,31 @@ def verify_sandbox(directory: Path) -> None:
                              "разрешённый инструмент превращает prompt injection в выполнение команд")
 
 
-def brain_env(extra: dict | None = None) -> dict:
+def brain_env(extra: dict | None = None, data_home: Path | None = None) -> dict:
     env = {**os.environ, **(extra or {})}
     for name in STRIPPED_ENV:
         env.pop(name, None)
+    if data_home is not None:
+        env["XDG_DATA_HOME"] = str(data_home)
     return env
+
+
+def prepare_data_home(data: Path) -> Path:
+    """Каталог данных подпроцесса opencode: сессии с полным промптом копятся в нём, а не в общем ~/.local/share.
+
+    Без auth.json изоляция данных ломает вход в аккаунт бесплатных моделей, поэтому глобальный файл
+    подвязывается симлинком: обновление токена opencode пишет через него в общий каталог.
+    """
+    data.mkdir(parents=True, exist_ok=True)
+    auth = data / "opencode" / "auth.json"
+    if auth.exists() or auth.is_symlink():
+        return data
+    raw = os.environ.get("XDG_DATA_HOME")
+    source = (Path(raw) if raw else Path.home() / ".local" / "share") / "opencode" / "auth.json"
+    if source.is_file():
+        auth.parent.mkdir(parents=True, exist_ok=True)
+        auth.symlink_to(source)
+    return data
 
 
 def agent_violations(agent: dict) -> list[str]:
@@ -184,6 +205,9 @@ class OpencodeBrain:
         self.model = model
         self.extra_env = env or {}
 
+    def subprocess_env(self) -> dict:
+        return brain_env(self.extra_env, data_home=prepare_data_home(self.config.opencode_data))
+
     def build_args(self, user: str, agent: bool = True) -> list[str]:
         args = [self.config.opencode_bin, "run", "-m", self.model]
         if agent:
@@ -196,7 +220,7 @@ class OpencodeBrain:
         args = [self.config.opencode_bin, "debug", "agent", AGENT_NAME]
         try:
             done = subprocess.run(args, cwd=self.config.sandbox_dir, capture_output=True, text=True, encoding="utf-8",
-                                  timeout=DEBUG_TIMEOUT_SECONDS, env=brain_env(self.extra_env), stdin=subprocess.DEVNULL)
+                                  timeout=DEBUG_TIMEOUT_SECONDS, env=self.subprocess_env(), stdin=subprocess.DEVNULL)
             start = done.stdout.index("{")
             agent = json.JSONDecoder().raw_decode(done.stdout[start:])[0]
         except (OSError, subprocess.TimeoutExpired, ValueError) as error:
@@ -222,7 +246,7 @@ class OpencodeBrain:
         started = time.monotonic()
         with open(out_path, "wb") as out, open(err_path, "wb") as err:
             process = subprocess.Popen(args, cwd=self.config.sandbox_dir, stdin=subprocess.DEVNULL, stdout=out, stderr=err,
-                                       start_new_session=True, env=brain_env(self.extra_env))
+                                       start_new_session=True, env=self.subprocess_env())
             try:
                 stdout, stderr, code = self._wait(process, out_path, err_path, started + timeout, timeout)
             except BaseException:

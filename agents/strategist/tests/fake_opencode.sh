@@ -13,7 +13,7 @@
 state="${FAKE_STATE:?FAKE_STATE обязателен}"
 # FAKE_AGENT=allow|late_allow|garbage — итоговые права агента в «opencode debug agent»: bash allow / шаблон allow после общего ask / не JSON
 if [ "$1 $2" = "debug agent" ]; then
-    echo "DEBUG_ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset}" >> "$state.args"
+    echo "DEBUG_ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset} DATADIR=${XDG_DATA_HOME-unset}" >> "$state.args"
     case "${FAKE_AGENT:-}" in
         garbage) echo "это не JSON"; exit 0 ;;
         allow) last='{"permission":"bash","pattern":"*","action":"allow"}' ;;
@@ -37,7 +37,7 @@ done
     echo "ARGS: $args"
     echo "CWD: $PWD"
     echo "PID: $$"
-    echo "ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset}"
+    echo "ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset} DATADIR=${XDG_DATA_HOME-unset}"
     [ -f "$PWD/.opencode/agent/strategist.md" ] && echo "AGENT_FILE: $(tr '\n' ' ' < "$PWD/.opencode/agent/strategist.md" | cut -c1-300)"
 } >> "$state.args"
 echo $$ > "$state.pid"

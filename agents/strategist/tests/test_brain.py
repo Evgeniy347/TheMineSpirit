@@ -112,6 +112,32 @@ class OpencodeBrainTests(BrainTestCase):
         self.brain().complete("с", "п")
         self.assertEqual(1, len(list((self.cfg.home / "runs").glob("failed-*.err"))), "успешный вызов ничего не сохраняет")
 
+    def test_subprocessEnv_DataHomeIsStrategyOwnDirectoryNotGlobalShare(self):
+        hostile = str(self.dir / "чужие-данные")
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": hostile}):
+            env = self.brain().subprocess_env()
+        expected = self.cfg.home / "opencode-data"
+        self.assertEqual(str(expected), env["XDG_DATA_HOME"],
+                         "сессии мозга копятся в каталоге данных стратега, а не в общем "
+                         "~/.local/share/opencode с полным промптом")
+        self.assertNotEqual(hostile, env["XDG_DATA_HOME"], "чужой XDG_DATA_HOME из окружения не доходит до подпроцесса")
+        self.assertEqual(self.cfg.home, expected.parent, "каталог данных живёт в STRATEGIST_HOME")
+        self.assertFalse(str(expected).startswith(str(Path.home() / ".local" / "share")))
+
+    def test_subprocessEnv_GlobalAuthIsSymlinkedIntoDataHome(self):
+        global_data = self.dir / "global-share"
+        source = global_data / "opencode" / "auth.json"
+        source.parent.mkdir(parents=True)
+        source.write_text('{"login": "бесплатный тариф"}', encoding="utf-8")
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": str(global_data)}):
+            first = Path(self.brain().subprocess_env()["XDG_DATA_HOME"])
+            second = Path(self.brain().subprocess_env()["XDG_DATA_HOME"])
+        auth = first / "opencode" / "auth.json"
+        self.assertEqual(first, second)
+        self.assertTrue(auth.is_symlink(),
+                        "изоляция данных не ломает авторизацию: auth.json подвязан симлинком на глобальный файл")
+        self.assertEqual(source.resolve(), auth.resolve())
+
     def test_complete_Silence_RaisesSilenceAndKillsWholeProcessGroup(self):
         cfg = dataclasses.replace(self.cfg, brain_timeout=1.0)
         brain = OpencodeBrain(cfg, "opencode/test-free", env={**self.env, "FAKE_SILENT": "1"})
@@ -317,6 +343,13 @@ class SandboxVerificationTests(BrainTestCase):
         log = self.args_log()
         self.assertEqual(2, log.count("PERMISSION=unset CONFIG=unset CONTENT=unset DIR=unset"),
                          f"переменные OPENCODE_* должны быть убраны из окружения debug и run: {log}")
+
+    def test_environment_DataHomeIsStrategyDirectoryForRunAndDebug(self):
+        self.brain().verify()
+        self.brain().complete("с", "п")
+        self.assertEqual(2, self.args_log().count(f"DATADIR={self.cfg.opencode_data}"),
+                         "и debug agent, и run получают каталог данных стратега: без этого сессии с полным "
+                         "промптом копятся в общем ~/.local/share/opencode")
 
 
 class CommandBrainTests(unittest.TestCase):

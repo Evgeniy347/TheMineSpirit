@@ -75,8 +75,10 @@ can only be used from within OpenCode»), если запретить `read/edit
 отклоняется), `"*": "deny"` стоит первым ключом. Файл проверяется при каждом вызове, а при старте `opencode debug agent strategist` даёт
 итоговые права: для каждого включённого инструмента последнее общее правило обязано быть ask/deny, иначе отказ запуска (код 4).
 Переменные `OPENCODE_PERMISSION/CONFIG/CONFIG_CONTENT/CONFIG_DIR` из окружения мозга убираются. Выполненный инструмент —
-`alert sandbox_breach`, файл `PAUSE`, остановка агента (код 5). Модель меняется переменной, правка кода не нужна; рабочие модели —
-в `docs/EXECUTOR-MODELS.md`.
+`alert sandbox_breach`, файл `PAUSE`, остановка агента (код 5). Каталог данных подпроцесса (`XDG_DATA_HOME`) — свой,
+`STRATEGIST_HOME/opencode-data`: сессии с полным промптом не копятся в общем `~/.local/share/opencode`, а вход в аккаунт
+держится симлинком на глобальный `auth.json`, поэтому изоляция не ломает бесплатный тариф. Модель меняется переменной,
+правка кода не нужна; рабочие модели — в `docs/EXECUTOR-MODELS.md`.
 `command`: `STRATEGIST_BRAIN=command STRATEGIST_BRAIN_COMMAND='/путь/к/скрипту'`. Команда читает со stdin JSON `{"system","user","model"}`
 и печатает ответ в stdout; код выхода 75 — «модель недоступна» (включает интервал ×2), любой другой ненулевой — ошибка мозга. Так
 подключается Sonnet 5.5.
