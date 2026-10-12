@@ -2,6 +2,7 @@ package com.theminespirit.core.inventory;
 
 import com.theminespirit.core.observation.IdFilter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,7 +32,7 @@ public final class Protected {
         }
         List<String> shields = new ArrayList<>(patterns);
         shields.addAll(kit.neverGiveAway());
-        return new Protected(shields, List.copyOf(inventory), giveAway);
+        return new Protected(shields, Collections.unmodifiableList(new ArrayList<>(inventory)), giveAway);
     }
 
     public int giveAway(int slot) {

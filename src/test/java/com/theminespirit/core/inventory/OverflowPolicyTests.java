@@ -28,12 +28,13 @@ class OverflowPolicyTests {
             "всё защищено шаблоном|cobblestone:64*36|diamond:1|*|REFUSE|-1|-1",
             "защищён только дешёвый слот|cobblestone:64*35;dirt:64|diamond:1|cobblestone|DROP|35|64",
             "незащищён только дорогой слот|cobblestone:64*35;diamond:1|cobblestone:1|cobblestone|REFUSE|-1|-1",
-            "нужная еда защищена шаблоном|bread:16*35;cobblestone:64|diamond:1|bread|DROP|35|32",
-            "квота еды режет только лишнее|bread:20;iron_ingot:64*35|diamond:1| |DROP|0|4",
-            "защищён дорогой слот|iron_ingot:1*35;cobblestone:64|diamond:1|iron_ingot|DROP|35|32",
+            "нужная еда защищена шаблоном|bread:16*35;cobblestone:64|diamond:1|bread|REFUSE|-1|-1",
+            "частичный излишек слота не освобождает слот|bread:20;iron_ingot:64*35|diamond:1| |REFUSE|-1|-1",
+            "защищён дорогой слот|iron_ingot:1*35;cobblestone:64|diamond:1|iron_ingot|REFUSE|-1|-1",
             "кучка того же предмета при полном инвентаре|dirt:64*36|dirt:64| |REFUSE|-1|-1",
             "лучшая кирка остаётся при духе|iron_pickaxe:1*36|diamond:1| |DROP|35|1",
-            "факелы нужны плану|torch:16*35;cobblestone:64|iron_ingot:1|torch|DROP|35|32"})
+            "факелы нужны плану|torch:16*35;cobblestone:64|iron_ingot:1|torch|REFUSE|-1|-1",
+            "лишний хлеб отдельной стопкой уходит|bread:16;bread:4;iron_ingot:64*34|diamond:1| |DROP|1|4"})
     void decide_TableOfSituations_MatchesExpected(String situation, String inventorySpec, String incomingSpec,
             String protectedSpec, String expectedAction, int expectedSlot, int expectedCount) {
         List<Stack> inventory = inventory(inventorySpec);
@@ -53,11 +54,11 @@ class OverflowPolicyTests {
                     "Ситуация '" + situation + "': выбросить должен самый дешёвый незащищённый слот "
                             + expectedSlot);
             assertEquals(expectedCount, decision.count(),
-                    "Ситуация '" + situation + "': выбрасывается ровно излишек слота, а не слот целиком — "
-                            + "иначе вместе с лишком уходит то, что набор придержал");
-            assertTrue(expectedCount <= inventory.get(decision.slot()).count(),
-                    "Ситуация '" + situation + "': из слота " + decision.slot() + " можно отдать не больше, "
-                            + "чем в нём лежит (" + inventory.get(decision.slot()) + ")");
+                    "Ситуация '" + situation + "': выбрасывается слот целиком и только когда весь он "
+                            + "излишек — частичный выброс оставляет слот занятым и кучке некуда деться");
+            assertTrue(expectedCount == inventory.get(decision.slot()).count(),
+                    "Ситуация '" + situation + "': выбранный слот выбрасывается целиком (" + expectedCount
+                            + "), в нём лежало " + inventory.get(decision.slot()));
         }
     }
 
@@ -191,6 +192,23 @@ class OverflowPolicyTests {
         assertEquals(OverflowPolicy.Action.REFUSE, decision.action(),
                 "Шалкер-бокс не выбрасывается никогда, даже если в нём меньше ценности, чем кучка: "
                         + "внутри может лежать склад. Причина " + decision.reason());
+    }
+
+    @Test
+    void decide_PartialSurplusSlot_IsSkippedForWholeSurplusSlot() {
+        List<Stack> inventory = inventory("bread:20;bread:16*35");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT);
+
+        assertEquals(OverflowPolicy.Action.DROP, decision.action(),
+                "Инвентарь из хлеба всегда найдёт, чем погасить алмаз: 35 стопок целиком вне квоты еды");
+        assertEquals(35, decision.slot(),
+                "Слот с частичным излишком (20 хлеба при квоте 16) не выбирается: выбросив из него 4, "
+                        + "дух оставляет слот занятым и алмазу некуда деться. Выбирается стопка, "
+                        + "которая целиком лишняя");
+        assertEquals(16, decision.count(),
+                "Выбранная стопка уходит целиком: в ней 16 хлебов, все за пределами квоты еды (16)");
     }
 
     @Test

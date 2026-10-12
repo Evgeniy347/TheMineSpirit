@@ -23,9 +23,9 @@ class OverflowPolicyProperties {
         Arbitrary<Stack> stack = Combinators.combine(
                 items,
                 Arbitraries.integers().between(0, 1),
-                Arbitraries.integers().between(1, 3))
+                Arbitraries.integers().between(1, 64))
                 .as((item, variant, count) -> new Stack(item, variant, count, maxStackOf(item)));
-        return stack.list().ofMaxSize(36);
+        return stack.list().ofMaxSize(36).ofMinSize(36);
     }
 
     @Provide
@@ -35,7 +35,7 @@ class OverflowPolicyProperties {
         return Combinators.combine(
                 items,
                 Arbitraries.integers().between(0, 1),
-                Arbitraries.integers().between(1, 3))
+                Arbitraries.integers().between(1, 64))
                 .as((item, variant, count) -> new Stack(item, variant, count, maxStackOf(item)));
     }
 
@@ -62,14 +62,18 @@ class OverflowPolicyProperties {
         if (decision.action() != OverflowPolicy.Action.DROP) {
             return;
         }
+        Stack dropped = inventory.get(decision.slot());
         int give = Protected.of(patterns, inventory, KIT, VALUES).giveAway(decision.slot());
         assertTrue(give > 0,
                 "Выброшен слот " + decision.slot() + " инвентаря " + inventory + " не имеет излишка: "
                         + "политика отдала бы в контейнер то, что базовый набор придержал. Излишек " + give
                         + ", решено отдать " + decision.count());
-        assertEquals(give, decision.count(),
-                "Отданное из слота " + decision.slot() + " (" + decision.count() + ") равно его излишку ("
-                        + give + "): политика режет только лишнее, иначе набор теряет свои предметы");
+        assertEquals(dropped.count(), decision.count(),
+                "Выбрасывается слот целиком (" + decision.count() + " из " + dropped.count() + "): "
+                        + "частичный выброс оставляет слот занятым, и подобранной кучке некуда деться");
+        assertEquals(dropped.count(), give,
+                "Слот выбирается, только когда весь он излишек: в слоте " + decision.slot() + " лежит "
+                        + dropped.count() + ", излишек " + give);
     }
 
     @Property
@@ -108,22 +112,22 @@ class OverflowPolicyProperties {
     }
 
     @Property
-    void decide_AfterDropAndTake_InventoryFitsInSlots(@ForAll("inventories") List<Stack> inventory,
+    void decide_AfterDrop_FreedSlotHostsIncoming(@ForAll("inventories") List<Stack> inventory,
             @ForAll("incoming") Stack incoming, @ForAll("protections") List<String> patterns) {
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT);
         if (decision.action() != OverflowPolicy.Action.DROP) {
             return;
         }
-        List<Stack> after = dropGivenAway(inventory, decision);
+        Stack dropped = inventory.get(decision.slot());
 
-        assertTrue(after.size() <= OverflowPolicy.INVENTORY_SLOTS,
-                "После обмена слотов не больше " + OverflowPolicy.INVENTORY_SLOTS + ": стало "
-                        + after.size() + ". Инвентарь " + inventory + ", кучка " + incoming);
-        assertTrue(VALUES.stackValue(incoming) > VALUES.valueOf(inventory.get(decision.slot()).item())
-                        * decision.count(),
-                "Кучка берётся, только если она дороже отдаваемого: ценность кучки "
-                        + VALUES.stackValue(incoming) + " против отданного "
-                        + VALUES.valueOf(inventory.get(decision.slot()).item()) * decision.count());
+        assertEquals(null, dropGivenAway(inventory, decision).get(decision.slot()),
+                "После DROP слот " + decision.slot() + " пуст: кучка '" + incoming.item() + "' должна "
+                        + "занять его место, иначе обмен не освобождает место и перенос некуда делать. "
+                        + "Инвентарь " + inventory + ", кучка " + incoming);
+        assertTrue(incoming.count() <= dropped.maxStack(),
+                "Кучка '" + incoming.item() + "' × " + incoming.count() + " должна поместиться в слот, "
+                        + "из которого ушла стопка вместимостью " + dropped.maxStack() + ": иначе выброс "
+                        + "не освобождает место и перенос некуда делать. Инвентарь " + inventory);
     }
 
     private static int countOfRule(List<Stack> inventory, KitRule rule) {
