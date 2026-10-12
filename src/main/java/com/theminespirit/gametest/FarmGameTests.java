@@ -1,6 +1,7 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.CropState;
@@ -8,6 +9,7 @@ import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.Ground;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.CropRegistry;
 import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
@@ -243,6 +245,76 @@ public final class FarmGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "farm_script_till", timeoutTicks = 600)
+    public static void till_FiveByFiveWithWater_TillsTwelveWithinFourOfWaterAndWearsHoe(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int x = 3; x <= 7; x++) {
+            for (int z = 3; z <= 7; z++) {
+                helper.setBlock(new BlockPos(x, FLOOR_Y, z), Blocks.DIRT);
+            }
+        }
+        BlockPos water = new BlockPos(5, FLOOR_Y, 5);
+        helper.setBlock(water, Blocks.WATER);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 1), new ItemStack(Items.IRON_HOE));
+        Map<BlockPos, Block> before = snapshot(helper);
+        SpiritRun run = SpiritRun.launch(helper, spirit, tillCall(4, 12), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "двенадцать клеток земли у воды обязаны вспахаться: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int farmland = 0;
+            for (Map.Entry<BlockPos, Block> entry : before.entrySet()) {
+                if (helper.getBlockState(entry.getKey()).is(Blocks.FARMLAND)) {
+                    farmland++;
+                    int dx = Math.abs(entry.getKey().getX() - water.getX());
+                    int dz = Math.abs(entry.getKey().getZ() - water.getZ());
+                    helper.assertTrue(dx <= 4 && dz <= 4,
+                            "пашня " + entry.getKey() + " дальше 4 блоков от воды: она пересохнет");
+                }
+            }
+            helper.assertTrue(farmland == 12, "обязано появиться ровно 12 пашни, фактически " + farmland);
+            helper.assertTrue(spirit.getInventory().getItem(0).getDamageValue() == 12,
+                    "износ мотыги обязан быть 12 (по единице на клетку, как у игрока), фактически "
+                            + spirit.getInventory().getItem(0).getDamageValue());
+            helper.assertTrue(changedBlocks(helper, before) == 12,
+                    "кроме 12 вспаханных клеток мир обязан остаться прежним, изменилось "
+                            + changedBlocks(helper, before));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_script_till_water", timeoutTicks = 400)
+    public static void till_DirtFiveBlocksFromWater_IsLeftUntilled(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(new BlockPos(1, FLOOR_Y, 5), Blocks.WATER);
+        helper.setBlock(new BlockPos(5, FLOOR_Y, 5), Blocks.DIRT);
+        helper.setBlock(new BlockPos(6, FLOOR_Y, 5), Blocks.DIRT);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 2), new ItemStack(Items.IRON_HOE));
+        SpiritRun run = SpiritRun.launch(helper, spirit, tillCall(4, 2), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "единственная годная клетка вспахивается, задача идёт до конца: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(new BlockPos(5, FLOOR_Y, 5)).is(Blocks.FARMLAND),
+                    "земля в 4 блоках от воды обязана стать пашней");
+            helper.assertTrue(helper.getBlockState(new BlockPos(6, FLOOR_Y, 5)).is(Blocks.DIRT),
+                    "земля в 5 блоках от воды обязана остаться землёй: вспаханная там пашня пересохла бы");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static ScriptCall tillCall(int radius, int count) {
+        return new ScriptCall("till", Map.of("radius", radius, "count", count));
     }
 
     private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
