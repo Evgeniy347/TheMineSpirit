@@ -77,4 +77,28 @@ class HazardFactsTests {
                 "null вместо списка обязан отклоняться: отсутствие опасностей — пустой список, а не null");
         assertNull(new HazardFacts(List.of()).nearest(), "в пустых фактах ближайшей опасности нет");
     }
+
+    @Test
+    void closest_MoreHazardsThanLimit_KeepsNearestInOrder() {
+        HazardFacts facts = new HazardFacts(List.of(LAVA_FAR, WATER_MID, LAVA_NEAR, DROP_NEAR));
+
+        HazardFacts closest = facts.closest(2);
+
+        assertEquals(List.of(LAVA_NEAR, DROP_NEAR), closest.hazards(),
+                "closest(2) обязан оставить две ближайшие опасности по возрастанию расстояния: иначе отчёт "
+                        + "sense_hazard теряет ближайшую опасность при переполнении");
+    }
+
+    @Test
+    void closest_NegativeLimit_IsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new HazardFacts(List.of(LAVA_NEAR)).closest(-1),
+                "отрицательный предел отчёта обязан отклоняться: иначе ошибка предела сойдёт за «опасностей нет»");
+    }
+
+    @Test
+    void maxReported_Constant_IsSixtyFour() {
+        assertEquals(64, HazardFacts.MAX_REPORTED,
+                "отчёт sense_hazard ограничен 64 ближайшими опасностями: обрыв и озеро дают тысячи клеток, "
+                        + "а ИИ нужны ближайшие; при смене числа пересмотри размер результата для планировщика");
+    }
 }

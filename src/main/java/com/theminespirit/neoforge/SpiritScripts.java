@@ -37,6 +37,7 @@ public final class SpiritScripts {
         table.put("scan", spirit -> params -> new ScanScript(spirit, ScanParams.from(params)));
         table.put("scan_blocks", spirit -> params -> new ScanScript(spirit, PerceptionParams.blocks(params)));
         table.put("scan_entities", spirit -> params -> new ScanScript(spirit, PerceptionParams.entities(params)));
+        table.put("sense_hazard", spirit -> params -> new HazardScript(spirit, PerceptionParams.hazards(params)));
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));

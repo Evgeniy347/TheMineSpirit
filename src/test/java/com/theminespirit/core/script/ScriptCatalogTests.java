@@ -125,6 +125,7 @@ class ScriptCatalogTests {
                 spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
                 spec("scan_blocks", List.of(), Map.of("radius", new long[]{1, 32})),
                 spec("scan_entities", List.of(), Map.of("radius", new long[]{1, 32})),
+                spec("sense_hazard", List.of(), Map.of("radius", new long[]{1, 32})),
                 spec("goto", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

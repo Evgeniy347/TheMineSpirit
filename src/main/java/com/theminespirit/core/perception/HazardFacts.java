@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public record HazardFacts(List<HazardRef> hazards) {
+    public static final int MAX_REPORTED = 64;
     private static final Comparator<HazardRef> BY_PROXIMITY = Comparator.comparingDouble(HazardRef::distance)
             .thenComparing(HazardRef::pos)
             .thenComparing(HazardRef::type);
@@ -32,6 +33,14 @@ public record HazardFacts(List<HazardRef> hazards) {
 
     public int count() {
         return hazards.size();
+    }
+
+    public HazardFacts closest(int limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("Предел " + limit + " отрицателен: сколько ближайших опасностей "
+                    + "оставить, задаётся числом от нуля");
+        }
+        return new HazardFacts(hazards.stream().sorted(BY_PROXIMITY).limit(limit).toList());
     }
 
     private boolean has(HazardType type) {

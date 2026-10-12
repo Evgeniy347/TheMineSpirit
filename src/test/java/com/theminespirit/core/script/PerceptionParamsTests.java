@@ -37,4 +37,22 @@ class PerceptionParamsTests {
                 () -> PerceptionParams.blocks(Map.of("radius", ScanRadius.MAX + 1)),
                 "радиус сверх предела скана обязан отклоняться: больший скан кладёт серверный тик");
     }
+
+    @Test
+    void hazards_Radius_BuildHazardsQueryMatchingAllIds() {
+        PerceptionQuery query = PerceptionParams.hazards(Map.of("radius", 6));
+
+        assertEquals(PerceptionType.HAZARDS, query.type(), "sense_hazard обязан строить запрос опасностей");
+        assertEquals(6, query.radius().value(), "радиус запроса опасностей обязан совпасть с параметром плана");
+    }
+
+    @Test
+    void hazards_NoRadius_IsRejectedWithParamName() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> PerceptionParams.hazards(Map.of()),
+                "radius приходит из каталога с умолчанием; без него разбор обязан падать, а не выдумывать значение");
+
+        assertEquals(true, error.getMessage().contains("radius"),
+                "сообщение обязано назвать параметр radius, сейчас: " + error.getMessage());
+    }
 }

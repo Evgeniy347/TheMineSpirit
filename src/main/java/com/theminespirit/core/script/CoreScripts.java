@@ -22,6 +22,9 @@ public final class CoreScripts {
                 spec("scan_entities", "просканировать только сущности вокруг духа",
                         List.of(perceptionRadius(), ParamSpec.textList("filter", false)),
                         List.of(), List.of("сущности по фильтру в радиусе найдены, блоки и контейнеры не собирались")),
+                spec("sense_hazard", "узнать об опасностях вокруг духа: лава, вода, обрыв",
+                        List.of(perceptionRadius()),
+                        List.of(), List.of("факты об опасностях в радиусе найдены, дух не двигался")),
                 spec("goto", "пройти к заданной точке",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
