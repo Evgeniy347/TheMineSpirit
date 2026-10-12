@@ -39,6 +39,24 @@ class HerdSafetyTests {
     }
 
     @Test
+    void dangerReason_AllDangersAtOnce_NamesLavaFirst() {
+        assertEquals(Optional.of("в лаве"), HerdSafety.dangerReason(true, true, true),
+                "Лава главнее огня и воды: из лавы животное уже не вывести, её называют первой");
+    }
+
+    @Test
+    void watchedByBaby_CalfExactlyTwoBlocksAway_BlocksStrike() {
+        AnimalRef mother = new AnimalRef("mother", Species.COW, false, false, false, new BlockCoord(0, 64, 0), true);
+        AnimalRef edge = new AnimalRef("calf", Species.COW, true, false, false, new BlockCoord(2, 64, 0), true);
+        AnimalRef beyond = new AnimalRef("grown", Species.COW, true, false, false, new BlockCoord(2, 64, 1), true);
+
+        assertTrue(HerdSafety.watchedByBaby(mother, List.of(mother, edge)),
+                "Детёныш ровно в 2 блоках ещё опекается: граница опеки включительна, иначе мать забьют на глазах");
+        assertFalse(HerdSafety.watchedByBaby(mother, List.of(mother, beyond)),
+                "Детёныш дальше 2 блоков опеке не мешает: иначе забой остановится из-за дальнего молодняка");
+    }
+
+    @Test
     void watchedByBaby_FarOrForeignBaby_AllowsStrike() {
         AnimalRef mother = new AnimalRef("mother", Species.COW, false, false, false, new BlockCoord(0, 64, 0), true);
         AnimalRef farCalf = new AnimalRef("calf", Species.COW, true, false, false, new BlockCoord(5, 64, 5), true);

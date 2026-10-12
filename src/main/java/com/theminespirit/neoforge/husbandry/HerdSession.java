@@ -6,6 +6,7 @@ import com.theminespirit.core.husbandry.CullPolicy;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.HerdCensus;
 import com.theminespirit.core.husbandry.HerdJob;
+import com.theminespirit.core.husbandry.HerdSafety;
 import com.theminespirit.core.husbandry.HerdTally;
 import com.theminespirit.core.husbandry.PenBounds;
 import com.theminespirit.core.husbandry.Species;
@@ -104,6 +105,7 @@ public final class HerdSession {
     private SwordTier swordTier;
     private int adultsAtStart = -1;
     private final Set<String> handledIds = new HashSet<>();
+    private final Set<String> lureSkipped = new HashSet<>();
 
     private int done;
     private int fed;
@@ -444,7 +446,7 @@ public final class HerdSession {
             return;
         }
         Species species = wanted.get(0);
-        List<AnimalRef> candidates = inPenOf(species);
+        List<AnimalRef> candidates = unhandled(inPenOf(species));
         if (adultsAtStart < 0) {
             adultsAtStart = adults(candidates);
         }
@@ -454,18 +456,18 @@ public final class HerdSession {
             fail(refused.reason() + ": забито " + culled);
             return;
         }
-        List<String> ids = preferTargetFirst(((CullPolicy.Picked) result).ids());
-        if (ids.isEmpty()) {
+        AnimalRef victim = firstStrikable(((CullPolicy.Picked) result).ids());
+        if (victim == null) {
             finishWithTally();
             return;
         }
-        Animal animal = live.get(ids.get(0));
+        Animal animal = live.get(victim.id());
         if (animal == null || animal.isRemoved()) {
             refreshSnapshot(true);
             return;
         }
         current = animal;
-        currentId = ids.get(0);
+        currentId = victim.id();
         act = Act.CULL_ONE;
         beginApproach(animal);
     }
@@ -481,31 +483,67 @@ public final class HerdSession {
         Species species = wanted.get(0);
         List<AnimalRef> wild = new ArrayList<>();
         for (AnimalRef animal : herd) {
-            if (animal.species() == species && !homePen.inside(animal.pos())) {
+            if (animal.species() == species && !homePen.inside(animal.pos())
+                    && !handledIds.contains(animal.id())) {
                 wild.add(animal);
             }
         }
-        wild.sort((left, right) -> {
-            int byDistance = Long.compare(distanceSquared(home, left.pos()), distanceSquared(home, right.pos()));
-            return byDistance != 0 ? byDistance : left.id().compareTo(right.id());
-        });
-        List<String> ids = new ArrayList<>();
-        for (AnimalRef animal : preferRefTargetFirst(wild)) {
-            ids.add(animal.id());
-        }
-        if (ids.isEmpty()) {
+        wild.sort(this::byDistanceToHome);
+        AnimalRef victim = firstStrikableIds(preferRefTargetFirst(wild));
+        if (victim == null) {
             finishWithTally();
             return;
         }
-        Animal animal = live.get(ids.get(0));
+        Animal animal = live.get(victim.id());
         if (animal == null || animal.isRemoved()) {
             refreshSnapshot(true);
             return;
         }
         current = animal;
-        currentId = ids.get(0);
+        currentId = victim.id();
         act = Act.HUNT_ONE;
         beginApproach(animal);
+    }
+
+    private AnimalRef firstStrikable(List<String> ids) {
+        List<String> ordered = preferTargetFirst(ids);
+        for (String id : ordered) {
+            AnimalRef ref = refOf(id);
+            if (ref == null || !live.containsKey(id)) {
+                continue;
+            }
+            if (HerdSafety.watchedByBaby(ref, herd)) {
+                skipped++;
+                handledIds.add(id);
+                continue;
+            }
+            return ref;
+        }
+        return null;
+    }
+
+    private AnimalRef firstStrikableIds(List<AnimalRef> refs) {
+        for (AnimalRef ref : refs) {
+            if (!live.containsKey(ref.id())) {
+                continue;
+            }
+            if (HerdSafety.watchedByBaby(ref, herd)) {
+                skipped++;
+                handledIds.add(ref.id());
+                continue;
+            }
+            return ref;
+        }
+        return null;
+    }
+
+    private AnimalRef refOf(String id) {
+        for (AnimalRef animal : herd) {
+            if (animal.id().equals(id)) {
+                return animal;
+            }
+        }
+        return null;
     }
 
     private void approachTick() {
@@ -530,6 +568,18 @@ public final class HerdSession {
         if (current == null || current.isRemoved() || !current.isAlive()) {
             current = null;
             currentId = null;
+            state = State.PICK;
+            return;
+        }
+        Optional<String> danger = HerdSafety.dangerReason(current.isInLava(), current.isOnFire(),
+                current.isInWater());
+        if (danger.isPresent()) {
+            skipped++;
+            handledIds.add(currentId);
+            current = null;
+            currentId = null;
+            firstParent = null;
+            pendingSecondId = null;
             state = State.PICK;
             return;
         }
@@ -701,6 +751,16 @@ public final class HerdSession {
             nextEscapee();
             return;
         }
+        Optional<String> danger = HerdSafety.dangerReason(lureTarget.isInLava(), lureTarget.isOnFire(),
+                lureTarget.isInWater());
+        if (danger.isPresent()) {
+            skipped++;
+            lureSkipped.add(lureId);
+            lureTarget = null;
+            lureId = null;
+            state = State.PICK;
+            return;
+        }
         BlockCoord escapeePos = new BlockCoord(lureTarget.blockPosition().getX(), lureTarget.blockPosition().getY(),
                 lureTarget.blockPosition().getZ());
         if (pen.inside(escapeePos)) {
@@ -831,14 +891,12 @@ public final class HerdSession {
     private List<AnimalRef> escapeesOf(Species species) {
         List<AnimalRef> escapees = new ArrayList<>();
         for (AnimalRef animal : herd) {
-            if (animal.species() == species && !animal.inPen() && live.containsKey(animal.id())) {
+            if (animal.species() == species && !animal.inPen() && live.containsKey(animal.id())
+                    && !lureSkipped.contains(animal.id())) {
                 escapees.add(animal);
             }
         }
-        escapees.sort((left, right) -> {
-            int byDistance = Long.compare(distanceSquared(home, left.pos()), distanceSquared(home, right.pos()));
-            return byDistance != 0 ? byDistance : left.id().compareTo(right.id());
-        });
+        escapees.sort(this::byDistanceToHome);
         return escapees;
     }
 
