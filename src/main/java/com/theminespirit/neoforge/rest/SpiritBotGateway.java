@@ -10,9 +10,12 @@ import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ObserveRequest;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
+import com.theminespirit.core.task.TaskRecord;
+import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -26,11 +29,21 @@ public final class SpiritBotGateway implements BotGateway {
     private final SpiritIndex index;
     private final ServerThreadCall serverCall;
     private final ObserveJobs jobs;
+    private final TaskRegistry tasks;
 
-    public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus) {
+    public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus, TaskRegistry tasks) {
         this.index = index;
         this.serverCall = new ServerThreadCall(server);
         this.jobs = new ObserveJobs(bus);
+        this.tasks = Objects.requireNonNull(tasks, "tasks не может быть null: current_task живёт в реестре задач");
+    }
+
+    public TaskRegistry taskRegistry() {
+        return tasks;
+    }
+
+    public SpiritIndex index() {
+        return index;
     }
 
     public ServerThreadCall serverCall() {
@@ -60,13 +73,13 @@ public final class SpiritBotGateway implements BotGateway {
 
     @Override
     public List<BotInfo> bots() {
-        return serverCall.call(() -> index.snapshot().stream().map(SpiritBotGateway::info).toList(),
+        return serverCall.call(() -> index.snapshot().stream().map(this::info).toList(),
                 RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
     public Optional<BotInfo> bot(String id) {
-        return serverCall.call(() -> parse(id).flatMap(index::find).map(SpiritBotGateway::info),
+        return serverCall.call(() -> parse(id).flatMap(index::find).map(this::info),
                 RestTuning.SERVER_CALL_TIMEOUT);
     }
 
@@ -96,10 +109,12 @@ public final class SpiritBotGateway implements BotGateway {
         }
     }
 
-    private static BotInfo info(SpiritEntity spirit) {
+    private BotInfo info(SpiritEntity spirit) {
         BlockPos position = spirit.blockPosition();
-        return new BotInfo(spirit.getUUID().toString(), name(spirit), state(spirit), position.getX(), position.getY(),
-                position.getZ(), spirit.level().dimension().location().toString(), null);
+        String id = spirit.getUUID().toString();
+        String currentTask = tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null);
+        return new BotInfo(id, name(spirit), state(spirit), position.getX(), position.getY(),
+                position.getZ(), spirit.level().dimension().location().toString(), currentTask);
     }
 
     private static String name(SpiritEntity spirit) {

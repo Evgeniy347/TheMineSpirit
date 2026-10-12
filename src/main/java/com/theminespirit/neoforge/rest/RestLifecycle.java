@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.rest;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.task.TaskRegistry;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,7 +42,7 @@ public final class RestLifecycle {
                     + "этого компьютера, 0.0.0.0 или 127.0.0.1", bindAddress, RestConfig.FILE_NAME, e.toString());
             return Optional.empty();
         }
-        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus);
+        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus, new TaskRegistry());
         try {
             RestServer started = RestServer.start(address, port, RestRouter.create(gateway), gateway::stop);
             LOGGER.info("REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",

@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.rest.RestRouter;
@@ -16,11 +17,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
@@ -57,6 +60,7 @@ final class RestFixture {
         }
     }
 
+    private final MinecraftServer minecraft;
     private final SpiritIndex index;
     private final SpiritBotGateway gateway;
     private final RestServer server;
@@ -64,7 +68,8 @@ final class RestFixture {
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private RestFixture(SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
+    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
+        this.minecraft = minecraft;
         this.index = index;
         this.gateway = gateway;
         this.server = server;
@@ -77,9 +82,9 @@ final class RestFixture {
     static RestFixture start(MinecraftServer minecraft) throws IOException {
         SpiritIndex index = new SpiritIndex(minecraft);
         index.register(NeoForge.EVENT_BUS);
-        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS);
+        SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS, new TaskRegistry());
         RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway), gateway::stop);
-        return new RestFixture(index, gateway, server);
+        return new RestFixture(minecraft, index, gateway, server);
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
@@ -124,6 +129,18 @@ final class RestFixture {
 
     CompletableFuture<Reply> post(String path, byte[] body) {
         return send(HttpRequest.newBuilder(uri(path)).POST(HttpRequest.BodyPublishers.ofByteArray(body)).build());
+    }
+
+    CompletableFuture<Reply> post(String path, String json) {
+        return post(path, json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    CompletableFuture<Reply> delete(String path) {
+        return send(HttpRequest.newBuilder(uri(path)).DELETE().build());
+    }
+
+    <T> CompletableFuture<T> onServer(Supplier<T> read) {
+        return CompletableFuture.supplyAsync(read, minecraft);
     }
 
     SpiritEntity spawn(GameTestHelper helper, BlockPos relative) {

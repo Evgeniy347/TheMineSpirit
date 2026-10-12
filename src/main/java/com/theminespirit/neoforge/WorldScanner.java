@@ -205,7 +205,7 @@ public final class WorldScanner {
         }
     }
 
-    private static List<ItemCount> inventoryEntries(Container inventory) {
+    public static List<ItemCount> inventoryEntries(Container inventory) {
         List<ItemCount> entries = new ArrayList<>();
         if (inventory == null) {
             return entries;

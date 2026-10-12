@@ -19,7 +19,7 @@ import java.util.Objects;
 /**
  * Маршруты задач: постановка, чтение, отмена, поток событий и сухой прогон плана.
  */
-final class TaskRoutes {
+public final class TaskRoutes {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final TaskRegistry registry;
@@ -28,7 +28,7 @@ final class TaskRoutes {
     private final IdempotencyCache idempotency;
     private final SseSlots slots;
 
-    TaskRoutes(TaskRegistry registry, TaskGateway gateway, PlanningService planning, IdempotencyCache idempotency,
+    public TaskRoutes(TaskRegistry registry, TaskGateway gateway, PlanningService planning, IdempotencyCache idempotency,
             SseSlots slots) {
         this.registry = Objects.requireNonNull(registry, "registry не может быть null: задачи живут в реестре");
         this.gateway = Objects.requireNonNull(gateway, "gateway не может быть null: мир двигает только платформа");
@@ -37,7 +37,7 @@ final class TaskRoutes {
         this.slots = Objects.requireNonNull(slots, "slots не может быть null: лимит потоков считает счётчик");
     }
 
-    List<Route> routes() {
+    public List<Route> routes() {
         return List.of(
                 new Route("POST", "/v1/bots/{id}/tasks", this::create),
                 new Route("GET", "/v1/tasks/{id}", this::get),
