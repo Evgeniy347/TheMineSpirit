@@ -47,7 +47,7 @@ class DeciderProperties {
     void decide_NoRouteOrScore_NeverPicksExcludedOption(@ForAll("situations") Situation situation,
             @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(cornered ? 0 : 2);
+        Assessment assessment = Assessments.withRoutes(situation, cornered ? 0 : 2);
         FactMap facts = FactMap.from(situation, assessment);
         Scores scores = new Scorer().score(situation, assessment, weights);
         HardRules hardRules = new HardRules(CONFIG.rules().hard(), new RuleCounter());
@@ -79,7 +79,7 @@ class DeciderProperties {
     void decide_DecisiveHardRule_CannotBeOutbidByAnyWeights(@ForAll("situations") Situation situation,
             @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
-        Assessment assessment = Assessments.full(situation).withEscapeRoutes(cornered ? 0 : 2);
+        Assessment assessment = Assessments.withRoutes(situation, cornered ? 0 : 2);
         FactMap facts = FactMap.from(situation, assessment);
         Scores scores = new Scorer().score(situation, assessment, weights);
         HardRules hardRules = new HardRules(CONFIG.rules().hard(), new RuleCounter());

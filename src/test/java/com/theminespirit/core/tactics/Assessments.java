@@ -4,6 +4,9 @@ final class Assessments {
     static final ArmorModel ARMOR = new ArmorModel(0.04, 0.8);
     private static final EnemyProfiles PROFILES = EnemyProfilesParser
             .parse(ConfigNode.root("enemies.json", TacticsTexts.read("enemies.json")));
+    // Худший настоящий способ отхода — бег прочь AWAY с полезностью 0.2 из rules.json:
+    // раз способ есть, а настоящий подсчёт дал 0, оценка идёт по минимальной реальной полезности.
+    private static final double MIN_REAL_ESCAPE = 0.2;
 
     private Assessments() {
     }
@@ -20,38 +23,52 @@ final class Assessments {
         return PROFILES;
     }
 
+    static RetreatOptions escapeOf(Situation situation) {
+        return new RetreatSelector(TacticsConfig.loadDefault().rules().retreat(), new RuleCounter())
+                .evaluate(facts(situation));
+    }
+
+    static Assessment withRoutes(Situation situation, int routes) {
+        Assessment real = full(situation);
+        double quality = routes == 0 ? 0.0 : Math.max(real.escapeQuality(), MIN_REAL_ESCAPE);
+        return real.withEscapeRoutes(routes).withEscapeQuality(quality);
+    }
+
     static Assessment of(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
-        return new Assessment(metrics, 0, 0, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
-                Assessment.UNBOUNDED, ratio(situation, metrics), TacticalState.CALM, 0, 1000);
+        return new Assessment(metrics, 0, 0, 0.0, situation.orders().mode(), initiates(situation), 0,
+                Assessment.UNBOUNDED, Assessment.UNBOUNDED, ratio(situation, metrics), TacticalState.CALM, 0, 1000);
     }
 
     static Assessment full(Situation situation) {
         EnemyMetrics metrics = EnemyMetrics.of(situation, PROFILES, ARMOR);
         double margin = WinMargin.of(situation.self(), metrics, Scales.defaults());
-        return new Assessment(metrics, margin, 1, situation.orders().mode(), initiates(situation), 0, Assessment.UNBOUNDED,
-                Assessment.UNBOUNDED, ratio(situation, metrics), TacticalState.CALM, 0, 1000);
+        RetreatOptions escape = escapeOf(situation);
+        return new Assessment(metrics, margin, escape.routes(), escape.bestUtility(), situation.orders().mode(),
+                initiates(situation), 0, Assessment.UNBOUNDED, Assessment.UNBOUNDED, ratio(situation, metrics),
+                TacticalState.CALM, 0, 1000);
     }
 
     static Assessment custom(Situation situation, int routes, double leashLeft, double engageLeft,
             TacticalState state) {
         Assessment base = full(situation);
-        return new Assessment(base.enemies(), base.winMargin(), routes, base.mode(), base.initiates(),
+        double quality = routes == 0 ? 0.0 : Math.max(base.escapeQuality(), MIN_REAL_ESCAPE);
+        return new Assessment(base.enemies(), base.winMargin(), routes, quality, base.mode(), base.initiates(),
                 base.zoneDistance(), leashLeft, engageLeft, base.speedRatio(), state, 0, 1000);
     }
 
     static FactMap timed(Situation situation, TacticalState state, long inState, long sinceEnemySeen) {
         Assessment base = full(situation);
         return FactMap.from(situation, new Assessment(base.enemies(), base.winMargin(), base.escapeRoutes(),
-                base.mode(), base.initiates(), base.zoneDistance(), base.leashLeft(), base.engageLeft(),
-                base.speedRatio(), state, inState, sinceEnemySeen));
+                base.escapeQuality(), base.mode(), base.initiates(), base.zoneDistance(), base.leashLeft(),
+                base.engageLeft(), base.speedRatio(), state, inState, sinceEnemySeen));
     }
 
     static FactMap factsInMode(Situation situation, CombatMode mode) {
         Assessment base = full(situation);
-        return FactMap.from(situation, new Assessment(base.enemies(), base.winMargin(), base.escapeRoutes(), mode,
-                base.initiates(), base.zoneDistance(), base.leashLeft(), base.engageLeft(), base.speedRatio(),
-                base.state(), base.ticksInState(), base.ticksSinceEnemySeen()));
+        return FactMap.from(situation, new Assessment(base.enemies(), base.winMargin(), base.escapeRoutes(),
+                base.escapeQuality(), mode, base.initiates(), base.zoneDistance(), base.leashLeft(), base.engageLeft(),
+                base.speedRatio(), base.state(), base.ticksInState(), base.ticksSinceEnemySeen()));
     }
 
     static FactMap facts(Situation situation) {

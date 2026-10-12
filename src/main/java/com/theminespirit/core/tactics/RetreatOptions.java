@@ -19,6 +19,14 @@ public record RetreatOptions(List<RetreatCandidate> candidates) {
         return methods.size();
     }
 
+    public double bestUtility() {
+        double best = 0;
+        for (RetreatCandidate candidate : candidates) {
+            best = Math.max(best, candidate.utility());
+        }
+        return best;
+    }
+
     public RetreatChoice choice() {
         RetreatCandidate best = null;
         List<RetreatCandidate> ordered = candidates.stream()

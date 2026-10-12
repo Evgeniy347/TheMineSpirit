@@ -13,7 +13,7 @@ public enum Factor {
     EXPLOSIVE_NEAR((situation, assessment, scales) -> unit(
             1 - assessment.enemies().nearestExplosive() / scales.explosiveRange())),
     ALLY_SUPPORT((situation, assessment, scales) -> unit(situation.self().allies() / scales.allyFull())),
-    ESCAPE_ROUTE((situation, assessment, scales) -> unit(assessment.escapeRoutes() / scales.routesFull())),
+    ESCAPE_ROUTE((situation, assessment, scales) -> assessment.escapeQuality()),
     TERRAIN_RISK((situation, assessment, scales) -> Math.max(
             unit(1 - situation.env().lavaNear() / scales.lavaRange()),
             unit((situation.env().dropHeight() - scales.dropSafe()) / scales.dropRange()))),

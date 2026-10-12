@@ -47,7 +47,7 @@ class ScorerTests {
     @MethodSource("handSums")
     void score_KnownSituation_EqualsHandComputedSum(String name, Situation situation, double fight, double retreat,
             double ignore) {
-        Scores scores = new Scorer().score(situation, Assessments.full(situation).withEscapeRoutes(0),
+        Scores scores = new Scorer().score(situation, Assessments.withRoutes(situation, 0),
                 SpecWeights.spec());
 
         List<Double> actual = List.of(scores.total(TacticalOption.FIGHT), scores.total(TacticalOption.RETREAT),
