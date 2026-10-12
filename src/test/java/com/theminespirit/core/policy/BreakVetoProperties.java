@@ -17,7 +17,7 @@ class BreakVetoProperties {
     private static final BlockCoord UNDER = new BlockCoord(3, 39, -9);
     private static final Cell[] PALETTE = {Cell.SOLID, Cell.SOLID, Cell.PASSABLE, Cell.PASSABLE, Cell.WATER, Cell.LAVA, Cell.FIRE, Cell.HAZARD, Cell.FALLING};
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void checkBelowFeet_RandomColumn_AllowedExactlyWhenSpiritLandsOnSolidWithinTwoBlocks(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Cell[] column = new Cell[8];

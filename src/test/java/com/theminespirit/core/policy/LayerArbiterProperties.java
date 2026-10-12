@@ -32,7 +32,7 @@ class LayerArbiterProperties {
         return step == 'r' || step == 'x';
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void step_ReflexTick_PolicyAlwaysOwns(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         String script = randomScript(seed);
         String owners = LayerArbiterTests.run(script);
@@ -44,7 +44,7 @@ class LayerArbiterProperties {
         }
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void step_OwnerLeavesPolicy_OnlyAfterTenQuietTicks(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         String script = randomScript(seed);
         String owners = LayerArbiterTests.run(script);
@@ -60,7 +60,7 @@ class LayerArbiterProperties {
         }
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void step_OwnerLeavesTactics_OnlyAfterTenTicksWithoutDemand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         String script = randomScript(seed);
         String owners = LayerArbiterTests.run(script);

@@ -73,6 +73,7 @@ public final class PolicySuspendGameTests {
         });
     }
 
+    // [флак] ломка блока с приостановкой: сотни тиков духа, запас под нагрузкой
     @GameTest(template = "arena", batch = "suspend_break", timeoutTicks = 500)
     public static void suspend_MidBreak_CrackIsRemovedBlockStaysThenBreakFinishes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

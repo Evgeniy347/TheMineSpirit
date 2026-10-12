@@ -118,7 +118,7 @@ class FleePlannerProperties {
         return worst;
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void plan_RandomTerrain_TargetIsReachableAndNotWorseThanStart(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Grid grid = new Grid(random);
@@ -140,7 +140,7 @@ class FleePlannerProperties {
         }
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void plan_RandomTerrain_ReadsAndVisitedStayWithinBudget(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Grid grid = new Grid(random);

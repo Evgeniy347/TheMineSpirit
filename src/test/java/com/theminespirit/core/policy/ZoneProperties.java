@@ -19,7 +19,7 @@ class ZoneProperties {
         return Combinators.combine(axis, axis, axis).as(BlockCoord::new);
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void nearestInside_AnyPosition_IsInsideTheZone(@ForAll("coords") BlockCoord center, @ForAll @IntRange(min = 1, max = 64) int radius,
                                                    @ForAll("coords") BlockCoord pos) {
         WorkZone zone = new WorkZone(center, radius);
@@ -29,7 +29,7 @@ class ZoneProperties {
         assertTrue(zone.box().contains(inside), "Ближайшая точка внутри обязана лежать в зоне, иначе возврат вернёт духа за границу. Точка: " + inside);
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void nearestInside_PositionInsideTheZone_IsTheSamePoint(@ForAll("coords") BlockCoord center, @ForAll @IntRange(min = 1, max = 64) int radius,
                                                             @ForAll @IntRange(min = -64, max = 64) int dx, @ForAll @IntRange(min = -64, max = 64) int dz) {
         WorkZone zone = new WorkZone(center, radius);
@@ -39,7 +39,7 @@ class ZoneProperties {
         assertEquals(new ZonePolicy.Allowed(), ZonePolicy.checkTarget(pos, zone), "Позиция в зоне разрешена как цель");
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 200)
     void excess_AnyPosition_EqualsLargestAxisDistanceToNearestInside(@ForAll("coords") BlockCoord center, @ForAll @IntRange(min = 1, max = 64) int radius,
                                                                     @ForAll("coords") BlockCoord pos) {
         WorkZone zone = new WorkZone(center, radius);

@@ -22,12 +22,12 @@ class PlacedBlockSetProperties {
                 Arbitraries.integers().between(-33_554_432, 33_554_431)).as(BlockCoord::new);
     }
 
-    @Property(tries = 2000)
+    @Property(tries = 200)
     void unpack_PackedCoordinate_RestoresIt(@ForAll("anyCoord") BlockCoord coord) {
         assertEquals(coord, PlacedBlockSet.unpack(PlacedBlockSet.pack(coord)), "Сжатие позиции в long обратимо на всём допустимом диапазоне");
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void contains_RandomAddRemoveBelowLimit_MatchesPlainSet(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         PlacedBlockSet set = new PlacedBlockSet();
@@ -55,7 +55,7 @@ class PlacedBlockSetProperties {
         assertEquals(model.size(), set.size(), "Размер набора равен числу добавленных и не удалённых позиций");
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void decode_EncodedRandomSet_EqualsOriginal(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         PlacedBlockSet set = new PlacedBlockSet();

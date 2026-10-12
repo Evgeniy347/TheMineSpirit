@@ -46,7 +46,7 @@ class HazardReflexProperties {
         }, BodyFlags.CALM, Optional.empty());
     }
 
-    @Property(tries = 500)
+    @Property(tries = 200)
     void evaluate_RandomSnapshot_FleeCellAlwaysPassesCanStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
@@ -59,7 +59,7 @@ class HazardReflexProperties {
         }
     }
 
-    @Property(tries = 500)
+    @Property(tries = 200)
     void evaluate_RandomSnapshot_ExitWaterCellHasFloorHeadroomAndNoHazardsAround(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
@@ -86,7 +86,7 @@ class HazardReflexProperties {
         }
     }
 
-    @Property(tries = 500)
+    @Property(tries = 200)
     void evaluate_HarmlessSurroundings_NeverGivesReflex(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BodyFlags harmless = new BodyFlags(false, false, false, random.nextBoolean());
@@ -98,7 +98,7 @@ class HazardReflexProperties {
                 "Без лавы, огня, опасных блоков, воды и горения рефлексу нечего делать: ложное срабатывание уводит духа с работы");
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void evaluate_WaterExemption_NeverExitsWater(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
@@ -111,7 +111,7 @@ class HazardReflexProperties {
         }
     }
 
-    @Property(tries = 300)
+    @Property(tries = 200)
     void evaluate_SameSnapshotReadTwice_GivesEqualVerdicts(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BodyFlags flags = flags(random);

@@ -28,6 +28,7 @@ public final class PolicyLayerGameTests {
     private PolicyLayerGameTests() {
     }
 
+    // [флак] слои и приостановка: сценарий в сотни тиков духа, запас под нагрузкой
     @GameTest(template = "arena", batch = "policy_layers", timeoutTicks = 500)
     public static void layers_LavaAppearsBesideTheWalkingSpirit_TaskSuspendedThenResumedAfterTenQuietTicks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

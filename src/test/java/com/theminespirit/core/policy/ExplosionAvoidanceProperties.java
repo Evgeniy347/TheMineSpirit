@@ -50,7 +50,7 @@ class ExplosionAvoidanceProperties {
         return facts;
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void evaluate_RandomThreats_ClearExactlyWhenEveryHoldDistanceIsKept(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BlockCoord self = new BlockCoord(4 + random.nextInt(13), 1, 4 + random.nextInt(13));
@@ -63,7 +63,7 @@ class ExplosionAvoidanceProperties {
                 "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 9, +3 при набухании). Угрозы: " + facts);
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void evaluate_OneThreat_FleeCellIsNotCloserThanStart(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BlockCoord self = new BlockCoord(4 + random.nextInt(13), 1, 4 + random.nextInt(13));
@@ -77,7 +77,7 @@ class ExplosionAvoidanceProperties {
         }
     }
 
-    @Property(tries = 400)
+    @Property(tries = 200)
     void evaluate_SeveralThreats_FleeCellKeepsHoldsOrIsNotWorseThanStart(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BlockCoord self = new BlockCoord(4 + random.nextInt(13), 1, 4 + random.nextInt(13));

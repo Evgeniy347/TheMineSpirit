@@ -78,6 +78,7 @@ public final class PolicyWaterGameTests {
         });
     }
 
+    // [флак] переправа через озеро вброд: goto до 480 тиков духа, запас под нагрузкой
     @GameTest(template = "arena", batch = "policy_lake_ford", timeoutTicks = 600)
     public static void lake_GotoWithoutBypass_CrossesTheWaterAndArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
