@@ -62,8 +62,10 @@ public final class CoreScripts {
                         List.of("в радиусе есть подходящие блоки"), List.of("блоки собраны")),
                 spec("collect_drops", "подобрать выпавшие предметы вокруг духа",
                         List.of(ParamSpec.integer("radius", false, CatalogLimits.DROP_RADIUS_MIN,
-                                CatalogLimits.DROP_RADIUS_MAX, CatalogLimits.DROP_RADIUS_DEFAULT),
-                                ParamSpec.textList("filter", false)),
+                                        CatalogLimits.DROP_RADIUS_MAX, CatalogLimits.DROP_RADIUS_DEFAULT),
+                                ParamSpec.textList("filter", false),
+                                ParamSpec.enumeration("overflow", false, List.of("fail", "by_value"),
+                                        "by_value")),
                         List.of("в инвентаре есть место"),
                         List.of("предметы по фильтру в радиусе подобраны", "предметов по фильтру в радиусе не осталось")),
                 spec("harvest_crop", "собрать урожай",
@@ -104,15 +106,25 @@ public final class CoreScripts {
                         List.of(ParamSpec.text("item", true)),
                         List.of("предмет есть в инвентаре"), List.of("предмет надет")),
                 spec("deposit", "положить предметы в контейнер",
-                        List.of(ParamSpec.text("container", true), ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
-                        List.of("контейнер доступен"), List.of("предметы в контейнере")),
+                        List.of(ParamSpec.text("container", false, "nearest"), ParamSpec.text("item", true),
+                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                containerRadius()),
+                        List.of("контейнер доступен"), List.of("предметы в контейнере",
+                                "контейнер отсортирован")),
                 spec("withdraw", "взять предметы из контейнера",
-                        List.of(ParamSpec.text("container", true), ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
-                        List.of("контейнер доступен"), List.of("предметы в инвентаре")),
+                        List.of(ParamSpec.text("container", false, "nearest"), ParamSpec.text("item", true),
+                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                containerRadius()),
+                        List.of("контейнер доступен"),
+                        List.of("предметы в инвентаре", "контейнер отсортирован")),
                 spec("sort_chest", "рассортировать содержимое сундука",
-                        List.of(), List.of("контейнер доступен"), List.of("содержимое упорядочено")),
+                        List.of(ParamSpec.text("container", false, "nearest"), containerRadius()),
+                        List.of("контейнер доступен"), List.of("содержимое упорядочено")),
+                spec("unload", "разгрузить лишнее на базе",
+                        List.of(ParamSpec.text("container", false, "nearest"), containerRadius(),
+                                ParamSpec.bool("force", false, false)),
+                        List.of("рядом есть допустимый контейнер"),
+                        List.of("лишнее в контейнере", "базовый набор остался при духе")),
                 spec("acquire", "добыть предмет любым способом",
                         List.of(ParamSpec.text("item", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
@@ -187,5 +199,10 @@ public final class CoreScripts {
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
             List<String> effects) {
         return new ScriptSpec(id, summary, params, preconditions, effects);
+    }
+
+    private static ParamSpec containerRadius() {
+        return ParamSpec.integer("radius", false, CatalogLimits.CONTAINER_RADIUS_MIN,
+                CatalogLimits.CONTAINER_RADIUS_MAX, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
     }
 }
