@@ -23,7 +23,8 @@ final class LoadedWorld {
     }
 
     static LevelChunk chunk(Level level, int chunkX, int chunkZ, Set<Long> skippedChunks) {
-        if (level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk chunk) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(chunkX, chunkZ);
+        if (chunk != null) {
             return chunk;
         }
         skippedChunks.add(ChunkPos.asLong(chunkX, chunkZ));

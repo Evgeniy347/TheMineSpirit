@@ -16,11 +16,14 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.WorldScanner;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -174,6 +177,54 @@ public final class ScanGameTests {
                 "скан порциями не должен грузить чанки: было " + before + ", стало " + after);
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 200)
+    public static void scanSession_ForcedTicketNotYetFull_SkipsChunkWithoutLoading(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
+        helper.assertTrue(unloaded != null,
+                "в пределах 256 чанков к востоку обязана найтись незагруженная область: иначе тест не проверяет пропуск");
+        int chunkX = unloaded.getX() >> 4;
+        int chunkZ = unloaded.getZ() >> 4;
+        ChunkPos forced = new ChunkPos(chunkX, chunkZ);
+        helper.getLevel().getChunkSource().updateChunkForced(forced, true);
+        CompletableFuture<?> future = helper.getLevel().getChunkSource().getChunkFuture(chunkX, chunkZ, ChunkStatus.EMPTY, true);
+        future.join();
+        BlockCoord center = new BlockCoord(unloaded.getX() - 24, base.getY(), base.getZ());
+        int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
+
+        WorldScanner.Session session = new WorldScanner.Session(helper.getLevel(), "scan_forced", center,
+                ScanRadius.of(32), IdFilter.of(List.of("*_ore")), new SimpleContainer(1));
+        int[] maxChunksDuringScan = {before};
+
+        helper.succeedWhen(() -> {
+            if (!session.done()) {
+                session.step(ScanTuning.SLICES_PER_TICK);
+                int currentChunks = helper.getLevel().getChunkSource().getLoadedChunksCount();
+                if (currentChunks > maxChunksDuringScan[0]) {
+                    maxChunksDuringScan[0] = currentChunks;
+                }
+                return;
+            }
+            WorldScanner.Scan scan = session.result();
+            int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
+
+            helper.assertTrue(scan.skippedChunks() > 0,
+                    "скан у края загруженной области обязан встретить незагруженные чанки, пропущено " + scan.skippedChunks());
+            helper.assertTrue(after == before,
+                    "скан порциями не должен грузить чанки: загруженных было " + before + ", стало " + after
+                            + ", максимум во время скана " + maxChunksDuringScan[0]
+                            + ": старый код вызывает managedBlock в getChunk(FULL) и догружает чанк");
+            helper.assertTrue(maxChunksDuringScan[0] == before,
+                    "во время скана число загруженных чанков не должно расти: было " + before
+                            + ", максимум " + maxChunksDuringScan[0]
+                            + ": старый код синхронно догружает чанки через managedBlock");
+            helper.getLevel().getChunkSource().updateChunkForced(forced, false);
+            GameTestFixtures.reset(helper);
+        });
     }
 
     @GameTest(template = "arena", batch = "scan_cancel", timeoutTicks = 400)
