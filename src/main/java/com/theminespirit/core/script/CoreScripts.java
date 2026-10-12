@@ -35,6 +35,14 @@ public final class CoreScripts {
                 spec("locate_container", "найти ближайший контейнер",
                         List.of(perceptionRadius()),
                         List.of(), List.of("позиция ближайшего контейнера найдена или сообщено, что контейнера нет")),
+                spec("look_at", "посмотреть на клетку: блок, сущность, контейнер",
+                        List.of(
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                        List.of(), List.of("описание клетки получено, чанк не загружался")),
                 spec("goto", "пройти к заданной точке",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,

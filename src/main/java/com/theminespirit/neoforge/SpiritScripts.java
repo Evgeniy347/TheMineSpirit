@@ -14,6 +14,7 @@ import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.HarvestCropParams;
 import com.theminespirit.core.script.LocateParams;
+import com.theminespirit.core.script.LookAtParams;
 import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.PerceptionParams;
 import com.theminespirit.core.script.PlantCropParams;
@@ -42,6 +43,7 @@ public final class SpiritScripts {
         table.put("locate_block", spirit -> params -> new LocateScript(spirit, LocateParams.block(params)));
         table.put("locate_tree", spirit -> params -> new LocateScript(spirit, LocateParams.tree(params)));
         table.put("locate_container", spirit -> params -> new LocateScript(spirit, LocateParams.container(params)));
+        table.put("look_at", spirit -> params -> new LookAtScript(spirit, LookAtParams.target(params)));
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
