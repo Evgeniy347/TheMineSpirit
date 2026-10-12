@@ -317,6 +317,36 @@ public final class FarmGameTests {
         return new ScriptCall("till", Map.of("radius", radius, "count", count));
     }
 
+    @GameTest(template = "arena", batch = "farm_walled", timeoutTicks = 300)
+    public static void harvestCrop_SpiritWalledInWithinReach_BreaksCropFromWhereItStands(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        BlockPos cell = new BlockPos(4, FLOOR_Y, 4);
+        setCrop(helper, cell, CropKind.WHEAT, 7);
+        BlockPos standing = new BlockPos(2, 1, 4);
+        helper.setBlock(standing.below(), Blocks.FARMLAND);
+        helper.setBlock(new BlockPos(1, FLOOR_Y, 4), Blocks.WATER);
+        for (int y = 1; y <= 2; y++) {
+            helper.setBlock(standing.west().atY(y), Blocks.STONE);
+            helper.setBlock(standing.east().atY(y), Blocks.STONE);
+            helper.setBlock(standing.north().atY(y), Blocks.STONE);
+            helper.setBlock(standing.south().atY(y), Blocks.STONE);
+        }
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), standing);
+        ScriptCall call = new ScriptCall("harvest_crop", Map.of("crop", "wheat", "radius", 8, "replant", false));
+        SpiritRun run = SpiritRun.launch(helper, spirit, call, SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(helper.getBlockState(cell.above()).isAir(),
+                    "дух заперт на пашне, предпочтённая стоянка недостижима, но зрелая клетка в досягаемости: когда "
+                            + "навигация не доводит духа до стоянки, работа обязана идти оттуда, где он стоит, а не "
+                            + "считаться «без места для духа». Статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         for (int slot = 0; slot < stacks.length; slot++) {

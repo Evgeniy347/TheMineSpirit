@@ -258,10 +258,18 @@ public final class FarmSession {
             }
             case ARRIVED -> state = State.ACT;
             case STUCK, TIMEOUT -> {
-                noStand++;
-                finishTarget();
+                if (inReachOfTarget()) {
+                    state = State.ACT;
+                } else {
+                    noStand++;
+                    finishTarget();
+                }
             }
         }
+    }
+
+    private boolean inReachOfTarget() {
+        return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(posOf(currentGround))) <= BlockBreaker.REACH;
     }
 
     private void act() {
