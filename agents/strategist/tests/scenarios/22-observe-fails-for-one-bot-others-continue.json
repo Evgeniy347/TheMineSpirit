@@ -1,0 +1,66 @@
+{
+ "description": "ошибка наблюдения у одного духа не останавливает остальных",
+ "bots": [
+  {
+   "id": "a",
+   "world": "forest"
+  },
+  {
+   "id": "b",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом зрелая пшеница.",
+    "goal": "собрать пшеницу",
+    "plan": {
+     "type": "script",
+     "script": "harvest_crop",
+     "params": {
+      "crop": "wheat",
+      "radius": 8
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "observe_errors": [
+     [
+      500,
+      "internal"
+     ]
+    ]
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal_has": [
+    {
+     "event": "bot_skipped",
+     "bot": "a",
+     "reason_contains": "observe"
+    },
+    {
+     "event": "posted",
+     "bot": "b"
+    }
+   ]
+  }
+ ],
+ "name": "22-observe-fails-for-one-bot-others-continue"
+}

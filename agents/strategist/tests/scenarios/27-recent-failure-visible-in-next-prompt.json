@@ -1,0 +1,80 @@
+{
+ "description": "провал предыдущей задачи виден модели в разделе «Недавние решения»",
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "В радиусе есть железная жила.",
+     "goal": "добыть железо",
+     "plan": {
+      "type": "script",
+      "script": "mine_vein",
+      "params": {
+       "ore": "iron",
+       "count": 2
+      }
+     }
+    }
+   }
+  ]
+ },
+ "fates": {
+  "*": {
+   "outcome": "failed",
+   "after_polls": 1,
+   "error": "нет подходящих брёвен в радиусе"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "prompt_contains": [
+    {
+     "call": 1,
+     "contains": "срубить деревья"
+    },
+    {
+     "call": 1,
+     "contains": "нет подходящих брёвен"
+    },
+    {
+     "call": 1,
+     "contains": "провал"
+    }
+   ]
+  },
+  {
+   "posts": 2
+  }
+ ],
+ "name": "27-recent-failure-visible-in-next-prompt",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

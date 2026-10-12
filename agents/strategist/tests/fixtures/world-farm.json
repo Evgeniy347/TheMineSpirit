@@ -1,0 +1,153 @@
+{
+ "name": "Дух-farm",
+ "state": "idle",
+ "observation": {
+  "bot": "farm",
+  "tick": 123456,
+  "pos": [
+   -12,
+   64,
+   240
+  ],
+  "radius": 32,
+  "inventory": [
+   {
+    "item": "iron_hoe",
+    "count": 1
+   },
+   {
+    "item": "wheat_seeds",
+    "count": 14
+   },
+   {
+    "item": "bone_meal",
+    "count": 3
+   },
+   {
+    "item": "bread",
+    "count": 4
+   },
+   {
+    "item": "oak_planks",
+    "count": 12
+   }
+  ],
+  "blocks": [
+   {
+    "item": "farmland",
+    "count": 54
+   },
+   {
+    "item": "wheat",
+    "count": 49
+   },
+   {
+    "item": "water",
+    "count": 9
+   },
+   {
+    "item": "grass_block",
+    "count": 300
+   },
+   {
+    "item": "dirt",
+    "count": 210
+   },
+   {
+    "item": "oak_fence",
+    "count": 28
+   },
+   {
+    "item": "oak_log",
+    "count": 6
+   },
+   {
+    "item": "carrots",
+    "count": 12
+   },
+   {
+    "item": "hay_block",
+    "count": 2
+   },
+   {
+    "item": "torch",
+    "count": 6
+   }
+  ],
+  "entities": [
+   {
+    "type": "minecraft:chicken",
+    "pos": [
+     -12,
+     64,
+     244
+    ],
+    "distance": 4.0
+   },
+   {
+    "type": "minecraft:chicken",
+    "pos": [
+     -15,
+     64,
+     236
+    ],
+    "distance": 5.0
+   },
+   {
+    "type": "minecraft:cow",
+    "pos": [
+     -5,
+     64,
+     243
+    ],
+    "distance": 7.6
+   },
+   {
+    "type": "minecraft:chicken",
+    "pos": [
+     -3,
+     64,
+     239
+    ],
+    "distance": 9.1
+   },
+   {
+    "type": "minecraft:cow",
+    "pos": [
+     -3,
+     64,
+     235
+    ],
+    "distance": 10.3
+   },
+   {
+    "type": "minecraft:villager",
+    "pos": [
+     -19,
+     64,
+     232
+    ],
+    "distance": 10.6
+   }
+  ],
+  "containers": [
+   {
+    "type": "minecraft:chest",
+    "pos": [
+     -8,
+     64,
+     236
+    ]
+   },
+   {
+    "type": "minecraft:barrel",
+    "pos": [
+     -9,
+     64,
+     238
+    ]
+   }
+  ],
+  "hash": "10b013784aee6f2473f73dd6119f50d2a0e1bfea9fe95355a6c9f2c44bf6480e"
+ }
+}

@@ -1,0 +1,69 @@
+{
+ "description": "каталог недоступен: цикл прерван с alert, модель не вызывается; следующий цикл работает",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "server_errors": [
+     [
+      500,
+      "internal"
+     ]
+    ]
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 0
+    },
+    {
+     "brain_calls": 0
+    },
+    {
+     "journal": {
+      "alert": 1
+     }
+    }
+   ]
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  }
+ ],
+ "name": "23-capabilities-down-cycle-aborted-next-cycle-works",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

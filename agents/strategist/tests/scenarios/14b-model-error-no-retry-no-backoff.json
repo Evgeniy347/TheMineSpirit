@@ -1,0 +1,37 @@
+{
+ "description": "мусор на выходе мозга (BrainError): сбой в журнале, повтора и увеличения интервала нет",
+ "brain": {
+  "default": {
+   "error": "В выводе opencode нет текстового ответа"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "interval": 300
+  },
+  {
+   "journal_has": {
+    "event": "brain_failure",
+    "kind": "error"
+   }
+  }
+ ],
+ "name": "14b-model-error-no-retry-no-backoff",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

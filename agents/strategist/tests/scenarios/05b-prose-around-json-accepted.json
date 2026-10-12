@@ -1,0 +1,28 @@
+{
+ "description": "проза до и после JSON не мешает",
+ "brain": {
+  "default": {
+   "text": "Вот моё решение:\n{\"reason\": \"Рядом лес, инструментов хватает.\", \"goal\": \"срубить деревья\", \"plan\": {\"type\": \"script\", \"script\": \"chop_tree\", \"params\": {\"count\": 3}}}\nУдачи духу!"
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  }
+ ],
+ "name": "05b-prose-around-json-accepted",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

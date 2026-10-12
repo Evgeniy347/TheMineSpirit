@@ -1,0 +1,59 @@
+{
+ "description": "сервер ответил 422 на план, который клиент пропустил: не POST, один повтор",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "fake": {
+    "plan_error": "Скрипт 'chop_tree': в радиусе нет подходящих брёвен"
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "plan_calls": 2
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "server",
+    "reason_contains": "нет подходящих брёвен"
+   }
+  }
+ ],
+ "name": "07-server-422-on-client-passed-plan-one-retry",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

@@ -1,0 +1,145 @@
+{
+ "name": "Дух-forest",
+ "state": "idle",
+ "observation": {
+  "bot": "forest",
+  "tick": 123456,
+  "pos": [
+   112,
+   70,
+   -35
+  ],
+  "radius": 32,
+  "inventory": [],
+  "blocks": [
+   {
+    "item": "grass_block",
+    "count": 612
+   },
+   {
+    "item": "dirt",
+    "count": 431
+   },
+   {
+    "item": "oak_leaves",
+    "count": 884
+   },
+   {
+    "item": "oak_log",
+    "count": 96
+   },
+   {
+    "item": "birch_log",
+    "count": 31
+   },
+   {
+    "item": "birch_leaves",
+    "count": 140
+   },
+   {
+    "item": "stone",
+    "count": 220
+   },
+   {
+    "item": "andesite",
+    "count": 40
+   },
+   {
+    "item": "short_grass",
+    "count": 150
+   },
+   {
+    "item": "fern",
+    "count": 33
+   },
+   {
+    "item": "poppy",
+    "count": 6
+   },
+   {
+    "item": "water",
+    "count": 18
+   },
+   {
+    "item": "sand",
+    "count": 24
+   }
+  ],
+  "entities": [
+   {
+    "type": "minecraft:chicken",
+    "pos": [
+     107,
+     70,
+     -39
+    ],
+    "distance": 6.4
+   },
+   {
+    "type": "minecraft:chicken",
+    "pos": [
+     111,
+     70,
+     -45
+    ],
+    "distance": 10.0
+   },
+   {
+    "type": "minecraft:cow",
+    "pos": [
+     120,
+     70,
+     -44
+    ],
+    "distance": 12.0
+   },
+   {
+    "type": "minecraft:cow",
+    "pos": [
+     100,
+     70,
+     -40
+    ],
+    "distance": 13.0
+   },
+   {
+    "type": "minecraft:sheep",
+    "pos": [
+     131,
+     70,
+     -53
+    ],
+    "distance": 26.2
+   },
+   {
+    "type": "minecraft:cow",
+    "pos": [
+     93,
+     70,
+     -16
+    ],
+    "distance": 26.9
+   },
+   {
+    "type": "minecraft:sheep",
+    "pos": [
+     134,
+     70,
+     -19
+    ],
+    "distance": 27.2
+   },
+   {
+    "type": "minecraft:zombie",
+    "pos": [
+     85,
+     70,
+     -45
+    ],
+    "distance": 28.8
+   }
+  ],
+  "containers": [],
+  "hash": "e7ed9573b93cbdfe37e492f6db5da7825b6cd797a0371e0efe5d414dcb328d60"
+ }
+}

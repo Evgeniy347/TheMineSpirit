@@ -1,0 +1,39 @@
+{
+ "description": "общий лимит вызовов модели: 30 в час на всех духов",
+ "bots": [
+  {
+   "prefix": "b",
+   "count": 32,
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Ничего полезного рядом нет.",
+    "skip": true
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "brain_calls": 30
+  },
+  {
+   "posts": 0
+  },
+  {
+   "journal_has": {
+    "event": "bot_skipped",
+    "bot": "b31",
+    "reason_contains": "30"
+   }
+  }
+ ],
+ "name": "24-global-brain-call-limit-per-hour"
+}

@@ -1,0 +1,86 @@
+{
+ "description": "провайдер недоступен: нет POST, интервал ×2; затем возврат через пробный вызов",
+ "brains": {
+  "primary": {
+   "script": [
+    {
+     "unavailable": "provider",
+     "text": "Free usage exceeded"
+    },
+    {
+     "json": {
+      "reason": "Рядом лес, инструментов хватает.",
+      "goal": "срубить деревья",
+      "plan": {
+       "type": "script",
+       "script": "chop_tree",
+       "params": {
+        "count": 3
+       }
+      }
+     }
+    }
+   ]
+  },
+  "fallback": {
+   "script": [
+    {
+     "unavailable": "provider",
+     "text": "Rate limit exceeded"
+    }
+   ]
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 0
+    },
+    {
+     "interval": 600
+    },
+    {
+     "probes": 0
+    },
+    {
+     "journal_has": {
+      "event": "brain_failure",
+      "kind": "provider",
+      "reason_contains": "Free usage exceeded"
+     }
+    }
+   ]
+  },
+  {
+   "advance": 600
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "probes": 1
+  },
+  {
+   "posts": 1
+  },
+  {
+   "interval": 300
+  },
+  {
+   "brain_calls": 3
+  }
+ ],
+ "name": "13b-provider-down-interval-doubles-then-probe-and-recovery",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

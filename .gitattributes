@@ -5,3 +5,4 @@ src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
 *.sh text eol=lf
 *.bat text eol=crlf
+*.py text eol=lf

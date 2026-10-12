@@ -1,0 +1,33 @@
+{
+  "reason": "Нужна руда: сначала железо, если жилы нет — уголь, иначе камень.",
+  "goal": "добыть руду или камень",
+  "plan": {
+    "type": "fallback",
+    "steps": [
+      {
+        "type": "script",
+        "script": "mine_vein",
+        "params": {
+          "ore": "iron",
+          "count": 4
+        }
+      },
+      {
+        "type": "script",
+        "script": "mine_vein",
+        "params": {
+          "ore": "coal",
+          "count": 8
+        }
+      },
+      {
+        "type": "script",
+        "script": "gather",
+        "params": {
+          "block": "minecraft:stone",
+          "count": 16
+        }
+      }
+    ]
+  }
+}

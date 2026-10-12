@@ -20,6 +20,8 @@
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
+| `scripts/testing/check-strategist.sh` | тесты агента-стратега (`python3 -m unittest`, сценарии, сторожа) и сценарии надзора `scripts/strategist.sh` на фейковом REST; сервер Minecraft и настоящий opencode не нужны | все строки `OK` |
+| `cd agents/strategist && python3 -m unittest discover -s tests -t .` | только Python-тесты агента-стратега | `OK` в последней строке |
 | `scripts/publish.sh` | собирает мод и ставит jar на сервер `/opt/minecraft/server`, перезапуская его, если он работал. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
 
 Первая сборка скачивает Gradle, Minecraft и NeoForge — несколько минут; дальше секунды.
@@ -31,6 +33,23 @@
 | Параметр | Значение | Смысл |
 |---|---|---|
 | `spirit.chunkLoadingRadius` | `-1` (по умолчанию), `1`–`32` | Радиус `R` квадрата принудительно загружаемых и тикающих чанков вокруг духа. `-1` — как simulation distance сервера: дух держит столько же, сколько игрок. `(2R+1)²` чанков на духа |
+
+## REST-мост
+
+Внешний ИИ-агент управляет духами по HTTP: мост живёт внутри мода и поднимается при старте выделенного сервера.
+Контракт — [docs/API.md](docs/API.md). Реализованы `capabilities`, `bots`, `bots/{id}` и `observe`; задачи и план — чеклист 15.
+
+Конфиг — `serverconfig/theminespirit-rest.toml` (в каталоге мира, создаётся при первом запуске сервера):
+
+| Параметр | По умолчанию | Смысл |
+|---|---|---|
+| `rest.enabled` | `true` | запускать ли мост |
+| `rest.port` | `8765` | TCP-порт, `1024`–`65535` (8099 занят раздачей клиента, 25565 — игра) |
+| `rest.bindAddress` | `0.0.0.0` | адрес привязки: `0.0.0.0` — вся локальная сеть, `127.0.0.1` — только этот компьютер |
+
+Авторизации нет: сеть доверенная (решение пользователя), **порт открыт всей сети**, до которой достаёт адрес привязки;
+ограничивайте доступ адресом и файрволом. Проверка: `curl http://<хост>:<порт>/v1/bots`. Занятый порт или неверный адрес
+привязки — ERROR в логе сервера, Minecraft-сервер при этом продолжает работать.
 
 ## Документация
 
@@ -46,7 +65,9 @@
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера, согласование |
 | [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | модели-исполнители opencode: проба и качество на заданиях |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md) | роль главного агента и ревьюера: задания для opencode, ревью, сторожа |
+| [docs/TACTICS.md](docs/TACTICS.md) | ядро тактики боя: факты, факторы, правила, режимы, схема JSON, trace |
 | [opencode.json](opencode.json) | настройки opencode в проекте: модель big-pickle, полный доступ, вопросы запрещены |
+| [docs/STRATEGIST.md](docs/STRATEGIST.md) | агент-стратег духов (`agents/strategist`): цикл, режимы, журнал, лимиты, смена модели |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
 | [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
 
@@ -57,6 +78,8 @@
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: при сбое провайдера (free usage, rate limit, квота, 429) или молчании модели ≥ 5 мин — перезапуск той же сессии (5, 5, 10, 30, 60 с), затем режим ожидания: раз в 120 с (`OPENCODE_PROBE_INTERVAL`) короткая проба модели из пустого каталога, провайдер вернулся — та же сессия продолжается, предел ожидания `OPENCODE_WAIT_LIMIT` 7200 с, потом стоп; сбои пишутся в `TestResults/opencode/failures.log`; новое задание не стартует в грязном дереве (там может работать другой агент), `OPENCODE_ALLOW_DIRTY=1` — осознанно | код выхода 0 и `Сессия: ses_…`; 75 (предел ожидания исчерпан) — сообщить пользователю |
 | [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): сбои провайдера, режим ожидания (провайдер вернулся / предел исчерпан), молчание модели, долгая команда, ложные срабатывания на файлах и логе INFO | все строки `OK` |
+| [scripts/strategist.sh](scripts/strategist.sh) | надзор за агентом-стратегом: `start`, `stop`, `status`, `pause`, `resume`, `once`, `smoke [модель]`, `logs [N]`; tmux-сессия `mc-strategist`, второй экземпляр отказывается, `live` только с `STRATEGIST_CONFIRM_LIVE=1` (после согласия пользователя) | `status` показывает «агент: работает», режим, модель и счётчики за час |
+| [scripts/testing/check-strategist.sh](scripts/testing/check-strategist.sh) | регрессионная проверка агента-стратега и `strategist.sh` на временном `STRATEGIST_HOME` | все строки `OK` |
 | [scripts/opencode-status.sh](scripts/opencode-status.sh) | короткая сводка о текущем задании opencode: жив ли, давно ли писал, последние действия, состояние git | строка `opencode: работает; …` |
 | [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | сводка в тему «Оповещения» Telegram: прогресс плана, работающие исполнители (tmux `oc-*`), сбои модели; таймер раз в 5 мин, молчит без исполнителей | `sudo systemd-run --unit=mc-opencode-status --on-calendar='*:0/5' <путь>` |
 | [scripts/progress.sh](scripts/progress.sh) | общий прогресс плана по `todo.md`: отмеченные `[x]` / все пункты | строка `N% (x из всего)` |
@@ -72,6 +95,7 @@
 ## Структура
 
 ```
+agents/strategist/                    ← агент-стратег духов (Python, стандартная библиотека), docs/STRATEGIST.md
 src/main/java/com/theminespirit/
 ├── TheMineSpirit.java   ← точка входа @Mod
 ├── core/                ← логика без Minecraft/NeoForge, тестируется JUnit

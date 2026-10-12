@@ -1,0 +1,64 @@
+{
+ "description": "hash наблюдения не менялся с прошлого решения: модель не вызывается",
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Ничего полезного рядом нет.",
+    "skip": true
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "brain_calls": 1
+    },
+    {
+     "journal_has": {
+      "event": "bot_skipped",
+      "reason_contains": "мир не менялся"
+     }
+    }
+   ]
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm"
+    }
+   }
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "brain_calls": 2
+  },
+  {
+   "posts": 0
+  }
+ ],
+ "name": "12-unchanged-hash-model-not-called",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}

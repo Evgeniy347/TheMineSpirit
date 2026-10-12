@@ -1,0 +1,69 @@
+{
+ "description": "повтор после отказа: исправленный план уходит, повтору передан текст ошибки",
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "телепорт",
+     "plan": {
+      "type": "script",
+      "script": "teleport",
+      "params": {
+       "x": 1,
+       "y": 64,
+       "z": 1
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом лес, инструментов хватает.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 1,
+    "posted": 1
+   }
+  },
+  {
+   "prompt_contains": [
+    {
+     "call": 1,
+     "contains": "teleport"
+    }
+   ]
+  }
+ ],
+ "name": "06a-retry-fixed-plan-is-sent",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ]
+}
