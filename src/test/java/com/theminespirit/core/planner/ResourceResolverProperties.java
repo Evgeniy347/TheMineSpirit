@@ -37,6 +37,11 @@ class ResourceResolverProperties {
                     "Резолвер обязан оканчивать план действием, добывающим сам предмет нужным количеством: "
                             + "иначе дух выполнит подготовку и не получит цель. Предмет=" + root
                             + ", количество=" + count);
+            FuelBalance balance = FuelBalance.of(plan);
+            assertTrue(balance.burn() >= balance.cook(),
+                    "Топлива в плане обязано хватать на все плавки: иначе печь встанет посреди работы. "
+                            + "Предмет=" + root + ", количество=" + count + ", горение=" + balance.burn()
+                            + ", нужно=" + balance.cook());
         } else {
             UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
                     () -> ResourceResolver.resolve(root, count, knowledge),
@@ -48,6 +53,22 @@ class ResourceResolverProperties {
                     "Поле item обязано называть предмет, у которого в графе нет способа добычи: "
                             + "иначе отказ маскирует дефект резолвера, а не пробел в знаниях. Предмет: " + named);
         }
+    }
+
+    @Property
+    void smeltPlan_AnyCount_FuelBurnCoversAllSmelts(@ForAll @IntRange(min = 1, max = 64) int count) {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("iron_ore", "coal", "oak_log"), Map.of(), Map.of("iron_ingot", "iron_ore"));
+
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", count, knowledge);
+
+        FuelBalance balance = FuelBalance.of(plan);
+        assertTrue(balance.smelts() == count,
+                "План обязан содержать плавку ровно " + count + " предметов: иначе проверять нечего. Фактически "
+                        + balance.smelts());
+        assertTrue(balance.burn() >= balance.cook(),
+                "Топлива в плане обязано хватать на все плавки: горение " + balance.burn() + " тиков обязано крыть "
+                        + balance.cook() + " тиков готовки. Количество=" + count);
     }
 
     private static TaskNode finalStep(TaskNode plan) {
@@ -83,7 +104,8 @@ class ResourceResolverProperties {
                         .allMatch(ingredient -> isObtainable(ingredient.item(), knowledge, path));
             }
             if (knowledge.isSmeltable(item)) {
-                return isObtainable(knowledge.smeltInputFor(item), knowledge, path);
+                return isObtainable(knowledge.smeltInputFor(item), knowledge, path)
+                        && hasObtainableFuel(knowledge, path);
             }
             return knowledge.isGatherable(item);
         } finally {
@@ -91,11 +113,19 @@ class ResourceResolverProperties {
         }
     }
 
+    private static boolean hasObtainableFuel(ResourceKnowledge knowledge, Set<String> path) {
+        return isObtainable("coal", knowledge, path)
+                || isObtainable("charcoal", knowledge, path)
+                || isObtainable("oak_log", knowledge, path)
+                || isObtainable("oak_planks", knowledge, path);
+    }
+
     private static ResourceKnowledge acyclic(List<Integer> decisions) {
         Set<String> gatherable = new HashSet<>();
         Map<String, List<Ingredient>> crafts = new LinkedHashMap<>();
         Map<String, String> smelts = new LinkedHashMap<>();
         gatherable.add(item(0));
+        gatherable.add("coal");
         for (int i = 1; i <= decisions.size(); i++) {
             switch (Math.floorMod(decisions.get(i - 1), 4)) {
                 case 1 -> gatherable.add(item(i));
