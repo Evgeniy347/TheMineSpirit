@@ -67,15 +67,19 @@ class TaskRegistryProperties {
     }
 
     @Test
-    void reserve_LikeIdempotencyEviction_CompletedCapHoldsForThousands() {
+    void reserve_TenThousandCompletedWithTenActive_KeepsTwoHundredFiftySixCompletedAndAllActive() {
         TaskRegistry registry = new TaskRegistry();
+        for (int i = 0; i < 10; i++) {
+            registry.reserve("active-" + i, null);
+        }
         for (int i = 0; i < 10_000; i++) {
             String taskId = registry.reserve("bot-" + i, null);
             registry.observe(taskId, TaskState.SUCCEEDED, null, null);
         }
 
-        assertEquals(TaskRegistry.MAX_COMPLETED, registry.completedCount(),
-                "После 10 000 завершённых в реестре обязано остаться ровно " + TaskRegistry.MAX_COMPLETED);
+        assertEquals(256, registry.completedCount(),
+                "После 10 000 завершённых в реестре обязано остаться ровно 256 завершённых: память реестра не растёт");
+        assertEquals(266, registry.size(), "Десять активных задач вытесняться не должны: 256 завершённых + 10 активных");
     }
 
     @Provide
