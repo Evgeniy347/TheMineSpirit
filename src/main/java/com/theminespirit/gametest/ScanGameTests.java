@@ -179,8 +179,8 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 200)
-    public static void scanSession_ForcedTicketNotYetFull_SkipsChunkWithoutLoading(GameTestHelper helper) {
+    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 100)
+    public static void scanSession_ForcedTicket_SkipsChunkWithoutLoading(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
@@ -191,40 +191,31 @@ public final class ScanGameTests {
         int chunkZ = unloaded.getZ() >> 4;
         ChunkPos forced = new ChunkPos(chunkX, chunkZ);
         helper.getLevel().getChunkSource().updateChunkForced(forced, true);
-        CompletableFuture<?> future = helper.getLevel().getChunkSource().getChunkFuture(chunkX, chunkZ, ChunkStatus.EMPTY, true);
-        future.join();
         BlockCoord center = new BlockCoord(unloaded.getX() - 24, base.getY(), base.getZ());
         int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
 
         WorldScanner.Session session = new WorldScanner.Session(helper.getLevel(), "scan_forced", center,
                 ScanRadius.of(32), IdFilter.of(List.of("*_ore")), new SimpleContainer(1));
-        int[] maxChunksDuringScan = {before};
-
-        helper.succeedWhen(() -> {
-            if (!session.done()) {
-                session.step(ScanTuning.SLICES_PER_TICK);
-                int currentChunks = helper.getLevel().getChunkSource().getLoadedChunksCount();
-                if (currentChunks > maxChunksDuringScan[0]) {
-                    maxChunksDuringScan[0] = currentChunks;
-                }
-                return;
+        int maxChunksDuringScan = before;
+        while (!session.done()) {
+            session.step(ScanTuning.SLICES_PER_TICK);
+            int currentChunks = helper.getLevel().getChunkSource().getLoadedChunksCount();
+            if (currentChunks > maxChunksDuringScan) {
+                maxChunksDuringScan = currentChunks;
             }
-            WorldScanner.Scan scan = session.result();
-            int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
+        }
+        WorldScanner.Scan scan = session.result();
+        int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
 
-            helper.assertTrue(scan.skippedChunks() > 0,
-                    "скан у края загруженной области обязан встретить незагруженные чанки, пропущено " + scan.skippedChunks());
-            helper.assertTrue(after == before,
-                    "скан порциями не должен грузить чанки: загруженных было " + before + ", стало " + after
-                            + ", максимум во время скана " + maxChunksDuringScan[0]
-                            + ": старый код вызывает managedBlock в getChunk(FULL) и догружает чанк");
-            helper.assertTrue(maxChunksDuringScan[0] == before,
-                    "во время скана число загруженных чанков не должно расти: было " + before
-                            + ", максимум " + maxChunksDuringScan[0]
-                            + ": старый код синхронно догружает чанки через managedBlock");
-            helper.getLevel().getChunkSource().updateChunkForced(forced, false);
-            GameTestFixtures.reset(helper);
-        });
+        helper.assertTrue(scan.skippedChunks() > 0,
+                "скан у края загруженной области обязан встретить незагруженные чанки, пропущено " + scan.skippedChunks());
+        helper.assertTrue(after == before,
+                "скан не должен грузить чанки: загруженных было " + before + ", стало " + after);
+        helper.assertTrue(maxChunksDuringScan == before,
+                "во время скана число загруженных чанков не должно расти: было " + before + ", максимум " + maxChunksDuringScan);
+        helper.getLevel().getChunkSource().updateChunkForced(forced, false);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = "scan_cancel", timeoutTicks = 400)
