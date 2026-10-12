@@ -3,8 +3,11 @@ package com.theminespirit.core.task;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class TaskReconciler {
     public static final int ABSENT_GRACE_TICKS = 100;
@@ -50,6 +53,18 @@ public final class TaskReconciler {
             case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
                     reading.failureReason() == null ? NO_REASON : reading.failureReason());
         }
+    }
+
+    public void forgetUnobserved(List<TaskRecord> observed) {
+        Set<String> observedIds = new HashSet<>();
+        for (TaskRecord record : observed) {
+            observedIds.add(record.taskId());
+        }
+        absentTicks.keySet().retainAll(observedIds);
+    }
+
+    public int trackedAbsences() {
+        return absentTicks.size();
     }
 
     private boolean displaced(TaskRecord record, SpiritReading reading) {

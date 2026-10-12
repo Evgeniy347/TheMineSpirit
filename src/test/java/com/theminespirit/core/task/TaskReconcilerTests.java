@@ -173,6 +173,30 @@ class TaskReconcilerTests {
     }
 
     @Test
+    void forgetUnobserved_TaskFinishedOutsideReconciler_DropsItsAbsenceCounter() {
+        reconcile(SpiritReading.absent());
+        reconcile(SpiritReading.absent());
+        assertEquals(1, reconciler.trackedAbsences(), "Пока дух отсутствует, счётчик отсутствия задачи ведётся");
+
+        registry.cancelIfActive(taskId);
+        reconciler.forgetUnobserved(registry.watchableRecords());
+
+        assertEquals(0, reconciler.trackedAbsences(),
+                "Задача, закрытая мимо наблюдателя (DELETE), больше не наблюдается: её счётчик отсутствия обязан "
+                        + "исчезнуть, иначе карта растёт на каждую такую задачу до перезапуска сервера");
+    }
+
+    @Test
+    void forgetUnobserved_TaskStillObserved_KeepsItsAbsenceCounter() {
+        registry.markStarted(taskId);
+        reconcile(SpiritReading.absent());
+
+        reconciler.forgetUnobserved(registry.watchableRecords());
+
+        assertEquals(1, reconciler.trackedAbsences(), "Наблюдаемая задача сохраняет счётчик: льготные 100 тиков идут");
+    }
+
+    @Test
     void reconcile_CancelledOutsideRest_ClosesTaskAsCancelled() {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
 

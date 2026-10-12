@@ -53,6 +53,7 @@ public final class TaskWatcher {
         for (TaskRecord record : active) {
             reconciler.reconcile(record, read(record.bot()));
         }
+        reconciler.forgetUnobserved(active);
     }
 
     private SpiritReading read(String bot) {
