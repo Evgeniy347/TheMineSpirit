@@ -150,11 +150,13 @@ public final class CoreScripts {
                         List.of("есть костная мука", "посевы растут"), List.of("посевы подкормлены")),
                 spec("craft", "скрафтить предмет",
                         List.of(ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
+                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                stationRadius()),
                         List.of("есть материалы и рецепт"), List.of("предмет скрафчен")),
                 spec("smelt", "переплавить предмет",
                         List.of(ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
+                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                stationRadius()),
                         List.of("есть печь и топливо"), List.of("предмет переплавлен")),
                 spec("equip", "надеть предмет",
                         List.of(ParamSpec.text("item", true)),
@@ -253,6 +255,11 @@ public final class CoreScripts {
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
             List<String> effects) {
         return new ScriptSpec(id, summary, params, preconditions, effects);
+    }
+
+    private static ParamSpec stationRadius() {
+        return ParamSpec.integer("radius", false, CatalogLimits.STATION_RADIUS_MIN,
+                CatalogLimits.STATION_RADIUS_MAX, CatalogLimits.STATION_RADIUS_DEFAULT);
     }
 
     private static ParamSpec containerRadius() {

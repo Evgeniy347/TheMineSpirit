@@ -15,6 +15,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ResourceResolverTests {
+    private static final int STATION_RADIUS = 16;
+
     private static final ResourceKnowledge KNOWLEDGE = new StubKnowledge(
             Set.of("oak_log", "iron_ore", "coal"),
             Map.of(
@@ -38,7 +40,7 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 2),
                 gather("coal", 1),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 2)))), plan,
+                smelt("iron_ingot", 2))), plan,
                 "Smeltable предмет обязан резолвиться в добычу входа, добычу топлива и переплавку: без шага топлива "
                         + "дух положит руду в холодную печь и цель не будет исполнена. 2 слитка углём (8 за штуку) "
                         + "требуют 1 угля");
@@ -50,7 +52,7 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 gather("oak_log", 2),
-                new ScriptCall("craft", Map.of("item", "stick", "count", 1)))), plan,
+                craft("stick", 1))), plan,
                 "Craftable предмет обязан резолвиться в получение ингредиентов и скрипт craft: без рекурсивного "
                         + "разбора ингредиентов дух попробует скрафтить из ничего");
     }
@@ -67,7 +69,7 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 gather("oak_log", 2),
-                new ScriptCall("craft", Map.of("item", "oak_planks", "count", 8)))), plan,
+                craft("oak_planks", 8))), plan,
                 "Рецепт с выходом 4 предмета обязан требовать 2 крафта на 8 досок: иначе резолвер добывает "
                         + "8 брёвен вместо 2 и заваливает духа лишним материалом");
     }
@@ -84,7 +86,7 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 gather("oak_log", 1),
-                new ScriptCall("craft", Map.of("item", "oak_planks", "count", 1)))), plan,
+                craft("oak_planks", 1))), plan,
                 "Одна доска из рецепта на 4 не может дать полкрафта: число крафтов округляется вверх до 1, "
                         + "иначе план добывает 0 брёвен и крафт провалится");
     }
@@ -112,12 +114,12 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 new SequenceNode(List.of(
                         gather("oak_log", 4),
-                        new ScriptCall("craft", Map.of("item", "stick", "count", 2)))),
+                        craft("stick", 2))),
                 new SequenceNode(List.of(
                         gather("iron_ore", 3),
                         gather("coal", 1),
-                        new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 3)))),
-                new ScriptCall("craft", Map.of("item", "iron_pickaxe", "count", 1)))), plan,
+                        smelt("iron_ingot", 3))),
+                craft("iron_pickaxe", 1))), plan,
                 "Вложенный craft обязан рекурсивно резолвить каждый ингредиент с учётом количества: иначе план "
                         + "пропустит добычу промежуточного предмета и кирка не скрафтится");
     }
@@ -137,11 +139,11 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 new SequenceNode(List.of(
                         gather("d", 1),
-                        new ScriptCall("craft", Map.of("item", "b", "count", 1)))),
+                        craft("b", 1))),
                 new SequenceNode(List.of(
                         gather("d", 1),
-                        new ScriptCall("craft", Map.of("item", "c", "count", 1)))),
-                new ScriptCall("craft", Map.of("item", "a", "count", 1)))), plan,
+                        craft("c", 1))),
+                craft("a", 1))), plan,
                 "Общий ингредиент в двух ветках — не цикл: он обязан резолвиться дважды. Если путь рекурсии "
                         + "не освобождается после ветки, цепочка прервётся ложным UnplannableGoalException");
     }
@@ -223,7 +225,7 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 8),
                 gather("coal", 1),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                smelt("iron_ingot", 8))), plan,
                 "8 слитков углём (8 предметов за уголь) требуют ровно 1 уголь: недобор остановит печь, перебор "
                         + "оставит духа без топлива на следующую плавку");
     }
@@ -240,7 +242,7 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 8),
                 gather("oak_log", 6),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                smelt("iron_ingot", 8))), plan,
                 "Без угля резолвер обязан взять следующее доступное топливо — брёвна (1.5 предмета за бревно, "
                         + "ceil(8 / 1.5) = 6): иначе плавка без угольной жилы не планируется вовсе");
     }
@@ -259,8 +261,8 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(
                         gather("oak_log", 1),
                         gather("oak_log", 1),
-                        new ScriptCall("smelt", Map.of("item", "charcoal", "count", 1)))),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                        smelt("charcoal", 1))),
+                smelt("iron_ingot", 8))), plan,
                 "Топливо-древесный уголь планируется своей плавкой: вход (1 бревно) и топливо под него (1 бревно) — "
                         + "два независимых шага, счёт не схлопывается. Иначе дух сожжёт входной запас вместо топлива");
     }
@@ -289,7 +291,7 @@ class ResourceResolverTests {
 
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 2),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 2)))), plan,
+                smelt("iron_ingot", 2))), plan,
                 "Топливо из инвентаря (5 угля при нужде в 1) обязано гасить шаг добычи: иначе дух потащит лишний "
                         + "уголь, хотя печь уже заправлена");
     }
@@ -301,7 +303,7 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 9),
                 gather("coal", 1),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 9)))), plan,
+                smelt("iron_ingot", 9))), plan,
                 "9 слитков требуют 2 угля, 1 уже в инвентаре — добыть надо ровно 1: полный недобор остановит печь, "
                         + "полный перебор проигнорирует запас");
     }
@@ -313,7 +315,7 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 gather("iron_ore", 8),
                 gather("oak_log", 4),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                smelt("iron_ingot", 8))), plan,
                 "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан потратить имеющиеся и добрать 4 того же топлива, "
                         + "а не переключаться на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа");
     }
@@ -333,16 +335,16 @@ class ResourceResolverTests {
         assertEquals(new SequenceNode(List.of(
                 new SequenceNode(List.of(
                         gather("iron_ore", 1),
-                        new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 1)))),
+                        smelt("iron_ingot", 1))),
                 new SequenceNode(List.of(
                         gather("copper_ore", 9),
                         gather("coal", 1),
-                        new ScriptCall("smelt", Map.of("item", "copper_ingot", "count", 9)))),
+                        smelt("copper_ingot", 9))),
                 new SequenceNode(List.of(
                         gather("gold_ore", 1),
                         gather("coal", 1),
-                        new ScriptCall("smelt", Map.of("item", "gold_ingot", "count", 1)))),
-                new ScriptCall("craft", Map.of("item", "gear", "count", 1)))), plan,
+                        smelt("gold_ingot", 1))),
+                craft("gear", 1))), plan,
                 "2 угля в инвентаре обязаны расходиться по плавкам: 1-й слиток тратит 1 (добычи нет), 9 медных тратят "
                         + "последний и добирают 1, золоту добирается 1. Без расхода между плавками вторая и третья "
                         + "посчитают чужой уголь своим и печь встанет");
@@ -361,8 +363,8 @@ class ResourceResolverTests {
                 gather("iron_ore", 8),
                 new SequenceNode(List.of(
                         gather("oak_log", 6),
-                        new ScriptCall("craft", Map.of("item", "oak_planks", "count", 6)))),
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 8)))), plan,
+                        craft("oak_planks", 6))),
+                smelt("iron_ingot", 8))), plan,
                 "Без угля резолвер обязан топить досками раньше древесного угля: из бревна выходят 4 доски по 300 "
                         + "тиков — в 4 раза больше горения, чем жечь бревно или плавить его в уголь. 8 слитков требуют "
                         + "6 досок");
@@ -373,6 +375,14 @@ class ResourceResolverTests {
         assertThrows(NullPointerException.class,
                 () -> ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE, null),
                 "Null-инвентарь обязан отвергаться: молчаливое чтение null превратит выбор топлива в падение в тике");
+    }
+
+    private static ScriptCall craft(String item, int count) {
+        return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
+    }
+
+    private static ScriptCall smelt(String item, int count) {
+        return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 
     private static ScriptCall gather(String block, int count) {

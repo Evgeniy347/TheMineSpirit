@@ -21,6 +21,11 @@ public final class CatalogLimits {
     public static final int REPEAT_TIMES_MIN = 1;
     public static final int REPEAT_TIMES_MAX = 64;
 
+    // Радиус поиска станции (верстак, печь) у скриптов craft и smelt
+    public static final int STATION_RADIUS_MIN = 1;
+    public static final int STATION_RADIUS_MAX = 32;
+    public static final int STATION_RADIUS_DEFAULT = 16;
+
     // AGENTS.md: wait.ticks 1..6000 (5 минут)
     public static final int WAIT_TICKS_MIN = 1;
     public static final int WAIT_TICKS_MAX = 6000;

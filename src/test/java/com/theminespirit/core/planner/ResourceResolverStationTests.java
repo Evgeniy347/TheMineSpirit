@@ -15,6 +15,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ResourceResolverStationTests {
+    private static final int STATION_RADIUS = 16;
+
     private static final Map<String, List<Ingredient>> CRAFTS = Map.of(
             "oak_planks", List.of(new Ingredient("oak_log", 1)),
             "stick", List.of(new Ingredient("oak_planks", 2)),
@@ -165,10 +167,10 @@ class ResourceResolverStationTests {
     }
 
     private static ScriptCall craft(String item, int count) {
-        return new ScriptCall("craft", Map.of("item", item, "count", count));
+        return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 
     private static ScriptCall smelt(String item, int count) {
-        return new ScriptCall("smelt", Map.of("item", item, "count", count));
+        return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 }

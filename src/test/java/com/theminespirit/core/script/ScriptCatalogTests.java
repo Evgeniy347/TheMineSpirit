@@ -155,8 +155,10 @@ class ScriptCatalogTests {
                 spec("plant_crop", List.of("crop"), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
                 spec("till", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
                 spec("bone_meal", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 256})),
-                spec("craft", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
-                spec("smelt", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
+                spec("craft", List.of("item", "count"),
+                        Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
+                spec("smelt", List.of("item", "count"),
+                        Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("equip", List.of("item"), Map.of()),
                 spec("deposit", List.of("item", "count"),
                         Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 16})),
@@ -269,6 +271,24 @@ class ScriptCatalogTests {
         assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
                 "radius в gather по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
                         + ": значение задаёт каталог, чтобы адаптер не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_CraftAndSmelt_StationRadiusIsOptionalIntWithDefaultSixteen() {
+        for (String id : List.of("craft", "smelt")) {
+            ParamSpec radius = param(CoreScripts.defaultCatalog().find(id).orElseThrow(), "radius");
+
+            assertEquals(false, radius.required(),
+                    "radius у '" + id + "' необязателен: умолчание задаёт каталог, и план не обязан называть радиус");
+            assertEquals(16, radius.defaultValue(),
+                    "Радиус поиска станции у '" + id + "' по умолчанию 16: верстак или печь обычно на базе, рядом");
+            assertEquals(ParamType.INT, radius.type(),
+                    "Радиус поиска станции у '" + id + "' — целое: дробный радиус бессмыслен");
+            assertEquals(1.0, radius.min(),
+                    "Радиус поиска станции у '" + id + "' начинается с 1: нулевой не найдёт и станцию под ногами");
+            assertEquals(32.0, radius.max(),
+                    "Радиус поиска станции у '" + id + "' ограничен 32: дальше поиск станции бьёт по серверному тику");
+        }
     }
 
     @Test

@@ -98,7 +98,7 @@ class PlanParserTests {
         TaskNode node = PlanParser.parse(json, CATALOG, conditions);
 
         assertEquals(new ConditionNode("has_item", Map.of("item", "oak_log"),
-                new ScriptCall("craft", Map.of("item", "stick", "count", 4)),
+                new ScriptCall("craft", Map.of("item", "stick", "count", 4, "radius", 16)),
                 new ScriptCall("acquire", Map.of("item", "oak_log", "count", 1))), node,
                 "Узел condition обязан нести проверку, параметры и обе ветки: потеря ветки else лишает план запасного пути");
     }

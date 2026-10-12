@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Tag;
 
 class ResourceResolverProperties {
     private static final int MAX_ITEMS = 12;
+    private static final int STATION_RADIUS = 16;
 
     @Property
     void resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal(
@@ -140,10 +141,10 @@ class ResourceResolverProperties {
 
     private static TaskNode expectedFinalStep(String item, int count, ResourceKnowledge knowledge) {
         if (knowledge.isCraftable(item)) {
-            return new ScriptCall("craft", Map.of("item", item, "count", count));
+            return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
         }
         if (knowledge.isSmeltable(item)) {
-            return new ScriptCall("smelt", Map.of("item", item, "count", count));
+            return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
         }
         return new ScriptCall("gather", Map.of("block", item, "count", count,
                 "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
