@@ -192,6 +192,31 @@ class TaskRoutesTests {
     }
 
     @Test
+    void create_ReplayWhileBotBusyWithSameTask_Returns202WithSameTaskIdNotConflict() throws Exception {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
+        String first = send("POST", "/v1/bots/" + BOT + "/tasks", body).body();
+        String taskId = taskId(first);
+        registry.observe(taskId, TaskState.RUNNING, null, null);
+        gateway.startFailsWith(new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of()));
+
+        RestResponse replay = send("POST", "/v1/bots/" + BOT + "/tasks", body);
+
+        assertEquals(202, replay.status(),
+                "Повтор запроса к духу, занятому этой же задачей, обязан вернуть 202, а не 409 «дух занят»: проверка "
+                        + "request_id идёт раньше проверки занятости (R15). Ответ: " + replay.body());
+        assertEquals(taskId, taskId(replay.body()),
+                "Повтор обязан вернуть ту же задачу " + taskId + ": " + replay.body());
+        assertEquals(1, gateway.starts().size(), "Повтор не должен ещё раз обращаться к духу через шлюз");
+        assertEquals(1, registry.size(), "Повтор не должен резервировать вторую задачу");
+        RestResponse fresh = send("POST", "/v1/bots/" + BOT + "/tasks",
+                "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}");
+        assertEquals(409, fresh.status(),
+                "Контроль: новый request_id к тому же занятому духу обязан давать 409, иначе тест не видит занятости: "
+                        + fresh.body());
+        assertTrue(fresh.body().contains(taskId), "409 обязан называть текущую задачу " + taskId + ": " + fresh.body());
+    }
+
+    @Test
     void create_GatewayStartFails_DiscardsReservation() {
         gateway.startFailsWith(new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of()));
         String body = "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
