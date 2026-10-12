@@ -1,13 +1,14 @@
 package com.theminespirit.core.husbandry;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 public final class CullPolicy {
-    public static final int MIN_KEEP = 2;
+    public static final int MIN_KEEP = CatalogLimits.HERD_KEEP_MIN;
 
     private CullPolicy() {
     }

@@ -90,4 +90,34 @@ public final class CatalogLimits {
     // Загон стада: радиус загона 2..16, поиск скриптов стада 1..16
     public static final int HERD_PEN_RADIUS_MIN = 2;
     public static final int HERD_PEN_RADIUS_MAX = 16;
+
+    // Скрипты стада: радиус поиска, пары разведения, число голов за запуск
+    public static final int HERD_RADIUS_MIN = 1;
+    public static final int HERD_RADIUS_MAX = 16;
+    public static final int HERD_RADIUS_DEFAULT = 8;
+
+    public static final int HERD_HUNT_RADIUS_MIN = 1;
+    public static final int HERD_HUNT_RADIUS_MAX = 32;
+    public static final int HERD_HUNT_RADIUS_DEFAULT = 16;
+
+    public static final int HERD_PAIRS_MIN = 1;
+    public static final int HERD_PAIRS_MAX = 8;
+    public static final int HERD_PAIRS_DEFAULT = 1;
+
+    public static final int HERD_COUNT_MIN = 1;
+    public static final int HERD_COUNT_MAX = 64;
+    public static final int HERD_FEED_COUNT_DEFAULT = 8;
+    public static final int HERD_WORK_COUNT_DEFAULT = 64;
+
+    // Норма поголовья: минимум пара для разведения, курам норма выше
+    public static final int HERD_KEEP_MIN = 2;
+    public static final int HERD_KEEP_MAX = 64;
+    public static final int HERD_KEEP_DEFAULT_CATTLE = 4;
+    public static final int HERD_KEEP_DEFAULT_CHICKEN = 8;
+
+    // Снимок стада обновляется раз в 20 тиков, между обновлениями — кэш
+    public static final int HERD_REFRESH_TICKS = 20;
+
+    // Охота не трогает животных в домашнем круге старта духа
+    public static final int HERD_HOME_RADIUS = 8;
 }

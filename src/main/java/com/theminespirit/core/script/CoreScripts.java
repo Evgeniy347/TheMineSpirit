@@ -2,9 +2,11 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class CoreScripts {
@@ -195,6 +197,58 @@ public final class CoreScripts {
                                 ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX,
                                         CatalogLimits.BONE_MEAL_COUNT_DEFAULT)),
                         List.of("есть костная мука", "посевы растут"), List.of("посевы подкормлены")),
+                spec("breed", "свести пару животных",
+                        List.of(ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT),
+                                ParamSpec.integer("pairs", false, CatalogLimits.HERD_PAIRS_MIN,
+                                        CatalogLimits.HERD_PAIRS_MAX, CatalogLimits.HERD_PAIRS_DEFAULT)),
+                        List.of("есть корм вида", "в загоне есть готовая пара"),
+                        List.of("пары сведены", "детёныши родились")),
+                spec("feed", "покормить стадо",
+                        List.of(ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.HERD_COUNT_MIN,
+                                        CatalogLimits.HERD_COUNT_MAX, CatalogLimits.HERD_FEED_COUNT_DEFAULT),
+                                ParamSpec.bool("babiesFirst", false, true)),
+                        List.of("есть корм вида"), List.of("головы покормлены", "отбившиеся возвращены")),
+                spec("shear", "постричь овец",
+                        List.of(ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.HERD_COUNT_MIN,
+                                        CatalogLimits.HERD_COUNT_MAX, CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
+                        List.of("есть ножницы", "овцы с шерстью"), List.of("овцы пострижены", "шерсть подобрана")),
+                spec("milk", "подоить коров",
+                        List.of(ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.HERD_COUNT_MIN,
+                                        CatalogLimits.HERD_COUNT_MAX, CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
+                        List.of("есть пустые вёдра"), List.of("коровы подоены")),
+                spec("collect_eggs", "собрать яйца в загоне",
+                        List.of(ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT)),
+                        List.of(), List.of("яйца в инвентаре")),
+                spec("cull", "забить лишних голов",
+                        List.of(ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.integer("keep", false, CatalogLimits.HERD_KEEP_MIN,
+                                        CatalogLimits.HERD_KEEP_MAX, CatalogLimits.HERD_KEEP_DEFAULT_CATTLE),
+                                ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT)),
+                        List.of("меч железный и выше"), List.of("лишние забиты", "детёныши целы")),
+                spec("herd_check", "сосчитать стадо",
+                        List.of(ParamSpec.enumeration("species", false, herdCheckValues(), Species.ALL),
+                                ParamSpec.integer("radius", false, CatalogLimits.HERD_RADIUS_MIN,
+                                        CatalogLimits.HERD_RADIUS_MAX, CatalogLimits.HERD_RADIUS_DEFAULT)),
+                        List.of(), List.of("взрослые, детёныши и вышедшие сосчитаны")),
+                spec("hunt", "забить диких животных",
+                        List.of(ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.integer("radius", false, CatalogLimits.HERD_HUNT_RADIUS_MIN,
+                                        CatalogLimits.HERD_HUNT_RADIUS_MAX, CatalogLimits.HERD_HUNT_RADIUS_DEFAULT),
+                                ParamSpec.integer("count", false, CatalogLimits.HERD_COUNT_MIN,
+                                        CatalogLimits.HERD_COUNT_MAX, CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
+                        List.of("меч железный и выше", "дичь вне загона"),
+                        List.of("дикие забиты", "дроп подобран")),
                 spec("craft", "скрафтить предмет",
                         List.of(ParamSpec.text("item", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
@@ -307,6 +361,12 @@ public final class CoreScripts {
     private static ParamSpec perceptionRadius() {
         return ParamSpec.integer("radius", false, CatalogLimits.PERCEPTION_RADIUS_MIN,
                 CatalogLimits.PERCEPTION_RADIUS_MAX, CatalogLimits.PERCEPTION_RADIUS_DEFAULT);
+    }
+
+    private static List<String> herdCheckValues() {
+        List<String> values = new ArrayList<>(Species.names());
+        values.add(Species.ALL);
+        return List.copyOf(values);
     }
 
     private static ParamSpec stationRadius() {
