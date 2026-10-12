@@ -23,8 +23,10 @@ from pathlib import Path
 
 from config import Config
 
+# Шаблоны сбоев обязаны совпадать с scripts/opencode-task.sh — их держит равными тест в tests/test_brain.py:
+# PROVIDER — сбой провайдера, NETWORK — сетевой сбой (обрыв соединения, недоступность конечной точки).
 PROVIDER_PATTERN = r'free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
-NETWORK_PATTERN = r'cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable'
+NETWORK_PATTERN = r'cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
 PROBE_PROMPT = "ответь OK"
 AGENT_NAME = "strategist"
 POLL_SECONDS = 0.1

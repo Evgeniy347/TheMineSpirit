@@ -27,6 +27,15 @@ check json_error_twice 0 3 FAKE_FAILURES=2
 grep -c -- "-s ses_fake123 " "$work/json_error_twice.state.args" | sed 's/^/  перезапусков с -s ses_fake123 (ровно один id): /'
 grep -c "Продолжай выполнение" "$work/json_error_twice.state.args" | sed 's/^/  перезапусков с текстом продолжения: /'
 check stderr_rate_limit 0 2 FAKE_FAILURES=1 FAKE_ERROR_CHANNEL=stderr
+check network_error_json 0 2 FAKE_NETWORK=1 OPENCODE_IDLE_LIMIT=6
+check network_error_stderr 0 2 FAKE_NETWORK=1 FAKE_ERROR_CHANNEL=stderr OPENCODE_IDLE_LIMIT=6
+for net_case in network_error_json network_error_stderr; do
+    if grep -q "сбой провайдера, перезапуск" "$work/$net_case.out"; then
+        echo "OK $net_case: сетевой сбой опознан как сбой провайдера, а не молчание"
+    else
+        echo "FAIL $net_case: в $net_case.out нет «сбой провайдера, перезапуск» — сеть не опознана"
+    fi
+done
 check silent_model 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6
 check busy_tool_is_not_silence 0 1 FAKE_BUSY_TOOL=15 OPENCODE_IDLE_LIMIT=6
 check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
@@ -42,7 +51,7 @@ task_args=()
 check exhausted 75 6 FAKE_FAILURES=99 OPENCODE_WAIT_LIMIT=0
 grep "перезапуск\|Остановлено" "$work/exhausted.out" | sed 's/^/  /'
 failures_after=$(wc -l < "$failures_log")
-echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+1+2+3+6 = 15: сбои, молчание, оборванные ответы, исчерпание)"
+echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+2+1+2+3+6 = 17: сбои провайдера, сетевые сбои, молчание, оборванные ответы, исчерпание)"
 tail -n 1 "$failures_log" | sed 's/^/  последняя: /'
 
 # Режим ожидания (короткие интервалы через переменные): 5 быстрых перезапусков исчерпаны, дальше — пробы провайдера.

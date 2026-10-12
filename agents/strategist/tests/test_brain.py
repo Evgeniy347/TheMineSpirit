@@ -103,6 +103,17 @@ class OpencodeBrainTests(BrainTestCase):
             self.brain(FAKE_ERROR="stderr", FAKE_ERROR_TEXT="Rate limit exceeded. Please try again later.").complete("с", "п")
         self.assertEqual("provider", ctx.exception.kind)
 
+    def test_complete_EndpointUnavailable_IsProviderFailureNotSilence(self):
+        for channel in ("json", "stderr"):
+            with self.subTest(channel=channel):
+                started = time.monotonic()
+                with self.assertRaises(BrainUnavailable) as ctx:
+                    self.brain(FAKE_ERROR=channel, FAKE_ERROR_TEXT="Endpoint is unavailable").complete("с", "п")
+                self.assertEqual("provider", ctx.exception.kind,
+                                 "«Endpoint is unavailable» — недоступность конечной точки, а не молчание до тайм-аута")
+                self.assertIn("Endpoint is unavailable", ctx.exception.text)
+                self.assertLess(time.monotonic() - started, 2.5, "опознаётся сразу, а не по тайм-ауту")
+
     def test_failure_KeepsRawOutputForDiagnosis(self):
         with self.assertRaises(BrainUnavailable):
             self.brain(FAKE_ERROR="stderr", FAKE_ERROR_TEXT="Rate limit exceeded. Please try again later.").complete("с", "п")
@@ -441,12 +452,20 @@ class FallbackTests(BrainTestCase):
 
 class BrainGuardTests(unittest.TestCase):
     PATTERN_LINE = re.compile(r"^PROVIDER_PATTERN='(.*)'$")
+    NETWORK_PATTERN_LINE = re.compile(r"^NETWORK_PATTERN='(.*)'$")
 
     def script_pattern(self):
         script = config.REPO_ROOT / "scripts" / "opencode-task.sh"
         grep = subprocess.run(["grep", "-m1", "^PROVIDER_PATTERN=", str(script)], capture_output=True, text=True, check=True)
         match = self.PATTERN_LINE.match(grep.stdout.strip())
         self.assertIsNotNone(match, "в scripts/opencode-task.sh не найдена строка PROVIDER_PATTERN='…'")
+        return match.group(1)
+
+    def script_network_pattern(self):
+        script = config.REPO_ROOT / "scripts" / "opencode-task.sh"
+        grep = subprocess.run(["grep", "-m1", "^NETWORK_PATTERN=", str(script)], capture_output=True, text=True, check=True)
+        match = self.NETWORK_PATTERN_LINE.match(grep.stdout.strip())
+        self.assertIsNotNone(match, "в scripts/opencode-task.sh не найдена строка NETWORK_PATTERN='…'")
         return match.group(1)
 
     def test_providerPattern_EqualsOneInOpencodeTaskScript(self):
@@ -456,6 +475,29 @@ class BrainGuardTests(unittest.TestCase):
 
     def test_providerPatternGuard_FindsDifferenceInSample(self):
         self.assertNotEqual(self.script_pattern() + "|новое", brain_module.PROVIDER_PATTERN, "сторож не слеп к расхождению")
+
+    def test_networkPattern_EqualsOneInOpencodeTaskScript(self):
+        self.assertEqual(self.script_network_pattern(), brain_module.NETWORK_PATTERN,
+                         "NETWORK_PATTERN в brain.py разошёлся с scripts/opencode-task.sh: сетевые сбои "
+                         "опознаются по-разному. Обновите обе копии одним коммитом")
+
+    def test_networkPatternGuard_FindsDifferenceInSample(self):
+        self.assertNotEqual(self.script_network_pattern() + "|новое", brain_module.NETWORK_PATTERN,
+                            "сторож не слеп к расхождению")
+
+    def test_script_ChecksEveryFailureByCombinedFailurePattern(self):
+        source = (config.REPO_ROOT / "scripts" / "opencode-task.sh").read_text(encoding="utf-8")
+        self.assertNotIn('"$PROVIDER_PATTERN"', source,
+                         "проверки сбоя в scripts/opencode-task.sh идут по FAILURE_PATTERN: по одному "
+                         "PROVIDER_PATTERN сетевые сбои не опознаются")
+        self.assertEqual(3, source.count('"$FAILURE_PATTERN"'),
+                         "provider_failure_text делает три проверки (stderr, prefilter stdout, json) — все на FAILURE_PATTERN")
+
+    def test_networkPattern_RecognisesConnectionAndEndpointFailures(self):
+        pattern = re.compile(brain_module.NETWORK_PATTERN, re.IGNORECASE)
+        for text in ("Cannot connect to API", "fetch failed", "ECONNREFUSED", "socket hang up",
+                     "network is unreachable", "Endpoint is unavailable"):
+            self.assertRegex(text, pattern, f"«{text}» должно опознаваться как сетевой сбой")
 
     def test_providerPattern_RecognisesTypicalFailures(self):
         pattern = re.compile(brain_module.PROVIDER_PATTERN, re.IGNORECASE)

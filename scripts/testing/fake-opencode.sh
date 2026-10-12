@@ -2,6 +2,7 @@
 # Подделка opencode для проверки scripts/opencode-task.sh.
 # FAKE_FAILURES=N   — первые N запусков сообщают о сбое провайдера и висят без дочерних процессов (как opencode в retry);
 #                     FAKE_ERROR_CHANNEL=json (по умолчанию) — событием error в stdout, stderr — строкой лога level=ERROR.
+# FAKE_NETWORK=N    — первые N запусков сообщают о сетевом сбое: json — «Cannot connect», stderr — «Endpoint is unavailable».
 # FAKE_SILENT=N     — первые N запусков молча ждут модель (без вывода и без дочерних процессов).
 # FAKE_BUSY_TOOL=S  — «команда» работает S секунд без вывода (дочерний процесс), это не сбой.
 # FAKE_TOOL_READ=1  — модель «читает» файл, где упомянута ошибка квоты; это не сбой.
@@ -44,6 +45,14 @@ if [ "$count" -lt "${FAKE_FAILURES:-0}" ]; then
         echo 'timestamp=2026-10-11T11:00:00Z level=ERROR message="stream error" providerID=opencode modelID=big-pickle error.error="AI_APICallError: Rate limit exceeded. Please try again later."' >&2
     else
         echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Free usage exceeded"}}}'
+    fi
+    exec sleep 600
+fi
+if [ "$count" -lt "${FAKE_NETWORK:-0}" ]; then
+    if [ "${FAKE_ERROR_CHANNEL:-json}" = "stderr" ]; then
+        echo 'timestamp=2026-10-11T11:00:00Z level=ERROR message="stream error" providerID=opencode modelID=big-pickle error.error="AI_APICallError: Endpoint is unavailable"' >&2
+    else
+        echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Cannot connect to API: fetch failed"}}}'
     fi
     exec sleep 600
 fi

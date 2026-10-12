@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Выполняет задание в opencode (модель big-pickle) и следит за ним.
-# Сбой провайдера модели («Free usage exceeded», «Rate limit exceeded», квота, 429, модель недоступна) и молчание
-# модели (повтор отложен надолго или ответ не пришёл) лечит перезапуском той же сессии в новом процессе
+# Сбой провайдера модели («Free usage exceeded», «Rate limit exceeded», квота, 429, модель недоступна), сетевой сбой
+# (нет соединения, «Endpoint is unavailable») и молчание модели (повтор отложен надолго или ответ не пришёл) лечит
+# перезапуском той же сессии в новом процессе
 # (новое HTTP-подключение без старых cookie) с паузами 5, 5, 10, 30, 60 с. После пятого перезапуска включает режим
 # ожидания: сбои провайдера — это временная недоступность на минуты, поэтому раз в OPENCODE_PROBE_INTERVAL (120 с)
 # скрипт шлёт короткую пробу той же модели (тайм-аут OPENCODE_PROBE_TIMEOUT, 60 с) из пустого каталога вне репозитория:
@@ -29,6 +30,8 @@ WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
 SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error'
+NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
+FAILURE_PATTERN="$PROVIDER_PATTERN|$NETWORK_PATTERN"
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
 UNFINISHED_PROMPT="Ты закончил ход на полуслове, не доделав задание и без итогового отчёта. Продолжай с того места, где \
 остановился, и не заканчивай ход, пока не будет итогового отчёта: хэши коммитов, итог тестов, что не сделано."
@@ -99,12 +102,12 @@ capture_session_id() {
 
 provider_failure_text() {
     local out="$1" err="$2" line
-    line="$(grep -E 'level=(ERROR|WARN)' "$err" 2>/dev/null | grep -m1 -iE "$PROVIDER_PATTERN")"
+    line="$(grep -E 'level=(ERROR|WARN)' "$err" 2>/dev/null | grep -m1 -iE "$FAILURE_PATTERN")"
     if [ -n "$line" ]; then
         printf '%s' "$line"
         return 0
     fi
-    grep -qiE "$PROVIDER_PATTERN" "$out" || return 1
+    grep -qiE "$FAILURE_PATTERN" "$out" || return 1
     "$PYTHON" -I -c '
 import json, re, sys
 pattern = re.compile(sys.argv[2], re.IGNORECASE)
@@ -119,7 +122,7 @@ for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
             print(text[:300], end="")
             sys.exit(0)
 sys.exit(1)
-' "$out" "$PROVIDER_PATTERN"
+' "$out" "$FAILURE_PATTERN"
 }
 
 waiting_for_model() {
