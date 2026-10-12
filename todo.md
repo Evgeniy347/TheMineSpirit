@@ -80,6 +80,8 @@
       `level.getChunk(x, z, FULL, false)`; на серверном потоке для чанка с билетом, ещё не дошедшего до FULL, это
       генерация + `managedBlock`. Проявление: GameTest `scan_Radius32NearUnloadedChunks_DoesNotLoadChunks` падает ~1 из 8.
       Как надо: `getChunkSource().getChunkNow(x, z)`; детерминированный GameTest с `setChunkForced` на далёкий чанк.
+- [ ] Ферма (ревью 21Б): досягаемость в FarmSession (BlockBreaker.REACH 4.5) и в планировщике стоянок (4.0) — одно
+      число; проверка мотыги/семян/муки перед каждым действием, а не только на первом тике (мотыга сломалась посреди работы).
 - [ ] Фермерство, часть Б (ревью 21А, R10): текст `FarmTally` для `harvest_crop` без зрелого — «зрелых посевов в радиусе R
       нет; растёт: n» (радиус не передаётся в `FarmTally`); `dry` отделить от `ineligible` (`FarmPlanner.Exhausted`);
       `requested` для `till` и `plant_crop` = min(count, найдено), иначе при найденном больше count итог `FAILED`.
