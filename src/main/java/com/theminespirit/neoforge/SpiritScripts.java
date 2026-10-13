@@ -7,6 +7,7 @@ import com.theminespirit.core.script.ApproachParams;
 import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
 import com.theminespirit.core.script.FillParams;
 import com.theminespirit.core.script.PlaceBlockParams;
@@ -128,6 +129,7 @@ public final class SpiritScripts {
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
+        table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         return table;
     }
 
