@@ -1,14 +1,18 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.PerceptionQuery;
+import com.theminespirit.core.perception.PerceptionResult;
+import com.theminespirit.core.perception.PerceptionResultCodec;
 import com.theminespirit.core.perception.ScanFocus;
 import com.theminespirit.core.script.ScanParams;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 
 public final class ScanScript implements ScriptInstance {
@@ -17,6 +21,7 @@ public final class ScanScript implements ScriptInstance {
     private final ScanRadius radius;
     private final WorldScanner.Session session;
     private String failureReason;
+    private PerceptionResult published;
 
     public ScanScript(SpiritEntity spirit, ScanParams params) {
         this(spirit, ScanFocus.ALL, params);
@@ -47,9 +52,17 @@ public final class ScanScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         WorldObservation observation = session.result().observation();
-        focus.resultOf(observation, radius).ifPresentOrElse(spirit::updatePerceptionResult,
-                () -> spirit.updateObservation(observation));
+        focus.resultOf(observation, radius).ifPresentOrElse(result -> {
+            published = result;
+            spirit.updatePerceptionResult(result);
+        }, () -> spirit.updateObservation(observation));
         return ScriptStatus.SUCCEEDED;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return published == null ? Optional.empty()
+                : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 
     @Override

@@ -1,10 +1,13 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.CellReport;
+import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.LoadedCell;
+import com.theminespirit.core.perception.PerceptionResultCodec;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -22,6 +25,7 @@ public final class LookAtScript implements ScriptInstance {
     private final BlockCoord target;
     private int blockReads;
     private String failureReason;
+    private Finding published;
 
     public LookAtScript(SpiritEntity spirit, BlockCoord target) {
         this.spirit = spirit;
@@ -34,8 +38,15 @@ public final class LookAtScript implements ScriptInstance {
             failureReason = "дух исчез, не успев посмотреть";
             return ScriptStatus.FAILED;
         }
-        spirit.updateFinding(CellReport.describe(target, readCell()));
+        published = CellReport.describe(target, readCell());
+        spirit.updateFinding(published);
         return ScriptStatus.SUCCEEDED;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return published == null ? Optional.empty()
+                : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 
     @Override

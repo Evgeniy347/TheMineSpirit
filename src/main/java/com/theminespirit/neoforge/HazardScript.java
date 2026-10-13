@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
@@ -12,8 +13,10 @@ import com.theminespirit.core.perception.HazardFacts;
 import com.theminespirit.core.perception.HazardRef;
 import com.theminespirit.core.perception.PerceptionQuery;
 import com.theminespirit.core.perception.PerceptionResult;
+import com.theminespirit.core.perception.PerceptionResultCodec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 
 public final class HazardScript implements ScriptInstance {
@@ -26,6 +29,7 @@ public final class HazardScript implements ScriptInstance {
     private int slicesThisTick;
     private int maxSlicesPerTick;
     private String failureReason;
+    private PerceptionResult published;
 
     public HazardScript(SpiritEntity spirit, PerceptionQuery query) {
         this.spirit = spirit;
@@ -52,8 +56,15 @@ public final class HazardScript implements ScriptInstance {
         if (!cursor.isDone()) {
             return ScriptStatus.RUNNING;
         }
-        spirit.updatePerceptionResult(PerceptionResult.hazards(query.radius(), found));
+        published = PerceptionResult.hazards(query.radius(), found);
+        spirit.updatePerceptionResult(published);
         return ScriptStatus.SUCCEEDED;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return published == null ? Optional.empty()
+                : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 
     @Override

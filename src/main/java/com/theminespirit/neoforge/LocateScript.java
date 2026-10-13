@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
@@ -8,7 +9,9 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.LocateQuery;
 import com.theminespirit.core.perception.NearestTracker;
+import com.theminespirit.core.perception.PerceptionResultCodec;
 import com.theminespirit.core.script.LocateParams;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -21,6 +24,7 @@ public final class LocateScript implements ScriptInstance {
     private final LocateSource source;
     private int maxExaminedPerTick;
     private String failureReason;
+    private Finding published;
 
     public LocateScript(SpiritEntity spirit, LocateQuery query) {
         this.spirit = spirit;
@@ -59,9 +63,16 @@ public final class LocateScript implements ScriptInstance {
         return maxExaminedPerTick;
     }
 
+    @Override
+    public Optional<ScriptResult> result() {
+        return published == null ? Optional.empty()
+                : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
+    }
+
     private ScriptStatus publish() {
         if (nearest.best().isEmpty()) {
-            spirit.updateFinding(Finding.notFound(query.type()));
+            published = Finding.notFound(query.type());
+            spirit.updateFinding(published);
             return ScriptStatus.SUCCEEDED;
         }
         BlockCoord pos = nearest.best().get();
@@ -72,7 +83,8 @@ public final class LocateScript implements ScriptInstance {
         }
         String blockId = BuiltInRegistries.BLOCK
                 .getKey(chunk.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).getBlock()).toString();
-        spirit.updateFinding(Finding.located(query.type(), blockId, pos, origin));
+        published = Finding.located(query.type(), blockId, pos, origin);
+        spirit.updateFinding(published);
         return ScriptStatus.SUCCEEDED;
     }
 
