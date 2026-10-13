@@ -136,7 +136,7 @@ public final class ClearGameTests {
         helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
                 "диагностика: дух заспавнился не в (1,1,1): " + spirit.blockPosition());
         SpiritRun run = SpiritRun.launch(helper, spirit, clearCall(helper, new BlockPos(1, 0, 1), new BlockPos(1, 0, 1)),
-                SETTLE_TICKS);
+                0);
 
         helper.succeedWhen(() -> {
             run.assertStarted();

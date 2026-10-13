@@ -58,6 +58,18 @@ public final class DigGameTests {
         helper.assertTrue(helper.getBlockState(new BlockPos(4, 3, 4)).isAir(),
                 "диагностика: над массой в (4,3,4) не воздух: "
                         + helper.getBlockState(new BlockPos(4, 3, 4)).getBlock());
+        StringBuilder dump = new StringBuilder();
+        for (int y = 0; y <= 3; y++) {
+            dump.append("y=").append(y).append(':');
+            for (int x = 3; x <= 6; x++) {
+                for (int z = 3; z <= 6; z++) {
+                    dump.append(helper.getBlockState(new BlockPos(x, y, z)).getBlock().toString().replace("Block{minecraft:", "")
+                            .replace("}", "")).append(',');
+                }
+            }
+            dump.append(' ');
+        }
+        System.out.println("DIAG dig сетка(3..6,0..3,3..6): " + dump);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, digCall(helper, new BlockPos(4, 1, 4), 2), SETTLE_TICKS);
 
