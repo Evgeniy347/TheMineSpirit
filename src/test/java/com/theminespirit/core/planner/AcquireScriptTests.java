@@ -247,6 +247,36 @@ class AcquireScriptTests {
     }
 
     @Test
+    void inventoryWithFuel_ResolverSeesFuel_NoGatherForFuel() {
+        FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryOverride = Map.of("coal", 1);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
+                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "План обязан быть построен");
+        List<String> scripts = scriptsOf(plan.get());
+        assertTrue(!scripts.contains("gather:coal"),
+                "Топливо в инвентаре — резолвер не должен планировать его добычу: " + scripts);
+    }
+
+    @Test
+    void emptyInventory_ResolverPlans_GatherForFuel() {
+        FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, new StubSupplies(0, Map.of()),
+                CATALOG, ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "План обязан быть построен");
+        List<String> scripts = scriptsOf(plan.get());
+        assertTrue(scripts.contains("gather:coal"),
+                "Топлива нет в инвентаре — резолвер обязан спланировать его добычу: " + scripts);
+    }
+
+    @Test
     void constructor_BlankItem_IsRejectedWithReason() {
         String reason = assertThrows(IllegalArgumentException.class,
                 () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG,
@@ -298,6 +328,7 @@ class AcquireScriptTests {
         private final int inventory;
         private final Map<String, Integer> chests;
         private List<ScriptCall> chestSteps;
+        private Map<String, Integer> inventoryOverride = Map.of();
 
         StubSupplies(int inventory, Map<String, Integer> chests) {
             this.inventory = inventory;
@@ -307,6 +338,11 @@ class AcquireScriptTests {
         @Override
         public int inInventory(String item) {
             return inventory;
+        }
+
+        @Override
+        public Map<String, Integer> inventory() {
+            return inventoryOverride;
         }
 
         @Override
@@ -364,6 +400,64 @@ class AcquireScriptTests {
         @Override
         public String smeltInputFor(String item) {
             throw new AssertionError("Скрипт в тесте не плавит: резолвер не должен спрашивать вход плавки");
+        }
+    }
+
+    private static List<String> scriptsOf(TaskNode node) {
+        List<String> scripts = new ArrayList<>();
+        collect(node, scripts);
+        return scripts;
+    }
+
+    private static void collect(TaskNode node, List<String> scripts) {
+        switch (node) {
+            case ScriptCall call -> scripts.add(call.script() + ":" + call.params().getOrDefault("block",
+                    call.params().getOrDefault("item", "?")));
+            case SequenceNode sequence -> sequence.steps().forEach(step -> collect(step, scripts));
+            default -> throw new IllegalArgumentException("Узел " + node.getClass().getSimpleName()
+                    + " не разбирается: тест ждёт sequence и script");
+        }
+    }
+
+    private static final class FuelAwareKnowledge implements ResourceKnowledge {
+        @Override
+        public boolean isGatherable(String item) {
+            return item.equals("raw_iron") || item.equals("coal") || item.equals("cobblestone");
+        }
+
+        @Override
+        public boolean isCraftable(String item) {
+            return item.equals("furnace");
+        }
+
+        @Override
+        public int outputCount(String item) {
+            return 1;
+        }
+
+        @Override
+        public List<Ingredient> ingredientsFor(String item) {
+            return List.of(new Ingredient("cobblestone", 8));
+        }
+
+        @Override
+        public boolean isSmeltable(String item) {
+            return item.equals("iron_ingot");
+        }
+
+        @Override
+        public String smeltInputFor(String item) {
+            return "raw_iron";
+        }
+
+        @Override
+        public Optional<String> stationFor(String item) {
+            return item.equals("iron_ingot") ? Optional.of("furnace") : Optional.empty();
+        }
+
+        @Override
+        public int burnTicks(String item) {
+            return item.equals("coal") ? 1600 : 0;
         }
     }
 

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +48,18 @@ public final class SpiritSupplies implements AcquireSupplies {
         Objects.requireNonNull(item, "Предмет не может быть null: по нему считается инвентарь духа");
         IdFilter filter = IdFilter.of(List.of(item));
         return count(spirit.getInventory(), filter);
+    }
+
+    @Override
+    public Map<String, Integer> inventory() {
+        Map<String, Integer> totals = new LinkedHashMap<>();
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (!stack.isEmpty()) {
+                totals.merge(ItemIds.of(stack.getItem()), stack.getCount(), Integer::sum);
+            }
+        }
+        return totals;
     }
 
     @Override

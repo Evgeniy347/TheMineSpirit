@@ -98,6 +98,11 @@ class AcquireSuppliesTests {
             }
 
             @Override
+            public Map<String, Integer> inventory() {
+                return Map.copyOf(inventory);
+            }
+
+            @Override
             public List<ScriptCall> withdraw(String item, int maxCount) {
                 Objects.requireNonNull(item, "item не может быть null: перенос идёт по имени предмета");
                 List<ScriptCall> steps = new ArrayList<>();
