@@ -1,10 +1,21 @@
 package com.theminespirit.gametest;
 
+import com.mojang.authlib.GameProfile;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
+import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.gametest.framework.GameTestInfo;
+import net.minecraft.gametest.framework.GameTestListener;
+import net.minecraft.gametest.framework.GameTestRunner;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -85,6 +96,19 @@ final class GameTestFixtures {
                 .mapToInt(ItemCount::count).sum();
     }
 
+    static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative, String name) {
+        MinecraftServer server = helper.getLevel().getServer();
+        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
+        ServerPlayer player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        server.getPlayerList().placeNewPlayer(connection, player, cookie);
+        BlockPos absolute = helper.absolutePos(relative);
+        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
+        helper.testInfo.addListener(new PlayerCleanup(server, player));
+        return player;
+    }
+
     static BlockPos firstUnloadedChunkEast(GameTestHelper helper, BlockPos base) {
         int chunkX = base.getX() >> 4;
         int chunkZ = base.getZ() >> 4;
@@ -98,6 +122,26 @@ final class GameTestFixtures {
 
     private static AABB area(GameTestHelper helper) {
         return area(helper, CLEAR_HEIGHT);
+    }
+
+    private record PlayerCleanup(MinecraftServer server, ServerPlayer player) implements GameTestListener {
+        @Override
+        public void testStructureLoaded(GameTestInfo testInfo) {
+        }
+
+        @Override
+        public void testPassed(GameTestInfo test, GameTestRunner runner) {
+            server.getPlayerList().remove(player);
+        }
+
+        @Override
+        public void testFailed(GameTestInfo test, GameTestRunner runner) {
+            server.getPlayerList().remove(player);
+        }
+
+        @Override
+        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {
+        }
     }
 
     private static AABB area(GameTestHelper helper, int clearHeight) {

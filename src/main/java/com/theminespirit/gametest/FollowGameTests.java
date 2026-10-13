@@ -17,43 +17,36 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class FollowGameTests {
     private static final int PLAYER_X = 4;
+    private static final int SETTLE_TICKS = 20;
+    private static final int WINDOW_TICKS = 100;
+    private static final String PLAYER_NAME = "gt_follow_hold_player";
 
     private FollowGameTests() {
     }
 
-    @GameTest(template = "empty", timeoutTicks = 160)
+    @GameTest(template = "arena", batch = "follow_hold", timeoutTicks = 300)
     public static void followScript_StationaryMockPlayer_HoldsRadiusWithFewRebuilds(GameTestHelper helper) {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
-        ServerPlayer player = spawnMockPlayer(helper, new BlockPos(PLAYER_X, 1, 1));
-        helper.runAfterDelay(20, () -> spirit.startTask(new ScriptCall("follow",
-                Map.of("target", player.getName().getString(), "radius", 3))));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(PLAYER_X, 1, 1), PLAYER_NAME);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("follow", Map.of("target", PLAYER_NAME, "radius", 3)), SETTLE_TICKS);
 
-        helper.runAfterDelay(120, () -> {
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(run.spiritTicks() >= WINDOW_TICKS,
+                    "окно наблюдения за сопровождением ещё не прошло: тиков духа " + run.spiritTicks());
             helper.assertTrue(spirit.pathBuilds() <= 2,
-                    "follow за неподвижной целью обязан построить путь не более двух раз за 100 тиков, а построил "
-                            + spirit.pathBuilds() + ": перебор ищет путь каждый тик и кладёт серверный тик");
+                    "follow за неподвижной целью обязан построить путь не более двух раз за " + WINDOW_TICKS
+                            + " тиков духа, а построил " + spirit.pathBuilds()
+                            + ": перебор ищет путь каждый тик и кладёт серверный тик. Если целью стал чужой игрок"
+                            + " с тем же именем или цель вне загруженных чанков, путь не строится и счёт растёт"
+                            + " по одному на каждые 21 тик");
             double distance = spirit.position().distanceTo(player.position());
             helper.assertTrue(distance <= 3.0,
                     "догнав игрока, дух обязан оказаться в радиусе удержания: расстояние " + distance
                             + " больше радиуса 3. Иначе follow не выполняет свою задачу");
-            removePlayer(helper, player);
-            helper.succeed();
         });
-    }
-
-    // NeoForge 21.1 не даёт иного способа получить ServerPlayer, попавшего в players() уровня; метод помечен
-    // deprecated, но в этой версии работает и удаления не произошло.
-    @SuppressWarnings("removal")
-    private static ServerPlayer spawnMockPlayer(GameTestHelper helper, BlockPos relative) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        return player;
-    }
-
-    private static void removePlayer(GameTestHelper helper, ServerPlayer player) {
-        helper.getLevel().getServer().getPlayerList().remove(player);
     }
 
     private static void buildFloor(GameTestHelper helper) {
