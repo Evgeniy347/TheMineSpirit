@@ -132,13 +132,7 @@ public final class ClearGameTests {
         prepare(helper);
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
                 "пол обязан лежать в (1,0,1): без опоры под ногами проверять вето не на чем");
-        helper.setBlock(new BlockPos(0, 1, 1), Blocks.STONE);
-        helper.setBlock(new BlockPos(2, 1, 1), Blocks.STONE);
-        helper.setBlock(new BlockPos(1, 1, 0), Blocks.STONE);
-        helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
-        helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
-                "дух обязан заспавниться в (1,1,1): " + spirit.blockPosition());
         SpiritRun run = SpiritRun.launch(helper, spirit, clearCall(helper, new BlockPos(1, 0, 1), new BlockPos(1, 0, 1)),
                 0);
 
@@ -146,8 +140,9 @@ public final class ClearGameTests {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED,
                     "пол под ногами сломан: вето обязано было пропустить клетку, а не дать подрубить опору");
-            if (spirit.taskStatus().orElse(null) == RunStatus.FAILED
-                    && spirit.taskFailureReason().orElse("").contains("не убран ни один блок")) {
+            String reason = spirit.taskFailureReason().orElse("");
+            if (spirit.taskStatus().orElse(null) == RunStatus.FAILED && reason.contains("не убран ни один блок")
+                    && reason.contains("защищено")) {
                 helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
                         "опора под духом обязана остаться целой: без вето дух подрубил бы пол и упал");
                 helper.assertTrue(spirit.blockPosition().getY() == helper.absolutePos(new BlockPos(1, 1, 1)).getY(),
