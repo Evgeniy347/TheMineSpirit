@@ -123,4 +123,11 @@ public final class CatalogLimits {
 
     // Дух замечает отбившихся чуть дальше края загона
     public static final int HERD_SIGHT_MARGIN = 4;
+
+    public static final int DIG_SIZE_MIN = 1;
+    public static final int DIG_SIZE_MAX = 16;
+    public static final int BUILD_VOLUME_MAX = 4096;
+    public static final int SCHEMATIC_SIZE_MAX = 32;
+    public static final int SCHEMATIC_BLOCKS_MAX = 4096;
+    public static final int BLOCKS_PER_TICK = 1;
 }
