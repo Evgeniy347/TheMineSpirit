@@ -58,8 +58,12 @@ public final class RestGameTests {
             scripts.forEach(script -> ids.add(script.path("id").asText()));
             problems.expect(ids.contains("goto") && ids.contains("follow"),
                     "Каталог обязан содержать реализованные скрипты goto и follow, получено " + ids);
-            problems.expect(!ids.contains("attack"),
-                    "attack не реализован в SpiritScripts и не должен обещаться ИИ в capabilities, получено " + ids);
+            problems.expect(ids.contains("attack") && ids.contains("defend"),
+                    "attack и defend реализованы в SpiritScripts и обязаны обещаться ИИ в capabilities, получено "
+                            + ids);
+            problems.expect(!ids.contains("dig_area"),
+                    "dig_area описан в каталоге, но не реализован и не должен обещаться ИИ в capabilities, получено "
+                            + ids);
             List<String> required = new ArrayList<>();
             for (JsonNode script : scripts) {
                 if (script.path("id").asText().equals("goto")) {

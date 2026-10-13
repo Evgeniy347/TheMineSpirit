@@ -1,13 +1,17 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.TacticsService;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -16,6 +20,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -169,5 +175,104 @@ public final class CombatGameTests {
                         + (spirit.entityQueries() - before) + " вместо 2");
         TacticsScene.finish(helper, spirit);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "combat_attack", timeoutTicks = 400)
+    public static void attack_HuskNearby_SpiritKillsTargetAndRestoresMode(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(8, 1, 5));
+        CombatMode before = spirit.tactics().combatMode();
+        Optional<LivingEntity> sighted = SpiritTargets.resolve(spirit, TargetSelector.parse("hostile"));
+        helper.assertTrue(sighted.isPresent(),
+                "хуск обязан найтись ДО старта задачи, иначе провал скрипта скажет ложь: дух "
+                        + helper.relativeVec(spirit.position()) + ", хуск " + helper.relativeVec(husk.position())
+                        + ", здоровье " + husk.getHealth());
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("attack", Map.of()), 10);
+        int[] lastStrikeTick = {-1};
+        int[] minGap = {Integer.MAX_VALUE};
+        int[] strikesSeen = {0};
+        helper.onEachTick(() -> {
+            int strikes = spirit.tactics().combat().strikes();
+            if (strikes > strikesSeen[0]) {
+                if (lastStrikeTick[0] >= 0) {
+                    minGap[0] = Math.min(minGap[0], spirit.tickCount - lastStrikeTick[0]);
+                }
+                lastStrikeTick[0] = spirit.tickCount;
+                strikesSeen[0] = strikes;
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "attack обязан убить цель и завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(husk.isDeadOrDying() || husk.isRemoved(),
+                    "цель attack обязана быть убита, здоровье хуска: " + husk.getHealth());
+            helper.assertTrue(strikesSeen[0] >= 2,
+                    "для убийства нужно несколько ударов, ударов: " + strikesSeen[0]);
+            helper.assertTrue(minGap[0] >= SpiritGear.ATTACK_COOLDOWN_TICKS,
+                    "удары обязаны идти не чаще SpiritGear.ATTACK_COOLDOWN_TICKS ("
+                            + SpiritGear.ATTACK_COOLDOWN_TICKS + "), минимальный интервал: " + minGap[0]);
+            helper.assertTrue(spirit.tactics().combatMode() == before,
+                    "после SUCCEEDED приказ обязан сняться и вернуть прежний режим, режим: "
+                            + spirit.tactics().combatMode() + " вместо " + before);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "combat_defend", timeoutTicks = 400)
+    public static void defend_WardUnderThreat_SpiritKillsAggressorAndWardSurvives(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(3, 1, 5));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 5), "Warded1");
+        Husk husk = helper.spawn(EntityType.HUSK, new BlockPos(6, 1, 5));
+        husk.setTarget(player);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("defend", Map.of("target", "player:Warded1")), 10);
+        boolean[] wardSeen = {false};
+        helper.onEachTick(() -> wardSeen[0] |= spirit.tactics().snapshot().ward().isPresent());
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "defend обязан убрать угрозу и завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(husk.isDeadOrDying() || husk.isRemoved(),
+                    "угрожавший подопечному моб обязан быть убит, здоровье: " + husk.getHealth());
+            helper.assertTrue(player.isAlive() && !player.isRemoved(),
+                    "подопечный обязан выжить под защитой, здоровье: " + player.getHealth());
+            helper.assertTrue(wardSeen[0],
+                    "подопечный обязан быть задан тактике (setWard) хотя бы один тик: без этого защитник "
+                            + "не знает, кого защищать");
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "combat_defend_missing", timeoutTicks = 150)
+    public static void defend_WardMissing_FailsWithReason(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("defend", Map.of("target", "player:Nobody404")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "defend без подопечного обязан отказаться, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("не найден"),
+                    "отказ обязан называть, что подопечный не найден, причина: " + reason);
+            TacticsScene.finish(helper, spirit);
+        });
     }
 }
