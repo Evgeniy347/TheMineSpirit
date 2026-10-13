@@ -130,12 +130,18 @@ public final class ClearGameTests {
     @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
     public static void clear_BlockUnderFeet_VetoSkipsAndSpiritStays(GameTestHelper helper) {
         prepare(helper);
+        helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
+                "диагностика: пола нет в (1,0,1)");
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+        helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
+                "диагностика: дух заспавнился не в (1,1,1): " + spirit.blockPosition());
         SpiritRun run = SpiritRun.launch(helper, spirit, clearCall(helper, new BlockPos(1, 0, 1), new BlockPos(1, 0, 1)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
+            helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
+                    "диагностика: дух ушёл с (1,1,1) до проверки вето: " + spirit.blockPosition());
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "пол под ногами рубить нельзя: задача обязана провалиться пропуском, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
