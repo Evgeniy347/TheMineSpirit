@@ -1,0 +1,145 @@
+package com.theminespirit.gametest;
+
+import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Map;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+
+@GameTestHolder(ModIdentity.MOD_ID)
+@PrefixGameTestTemplate(false)
+public final class SchematicGameTests {
+    private static final int SETTLE_TICKS = 5;
+    private static final BlockPos ANCHOR = new BlockPos(3, 1, 3);
+
+    private static final int[][] HOUSE_FLOOR = {
+            {0, 0, 0}, {1, 0, 0}, {2, 0, 0},
+            {0, 0, 1}, {1, 0, 1}, {2, 0, 1},
+            {0, 0, 2}, {1, 0, 2}, {2, 0, 2},
+    };
+    private static final int[][] HOUSE_WALLS = {
+            {0, 1, 0}, {1, 1, 0}, {2, 1, 0},
+            {0, 1, 2}, {1, 1, 2}, {2, 1, 2},
+            {0, 1, 1}, {2, 1, 1},
+    };
+
+    private SchematicGameTests() {
+    }
+
+    private static void prepare(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+    }
+
+    private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, int cobble) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
+        if (cobble > 0) {
+            spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, cobble));
+        }
+        return spirit;
+    }
+
+    private static ScriptCall schematicCall(GameTestHelper helper, BlockPos anchor) {
+        BlockPos absolute = helper.absolutePos(anchor);
+        return new ScriptCall("build_schematic", Map.of("file", "house", "x", absolute.getX(), "y", absolute.getY(),
+                "z", absolute.getZ()));
+    }
+
+    private static void buildHouseByHand(GameTestHelper helper, BlockPos anchor) {
+        for (int[] cell : HOUSE_FLOOR) {
+            helper.setBlock(anchor.offset(cell[0], cell[1], cell[2]), Blocks.COBBLESTONE);
+        }
+        for (int[] cell : HOUSE_WALLS) {
+            helper.setBlock(anchor.offset(cell[0], cell[1], cell[2]), Blocks.COBBLESTONE);
+        }
+    }
+
+    private static int countHouse(GameTestHelper helper, BlockPos anchor) {
+        int found = 0;
+        for (int[] cell : HOUSE_FLOOR) {
+            if (helper.getBlockState(anchor.offset(cell[0], cell[1], cell[2])).is(Blocks.COBBLESTONE)) {
+                found++;
+            }
+        }
+        for (int[] cell : HOUSE_WALLS) {
+            if (helper.getBlockState(anchor.offset(cell[0], cell[1], cell[2])).is(Blocks.COBBLESTONE)) {
+                found++;
+            }
+        }
+        return found;
+    }
+
+    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    public static void schematic_HouseFromFile_StandsWithCountedMaterials(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 17);
+        SpiritRun run = SpiritRun.launch(helper, spirit, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "домик по схеме обязан построиться целиком, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+                    "все 17 блоков схемы обязаны стоять на месте, фактически " + countHouse(helper, ANCHOR));
+            helper.assertTrue(helper.getBlockState(ANCHOR.offset(1, 1, 1)).isAir(),
+                    "дверной проём схемы обязан остаться пустым: лишних блоков нет");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "материалы списываются по видам: 17 блоков — 17 булыжников, в инвентаре "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    public static void schematic_AlreadyBuilt_SucceedsWithoutSpending(GameTestHelper helper) {
+        prepare(helper);
+        buildHouseByHand(helper, ANCHOR);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 17);
+        SpiritRun run = SpiritRun.launch(helper, spirit, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "повтор на готовом домике обязан завершиться успехом, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+                    "домик обязан остаться целым, блоков " + countHouse(helper, ANCHOR));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 17,
+                    "уже стоящие блоки ставятся повторно: двойного расхода нет, в инвентаре обязано остаться 17, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    public static void schematic_NeedSeventeenHaveFive_FailsWithNumbersKeepsFive(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 5);
+        SpiritRun run = SpiritRun.launch(helper, spirit, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "нехватка материала обязана провалить стройку по схеме, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("17") && reason.contains("5"),
+                    "причина обязана называть числа 17 и 5 (нужно и поставлено), фактически: " + reason);
+            helper.assertTrue(countHouse(helper, ANCHOR) == 5,
+                    "в мире обязано стоять ровно 5 блоков: что было, то поставили, стоит " + countHouse(helper, ANCHOR));
+            GameTestFixtures.reset(helper);
+        });
+    }
+}

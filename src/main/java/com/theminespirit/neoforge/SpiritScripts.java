@@ -6,6 +6,7 @@ import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.script.ApproachParams;
 import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.BreedParams;
+import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
@@ -132,6 +133,8 @@ public final class SpiritScripts {
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
+        table.put("build_schematic",
+                spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
         return table;
     }
 
