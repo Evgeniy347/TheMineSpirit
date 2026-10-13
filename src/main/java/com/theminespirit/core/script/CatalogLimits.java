@@ -140,4 +140,16 @@ public final class CatalogLimits {
     public static final int CAMP_RADIUS_MIN = 1;
     public static final int CAMP_RADIUS_MAX = 32;
     public static final int CAMP_RADIUS_DEFAULT = 16;
+
+    // Боевые и социальные скрипты: тайм-ауты и безопасные интервалы в тиках духа (20/сек)
+    public static final int SAY_LENGTH_MAX = 256;
+    public static final int SAY_MIN_INTERVAL_TICKS = 20;
+    public static final int ATTACK_TIMEOUT_TICKS = 1200;
+    public static final int DEFEND_TIMEOUT_TICKS = 1200;
+    public static final int DEFEND_SAFE_TICKS = 60;
+    public static final int FLEE_TIMEOUT_TICKS = 600;
+    public static final int FLEE_SAFE_TICKS = 40;
+    public static final int RETREAT_TIMEOUT_TICKS = 1200;
+    public static final int MEET_TIMEOUT_TICKS = 1200;
+    public static final int DELIVER_TIMEOUT_TICKS = 1200;
 }
