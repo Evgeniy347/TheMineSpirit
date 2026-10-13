@@ -1,0 +1,329 @@
+# 29 — Строительство и земляные работы: `place_block`, `fill`, `clear_area`, `dig_area`, `build_schematic`
+
+Источник: `todo.md` → раздел «Стройка, ферма, база»: «`place_block`, `fill`, `clear_area`, `build_schematic`»;
+P6 → «Стройка: `place_block`, `fill`, `clear_area`, `build_schematic`, `build_farm`, `build_shelter`»;
+карта действий → «Добыча: `mine_block`, `dig_area`»; «Добыча: `harvest_crop`…»; «Инвентарь и крафт». В каталоге
+все пять скриптов описаны (параметры и эффекты), реализаций нет (отчёт 17/24: `SpiritScripts.implemented()` их
+не содержит, `catalog()` ограничен реализованными — план с ними отвергается валидатором). Ближайшие готовые
+кирпичи: `BlockBreaker` (ломка), `HarvestSession` (ломка набора целей со стойками и подбором), `Replanter` /
+`FarmActions` / `StationPlacer` (постановка блока духом), `MiningPlanner` / `StandSpots` (стоянки и
+досягаемость), `ProtectionGate.checkPlace` и `PlacedBlocksData` (что духу можно ставить и ломать).
+
+Перед работой прочитай `AGENTS.md`, `docs/CONVENTIONS.md` (Быстрый путь — чистая логика в `core`, адаптер тонкий;
+Структура — тип решается в одном месте; Производительность — тик стоит дорого, тест на масштаб считает операции;
+Ошибки — тихий fallback запрещён), `docs/TESTING.md` (JUnit и GameTest, имена тестов, сторожа, `GameTestTimeoutGuardTests`,
+время тестов), `docs/GIT.md`, `docs/API.md` (каталог скриптов, поля `progress`/`result` задачи).
+
+Код (карта для чтения): `core/script/{CoreScripts,CatalogLimits,ParamSpec,ScriptArgs,GatherParams,TransferParams,
+TillParams,ApproachParams}` (образцы параметров), `core/plan/{PlanParser,PlanValidator,ScriptCall}` (план и лимиты
+координат), `core/engine/{ScriptInstance,ScriptStatus,ScriptExecutor,TaskRunner,TaskSnapshotCodec,RunProgress}`,
+`core/mining/{MiningPlanner,MiningSafety,StandSpots,SafetyView,Cell,BreakSafety,TargetBuffer,GatherPolicy,VeinWalker}`
+(ломка, стойки, безопасность), `core/observation/{BlockCoord,IdFilter}`, `core/planner/{ResourceKnowledge,Ingredient}`,
+`core/inventory/{NeedsOfPlan,JsonResource,OverflowPolicy}` (нужды плана и чтение JSON-таблиц),
+`neoforge/BlockBreaker` (ломка одного блока, `REACH` 4.5, `protectionGate`), `neoforge/{HarvestSession,HarvestTargets,
+GatherTargets,VeinTargets}` (ломка набора целей, состояния и `saveState`/`restoreState`), `neoforge/{Approach,
+LevelSafetyView,LoadedTerrain,LoadedWorld,BlockLocator,Replanter,FarmActions,StationPlacer,DropCollector,SpiritEntity}`,
+`neoforge/policy/{ProtectionGate,PolicyEvents,PlacedBlocksData,PolicyConfig}`, `neoforge/crafting/{RecipeKnowledge,
+StationPlacer}`, `neoforge/tactics/SpiritGear` (постановка блока ради укрытия), `neoforge/SpiritScripts` (реестр
+исполнителей), `gametest/{GameTestFixtures,SpiritRun,FullCycleScene,CraftTestSupport,TaskPersistenceGameTests,
+ScriptProgressGameTests,CraftScaleGameTests,SavedBlocks,RestFixture}`. Публикацию и перезапуск сервера не делать.
+
+**Зависимости.** Часть А (ядро, пп. 1–9) не зависит ни от кого — делается сразу. Часть Б (адаптер, пп. 10–18) —
+после А; п. 17 (материалы из сундуков/`acquire`) удобнее после слияния чеклиста 28 (`AcquireSupplies`,
+`SpiritSupplies` — если 28 в main, они переиспользуются, иначе порт снабжения из п. 4 свой); п. 18 (итог) — после
+слияния чеклиста 27 (`ScriptResult` sealed `Text`/`Data`, поле `result` в REST). Часть В (GameTest, пп. 19–26) —
+после Б; пп. 25–26 (перезапуск и масштаб) — после стабилизации Б. Чеклисты 13 (движок задач), 16 (инвентарь/сундуки),
+17 (крафт и плавка), 24 (навигация и стойки) уже в main и нужны как есть. Если 27 или 28 к моменту финала не в main,
+всё остальное доводится, а зависящие пункты честно помечаются «ждёт 27»/«ждёт 28».
+
+## Что должно получиться
+
+Пять скриптов стройки и земляных работ исполняются в мире: дух ставит и ломает блоки, копает и заполняет области,
+строит по схеме из файла, расходуя материалы из инвентаря (и, при согласовании H3, из сундуков/`acquire`),
+отказывает с числами при нехватке и не хоронит себя. Прогресс переживает перезапуск. Итог идёт общим каналом
+(чеклист 27), счётные работы отражаются в `GET /v1/tasks/{id}` → `progress`.
+
+- **`place_block`** («поставить блок»: `block`,`x`,`y`,`z`) — поставить один блок указанного вида в точку.
+  Пустое место, опора под или рядом, в досягаемости (иначе подойти), место не в защищённой зоне
+  (`ProtectionGate.checkPlace`), материал есть в инвентаре (иначе отказ с числами или `withdraw`/`acquire`).
+  В мире — блок, из инвентаря — один предмет; в мир — событие `BLOCK_PLACE`. Причина отказа называет, чего не
+  хватило (место занято / нет опоры / далеко / защищено / нет материала `blockId` нужно N, есть M).
+- **`fill`** («заполнить область блоком»: `block`,`x1..z2`) — залить коробку указанным блоком. Порядок — снизу
+  вверх (опора из блока ниже появляется раньше верхнего), порциями по одному блоку за тик; углы нормализуются
+  (любой порядок `x1/y1/z1` и `x2/y2/z2`). Ячейки, которые дух занимает сам, ставятся последними, а если коробка
+  не выпускает духа — дух сначала выходит на стоянку снаружи (иначе оставляет свою колонку пустой и называет
+  пропуск в итоге). Нехватка материала — `FAILED` с числами, если H3 не выберет `acquire`.
+- **`clear_area`** («очистить область»: `x1..z2`) — убрать все ломаемые блоки коробки. Ломает через
+  `BlockBreaker` (`REACH`, `protectionGate.checkBreak`, `BreakVeto` не даёт подрубить опору под собой), подход к
+  стоянкам через `MiningPlanner`/`StandSpots`, дроп подбирает существующим `DropCollector`. Неразрушимые,
+  защищённые и небезопасные (рядом лава/вода — `MiningSafety.canBreak`) блоки пропускаются со счётчиком, а не
+  роняют задачу; если не убран ни один — `FAILED` с числами.
+- **`dig_area`** («выкопать область»: `x`,`y`,`z`,`size`) — куб со стороной `size` от угла `x,y,z` (минимальный
+  угол), выкопать всё ломаемое. То же, что `clear_area`, но область задаётся стороной; сторона и объём
+  ограничены (`DIG_SIZE_*`, `BUILD_VOLUME_MAX`), превышение — явная ошибка с числами до первого блока.
+- **`build_schematic`** («построить схему из файла»: `file`,`x`,`y`,`z`) — построить по файлу схемы, поставить
+  якорь в `x,y,z`. Схема читается из данных проекта (формат — на согласование H2, предлагается минимальный JSON
+  `data/theminespirit/schematics/<file>.json`: `version`, `size`, `blocks:[{pos:[dx,dy,dz],block}]`); файл
+  грузится один раз за процесс, ошибка формата останавливает старт громко (`JsonResource`, как таблицы тактики).
+  Порядок — снизу вверх, по одному блоку за тик, материалы собираются по видам блоков (нехватка — числа), уже
+  стоящие нужные блоки пропускаются.
+- **Итог общим каналом.** Успешные `fill`/`clear_area`/`dig_area`/`place_block`/`build_schematic` отдают
+  `ScriptResult.Data` (чеклист 27) с полями `placed`, `removed`, `skipped`, `failed`, `have`, `missing`,
+  `block`(и), а при провале — `failureReason()` с числами. Счётные скрипты дают `progress()`: `done` — сколько
+  блоков обработано, `target` — сколько нужно.
+- **Прогресс переживает перезапуск.** `saveState()`/`restoreState()` хранят счётчики (поставлено/убрано/
+  пропущено) и факт незавершённости; при восстановлении список работ пересчитывается из параметров и мира
+  (ячейки, уже приведённые к цели, выпадают), двойного расхода материалов нет.
+- **Лимиты объёма.** `fill`/`clear_area`/`dig_area`/`build_schematic` не запускаются на область сверх
+  `BUILD_VOLUME_MAX` и на схему сверх `SCHEMATIC_SIZE_MAX` — отказ до первого изменения мира. Числа — в
+  `CatalogLimits`, у каждого тест равенства production-константе.
+- **GameTest на каждый скрипт и тест на масштаб.** Сквозные сцены в `arena`: поставить, залить, очистить,
+  выкопать, построить домик по мини-схеме; отказы (далеко/занято/нет опоры/защита/нет материала) с числами;
+  перезапуск на середине; тест на масштаб считает чтения/записи блоков за тик.
+
+### Как устроены порядок, стойки, материалы и порции (предлагаемый механизм)
+
+Пять скриптов — обычные `ScriptCall` в каталоге (язык плана не меняется). Расстановка идёт порционно:
+
+1. **Порядок — снизу вверх.** `BuildBox.cellsBottomUp()` нормализует коробку и сортирует ячейки по `y` (потом по
+   устойчивому порядку координат). Для постановки поддержка снизу уже появилась на прошлом слое; для ломки
+   состояние — «цели по близости к стоянке» через `MiningPlanner.next` (как `HarvestSession`).
+2. **Стойки и досягаемость.** Перед каждой ячейкой берётся стоянка (`StandSpots.of(cell, safety, from)`), подход —
+   `Approach` (`core/movement`), ставить/ломать только в пределах `BlockBreaker.REACH` (4.5). Нет ни одной
+   стоянки — ячейка пропускается со счётчиком, а не роняет всю задачу.
+3. **Материалы — до работы.** `BuildMaterials.plan(blockId, needed, supplies)` считает, сколько нужно и сколько
+   есть; чего нет — `withdraw` по ближним сундукам (`BuildSupplies`), остаток — `acquire` (28) или отказ с
+   числами (H3). Считается один раз на попытку, не каждый тик.
+4. **Порции — один блок за тик** (`BLOCKS_PER_TICK = 1`): за тик ставится или ломается ровно один блок, плюс
+   O(1) выбор следующей ячейки. Обход области — курсором по готовому списку, без повторного сканирования мира
+   каждый тик (переиспользовать `TargetBuffer`/`LoadedWorld`, как `GatherTargets`).
+5. **Не замуровать себя.** Ячейки духа (ноги/голова) выносятся в хвост порядка (`BuildOrder.placement`), при
+   тесной коробке дух сначала выходит на стоянку снаружи; своих поставленных блоков `PlacedBlocksData` не
+   помечает (помечает только игрока, `PolicyEvents`), поэтому над собой дух ставит в последнюю очередь.
+
+## Общие точки с другими чеклистами (merge)
+
+- `core/script/CoreScripts` — спецификации пяти скриптов уже есть. Правки: у `dig_area.size` добавить границы
+  `DIG_SIZE_MIN..DIG_SIZE_MAX` (сейчас границ нет); у `fill`/`clear_area`/`build_schematic` — без изменений
+  набора параметров. Конфликт с 28 только в файле, строки разные.
+- `core/script/CatalogLimits` — новый блок `BUILD_*` в конце файла (после `HERD_SIGHT_MARGIN`). Чеклист 28 тоже
+  добавляет блок `ACQUIRE_*` в конце — при слиянии «оставить обе стороны».
+- `core/script/ScriptCatalogTests` — таблица обязательных параметров уже содержит пять скриптов; при добавлении
+  границ `dig_area.size` добавить строку диапазона в `scriptSpecRows`. Строки `place_block`/`fill`/`clear_area`/
+  `build_schematic` не меняются.
+- `core/plan/PlanValidatorRulesTests` — уже есть строки отказов `dig_area` по `x/y/z`; если менять границы
+  `size`, добавить строку «size 0»/«size > max». Конфликтов по строкам мало.
+- `guards/CatalogDefaultGuardTests` — все новые параметры обязательные (без умолчаний), нарушений нет; список
+  `OPTIONAL_WITHOUT_DEFAULT` не трогаем.
+- `core/inventory/NeedsOfPlan` — сейчас собирает нужды только из `ITEM_SCRIPTS` и `gather` (`BLOCK_PARAM`);
+  `place_block`/`fill`/`build_schematic` тоже несут `block` — добавить их в сбор нужд (иначе резервирование
+  материалов не увидит стройку). Конфликт с 28 (там правится `acquire`) — «оставить обе стороны».
+- `neoforge/SpiritScripts` — пять новых записей `table.put(...)`; `catalog()` = `CoreScripts` ∩ реализованные —
+  скрипты появляются в `capabilities`. Конфликт с 28 (запись `acquire`) — «оставить обе стороны».
+- `neoforge/BlockBreaker` — только вызывается (`begin`/`tick`), не меняется. `neoforge/LevelSafetyView` —
+  используется как `SafetyView`, не меняется.
+- `core/mining/{MiningPlanner,MiningSafety,StandSpots,TargetBuffer}` — вызываются; новой логики не пишем.
+  Область как набор целей — новый `core/building/*`, `HarvestSession` не трогаем (иначе рискуем добычей).
+- `neoforge/policy/{ProtectionGate,PlacedBlocksData,PolicyEvents}` — вызываются; при выборе H4 (помечать свои
+  блоки) правка `PolicyEvents`/`PlacedBlocksData` — небольшой конфликт с чеклистом «политики», если он в работе.
+- `neoforge/{Replanter,FarmActions,StationPlacer,tactics/SpiritGear}` — образцы постановки; рефакторинг на
+  `BlockPlacer` не делаем (меняет поведение садоводства/крафта), только читаем.
+- `docs/API.md` — раздел каталога: поведение пяти скриптов, формат схемы (H2), поля `result` (после 27).
+  Конфликт с 27 (`result`) — «оставить обе стороны».
+- `gametest/FullCycle*`, `gametest/CraftTestSupport`, `gametest/TaskPersistenceGameTests` — переиспользуются;
+  новые классы стройки отдельные, существующие не меняются.
+- Чеклист 28 (`acquire`) — снабжение стройки; при слиянии переиспользовать `AcquireSupplies`/`SpiritSupplies`.
+- Чеклист 27 (`ScriptResult`) — `ScriptResult.Data` для итога; зависимость только у п. 18 и REST-части GameTest.
+
+## Часть А — ядро (`core`, без Minecraft)
+
+- [ ] 1. **Параметры пяти скриптов** (`core/script`) — записи по образцу `GatherParams`/`TransferParams`:
+  `PlaceBlockParams(block,x,y,z)`, `FillParams(block, x1,y1,z1, x2,y2,z2)`, `ClearAreaParams(x1..z2)`,
+  `DigAreaParams(x,y,z,size)`, `BuildSchematicParams(file,x,y,z)`; у каждой `from(Map)` через `ScriptArgs`.
+  Проверки: `block`/`file` непусты (id или шаблон), координаты в `WORLD_*`, `size` в `DIG_SIZE_MIN..DIG_SIZE_MAX`,
+  объём `fill`/`clear_area`/`dig_area` ≤ `BUILD_VOLUME_MAX` (считается через `BuildBox`). Тесты: значения
+  читаются; пустой `block`/`file`, координаты вне мира, `size` и объём вне границ — исключение с текстом;
+  умолчаний нет (`CatalogDefaultGuardTests`). Обновить `CoreScripts` (границы `size`) и `ScriptCatalogTests`.
+- [ ] 2. **`BuildBox`** (`core/building`) — нормализованная коробка: `of(x1,y1,z1,x2,y2,z2)` (порядок углов любой),
+  `sideX/sideY/sideZ`, `volume()`, `cells()` и `cellsBottomUp()` (сортировка по `y`, потом по `(x,z)`),
+  `contains(BlockCoord)`, `exceeds(int maxVolume)`. Тесты: обратный порядок углов даёт ту же коробку; `volume`
+  для 1×1×1 и 2×3×4; порядок `cellsBottomUp` — `y` не убывает; список — перестановка `cells()` без дублей;
+  объём сверх предела ловится.
+- [ ] 3. **`BuildOrder`** (`core/building`) — чистая раскладка постановки: `placement(List<BlockCoord> cells,
+  Set<BlockCoord> occupiedBySpirit)` возвращает ячейки снизу вверх, вынося занятые духом в хвост, и `deferred(...)`
+  отдельно. Тесты: блок из нижнего слоя раньше блока выше; занятая духом ячейка последняя; результат —
+  перестановка входа; пустой вход — пустой выход; несколько занятых ячеек сохраняют относительный порядок.
+- [ ] 4. **`BuildSupplies` + `BuildMaterials`** (`core/building`) — порт снабжения `int inInventory(String block)`
+  и `List<ScriptCall> withdraw(String block, int maxCount)` (шаги `withdraw` по ближним сундукам, ближний
+  первым); `BuildMaterials.plan(blockId, needed, supplies)` → `record Plan(List<ScriptCall> steps, int have,
+  int missing)`. Если 28 в main — порт совместим с `AcquireSupplies` (не дублировать). Тесты: заглушка отдаёт
+  счётчики и шаги; всё есть — пустые шаги, `missing=0`; частично — шаги на остаток; пусто — `missing=needed`;
+  порядок шагов сохраняется; null-параметры — исключение.
+- [ ] 5. **`Schematic` + `SchematicParser`** (`core/building`) — формат из H2: `version`, `size:[sx,sy,sz]`,
+  `blocks:[{pos:[dx,dy,dz],block}]`. `SchematicParser.parse(json, origin)` через `JsonResource` (проверка полей,
+  границ `pos` внутри `size`, непустого списка, лимита `SCHEMATIC_SIZE_MAX`/`SCHEMATIC_BLOCKS_MAX`, версии).
+  `Schematic.entries(BlockCoord origin)` → ячейки с блоками снизу вверх. Тесты: корректный файл; неизвестное поле,
+  пропущенное `block`, `pos` вне `size`, пустой список, `size` сверх предела, чужая `version` — исключение с
+  путём и причиной; порядок снизу вверх; воздух/отсутствие ячейки = пусто.
+- [ ] 6. **`BuildState`** (`core/building`) — снимок прогресса: `placed`, `removed`, `skipped`, `failed`,
+  `block`(и) и признак незавершённости; `toMap()`/`fromMap()` для `saveState()`/`restoreState()`. При
+  восстановлении работа пересчитывается от параметров и мира, а счётчики берутся из снимка. Тесты: round-trip
+  карты; отрицательные значения — исключение; `fromMap` без ключей даёт нули (совместимость со старым снимком).
+- [ ] 7. **`BuildResult`** (`core/building`) — накопитель итога для `ScriptResult.Data` (27): `placed`, `removed`,
+  `skipped`, `failed`, `have`, `missing`, `block`; `toData()` → `Map<String,Object>`. Тесты: счётчики
+  накапливаются; `toData` содержит все поля; `missing>0` не теряется; пустой результат даёт нули (не `null`).
+- [ ] 8. **Числа в `CatalogLimits`** (`core/script`) — `DIG_SIZE_MIN=1`, `DIG_SIZE_MAX=16`, `BUILD_VOLUME_MAX=4096`,
+  `SCHEMATIC_SIZE_MAX=32`, `SCHEMATIC_BLOCKS_MAX=4096`, `BLOCKS_PER_TICK=1` в блоке `BUILD_*`. Тесты равенства
+  production-константам (`assertEquals`, не литерал с литералом).
+- [ ] 9. **`BuildTuning`** (`core/building`) — подход и тайм-ауты: дистанция прибытия к стоянке, тайм-аут на
+  ячейку (через `GotoTuning.timeoutTicks`), число пропусков до отказа. Тесты: значения читаются; время
+  монотонно растёт с расстоянием (свойство), нулей нет. (Если числа не нужны — обосновать в отчёте, оставить
+  только константы п. 8.)
+
+## Часть Б — адаптер (после А; п. 17 — после 28, п. 18 — после 27)
+
+- [ ] 10. **`BlockPlacer`** (`neoforge`) — постановка одного блока по образцу `BlockBreaker`:
+  `begin(BlockPos target, BlockState state)` возвращает `Started`/`Refused(reason)`/`Protected(policy)`;
+  проверки: чанк загружен, клетка заменяема (`isAir`/`canBeReplaced`), в досягаемости `BlockBreaker.REACH` (иначе
+  `OUT_OF_REACH`), `protectionGate.checkPlace` (иначе `Protected`), есть опора (низ `isFaceSturdy(UP)` или
+  соседняя грань), есть материал в инвентаре. Успех: списать `BlockItem` из инвентаря, `level.setBlock(..., 
+  Block.UPDATE_ALL)`, `gameEvent(BLOCK_PLACE)` (как `Replanter`/`FarmActions`). Тесты (JUnit, если возможно;
+  иначе GameTest п. 19): причины отказа по порядку; успех один блок за тик; материал списывается ровно на 1.
+- [ ] 11. **`BlockStates` + `BlockItems`** (`neoforge`) — id↔`BlockState`/`Block`/`Item` через `BuiltInRegistries`
+  (как `RecipeKnowledge` для предметов). `BlockItems.itemFor(blockId)` даёт `BlockItem` для расхода;
+  неизвестный id — явная ошибка с id. Тесты: ванильные id находятся; неизвестный id — исключение с id.
+- [ ] 12. **`BuildSupplies` адаптер** (`neoforge/inventory` или `neoforge`) — реализация порта п. 4: счёт
+  `block`-предмета в `SimpleContainer`, шаги `withdraw` по ближним контейнерам (`ContainerFinder` /
+  `ContainerAccess`, ближний первым, `container` = «x,y,z»). Если 28 в main — обернуть/переиспользовать
+  `SpiritSupplies`. Тесты: счёт из инвентаря; один сундук — один шаг; два сундука — ближний первым; пустые/
+  защищённые пропускаются; радиус соблюдён.
+- [ ] 13. **`PlaceBlockScript`** (`neoforge`) — `ScriptInstance` на один блок: на первом тике выбрать стоянку,
+  подойти (`Approach`), `BlockPlacer.begin`, при успехе `SUCCEEDED`, при `OUT_OF_REACH`/`NO_SUPPORT`/`NO_MATERIAL`/
+  `PROTECTED` — `FAILED` с числами; `saveState`/`restoreState` через `BuildState`. Регистрация в
+  `SpiritScripts`. Тесты: GameTest п. 19; JUnit — если вынести чистую часть.
+- [ ] 14. **`FillSession` + `FillScript`** (`neoforge`) — коробка `BuildBox`, список `cellsBottomUp` минус ячейки,
+  уже равные целевому блоку; `BuildMaterials.plan` до начала (H3); обход по одной ячейке за тик: стоянка
+  (`StandSpots`) → подход → `BlockPlacer`; занятые духом ячейки — в хвост, при тесной коробке выход на стоянку
+  снаружи; счётчики `placed`/`skipped`/`failed`; пропуски с числами. `saveState`/`restoreState`. Регистрация.
+  Тесты: GameTest пп. 20–21; чистая проверка списка — в `BuildOrder` (п. 3).
+- [ ] 15. **`ClearAreaSession` + `ClearAreaScript`** (`neoforge`) — коробка; цели — все ломаемые блоки; ломка по
+  одной за тик через `BlockBreaker` (`checkBreak`), стоянки `MiningPlanner`/`StandSpots` (как `HarvestSession`),
+  подбор дропа `DropCollector`; неразрушимые/защищённые/небезопасные — `skipped` с числом и причиной; если
+  `removed == 0` — `FAILED` с числами. `saveState`/`restoreState`. Регистрация. Тесты: GameTest п. 22.
+- [ ] 16. **`DigAreaSession` + `DigAreaScript`** (`neoforge`) — то же, что п. 15, но область — куб от угла со
+  стороной `size` (`BuildBox` из `x,y,z,size`); отказ до первого блока при `size`/объёме вне лимитов. Тесты:
+  GameTest п. 23; JUnit на форму коробки (через `BuildBox`).
+- [ ] 17. **`SchematicResources` + `BuildSchematicScript`** (`neoforge`) — загрузка схемы из
+  `data/theminespirit/schematics/<file>` (`JsonResource`, `SchematicParser`), один раз за процесс, ошибка формата
+  — громко при первом обращении (и при старте, если список файлов известен); материалы собираются по видам
+  блоков (`Map<blockId,count>`), источники — `BuildMaterials`; постановка по одной за тик, уже стоящие нужные
+  блоки пропускаются; счётчики по видам и общий итог. `saveState`/`restoreState`. Регистрация. Тесты: GameTest
+  п. 24; JUnit — парсер в п. 5. Нехватка материалов — числа (H3).
+- [ ] 18. **Итог до REST** (после 27) — `result()` возвращает `ScriptResult.Data` (`BuildResult.toData()`);
+  движок и мост из 27 доносят до `GET /v1/tasks/{id}` без новых полей. Тесты: успешный `fill` кладёт итог;
+  провал — `failureReason` с числами, `result` пустой; поля `Data` соответствуют п. 7. **Без п. 27 не делается.**
+
+## Часть В — GameTest (`gametest/BuildingGameTests`, `DigGameTests`, `SchematicGameTests`)
+
+Шаблон `arena` 11×8×11, всё внутри площадки, духи и предметы удаляются (`GameTestFixtures.reset`), без `sleep`,
+время по тикам духа (`SpiritRun`), своя пачка (`batch`) на группу, `timeoutTicks ≤ 400` (иначе — комментарий
+`[флак]` с обоснованием, как `GameTestTimeoutGuardTests`). План задаётся `ScriptCall`, сцена строится
+`GameTestFixtures`/`SavedBlocks`. Если мешает время суток — фиксировать полдень.
+
+- [ ] 19. **`place_block`** (пачка `build_place`): (а) пустая клетка, блок в инвентаре — блок в мире, предмет
+  израсходован; (б) та же клетка занята — `FAILED` с числом «место занято»; (в) клетка вне досягаемости — дух
+  подходит и ставит (или `FAILED` при недостижимой стоянке); (г) нет блока — `FAILED` «нужно 1, есть 0».
+  Подлоги: не списывать предмет (блок появился бесплатно); ставить через защищённую зону (`checkPlace` обойдён).
+- [ ] 20. **`fill` — снизу вверх и без самозахоронения** (пачка `build_fill`): коробка 2×2×2 у стены, блок в
+  инвентаре; все 8 в мире, порядок постановки — `y` не убывает (собирать через прогресс/`BuildState`), дух не
+  внутри залитого (стоит снаружи). Подлог: порядок сверху вниз — блок без опоры; дух внутри и замурован.
+- [ ] 21. **`fill` — нехватка и защита** (пачка `build_fill_fail`): (а) нужно 8, в инвентаре 3 — `FAILED` с
+  числами 8/3 и в мире ровно 3 блока; (б) коробка целиком в защищённой зоне (`PolicyConfig`) — `FAILED` с
+  названием политики, мир не тронут. Подлог: ставить без проверки количества (ставит на пустом инвентаре);
+  игнорировать защищённую зону.
+- [ ] 22. **`clear_area`** (пачка `clear`): стенка 3×3 из булыжника, дух с киркой; все ломаемые убраны
+  (`count == 0`), дроп булыжника в инвентаре/собран, неразрушимый (например, обсидиан/бедрок) пропущен и задача
+  не провалена; рядом лава — соседний блок пропущен с причиной. Подлог: `BreakVeto` не вызывает (дух подрубает
+  опору и падает); дроп не подбирается; пропуск защиты роняет задачу.
+- [ ] 23. **`dig_area` и лимиты** (пачка `dig`): (а) куб 2×2×2 камня выкопан до дна, туннелей нет; (б) `size=0`
+  и `size>DIG_SIZE_MAX` (и объём сверх `BUILD_VOLUME_MAX`) — план/скрипт отвергнут с числами до изменений мира.
+  Подлог: лимит `size` не проверяется — скрипт запускается на огромной области.
+- [ ] 24. **`build_schematic`** (пачка `build_schematic`): мини-схема «домик» (пол 3×3 + стены) из
+  `data/theminespirit/schematics/…json`; блоки на месте, лишних нет, материалы списаны по видам; повторный
+  запуск на готовом — `SUCCEEDED` без расхода. Подлог: схема не читается (нет блока); блоки ставятся сверху
+  вниз (облом без опоры); уже стоящие блоки ставятся повторно (двойной расход).
+- [ ] 25. **Перезапуск на середине** (пачка `build_restart`): `fill` прерывается сохранением/восстановлением
+  духа (NBT, как `TaskPersistenceGameTests`) — работа продолжается с того же места, материалы не тратятся
+  дважды, задача доходит до `SUCCEEDED`; снимок RUNNING-задачи (`TaskSnapshotCodec`) сериализуется. При
+  слиянии 27 — `GET /v1/tasks/{id}` отдаёт итог (`RestFixture`). Подлоги: `saveState` не хранит счётчики
+  (после перезапуска расход с нуля); список работ не пересчитывается (ставит уже стоящее).
+- [ ] 26. **Масштаб** (пачка `build_scale`): `fill` коробки у предела `BUILD_VOLUME_MAX` считается в
+  операциях: чтений блоков за тик не больше потолка (как `MAX_VIEW_READS_PER_TARGET`) и блоков за тик —
+  ровно `BLOCKS_PER_TICK`; повторного сканирования области каждый тик нет (счётчик чтений/вызовов). Подлог:
+  обход всей коробки каждый тик — чтения взлетают; два блока за тик — счётчик `BLOCKS_PER_TICK` нарушен.
+
+## Красными до реализации
+
+Все JUnit-тесты `core/building/{BuildBoxTests,BuildOrderTests,BuildMaterialsTests,SchematicParserTests,
+BuildStateTests,BuildResultTests}` и `core/script/{PlaceBlockParamsTests,FillParamsTests,ClearAreaParamsTests,
+DigAreaParamsTests,BuildSchematicParamsTests}` (классов и записей нет), все GameTest пп. 19–26 (исполнители не
+зарегистрированы в `SpiritScripts`, `catalog()` не отдаёт их в `capabilities`, план с ними отвергается). Назови
+красные до прогона. Для `fix:`-коммитов — `scripts/prove-red.sh`; GameTest скрипт не проверяет — подлоги вручную.
+Пределы в тестах — литералы с проверкой равенства production-константе (`assertEquals(16, CatalogLimits.DIG_SIZE_MAX)`,
+`assertEquals(4096, CatalogLimits.BUILD_VOLUME_MAX)`), сравнение литерала с литералом — не проверка.
+
+## Стоимость в тике
+
+- За тик — один изменённый блок (`BLOCKS_PER_TICK = 1`) плюс O(1) выбор следующей ячейки из готового списка;
+  мир каждый тик не сканируется (область обходится один раз, как `GatherTargets`/`TargetBuffer`).
+- Планирование материалов (`BuildSupplies`, обход ближних контейнеров в радиусе 8) и чтение схемы — один раз на
+  попытку/за процесс, не каждый тик. Сериализация снимка — только при `saveState`.
+- Ломка (`clear_area`/`dig_area`) переиспользует существующие бюджеты `MiningPlanner.MAX_VIEW_READS_PER_TARGET`
+  и `StandSpots.MAX_VIEW_READS`; обход области — срез за тик, как в `BlockLocator`.
+- Вложенных циклов «духи × блоки» нет; числа — в тестах, не время.
+
+## Завершение
+
+- [ ] 27. `./gradlew test` зелёный; GameTest — через `scripts/gametest.sh` (под `flock`, один сервер на машину),
+  в финале — 3 прогона подряд. Коммиты по пунктам (`test:`/`feat:`); `fix:`-коммиты с JUnit-тестом
+  сопровождаются выводом `scripts/prove-red.sh <коммит>`. `todo.md` не править. Отчёт: хэши; сколько тестов
+  прошло и упало; красные до реализации; подлоги пп. 19–26; время самого медленного GameTest и причина; что не
+  сделано и почему (в том числе: сделан ли п. 18 и REST-часть п. 25 — зависит от слияния 27; п. 17 — от 28).
+
+## Не входит (уходит в следующие чеклисты)
+
+- `build_farm`, `build_shelter`, `build_fence` — строятся поверх этих пяти скриптов, отдельным чеклистом.
+- `light_area`, `secure_area` (факелы против спавна), `use_block` (рычаг/кнопка/дверь), `open`/`close`.
+- Механизмы и редстоун, обратная засыпка туннелей (см. `todo.md` → «На развитие»), паркур с постановкой блока.
+- `.nbt`-структуры Minecraft как формат схемы (см. H2); модовые блоки и теги в схеме.
+- Резервирование материалов под стройку в модели товаропотоков (`reservedQuantity`) — задача экономики.
+- Параллельные духи на одной стройке без конфликтов (расписание и захват клеток) — отдельный чеклист.
+- MCP-адаптер поверх REST; публикация мода и перезапуск сервера.
+
+## На согласование
+
+1. **H1 — лимиты области:** `dig_area.size` — сторона куба 1..16 (`DIG_SIZE_MIN/MAX`); `BUILD_VOLUME_MAX` 4096
+   (16³) для `fill`/`clear_area`/`dig_area`; схема не больше 32³ и 4096 блоков (`SCHEMATIC_SIZE_MAX/BLOCKS_MAX`);
+   `BLOCKS_PER_TICK = 1`. Цена завышения — долгая стройка и нагрузка на тик; цена занижения — нельзя построить
+   стену/дом. Менять числа — только с согласия.
+2. **H2 — формат схемы:** минимальный JSON проекта `data/theminespirit/schematics/<file>.json`
+   (`version`, `size`, `blocks:[{pos,block}]`; якорь `x,y,z`, порядок снизу вверх) или `.nbt`-структуры
+   Minecraft / готовый формат внешних редакторов? Предлагается свой JSON: играется без NBT-ридера, ошибки формата
+   громкие, читается `JsonResource`. Цена JSON — нет совместимости с редакторами; цена `.nbt` — парсер структур и
+   зависимость от формата версии.
+3. **H3 — нехватка материалов:** отказ `FAILED` с числами (предлагается) или автоматический `withdraw`/`acquire`
+   (чеклист 28) до начала? Цена отказа — стратег сам решает, где взять; цена автозакупки — стройка тянет за собой
+   дальний поход, сюрпризы в чужом мире.
+4. **H4 — свои поставленные блоки:** помечать ли блок, поставленный духом, в `PlacedBlocksData` (сейчас
+   помечаются только блоки игрока, `PolicyEvents` смотрит на `Player`)? Без пометки эвристика «постройка»
+   (`buildingThreshold`) может счесть свою же стену чужой и отказать в разборе. Предлагается не менять политику
+   сейчас, но назвать это известным ограничением; альтернатива — отдельная отметка «поставлено духом» и
+   исключение для своего. Цена первого — дух не разберёт то, что построил; цена второго — правка политики.
+5. **H5 — формат итога:** `ScriptResult.Data` с полями `placed`, `removed`, `skipped`, `failed`, `have`,
+   `missing`, `block`(и) (предлагается) плюс `reason` в `failureReason`. После слияния 27. Цена — новая схема
+   `Data` в контракте; альтернатива — только строка, стратегу парсить подстроки.
+6. **H6 — правило «не замуровать себя»:** занятые духом ячейки ставить последними и сначала выходить на стоянку
+   снаружи (предлагается) или просто пропускать колонку духа с записью в итог? Цена первого — лишний шаг и
+   стоянка; цена второго — в коробке остаётся дырка, о которой стратег узнаёт из чисел.
+7. **H7 — порядок с 27/28:** пп. 17 и 18, REST-часть п. 25 зависят от слияния 28 и 27. Если к финалу они не в
+   main, всё остальное доводится, а эти пункты честно отмечаются «ждёт 28»/«ждёт 27» (как в чеклистах 27/28).
