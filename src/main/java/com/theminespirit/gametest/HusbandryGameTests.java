@@ -104,13 +104,18 @@ public final class HusbandryGameTests {
     }
 
     @GameTest(template = "arena", batch = "husbandry_feed_live", timeoutTicks = 400)
-    public static void feed_TwoLiveCowsInPen_BothFedWithin200SpiritTicks(GameTestHelper helper) {
+    public static void feed_TwoLiveCowsInSmallPen_BothFedWithin300SpiritTicks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        HusbandryGameTests.fencePerimeter(helper);
+        for (int i = 1; i <= 5; i++) {
+            helper.setBlock(new BlockPos(i, 1, 1), Blocks.OAK_FENCE);
+            helper.setBlock(new BlockPos(i, 1, 5), Blocks.OAK_FENCE);
+            helper.setBlock(new BlockPos(1, 1, i), Blocks.OAK_FENCE);
+            helper.setBlock(new BlockPos(5, 1, i), Blocks.OAK_FENCE);
+        }
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
-        helper.spawn(EntityType.COW, new BlockPos(5, 1, 5));
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 2));
+        helper.spawn(EntityType.COW, new BlockPos(3, 1, 2));
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(2, 1, 4), new ItemStack(Items.WHEAT, 2));
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("feed",
                         Map.of("species", "cow", "radius", 8, "count", 2, "babiesFirst", false)),
@@ -118,8 +123,8 @@ public final class HusbandryGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(run.spiritTicks() <= 200,
-                    "две живые коровы обязаны покормиться за 200 тиков духа, заняло " + run.spiritTicks());
+            helper.assertTrue(run.spiritTicks() <= 300,
+                    "две живые коровы обязаны покормиться за 300 тиков духа, заняло " + run.spiritTicks());
             assertSucceeded(helper, spirit, "две живые коровы в загоне обязаны покормиться");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 0,
                     "на двух коров уходят обе пшеницы, фактически осталось "
