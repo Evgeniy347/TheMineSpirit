@@ -60,6 +60,7 @@ public final class DropCollector {
         this.safety = new LevelSafetyView(spirit.level());
         this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
                 center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
+        spirit.trackDropCollector(this);
     }
 
     public State tick() {
@@ -110,6 +111,10 @@ public final class DropCollector {
 
     public int entityQueries() {
         return entityQueries;
+    }
+
+    public OverflowDecider decider() {
+        return decider;
     }
 
     private void refresh() {

@@ -23,6 +23,7 @@ import com.theminespirit.core.tactics.adapter.StoredTactics;
 import com.theminespirit.core.tactics.adapter.TacticsFormatException;
 import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.inventory.SpiritInventory;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
@@ -34,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -48,7 +48,7 @@ public final class SpiritEntity extends PathfinderMob {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int INVENTORY_SIZE = 36;
 
-    private final SimpleContainer inventory = new SimpleContainer(INVENTORY_SIZE);
+    private final SpiritInventory inventory = new SpiritInventory(INVENTORY_SIZE);
     private final SpiritChunkLoader chunkLoader = new SpiritChunkLoader(this);
     private final SpiritPolicies policies = new SpiritPolicies(this);
     private final ProtectionGate protectionGate = new ProtectionGate(this);
@@ -60,6 +60,7 @@ public final class SpiritEntity extends PathfinderMob {
     private Finding finding;
     private MemoryStore memory = MemoryStore.empty();
     private BlockCoord home;
+    private DropCollector activeCollector;
     private int pathBuilds;
     private int entityQueries;
     private int snapshotBuilds;
@@ -262,8 +263,16 @@ public final class SpiritEntity extends PathfinderMob {
         this.memory = updated;
     }
 
-    public SimpleContainer getInventory() {
+    public SpiritInventory getInventory() {
         return inventory;
+    }
+
+    public void trackDropCollector(DropCollector collector) {
+        this.activeCollector = collector;
+    }
+
+    public DropCollector activeDropCollector() {
+        return activeCollector;
     }
 
     public float equipmentDropChance(EquipmentSlot slot) {

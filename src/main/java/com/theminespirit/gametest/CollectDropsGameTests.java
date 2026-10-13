@@ -36,6 +36,9 @@ public final class CollectDropsGameTests {
     private static final int SETTLE_TICKS = 1;
     private static final int PILLAR_SETTLE_TICKS = 10;
     private static final int ENDLESS_PICKUP_DELAY = 32767;
+    private static final int DIAMOND_HEAPS = 20;
+    private static final int DIAMONDS_PER_HEAP = 64;
+    private static final int POLICY_CALL_BOUND = DIAMOND_HEAPS * 2;
 
     private CollectDropsGameTests() {
     }
@@ -484,6 +487,57 @@ public final class CollectDropsGameTests {
                     "изумруд обязан остаться в мире нетронутым");
             GameTestFixtures.reset(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "drops_overflow_cache", timeoutTicks = 400)
+    public static void collectDrops_FullOfCobblestoneByValue_CachesOverflowDecision(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+        dropDiamondRing(helper);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("collect_drops", Map.of("radius", 6, "overflow", "by_value")), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            DropCollector collector = spirit.activeDropCollector();
+            helper.assertTrue(collector != null,
+                    "сборщик подбора обязан существовать после старта collect_drops: без него нечего измерять, "
+                            + "а тест проверяет счётчик вызовов политики именно этого сборщика");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "обмен полного булыжника на алмазы обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            long policyCalls = collector.decider().policyCalls();
+            helper.assertTrue(policyCalls <= POLICY_CALL_BOUND,
+                    "за 20 подборов политика переполнения обязана вызываться не чаще " + POLICY_CALL_BOUND
+                            + " раз (одно решение на изменение инвентаря на кучку: 20 подборов — 20 решений, "
+                            + "×2 — запас на повторные выборы цели; повторные запросы той же кучки берутся из "
+                            + "кэша, а не пересчитываются обходом 36 слотов), фактически вызовов " + policyCalls
+                            + ": кэш не работает, каждый тик выбора цели пересчитывает каждую кучку");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND)
+                            == DIAMOND_HEAPS * DIAMONDS_PER_HEAP,
+                    "все 20 кучек алмазов (по 64) обязаны оказаться в инвентаре: обмен ценного на дешёвое, "
+                            + "а не отказ, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 16 * 64,
+                    "в инвентаре обязано остаться 16 стопок булыжника (36 слотов − 20 алмазов): каждый алмаз "
+                            + "вытеснил ровно одну стопку, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    private static void dropDiamondRing(GameTestHelper helper) {
+        int[][] ring = {{2, 2}, {2, 1}, {2, 0}, {2, -1}, {2, -2}, {1, -2}, {0, -2}, {-1, -2}, {-2, -2}, {-2, -1},
+                {-2, 0}, {-2, 1}, {-2, 2}, {-1, 2}, {0, 2}, {1, 2}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+        for (int[] cell : ring) {
+            GameTestFixtures.dropAt(helper, Items.DIAMOND, DIAMONDS_PER_HEAP,
+                    SPIRIT_START.getX() + cell[0] + 0.5, 1, SPIRIT_START.getZ() + cell[1] + 0.5);
+        }
     }
 
     private static void spawnCobblestoneHeaps(GameTestHelper helper) {
