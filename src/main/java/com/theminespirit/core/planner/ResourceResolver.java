@@ -106,9 +106,12 @@ public final class ResourceResolver {
         private ScriptCall single(String script, String item, int count) {
             return switch (script) {
                 case "gather" -> new ScriptCall("gather",
-                        Map.of("block", knowledge.gatherBlockFor(item), "count", count));
-                case "craft" -> new ScriptCall("craft", Map.of("item", item, "count", count));
-                case "smelt" -> new ScriptCall("smelt", Map.of("item", item, "count", count));
+                        Map.of("block", knowledge.gatherBlockFor(item), "count", count,
+                                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
+                case "craft" -> new ScriptCall("craft", Map.of("item", item, "count", count,
+                        "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                case "smelt" -> new ScriptCall("smelt", Map.of("item", item, "count", count,
+                        "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
                 default -> throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
                         + "батчинг знает только gather, craft и smelt");
             };
