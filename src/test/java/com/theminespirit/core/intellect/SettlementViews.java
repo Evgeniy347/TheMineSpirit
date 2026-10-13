@@ -15,26 +15,35 @@ import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Combinators;
 
-final class SettlementViews {
+public final class SettlementViews {
     private SettlementViews() {
     }
 
-    static SpiritSnapshot spirit(UUID id) {
-        return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
+    public static SpiritSnapshot spirit(UUID id) {
+        return spiritWithRole(id, SpiritRole.WORKER);
+    }
+
+    public static SpiritSnapshot spiritWithRole(UUID id, SpiritRole role) {
+        return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, role, CombatMode.DEFENSIVE, 0, false,
                 Optional.empty(), 0);
     }
 
-    static SettlementView empty() {
+    public static SettlementView empty() {
         return new SettlementView(0, 0, 0, 0, 0, 0, 0, 0, 0.5, List.of(), 0);
     }
 
-    static SettlementView withSpirits(List<SpiritSnapshot> spirits) {
+    public static SettlementView settlement(double food, double nutrition, int ore, int iron, int weapons,
+            int threats, double dayFraction) {
+        return new SettlementView(3, 0, food, nutrition, ore, iron, weapons, threats, dayFraction, List.of(), 100);
+    }
+
+    public static SettlementView withSpirits(List<SpiritSnapshot> spirits) {
         List<SpiritSnapshot> ordered = new ArrayList<>(spirits);
         ordered.sort(Comparator.comparing(SpiritSnapshot::id));
         return new SettlementView(ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, ordered, 100);
     }
 
-    static Arbitrary<SettlementView> views() {
+    public static Arbitrary<SettlementView> views() {
         Arbitrary<SpiritSnapshot> spirit = Combinators.combine(Arbitraries.create(UUID::randomUUID),
                 Arbitraries.integers().between(0, 20).map(step -> step / 20.0),
                 Arbitraries.of(SpiritRole.values()), Arbitraries.integers().between(0, 3),
