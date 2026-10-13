@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.core.task.TaskReconciler;
 import com.theminespirit.core.task.TaskRecord;
@@ -70,7 +71,9 @@ public final class TaskWatcher {
             return SpiritReading.failed(spirit.taskFailureReason().orElse(null), spirit.taskFailedAt().orElse(null))
                     .withGeneration(spirit.taskGeneration());
         }
-        return SpiritReading.living(status, spirit.taskProgress().orElse(null), spirit.taskFailureReason().orElse(null))
+        Object result = spirit.taskResult().map(ScriptResult::jsonValue).orElse(null);
+        return SpiritReading.living(status, spirit.taskProgress().orElse(null),
+                        spirit.taskFailureReason().orElse(null), result)
                 .withGeneration(spirit.taskGeneration());
     }
 

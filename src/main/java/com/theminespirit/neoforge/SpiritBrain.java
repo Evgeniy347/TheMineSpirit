@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.plan.TaskNode;
@@ -24,6 +25,7 @@ public final class SpiritBrain {
     private Throwable lastCause;
     private String suspendReason;
     private RunProgress lastFailedAt;
+    private ScriptResult lastResult;
     private long generation = SpiritReading.UNKNOWN_GENERATION;
 
     public SpiritBrain(SpiritEntity spirit) {
@@ -41,6 +43,7 @@ public final class SpiritBrain {
         lastReason = null;
         lastCause = null;
         lastFailedAt = null;
+        lastResult = null;
     }
 
     public long generation() {
@@ -110,6 +113,10 @@ public final class SpiritBrain {
         return Optional.ofNullable(lastFailedAt);
     }
 
+    public Optional<ScriptResult> successResult() {
+        return Optional.ofNullable(lastResult);
+    }
+
     public Optional<RunProgress> progress() {
         return runner == null ? Optional.empty() : runner.progress();
     }
@@ -129,6 +136,7 @@ public final class SpiritBrain {
         generation = SpiritReading.UNKNOWN_GENERATION;
         lastStatus = runner.status();
         lastFailedAt = null;
+        lastResult = null;
         if (lastStatus != RunStatus.RUNNING) {
             lastReason = runner.failureReason().orElse(null);
             lastCause = runner.failureCause().orElse(null);
@@ -163,6 +171,9 @@ public final class SpiritBrain {
         lastReason = runner.failureReason().orElse(null);
         lastCause = runner.failureCause().orElse(null);
         lastFailedAt = runner.failedAt().orElse(null);
+        if (lastStatus == RunStatus.SUCCEEDED) {
+            lastResult = runner.successResult().orElse(null);
+        }
         if (lastStatus == RunStatus.FAILED) {
             LOGGER.warn("Дух {} провалил задачу: {}", spirit.getUUID(), lastReason, lastCause);
         }

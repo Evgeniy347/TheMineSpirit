@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.ChopTuning;
@@ -32,6 +33,11 @@ import org.slf4j.Logger;
 public final class ChopTreeScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String CHOPPED_KEY = "chopped";
+    private static final String STANDING_KEY = "standingLogs";
+    private static final String PROTECTED_KEY = "protectedLogs";
+    private static final String PLANTED_KEY = "plantedSaplings";
+    private static final String SKIPPED_KEY = "skippedCells";
+    private static final String LACKED_KEY = "lackedSaplings";
 
     private enum Phase {
         FIND,
@@ -137,21 +143,43 @@ public final class ChopTreeScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return Map.of(CHOPPED_KEY, chopped);
+        return Map.of(CHOPPED_KEY, chopped,
+                STANDING_KEY, standingLogs,
+                PROTECTED_KEY, protectedLogs,
+                PLANTED_KEY, plantedSaplings,
+                SKIPPED_KEY, skippedCells,
+                LACKED_KEY, lackedSaplings);
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        Object saved = state.get(CHOPPED_KEY);
-        if (saved == null) {
-            return;
+        chopped = readCount(state, CHOPPED_KEY, params.count(), chopped);
+        standingLogs = readCount(state, STANDING_KEY, Integer.MAX_VALUE, standingLogs);
+        protectedLogs = readCount(state, PROTECTED_KEY, Integer.MAX_VALUE, protectedLogs);
+        plantedSaplings = readCount(state, PLANTED_KEY, Integer.MAX_VALUE, plantedSaplings);
+        skippedCells = readCount(state, SKIPPED_KEY, Integer.MAX_VALUE, skippedCells);
+        Object lacked = state.get(LACKED_KEY);
+        if (lacked != null) {
+            if (!(lacked instanceof Boolean flag)) {
+                throw new IllegalArgumentException("Состояние chop_tree: '" + LACKED_KEY + "' = " + lacked
+                        + ", а ожидалось булево значение: снимок задачи повреждён или записан другой версией мода, "
+                        + "проверьте его");
+            }
+            lackedSaplings = flag;
         }
-        if (!(saved instanceof Number number) || number.intValue() < 0 || number.intValue() > params.count()) {
-            throw new IllegalArgumentException("Состояние chop_tree: '" + CHOPPED_KEY + "' = " + saved
-                    + ", а ожидалось целое число от 0 до count=" + params.count()
+    }
+
+    private static int readCount(Map<String, Object> state, String key, int bound, int previous) {
+        Object saved = state.get(key);
+        if (saved == null) {
+            return previous;
+        }
+        if (!(saved instanceof Number number) || number.intValue() < 0 || number.intValue() > bound) {
+            throw new IllegalArgumentException("Состояние chop_tree: '" + key + "' = " + saved
+                    + ", а ожидалось целое число от 0 до " + bound
                     + ": снимок задачи повреждён или записан другой версией мода, проверьте его");
         }
-        chopped = number.intValue();
+        return number.intValue();
     }
 
     public String summary() {
@@ -166,6 +194,11 @@ public final class ChopTreeScript implements ScriptInstance {
             text.append("; replant: ").append(replantText());
         }
         return text.toString();
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.of(new ScriptResult.Text(summary()));
     }
 
     public long treeBlockReads() {

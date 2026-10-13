@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
@@ -313,6 +314,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public Optional<String> taskFailureReason() {
         return brain == null ? Optional.empty() : brain.failureReason();
+    }
+
+    public Optional<ScriptResult> taskResult() {
+        return brain == null ? Optional.empty() : brain.successResult();
     }
 
     public Optional<String> taskSnapshot() {
