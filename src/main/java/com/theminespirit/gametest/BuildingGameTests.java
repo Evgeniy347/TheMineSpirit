@@ -9,6 +9,10 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritBuildSupplies;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.policy.PolicyConfig;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -41,6 +45,180 @@ public final class BuildingGameTests {
             spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, cobble));
         }
         return spirit;
+    }
+
+    private static ScriptCall fillCall(GameTestHelper helper, BlockPos first, BlockPos second) {
+        BlockPos from = helper.absolutePos(first);
+        BlockPos to = helper.absolutePos(second);
+        return new ScriptCall("fill", Map.of("block", "cobblestone", "x1", from.getX(), "y1", from.getY(), "z1", from.getZ(),
+                "x2", to.getX(), "y2", to.getY(), "z2", to.getZ()));
+    }
+
+    @GameTest(template = "arena", batch = "build_fill", timeoutTicks = 400)
+    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
+        prepare(helper);
+        BlockPos first = new BlockPos(6, 1, 6);
+        BlockPos second = new BlockPos(7, 2, 7);
+        List<BlockPos> cells = new ArrayList<>();
+        for (int x = 6; x <= 7; x++) {
+            for (int y = 1; y <= 2; y++) {
+                for (int z = 6; z <= 7; z++) {
+                    cells.add(new BlockPos(x, y, z));
+                }
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 8);
+        Map<BlockPos, Integer> seenAt = new HashMap<>();
+        helper.onEachTick(() -> {
+            for (BlockPos cell : cells) {
+                if (!seenAt.containsKey(cell) && helper.getBlockState(cell).is(Blocks.COBBLESTONE)) {
+                    seenAt.put(cell, spirit.tickCount);
+                }
+            }
+        });
+        SpiritRun run = SpiritRun.launch(helper, spirit, fillCall(helper, first, second), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "коробка 2×2×2 обязана залиться целиком, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(seenAt.size() == 8,
+                    "все 8 клеток обязаны появиться в мире, замечено " + seenAt.size());
+            List<BlockPos> sequence = new ArrayList<>(seenAt.keySet());
+            sequence.sort((left, right) -> Integer.compare(seenAt.get(left), seenAt.get(right)));
+            for (int i = 1; i < sequence.size(); i++) {
+                helper.assertTrue(sequence.get(i - 1).getY() <= sequence.get(i).getY(),
+                        "порядок постановки обязан идти снизу вверх: клетка " + sequence.get(i - 1) + " позже "
+                                + sequence.get(i) + ", верхний блок без опоры снизу обвалится");
+            }
+            BlockPos feet = spirit.blockPosition();
+            BlockPos boxMin = helper.absolutePos(first);
+            BlockPos boxMax = helper.absolutePos(second);
+            boolean inside = feet.getX() >= boxMin.getX() && feet.getX() <= boxMax.getX()
+                    && feet.getY() >= boxMin.getY() && feet.getY() <= boxMax.getY()
+                    && feet.getZ() >= boxMin.getZ() && feet.getZ() <= boxMax.getZ();
+            helper.assertTrue(!inside,
+                    "дух обязан стоять снаружи залитого: иначе он замуровал себя, клетка духа " + feet);
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "8 блоков обязаны израсходоваться ровно: двойного расхода нет");
+            helper.assertTrue(run.spiritTicks() <= 380,
+                    "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло " + run.spiritTicks());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "build_reserve", timeoutTicks = 400)
+    public static void fill_TwoSpiritsOneBox_EachCellPlacedOnce(GameTestHelper helper) {
+        prepare(helper);
+        BlockPos first = new BlockPos(4, 1, 4);
+        BlockPos second = new BlockPos(5, 1, 5);
+        SpiritEntity firstSpirit = spawnWith(helper, new BlockPos(1, 1, 1), 4);
+        SpiritEntity secondSpirit = spawnWith(helper, new BlockPos(7, 1, 7), 4);
+        SpiritRun firstRun = SpiritRun.launch(helper, firstSpirit, fillCall(helper, first, second), SETTLE_TICKS);
+        SpiritRun secondRun = SpiritRun.launch(helper, secondSpirit, fillCall(helper, first, second), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            firstRun.assertStarted();
+            secondRun.assertStarted();
+            helper.assertTrue(firstSpirit.taskStatus().isPresent() && firstSpirit.taskStatus().orElse(null) != RunStatus.RUNNING
+                    && secondSpirit.taskStatus().isPresent() && secondSpirit.taskStatus().orElse(null) != RunStatus.RUNNING,
+                    "обе задачи обязаны завершиться: первая "
+                            + firstSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", вторая "
+                            + secondSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            int inWorld = 0;
+            for (int x = 4; x <= 5; x++) {
+                for (int z = 4; z <= 5; z++) {
+                    if (helper.getBlockState(new BlockPos(x, 1, z)).is(Blocks.COBBLESTONE)) {
+                        inWorld++;
+                    }
+                }
+            }
+            helper.assertTrue(inWorld == 4,
+                    "все 4 клетки обязаны стоять: каждая поставлена ровно одним духом, в мире " + inWorld);
+            int spent = 8 - GameTestFixtures.countInInventory(firstSpirit.getInventory(), Items.COBBLESTONE)
+                    - GameTestFixtures.countInInventory(secondSpirit.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(spent == 4,
+                    "потрачено обязано быть ровно 4 блока: двойной постановки и двойного расхода нет, потрачено " + spent);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "build_fill_fail", timeoutTicks = 400)
+    public static void fill_NeedEightHaveThree_FailsWithNumbersKeepsThree(GameTestHelper helper) {
+        prepare(helper);
+        BlockPos first = new BlockPos(4, 1, 4);
+        BlockPos second = new BlockPos(5, 2, 5);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 3);
+        SpiritRun run = SpiritRun.launch(helper, spirit, fillCall(helper, first, second), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "нехватка материала обязана провалить задачу, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("8") && reason.contains("3"),
+                    "причина обязана называть числа 8 и 3 (нужно и есть), фактически: " + reason);
+            int inWorld = 0;
+            for (int x = 4; x <= 5; x++) {
+                for (int y = 1; y <= 2; y++) {
+                    for (int z = 4; z <= 5; z++) {
+                        if (helper.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBBLESTONE)) {
+                            inWorld++;
+                        }
+                    }
+                }
+            }
+            helper.assertTrue(inWorld == 3,
+                    "в мире обязано стоять ровно 3 блока: что было, то поставили, дальше честный отказ, стоит " + inWorld);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "build_fill_fail", timeoutTicks = 400)
+    public static void fill_ProtectedBox_FailsNamingPolicyKeepsWorld(GameTestHelper helper) {
+        prepare(helper);
+        BlockPos first = new BlockPos(4, 1, 4);
+        BlockPos second = new BlockPos(5, 2, 5);
+        BlockPos from = helper.absolutePos(first);
+        BlockPos to = helper.absolutePos(second);
+        String dimension = helper.getLevel().dimension().location().toString();
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 8);
+        try {
+            PolicyConfig.setProtectedZones(List.of(dimension + " " + from.getX() + " "
+                    + from.getY() + " " + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
+            SpiritRun run = SpiritRun.launch(helper, spirit, fillCall(helper, first, second), SETTLE_TICKS);
+
+            helper.succeedWhen(() -> {
+                run.assertStarted();
+                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                        "коробка в защищённой зоне обязана провалиться, статус "
+                                + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+                helper.assertTrue(spirit.taskFailureReason().orElse("").contains("защищён"),
+                        "причина обязана называть защищённую зону, фактически: " + spirit.taskFailureReason().orElse("нет"));
+                int inWorld = 0;
+                for (int x = 4; x <= 5; x++) {
+                    for (int y = 1; y <= 2; y++) {
+                        for (int z = 4; z <= 5; z++) {
+                            if (helper.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBBLESTONE)) {
+                                inWorld++;
+                            }
+                        }
+                    }
+                }
+                helper.assertTrue(inWorld == 0,
+                        "мир обязан остаться нетронутым: в зону ни блока, стоит " + inWorld);
+                helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
+                        "материал при отказе по зоне обязан остаться целым");
+                PolicyConfig.setProtectedZones(List.of());
+                GameTestFixtures.reset(helper);
+            });
+        } catch (RuntimeException error) {
+            PolicyConfig.setProtectedZones(List.of());
+            throw error;
+        }
     }
 
     @GameTest(template = "arena", batch = "build_supplies", timeoutTicks = 100)
