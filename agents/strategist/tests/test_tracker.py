@@ -66,6 +66,39 @@ class TrackerTests(unittest.TestCase):
                          "расписание не помнит завершённые задачи: словарь живёт вечно в процессе и иначе растёт "
                          "с каждой задачей")
 
+    def test_poll_TerminalWithTextResult_JournalKeepsResult(self):
+        self.client.view = {"task_id": TASK_ID, "state": "succeeded", "progress": None,
+                            "result": "срублено 1 из 1", "error": None}
+        self.add_task()
+        self.clock.advance(self.config.task_poll)
+        self.assertEqual(1, self.tracker.poll())
+        done = [e for e in self.journal.read().events if e["event"] == "task_done"]
+        self.assertEqual(1, len(done), "завершённая задача обязана попасть в журнал")
+        self.assertEqual("срублено 1 из 1", done[0].get("result"),
+                         "текстовый итог задачи обязан лежать в task_done: иначе стратег видит только state и error")
+
+    def test_poll_TerminalWithObjectResult_JournalKeepsResult(self):
+        payload = {"type": "blocks", "blocks": [{"item": "minecraft:oak_log", "count": 3}]}
+        self.client.view = {"task_id": TASK_ID, "state": "succeeded", "progress": None,
+                            "result": dict(payload), "error": None}
+        self.add_task()
+        self.clock.advance(self.config.task_poll)
+        self.assertEqual(1, self.tracker.poll())
+        done = [e for e in self.journal.read().events if e["event"] == "task_done"]
+        self.assertEqual(1, len(done), "завершённая задача обязана попасть в журнал")
+        self.assertEqual(payload, done[0].get("result"),
+                         "объектный итог восприятия обязан лежать в task_done целиком: стратег парсит его без "
+                         "вложенного json.loads")
+
+    def test_poll_TerminalWithoutResult_JournalHasNoResult(self):
+        self.add_task()
+        self.clock.advance(self.config.task_poll)
+        self.assertEqual(1, self.tracker.poll())
+        done = [e for e in self.journal.read().events if e["event"] == "task_done"]
+        self.assertEqual(1, len(done), "завершённая задача обязана попасть в журнал")
+        self.assertNotIn("result", done[0],
+                         "пустой итог не пишется в журнал: поле появляется только с настоящим значением")
+
 
 if __name__ == "__main__":
     unittest.main()

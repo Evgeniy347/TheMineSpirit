@@ -43,7 +43,8 @@ class Tracker:
             view = rt.client.get(f"/v1/tasks/{task_id}")
         except ApiError as error:
             if error.status == 404:
-                return self._finish(task_id, entry, "lost", "задача не найдена в моде (возможно, сервер перезапускали)", now)
+                return self._finish(task_id, entry, "lost", "задача не найдена в моде (возможно, сервер перезапускали)",
+                                    None, now)
             return self._poll_failed(task_id, entry, str(error), now)
         except NetworkError as error:
             return self._poll_failed(task_id, entry, str(error), now)
@@ -55,7 +56,7 @@ class Tracker:
                    progress=view.get("progress"))
         if state in TERMINAL_STATES:
             error = view.get("error")
-            return self._finish(task_id, entry, state, str(error) if error else None, now)
+            return self._finish(task_id, entry, state, str(error) if error else None, view.get("result"), now)
         if now - entry["posted_at"] >= rt.config.task_timeout:
             return self._time_out(task_id, entry, now)
         return 0
@@ -82,14 +83,15 @@ class Tracker:
             rt.alert(f"задача {task_id} духа {entry['bot']} просрочена, но DELETE не дошёл: {error}", code="delete_failed",
                      bot=entry["bot"])
             return 0
-        return self._finish(task_id, entry, "timeout", f"не завершилась за {int(rt.config.task_timeout)} с, отменена", now)
+        return self._finish(task_id, entry, "timeout", f"не завершилась за {int(rt.config.task_timeout)} с, отменена",
+                             None, now)
 
-    def _finish(self, task_id: str, entry: dict, outcome: str, error: str | None, now: float) -> int:
+    def _finish(self, task_id: str, entry: dict, outcome: str, error: str | None, result, now: float) -> int:
         rt = self.rt
         del rt.state["active"][task_id]
         self._next_poll.pop(task_id, None)
         rt.log("task_done", cycle=entry["cycle"], bot=entry["bot"], task_id=task_id, goal=entry["goal"], outcome=outcome,
-               error=error, fingerprint=entry["fingerprint"], request_id=entry["request_id"],
+               error=error, result=result, fingerprint=entry["fingerprint"], request_id=entry["request_id"],
                seconds=round(now - entry["posted_at"], 1))
         result = rt.guard.record_outcome(now, entry["bot"], entry["fingerprint"], outcome)
         if result.paused:

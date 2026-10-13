@@ -176,6 +176,10 @@ def format_recent(events: list[dict], now: float) -> str:
         if kind == "task_done":
             outcome = OUTCOME_TEXT.get(event.get("outcome"), str(event.get("outcome")))
             tail = f": {_line_text(event['error'])}" if event.get("error") else ""
+            if event.get("result") is not None:
+                shown = event["result"] if isinstance(event["result"], str) else json.dumps(event["result"],
+                                                                                            ensure_ascii=False)
+                tail += f" — итог: {_line_text(shown)}"
             lines.append(f"- {age}: цель «{_line_text(event.get('goal', '?'))}» — {outcome}{tail}")
         elif kind == "rejected":
             lines.append(f"- {age}: план «{_line_text(event.get('goal', '?'))}» отклонён: {_line_text(event.get('reason', '?'))}")

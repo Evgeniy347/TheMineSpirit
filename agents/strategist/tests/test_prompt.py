@@ -172,6 +172,16 @@ class RecentDecisionsTests(unittest.TestCase):
         self.assertIn("инвентарь полон", text)
         self.assertRegex(text, r"\d+ мин назад|\d+ ч назад|\d+ с назад", "возраст решения")
 
+    def test_formatRecent_TaskDoneWithResult_ShowsOutcome(self):
+        events = [
+            self.event(event="task_done", goal="срубить деревья", outcome="succeeded", result="срублено 1 из 1"),
+            self.event(event="task_done", goal="найти брёвна", outcome="succeeded",
+                       result={"type": "blocks", "blocks": [{"item": "minecraft:oak_log", "count": 3}]}),
+        ]
+        text = format_recent(events, self.NOW)
+        self.assertIn("срублено 1 из 1", text)
+        self.assertIn("oak_log", text)
+
 
 class PrompterTests(unittest.TestCase):
     @classmethod
