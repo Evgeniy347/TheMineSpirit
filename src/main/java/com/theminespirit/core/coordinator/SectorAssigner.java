@@ -11,7 +11,7 @@ public final class SectorAssigner {
     private static final long BEARING_BITS = 0x1FFFFFFFFFFFL;
     private static final double UNIT = 0x20000000000L;
 
-    SectorAssigner() {
+    public SectorAssigner() {
     }
 
     public List<DefenseAssignment> assign(Point center, double radius, List<UUID> defenders) {
