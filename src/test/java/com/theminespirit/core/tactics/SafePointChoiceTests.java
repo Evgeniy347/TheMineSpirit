@@ -7,66 +7,68 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class SafePointChoiceTests {
-    private final Point self = new Point(0, 64, 0);
+    private static final Point SELF = new Point(0, 64, 0);
+    private static final Point HOME = new Point(10, 64, 0);
+    private static final Point CAMP = new Point(5, 64, 0);
 
     @Test
-    void nearest_OnlyHome_ReturnsHome() {
-        Point home = new Point(10, 64, 0);
+    void nearest_OnlyHomePresent_ReturnsHome() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.of(HOME), Optional.empty());
 
-        assertEquals(Optional.of(home), SafePointChoice.nearest(self, Optional.of(home), Optional.empty()),
-                "Единственный дом обязан выбираться: иначе дух с домом останется без точки отхода");
+        assertEquals(Optional.of(HOME), choice,
+                "Без лагеря отход обязан идти домой: единственный известный безопасный адрес — дом семьи");
     }
 
     @Test
-    void nearest_OnlyCamp_ReturnsCamp() {
-        Point camp = new Point(5, 64, 0);
+    void nearest_OnlyCampPresent_ReturnsCamp() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.empty(), Optional.of(CAMP));
 
-        assertEquals(Optional.of(camp), SafePointChoice.nearest(self, Optional.empty(), Optional.of(camp)),
-                "Единственный лагерь обязан выбираться: иначе поход без дома останется без точки отхода");
+        assertEquals(Optional.of(CAMP), choice,
+                "Без дома отход обязан идти в лагерь: единственный известный безопасный адрес — лагерь похода");
     }
 
     @Test
-    void nearest_BothPresent_ReturnsNearer() {
-        Point home = new Point(30, 64, 0);
-        Point camp = new Point(6, 64, 0);
+    void nearest_BothPointsPresent_ReturnsCloserCamp() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.of(HOME), Optional.of(CAMP));
 
-        assertEquals(Optional.of(camp), SafePointChoice.nearest(self, Optional.of(home), Optional.of(camp)),
-                "Из дома и лагеря выбирается ближний: иначе отход идёт мимо ближней точки к дальней");
-
-        assertEquals(Optional.of(camp),
-                SafePointChoice.nearest(self, Optional.of(camp), Optional.of(home)),
-                "Порядок аргументов обязан не влиять: иначе выбор зависит от того, что подали первым");
+        assertEquals(Optional.of(CAMP), choice,
+                "С двумя точками отход обязан идти к ближайшей: дальний адрес растянет путь и дольше держит "
+                        + "духа под угрозой");
     }
 
     @Test
-    void nearest_Tie_ReturnsHome() {
-        Point home = new Point(10, 64, 0);
-        Point camp = new Point(-10, 64, 0);
+    void nearest_DistanceTie_ReturnsHome() {
+        Point campAway = new Point(-10, 64, 0);
 
-        assertEquals(Optional.of(home), SafePointChoice.nearest(self, Optional.of(home), Optional.of(camp)),
-                "При ничьей выбирается дом: устойчивый тай-брейк, иначе отход прыгает между точками");
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.of(HOME), Optional.of(campAway));
+
+        assertEquals(Optional.of(HOME), choice,
+                "При равных расстояниях обязана побеждать штатная точка home: тай-брейк должен быть устойчивым, "
+                        + "иначе выбор прыгал бы между точками от прогона к прогону");
     }
 
     @Test
-    void nearest_BothEmpty_GivesEmpty() {
-        assertEquals(Optional.empty(), SafePointChoice.nearest(self, Optional.empty(), Optional.empty()),
-                "Без дома и лагеря точки нет: адаптер отдаёт «точки отхода нет», а не выдуманную точку");
+    void nearest_NoPointsPresent_ReturnsEmpty() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.empty(), Optional.empty());
+
+        assertEquals(Optional.empty(), choice,
+                "Без дома и лагеря выбора нет: обязан вернуться пусто, чтобы отход упал с явной ошибкой, "
+                        + "а не пошёл в случайную точку мира");
     }
 
     @Test
-    void nearest_NullSelf_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> SafePointChoice.nearest(null, Optional.of(new Point(1, 64, 0)), Optional.empty()),
-                "Выбор без духа обязан отвергаться: ближе не от чего мерять");
+    void nearest_NullSelf_IsRejected() {
+        assertThrows(NullPointerException.class,
+                () -> SafePointChoice.nearest(null, Optional.of(HOME), Optional.empty()),
+                "Self-точка обязана быть задана: без позиции духа расстояние не посчитать, "
+                        + "а молчаливая подмена привела бы к выбору не той точки");
     }
 
     @Test
-    void nearest_NullContainers_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> SafePointChoice.nearest(self, null, Optional.empty()),
-                "Null вместо контейнера дома обязан отвергаться: иначе баги прячутся за молчанием");
-        assertThrows(IllegalArgumentException.class,
-                () -> SafePointChoice.nearest(self, Optional.empty(), null),
-                "Null вместо контейнера лагеря обязан отвергаться: иначе баги прячутся за молчанием");
+    void nearest_NullHome_IsRejected() {
+        assertThrows(NullPointerException.class,
+                () -> SafePointChoice.nearest(SELF, null, Optional.of(CAMP)),
+                "Отсутствие дома обязано приходить как Optional.empty(), а не null: null скрыл бы ошибку "
+                        + "сборщика данных и увёл бы отход не туда");
     }
 }
