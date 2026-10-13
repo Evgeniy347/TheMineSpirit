@@ -294,7 +294,8 @@ public final class MineGameTests {
         });
     }
 
-    // [флак] сценарий в ~600 тиков духа, подбор дропа зависит от случайного разлёта предметов; запас под нагрузкой
+    // [флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
+    // потолок 1000 ≈ 1.7× замера
     @GameTest(template = "arena", batch = "gather_dirt_heap", timeoutTicks = 1000)
     public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -374,8 +375,7 @@ public final class MineGameTests {
         });
     }
 
-    // [флак] дух добывает блоки и подбирает дроп, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "empty", batch = "gather_logs", timeoutTicks = 600)
+    @GameTest(template = "empty", batch = "gather_logs", timeoutTicks = 200)
     public static void gather_WildcardLogFilter_CollectsAllMatchingLogs(GameTestHelper helper) {
         buildCave(helper);
         helper.setBlock(1, 1, 1, Blocks.OAK_LOG);
