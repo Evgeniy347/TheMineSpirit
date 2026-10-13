@@ -4,6 +4,7 @@ import com.theminespirit.core.movement.GotoTuning;
 import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.movement.StuckWatcher;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
 public final class Approach {
@@ -66,6 +67,12 @@ public final class Approach {
         if (pathRefresh.shouldRefresh(target.x, target.y, target.z, spirit.getNavigation().isDone())) {
             moveToTarget(target);
             spirit.countPathBuild();
+            String noRoute = staticTargetRefusal(target);
+            if (noRoute != null) {
+                refusal = noRoute;
+                finish();
+                return State.STUCK;
+            }
             if (mode == PathMode.CAREFUL && spirit.onGround()) {
                 refusal = CarefulPath.refusal(spirit.getNavigation().getPath());
                 if (refusal != null) {
@@ -118,6 +125,25 @@ public final class Approach {
 
     private Vec3 currentTarget() {
         return targetEntity == null ? targetPoint : targetEntity.position();
+    }
+
+    private String staticTargetRefusal(Vec3 target) {
+        if (targetEntity != null) {
+            return null;
+        }
+        if (spirit.position().distanceTo(target) > GotoTuning.EARLY_REFUSAL_RANGE) {
+            return null;
+        }
+        Path path = spirit.getNavigation().getPath();
+        if (path == null) {
+            return "навигация не построила путь к цели в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
+                    + " блоков: стоянка отрезана преградой";
+        }
+        if (!path.canReach()) {
+            return "путь не доходит до цели в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
+                    + " блоков: стоянка за преградой";
+        }
+        return null;
     }
 
     private void moveToTarget(Vec3 target) {

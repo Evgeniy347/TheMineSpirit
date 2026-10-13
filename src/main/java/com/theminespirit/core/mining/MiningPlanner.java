@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public final class MiningPlanner {
     public static final int MAX_VIEW_READS_PER_TARGET = MiningSafety.FACE_READS + StandSpots.MAX_VIEW_READS;
@@ -15,9 +16,15 @@ public final class MiningPlanner {
     }
 
     public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view) {
+        return next(from, remaining, view, Set.of());
+    }
+
+    public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view,
+            Set<BlockCoord> excluded) {
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая цель");
         Objects.requireNonNull(remaining, "Список целей не может быть null: пустой набор задают пустым списком");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется безопасность цели");
+        Objects.requireNonNull(excluded, "Множество исключённых стоянок не может быть null: без него непонятно, что пропускать");
         List<BlockCoord> ordered = new ArrayList<>(remaining);
         ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
                 .thenComparing(Comparator.naturalOrder()));
@@ -25,6 +32,7 @@ public final class MiningPlanner {
         long bestStandSquared = Long.MAX_VALUE;
         int unsafe = 0;
         int noStand = 0;
+        int unreachable = 0;
         for (BlockCoord target : ordered) {
             if (best != null && cannotBeat(from, target, bestStandSquared)) {
                 break;
@@ -38,13 +46,19 @@ public final class MiningPlanner {
                 noStand++;
                 continue;
             }
-            Next candidate = new Next(target, stands.get(0));
+            List<BlockCoord> open = new ArrayList<>(stands);
+            open.removeIf(excluded::contains);
+            if (open.isEmpty()) {
+                unreachable++;
+                continue;
+            }
+            Next candidate = new Next(target, open.get(0));
             if (best == null || closer(candidate, best, from)) {
                 best = candidate;
                 bestStandSquared = distanceSquared(from, candidate.stand());
             }
         }
-        return best == null ? new Exhausted(unsafe, noStand) : best;
+        return best == null ? new Exhausted(unsafe, noStand, unreachable) : best;
     }
 
     private static boolean cannotBeat(BlockCoord from, BlockCoord target, long bestStandSquared) {
@@ -86,11 +100,11 @@ public final class MiningPlanner {
         }
     }
 
-    public record Exhausted(int unsafe, int noStand) implements Outcome {
+    public record Exhausted(int unsafe, int noStand, int unreachable) implements Outcome {
         public Exhausted {
-            if (unsafe < 0 || noStand < 0) {
+            if (unsafe < 0 || noStand < 0 || unreachable < 0) {
                 throw new IllegalArgumentException("Счётчики пропущенных целей не могут быть отрицательными: unsafe="
-                        + unsafe + ", noStand=" + noStand);
+                        + unsafe + ", noStand=" + noStand + ", unreachable=" + unreachable);
             }
         }
     }

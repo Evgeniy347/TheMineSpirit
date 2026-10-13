@@ -5,6 +5,7 @@ public final class GotoTuning {
     public static final int RESERVE_TICKS = 200;
     public static final int STUCK_TICKS = 40;
     public static final double STUCK_MIN_MOVEMENT = 0.05;
+    public static final int EARLY_REFUSAL_RANGE = 8;
 
     private GotoTuning() {
     }

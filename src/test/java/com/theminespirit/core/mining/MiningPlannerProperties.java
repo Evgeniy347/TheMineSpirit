@@ -7,8 +7,10 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
@@ -48,6 +50,28 @@ class MiningPlannerProperties {
         assertEquals(ordered, reordered,
                 "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
                         + "добыча непредсказуемо выбирает разные блоки");
+    }
+
+    @Property
+    void next_ExcludedFirstStands_NeverReturnsExcludedStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+        Random random = new Random(seed);
+        CellWorld world = randomWorld(random);
+        List<BlockCoord> remaining = randomTargets(random);
+        Set<BlockCoord> excluded = new HashSet<>();
+        for (BlockCoord target : remaining) {
+            List<BlockCoord> stands = StandSpots.of(target, world, FROM);
+            if (!stands.isEmpty()) {
+                excluded.add(stands.get(0));
+            }
+        }
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, remaining, world, excluded);
+
+        if (outcome instanceof MiningPlanner.Next next) {
+            assertTrue(!excluded.contains(next.stand()),
+                    "Возвращённая стоянка обязана быть вне исключённых: иначе исключение глухих стоянок "
+                            + "не работает и дух идёт в стену");
+        }
     }
 
     @Property
@@ -118,7 +142,7 @@ class MiningPlannerProperties {
                 best = candidate;
             }
         }
-        return best == null ? new MiningPlanner.Exhausted(unsafe, noStand) : best;
+        return best == null ? new MiningPlanner.Exhausted(unsafe, noStand, 0) : best;
     }
 
     private static boolean closer(MiningPlanner.Next candidate, MiningPlanner.Next current, BlockCoord from) {

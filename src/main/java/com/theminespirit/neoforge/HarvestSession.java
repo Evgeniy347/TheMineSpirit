@@ -4,12 +4,15 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,11 +58,15 @@ public final class HarvestSession {
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
     private BlockCoord currentTarget;
+    private BlockCoord currentStand;
+    private final Map<BlockCoord, Integer> standFailures = new HashMap<>();
+    private final Set<BlockCoord> excludedStands = new HashSet<>();
     private DropCollector collector;
 
     private int mined;
     private int unsafe;
     private int noStand;
+    private int unreachable;
     private int noTool;
     private int protectedSkipped;
     private int planCalls;
@@ -129,6 +136,7 @@ public final class HarvestSession {
             breaker.cancel();
             buffer.offer(List.of(currentTarget));
             currentTarget = null;
+            currentStand = null;
             state = State.PICK;
         }
         if (collector != null) {
@@ -233,10 +241,11 @@ public final class HarvestSession {
         planCalls++;
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety);
+        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety, excludedStands);
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
+            unreachable += exhausted.unreachable();
             buffer.clearActive();
             state = State.FIND;
             return;
@@ -258,6 +267,7 @@ public final class HarvestSession {
         }
         buffer.remove(next.target());
         currentTarget = next.target();
+        currentStand = next.stand();
         approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
                 APPROACH_ARRIVAL);
         state = State.APPROACH;
@@ -269,10 +279,20 @@ public final class HarvestSession {
             }
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
-                noStand++;
+                recordStandFailure();
+                buffer.offer(List.of(currentTarget));
                 currentTarget = null;
+                currentStand = null;
                 state = State.PICK;
             }
+        }
+    }
+
+    private void recordStandFailure() {
+        int failures = standFailures.getOrDefault(currentStand, 0) + 1;
+        standFailures.put(currentStand, failures);
+        if (failures >= MiningTuning.MAX_STAND_APPROACH_FAILURES) {
+            excludedStands.add(currentStand);
         }
     }
 
@@ -280,6 +300,7 @@ public final class HarvestSession {
         if (!(MiningSafety.canBreak(currentTarget, safety) instanceof BreakSafety.Safe)) {
             unsafe++;
             currentTarget = null;
+            currentStand = null;
             state = State.PICK;
             return;
         }
@@ -287,12 +308,14 @@ public final class HarvestSession {
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
             currentTarget = null;
+            currentStand = null;
             state = State.PICK;
             return;
         }
         if (!(begin instanceof BlockBreaker.Started)) {
             noStand++;
             currentTarget = null;
+            currentStand = null;
             state = State.PICK;
             return;
         }
@@ -312,6 +335,7 @@ public final class HarvestSession {
             }
             case GONE -> {
                 currentTarget = null;
+                currentStand = null;
                 state = State.PICK;
             }
         }
@@ -330,6 +354,7 @@ public final class HarvestSession {
         }
         collector = null;
         currentTarget = null;
+        currentStand = null;
         if (mined >= count) {
             outcome = Outcome.SUCCEEDED;
         } else {
@@ -349,11 +374,15 @@ public final class HarvestSession {
     }
 
     private String summary() {
-        return "добыто " + mined + " из " + count
+        String counts = "добыто " + mined + " из " + count
                 + "; пропущено небезопасных: " + unsafe
                 + ", без места для духа: " + noStand
                 + ", без подходящего инструмента: " + noTool
                 + ", пропущено защищённых: " + protectedSkipped;
+        if (unreachable > 0) {
+            counts += "; недостижимо: " + unreachable;
+        }
+        return counts;
     }
 
     private String tierReason(BlockState state) {

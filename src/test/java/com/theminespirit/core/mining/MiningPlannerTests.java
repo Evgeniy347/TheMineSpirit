@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class MiningPlannerTests {
@@ -43,7 +44,7 @@ class MiningPlannerTests {
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM,
                 List.of(new BlockCoord(0, 0, 0), new BlockCoord(10, 0, 0)), world);
 
-        assertEquals(new MiningPlanner.Exhausted(2, 0), outcome,
+        assertEquals(new MiningPlanner.Exhausted(2, 0, 0), outcome,
                 "Все цели с жидкостью обязаны считаться в unsafe: по числу видно, почему добыча не началась");
     }
 
@@ -56,7 +57,7 @@ class MiningPlannerTests {
 
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 0, 0)), world);
 
-        assertEquals(new MiningPlanner.Exhausted(0, 1), outcome,
+        assertEquals(new MiningPlanner.Exhausted(0, 1, 0), outcome,
                 "Замурованная цель обязана считаться в noStand: без числа непонятно, что дух не нашёл подход");
     }
 
@@ -101,7 +102,7 @@ class MiningPlannerTests {
     void next_EmptyRemaining_ReturnsExhaustedZero() {
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(), new CellWorld());
 
-        assertEquals(new MiningPlanner.Exhausted(0, 0), outcome,
+        assertEquals(new MiningPlanner.Exhausted(0, 0, 0), outcome,
                 "Пустой список целей — Exhausted с нулями: вызывающий отличает конец списка от пропусков");
     }
 
@@ -144,5 +145,50 @@ class MiningPlannerTests {
         assertTrue(outcome instanceof MiningPlanner.Next next
                         && MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
                 "Возвращённая цель обязана быть безопасной для ломки: иначе дух бьёт блок с лавой за гранью");
+    }
+
+    @Test
+    void next_ExcludedStand_PicksNextOpenStand() {
+        CellWorld world = new CellWorld()
+                .set(1, -1, 0, Cell.SOLID)
+                .set(-1, -1, 0, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 0, 0)), world,
+                Set.of(new BlockCoord(-1, 0, 0)));
+
+        assertEquals(new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)), outcome,
+                "Исключённая стоянка обязана пропускаться: дух встаёт на следующую открытую, "
+                        + "а не идёт в глухое место");
+    }
+
+    @Test
+    void next_AllStandsExcluded_ReturnsExhaustedWithUnreachableCount() {
+        CellWorld world = new CellWorld()
+                .set(1, -1, 0, Cell.SOLID)
+                .set(-1, -1, 0, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 0, 0)), world,
+                Set.of(new BlockCoord(-1, 0, 0), new BlockCoord(1, 0, 0)));
+
+        assertEquals(new MiningPlanner.Exhausted(0, 0, 1), outcome,
+                "Цель, чьи стоянки нашлись, но все исключены, обязана считаться недостижимой, а не без места: "
+                        + "иначе в итоге нельзя отличить глухую цель от замурованной");
+    }
+
+    @Test
+    void next_ExcludedAndWalledTargets_CountsSeparately() {
+        CellWorld world = new CellWorld()
+                .set(1, -1, 0, Cell.SOLID).set(-1, -1, 0, Cell.SOLID)
+                .set(10, 1, 0, Cell.SOLID).set(10, -1, 0, Cell.SOLID)
+                .set(11, 0, 0, Cell.SOLID).set(9, 0, 0, Cell.SOLID)
+                .set(10, 0, 1, Cell.SOLID).set(10, 0, -1, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM,
+                List.of(new BlockCoord(0, 0, 0), new BlockCoord(10, 0, 0)), world,
+                Set.of(new BlockCoord(-1, 0, 0), new BlockCoord(1, 0, 0)));
+
+        assertEquals(new MiningPlanner.Exhausted(0, 1, 1), outcome,
+                "Замурованная цель идёт в счётчик без места, цель с исключёнными стоянками — в недостижимые: "
+                        + "смешивание счётчиков врёт в причине отказа");
     }
 }
