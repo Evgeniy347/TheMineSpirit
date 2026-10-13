@@ -372,8 +372,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_by_hand", timeoutTicks = 600)
+    @GameTest(template = FIELD, batch = "chop_tree_by_hand", timeoutTicks = 300)
     public static void chopTree_WithoutAxeTwoLogs_SucceedsByHand(GameTestHelper helper) {
         prepareField(helper);
         // Крона на высоте 3, а не 2: листья вплотную к земле закрывают духу ростом 1.4 вход в клетку ствола,
@@ -428,8 +427,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 500)
+    @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 260)
     public static void chopTree_LogPostsWithPlankWallsUnderCrown_UntouchedAndRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
         buildPlankHutOnLedge(helper, 3, 3);
@@ -460,8 +458,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_cobblestone_wall", timeoutTicks = 500)
+    @GameTest(template = FIELD, batch = "chop_tree_cobblestone_wall", timeoutTicks = 200)
     public static void chopTree_LogPostByCobblestoneWallUnderForeignCrown_NotChoppedRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 6, 4, 5);
@@ -497,8 +494,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 500)
+    @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 200)
     public static void chopTree_LogBuildingOfManyLogs_TreeBehindItIsChopped(GameTestHelper helper) {
         prepareField(helper);
         for (int x = 3; x <= 9; x++) {
@@ -531,8 +527,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 600)
+    @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 200)
     public static void chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog(GameTestHelper helper) {
         prepareField(helper);
         buildTree(helper, 4, 4, TALL_TREE_LOGS, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
@@ -610,8 +605,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 900)
+    @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 400)
     public static void chopTree_ReloadedAfterFirstTree_ChopsExactlyThreeTrees(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 3, 3, 5);
@@ -711,8 +705,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_replant_dark_oak", timeoutTicks = 900)
+    @GameTest(template = FIELD, batch = "chop_tree_replant_dark_oak", timeoutTicks = 400)
     public static void chopTree_ReplantDarkOakWithFourSaplings_PlantsAllFourCells(GameTestHelper helper) {
         prepareField(helper);
         buildDarkOakTree(helper, 4, 4, 4);
@@ -740,8 +733,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_replant_short", timeoutTicks = 900)
+    @GameTest(template = FIELD, batch = "chop_tree_replant_short", timeoutTicks = 400)
     public static void chopTree_ReplantDarkOakWithThreeSaplings_PlantsNothing(GameTestHelper helper) {
         prepareField(helper);
         buildDarkOakTree(helper, 4, 4, 4);
@@ -765,8 +757,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 500)
+    @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 170)
     public static void chopTree_SecondOakVanishesDuringFirst_FailsWithTreesRanOut(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 3, 3, 5);
@@ -800,8 +791,9 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] дух рубит дерево и ждёт падение или посадку, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 1000)
+    // [флак] замер 372 тика: ветка за стеной, дух перебирает стоянки и считает оставленные брёвна;
+    // потолок 750 ≈ 2× замера
+    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 750)
     public static void chopTree_BranchBehindWall_LeftLogsAreCountedInSummary(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
