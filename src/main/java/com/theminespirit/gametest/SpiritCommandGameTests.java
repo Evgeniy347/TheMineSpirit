@@ -118,7 +118,7 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "cmd_commandGoal", template = "arena", timeoutTicks = 100)
     public static void commandGoal_OnTwoSpirits_AppliesToAllOrNone(GameTestHelper helper)
             throws CommandSyntaxException {
         buildFloor(helper);

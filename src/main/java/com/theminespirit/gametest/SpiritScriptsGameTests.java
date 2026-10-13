@@ -20,7 +20,7 @@ public final class SpiritScriptsGameTests {
     private SpiritScriptsGameTests() {
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
     public static void catalog_Static_ListsExactlyRegistryScriptsInDefaultCatalogOrder(GameTestHelper helper) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
 

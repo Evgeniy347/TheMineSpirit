@@ -54,7 +54,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_Radius32_ReadsWithinPerTickBudget(GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
@@ -75,7 +75,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -105,7 +105,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void index_ThirtySpirits_SnapshotReadsExactlyThirtyEntries(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
         SpiritIndex index = new SpiritIndex(minecraft);
