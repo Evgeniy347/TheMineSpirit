@@ -60,6 +60,7 @@ public final class HarvestSession {
     private BlockCoord currentTarget;
     private BlockCoord currentStand;
     private final Map<BlockCoord, Integer> standFailures = new HashMap<>();
+    private final Map<BlockCoord, Integer> targetFailures = new HashMap<>();
     private final Set<BlockCoord> excludedStands = new HashSet<>();
     private DropCollector collector;
 
@@ -280,7 +281,13 @@ public final class HarvestSession {
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
                 recordStandFailure();
-                buffer.offer(List.of(currentTarget));
+                int targetFails = targetFailures.getOrDefault(currentTarget, 0) + 1;
+                if (targetFails >= MiningTuning.MAX_APPROACH_FAILURES) {
+                    unreachable++;
+                } else {
+                    targetFailures.put(currentTarget, targetFails);
+                    buffer.offer(List.of(currentTarget));
+                }
                 currentTarget = null;
                 currentStand = null;
                 state = State.PICK;
@@ -291,7 +298,7 @@ public final class HarvestSession {
     private void recordStandFailure() {
         int failures = standFailures.getOrDefault(currentStand, 0) + 1;
         standFailures.put(currentStand, failures);
-        if (failures >= MiningTuning.MAX_STAND_APPROACH_FAILURES) {
+        if (failures >= MiningTuning.MAX_APPROACH_FAILURES) {
             excludedStands.add(currentStand);
         }
     }
