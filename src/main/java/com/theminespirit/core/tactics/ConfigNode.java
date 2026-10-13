@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
-final class ConfigNode {
+public final class ConfigNode {
     private static final ObjectMapper MAPPER = new ObjectMapper(
             JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
 
@@ -29,7 +29,7 @@ final class ConfigNode {
         this.node = node;
     }
 
-    static ConfigNode root(String file, String json) {
+    public static ConfigNode root(String file, String json) {
         try {
             return new ConfigNode(file, "", MAPPER.readTree(json));
         } catch (JsonProcessingException e) {
@@ -38,20 +38,20 @@ final class ConfigNode {
         }
     }
 
-    IllegalStateException fail(String problem, String hint) {
+    public IllegalStateException fail(String problem, String hint) {
         String where = path.isEmpty() ? "(корень)" : path;
         return new IllegalStateException(file + " → " + where + ": " + problem + ". Проверьте: " + hint);
     }
 
-    String path() {
+    public String path() {
         return path;
     }
 
-    String file() {
+    public String file() {
         return file;
     }
 
-    ConfigNode fields(String[] required, String... optional) {
+    public ConfigNode fields(String[] required, String... optional) {
         if (!node.isObject()) {
             throw fail("ожидался объект, получено " + describe(), "в этом месте файла должен стоять объект { ... }");
         }
@@ -72,18 +72,18 @@ final class ConfigNode {
         return this;
     }
 
-    boolean has(String name) {
+    public boolean has(String name) {
         return node.has(name);
     }
 
-    ConfigNode get(String name) {
+    public ConfigNode get(String name) {
         if (!node.has(name)) {
             throw child(name).fail("нет поля '" + name + "'", "добавьте поле");
         }
         return child(name);
     }
 
-    Map<String, ConfigNode> entries() {
+    public Map<String, ConfigNode> entries() {
         if (!node.isObject()) {
             throw fail("ожидался объект, получено " + describe(), "в этом месте файла должен стоять объект { ... }");
         }
@@ -95,7 +95,7 @@ final class ConfigNode {
         return result;
     }
 
-    List<ConfigNode> items() {
+    public List<ConfigNode> items() {
         if (!node.isArray()) {
             throw fail("ожидался массив, получено " + describe(), "в этом месте файла должен стоять массив [ ... ]");
         }
@@ -106,7 +106,7 @@ final class ConfigNode {
         return result;
     }
 
-    List<ConfigNode> nonEmptyItems() {
+    public List<ConfigNode> nonEmptyItems() {
         List<ConfigNode> items = items();
         if (items.isEmpty()) {
             throw fail("пустая таблица", "таблица не может быть пустой: без строк решение не определено");
@@ -114,21 +114,21 @@ final class ConfigNode {
         return items;
     }
 
-    String text() {
+    public String text() {
         if (!node.isTextual()) {
             throw fail("ожидалась строка, получено " + describe(), "значение берётся в кавычки");
         }
         return node.asText();
     }
 
-    boolean bool() {
+    public boolean bool() {
         if (!node.isBoolean()) {
             throw fail("ожидалось true или false, получено " + describe(), "булево значение пишется без кавычек");
         }
         return node.asBoolean();
     }
 
-    double number(double min, double max) {
+    public double number(double min, double max) {
         double value = number();
         if (value < min || value > max) {
             throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
@@ -137,21 +137,21 @@ final class ConfigNode {
         return value;
     }
 
-    double number() {
+    public double number() {
         if (!node.isNumber()) {
             throw fail("ожидалось число, получено " + describe(), "число пишется без кавычек");
         }
         return node.asDouble();
     }
 
-    int integer() {
+    public int integer() {
         if (!node.isIntegralNumber() || !node.canConvertToInt()) {
             throw fail("ожидалось целое число, получено " + describe(), "приоритеты и тики — целые числа без дробной части");
         }
         return node.asInt();
     }
 
-    int integer(int min, int max) {
+    public int integer(int min, int max) {
         int value = integer();
         if (value < min || value > max) {
             throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
@@ -160,11 +160,11 @@ final class ConfigNode {
         return value;
     }
 
-    <T> T build(Supplier<T> constructor) {
+    public <T> T build(Supplier<T> constructor) {
         return build("", constructor);
     }
 
-    <T> T build(String fieldPrefix, Supplier<T> constructor) {
+    public <T> T build(String fieldPrefix, Supplier<T> constructor) {
         try {
             return constructor.get();
         } catch (InvalidFieldException e) {
@@ -182,7 +182,7 @@ final class ConfigNode {
         }
     }
 
-    <E extends Enum<E>> E enumValue(Class<E> type) {
+    public <E extends Enum<E>> E enumValue(Class<E> type) {
         String text = text();
         for (E constant : type.getEnumConstants()) {
             if (constant.name().equalsIgnoreCase(text)) {
@@ -193,7 +193,7 @@ final class ConfigNode {
                 "допустимы " + Arrays.toString(type.getEnumConstants()) + ", опечатка в имени");
     }
 
-    <E extends Enum<E>> E enumValueOf(Class<E> type, String name, String label) {
+    public <E extends Enum<E>> E enumValueOf(Class<E> type, String name, String label) {
         for (E constant : type.getEnumConstants()) {
             if (constant.name().equalsIgnoreCase(name)) {
                 return constant;
