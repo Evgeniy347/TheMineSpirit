@@ -109,6 +109,30 @@ public final class AcquireGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = IRON_TICKS_LIMIT)
+    public static void acquireIronIngot_DeepslateNearby_GathersIronOre(GameTestHelper helper) {
+        field(helper);
+        placeIronOreRow(helper);
+        for (int x = 0; x < IRON_ORE_COUNT; x++) {
+            helper.setBlock(3 + x, 1, 6, Blocks.DEEPSLATE_IRON_ORE);
+        }
+        helper.setBlock(5, 1, 5, Blocks.FURNACE);
+        SpiritEntity spirit = prepare(helper, stack(Items.STONE_PICKAXE, 1), stack(Items.COAL, 2));
+        TaskNode plan = PlanParser.parse("""
+                {"type":"script","script":"acquire","params":{"item":"iron_ingot","count":1}}
+                """, SpiritScripts.catalog());
+        SpiritRun run = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.IRON_INGOT, 1, "железный слиток");
+            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.DEEPSLATE_IRON_ORE) == IRON_ORE_COUNT,
+                    "deepslate_iron_ore обязан остаться нетронутым: осталось "
+                            + FullCycleScene.countBlocks(helper, Blocks.DEEPSLATE_IRON_ORE));
+            cleanup(helper, spirit);
+        });
+    }
+
     @GameTest(template = "arena", batch = "acquire_have", timeoutTicks = 100)
     public static void acquireWoodenPickaxe_AlreadyInInventory_SucceedsWithoutWorld(GameTestHelper helper) {
         field(helper);

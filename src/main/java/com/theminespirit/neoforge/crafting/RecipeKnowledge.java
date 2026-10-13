@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -157,12 +158,20 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private String pickRepresentative(List<String> alternatives) {
-        for (String alternative : alternatives) {
-            if (canObtain(alternative, new HashSet<>())) {
-                return alternative;
-            }
+        // Сырьё предпочтительнее прямой руды: raw_iron добывается из любой железной
+        // руды (iron_ore и deepslate_iron_ore — оба в DropTable), а deepslate_iron_ore
+        // — частный блок, которого в мире может не быть: плавка через него план
+        // строит добычу конкретного блока вместо универсального сырья.
+        Optional<String> raw = pickObtainable(alternatives.stream().filter(alternative -> ownBlock(alternative).isEmpty()));
+        if (raw.isPresent()) {
+            return raw.get();
         }
-        return alternatives.stream().sorted().findFirst().orElseThrow();
+        return pickObtainable(alternatives.stream())
+                .orElseGet(() -> alternatives.stream().sorted().findFirst().orElseThrow());
+    }
+
+    private Optional<String> pickObtainable(Stream<String> candidates) {
+        return candidates.filter(alternative -> canObtain(alternative, new HashSet<>())).findFirst();
     }
 
     private boolean canObtain(String item, Set<String> path) {
