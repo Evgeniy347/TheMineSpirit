@@ -120,4 +120,8 @@ abstract class NodeExecutor {
     PolicyExemptions exemptions() {
         return PolicyExemptions.empty();
     }
+
+    Optional<ScriptResult> result() {
+        return Optional.empty();
+    }
 }

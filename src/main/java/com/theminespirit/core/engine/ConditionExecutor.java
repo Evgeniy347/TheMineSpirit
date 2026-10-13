@@ -49,6 +49,9 @@ final class ConditionExecutor extends SingleChildExecutor {
             failFrom(current());
             return ScriptStatus.FAILED;
         }
+        if (child == ScriptStatus.SUCCEEDED) {
+            rememberCompleted();
+        }
         return child;
     }
 

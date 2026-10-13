@@ -8,6 +8,7 @@ abstract class SingleChildExecutor extends NodeExecutor {
     private final ScriptRegistry scripts;
     private final ConditionRegistry conditions;
     private NodeExecutor current;
+    private Optional<ScriptResult> completedResult = Optional.empty();
 
     SingleChildExecutor(ScriptRegistry scripts, ConditionRegistry conditions) {
         this.scripts = scripts;
@@ -60,5 +61,16 @@ abstract class SingleChildExecutor extends NodeExecutor {
     @Override
     final PolicyExemptions exemptions() {
         return current == null ? PolicyExemptions.empty() : current.exemptions();
+    }
+
+    final void rememberCompleted() {
+        if (current != null) {
+            completedResult = current.result();
+        }
+    }
+
+    @Override
+    Optional<ScriptResult> result() {
+        return current != null ? current.result() : completedResult;
     }
 }

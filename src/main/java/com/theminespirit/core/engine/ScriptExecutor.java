@@ -11,6 +11,7 @@ final class ScriptExecutor extends NodeExecutor {
     private final ScriptRegistry registry;
     private ScriptInstance instance;
     private boolean failed;
+    private Optional<ScriptResult> collectedResult = Optional.empty();
 
     ScriptExecutor(ScriptCall call, ScriptRegistry registry) {
         this.scriptId = call.script();
@@ -27,6 +28,7 @@ final class ScriptExecutor extends NodeExecutor {
             ScriptInstance live = instance;
             ScriptStatus result = live.tick();
             if (result != ScriptStatus.RUNNING) {
+                collectedResult = live.result();
                 instance = null;
             }
             if (result == ScriptStatus.FAILED) {
@@ -108,6 +110,11 @@ final class ScriptExecutor extends NodeExecutor {
     @Override
     PolicyExemptions exemptions() {
         return instance == null ? PolicyExemptions.empty() : instance.policyExemptions();
+    }
+
+    @Override
+    Optional<ScriptResult> result() {
+        return collectedResult;
     }
 
     @Override

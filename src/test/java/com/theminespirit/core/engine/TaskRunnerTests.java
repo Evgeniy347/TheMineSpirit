@@ -562,6 +562,45 @@ class TaskRunnerTests {
                 "фабрика, проверившая параметры, возвращает мгновенно успешный экземпляр");
     }
 
+    @Test
+    void successResult_TerminatedWithResultScript_ReportsTextResult() {
+        ScriptResult expected = new ScriptResult.Text("срублено 1 из 1");
+        TaskRunner runner = TaskRunner.start(sequence(script(SCRIPT)),
+                ScriptRegistry.of(Map.of(SCRIPT, TestScripts.resulting(1, expected))),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.SUCCEEDED, runner.tick(), "скрипт с итогом завершается успехом за один тик");
+        assertTrue(runner.successResult().isPresent(),
+                "успех со скриптом-итогом обязан нести итог: без него стратег не узнает, что именно сделано");
+        assertEquals(expected, runner.successResult().orElse(null),
+                "successResult обязан возвращать итог скрипта без искажений");
+    }
+
+    @Test
+    void successResult_ScriptWithoutResult_IsEmpty() {
+        TaskRunner runner = TaskRunner.start(script(SCRIPT),
+                TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(1)),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.SUCCEEDED, runner.tick(), "скрипт без итога завершается успехом");
+        assertTrue(runner.successResult().isEmpty(),
+                "успех без итога обязан давать пустой Optional: null внутри Optional скрыл бы отсутствие данных");
+    }
+
+    @Test
+    void successResult_AfterCancelOfSucceededTask_ResultIsPreserved() {
+        TaskRunner runner = TaskRunner.start(script(SCRIPT),
+                ScriptRegistry.of(Map.of(SCRIPT, TestScripts.resulting(1, new ScriptResult.Text("готово")))),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.SUCCEEDED, runner.tick(), "задача завершается успехом");
+        runner.cancel();
+
+        assertEquals(RunStatus.SUCCEEDED, runner.status(), "cancel после успеха не меняет терминальный статус");
+        assertTrue(runner.successResult().isPresent(),
+                "cancel после успеха обязан сохранять итог: отчёт задачи теряет данные итога при вызове cancel");
+    }
+
     private static TaskNode script(String id) {
         return new ScriptCall(id, Map.of());
     }

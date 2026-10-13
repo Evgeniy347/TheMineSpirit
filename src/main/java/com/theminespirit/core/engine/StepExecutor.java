@@ -24,6 +24,7 @@ abstract class StepExecutor extends SingleChildExecutor {
             return ScriptStatus.FAILED;
         }
         if (child == ScriptStatus.SUCCEEDED) {
+            rememberCompleted();
             index++;
             current(null);
             if (stepAt(index) == null) {

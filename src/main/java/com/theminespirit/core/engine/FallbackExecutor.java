@@ -28,6 +28,7 @@ final class FallbackExecutor extends SingleChildExecutor {
         }
         ScriptStatus child = current().tick();
         if (child == ScriptStatus.SUCCEEDED) {
+            rememberCompleted();
             return ScriptStatus.SUCCEEDED;
         }
         if (child == ScriptStatus.FAILED) {

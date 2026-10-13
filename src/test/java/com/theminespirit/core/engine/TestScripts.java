@@ -19,6 +19,10 @@ final class TestScripts {
         return params -> new CountingInstance(ticks);
     }
 
+    static ScriptFactory resulting(int ticks, ScriptResult result) {
+        return params -> new ResultingInstance(ticks, result);
+    }
+
     static ScriptRegistry singleRegistry(String id, ScriptFactory factory) {
         return ScriptRegistry.of(Map.of(id, factory));
     }
@@ -61,6 +65,28 @@ final class TestScripts {
         @Override
         public Optional<Progress> progress() {
             return Optional.of(new Progress(Math.min(done, target), target));
+        }
+    }
+
+    private static final class ResultingInstance implements ScriptInstance {
+        private final int total;
+        private final ScriptResult result;
+        private int elapsed;
+
+        ResultingInstance(int ticks, ScriptResult result) {
+            this.total = ticks;
+            this.result = result;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            elapsed++;
+            return elapsed >= total ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+        }
+
+        @Override
+        public Optional<ScriptResult> result() {
+            return Optional.of(result);
         }
     }
 }
