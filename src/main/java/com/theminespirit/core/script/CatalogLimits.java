@@ -129,6 +129,9 @@ public final class CatalogLimits {
     // Дух замечает отбившихся чуть дальше края загона
     public static final int HERD_SIGHT_MARGIN = 4;
 
+    // acquire: сколько раз подплан разрешается пересобрать после провала шага
+    public static final int ACQUIRE_MAX_ATTEMPTS = 3;
+
     public static final int DIG_SIZE_MIN = 1;
     public static final int DIG_SIZE_MAX = 16;
     public static final int BUILD_VOLUME_MAX = 4096;
