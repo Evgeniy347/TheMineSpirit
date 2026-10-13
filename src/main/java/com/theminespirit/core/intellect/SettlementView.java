@@ -1,0 +1,60 @@
+package com.theminespirit.core.intellect;
+
+import com.theminespirit.core.coordinator.SpiritSnapshot;
+import java.util.List;
+import java.util.UUID;
+
+public record SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
+        int iron, int weapons, int threats, double dayFraction, List<SpiritSnapshot> spirits, long tick) {
+    public SettlementView {
+        if (population < 0) {
+            throw new IllegalArgumentException(
+                    "Население = " + population + ": число духов не может быть отрицательным");
+        }
+        if (children < 0) {
+            throw new IllegalArgumentException("Детей = " + children + ": число детей не может быть отрицательным");
+        }
+        if (children > population) {
+            throw new IllegalArgumentException("Детей = " + children + " при населении " + population
+                    + ": детей не может быть больше, чем духов");
+        }
+        if (Double.isNaN(foodPerSoul) || Double.isInfinite(foodPerSoul) || foodPerSoul < 0) {
+            throw new IllegalArgumentException("Еды на душу = " + foodPerSoul + ": запас обязан быть конечным и >= 0");
+        }
+        if (Double.isNaN(foodNutritionPerSoul) || Double.isInfinite(foodNutritionPerSoul)
+                || foodNutritionPerSoul < 0) {
+            throw new IllegalArgumentException("Сытности на душу = " + foodNutritionPerSoul
+                    + ": запас обязан быть конечным и >= 0");
+        }
+        if (ore < 0) {
+            throw new IllegalArgumentException("Руды = " + ore + ": запас не может быть отрицательным");
+        }
+        if (iron < 0) {
+            throw new IllegalArgumentException("Железа = " + iron + ": запас не может быть отрицательным");
+        }
+        if (weapons < 0) {
+            throw new IllegalArgumentException("Оружия = " + weapons + ": запас не может быть отрицательным");
+        }
+        if (threats < 0) {
+            throw new IllegalArgumentException("Угроз = " + threats + ": число угроз не может быть отрицательным");
+        }
+        if (Double.isNaN(dayFraction) || dayFraction < 0 || dayFraction > 1) {
+            throw new IllegalArgumentException("Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
+        }
+        if (spirits == null) {
+            throw new IllegalArgumentException("Список духов не может быть null: пустое поселение задают пустым списком");
+        }
+        for (int index = 1; index < spirits.size(); index++) {
+            UUID prev = spirits.get(index - 1).id();
+            UUID next = spirits.get(index).id();
+            if (prev.compareTo(next) >= 0) {
+                throw new IllegalArgumentException("Духи в снимке поселения не упорядочены по id: "
+                        + "распределение обязано быть детерминированным и не зависеть от порядка сбора");
+            }
+        }
+        if (tick < 0) {
+            throw new IllegalArgumentException("Тик = " + tick + ": время снимка не может быть отрицательным");
+        }
+        spirits = List.copyOf(spirits);
+    }
+}
