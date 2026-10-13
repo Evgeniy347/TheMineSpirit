@@ -16,7 +16,9 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTargets;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.TacticsService;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -420,6 +422,55 @@ public final class CombatGameTests {
             helper.assertTrue(reason.contains("точки отхода нет"),
                     "отказ обязан называть, что точки отхода нет, причина: " + reason);
             TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "combat_scale", timeoutTicks = 400)
+    public static void scale_TwentySpiritsAttackOneHusk_QueriesStayWithinLimits(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (int row = 0; row < 4; row++) {
+            for (int column = 0; column < 5; column++) {
+                spirits.add(TacticsScene.spirit(helper, new BlockPos(column + 1, 1, row + 1)));
+            }
+        }
+        helper.assertTrue(spirits.size() == 20, "в тесте на масштаб 20 духов, создано " + spirits.size());
+        TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(9, 1, 9));
+
+        for (SpiritEntity spirit : spirits) {
+            spirit.startTask(new ScriptCall("attack", Map.of()));
+        }
+
+        int observedTicks = 200;
+        int evalInterval = 10;
+        int maxEntityQueries = 20 * observedTicks / evalInterval;
+        int maxBlockReads = 20 * observedTicks / evalInterval * 64;
+        int maxSteps = 20 * observedTicks / evalInterval + 20;
+
+        helper.succeedWhen(() -> {
+            int reads = 0;
+            int queries = 0;
+            int steps = 0;
+            for (SpiritEntity spirit : spirits) {
+                helper.assertTrue(spirit.tickCount >= observedTicks,
+                        "дух ещё не отработал " + observedTicks + " тиков: " + spirit.tickCount);
+                reads += spirit.tactics().blockReads();
+                queries += spirit.tactics().entityQueries();
+                steps += spirit.tactics().stepCalls();
+            }
+            helper.assertTrue(steps > 0 && reads > 0 && queries > 0,
+                    "тактика обязана работать, иначе предел ничего не доказывает: шагов " + steps
+                            + ", чтений " + reads);
+            helper.assertTrue(queries <= maxEntityQueries,
+                    "запросов сущностей не больше " + maxEntityQueries + ", было " + queries);
+            helper.assertTrue(reads <= maxBlockReads,
+                    "чтений блоков не больше " + maxBlockReads + ", было " + reads);
+            helper.assertTrue(steps <= maxSteps,
+                    "шагов тактики не больше " + maxSteps + ", было " + steps);
+            for (SpiritEntity spirit : spirits) {
+                spirit.discard();
+            }
+            GameTestFixtures.reset(helper);
         });
     }
 }
