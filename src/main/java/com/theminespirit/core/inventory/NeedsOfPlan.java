@@ -19,7 +19,7 @@ public final class NeedsOfPlan {
     public static final int MAX_DEPTH = 8;
 
     private static final Set<String> ITEM_SCRIPTS = Set.of("craft", "smelt", "equip", "deposit", "acquire");
-    private static final String GATHER_SCRIPT = "gather";
+    private static final Set<String> BLOCK_SCRIPTS = Set.of("gather", "place_block", "fill", "build_schematic");
     private static final String ITEM_PARAM = "item";
     private static final String BLOCK_PARAM = "block";
 
@@ -68,7 +68,7 @@ public final class NeedsOfPlan {
             }
             return;
         }
-        if (GATHER_SCRIPT.equals(call.script())) {
+        if (BLOCK_SCRIPTS.contains(call.script())) {
             String block = text(call, BLOCK_PARAM);
             if (block != null) {
                 add(needs, block);

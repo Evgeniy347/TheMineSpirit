@@ -47,6 +47,18 @@ class NeedsOfPlanTests {
     }
 
     @Test
+    void collect_BuildScripts_ListsBlockNeeds() {
+        TaskNode plan = new SequenceNode(List.of(
+                new ScriptCall("place_block", Map.of("block", "cobblestone", "x", 0, "y", 64, "z", 0)),
+                new ScriptCall("fill", Map.of("block", "dirt", "x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 64, "z2", 1)),
+                new ScriptCall("build_schematic", Map.of("file", "house", "x", 0, "y", 64, "z", 0))));
+
+        assertEquals(List.of("cobblestone", "dirt"), NeedsOfPlan.collect(plan, KNOWLEDGE),
+                "Шаги стройки несут block и обязаны входить в нужное: иначе резервирование материалов не видит стройку "
+                        + "и дух выбросит блоки до начала заливки");
+    }
+
+    @Test
     void collect_RepeatNode_WalksRepeatedStep() {
         TaskNode plan = new RepeatNode(4, new ScriptCall("craft", Map.of("item", "torch", "count", 4)));
 
