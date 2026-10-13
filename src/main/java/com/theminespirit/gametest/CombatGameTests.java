@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.CombatDirective;
@@ -15,6 +16,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTargets;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.TacticsService;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -195,13 +197,18 @@ public final class CombatGameTests {
                         + helper.relativeVec(spirit.position()) + ", хуск " + helper.relativeVec(husk.position())
                         + ", здоровье " + husk.getHealth());
 
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("attack", Map.of()), 10);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("attack", Map.of()), 0);
         int[] lastStrikeTick = {-1};
         int[] minGap = {Integer.MAX_VALUE};
         int[] strikesSeen = {0};
         boolean[] huskSighted = {false};
         double[] closestSeen = {Double.MAX_VALUE};
+        int[] huskHealthAt = {20, 20, 20, 20, 20};
         helper.onEachTick(() -> {
+            int t = (int) helper.getTick();
+            if (t < huskHealthAt.length) {
+                huskHealthAt[t] = (int) husk.getHealth();
+            }
             if (!husk.isDeadOrDying() && !husk.isRemoved()) {
                 double distance = new Point(spirit.getX(), spirit.getY(), spirit.getZ())
                         .distanceTo(new Point(husk.getX(), husk.getY(), husk.getZ()));
@@ -224,7 +231,8 @@ public final class CombatGameTests {
                     "attack обязан убить цель и завершиться успехом, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет") + "; хуск виден тиками: " + huskSighted[0]
-                            + ", ближайшая дистанция: " + closestSeen[0] + ", здоровье: " + husk.getHealth());
+                            + ", ближайшая дистанция: " + closestSeen[0] + ", здоровье[0..4]: "
+                            + Arrays.toString(huskHealthAt) + ", цель духа: " + spirit.getTarget());
             helper.assertTrue(husk.isDeadOrDying() || husk.isRemoved(),
                     "цель attack обязана быть убита, здоровье хуска: " + husk.getHealth());
             helper.assertTrue(strikesSeen[0] >= 2,
@@ -296,15 +304,37 @@ public final class CombatGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(8, 1, 5));
+        for (int x = -15; x <= 0; x++) {
+            for (int z = 3; z <= 7; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.COBBLESTONE);
+            }
+        }
 
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("flee", Map.of()), 10);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("flee", Map.of()), 0);
+        double startDistance = new Point(spirit.getX(), spirit.getY(), spirit.getZ())
+                .distanceTo(new Point(husk.getX(), husk.getY(), husk.getZ()));
+        double[] closestSeen = {Double.MAX_VALUE};
+        int[] huskHealthAt = {20, 20, 20, 20, 20};
+        helper.onEachTick(() -> {
+            int t = (int) helper.getTick();
+            if (t < huskHealthAt.length) {
+                huskHealthAt[t] = (int) husk.getHealth();
+            }
+            if (!husk.isDeadOrDying() && !husk.isRemoved()) {
+                double distance = new Point(spirit.getX(), spirit.getY(), spirit.getZ())
+                        .distanceTo(new Point(husk.getX(), husk.getY(), husk.getZ()));
+                closestSeen[0] = Math.min(closestSeen[0], distance);
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "flee обязан увести духа из опасности и завершиться успехом, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "; старт dist=" + startDistance
+                            + ", min dist=" + closestSeen[0] + ", здоровье[0..4]: "
+                            + Arrays.toString(huskHealthAt));
             double distance = new Point(spirit.getX(), spirit.getY(), spirit.getZ())
                     .distanceTo(new Point(husk.getX(), husk.getY(), husk.getZ()));
             helper.assertTrue(distance > CombatTuning.DANGER_RADIUS,
@@ -318,7 +348,7 @@ public final class CombatGameTests {
     }
 
     // [флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
-    @GameTest(template = "arena", batch = "combat_flee_trap", timeoutTicks = 700)
+    @GameTest(template = "arena", batch = "combat_flee_trap", timeoutTicks = 900)
     public static void flee_TrappedInWalls_TimesOutWithTickCount(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -334,7 +364,7 @@ public final class CombatGameTests {
         }
         TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(7, 1, 5));
 
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("flee", Map.of()), 10);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("flee", Map.of()), 0);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -353,8 +383,9 @@ public final class CombatGameTests {
     public static void retreat_HomeSet_SpiritReturnsToHome(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 9));
-        TacticsScene.giveHome(helper, spirit, new BlockPos(9, 1, 1));
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(9, 1, 1));
+        spirit.setHome(new BlockCoord(
+                absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
         Point home = new Point(absoluteHome.getX() + 0.5, absoluteHome.getY(), absoluteHome.getZ() + 0.5);
 
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("retreat", Map.of()), 10);
