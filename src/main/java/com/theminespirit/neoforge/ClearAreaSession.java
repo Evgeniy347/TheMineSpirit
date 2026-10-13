@@ -64,6 +64,9 @@ public class ClearAreaSession {
         this.level = spirit.level();
         this.box = box;
         this.remaining = new ArrayList<>(box.cellsBottomUp());
+        System.out.println("DIAG сессия коробка=" + box + " клеток=" + remaining.size() + " первая="
+                + (remaining.isEmpty() ? "нет" : remaining.get(0)) + " мир=" + level.dimension().location()
+                + " дух=" + spirit.blockPosition().toShortString());
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
