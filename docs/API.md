@@ -211,6 +211,25 @@
 мир за 100 тиков (перезагрузка чанка короче не проваливает задачу). Если духу поставили другую задачу вне REST
 (команда `/spirit`, планировщик ИИ), REST-задача закрывается как `cancelled` с `error` «задача вытеснена вне REST».
 
+`result` у `succeeded` несёт итог задачи, у остальных состояний — `null`. Для текстовых скриптов (`chop_tree`
+и т.п.) — строка (`«срублено 1 из 1»`). Для скриптов восприятия (`scan_blocks`, `scan_entities`, `sense_hazard`,
+`locate_*`, `look_at`, `remember`/`recall`/`recall_all`/`forget`) — JSON-объект (см. схему ниже); у обычного `scan`
+без фокуса итога нет (`null`). Итог доступен, пока задача в реестре (реестр очищается при перезапуске сервера).
+
+Схема объекта восприятия (`result.type`):
+
+| `type` | Откуда | Поля |
+|---|---|---|
+| `blocks` | `scan_blocks` | `blocks[]` (`{item, count}`), `radius` |
+| `entities` | `scan_entities` | `entities[]` (`{type, pos, distance}`), `radius` |
+| `hazards` | `sense_hazard` | `hazards[]` (`{type, pos, distance}`), `radius` |
+| `located` | `locate_*` | `script`, `sightings[]` (`{kind, label, pos, detail}`) |
+| `cell` | `look_at` | `script`, `sightings[]` (`{kind, label, pos, detail}`) |
+| `memory` | `remember`/`recall`/`recall_all`/`forget` | `script`, `sightings[]` (`{kind, label, pos, detail}`) |
+
+Лимиты итога: строка — не дольше 200 символов, список — не больше 32 записей, объект — не больше 4 КиБ;
+превышение обрезается с пометкой `"truncated": true`.
+
 ### DELETE /v1/tasks/{id}
 
 Отмена: `200` с задачей в состоянии `cancelled`; дух останавливается, незавершённая ломка блока откатывается (блок цел
@@ -221,6 +240,8 @@
 
 `Content-Type: text/event-stream`. Первым кадром идёт текущее `state`, затем `progress` (при смене шага, скрипта или
 счётчика), `script_failed` и завершающий `state` (`succeeded` / `failed` / `cancelled`), после чего поток закрывается.
+Завершающий `state` со `succeeded` несёт `result` — тот же итог, что `GET /v1/tasks/{id}` (см. схему выше); отдельного
+события итога нет.
 Каждый кадр несёт `id:`; заголовок `Last-Event-ID` продолжает с места обрыва (приходят только более поздние кадры; если
 журнал, окно 256 событий, уже вытеснил нужные, или `Last-Event-ID` больше последнего id журнала, сначала приходит
 текущее `state`, дальше поток идёт с позиции журнала). Раз в 15 секунд при тишине идёт
