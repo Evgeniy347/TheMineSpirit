@@ -64,9 +64,6 @@ public class ClearAreaSession {
         this.level = spirit.level();
         this.box = box;
         this.remaining = new ArrayList<>(box.cellsBottomUp());
-        System.out.println("DIAG сессия коробка=" + box + " клеток=" + remaining.size() + " первая="
-                + (remaining.isEmpty() ? "нет" : remaining.get(0)) + " мир=" + level.dimension().location()
-                + " дух=" + spirit.blockPosition().toShortString());
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
@@ -138,28 +135,8 @@ public class ClearAreaSession {
     protected int boxVolume() {
         return (int) Math.min(box.volume(), Integer.MAX_VALUE);
     }
-
     private void pick() {
-        if (remaining.size() == (int) Math.min(box.volume(), Integer.MAX_VALUE)) {
-            StringBuilder grid = new StringBuilder();
-            for (int y = 0; y <= 3; y++) {
-                for (int x = 3; x <= 6; x++) {
-                    for (int z = 3; z <= 6; z++) {
-                        grid.append(level.getBlockState(new BlockPos(box.minX() + x - 3, box.minY() + y - 1,
-                                box.minZ() + z - 3)).getBlock().toString().replace("Block{minecraft:", "")
-                                .replace("}", "")).append(',');
-                    }
-                }
-                grid.append(';');
-            }
-            System.out.println("DIAG pick сетка=" + grid + " дух=" + spirit.blockPosition().toShortString()
-                    + " клеток=" + remaining.size());
-        }
-        if (remaining.size() == (int) Math.min(box.volume(), Integer.MAX_VALUE)) {
-            BlockPos feet = spirit.blockPosition();
-            BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-            System.out.println("DIAG pick планёр=" + MiningPlanner.next(from, new ArrayList<>(remaining), safety));
-        }        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
+        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
             remaining.remove(0);
         }
         if (remaining.isEmpty()) {

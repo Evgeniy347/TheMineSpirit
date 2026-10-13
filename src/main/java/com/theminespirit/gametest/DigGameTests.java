@@ -2,15 +2,9 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.mining.MiningPlanner;
-import com.theminespirit.core.mining.StandSpots;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
@@ -58,40 +52,12 @@ public final class DigGameTests {
             }
         }
         helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.STONE),
-                "диагностика: масса не встала в (4,1,4)");
+                "масса обязана встать в (4,1,4): без неё копать нечего");
         helper.assertTrue(helper.getBlockState(new BlockPos(4, 2, 4)).is(Blocks.STONE),
-                "диагностика: масса не встала в (4,2,4)");
+                "масса обязана встать в (4,2,4): без неё копать нечего");
         helper.assertTrue(helper.getBlockState(new BlockPos(4, 3, 4)).isAir(),
-                "диагностика: над массой в (4,3,4) не воздух: "
-                        + helper.getBlockState(new BlockPos(4, 3, 4)).getBlock());
-        StringBuilder dump = new StringBuilder();
-        for (int y = 0; y <= 3; y++) {
-            dump.append("y=").append(y).append(':');
-            for (int x = 3; x <= 6; x++) {
-                for (int z = 3; z <= 6; z++) {
-                    dump.append(helper.getBlockState(new BlockPos(x, y, z)).getBlock().toString().replace("Block{minecraft:", "")
-                            .replace("}", "")).append(',');
-                }
-            }
-            dump.append(' ');
-        }
-        System.out.println("DIAG dig сетка(3..6,0..3,3..6): " + dump);
-        LevelSafetyView diagnosticView = new LevelSafetyView(helper.getLevel());
-        List<BlockCoord> diagnosticCells = new ArrayList<>();
-        for (int x = 4; x <= 5; x++) {
-            for (int y = 1; y <= 2; y++) {
-                for (int z = 4; z <= 5; z++) {
-                    BlockPos abs = helper.absolutePos(new BlockPos(x, y, z));
-                    diagnosticCells.add(new BlockCoord(abs.getX(), abs.getY(), abs.getZ()));
-                }
-            }
-        }
-        BlockPos feetAbs = helper.absolutePos(new BlockPos(1, 1, 1));
-        BlockCoord diagnosticFrom = new BlockCoord(feetAbs.getX(), feetAbs.getY(), feetAbs.getZ());
-        System.out.println("DIAG dig планёр=" + MiningPlanner.next(diagnosticFrom,
-                new ArrayList<>(diagnosticCells), diagnosticView));
-        System.out.println("DIAG dig стоянки=" + StandSpots.of(diagnosticCells.get(0), diagnosticView, diagnosticFrom));
-        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+                "над массой в (4,3,4) обязан быть воздух: иначе стоянок сверху нет");
+        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(3, 3, 3));
         SpiritRun run = SpiritRun.launch(helper, spirit, digCall(helper, new BlockPos(4, 1, 4), 2), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {

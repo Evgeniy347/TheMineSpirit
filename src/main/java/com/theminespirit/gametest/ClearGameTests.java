@@ -131,14 +131,14 @@ public final class ClearGameTests {
     public static void clear_BlockUnderFeet_VetoSkipsAndSpiritStays(GameTestHelper helper) {
         prepare(helper);
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
-                "диагностика: пола нет в (1,0,1)");
+                "пол обязан лежать в (1,0,1): без опоры под ногами проверять вето не на чем");
         helper.setBlock(new BlockPos(0, 1, 1), Blocks.STONE);
         helper.setBlock(new BlockPos(2, 1, 1), Blocks.STONE);
         helper.setBlock(new BlockPos(1, 1, 0), Blocks.STONE);
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
         helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
-                "диагностика: дух заспавнился не в (1,1,1): " + spirit.blockPosition());
+                "дух обязан заспавниться в (1,1,1): " + spirit.blockPosition());
         SpiritRun run = SpiritRun.launch(helper, spirit, clearCall(helper, new BlockPos(1, 0, 1), new BlockPos(1, 0, 1)),
                 0);
 
