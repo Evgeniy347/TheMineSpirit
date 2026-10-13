@@ -28,6 +28,9 @@ public final class TaskEventDiff {
         if (previous.state() != current.state()) {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("state", current.state().wire());
+            if (current.state() == TaskState.SUCCEEDED) {
+                data.put("result", current.result());
+            }
             events.add(new TaskEvent(0, TaskEvent.TYPE_STATE, data));
         }
         return List.copyOf(events);

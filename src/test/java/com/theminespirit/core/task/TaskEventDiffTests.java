@@ -1,12 +1,14 @@
 package com.theminespirit.core.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -14,6 +16,51 @@ import org.junit.jupiter.params.provider.MethodSource;
 class TaskEventDiffTests {
     private static TaskRecord record(TaskState state, RunProgress progress, String error) {
         return new TaskRecord("t-1", "bot", state, "цель", progress, null, error);
+    }
+
+    private static TaskRecord recordWithResult(TaskState state, Object result) {
+        return new TaskRecord("t-1", "bot", state, "цель", null, result, null);
+    }
+
+    private static TaskEvent stateEvent(TaskRecord previous, TaskRecord current) {
+        return TaskEventDiff.between(previous, current).stream()
+                .filter(event -> event.type().equals(TaskEvent.TYPE_STATE))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("переход обязан дать state-событие"));
+    }
+
+    @Test
+    void between_SucceededWithResult_StateEventCarriesResult() {
+        Object result = Map.of("chopped", 2);
+
+        TaskEvent event = stateEvent(record(TaskState.RUNNING, null, null), recordWithResult(TaskState.SUCCEEDED, result));
+
+        assertEquals("succeeded", event.data().get("state"), "state-событие обязано называть succeeded");
+        assertEquals(result, event.data().get("result"),
+                "state-событие успеха обязано нести итог: по нему клиент узнаёт, что сделано, без второго запроса");
+    }
+
+    @Test
+    void between_SucceededWithoutResult_StateEventHasNullResult() {
+        TaskEvent event = stateEvent(record(TaskState.ACCEPTED, null, null), recordWithResult(TaskState.SUCCEEDED, null));
+
+        assertTrue(event.data().containsKey("result"),
+                "state-событие успеха обязано содержать ключ result даже при пустом итоге: клиент отличает 'нет "
+                        + "ключа' от 'итога нет'");
+        assertNull(event.data().get("result"), "успех без итога обязан нести result == null");
+    }
+
+    @Test
+    void between_Failed_NoResultKeyInScriptFailedOrState() {
+        TaskRecord previous = record(TaskState.RUNNING, new RunProgress(1, 2, "goto", null, null), null);
+        TaskRecord current = record(TaskState.FAILED, null, "упал");
+
+        List<TaskEvent> events = TaskEventDiff.between(previous, current);
+
+        for (TaskEvent event : events) {
+            assertTrue(!event.data().containsKey("result"),
+                    "событие провала (" + event.type() + ") не должно нести result: итог принадлежит только успеху");
+        }
     }
 
     static Stream<Arguments> table() {
