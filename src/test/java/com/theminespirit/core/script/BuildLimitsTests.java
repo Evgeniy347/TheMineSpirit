@@ -40,4 +40,14 @@ class BuildLimitsTests {
         assertEquals(1, CatalogLimits.BLOCKS_PER_TICK,
                 "За тик меняется ровно один блок: два блока за тик удваивают нагрузку серверного тика, число меняет геймдизайн только с согласия");
     }
+
+    @Test
+    void campRadius_LimitValues_MatchDeclared() {
+        assertEquals(1, CatalogLimits.CAMP_RADIUS_MIN,
+                "Радиус лагеря начинается с 1: меньшая зона не прикроет даже одного духа");
+        assertEquals(32, CatalogLimits.CAMP_RADIUS_MAX,
+                "Радиус лагеря ограничен 32: большая зона расползается дальше обороны");
+        assertEquals(16, CatalogLimits.CAMP_RADIUS_DEFAULT,
+                "Радиус лагеря по умолчанию 16: как радиус обороны и CampTuning.CAMP_RADIUS");
+    }
 }

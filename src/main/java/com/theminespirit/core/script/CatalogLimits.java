@@ -130,4 +130,9 @@ public final class CatalogLimits {
     public static final int SCHEMATIC_SIZE_MAX = 32;
     public static final int SCHEMATIC_BLOCKS_MAX = 4096;
     public static final int BLOCKS_PER_TICK = 1;
+
+    // Лагерь похода: радиус спокойной зоны скриптов set_camp/clear_camp
+    public static final int CAMP_RADIUS_MIN = 1;
+    public static final int CAMP_RADIUS_MAX = 32;
+    public static final int CAMP_RADIUS_DEFAULT = 16;
 }
