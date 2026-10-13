@@ -140,7 +140,21 @@ public class ClearAreaSession {
     }
 
     private void pick() {
-        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
+        if (remaining.size() == (int) Math.min(box.volume(), Integer.MAX_VALUE)) {
+            StringBuilder grid = new StringBuilder();
+            for (int y = 0; y <= 3; y++) {
+                for (int x = 3; x <= 6; x++) {
+                    for (int z = 3; z <= 6; z++) {
+                        grid.append(level.getBlockState(new BlockPos(box.minX() + x - 3, box.minY() + y - 1,
+                                box.minZ() + z - 3)).getBlock().toString().replace("Block{minecraft:", "")
+                                .replace("}", "")).append(',');
+                    }
+                }
+                grid.append(';');
+            }
+            System.out.println("DIAG pick сетка=" + grid + " дух=" + spirit.blockPosition().toShortString()
+                    + " клеток=" + remaining.size());
+        }        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
             remaining.remove(0);
         }
         if (remaining.isEmpty()) {
