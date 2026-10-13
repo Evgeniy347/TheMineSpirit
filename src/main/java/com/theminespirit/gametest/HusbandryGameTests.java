@@ -103,6 +103,34 @@ public final class HusbandryGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "husbandry_feed_live", timeoutTicks = 400)
+    public static void feed_TwoLiveCowsInPen_BothFedWithin200SpiritTicks(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        HusbandryGameTests.fencePerimeter(helper);
+        helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
+        helper.spawn(EntityType.COW, new BlockPos(5, 1, 5));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 2));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("feed",
+                        Map.of("species", "cow", "radius", 8, "count", 2, "babiesFirst", false)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(run.spiritTicks() <= 200,
+                    "две живые коровы обязаны покормиться за 200 тиков духа, заняло " + run.spiritTicks());
+            assertSucceeded(helper, spirit, "две живые коровы в загоне обязаны покормиться");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 0,
+                    "на двух коров уходят обе пшеницы, фактически осталось "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
+            helper.assertTrue(alive(helper, Cow.class).size() == 2,
+                    "кормление не убивает: живых коров обязано остаться 2, фактически "
+                            + alive(helper, Cow.class).size());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "husbandry_breed_no_feed", timeoutTicks = 100)
     public static void breed_WithoutFeed_FailsAndLeavesHerdUntouched(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
