@@ -7,7 +7,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.GotoParams;
 import net.minecraft.world.phys.Vec3;
 
-final class GotoScript implements ScriptInstance {
+public final class GotoScript implements ScriptInstance {
     private static final double ARRIVAL_TOLERANCE = 1.25;
 
     private final SpiritEntity spirit;
@@ -16,7 +16,7 @@ final class GotoScript implements ScriptInstance {
     private String failureReason;
     private boolean zoneChecked;
 
-    GotoScript(SpiritEntity spirit, GotoParams params) {
+    public GotoScript(SpiritEntity spirit, GotoParams params) {
         this.spirit = spirit;
         this.target = new Vec3(params.x() + 0.5, params.y(), params.z() + 0.5);
         this.approach = new Approach(spirit);

@@ -50,6 +50,7 @@ import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
+import com.theminespirit.neoforge.movement.ReturnHomeScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -78,6 +79,7 @@ public final class SpiritScripts {
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
+        table.put("return_home", spirit -> params -> new ReturnHomeScript(spirit));
         table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
         table.put("gather", spirit -> params -> new GatherScript(spirit, GatherParams.from(params)));
         table.put("till", spirit -> params -> new TillScript(spirit, TillParams.from(params)));

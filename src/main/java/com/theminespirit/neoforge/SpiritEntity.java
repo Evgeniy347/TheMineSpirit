@@ -7,6 +7,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.MemoryCodec;
@@ -58,6 +59,7 @@ public final class SpiritEntity extends PathfinderMob {
     private PerceptionResult perceptionResult;
     private Finding finding;
     private MemoryStore memory = MemoryStore.empty();
+    private BlockCoord home;
     private int pathBuilds;
     private int snapshotBuilds;
     private String pendingTaskJson;
@@ -136,6 +138,18 @@ public final class SpiritEntity extends PathfinderMob {
         policies.clearWorkZone();
     }
 
+    public Optional<BlockCoord> home() {
+        return Optional.ofNullable(home);
+    }
+
+    public void setHome(BlockCoord home) {
+        this.home = home;
+    }
+
+    public void clearHome() {
+        this.home = null;
+    }
+
     public Optional<SpiritBrain> brainIfPresent() {
         return Optional.ofNullable(brain);
     }
@@ -161,6 +175,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
         SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);
+        SpiritHomeStore.write(compound, home);
     }
 
     private String taskJsonForSave() {
@@ -194,6 +209,7 @@ public final class SpiritEntity extends PathfinderMob {
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил рабочую зону: {}", getUUID(), e.getMessage());
         }
+        restoreHome(compound);
         restoreTactics(compound);
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
@@ -203,6 +219,14 @@ public final class SpiritEntity extends PathfinderMob {
                 pendingRestoreFailure = "не удалось восстановить задачу: " + e.getMessage();
             }
         });
+    }
+
+    private void restoreHome(CompoundTag compound) {
+        try {
+            home = SpiritHomeStore.read(compound).orElse(null);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Дух {} не восстановил дом: {}", getUUID(), e.getMessage());
+        }
     }
 
     private void restoreTactics(CompoundTag compound) {

@@ -20,6 +20,7 @@ public final class SpiritCommands {
         SpiritTaskCommands.register(spirit);
         SpiritMemoryCommand.register(spirit);
         SpiritZoneCommand.register(spirit);
+        SpiritHomeCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }

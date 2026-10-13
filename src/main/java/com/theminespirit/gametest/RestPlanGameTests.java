@@ -35,9 +35,9 @@ public final class RestPlanGameTests {
         String path = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
         String followerPath = "/v1/bots/" + follower.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(path, goalBody("верни домой", ""))
+        CompletableFuture<List<String>> scenario = rest.post(path, goalBody("атакуй зомби", ""))
                 .thenCompose(home -> {
-                    expectInvalidPlan(problems, home, "return_home", "цель «верни домой»: скрипт return_home не реализован");
+                    expectInvalidPlan(problems, home, "attack", "цель «атакуй зомби»: скрипт attack не реализован");
                     return rest.post(path, goalBody("абракадабра", ""));
                 }).thenCompose(nonsense -> {
                     expectInvalidPlan(problems, nonsense, "абракадабра", "бессмысленная цель");
