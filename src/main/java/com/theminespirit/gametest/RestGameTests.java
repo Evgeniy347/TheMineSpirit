@@ -73,7 +73,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_bots", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void bots_SpawnedThenDiscardedSpirit_ListedThenAbsent(GameTestHelper helper) throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
@@ -95,7 +95,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_botState", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void botState_IdleThenGotoStarted_ReportsIdleThenBusy(GameTestHelper helper) throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
         buildFloor(helper);
@@ -149,7 +149,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_observe", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_RadiusEightAndInvalidRadius_ReturnsObservationAnd400(GameTestHelper helper)
             throws IOException {
         buildFloor(helper);
@@ -210,7 +210,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_SpiritDiscardedMidScan_Returns404WithId(GameTestHelper helper) throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
@@ -242,7 +242,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick(GameTestHelper helper)
             throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -284,7 +284,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, done);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_threads", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void threads_ForeignThreadAccess_IndexRejectsWhileGatewayAndHttpWork(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
