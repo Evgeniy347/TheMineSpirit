@@ -141,7 +141,7 @@ public final class MovementCarefulGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "move_careful_path")
+    @GameTest(template = "arena", batch = "move_careful_path")
     public static void carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing(GameTestHelper helper) {
         helper.assertTrue(DropProfile.LOOKAHEAD_CELLS == 8,
                 "заглядывание вперёд — 8 клеток (решение главного агента к чеклисту 24), в коде "

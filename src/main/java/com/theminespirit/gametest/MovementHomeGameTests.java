@@ -80,7 +80,7 @@ public final class MovementHomeGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "move_home_nbt")
+    @GameTest(template = "arena", batch = "move_home_nbt")
     public static void home_SavedAndLoaded_SurvivesRoundTripAndRejectsFutureVersion(GameTestHelper helper) {
         SpiritEntity saved = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockCoord home = new BlockCoord(-12, 64, 345);
