@@ -101,6 +101,7 @@
 - [x] Изоляция GameTest: политики — уникальные мок-игроки, память и защита — выбор духов по тегу, MineGameTests (18) — пещера внутри arena (muse, 13.10)
 - [x] Итог скриптов до REST и стратегического интеллекта: ScriptInstance.result (Text/Data), поле result в GET /v1/tasks/{id} и финальном событии SSE, итоги восприятия данными, счётчики рубки переживают перезапуск (чеклист 27)
 - [x] Изоляция GameTest REST: мок-игрок с уникальным именем (deepseek-web, 13.10)
+- [x] Стройка: place_block, fill, clear_area, dig_area, build_schematic (свой JSON схем), бронь клеток, свои блоки помечаются, итог данными, перезапуск (чеклист 29)
 
 ## В работе и техдолг
 
@@ -178,7 +179,7 @@
 
 ### Добыча
 - [ ] `chop_target` (конкретное дерево/координата; `chop_tree` по виду — сделан)
-- [ ] `mine_block`, `dig_area` (`mine_vein`, `gather`, `collect_drops` — сделаны)
+- [ ] `mine_block` (`mine_vein`, `gather`, `collect_drops`, `dig_area` — сделаны)
 - [ ] `harvest_crop`, `plant_crop`, `till`, `bone_meal`, `shear`, `milk`, `fish`
 
 ### Бой и охота
@@ -192,7 +193,6 @@
 - [ ] `eat`, `drink_potion`
 
 ### Стройка, ферма, база
-- [ ] `place_block`, `fill`, `clear_area`, `build_schematic`
 - [ ] `build_farm`, `build_shelter`, `build_fence`
 - [ ] `light_area`, `secure_area` (факелы против спавна)
 - [ ] `use_block` (рычаг, кнопка, дверь), `open` / `close`
@@ -467,7 +467,7 @@
 ## P6 — бой, стройка, мультиботы, MCP
 
 - [ ] Бой/защита: `attack`, `defend`, `retreat`, `avoid`, `light_area`, `secure_area`.
-- [ ] Стройка: `place_block`, `fill`, `clear_area`, `build_schematic`, `build_farm`, `build_shelter`.
+- [ ] Стройка: `build_farm`, `build_shelter` (`place_block`, `fill`, `clear_area`, `build_schematic` — сделаны).
 - [ ] Параллельные духи без конфликтов; масштаб и производительность.
 - [ ] MCP-обёртка над bridge для ИИ-агентов.
 
