@@ -14,13 +14,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class ServerThreadCallTests {
     private static final Duration LONG_ENOUGH = Duration.ofSeconds(10);
+    // Таймаут, который не наступит сам: само-пробуждение wait по истечении срока исключено,
+    // поэтому проснувшийся ожидальец разбужен только stop() — скорость реакции проверяется
+    // условием (поток мёртв, ошибка называет остановку), а не замером миллисекунд.
+    private static final Duration WITHOUT_TIMEOUT = Duration.ofDays(3650);
     private static final Duration SHORT = Duration.ofMillis(100);
     private static final String SERVER_THREAD_NAME = "test-server-thread";
 
@@ -154,34 +158,49 @@ class ServerThreadCallTests {
     }
 
     @Test
-    void await_StopWhileTaskNeverRuns_ThrowsWithinHundredMillisNamingShutdown() throws Exception {
+    void await_StopWhileTaskNeverRuns_ThrowsNamingShutdown() throws Exception {
         ServerThreadCall call = new ServerThreadCall(new QueuedExecutor());
         CompletableFuture<Integer> future = call.submit(() -> 1);
-        ExecutorService stopper = Executors.newSingleThreadExecutor();
-        long started = System.nanoTime();
-        try {
-            stopper.submit(() -> {
-                try {
-                    Thread.sleep(30);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                call.stop();
-            });
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Thread waiter = new Thread(() -> {
+            try {
+                call.await(future, WITHOUT_TIMEOUT);
+            } catch (Throwable e) {
+                failure.set(e);
+            }
+        }, "test-awaiting-thread");
+        waiter.setDaemon(true);
+        waiter.start();
 
-            ApiException error = assertThrows(ApiException.class, () -> call.await(future, LONG_ENOUGH),
-                    "Остановка сервера не должна держать запрос весь тайм-аут: серверный поток занят в stop() и "
-                            + "никогда не выполнит задачу");
-
-            long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-            assertTrue(millis <= 100,
-                    "Ждущий запрос обязан оборваться остановкой почти сразу, а ждал " + millis + " мс из "
-                            + LONG_ENOUGH.toMillis() + ": иначе stop() висит на каждом запросе в полёте");
-            assertTrue(error.getMessage().contains("останавливается"),
-                    "Сообщение обязано называть остановку сервера, а не истечение тайм-аута: " + error.getMessage());
-        } finally {
-            stopper.shutdownNow();
+        // Ждём условием, а не сном: ожидальец обязан встать в wait на stopLock.
+        // Граница — число итераций, а не миллисекунды: под нагрузкой планировщик
+        // отдаёт поток позже, итерации со счётчиком это переживают, а sleep — нет.
+        int spins = 0;
+        Thread.State state = waiter.getState();
+        while (state != Thread.State.TIMED_WAITING && state != Thread.State.WAITING) {
+            if (++spins > 10_000_000) {
+                waiter.interrupt();
+                throw new AssertionError(
+                        "Ожидальец за " + spins + " итераций не встал в wait на stopLock: "
+                                + "без этого stop() не будит, а проверяет пустоту — "
+                                + "смотри ServerThreadCall.await и запускающий его поток");
+            }
+            Thread.yield();
+            state = waiter.getState();
         }
+        call.stop();
+        waiter.join(LONG_ENOUGH.toMillis());
+
+        assertFalse(waiter.isAlive(),
+                "Остановка сервера обязана будить ждущий запрос через stopLock.notifyAll: "
+                        + "само-пробуждение по тайм-ауту исключено (WITHOUT_TIMEOUT), поэтому живой "
+                        + "ожидальец означает, что stop() его не разбудил и запрос висит");
+        Throwable thrown = failure.get();
+        assertTrue(thrown instanceof ApiException,
+                "Ждущий запрос при остановке обязан кидать ApiException, а не молча возвращаться или "
+                        + "умирать с другим: фактически " + thrown);
+        assertTrue(thrown.getMessage().contains("останавливается"),
+                "Сообщение обязано называть остановку сервера, а не истечение тайм-аута: " + thrown.getMessage());
     }
 
     @Test
