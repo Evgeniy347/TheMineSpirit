@@ -52,8 +52,12 @@ final class SettlementViews {
         Arbitrary<double[]> stocks = Combinators.combine(Arbitraries.doubles().between(0, 5),
                 Arbitraries.doubles().between(0, 5), Arbitraries.doubles().between(0, 1))
                 .as((food, nutrition, day) -> new double[] {food, nutrition, day});
-        return Combinators.combine(counts, stocks, unique, Arbitraries.longs().between(0, 100000))
-                .as((counted, stocked, spirits, tick) -> new SettlementView(spirits.size() + counted[0], 0, stocked[0],
-                        stocked[1], counted[1], counted[2], counted[3], counted[4], stocked[2], spirits, tick));
+        return Combinators.combine(counts, stocks, unique, Arbitraries.longs().between(0, 100000),
+                Arbitraries.integers().between(0, 6))
+                .as((counted, stocked, spirits, tick, kids) -> {
+                    int population = spirits.size() + counted[0];
+                    return new SettlementView(population, Math.min(kids, population), stocked[0], stocked[1],
+                            counted[1], counted[2], counted[3], counted[4], stocked[2], spirits, tick);
+                });
     }
 }

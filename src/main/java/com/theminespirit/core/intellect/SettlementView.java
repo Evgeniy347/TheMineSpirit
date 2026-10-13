@@ -1,5 +1,6 @@
 package com.theminespirit.core.intellect;
 
+import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import java.util.List;
 import java.util.UUID;
@@ -56,5 +57,38 @@ public record SettlementView(int population, int children, double foodPerSoul, d
             throw new IllegalArgumentException("Тик = " + tick + ": время снимка не может быть отрицательным");
         }
         spirits = List.copyOf(spirits);
+    }
+
+    public int adults() {
+        return population - children;
+    }
+
+    public List<SpiritSnapshot> idle() {
+        return spirits.stream().filter(spirit -> spirit.workTarget().isEmpty()).toList();
+    }
+
+    public List<SpiritSnapshot> freeWorkers() {
+        return idle().stream()
+                .filter(spirit -> spirit.role() == SpiritRole.WORKER || spirit.role() == SpiritRole.IDLE)
+                .toList();
+    }
+
+    public boolean needsFood(double days, double safety) {
+        if (Double.isNaN(days) || Double.isInfinite(days) || days <= 0) {
+            throw new IllegalArgumentException("Запас еды считается на " + days + " суток: срок обязан быть конечным и > 0");
+        }
+        if (Double.isNaN(safety) || Double.isInfinite(safety) || safety <= 0) {
+            throw new IllegalArgumentException(
+                    "Запас еды считается с коэффициентом " + safety + ": запас обязан быть конечным и > 0");
+        }
+        return foodNutritionPerSoul < days * safety;
+    }
+
+    public boolean needsOre(int oreTarget, int ironTarget, int weaponTarget) {
+        if (oreTarget < 0 || ironTarget < 0 || weaponTarget < 0) {
+            throw new IllegalArgumentException("Цели запасов не могут быть отрицательными: руда " + oreTarget
+                    + ", железо " + ironTarget + ", оружие " + weaponTarget);
+        }
+        return ore < oreTarget || iron < ironTarget || weapons < weaponTarget;
     }
 }
