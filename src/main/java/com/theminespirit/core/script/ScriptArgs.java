@@ -27,6 +27,19 @@ final class ScriptArgs {
         return text;
     }
 
+    static String optionalString(Map<String, Object> params, String name, String defaultValue) {
+        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
+        Object value = params.get(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (!(value instanceof String text)) {
+            throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть строкой, а получено "
+                    + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
+        }
+        return text;
+    }
+
     static boolean requireBoolean(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof Boolean flag)) {
