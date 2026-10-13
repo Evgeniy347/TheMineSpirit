@@ -2,6 +2,9 @@ package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import java.util.ArrayList;
@@ -26,6 +29,16 @@ public final class SettlementViews {
     public static SpiritSnapshot spiritWithRole(UUID id, SpiritRole role) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, role, CombatMode.DEFENSIVE, 0, false,
                 Optional.empty(), 0);
+    }
+
+    public static SpiritSnapshot threatenedSpirit(UUID id) {
+        return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 1, false,
+                Optional.empty(), 0);
+    }
+
+    public static SpiritSnapshot busySpirit(UUID id) {
+        return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
+                Optional.of(new WorkTarget(WorkKind.TREE, new BlockCoord(1, 64, 1))), 0);
     }
 
     public static SettlementView empty() {
