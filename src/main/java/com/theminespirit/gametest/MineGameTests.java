@@ -337,6 +337,52 @@ public final class MineGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "gather_pocket", timeoutTicks = 400)
+    public static void gather_DirtRingAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
+        // Запечатанная стоянка (4,1,4): воздух с каменным полом, с четырёх сторон блоки земли,
+        // по диагоналям и снаружи камень, сверху запечатанный колпак (4,2,4): планировщик видит
+        // стоянку, а навигация пути к ней не находит.
+        int[][] dirt = {{4, 1, 3}, {5, 1, 4}, {4, 1, 5}, {3, 1, 4}, {4, 2, 3}, {5, 2, 4}, {4, 2, 5}, {3, 2, 4}};
+        for (int[] cell : dirt) {
+            helper.setBlock(cell[0], cell[1], cell[2], Blocks.DIRT);
+        }
+        int[][] stone = {{3, 1, 3}, {5, 1, 3}, {3, 1, 5}, {5, 1, 5}, {6, 1, 4}, {2, 1, 4}, {4, 1, 6}, {4, 1, 2},
+                {3, 2, 3}, {5, 2, 3}, {3, 2, 5}, {5, 2, 5}, {6, 2, 4}, {2, 2, 4}, {4, 2, 6}, {4, 2, 2}};
+        for (int[] cell : stone) {
+            helper.setBlock(cell[0], cell[1], cell[2], Blocks.STONE);
+        }
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                helper.setBlock(4 + dx, 3, 4 + dz, Blocks.STONE);
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
+                Items.IRON_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "восемь блоков земли вокруг запечатанной стоянки недобываемы: задача обязана провалиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("недостижимо: 8"),
+                    "причина обязана назвать 8 недостижимых блоков, фактически: " + reason);
+            helper.assertTrue(countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA) == 8,
+                    "запечатанную землю трогать нельзя: в мире обязано остаться 8 блоков, осталось "
+                            + countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 0,
+                    "добыть из запечатанного кольца нечего: в инвентаре обязано быть 0 земли, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
+            helper.assertTrue(run.spiritTicks() <= 200,
+                    "отказ по запечатанной стоянке обязан наступить за 200 тиков духа "
+                            + "(общая стоянка исключается после трёх неудачных подходов по ~41 тику), заняло "
+                            + run.spiritTicks());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "gather_refill", timeoutTicks = 400)
     public static void gather_FewTargetsLeft_KeepsRefillingSearchEachTick(GameTestHelper helper) {
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
