@@ -204,8 +204,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_session_till", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "farm_session_till", timeoutTicks = 110)
     public static void farmSession_TillFiveByFiveNearWater_TillsTwelveWearsHoeAndKeepsRest(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -237,8 +236,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_session_harvest", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_session_harvest", timeoutTicks = 250)
     public static void farmSession_HarvestMixedWheat_CollectsAndReplantsOnlyMature(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -276,8 +274,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_script_till", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "farm_script_till", timeoutTicks = 120)
     public static void till_FiveByFiveWithWater_TillsTwelveWithinFourOfWaterAndWearsHoe(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -435,8 +432,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_plant_wheat", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_plant_wheat", timeoutTicks = 120)
     public static void plantCrop_WheatOnNineFarmland_PlantsNineAndKeepsOneSeed(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -549,32 +545,27 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_wheat", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_harvest_wheat", timeoutTicks = 260)
     public static void harvestCrop_MixedWheat_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.WHEAT);
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_carrot", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_harvest_carrot", timeoutTicks = 260)
     public static void harvestCrop_MixedCarrots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.CARROT);
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_potato", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_harvest_potato", timeoutTicks = 250)
     public static void harvestCrop_MixedPotatoes_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.POTATO);
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_beetroot", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_harvest_beetroot", timeoutTicks = 270)
     public static void harvestCrop_MixedBeetroots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.BEETROOT);
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_filter", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "farm_harvest_filter", timeoutTicks = 50)
     public static void harvestCrop_WheatFilter_LeavesMatureCarrotsAlone(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -597,8 +588,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_harvest_no_replant", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_harvest_no_replant", timeoutTicks = 400)
     public static void harvestCrop_ReplantFalse_LeavesCellsEmptyAndFarmlandIntact(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -707,8 +697,8 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_cycle", timeoutTicks = 3600)
+    // [флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
+    @GameTest(template = "arena", batch = "farm_cycle", timeoutTicks = 1950)
     public static void farmCycle_PlantGrowHarvestThreeTimes_KeepsFarmlandAndSeeds(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -750,8 +740,8 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_trample", timeoutTicks = 800)
+    // [флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
+    @GameTest(template = "arena", batch = "farm_trample", timeoutTicks = 420)
     public static void harvestCrop_SpiritFallsOntoBed_DoesNotTrampleFarmland(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -775,8 +765,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_cancel", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "farm_cancel", timeoutTicks = 150)
     public static void harvestCrop_CancelledMidWork_StopsWorldAndNavigation(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -823,8 +812,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 600)
+    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 20)
     public static void harvestCrop_InventoryFull_FailsAndKeepsItems(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -857,8 +845,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_persist", timeoutTicks = 900)
+    @GameTest(template = "arena", batch = "farm_persist", timeoutTicks = 400)
     public static void harvestCrop_SpiritReloadedMidWork_KeepsDoneAndFinishes(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -907,8 +894,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_scale_harvest", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_scale_harvest", timeoutTicks = 400)
     public static void farmSession_FullHarvestWithReplant_StaysWithinReadAndTickBudgets(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -940,8 +926,7 @@ public final class FarmGameTests {
         });
     }
 
-    // [флак] дух пашет, сажает или собирает на арене, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "farm_scale_till", timeoutTicks = 800)
+    @GameTest(template = "arena", batch = "farm_scale_till", timeoutTicks = 130)
     public static void farmSession_TillWithWeeds_StaysWithinPerTickBudgets(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
