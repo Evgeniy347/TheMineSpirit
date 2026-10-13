@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -65,6 +66,49 @@ public final class SocialGameTests {
                     "отказ обязан называть нехватку предмета, причина: " + reason);
             helper.assertTrue(reason.contains("3") && reason.contains("0"),
                     "отказ обязан содержать числа (сколько нужно и сколько есть), причина: " + reason);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_meet", timeoutTicks = 300)
+    public static void meet_PlayerNearby_SpiritArrives(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(9, 1, 5));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 5), "MeetTarget");
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("meet", Map.of(
+                "target", "player:MeetTarget")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "meet обязан подвести духа к игроку и завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            double distance = spirit.position().distanceTo(player.position());
+            helper.assertTrue(distance <= SocialTuning.MEET_ARRIVAL + 0.5,
+                    "дух обязан остановиться на MEET_ARRIVAL (" + SocialTuning.MEET_ARRIVAL
+                            + ") от игрока, расстояние: " + distance);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_meet_missing", timeoutTicks = 100)
+    public static void meet_TargetMissing_FailsWithText(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("meet", Map.of(
+                "target", "player:NoSuchPlayer")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "meet без цели обязан отказаться, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("не найдена"),
+                    "отказ обязан называть ненайденную цель, причина: " + reason);
             TacticsScene.finish(helper, spirit);
         });
     }
