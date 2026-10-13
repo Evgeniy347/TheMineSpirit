@@ -8,6 +8,7 @@ import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
+import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.Situation;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalOutcome;
@@ -297,9 +298,11 @@ public final class TacticsService {
 
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
+        Optional<Point> retreatPoint = SafePointChoice.nearest(situation.self().pos(), collected.home(),
+                SafePointChoice.NO_CAMP);
         RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
-                collected.home(), situation.self().blocks());
+                retreatPoint, situation.self().blocks());
         return RetreatPlanner.plan(retreat.method(), input);
     }
 

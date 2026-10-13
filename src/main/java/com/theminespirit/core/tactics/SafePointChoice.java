@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class SafePointChoice {
+    public static final Optional<Point> NO_CAMP = Optional.empty();
+
     private SafePointChoice() {
     }
 

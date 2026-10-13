@@ -2,6 +2,7 @@ package com.theminespirit.core.tactics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -70,5 +71,35 @@ class SafePointChoiceTests {
                 () -> SafePointChoice.nearest(SELF, null, Optional.of(CAMP)),
                 "Отсутствие дома обязано приходить как Optional.empty(), а не null: null скрыл бы ошибку "
                         + "сборщика данных и увёл бы отход не туда");
+    }
+
+    @Test
+    void nearest_NoCampStubPresentHome_ReturnsHome() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.of(HOME), SafePointChoice.NO_CAMP);
+
+        assertEquals(Optional.of(HOME), choice,
+                "Заглушка лагеря обязана вести себя как раньше: пока лагеря нет, отход от точки с домом "
+                        + "идёт домой, иначе с включённой заглушкой планы отхода сломаются");
+        assertTrue(SafePointChoice.NO_CAMP.isEmpty(),
+                "Заглушка лагеря обязана быть пустой: лагерь в этом чеклисте не реализован, "
+                        + "а не-пустая заглушка подставила бы в отход выдуманную точку");
+    }
+
+    @Test
+    void nearest_NoCampStubWithoutHome_ReturnsEmpty() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.empty(), SafePointChoice.NO_CAMP);
+
+        assertEquals(Optional.empty(), choice,
+                "Без дома и с пустой заглушкой лагеря выбора нет: обязан вернуться пусто, как и раньше, "
+                        + "чтобы отход упал с явной ошибкой, а не пошёл в случайную точку мира");
+    }
+
+    @Test
+    void nearest_CampAttachedStubReplaced_ChoosesNearerCamp() {
+        Optional<Point> choice = SafePointChoice.nearest(SELF, Optional.of(HOME), Optional.of(CAMP));
+
+        assertEquals(Optional.of(CAMP), choice,
+                "Хук обязан принять лагерь без правок кода: когда вместо заглушки придёт точка лагеря, "
+                        + "отход обязан пойти к ближайшей из двух точек");
     }
 }
