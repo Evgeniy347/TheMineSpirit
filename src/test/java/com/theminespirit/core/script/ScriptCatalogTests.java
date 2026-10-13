@@ -163,7 +163,7 @@ class ScriptCatalogTests {
                 spec("mine_vein", List.of(), Map.of("count", new long[]{1, 256})),
                 spec("dig_area", List.of("x", "y", "z", "size"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
-                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                                "z", new long[]{WORLD_MIN, WORLD_MAX}, "size", new long[]{1, 16})),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[]{1, 256})),
                 spec("collect_drops", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("harvest_crop", List.of(), Map.of("radius", new long[]{1, 16})),
