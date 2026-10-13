@@ -39,6 +39,10 @@ public interface ScriptInstance {
         return null;
     }
 
+    default Optional<ScriptResult> result() {
+        return Optional.empty();
+    }
+
     default Map<String, Object> saveState() {
         return Map.of();
     }
