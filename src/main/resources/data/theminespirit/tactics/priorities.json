@@ -1,0 +1,31 @@
+{
+  "classes": {
+    "minecraft:zombie": "MELEE",
+    "minecraft:husk": "MELEE",
+    "minecraft:drowned": "MELEE",
+    "minecraft:skeleton": "SKELETON",
+    "minecraft:stray": "SKELETON",
+    "minecraft:spider": "MELEE",
+    "minecraft:cave_spider": "MELEE",
+    "minecraft:creeper": "CREEPER",
+    "minecraft:witch": "RANGED",
+    "minecraft:enderman": "MELEE",
+    "minecraft:slime": "MELEE",
+    "minecraft:phantom": "FLYER",
+    "minecraft:pillager": "RANGED",
+    "minecraft:vindicator": "MELEE",
+    "minecraft:ravager": "HEAVY",
+    "minecraft:blaze": "FLYER",
+    "minecraft:wither_skeleton": "MELEE",
+    "minecraft:piglin_brute": "MELEE",
+    "minecraft:warden": "HEAVY",
+    "default": "MELEE"
+  },
+  "priority": {
+    "ARCHER": ["CREEPER", "SKELETON", "RANGED", "MELEE"],
+    "MELEE": ["MELEE", "RANGED"]
+  },
+  "priorityWithoutArcher": {
+    "MELEE": ["SKELETON", "MELEE", "RANGED"]
+  }
+}
