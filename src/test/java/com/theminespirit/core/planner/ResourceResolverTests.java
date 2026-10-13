@@ -34,6 +34,18 @@ class ResourceResolverTests {
     }
 
     @Test
+    void resolve_DropWithSourceBlock_GatherCallNamesSourceBlock() {
+        ResourceKnowledge knowledge = new StubKnowledge(Set.of("raw_iron"), Map.of(), Map.of())
+                .withGatherSource("raw_iron", "iron_ore");
+
+        TaskNode plan = ResourceResolver.resolve("raw_iron", 3, knowledge);
+
+        assertEquals(gather("iron_ore", 3), plan,
+                "Дроп обязан резолвиться в сбор блока-источника: raw_iron не является блоком, gather block=raw_iron "
+                        + "не нашёл бы ни одного блока в мире и добыча завершилась бы провалом");
+    }
+
+    @Test
     void resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE);
 

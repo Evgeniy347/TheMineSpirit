@@ -1,0 +1,11 @@
+{
+  "raw_iron": ["iron_ore", "deepslate_iron_ore"],
+  "raw_copper": ["copper_ore", "deepslate_copper_ore"],
+  "raw_gold": ["gold_ore", "deepslate_gold_ore"],
+  "coal": ["coal_ore", "deepslate_coal_ore"],
+  "diamond": ["diamond_ore", "deepslate_diamond_ore"],
+  "redstone": ["redstone_ore", "deepslate_redstone_ore"],
+  "lapis_lazuli": ["lapis_ore", "deepslate_lapis_ore"],
+  "emerald": ["emerald_ore", "deepslate_emerald_ore"],
+  "cobblestone": ["stone"]
+}

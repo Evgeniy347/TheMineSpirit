@@ -3,7 +3,9 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.crafting.IngredientSpec;
 import com.theminespirit.core.crafting.RecipeSpec;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.ResourceResolver;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +106,36 @@ public final class RecipeKnowledgeGameTests {
         helper.assertTrue(recipe.isPresent() && recipe.get().outputCount() == 4,
                 "палки при пустом инвентаре обязаны выбирать рецепт из досок (4 за крафт), а не из бамбука (1 за "
                         + "крафт), выбран " + recipe);
+        helper.succeed();
+    }
+
+    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    public static void rawIron_DropKnowledge_GatherableFromIronOre(GameTestHelper helper) {
+        RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
+
+        helper.assertTrue(knowledge.isGatherable("raw_iron"),
+                "raw_iron обязан стать gatherable через знание «дроп ← руда» из drops.json: без него "
+                        + "acquire iron_ingot с нуля падает с «не найден способ добычи»");
+        helper.assertTrue(knowledge.gatherBlockFor("raw_iron").equals("iron_ore"),
+                "gather для raw_iron обязан ломать железную руду, знания вернули "
+                        + knowledge.gatherBlockFor("raw_iron"));
+        helper.assertTrue(knowledge.isGatherable("oak_log")
+                        && knowledge.gatherBlockFor("oak_log").equals("oak_log"),
+                "блоки-предметы не должны пострадать от таблицы дропов: oak_log добывается как сам блок, "
+                        + "gatherBlockFor вернул " + knowledge.gatherBlockFor("oak_log"));
+        helper.succeed();
+    }
+
+    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    public static void resolve_RawIron_GatherPlanBreaksIronOreBlocks(GameTestHelper helper) {
+        RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
+
+        TaskNode plan = ResourceResolver.resolve("raw_iron", 2, knowledge);
+        List<String> steps = FullCycleScene.scriptsOf(plan);
+
+        helper.assertTrue(steps.equals(List.of("gather:iron_ore")),
+                "план для сырого железа — сбор железной руды (один блок руды даёт один дроп), резолвер "
+                        + "и PlanValidator не должны его отклонить, шаги: " + steps);
         helper.succeed();
     }
 }

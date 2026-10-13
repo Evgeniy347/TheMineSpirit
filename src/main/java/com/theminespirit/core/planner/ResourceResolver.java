@@ -89,7 +89,7 @@ public final class ResourceResolver {
             }
         }
 
-        private static TaskNode batched(String script, String item, int count, boolean topLevel) {
+        private TaskNode batched(String script, String item, int count, boolean topLevel) {
             if (topLevel || count <= CatalogLimits.COUNT_MAX) {
                 return single(script, item, count);
             }
@@ -103,9 +103,10 @@ public final class ResourceResolver {
             return new SequenceNode(batches);
         }
 
-        private static ScriptCall single(String script, String item, int count) {
+        private ScriptCall single(String script, String item, int count) {
             return switch (script) {
-                case "gather" -> new ScriptCall("gather", Map.of("block", item, "count", count));
+                case "gather" -> new ScriptCall("gather",
+                        Map.of("block", knowledge.gatherBlockFor(item), "count", count));
                 case "craft" -> new ScriptCall("craft", Map.of("item", item, "count", count));
                 case "smelt" -> new ScriptCall("smelt", Map.of("item", item, "count", count));
                 default -> throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "

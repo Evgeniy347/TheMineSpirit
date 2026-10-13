@@ -6,6 +6,7 @@ import com.theminespirit.core.crafting.RecipeCurator;
 import com.theminespirit.core.crafting.RecipeIndex;
 import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.crafting.Stations;
+import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.planner.ResourceKnowledge;
@@ -62,9 +63,35 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public boolean isGatherable(String item) {
         String id = ItemIds.normalize(item);
-        Optional<ResourceLocation> block = ItemIds.item(id).map(BuiltInRegistries.ITEM::getKey)
-                .filter(BuiltInRegistries.BLOCK::containsKey);
-        return block.isPresent() && GatherPolicy.check(block.get().toString()) instanceof GatherPolicy.Allowed;
+        Optional<ResourceLocation> block = ownBlock(id);
+        if (block.isPresent()) {
+            return GatherPolicy.check(block.get().toString()) instanceof GatherPolicy.Allowed;
+        }
+        return DropTable.shared().blocksFor(id)
+                .map(blocks -> blocks.stream().anyMatch(RecipeKnowledge::gatherableBlock))
+                .orElse(false);
+    }
+
+    @Override
+    public String gatherBlockFor(String item) {
+        String id = ItemIds.normalize(item);
+        if (ownBlock(id).isPresent()) {
+            return id;
+        }
+        return DropTable.shared().blocksFor(id)
+                .map(blocks -> blocks.stream().filter(RecipeKnowledge::gatherableBlock).findFirst().orElse(item))
+                .orElse(item);
+    }
+
+    private static Optional<ResourceLocation> ownBlock(String id) {
+        return ItemIds.item(id).map(BuiltInRegistries.ITEM::getKey).filter(BuiltInRegistries.BLOCK::containsKey);
+    }
+
+    private static boolean gatherableBlock(String blockId) {
+        String qualified = blockId.indexOf(':') < 0 ? "minecraft:" + blockId : blockId;
+        ResourceLocation location = ResourceLocation.tryParse(qualified);
+        return location != null && BuiltInRegistries.BLOCK.containsKey(location)
+                && GatherPolicy.check(qualified) instanceof GatherPolicy.Allowed;
     }
 
     @Override

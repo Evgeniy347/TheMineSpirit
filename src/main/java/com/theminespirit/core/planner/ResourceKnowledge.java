@@ -6,6 +6,14 @@ import java.util.Optional;
 public interface ResourceKnowledge {
     boolean isGatherable(String item);
 
+    /**
+     * Блок, который надо сломать, чтобы добыть предмет: по умолчанию сам предмет —
+     * для дропов адаптер возвращает блок-источник из таблицы «дроп ← блок».
+     */
+    default String gatherBlockFor(String item) {
+        return item;
+    }
+
     boolean isCraftable(String item);
 
     int outputCount(String item);

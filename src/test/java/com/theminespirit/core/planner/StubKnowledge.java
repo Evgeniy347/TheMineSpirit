@@ -1,5 +1,6 @@
 package com.theminespirit.core.planner;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +12,7 @@ final class StubKnowledge implements ResourceKnowledge {
     private final Map<String, String> smelts;
     private final Map<String, Integer> outputs;
     private final Map<String, String> stations;
+    private final Map<String, String> gatherSources;
 
     StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts) {
         this(gatherable, crafts, smelts, Map.of());
@@ -23,16 +25,33 @@ final class StubKnowledge implements ResourceKnowledge {
 
     StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
             Map<String, Integer> outputs, Map<String, String> stations) {
+        this(gatherable, crafts, smelts, outputs, stations, Map.of());
+    }
+
+    private StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
+            Map<String, Integer> outputs, Map<String, String> stations, Map<String, String> gatherSources) {
         this.gatherable = Set.copyOf(gatherable);
         this.crafts = Map.copyOf(crafts);
         this.smelts = Map.copyOf(smelts);
         this.outputs = Map.copyOf(outputs);
         this.stations = Map.copyOf(stations);
+        this.gatherSources = Map.copyOf(gatherSources);
+    }
+
+    StubKnowledge withGatherSource(String item, String block) {
+        Map<String, String> sources = new HashMap<>(gatherSources);
+        sources.put(item, block);
+        return new StubKnowledge(gatherable, crafts, smelts, outputs, stations, sources);
     }
 
     @Override
     public boolean isGatherable(String item) {
         return gatherable.contains(item);
+    }
+
+    @Override
+    public String gatherBlockFor(String item) {
+        return gatherSources.getOrDefault(item, item);
     }
 
     @Override
