@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.io.IOException;
 import java.util.List;
@@ -15,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -235,9 +237,78 @@ public final class ResultGameTests {
         }
     }
 
+    @GameTest(batch = "result_chop_reload", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void chopTree_ReloadedAfterFirstTree_ResultKeepsCountersOfBoth(GameTestHelper helper)
+            throws IOException {
+        RestFixture rest = arena(helper);
+        buildOakTree(helper, 4, 4, 8);
+        buildOakTree(helper, 6, 6, 5);
+        SpiritEntity started = spawnedChopper(helper, rest);
+        AtomicReference<SpiritEntity> spirit = new AtomicReference<>(started);
+        ResultPoller poller = ResultPoller.start(helper, rest);
+        AtomicBoolean reloaded = new AtomicBoolean();
+        AtomicReference<CompoundTag> saved = new AtomicReference<>();
+        helper.onEachTick(() -> {
+            if (!reloaded.get() && saved.get() == null
+                    && spirit.get().taskProgress().map(progress -> progress.done() != null && progress.done() >= 1)
+                            .orElse(false)) {
+                CompoundTag tag = new CompoundTag();
+                spirit.get().saveWithoutId(tag);
+                spirit.get().discard();
+                saved.set(tag);
+            }
+            if (saved.get() != null && !reloaded.get()) {
+                reloaded.set(true);
+                SpiritEntity back = ModEntities.SPIRIT.get().create(helper.getLevel());
+                back.load(saved.get());
+                helper.getLevel().addFreshEntity(back);
+                spirit.set(back);
+                rest.track(back);
+            }
+        });
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest
+                .post("/v1/bots/" + started.getStringUUID() + "/tasks",
+                        taskBody("chop_tree",
+                                Map.of("species", "oak", "count", 2, "radius", 8, "replant", false)))
+                .thenApply(accepted -> {
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
+                    poller.follow(accepted.json().path("task_id").asText());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario, () -> {
+            helper.assertTrue(reloaded.get(), "Дух обязан пройти перезагрузку до завершения рубки двух деревьев");
+            helper.assertTrue("succeeded".equals(poller.latest()),
+                    "Рубка двух деревьев с перезагрузкой обязана завершиться успехом; последнее состояние "
+                            + poller.latest() + ", тело " + poller.lastJson());
+            String result = poller.lastJson().path("result").asText("");
+            helper.assertTrue(result.contains("срублено 2 из 2"),
+                    "Итог обязан называть оба дерева «срублено 2 из 2», получено " + result);
+            helper.assertTrue(result.contains("оставлено"),
+                    "Итог обязан сохранить счётчик недостижимых брёвен первого дерева, получено " + result);
+            helper.assertTrue(countLogs(helper) == 2,
+                    "В мире обязаны остаться только 2 недостижимых бревна первого дерева, осталось "
+                            + countLogs(helper));
+        });
+    }
+
+    private static int countLogs(GameTestHelper helper) {
+        int count = 0;
+        for (int x = -2; x < 11; x++) {
+            for (int y = 0; y < 12; y++) {
+                for (int z = -2; z < 11; z++) {
+                    if (helper.getBlockState(new BlockPos(x, y, z)).is(Blocks.OAK_LOG)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
     private static RestFixture arena(GameTestHelper helper) throws IOException {
         GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        GameTestFixtures.buildFloor(helper, Blocks.DIRT);
         return RestFixture.start(helper.getLevel().getServer());
     }
 
