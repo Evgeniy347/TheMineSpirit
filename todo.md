@@ -95,6 +95,7 @@
 - [x] Флеки GameTest: follow (уникальный мок-игрок), команды духа (селектор по тегу), куча земли — пещера внутри arena (Sonnet, 13.10)
 - [x] Техдолг: ферма — одно число досягаемости FarmTuning.REACH, припасы проверяются каждый тик с итогом через FarmTally (mimo, 13.10)
 - [x] Техдолг: HerdSession разбит по действиям, ложный счётчик чтений блоков убран, GameTest с живыми коровами (muse, 13.10)
+- [x] Движение: goto_block, come_to_player, return_home (дом духа /spirit home), patrol, wander, keep_distance, walk_careful (CAREFUL), step_over, approach (чеклист 24)
 
 ## В работе и техдолг
 
@@ -140,6 +141,10 @@
 - [ ] Общие риски GameTest (td-flakes2): MineGameTests на шаблоне empty с пещерой за структурой; Policy*/Rest* — общее имя
       мок-игрока (перевести на GameTestFixtures.mockPlayer); MemoryGameTests/PolicyProtectionGameTests — селекторы по
       расстоянию (перевести на тег). Новый флек `till_hoebreaksafterfirstcell_failsnamingtilledprogress` («пашни 0»).
+- [ ] Дом духа (ревью 24): `SpiritHome` (NBT, /spirit home, return_home) и точка памяти `MemoryType.BASE` (её читает отход
+      тактики HOME) — два хранилища «дома»; свести к одному источнику (SpiritHome), BASE — именованные точки.
+- [ ] `walk_careful` вдоль пропасти: GameTest не краснеет на подлоге (ванильный поиск и так идёт по краю) — найти сценарий,
+      где осторожный путь отличается от обычного, или оставить как регрессионный с пометкой.
 - [ ] Сторож GameTest (повторяется в ревью 11Б, 12Б R15/R22): тест, который спавнит духа или ставит блоки, не
       использует шаблон `empty` 3×3×3 — дух или блок за его пределами попадает в соседний неактивный чанк (флеки ~1 из 8).
       Сторож сканирует gametest/*: метод с духом/setBlock → template "arena"; перевести существующие (52 empty в main).
@@ -164,11 +169,11 @@
 Действие конкретно: одна цель, без «углубления» (цепочки/ресурсы — дело ядра и ИИ). Политики — всегда включённые правила, не задачи.
 
 ### Движение и навигация
-- [ ] `goto`, `goto_block`, `come_to_player`, `follow`, `escort`, `meet`
-- [ ] `return_home`, `patrol`, `wander`, `explore`, `keep_distance`
+- [ ] `escort`, `meet`
+- [ ] `explore`
 - [ ] `flee_from` (опасность: лава, враг, крипер), `retreat`, `disengage`
-- [ ] `walk_careful` (не сходить с края выше 2), `bridge`, `pillar_up`, `descend`, `climb`
-- [ ] `swim`, `cross_water`, `step_over`, `approach` (выбор стороны подхода)
+- [ ] `bridge`, `pillar_up`, `descend`, `climb`
+- [ ] `swim`, `cross_water`
 
 ### Восприятие
 
