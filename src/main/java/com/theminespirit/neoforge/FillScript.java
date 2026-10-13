@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.FillParams;
 import java.util.Map;
@@ -27,6 +28,13 @@ final class FillScript implements ScriptInstance {
     @Override
     public Optional<Progress> progress() {
         return Optional.of(session.progress());
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return session.outcome() == FillSession.Outcome.SUCCEEDED
+                ? Optional.of(new ScriptResult.Data(session.resultData()))
+                : Optional.empty();
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildState;
+import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
@@ -29,6 +31,7 @@ final class PlaceBlockScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private int placed;
+    private final BuildResult tally = new BuildResult();
 
     PlaceBlockScript(SpiritEntity spirit, PlaceBlockParams params) {
         this.spirit = spirit;
@@ -83,6 +86,8 @@ final class PlaceBlockScript implements ScriptInstance {
         BlockPlacer.Begin begin = placer.begin(toPos(target), wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
             placed = 1;
+            tally.placed(blockId);
+            tally.supplies(1, 0);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -112,6 +117,12 @@ final class PlaceBlockScript implements ScriptInstance {
     }
 
     @Override
+    public Optional<ScriptResult> result() {
+        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Data(tally.toData()))
+                : Optional.empty();
+    }
+
+    @Override
     public void cancel() {
         approach.cancel();
     }
@@ -135,6 +146,9 @@ final class PlaceBlockScript implements ScriptInstance {
     public void restoreState(Map<String, Object> state) {
         BuildState snapshot = BuildState.fromMap(state);
         placed = Math.max(placed, snapshot.placed());
+        for (int i = 0; i < snapshot.placed(); i++) {
+            tally.placed(blockId);
+        }
     }
 
     private BlockCoord spiritCoord() {

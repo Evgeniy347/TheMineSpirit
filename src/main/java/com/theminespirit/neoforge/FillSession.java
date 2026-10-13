@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildOrder;
 import com.theminespirit.core.building.BuildReservations;
+import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
@@ -54,6 +55,7 @@ public final class FillSession {
     private int cursor;
     private BlockCoord current;
     private int placed;
+    private int prebuilt;
     private int skipped;
     private int failed;
     private int noStand;
@@ -61,6 +63,7 @@ public final class FillSession {
     private int foreignSkipped;
     private int blockReads;
     private int slices;
+    private final BuildResult tally = new BuildResult();
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
         this.spirit = spirit;
@@ -130,6 +133,10 @@ public final class FillSession {
         return blockId;
     }
 
+    public Map<String, Object> resultData() {
+        return tally.toData();
+    }
+
     public int blockReads() {
         return blockReads;
     }
@@ -147,6 +154,15 @@ public final class FillSession {
         placed = Math.max(placed, state.placed());
         skipped = Math.max(skipped, state.skipped());
         failed = Math.max(failed, state.failed());
+        for (int i = 0; i < state.placed(); i++) {
+            tally.placed(blockId);
+        }
+        for (int i = 0; i < state.skipped(); i++) {
+            tally.skipped();
+        }
+        for (int i = 0; i < state.failed(); i++) {
+            tally.failed();
+        }
     }
 
     private void exitTick() {
@@ -172,6 +188,7 @@ public final class FillSession {
             BlockCoord cell = order.get(cursor);
             if (noExit && spiritCells.contains(cell)) {
                 skipped++;
+                tally.skipped();
                 cursor++;
                 continue;
             }
@@ -179,12 +196,14 @@ public final class FillSession {
             blockReads++;
             BlockState current = level.getBlockState(pos);
             if (current.is(wanted.getBlock())) {
+                prebuilt++;
                 cursor++;
                 continue;
             }
             if (reservations.foreign(cell, spirit.getUUID())) {
                 foreignSkipped++;
                 skipped++;
+                tally.skipped();
                 cursor++;
                 continue;
             }
@@ -195,6 +214,7 @@ public final class FillSession {
             if (stands.isEmpty()) {
                 noStand++;
                 skipped++;
+                tally.skipped();
                 release(cell);
                 cursor++;
                 continue;
@@ -216,6 +236,7 @@ public final class FillSession {
             case STUCK, TIMEOUT -> {
                 noStand++;
                 skipped++;
+                tally.skipped();
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -227,6 +248,7 @@ public final class FillSession {
         BlockPlacer.Begin begin = placer.begin(pos, wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
             placed++;
+            tally.placed(blockId);
             releaseAndAdvance();
             state = State.PICK;
             return;
@@ -234,6 +256,7 @@ public final class FillSession {
         if (begin instanceof BlockPlacer.Protected single) {
             protectedSkipped++;
             skipped++;
+            tally.skipped();
             releaseAndAdvance();
             state = State.PICK;
             if (placed == 0 && cursor >= order.size()) {
@@ -245,19 +268,23 @@ public final class FillSession {
         switch (refused.reason()) {
             case NO_MATERIAL -> {
                 failed++;
+                tally.failed();
                 releaseAndAdvance();
-                int have = BlockItems.countIn(spirit.getInventory(), blockId);
-                fail("не хватило материала '" + blockId + "': нужно " + order.size() + ", есть " + (placed + have)
+                int have = placed + BlockItems.countIn(spirit.getInventory(), blockId);
+                tally.supplies(have, Math.max(order.size() - prebuilt - have, 0));
+                fail("не хватило материала '" + blockId + "': нужно " + order.size() + ", есть " + have
                         + "; поставлено " + placed + " из " + order.size());
             }
             case OCCUPIED, NO_SUPPORT, CHUNK_NOT_LOADED -> {
                 skipped++;
+                tally.skipped();
                 releaseAndAdvance();
                 state = State.PICK;
             }
             case OUT_OF_REACH -> {
                 noStand++;
                 skipped++;
+                tally.skipped();
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -276,6 +303,7 @@ public final class FillSession {
             fail(summary() + "; ни один блок не поставлен");
             return;
         }
+        tally.supplies(placed, 0);
         outcome = Outcome.SUCCEEDED;
     }
 

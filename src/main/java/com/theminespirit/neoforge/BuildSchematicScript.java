@@ -1,10 +1,12 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildReservations;
+import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
@@ -36,6 +38,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private int protectedSkipped;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
+    private final BuildResult tally = new BuildResult();
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -103,6 +106,7 @@ final class BuildSchematicScript implements ScriptInstance {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
+        tally.supplies(placed, 0);
         outcome = ScriptStatus.SUCCEEDED;
         return outcome;
     }
@@ -112,12 +116,14 @@ final class BuildSchematicScript implements ScriptInstance {
         release(entry.pos());
         if (begin instanceof BlockPlacer.Started) {
             placed++;
+            tally.placed(entry.block());
             cursor++;
             return;
         }
         if (begin instanceof BlockPlacer.Protected single) {
             protectedSkipped++;
             skipped++;
+            tally.skipped();
             cursor++;
             if (placed == 0 && cursor >= entries.size()) {
                 fail("строить запрещено: " + single.reason() + "; поставлено 0 из " + entries.size());
@@ -127,12 +133,16 @@ final class BuildSchematicScript implements ScriptInstance {
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
             failed++;
+            tally.failed();
             cursor++;
+            int have = placed + BlockItems.countIn(spirit.getInventory(), entry.block());
+            tally.supplies(have, Math.max(countNeeded(entry.block()) - BlockItems.countIn(spirit.getInventory(), entry.block()), 0));
             fail("не хватило материала '" + entry.block() + "': поставлено " + placed + " из " + entries.size()
                     + "; нужно " + countNeeded(entry.block()) + ", есть " + BlockItems.countIn(spirit.getInventory(), entry.block()));
             return;
         }
         skipped++;
+        tally.skipped();
         cursor++;
     }
 
@@ -160,6 +170,12 @@ final class BuildSchematicScript implements ScriptInstance {
     public Optional<Progress> progress() {
         int total = Math.max(entries.size(), 1);
         return Optional.of(new Progress(Math.min(cursor, entries.size()), total));
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Data(tally.toData()))
+                : Optional.empty();
     }
 
     @Override
@@ -191,6 +207,16 @@ final class BuildSchematicScript implements ScriptInstance {
         placed = Math.max(placed, snapshot.placed());
         skipped = Math.max(skipped, snapshot.skipped());
         failed = Math.max(failed, snapshot.failed());
+        String kind = entries.isEmpty() ? "" : entries.get(0).block();
+        for (int i = 0; i < snapshot.placed() && !kind.isEmpty(); i++) {
+            tally.placed(kind);
+        }
+        for (int i = 0; i < snapshot.skipped(); i++) {
+            tally.skipped();
+        }
+        for (int i = 0; i < snapshot.failed(); i++) {
+            tally.failed();
+        }
         if (state.get("cursor") instanceof Number number) {
             cursor = Math.max(cursor, Math.min(number.intValue(), entries.size()));
         }

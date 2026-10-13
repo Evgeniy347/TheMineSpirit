@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
+import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.BreakSafety;
@@ -56,8 +57,10 @@ public class ClearAreaSession {
     protected int protectedSkipped;
     protected int foreignSkipped;
     protected int unbreakable;
+    protected int restoredSkipped;
     private int entityQueries;
     private int blockReads;
+    private final BuildResult tally = new BuildResult();
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this.spirit = spirit;
@@ -120,7 +123,11 @@ public class ClearAreaSession {
     }
 
     public int skippedTotal() {
-        return unsafe + noStand + protectedSkipped + foreignSkipped + unbreakable;
+        return unsafe + noStand + protectedSkipped + foreignSkipped + unbreakable + restoredSkipped;
+    }
+
+    public Map<String, Object> resultData() {
+        return tally.toData();
     }
 
     public Map<String, Object> saveState() {
@@ -130,6 +137,16 @@ public class ClearAreaSession {
     public void restoreState(Map<String, Object> saved) {
         BuildState state = BuildState.fromMap(saved);
         removed = Math.max(removed, state.removed());
+        restoredSkipped = Math.max(restoredSkipped, state.skipped());
+        for (int i = 0; i < state.removed(); i++) {
+            tally.removed();
+        }
+        for (int i = 0; i < state.skipped(); i++) {
+            tally.skipped();
+        }
+        for (int i = 0; i < state.failed(); i++) {
+            tally.failed();
+        }
     }
 
     protected int boxVolume() {
@@ -149,6 +166,7 @@ public class ClearAreaSession {
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
+            noteSkipped(exhausted.unsafe() + exhausted.noStand());
             remaining.clear();
             finish();
             return;
@@ -157,6 +175,7 @@ public class ClearAreaSession {
         remaining.remove(next.target());
         if (reservations.foreign(next.target(), spirit.getUUID())) {
             foreignSkipped++;
+            tally.skipped();
             return;
         }
         reservations.reserve(next.target(), spirit.getUUID());
@@ -172,6 +191,7 @@ public class ClearAreaSession {
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
                 noStand++;
+                tally.skipped();
                 releaseCurrent();
                 state = State.PICK;
             }
@@ -181,6 +201,7 @@ public class ClearAreaSession {
     private void prepareBreak() {
         if (!(MiningSafety.canBreak(currentTarget, safety) instanceof BreakSafety.Safe)) {
             unsafe++;
+            tally.skipped();
             releaseCurrent();
             state = State.PICK;
             return;
@@ -188,12 +209,14 @@ public class ClearAreaSession {
         BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget));
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
+            tally.skipped();
             releaseCurrent();
             state = State.PICK;
             return;
         }
         if (begin instanceof BlockBreaker.Refused) {
             unbreakable++;
+            tally.skipped();
             releaseCurrent();
             state = State.PICK;
             return;
@@ -208,6 +231,7 @@ public class ClearAreaSession {
             case BROKEN -> {
                 blockReads++;
                 removed++;
+                tally.removed();
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
                         PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
                 state = State.COLLECT;
@@ -249,6 +273,7 @@ public class ClearAreaSession {
     protected Outcome fail(String reason) {
         failureReason = reason;
         outcome = Outcome.FAILED;
+        tally.failed();
         cancel();
         return outcome;
     }
@@ -263,6 +288,12 @@ public class ClearAreaSession {
         if (currentTarget != null) {
             reservations.release(currentTarget, spirit.getUUID());
             currentTarget = null;
+        }
+    }
+
+    private void noteSkipped(int count) {
+        for (int i = 0; i < count; i++) {
+            tally.skipped();
         }
     }
 
