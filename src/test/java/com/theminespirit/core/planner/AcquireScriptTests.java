@@ -1,0 +1,442 @@
+package com.theminespirit.core.planner;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.theminespirit.core.engine.ConditionRegistry;
+import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.engine.TaskSnapshotCodec;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.ScriptCatalog;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.Test;
+
+class AcquireScriptTests {
+    private static final String ITEM = "stick";
+    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog();
+    private static final ConditionRegistry NO_CONDITIONS = ConditionRegistry.of(Map.of());
+
+    @Test
+    void inventoryCoversGoal_FirstTick_SucceedsWithoutSubplan() {
+        AtomicInteger registryCalls = new AtomicInteger();
+        AcquireScript script = script(2, new StubSupplies(5, Map.of()), alwaysGatherable(), registryCalls);
+
+        ScriptStatus status = script.tick();
+
+        assertEquals(ScriptStatus.SUCCEEDED, status,
+                "Цель уже в инвентаре — acquire обязан завершиться сразу, мир не трогаем");
+        assertEquals(0, registryCalls.get(),
+                "Реестр скриптов не должен запрашиваться: подплан не строится, когда хватает инвентаря");
+        assertNull(script.failureReason(), "Успешный acquire не несёт причины провала");
+    }
+
+    @Test
+    void shortfallExists_ChestCoversRemainder_PlanStartsWithWithdraw() {
+        AcquireScript script = script(3, new StubSupplies(1, Map.of("chestA", 10)), alwaysGatherable(),
+                new AtomicInteger());
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "Не хватает 2 из 3 — подплан обязан быть построен");
+        List<TaskNode> steps = ((SequenceNode) plan.get()).steps();
+        assertEquals("withdraw", ((ScriptCall) steps.get(0)).script(),
+                "Снабжение идёт первым: сначала сундуки, потом мир");
+        assertEquals(2, ((ScriptCall) steps.get(0)).params().get("count"),
+                "withdraw берёт ровно остаток после инвентаря: 3 − 1 инвентарь");
+        assertEquals("chestA", ((ScriptCall) steps.get(0)).params().get("container"),
+                "Шаг обязан называть ближний сундук");
+    }
+
+    @Test
+    void withdrawCoversRemainder_RemainderCovered_ResolverNotCalled() {
+        StubKnowledge knowledge = alwaysGatherable();
+        AcquireScript script = script(3, new StubSupplies(1, Map.of("chestA", 10)), knowledge,
+                new AtomicInteger());
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "Остаток покрыт сундуком — подплан обязан быть");
+        List<TaskNode> steps = ((SequenceNode) plan.get()).steps();
+        assertEquals(1, steps.size(),
+                "Инвентарь + сундук покрывают цель — gather/craft/smelt не планируются");
+        assertTrue(knowledge.gatherQueries.isEmpty(),
+                "Резолвер не вызывается, когда withdraw покрывает остаток: мир не трогаем без нужды");
+    }
+
+    @Test
+    void chestsEmpty_RemainderUncovered_ResolverPlansGather() {
+        StubKnowledge knowledge = alwaysGatherable();
+        AcquireScript script = script(3, new StubSupplies(1, Map.of()), knowledge, new AtomicInteger());
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "Остаток 2 — подплан обязан быть");
+        List<TaskNode> steps = ((SequenceNode) plan.get()).steps();
+        assertEquals(List.of(ITEM), knowledge.gatherQueries,
+                "Резолвер вызывается на остаток 3 − 1 = 2, когда сундуков нет");
+        assertEquals("gather", ((ScriptCall) steps.get(steps.size() - 1)).script(),
+                "Шаг добычи идёт последним, после снабжения");
+    }
+
+    @Test
+    void stepKeepsFailing_AttemptsReachLimit_RebuildStops() {
+        AtomicInteger builds = new AtomicInteger();
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> {
+                    builds.incrementAndGet();
+                    return ScriptRegistry.of(Map.of("gather", params -> new AlwaysFailingInstance()));
+                }, NO_CONDITIONS);
+
+        ScriptStatus status = run(script, 40);
+
+        assertEquals(ScriptStatus.FAILED, status,
+                "Шаг падает на каждой пересборке — acquire обязан честно завершиться FAILED");
+        assertEquals(CatalogLimits.ACQUIRE_MAX_ATTEMPTS, script.attempts(),
+                "Пересборок не больше ACQUIRE_MAX_ATTEMPTS: мир перечитывается ограниченное число раз");
+        assertEquals(CatalogLimits.ACQUIRE_MAX_ATTEMPTS, builds.get(),
+                "Каждая попытка строит новый подплан и берёт свежий реестр — но не больше предела");
+        String reason = script.failureReason();
+        assertTrue(reason != null && reason.contains(ITEM),
+                "FAILED обязан нести причину с числами: по ней видно, что именно не добыли");
+        assertTrue(reason.contains("×1"), "Причина называет цель: сколько просили");
+        assertTrue(reason.contains("попыток " + CatalogLimits.ACQUIRE_MAX_ATTEMPTS),
+                "Причина называет число попыток: «похоже, работает» не отдаём");
+    }
+
+    @Test
+    void subplanExceedsBudget_NodesOverBudget_BuildFailsWithNumbers() {
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.chestSteps = withdrawSteps(CatalogLimits.COUNT_MAX + 1);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG,
+                ConditionCatalog.empty(), () -> {
+                    throw new AssertionError("Реестр не должен запрашиваться: подплан отклоняется по бюджету");
+                }, NO_CONDITIONS);
+
+        Optional<TaskNode> plan;
+        String reason = null;
+        try {
+            plan = script.buildSubplan();
+        } catch (RuntimeException error) {
+            plan = Optional.empty();
+            reason = error.getMessage();
+        }
+
+        assertTrue(plan.isEmpty(), "Подплан сверх 256 узлов обязан отклониться, а не запускаться");
+        assertTrue(reason != null && reason.contains("256"),
+                "Отклонение по бюджету обязано нести текст с пределом узлов: по нему видно, что упёрлись в бюджет");
+        assertEquals(ScriptStatus.FAILED, script.tick(),
+                "Провал сборки по бюджету — acquire завершается FAILED, а не крутится безлимитно");
+        assertTrue(script.failureReason() != null && script.failureReason().contains("попыток"),
+                "FAILED по бюджету обязан нести причину с числом попыток");
+    }
+
+    @Test
+    void nestedRunnerRunning_WhileWorking_ProgressAndExemptionsDelegate() {
+        AtomicInteger ticks = new AtomicInteger();
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, ticks))),
+                NO_CONDITIONS);
+
+        assertEquals(ScriptStatus.RUNNING, script.tick(), "Первый тик строит подплан и двигает первый шаг");
+        assertEquals(ScriptStatus.RUNNING, script.tick(), "Счётный скрипт ещё работает");
+        assertTrue(script.progress().isPresent(), "Вложенный шаг счётный — прогресс обязан дойти до acquire");
+        assertEquals(2, script.progress().get().done(), "Прогресс делегируется вложенному раннеру");
+        assertEquals(3, script.progress().get().target(), "Цель прогресса — из вложенного скрипта");
+        assertEquals(ScriptStatus.SUCCEEDED, script.tick(), "Третий тик доводит счётный скрипт до конца");
+    }
+
+    @Test
+    void nestedStarted_ControlSignals_ReachLiveStep() {
+        List<String> calls = new ArrayList<>();
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new RecordingInstance(calls))),
+                NO_CONDITIONS);
+
+        script.tick();
+        script.suspend();
+        script.resume();
+        script.cancel();
+
+        assertEquals(List.of("suspend", "resume", "cancel"), calls,
+                "Управление вложенным раннером доходит до живого скрипта шага: иначе отмена оставит духа в мире");
+    }
+
+    @Test
+    void control_BeforeFirstTick_ScriptStillRunsAfter() {
+        AcquireScript script = script(1, new StubSupplies(0, Map.of()), alwaysGatherable(),
+                new AtomicInteger());
+
+        script.suspend();
+        script.resume();
+        script.cancel();
+
+        assertEquals(ScriptStatus.RUNNING, run(script, 5),
+                "Управление до первого тика безопасно: подплан строится после, скрипт не падает");
+    }
+
+    @Test
+    void saveRestore_BetweenTicks_AttemptAndSnapshotKept() {
+        AtomicInteger ticks = new AtomicInteger();
+        AcquireScript first = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
+                NO_CONDITIONS);
+        assertEquals(ScriptStatus.RUNNING, first.tick(), "Первый тик строит подплан");
+        assertEquals(ScriptStatus.RUNNING, first.tick(), "Вложенный скрипт работает");
+
+        Map<String, Object> saved = first.saveState();
+        AcquireScript restored = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
+                NO_CONDITIONS);
+        restored.restoreState(saved);
+
+        assertEquals(first.attempts(), restored.attempts(),
+                "restoreState не теряет попытку: перезапуск не даёт скрипту свежих пересборок");
+        assertEquals(saved, restored.saveState(),
+                "Снимок после восстановления совпадает с исходным: шаг и попытка не потеряны");
+        assertEquals(2, restored.progress().get().done(),
+                "Прогресс после восстановления — позиция вложенного шага до перезапуска, не ноль");
+        assertEquals(ScriptStatus.RUNNING, restored.tick(),
+                "Восстановленный скрипт продолжает с того же шага, а не начинает добычу заново");
+        assertEquals(3, restored.progress().get().done(),
+                "Тик после восстановления двигает тот же шаг: счётчик продолжился, а не начался заново");
+    }
+
+    @Test
+    void savedRunnerState_AfterFirstTick_SnapshotDecodesBack() {
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, new AtomicInteger()))),
+                NO_CONDITIONS);
+        script.tick();
+
+        String snapshot = (String) script.saveState().get("runner");
+
+        assertTrue(snapshot != null && TaskSnapshotCodec.decode(snapshot).plan() instanceof SequenceNode,
+                "Снимок вложенной задачи обязан сохраняться строкой и разбираться обратно в то же дерево шагов");
+    }
+
+    @Test
+    void restore_WithoutRunnerSnapshot_SubplanRebuildsOnTick() {
+        AcquireScript restored = script(1, new StubSupplies(0, Map.of()), alwaysGatherable(),
+                new AtomicInteger());
+        restored.restoreState(Map.of("attempts", 1));
+
+        assertEquals(1, restored.attempts(), "Попытка читается из снимка, даже если снимка вложенной задачи нет");
+        assertEquals(ScriptStatus.RUNNING, run(restored, 5),
+                "Без снимка подплан строится заново на первом тике: восстановление не ломает скрипт");
+    }
+
+    @Test
+    void constructor_BlankItem_IsRejectedWithReason() {
+        String reason = assertThrows(IllegalArgumentException.class,
+                () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG,
+                        ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS),
+                "Пустой item обязан отвергаться: без имени предмета скрипт не знает, что добыть")
+                .getMessage();
+
+        assertTrue(reason.contains("Предмет"), "Ошибка называет предмет: по ней видно, чего не хватило");
+    }
+
+    private static Supplier<ScriptRegistry> countingRegistry(AtomicInteger calls, int ticks) {
+        return () -> {
+            calls.incrementAndGet();
+            return ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(ticks, new AtomicInteger())));
+        };
+    }
+
+    private static ScriptStatus run(AcquireScript script, int maxTicks) {
+        ScriptStatus status = ScriptStatus.RUNNING;
+        for (int i = 0; i < maxTicks && status == ScriptStatus.RUNNING; i++) {
+            status = script.tick();
+        }
+        return status;
+    }
+
+    private static AcquireScript script(int count, StubSupplies supplies, StubKnowledge knowledge,
+            AtomicInteger registryCalls) {
+        return new AcquireScript(ITEM, count, knowledge, supplies, CATALOG, ConditionCatalog.empty(),
+                countingRegistry(registryCalls, 10), NO_CONDITIONS);
+    }
+
+    private static StubKnowledge alwaysGatherable() {
+        return new StubKnowledge();
+    }
+
+    private static List<ScriptCall> withdrawSteps(int steps) {
+        List<ScriptCall> calls = new ArrayList<>();
+        for (int i = 0; i < steps; i++) {
+            calls.add(new ScriptCall("withdraw", Map.of(
+                    "container", i + ",64," + i,
+                    "item", ITEM,
+                    "count", 1,
+                    "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+        }
+        return calls;
+    }
+
+    private static final class StubSupplies implements AcquireSupplies {
+        private final int inventory;
+        private final Map<String, Integer> chests;
+        private List<ScriptCall> chestSteps;
+
+        StubSupplies(int inventory, Map<String, Integer> chests) {
+            this.inventory = inventory;
+            this.chests = new LinkedHashMap<>(chests);
+        }
+
+        @Override
+        public int inInventory(String item) {
+            return inventory;
+        }
+
+        @Override
+        public List<ScriptCall> withdraw(String item, int maxCount) {
+            if (chestSteps != null) {
+                return chestSteps;
+            }
+            List<ScriptCall> steps = new ArrayList<>();
+            int left = maxCount;
+            for (Map.Entry<String, Integer> chest : chests.entrySet()) {
+                int available = Math.min(chest.getValue(), left);
+                if (available <= 0) {
+                    continue;
+                }
+                steps.add(new ScriptCall("withdraw", Map.of(
+                        "container", chest.getKey(),
+                        "item", item,
+                        "count", available,
+                        "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+                left -= available;
+            }
+            return steps;
+        }
+    }
+
+    private static final class StubKnowledge implements ResourceKnowledge {
+        private final List<String> gatherQueries = new ArrayList<>();
+
+        @Override
+        public boolean isGatherable(String item) {
+            gatherQueries.add(item);
+            return true;
+        }
+
+        @Override
+        public boolean isCraftable(String item) {
+            return false;
+        }
+
+        @Override
+        public int outputCount(String item) {
+            return 1;
+        }
+
+        @Override
+        public List<Ingredient> ingredientsFor(String item) {
+            return List.of();
+        }
+
+        @Override
+        public boolean isSmeltable(String item) {
+            return false;
+        }
+
+        @Override
+        public String smeltInputFor(String item) {
+            throw new AssertionError("Скрипт в тесте не плавит: резолвер не должен спрашивать вход плавки");
+        }
+    }
+
+    private static final class AlwaysFailingInstance implements ScriptInstance {
+        @Override
+        public ScriptStatus tick() {
+            return ScriptStatus.FAILED;
+        }
+
+        @Override
+        public String failureReason() {
+            return "нет блока в радиусе";
+        }
+    }
+
+    private static final class CountingInstance implements ScriptInstance {
+        private final int target;
+        private final AtomicInteger shared;
+        private int done;
+
+        CountingInstance(int target, AtomicInteger sharedTicks) {
+            this.target = target;
+            this.shared = sharedTicks;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            done++;
+            shared.incrementAndGet();
+            return done >= target ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+        }
+
+        @Override
+        public Optional<Progress> progress() {
+            return Optional.of(new Progress(Math.min(done, target), target));
+        }
+
+        @Override
+        public Map<String, Object> saveState() {
+            return Map.of("done", done);
+        }
+
+        @Override
+        public void restoreState(Map<String, Object> state) {
+            done = (Integer) state.getOrDefault("done", 0);
+        }
+    }
+
+    private static final class RecordingInstance implements ScriptInstance {
+        private final List<String> calls;
+
+        RecordingInstance(List<String> calls) {
+            this.calls = calls;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            return ScriptStatus.RUNNING;
+        }
+
+        @Override
+        public void suspend() {
+            calls.add("suspend");
+        }
+
+        @Override
+        public void resume() {
+            calls.add("resume");
+        }
+
+        @Override
+        public void cancel() {
+            calls.add("cancel");
+        }
+    }
+}
