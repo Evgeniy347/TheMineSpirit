@@ -92,6 +92,72 @@ public final class ClearGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "clear_pocket", timeoutTicks = 400)
+    public static void clear_DirtBlockAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
+        prepare(helper);
+        for (int x = 3; x <= 5; x++) {
+            for (int y = 1; y <= 2; y++) {
+                for (int z = 3; z <= 5; z++) {
+                    if (x == 4 && z == 4) {
+                        continue;
+                    }
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.DIRT);
+                }
+            }
+        }
+        for (int x = 2; x <= 6; x++) {
+            for (int z = 2; z <= 6; z++) {
+                if (x >= 3 && x <= 5 && z >= 3 && z <= 5) {
+                    continue;
+                }
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, 2, z), Blocks.STONE);
+            }
+        }
+        for (int x = 2; x <= 6; x++) {
+            for (int z = 2; z <= 6; z++) {
+                helper.setBlock(new BlockPos(x, 3, z), Blocks.STONE);
+            }
+        }
+        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+        SpiritRun run = SpiritRun.launch(helper, spirit, clearCall(helper, new BlockPos(3, 1, 3), new BlockPos(5, 2, 5)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "шестнадцать блоков земли вокруг запечатанной стоянки недобываемы: задача обязана провалиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("недостижимо: 10"),
+                    "причина обязана назвать 10 недостижимых клеток (8 земли кольца и 2 воздуха кармана "
+                            + "с той же запечатанной стоянкой), фактически: " + reason);
+            int left = 0;
+            for (int x = 3; x <= 5; x++) {
+                for (int y = 1; y <= 2; y++) {
+                    for (int z = 3; z <= 5; z++) {
+                        if (x == 4 && z == 4) {
+                            continue;
+                        }
+                        if (helper.getBlockState(new BlockPos(x, y, z)).is(Blocks.DIRT)) {
+                            left++;
+                        }
+                    }
+                }
+            }
+            helper.assertTrue(left == 16,
+                    "запечатанную землю трогать нельзя: в мире обязано остаться 16 блоков, осталось " + left);
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 0,
+                    "добыть из запечатанного блока нечего: в инвентаре обязано быть 0 земли, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
+            helper.assertTrue(run.spiritTicks() <= 200,
+                    "отказ по запечатанной стоянке обязан наступить за 200 тиков духа "
+                            + "(общая стоянка исключается после трёх неудачных подходов), заняло "
+                            + run.spiritTicks());
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
     public static void clear_BedrockAndLavaNeighbour_SkipsWithoutFailing(GameTestHelper helper) {
         prepare(helper);

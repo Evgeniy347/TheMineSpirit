@@ -5,6 +5,7 @@ import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
@@ -49,11 +50,14 @@ public class ClearAreaSession {
     protected Outcome outcome = Outcome.RUNNING;
     protected String failureReason;
     protected BlockCoord currentTarget;
+    protected BlockCoord currentStand;
+    protected final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
     protected DropCollector collector;
 
     protected int removed;
     protected int unsafe;
     protected int noStand;
+    protected int unreachable;
     protected int protectedSkipped;
     protected int foreignSkipped;
     protected int unbreakable;
@@ -123,7 +127,7 @@ public class ClearAreaSession {
     }
 
     public int skippedTotal() {
-        return unsafe + noStand + protectedSkipped + foreignSkipped + unbreakable + restoredSkipped;
+        return unsafe + noStand + unreachable + protectedSkipped + foreignSkipped + unbreakable + restoredSkipped;
     }
 
     public Map<String, Object> resultData() {
@@ -162,11 +166,13 @@ public class ClearAreaSession {
         }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(from, remaining, safety);
+        MiningPlanner.Outcome result = MiningPlanner.next(from, remaining, safety,
+                approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
-            noteSkipped(exhausted.unsafe() + exhausted.noStand());
+            unreachable += exhausted.unreachable();
+            noteSkipped(exhausted.unsafe() + exhausted.noStand() + exhausted.unreachable());
             remaining.clear();
             finish();
             return;
@@ -180,6 +186,7 @@ public class ClearAreaSession {
         }
         reservations.reserve(next.target(), spirit.getUUID());
         currentTarget = next.target();
+        currentStand = next.stand();
         approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
@@ -190,9 +197,15 @@ public class ClearAreaSession {
             }
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
-                noStand++;
-                tally.skipped();
-                releaseCurrent();
+                if (approachFailures.recordFailure(currentStand, currentTarget)) {
+                    unreachable++;
+                    tally.skipped();
+                    releaseCurrent();
+                } else {
+                    BlockCoord retry = currentTarget;
+                    releaseCurrent();
+                    remaining.add(0, retry);
+                }
                 state = State.PICK;
             }
         }
@@ -279,9 +292,13 @@ public class ClearAreaSession {
     }
 
     private String summary() {
-        return "убрано " + removed + " из " + boxVolume() + "; пропущено: " + skippedTotal() + " (небезопасных: " + unsafe
+        String counts = "убрано " + removed + " из " + boxVolume() + "; пропущено: " + skippedTotal() + " (небезопасных: " + unsafe
                 + ", без стоянки: " + noStand + ", защищено: " + protectedSkipped + ", неразрушимых: " + unbreakable
                 + ", занято другим духом: " + foreignSkipped + ")";
+        if (unreachable > 0) {
+            counts += "; недостижимо: " + unreachable;
+        }
+        return counts;
     }
 
     private void releaseCurrent() {
@@ -289,6 +306,7 @@ public class ClearAreaSession {
             reservations.release(currentTarget, spirit.getUUID());
             currentTarget = null;
         }
+        currentStand = null;
     }
 
     private void noteSkipped(int count) {
