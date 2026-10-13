@@ -5,10 +5,13 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -109,6 +112,73 @@ public final class SocialGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("не найдена"),
                     "отказ обязан называть ненайденную цель, причина: " + reason);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "social_say_wait", timeoutTicks = 200)
+    public static void say_ShortText_PlayerGetsMessage(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
+        List<Component> messages = new ArrayList<>();
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SayTarget", messages);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("say", Map.of(
+                "text", "привет")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "say обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(messages.stream().anyMatch(m -> m.getString().contains("привет")),
+                    "игрок обязан получить сообщение с текстом, сообщения: " + messages);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "social_say_spam", timeoutTicks = 100)
+    public static void say_SecondSayImmediately_FailsWithAntiSpam(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
+        List<Component> messages = new ArrayList<>();
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SpamTarget", messages);
+
+        spirit.setLastSayTick(spirit.tickCount);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("say", Map.of(
+                "text", "спам")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "второй say сразу обязан отказаться по анти-спаму, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(reason.contains("спам") || reason.contains("интервал"),
+                    "отказ обязан называть анти-спам, причина: " + reason);
+            helper.assertTrue(reason.contains("20"),
+                    "отказ обязан содержать число интервала (20), причина: " + reason);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "social_wait", timeoutTicks = 200)
+    public static void wait_FortyTicks_SucceedsAfterSpiritTicks(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("wait", Map.of(
+                "ticks", 40)), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "wait 40 тиков обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(run.spiritTicks() >= 40,
+                    "wait обязан ждать ровно 40 тиков духа, прошло: " + run.spiritTicks());
             TacticsScene.finish(helper, spirit);
         });
     }

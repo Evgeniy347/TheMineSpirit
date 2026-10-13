@@ -65,6 +65,7 @@ public final class SpiritEntity extends PathfinderMob {
     private int pathBuilds;
     private int entityQueries;
     private int snapshotBuilds;
+    private long lastSayTick = Long.MIN_VALUE;
     private String pendingTaskJson;
     private TaskSnapshot pendingSnapshot;
     private String pendingRestoreFailure;
@@ -377,6 +378,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public int entityQueries() {
         return entityQueries;
+    }
+
+    public long lastSayTick() {
+        return lastSayTick;
+    }
+
+    public void setLastSayTick(long tick) {
+        lastSayTick = tick;
     }
 
     private void applyPendingRestore() {
