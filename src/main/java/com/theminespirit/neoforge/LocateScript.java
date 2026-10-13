@@ -92,7 +92,7 @@ public final class LocateScript implements ScriptInstance {
         int radius = query.radius().value();
         return switch (query.type()) {
             case BLOCK -> new BlockLocateSource(spirit.level(), center, radius, BlockSets.resolve(query.filter()));
-            case TREE -> new BlockLocateSource(spirit.level(), center, radius, BlockSets.resolve(logFilter(query)));
+            case TREE -> new TreeLocateSource(spirit.level(), center, radius, BlockSets.resolve(logFilter(query)));
             case CONTAINER -> new ContainerLocateSource(spirit,
                     new BlockCoord(center.getX(), center.getY(), center.getZ()), query.radius());
         };

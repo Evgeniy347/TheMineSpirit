@@ -24,7 +24,9 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -64,12 +66,8 @@ public final class PerceptionLocateGameTests {
     public static void locateTree_OakSixBlocksAway_ReportsOakTrunkNotNearerBirch(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        for (int y = 1; y <= 4; y++) {
-            helper.setBlock(3, y, 4, Blocks.BIRCH_LOG);
-        }
-        for (int y = 1; y <= 4; y++) {
-            helper.setBlock(7, y, 4, Blocks.OAK_LOG);
-        }
+        buildTree(helper, 3, 4, Blocks.BIRCH_LOG, Blocks.BIRCH_LEAVES);
+        buildTree(helper, 7, 4, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
         SpiritEntity spirit = spawnSpirit(helper, 1, 1, 4);
         SpiritRun run = launch(helper, spirit, "locate_tree", Map.of("species", "oak", "radius", LOCATE_RADIUS));
 
@@ -80,6 +78,48 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
                     "locate_tree с породой oak обязан назвать основание дуба в шести блоках " + expected
                             + ", а не берёзу в двух блоках: " + finding);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "perception_locate_tree_pillar", timeoutTicks = TEST_TIMEOUT_TICKS)
+    public static void locateTree_OakPillarNearerThanRealOak_ReportsRealOakBase(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int y = 1; y <= 3; y++) {
+            helper.setBlock(3, y, 4, Blocks.OAK_LOG);
+        }
+        buildTree(helper, 7, 4, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
+        SpiritEntity spirit = spawnSpirit(helper, 1, 1, 4);
+        SpiritRun run = launch(helper, spirit, "locate_tree", Map.of("species", "oak", "radius", LOCATE_RADIUS));
+
+        helper.succeedWhen(() -> {
+            assertSucceeded(helper, spirit, run, "locate_tree");
+            Finding finding = spirit.finding().orElse(null);
+            Sighting expected = new Sighting("tree", "minecraft:oak_log", coordOf(helper, 7, 1, 4), "расстояние 6.0");
+            helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
+                    "locate_tree обязан пропустить ближний столб из трёх дубовых брёвен без листвы и назвать "
+                            + "основание настоящего дуба в шести блоках " + expected + ": " + finding);
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "perception_locate_tree_only_pillar", timeoutTicks = TEST_TIMEOUT_TICKS)
+    public static void locateTree_OnlyLogPillar_ReportsNotFound(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int y = 1; y <= 3; y++) {
+            helper.setBlock(4, y, 4, Blocks.OAK_LOG);
+        }
+        SpiritEntity spirit = spawnSpirit(helper, 1, 1, 4);
+        SpiritRun run = launch(helper, spirit, "locate_tree", Map.of("species", "oak", "radius", LOCATE_RADIUS));
+
+        helper.succeedWhen(() -> {
+            assertSucceeded(helper, spirit, run, "locate_tree");
+            Finding finding = spirit.finding().orElse(null);
+            helper.assertTrue(finding != null && finding.script().equals("locate_tree") && finding.isEmpty(),
+                    "поиск дерева при одних брёвнах столба без листвы обязан завершиться успехом с пустой находкой "
+                            + "(«не найдено»), а не выдуманной позицией столба: " + finding);
             GameTestFixtures.reset(helper);
         });
     }
@@ -152,5 +192,22 @@ public final class PerceptionLocateGameTests {
                         + " позиций, а прочитал " + script.maxExaminedPositionsPerTick());
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    private static void buildTree(GameTestHelper helper, int x, int z, Block log, Block leaves) {
+        helper.setBlock(x, 0, z, Blocks.DIRT);
+        for (int y = 1; y <= 4; y++) {
+            helper.setBlock(x, y, z, log);
+        }
+        var crown = leaves.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        helper.setBlock(x, 5, z, crown);
+        helper.setBlock(x + 1, 4, z, crown);
+        helper.setBlock(x - 1, 4, z, crown);
+        helper.setBlock(x, 4, z + 1, crown);
+        helper.setBlock(x, 4, z - 1, crown);
+        helper.setBlock(x + 1, 5, z, crown);
+        helper.setBlock(x - 1, 5, z, crown);
+        helper.setBlock(x, 5, z + 1, crown);
+        helper.setBlock(x, 5, z - 1, crown);
     }
 }
