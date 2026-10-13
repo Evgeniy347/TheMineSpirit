@@ -102,6 +102,27 @@ public final class CombatGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "combat_forced_attack", timeoutTicks = 200)
+    public static void forcedAttack_PassiveTarget_SpiritStillStrikes(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(8, 1, 5));
+        TacticsService tactics = spirit.tactics();
+        tactics.applyDirective(CombatDirective.attack(TargetSelector.parse("hostile")));
+        tactics.setForcedTarget(husk);
+
+        int[] huskHealthStart = {(int) husk.getHealth()};
+        helper.onEachTick(() -> {
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(husk.getHealth() < huskHealthStart[0],
+                    "приказ attack с живой целью обязан бить её даже когда ядро решило IGNORE, "
+                            + "здоровье хуска: " + husk.getHealth() + " из " + huskHealthStart[0]
+                            + ", ударов: " + tactics.combat().strikes());
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
     @GameTest(template = "arena", batch = "combat_target_player", timeoutTicks = 150)
     public static void targets_ResolvePlayerByName_ReturnsThatPlayer(GameTestHelper helper) {
         TacticsScene.prepare(helper);

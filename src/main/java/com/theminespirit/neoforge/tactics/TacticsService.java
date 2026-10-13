@@ -397,6 +397,13 @@ public final class TacticsService {
         }
         LivingEntity target = forcedTarget != null && forcedTarget.isAlive() ? forcedTarget
                 : entity(targetId).orElse(null);
+        if (forcedTarget != null && forcedTarget.isAlive() && directive != null
+                && directive.mode() == CombatMode.AGGRESSIVE) {
+            active = true;
+            retreating.reset();
+            combat.melee(forcedTarget);
+            return;
+        }
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
             retreating.reset();
