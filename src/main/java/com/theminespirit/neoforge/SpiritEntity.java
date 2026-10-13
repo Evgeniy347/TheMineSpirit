@@ -61,6 +61,7 @@ public final class SpiritEntity extends PathfinderMob {
     private MemoryStore memory = MemoryStore.empty();
     private BlockCoord home;
     private int pathBuilds;
+    private int entityQueries;
     private int snapshotBuilds;
     private String pendingTaskJson;
     private TaskSnapshot pendingSnapshot;
@@ -354,6 +355,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public int pathBuilds() {
         return pathBuilds;
+    }
+
+    public void countEntityQuery() {
+        entityQueries++;
+    }
+
+    public int entityQueries() {
+        return entityQueries;
     }
 
     private void applyPendingRestore() {
