@@ -53,18 +53,6 @@ public final class PolicyProtectionGameTests {
         return begin instanceof BlockBreaker.Protected protectedBlock && protectedBlock.policy() == policy;
     }
 
-    @SuppressWarnings("removal")
-    private static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        return player;
-    }
-
-    private static void removePlayer(GameTestHelper helper, ServerPlayer player) {
-        helper.getLevel().getServer().getPlayerList().remove(player);
-    }
-
     private static void placeByPlayer(GameTestHelper helper, ServerPlayer player, BlockPos support, Block block) {
         BlockPos absolute = helper.absolutePos(support);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(block.asItem()));
@@ -132,9 +120,9 @@ public final class PolicyProtectionGameTests {
     public static void gather_LogPlacedByPlayerAndNaturalLog_SkipsPlacedAndReportsIt(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(6, 1, 2, Blocks.OAK_LOG);
-        ServerPlayer player = mockPlayer(helper, new BlockPos(2, 1, 6));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(2, 1, 6), "gt_protect_log_player");
         placeByPlayer(helper, player, new BlockPos(6, 0, 6), Blocks.OAK_LOG);
-        removePlayer(helper, player);
+        helper.getLevel().getServer().getPlayerList().remove(player);
         helper.assertTrue(helper.getBlockState(new BlockPos(6, 1, 6)).is(Blocks.OAK_LOG),
                 "игрок обязан поставить бревно в (6,1,6): без этого проверка ничего не доказывает");
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
@@ -273,7 +261,7 @@ public final class PolicyProtectionGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         WorkZone zone = zoneAround(helper, new BlockPos(1, 1, 1), 2);
         spirit.setWorkZone(zone);
-        ServerPlayer player = mockPlayer(helper, new BlockPos(1, 1, 2));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 2), "gt_protect_zone_follow_player");
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", 2)), 2);
         boolean[] left = {false};
@@ -293,7 +281,6 @@ public final class PolicyProtectionGameTests {
             helper.assertTrue(reason.startsWith("цель вышла за границы рабочей зоны"), "причина называет выход цели за зону: «" + reason + "»");
             BlockPos cell = spirit.blockPosition();
             helper.assertTrue(zone.excess(new BlockCoord(cell.getX(), cell.getY(), cell.getZ())) <= 3, "дух обязан остаться в зоне");
-            removePlayer(helper, player);
             GameTestFixtures.reset(helper);
         });
     }

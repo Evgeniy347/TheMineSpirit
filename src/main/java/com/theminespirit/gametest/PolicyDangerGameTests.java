@@ -222,16 +222,13 @@ public final class PolicyDangerGameTests {
         });
     }
 
-    @SuppressWarnings("removal")
     @GameTest(template = "arena", batch = "policy_portal_follow_veto", timeoutTicks = 200)
     public static void portal_FollowPlayerStandingInPortalCell_FailsWithReason(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         portalFrame(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        BlockPos inPortal = helper.absolutePos(new BlockPos(4, 1, 4));
-        player.moveTo(inPortal.getX() + 0.5, inPortal.getY(), inPortal.getZ() + 0.5);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 4), "gt_portal_follow_player");
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", 2)), 2);
 
@@ -241,7 +238,6 @@ public final class PolicyDangerGameTests {
                     "игрок стоит в клетке портала: follow обязан отказаться идти туда, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал: «" + reason + "»");
-            helper.getLevel().getServer().getPlayerList().remove(player);
             GameTestFixtures.reset(helper);
         });
     }
