@@ -45,6 +45,7 @@ import com.theminespirit.neoforge.husbandry.MilkScript;
 import com.theminespirit.neoforge.husbandry.ShearScript;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.core.script.UnloadParams;
+import com.theminespirit.core.script.WalkCarefulParams;
 import com.theminespirit.neoforge.inventory.DepositScript;
 import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
@@ -80,6 +81,7 @@ public final class SpiritScripts {
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("return_home", spirit -> params -> new ReturnHomeScript(spirit));
+        table.put("walk_careful", spirit -> params -> GotoScript.careful(spirit, WalkCarefulParams.from(params)));
         table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
         table.put("gather", spirit -> params -> new GatherScript(spirit, GatherParams.from(params)));
         table.put("till", spirit -> params -> new TillScript(spirit, TillParams.from(params)));

@@ -25,16 +25,24 @@ public final class Approach {
     private int timeoutTicks;
     private int elapsed;
     private boolean active;
+    private PathMode mode = PathMode.NORMAL;
+    private String refusal;
 
     public Approach(SpiritEntity spirit) {
         this.spirit = spirit;
     }
 
     public void begin(Vec3 target, double arrival) {
+        begin(target, arrival, PathMode.NORMAL);
+    }
+
+    public void begin(Vec3 target, double arrival, PathMode pathMode) {
+        mode = pathMode;
         start(target, null, arrival);
     }
 
     public void begin(Entity target, double arrival) {
+        mode = PathMode.NORMAL;
         start(target.position(), target, arrival);
     }
 
@@ -58,6 +66,13 @@ public final class Approach {
         if (pathRefresh.shouldRefresh(target.x, target.y, target.z, spirit.getNavigation().isDone())) {
             moveToTarget(target);
             spirit.countPathBuild();
+            if (mode == PathMode.CAREFUL && spirit.onGround()) {
+                refusal = CarefulPath.refusal(spirit.getNavigation().getPath());
+                if (refusal != null) {
+                    finish();
+                    return State.STUCK;
+                }
+            }
         }
         return State.MOVING;
     }
@@ -82,6 +97,10 @@ public final class Approach {
         return timeoutTicks;
     }
 
+    public String refusal() {
+        return refusal;
+    }
+
     private void start(Vec3 point, Entity entity, double arrivalDistance) {
         if (active) {
             spirit.getNavigation().stop();
@@ -93,6 +112,7 @@ public final class Approach {
         arrival = arrivalDistance;
         timeoutTicks = GotoTuning.timeoutTicks(spirit.position().distanceTo(point));
         elapsed = 0;
+        refusal = null;
         active = true;
     }
 

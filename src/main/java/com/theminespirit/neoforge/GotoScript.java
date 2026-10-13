@@ -3,8 +3,9 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.script.WalkCarefulParams;
+import com.theminespirit.neoforge.movement.TravelCheck;
 import net.minecraft.world.phys.Vec3;
 
 public final class GotoScript implements ScriptInstance {
@@ -13,14 +14,24 @@ public final class GotoScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final Vec3 target;
     private final Approach approach;
+    private final PathMode mode;
     private String failureReason;
     private boolean zoneChecked;
 
     public GotoScript(SpiritEntity spirit, GotoParams params) {
+        this(spirit, params, PathMode.NORMAL);
+    }
+
+    public static GotoScript careful(SpiritEntity spirit, WalkCarefulParams params) {
+        return new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()), PathMode.CAREFUL);
+    }
+
+    private GotoScript(SpiritEntity spirit, GotoParams params, PathMode mode) {
         this.spirit = spirit;
+        this.mode = mode;
         this.target = new Vec3(params.x() + 0.5, params.y(), params.z() + 0.5);
         this.approach = new Approach(spirit);
-        this.approach.begin(target, ARRIVAL_TOLERANCE);
+        this.approach.begin(target, ARRIVAL_TOLERANCE, mode);
     }
 
     @Override
@@ -33,14 +44,10 @@ public final class GotoScript implements ScriptInstance {
         if (!zoneChecked) {
             zoneChecked = true;
             BlockCoord goal = new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
-            if (spirit.protectionGate().checkTravel(goal) instanceof BlockProtection.Refused refused) {
+            String refusal = TravelCheck.refusal(spirit, goal);
+            if (refusal != null) {
                 approach.cancel();
-                failureReason = refused.reason();
-                return ScriptStatus.FAILED;
-            }
-            if (spirit.protectionGate().checkPortalTarget(goal) instanceof BlockProtection.Refused refused) {
-                approach.cancel();
-                failureReason = refused.reason();
+                failureReason = refusal;
                 return ScriptStatus.FAILED;
             }
         }
@@ -79,6 +86,10 @@ public final class GotoScript implements ScriptInstance {
     }
 
     private String stuckReason() {
+        if (mode == PathMode.CAREFUL && approach.refusal() != null) {
+            return "недостижимо осторожным шагом до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): "
+                    + approach.refusal();
+        }
         return "застрял в (x=" + spirit.getX() + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")";
     }
 }
