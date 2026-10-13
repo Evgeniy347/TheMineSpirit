@@ -1,18 +1,16 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -59,9 +57,7 @@ public final class HarvestSession {
     private String failureReason;
     private BlockCoord currentTarget;
     private BlockCoord currentStand;
-    private final Map<BlockCoord, Integer> standFailures = new HashMap<>();
-    private final Map<BlockCoord, Integer> targetFailures = new HashMap<>();
-    private final Set<BlockCoord> excludedStands = new HashSet<>();
+    private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
     private DropCollector collector;
 
     private int mined;
@@ -242,7 +238,8 @@ public final class HarvestSession {
         planCalls++;
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety, excludedStands);
+        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety,
+                approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
@@ -280,26 +277,15 @@ public final class HarvestSession {
             }
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
-                recordStandFailure();
-                int targetFails = targetFailures.getOrDefault(currentTarget, 0) + 1;
-                if (targetFails >= MiningTuning.MAX_APPROACH_FAILURES) {
+                if (approachFailures.recordFailure(currentStand, currentTarget)) {
                     unreachable++;
                 } else {
-                    targetFailures.put(currentTarget, targetFails);
                     buffer.offer(List.of(currentTarget));
                 }
                 currentTarget = null;
                 currentStand = null;
                 state = State.PICK;
             }
-        }
-    }
-
-    private void recordStandFailure() {
-        int failures = standFailures.getOrDefault(currentStand, 0) + 1;
-        standFailures.put(currentStand, failures);
-        if (failures >= MiningTuning.MAX_APPROACH_FAILURES) {
-            excludedStands.add(currentStand);
         }
     }
 
