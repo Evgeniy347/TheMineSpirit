@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
@@ -72,6 +73,11 @@ public final class TacticsService {
     private Optional<RetreatPlan> plan = Optional.empty();
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
+    private CombatDirective directive;
+    private Optional<StoredTactics> preDirective = Optional.empty();
+    private LivingEntity forcedTarget;
+    private RetreatMethod forcedMethod = RetreatMethod.NONE;
+    private Optional<Point> forcedPoint = Optional.empty();
     private String targetId;
     private String shootTargetId;
     private boolean active;
@@ -171,6 +177,62 @@ public final class TacticsService {
         forced = true;
     }
 
+    public void applyDirective(CombatDirective directive) {
+        if (directive == null) {
+            throw new IllegalArgumentException("Приказ = null: боевой скрипт обязан передать CombatDirective, "
+                    + "иначе тактика не знает, какой режим и цель включить");
+        }
+        if (this.directive == null) {
+            preDirective = Optional.of(snapshot());
+        }
+        this.directive = directive;
+        ordered = directive.mode();
+        forcedTarget = null;
+        setForcedRetreat(directive.retreat().orElse(RetreatMethod.NONE), directive.safePoint());
+        if (directive.mode() == CombatMode.PASSIVE) {
+            spirit.setTarget(null);
+        }
+        forced = true;
+    }
+
+    public void clearDirective() {
+        if (directive == null) {
+            return;
+        }
+        directive = null;
+        forcedTarget = null;
+        setForcedRetreat(RetreatMethod.NONE, Optional.empty());
+        restore(preDirective.orElse(new StoredTactics(DEFAULT_MODE, Optional.empty(), Optional.empty(),
+                Optional.empty(), RetreatTracker.IDLE)));
+        preDirective = Optional.empty();
+        spirit.setTarget(null);
+    }
+
+    public Optional<CombatDirective> activeDirective() {
+        return Optional.ofNullable(directive);
+    }
+
+    public void setForcedTarget(LivingEntity target) {
+        forcedTarget = target;
+        spirit.setTarget(target);
+    }
+
+    public void setForcedRetreat(RetreatMethod method, Optional<Point> point) {
+        if (method == null) {
+            throw new IllegalArgumentException("Способ отхода = null: укажите RetreatMethod, "
+                    + "для «способ не навязан» — RetreatMethod.NONE");
+        }
+        if (point == null) {
+            throw new IllegalArgumentException("Точка отхода = null: отсутствие точки передаётся Optional.empty()");
+        }
+        if (point.isPresent() && method == RetreatMethod.NONE) {
+            throw new IllegalArgumentException("Точка " + point.get() + " при способе NONE: "
+                    + "точка имеет смысл только с явным способом отхода, иначе дух не знает, зачем она нужна");
+        }
+        forcedMethod = method;
+        forcedPoint = point;
+    }
+
     public boolean hasState() {
         return memory != null || ordered != DEFAULT_MODE || zone.isPresent() || ward.isPresent() || retreat.retreating();
     }
@@ -267,11 +329,16 @@ public final class TacticsService {
         stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
+        next = withForcedRetreat(next);
         retreat = RetreatCommitment.next(retreat, next, now, settings, progress == RetreatExecutor.Progress.BUILDING);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
         targetId = designated.map(EnemyFact::id).orElse(null);
-        spirit.setTarget(designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null));
+        if (forcedTarget != null && forcedTarget.isAlive()) {
+            spirit.setTarget(forcedTarget);
+        } else {
+            spirit.setTarget(designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null));
+        }
         shootTargetId = collected.context().enemies().stream().filter(EnemyFact::visible)
                 .min(Comparator.comparingDouble(enemy -> enemy.pos().distanceTo(situation.self().pos())))
                 .map(EnemyFact::id).orElse(null);
@@ -296,10 +363,23 @@ public final class TacticsService {
         }
     }
 
+    private TacticalOutcome withForcedRetreat(TacticalOutcome next) {
+        if (directive == null || directive.retreat().isEmpty()) {
+            return next;
+        }
+        RetreatMethod method = forcedMethod != RetreatMethod.NONE ? forcedMethod
+                : next.retreatMethod() != RetreatMethod.NONE ? next.retreatMethod() : RetreatMethod.AWAY;
+        if (next.decision() == TacticalOption.RETREAT && next.retreatMethod() == method) {
+            return next;
+        }
+        return new TacticalOutcome(TacticalOption.RETREAT, next.action(), method, next.callHelp(), next.state(),
+                next.mode(), next.returnTo(), next.trace(), next.memory());
+    }
+
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
-        Optional<Point> retreatPoint = SafePointChoice.nearest(situation.self().pos(), collected.home(),
-                SafePointChoice.NO_CAMP);
+        Optional<Point> retreatPoint = forcedPoint.isPresent() ? forcedPoint
+                : SafePointChoice.nearest(situation.self().pos(), collected.home(), SafePointChoice.NO_CAMP);
         RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
                 retreatPoint, situation.self().blocks());
@@ -315,7 +395,8 @@ public final class TacticsService {
             progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
-        LivingEntity target = entity(targetId).orElse(null);
+        LivingEntity target = forcedTarget != null && forcedTarget.isAlive() ? forcedTarget
+                : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
             retreating.reset();
