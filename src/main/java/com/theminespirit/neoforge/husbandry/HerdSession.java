@@ -297,10 +297,6 @@ public final class HerdSession {
         return maxActionsPerTick;
     }
 
-    public int blockReads() {
-        return 0;
-    }
-
     void find() {
         flock.refreshSnapshot(false);
         if (job == HerdJob.HERD_CHECK) {

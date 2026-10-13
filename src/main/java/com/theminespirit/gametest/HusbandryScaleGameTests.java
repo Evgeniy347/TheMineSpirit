@@ -112,9 +112,6 @@ public final class HusbandryScaleGameTests {
             helper.assertTrue(feeding.planCalls() <= feeding.actionTicks(),
                     "вызовов планировщика ядра обязано быть не больше числа тиков действий ("
                             + feeding.actionTicks() + "), фактически " + feeding.planCalls());
-            helper.assertTrue(feeding.blockReads() == 0,
-                    "чтений блоков на действие обязано быть 0 (животные — сущности, мир не сканируется), фактически "
-                            + feeding.blockReads());
             helper.assertTrue(HusbandryGameTests.alive(helper, Cow.class).size() == 3
                     && HusbandryGameTests.alive(helper, Sheep.class).size() == 3
                     && HusbandryGameTests.alive(helper, Pig.class).size() == 3
