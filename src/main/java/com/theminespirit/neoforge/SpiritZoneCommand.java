@@ -32,7 +32,7 @@ final class SpiritZoneCommand {
     }
 
     private static int set(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        List<SpiritEntity> spirits = SpiritTargets.selected(context);
+        List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         BlockPos center = BlockPosArgument.getLoadedBlockPos(context, "center");
         int radius = IntegerArgumentType.getInteger(context, "radius");
         if (spirits.isEmpty()) {
@@ -47,7 +47,7 @@ final class SpiritZoneCommand {
     }
 
     private static int clear(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        List<SpiritEntity> spirits = SpiritTargets.selected(context);
+        List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
             context.getSource().sendFailure(Component.literal("Рабочую зону некому снять: среди выбранных сущностей нет духа"));
             return 0;

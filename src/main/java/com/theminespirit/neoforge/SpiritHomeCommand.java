@@ -30,7 +30,7 @@ final class SpiritHomeCommand {
     }
 
     private static int set(CommandContext<CommandSourceStack> context, BlockPos explicit) throws CommandSyntaxException {
-        List<SpiritEntity> spirits = SpiritTargets.selected(context);
+        List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
             context.getSource().sendFailure(Component.literal("Дом некому поставить: среди выбранных сущностей нет духа"));
             return 0;
@@ -44,7 +44,7 @@ final class SpiritHomeCommand {
     }
 
     private static int clear(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        List<SpiritEntity> spirits = SpiritTargets.selected(context);
+        List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
             context.getSource().sendFailure(Component.literal("Дом некому снять: среди выбранных сущностей нет духа"));
             return 0;
