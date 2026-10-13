@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -88,6 +89,43 @@ class TaskReconcilerTests {
 
         assertEquals(TaskState.SUCCEEDED, record().state(),
                 "Задача, завершившаяся до первого опроса, обязана закрыться из accepted");
+    }
+
+    @Test
+    void reconcile_SucceededWithResult_StoresResultInTaskRecord() {
+        Object result = Map.of("chopped", 2);
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
+
+        reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null, result));
+
+        assertEquals(TaskState.SUCCEEDED, record().state(), "Успех духа обязан закрывать задачу как succeeded");
+        assertEquals(result, record().result(),
+                "Итог успеха обязан попасть в запись задачи: по нему клиент узнаёт, что именно сделано");
+    }
+
+    @Test
+    void reconcile_SucceededWithoutResult_LeavesResultNull() {
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
+
+        reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null));
+
+        assertNull(record().result(), "Успех без итога обязан оставлять result == null");
+    }
+
+    @Test
+    void reconcile_FailedOrCancelled_LeavesResultNull() {
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
+        reconcile(SpiritReading.living(RunStatus.FAILED, null, "цель недостижима"));
+
+        assertNull(record().result(), "Провал не несёт итога успеха: result обязан остаться null");
+    }
+
+    @Test
+    void reconcile_Cancelled_LeavesResultNull() {
+        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
+        reconcile(SpiritReading.living(RunStatus.CANCELLED, null, null));
+
+        assertNull(record().result(), "Отмена не несёт итога успеха: result обязан остаться null");
     }
 
     @Test

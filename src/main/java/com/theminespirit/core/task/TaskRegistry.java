@@ -99,6 +99,11 @@ public final class TaskRegistry {
 
     public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress,
             String error) {
+        return observe(taskId, state, progress, null, error);
+    }
+
+    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress, Object result,
+            String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
             throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: обновлять нечего");
@@ -109,7 +114,8 @@ public final class TaskRegistry {
                     + " → " + state.wire() + ". Разрешены accepted → running/succeeded/failed/cancelled и "
                     + "running → succeeded/failed/cancelled");
         }
-        TaskRecord next = new TaskRecord(taskId, previous.bot(), state, previous.goal(), progress, previous.result(), error);
+        Object nextResult = result != null ? result : previous.result();
+        TaskRecord next = new TaskRecord(taskId, previous.bot(), state, previous.goal(), progress, nextResult, error);
         entry.record = next;
         List<TaskEvent> events = TaskEventDiff.between(previous, next);
         entry.log.append(events);
@@ -121,11 +127,16 @@ public final class TaskRegistry {
     }
 
     public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, String error) {
+        return observeIfActive(taskId, state, progress, null, error);
+    }
+
+    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, Object result,
+            String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null || !entry.record.active()) {
             return false;
         }
-        observe(taskId, state, progress, error);
+        observe(taskId, state, progress, result, error);
         return true;
     }
 

@@ -29,17 +29,17 @@ public final class TaskReconciler {
         if (!reading.present()) {
             int absent = absentTicks.merge(taskId, 1, Integer::sum);
             if (absent >= ABSENT_GRACE_TICKS) {
-                finish(record, TaskState.FAILED, SPIRIT_GONE.formatted(ABSENT_GRACE_TICKS));
+                finish(record, TaskState.FAILED, SPIRIT_GONE.formatted(ABSENT_GRACE_TICKS), null);
             }
             return;
         }
         absentTicks.remove(taskId);
         if (!reading.alive()) {
-            finish(record, TaskState.FAILED, SPIRIT_DEAD);
+            finish(record, TaskState.FAILED, SPIRIT_DEAD, null);
             return;
         }
         if (displaced(record, reading)) {
-            finish(record, TaskState.CANCELLED, DISPLACED);
+            finish(record, TaskState.CANCELLED, DISPLACED, null);
             return;
         }
         RunStatus status = reading.status();
@@ -48,10 +48,10 @@ public final class TaskReconciler {
         }
         switch (status) {
             case RUNNING -> running(record, reading.progress());
-            case SUCCEEDED -> finish(record, TaskState.SUCCEEDED, null);
-            case CANCELLED -> finish(record, TaskState.CANCELLED, null);
+            case SUCCEEDED -> finish(record, TaskState.SUCCEEDED, null, reading.result());
+            case CANCELLED -> finish(record, TaskState.CANCELLED, null, null);
             case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
-                    reading.failureReason() == null ? NO_REASON : reading.failureReason());
+                    reading.failureReason() == null ? NO_REASON : reading.failureReason(), null);
         }
     }
 
@@ -82,8 +82,8 @@ public final class TaskReconciler {
         registry.observeIfActive(record.taskId(), TaskState.RUNNING, next, null);
     }
 
-    private void finish(TaskRecord record, TaskState state, String error) {
+    private void finish(TaskRecord record, TaskState state, String error, Object result) {
         absentTicks.remove(record.taskId());
-        registry.observeIfActive(record.taskId(), state, record.progress(), error);
+        registry.observeIfActive(record.taskId(), state, record.progress(), result, error);
     }
 }
