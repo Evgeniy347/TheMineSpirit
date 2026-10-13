@@ -184,6 +184,9 @@ if not text:
     sys.exit(1)
 if text.endswith((":", "…", "...")):
     sys.exit(0)
+# Мост к веб-модели (deepseek-web) иногда отдаёт вызов инструмента текстом «<invoke name=...» — это не конец работы.
+if re.search(r"<(invoke|parameter|function_calls)", text[-400:]):
+    sys.exit(0)
 starts = r"^(Теперь|Сейчас|Дальше|Продолжаю|Смотрю|Проверяю|Переписываю|Готовлю|Запускаю|Читаю|Let me|Now |Next)"
 sys.exit(0 if len(text) < 400 and re.match(starts, text, re.I) else 1)
 '
