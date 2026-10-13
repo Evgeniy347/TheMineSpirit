@@ -1,0 +1,114 @@
+package com.theminespirit.neoforge.inventory;
+
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.planner.AcquireSupplies;
+import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.neoforge.BlockLocator;
+import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.crafting.ItemIds;
+import com.theminespirit.neoforge.policy.PolicyConfig;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+
+/**
+ * Снабжение для acquire: считает предмет в инвентаре духа и планирует шаги withdraw
+ * по ближним контейнерам — ближний первым, недоступные и пустые пропускаются.
+ */
+public final class SpiritSupplies implements AcquireSupplies {
+    private static final int SLICES_PER_TICK = 4;
+
+    private final SpiritEntity spirit;
+    private final int radius;
+
+    public SpiritSupplies(SpiritEntity spirit, int radius) {
+        this.spirit = Objects.requireNonNull(spirit, "spirit не может быть null: снабжение читает инвентарь духа");
+        if (radius < CatalogLimits.CONTAINER_RADIUS_MIN || radius > CatalogLimits.CONTAINER_RADIUS_MAX) {
+            throw new IllegalArgumentException("Радиус поиска сундуков " + radius + " вне диапазона ["
+                    + CatalogLimits.CONTAINER_RADIUS_MIN + ", " + CatalogLimits.CONTAINER_RADIUS_MAX
+                    + "]: дальше дух уходит из базовой зоны");
+        }
+        this.radius = radius;
+    }
+
+    @Override
+    public int inInventory(String item) {
+        Objects.requireNonNull(item, "Предмет не может быть null: по нему считается инвентарь духа");
+        IdFilter filter = IdFilter.of(List.of(item));
+        return count(spirit.getInventory(), filter);
+    }
+
+    @Override
+    public List<ScriptCall> withdraw(String item, int maxCount) {
+        Objects.requireNonNull(item, "Предмет не может быть null: по нему ищутся сундуки");
+        if (maxCount <= 0) {
+            return List.of();
+        }
+        IdFilter filter = IdFilter.of(List.of(item));
+        BlockPos center = spirit.blockPosition();
+        BlockLocator.Search search = BlockLocator.search(spirit.level(), center, radius,
+                ContainerAccess.allowedBlocks());
+        List<BlockPos> found = new ArrayList<>();
+        while (!search.done()) {
+            found.addAll(search.step(SLICES_PER_TICK));
+        }
+        found.sort(Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(center))
+                .thenComparing(Comparator.naturalOrder()));
+        List<ScriptCall> steps = new ArrayList<>();
+        Set<Container> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        String dimension = spirit.level().dimension().location().toString();
+        int left = maxCount;
+        for (BlockPos pos : found) {
+            if (left <= 0) {
+                break;
+            }
+            BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+            if (spirit.protectionGate().checkTravel(coord) instanceof BlockProtection.Refused) {
+                continue;
+            }
+            if (PolicyConfig.zones().contains(dimension, coord)) {
+                continue;
+            }
+            ContainerAccess.Open open = ContainerAccess.open(spirit.level(), pos);
+            if (!(open instanceof ContainerAccess.Opened opened)) {
+                continue;
+            }
+            if (!seen.add(opened.container())) {
+                continue;
+            }
+            int available = count(opened.container(), filter);
+            if (available <= 0) {
+                continue;
+            }
+            int take = Math.min(left, available);
+            steps.add(new ScriptCall("withdraw", Map.of(
+                    "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
+                    "item", item,
+                    "count", take)));
+            left -= take;
+        }
+        return steps;
+    }
+
+    private static int count(Container container, IdFilter filter) {
+        int total = 0;
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (!stack.isEmpty() && filter.matches(ItemIds.of(stack.getItem()))) {
+                total += stack.getCount();
+            }
+        }
+        return total;
+    }
+}
