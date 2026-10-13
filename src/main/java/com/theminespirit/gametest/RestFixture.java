@@ -163,6 +163,7 @@ final class RestFixture {
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final List<ServerPlayer> players = new ArrayList<>();
+    private int playerCounter;
     private final SseSlots slots;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ExecutorService readers = Executors.newCachedThreadPool(task -> {
@@ -288,10 +289,11 @@ final class RestFixture {
         return spirit;
     }
 
-    @SuppressWarnings("removal") // NeoForge 21.1: иного способа получить ServerPlayer в players() уровня нет
+    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow берёт первого игрока
+    // с таким именем: протёкший из упавшего соседнего теста игрок уводит духа к чужой цели. GameTestFixtures.mockPlayer
+    // даёт уникальное имя теста и снимает игрока при любом исходе через слушателя (образец — 65406d0, 3130b96).
     ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        moveTo(helper, player, relative);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, relative, "gt_rest_player_" + playerCounter++);
         players.add(player);
         return player;
     }
