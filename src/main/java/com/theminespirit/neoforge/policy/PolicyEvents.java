@@ -28,7 +28,9 @@ public final class PolicyEvents {
     @SubscribeEvent
     public static void onBlockBroken(BlockEvent.BreakEvent event) {
         if (event.getLevel() instanceof ServerLevel level) {
-            PlacedBlocksData.get(level).unmark(event.getPos());
+            PlacedBlocksData data = PlacedBlocksData.get(level);
+            data.unmark(event.getPos());
+            data.unmarkSpirit(event.getPos());
         }
     }
 
@@ -36,7 +38,10 @@ public final class PolicyEvents {
     public static void onExplosion(ExplosionEvent.Detonate event) {
         if (event.getLevel() instanceof ServerLevel level) {
             PlacedBlocksData data = PlacedBlocksData.get(level);
-            event.getAffectedBlocks().forEach(data::unmark);
+            event.getAffectedBlocks().forEach(pos -> {
+                data.unmark(pos);
+                data.unmarkSpirit(pos);
+            });
         }
     }
 }

@@ -17,19 +17,22 @@ public final class PlacedBlocksData extends SavedData {
     public static final String NAME = "theminespirit_placed_blocks";
 
     private static final String CHUNKS = "Chunks";
+    private static final String SPIRIT_CHUNKS = "SpiritChunks";
     private static final String CHUNK_X = "X";
     private static final String CHUNK_Z = "Z";
     private static final String OVERFLOWED = "Overflowed";
     private static final String POSITIONS = "Positions";
 
     private final PlacedBlockSet set;
+    private final PlacedBlockSet spiritSet;
 
     public PlacedBlocksData() {
-        this(new PlacedBlockSet());
+        this(new PlacedBlockSet(), new PlacedBlockSet());
     }
 
-    private PlacedBlocksData(PlacedBlockSet set) {
+    private PlacedBlocksData(PlacedBlockSet set, PlacedBlockSet spiritSet) {
         this.set = set;
+        this.spiritSet = spiritSet;
     }
 
     public static SavedData.Factory<PlacedBlocksData> factory() {
@@ -41,20 +44,31 @@ public final class PlacedBlocksData extends SavedData {
     }
 
     public static PlacedBlocksData load(CompoundTag tag, HolderLookup.Provider registries) {
+        return new PlacedBlocksData(PlacedBlockCodec.decode(readEntries(tag, CHUNKS)),
+                PlacedBlockCodec.decode(readEntries(tag, SPIRIT_CHUNKS)));
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        tag.put(CHUNKS, writeEntries(PlacedBlockCodec.encode(set)));
+        tag.put(SPIRIT_CHUNKS, writeEntries(PlacedBlockCodec.encode(spiritSet)));
+        return tag;
+    }
+
+    private static List<PlacedBlockCodec.ChunkEntry> readEntries(CompoundTag tag, String key) {
         List<PlacedBlockCodec.ChunkEntry> entries = new ArrayList<>();
-        ListTag chunks = tag.getList(CHUNKS, Tag.TAG_COMPOUND);
+        ListTag chunks = tag.getList(key, Tag.TAG_COMPOUND);
         for (int i = 0; i < chunks.size(); i++) {
             CompoundTag chunk = chunks.getCompound(i);
             entries.add(new PlacedBlockCodec.ChunkEntry(chunk.getInt(CHUNK_X), chunk.getInt(CHUNK_Z), chunk.getBoolean(OVERFLOWED),
                     chunk.getLongArray(POSITIONS)));
         }
-        return new PlacedBlocksData(PlacedBlockCodec.decode(entries));
+        return entries;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    private static ListTag writeEntries(List<PlacedBlockCodec.ChunkEntry> encoded) {
         ListTag chunks = new ListTag();
-        for (PlacedBlockCodec.ChunkEntry entry : PlacedBlockCodec.encode(set)) {
+        for (PlacedBlockCodec.ChunkEntry entry : encoded) {
             CompoundTag chunk = new CompoundTag();
             chunk.putInt(CHUNK_X, entry.chunkX());
             chunk.putInt(CHUNK_Z, entry.chunkZ());
@@ -62,8 +76,7 @@ public final class PlacedBlocksData extends SavedData {
             chunk.putLongArray(POSITIONS, entry.positions());
             chunks.add(chunk);
         }
-        tag.put(CHUNKS, chunks);
-        return tag;
+        return chunks;
     }
 
     public void mark(BlockPos pos) {
@@ -80,6 +93,26 @@ public final class PlacedBlocksData extends SavedData {
 
     public boolean isMarked(BlockPos pos) {
         return set.contains(toCoord(pos));
+    }
+
+    public void markSpirit(BlockPos pos) {
+        if (spiritSet.add(toCoord(pos))) {
+            setDirty();
+        }
+    }
+
+    public void unmarkSpirit(BlockPos pos) {
+        if (spiritSet.remove(toCoord(pos))) {
+            setDirty();
+        }
+    }
+
+    public boolean isSpiritMarked(BlockPos pos) {
+        return spiritSet.contains(toCoord(pos));
+    }
+
+    public int spiritSize() {
+        return spiritSet.size();
     }
 
     public int size() {

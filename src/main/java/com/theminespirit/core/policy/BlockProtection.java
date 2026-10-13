@@ -40,6 +40,21 @@ public final class BlockProtection {
         }
     }
 
+    public Decision checkOwn(String blockId, boolean inProtectedZone) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
+        if (GatherPolicy.check(blockId) instanceof GatherPolicy.Refused refused) {
+            return new Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
+        }
+        if (deny.matches(blockId)) {
+            return new Refused(PolicyId.PROTECTED_BLOCKS, "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
+                    + "его не ломают, чтобы не разрушить постройку или механизм");
+        }
+        if (inProtectedZone) {
+            return new Refused(PolicyId.PROTECTED_ZONE, "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
+        }
+        return new Allowed();
+    }
+
     public List<String> denyPatterns() {
         return deny.patterns();
     }

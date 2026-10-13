@@ -55,6 +55,8 @@ public final class ProtectionGate {
         BlockProtection.Decision decision;
         if (tended) {
             decision = PROTECTION.check(blockId(state), Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID), false, inProtectedZone);
+        } else if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+            decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
             boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
             decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone);
