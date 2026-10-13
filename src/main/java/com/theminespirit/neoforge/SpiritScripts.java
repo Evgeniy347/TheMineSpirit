@@ -9,6 +9,7 @@ import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
+import com.theminespirit.core.script.DigAreaParams;
 import com.theminespirit.core.script.FillParams;
 import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.CollectDropsParams;
@@ -130,6 +131,7 @@ public final class SpiritScripts {
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
+        table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         return table;
     }
 
