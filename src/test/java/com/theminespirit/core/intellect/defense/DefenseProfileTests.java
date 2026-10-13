@@ -13,6 +13,7 @@ class DefenseProfileTests {
             + "\"classes\": {"
             + "\"minecraft:creeper\": \"CREEPER\","
             + "\"minecraft:skeleton\": \"SKELETON\","
+            + "\"minecraft:phantom\": \"FLYER\","
             + "\"minecraft:zombie\": \"MELEE\","
             + "\"default\": \"MELEE\"},"
             + "\"priority\": {"
