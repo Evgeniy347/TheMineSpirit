@@ -41,18 +41,13 @@ public final class AttackScript implements ScriptInstance {
             target = found.get();
             spirit.tactics().setForcedTarget(target);
         }
-        if (target == null) {
-            return fail("цель '" + targetText + "' не найдена рядом: атаковать нечего");
-        }
-        if (target.isDeadOrDying() || target.isRemoved()) {
+        if (target != null && (target.isDeadOrDying() || target.isRemoved())) {
             return succeed();
-        }
-        if (found.isEmpty()) {
-            return fail("цель '" + targetText + "' пропала из поля зрения: атака сорвана");
         }
         if (ticks >= CatalogLimits.ATTACK_TIMEOUT_TICKS) {
             return fail("цель '" + targetText + "' не убита за " + ticks + " тиков (тайм-аут "
-                    + CatalogLimits.ATTACK_TIMEOUT_TICKS + "), здоровье: " + target.getHealth());
+                    + CatalogLimits.ATTACK_TIMEOUT_TICKS + ")"
+                    + (target != null ? ", здоровье: " + target.getHealth() : ", цель так и не найдена"));
         }
         return ScriptStatus.RUNNING;
     }

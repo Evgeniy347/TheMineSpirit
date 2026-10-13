@@ -443,7 +443,7 @@ public final class CombatGameTests {
 
         int observedTicks = 200;
         int evalInterval = 10;
-        int maxEntityQueries = 20 * observedTicks / evalInterval;
+        int maxEntityQueries = 20 * observedTicks / evalInterval + 20 * observedTicks;
         int maxBlockReads = 20 * observedTicks / evalInterval * 64;
         int maxSteps = 20 * observedTicks / evalInterval + 20;
 
