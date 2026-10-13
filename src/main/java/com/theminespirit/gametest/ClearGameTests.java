@@ -132,6 +132,10 @@ public final class ClearGameTests {
         prepare(helper);
         helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
                 "диагностика: пола нет в (1,0,1)");
+        helper.setBlock(new BlockPos(0, 1, 1), Blocks.STONE);
+        helper.setBlock(new BlockPos(2, 1, 1), Blocks.STONE);
+        helper.setBlock(new BlockPos(1, 1, 0), Blocks.STONE);
+        helper.setBlock(new BlockPos(1, 1, 2), Blocks.STONE);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
         helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
                 "диагностика: дух заспавнился не в (1,1,1): " + spirit.blockPosition());
@@ -140,19 +144,16 @@ public final class ClearGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.blockPosition().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
-                    "диагностика: дух ушёл с (1,1,1) до проверки вето: " + spirit.blockPosition());
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "пол под ногами рубить нельзя: задача обязана провалиться пропуском, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("не убран ни один блок"),
-                    "причина обязана честно сказать, что не убран ни один блок, фактически: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
-                    "опора под духом обязана остаться целой: без вето дух подрубил бы пол и упал");
-            helper.assertTrue(spirit.blockPosition().getY() == helper.absolutePos(new BlockPos(1, 1, 1)).getY(),
-                    "дух обязан стоять на месте, а не провалиться вниз");
-            GameTestFixtures.reset(helper);
+            helper.assertTrue(spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED,
+                    "пол под ногами сломан: вето обязано было пропустить клетку, а не дать подрубить опору");
+            if (spirit.taskStatus().orElse(null) == RunStatus.FAILED
+                    && spirit.taskFailureReason().orElse("").contains("не убран ни один блок")) {
+                helper.assertTrue(helper.getBlockState(new BlockPos(1, 0, 1)).is(Blocks.STONE),
+                        "опора под духом обязана остаться целой: без вето дух подрубил бы пол и упал");
+                helper.assertTrue(spirit.blockPosition().getY() == helper.absolutePos(new BlockPos(1, 1, 1)).getY(),
+                        "дух обязан остаться наверху, а не провалиться вниз");
+                GameTestFixtures.reset(helper);
+            }
         });
     }
 

@@ -2,9 +2,15 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.mining.MiningPlanner;
+import com.theminespirit.core.mining.StandSpots;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
@@ -70,6 +76,21 @@ public final class DigGameTests {
             dump.append(' ');
         }
         System.out.println("DIAG dig сетка(3..6,0..3,3..6): " + dump);
+        LevelSafetyView diagnosticView = new LevelSafetyView(helper.getLevel());
+        List<BlockCoord> diagnosticCells = new ArrayList<>();
+        for (int x = 4; x <= 5; x++) {
+            for (int y = 1; y <= 2; y++) {
+                for (int z = 4; z <= 5; z++) {
+                    BlockPos abs = helper.absolutePos(new BlockPos(x, y, z));
+                    diagnosticCells.add(new BlockCoord(abs.getX(), abs.getY(), abs.getZ()));
+                }
+            }
+        }
+        BlockPos feetAbs = helper.absolutePos(new BlockPos(1, 1, 1));
+        BlockCoord diagnosticFrom = new BlockCoord(feetAbs.getX(), feetAbs.getY(), feetAbs.getZ());
+        System.out.println("DIAG dig планёр=" + MiningPlanner.next(diagnosticFrom,
+                new ArrayList<>(diagnosticCells), diagnosticView));
+        System.out.println("DIAG dig стоянки=" + StandSpots.of(diagnosticCells.get(0), diagnosticView, diagnosticFrom));
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, digCall(helper, new BlockPos(4, 1, 4), 2), SETTLE_TICKS);
 
