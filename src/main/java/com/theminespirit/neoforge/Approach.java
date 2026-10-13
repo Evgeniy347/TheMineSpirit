@@ -25,6 +25,7 @@ public final class Approach {
     private double arrival;
     private int timeoutTicks;
     private int elapsed;
+    private int deadEndTicks;
     private boolean active;
     private PathMode mode = PathMode.NORMAL;
     private String refusal;
@@ -67,12 +68,6 @@ public final class Approach {
         if (pathRefresh.shouldRefresh(target.x, target.y, target.z, spirit.getNavigation().isDone())) {
             moveToTarget(target);
             spirit.countPathBuild();
-            String noRoute = staticTargetRefusal(target);
-            if (noRoute != null) {
-                refusal = noRoute;
-                finish();
-                return State.STUCK;
-            }
             if (mode == PathMode.CAREFUL && spirit.onGround()) {
                 refusal = CarefulPath.refusal(spirit.getNavigation().getPath());
                 if (refusal != null) {
@@ -80,6 +75,17 @@ public final class Approach {
                     return State.STUCK;
                 }
             }
+        }
+        String deadEnd = deadEndRefusal(target);
+        if (deadEnd != null) {
+            deadEndTicks++;
+            if (deadEndTicks >= GotoTuning.DEAD_END_CONFIRM_TICKS) {
+                refusal = deadEnd;
+                finish();
+                return State.STUCK;
+            }
+        } else {
+            deadEndTicks = 0;
         }
         return State.MOVING;
     }
@@ -119,6 +125,7 @@ public final class Approach {
         arrival = arrivalDistance;
         timeoutTicks = GotoTuning.timeoutTicks(spirit.position().distanceTo(point));
         elapsed = 0;
+        deadEndTicks = 0;
         refusal = null;
         active = true;
     }
@@ -127,23 +134,26 @@ public final class Approach {
         return targetEntity == null ? targetPoint : targetEntity.position();
     }
 
-    private String staticTargetRefusal(Vec3 target) {
-        if (targetEntity != null) {
+    private String deadEndRefusal(Vec3 target) {
+        if (targetEntity != null || mode == PathMode.CAREFUL) {
             return null;
         }
         if (spirit.position().distanceTo(target) > GotoTuning.EARLY_REFUSAL_RANGE) {
             return null;
         }
         Path path = spirit.getNavigation().getPath();
-        if (path == null) {
-            return "навигация не построила путь к цели в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
-                    + " блоков: стоянка отрезана преградой";
+        if (path == null || !spirit.getNavigation().isDone()) {
+            return null;
         }
-        if (!path.canReach()) {
-            return "путь не доходит до цели в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
-                    + " блоков: стоянка за преградой";
+        Vec3 end = new Vec3(path.getEndNode().x + 0.5, path.getEndNode().y, path.getEndNode().z + 0.5);
+        if (end.distanceTo(target) <= arrival) {
+            return null;
         }
-        return null;
+        if (spirit.position().distanceTo(end) > arrival) {
+            return null;
+        }
+        return "путь упёрся в тупик в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
+                + " блоков от цели: стоянка за преградой";
     }
 
     private void moveToTarget(Vec3 target) {
