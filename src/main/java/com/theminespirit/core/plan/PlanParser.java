@@ -14,8 +14,6 @@ import java.util.Objects;
 
 public final class PlanParser {
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final int MAX_DEPTH = 16;
-    private static final int MAX_NODES = 256;
 
     private PlanParser() {
     }
@@ -47,13 +45,13 @@ public final class PlanParser {
     }
 
     private static TaskNode parseNode(JsonNode node, int depth, Counter counter) {
-        if (depth > MAX_DEPTH) {
-            throw new PlanValidationException("Глубина плана больше " + MAX_DEPTH
+        if (depth > PlanLimits.MAX_DEPTH) {
+            throw new PlanValidationException("Глубина плана больше " + PlanLimits.MAX_DEPTH
                     + ": проверьте вложенность sequence/repeat/fallback/parallel/condition, планировщик зациклился");
         }
         counter.increment();
-        if (counter.value() > MAX_NODES) {
-            throw new PlanValidationException("В плане больше " + MAX_NODES
+        if (counter.value() > PlanLimits.MAX_NODES) {
+            throw new PlanValidationException("В плане больше " + PlanLimits.MAX_NODES
                     + " узлов: проверьте план, ИИ-планировщик вернул неограниченно большое дерево");
         }
         if (node == null || !node.isObject()) {
