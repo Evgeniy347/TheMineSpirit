@@ -154,6 +154,11 @@ public class ClearAreaSession {
             }
             System.out.println("DIAG pick сетка=" + grid + " дух=" + spirit.blockPosition().toShortString()
                     + " клеток=" + remaining.size());
+        }
+        if (remaining.size() == (int) Math.min(box.volume(), Integer.MAX_VALUE)) {
+            BlockPos feet = spirit.blockPosition();
+            BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+            System.out.println("DIAG pick планёр=" + MiningPlanner.next(from, new ArrayList<>(remaining), safety));
         }        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
             remaining.remove(0);
         }
