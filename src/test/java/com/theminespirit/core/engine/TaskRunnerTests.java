@@ -601,6 +601,18 @@ class TaskRunnerTests {
                 "cancel после успеха обязан сохранять итог: отчёт задачи теряет данные итога при вызове cancel");
     }
 
+    @Test
+    void snapshot_TerminatedRunner_IsEmpty() {
+        TaskRunner runner = TaskRunner.start(script(SCRIPT), TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(1)),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.SUCCEEDED, runner.tick(), "задача завершается успехом");
+
+        assertTrue(runner.snapshot().isEmpty(),
+                "завершённая задача не имеет снимка: encodeForSave для не-RUNNING получает Optional.empty и не "
+                        + "пишет итог в снимок — итог живёт отдельно");
+    }
+
     private static TaskNode script(String id) {
         return new ScriptCall(id, Map.of());
     }
