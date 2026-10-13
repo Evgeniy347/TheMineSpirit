@@ -45,6 +45,7 @@ public final class MineGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final int RADIUS = 16;
     private static final int LAVA_TOTAL = 1;
+    private static final int CAVE_SHIFT_INSIDE_ARENA = -SHELL_MIN;
 
     private MineGameTests() {
     }
@@ -293,18 +294,19 @@ public final class MineGameTests {
         });
     }
 
-    // [флак] дух добывает блоки и подбирает дроп, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "empty", batch = "gather_dirt_heap", timeoutTicks = 1000)
+    // [флак] сценарий в ~600 тиков духа, подбор дропа зависит от случайного разлёта предметов; запас под нагрузкой
+    @GameTest(template = "arena", batch = "gather_dirt_heap", timeoutTicks = 1000)
     public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
-        buildCave(helper);
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int x = 1; x <= 3; x++) {
             for (int y = 1; y <= 2; y++) {
                 for (int z = 1; z <= 3; z++) {
-                    helper.setBlock(x, y, z, Blocks.DIRT);
+                    helper.setBlock(x + CAVE_SHIFT_INSIDE_ARENA, y, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.DIRT);
                 }
             }
         }
-        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER, Items.IRON_PICKAXE);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
+                Items.IRON_PICKAXE);
         SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -316,10 +318,11 @@ public final class MineGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 18,
                     "в инвентаре обязано быть 18 земли, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
-            helper.assertTrue(helper.getBlockState(new BlockPos(2, 0, 2)).is(Blocks.STONE),
+            helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 0, 2 + CAVE_SHIFT_INSIDE_ARENA))
+                            .is(Blocks.STONE),
                     "пол под кучей обязан остаться: блок под ногами не ломается");
             helper.assertTrue(run.spiritTicks() <= 720,
-                    "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 486, порог ≈1.5×), "
+                    "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 565–612, порог ≈1.2×), "
                             + "заняло " + run.spiritTicks());
             GameTestFixtures.reset(helper);
         });
@@ -736,22 +739,26 @@ public final class MineGameTests {
     }
 
     private static void buildCave(GameTestHelper helper) {
-        for (int x = SHELL_MIN; x <= SHELL_MAX; x++) {
+        buildCave(helper, 0);
+    }
+
+    private static void buildCave(GameTestHelper helper, int shift) {
+        for (int x = SHELL_MIN + shift; x <= SHELL_MAX + shift; x++) {
             for (int y = 0; y <= SHELL_TOP; y++) {
-                for (int z = SHELL_MIN; z <= SHELL_MAX; z++) {
+                for (int z = SHELL_MIN + shift; z <= SHELL_MAX + shift; z++) {
                     helper.setBlock(x, y, z, Blocks.STONE);
                 }
             }
         }
-        for (int x = 0; x <= 4; x++) {
+        for (int x = shift; x <= 4 + shift; x++) {
             for (int y = 1; y <= 3; y++) {
-                for (int z = 0; z <= 4; z++) {
+                for (int z = shift; z <= 4 + shift; z++) {
                     helper.setBlock(x, y, z, Blocks.AIR);
                 }
             }
         }
-        for (int x = SHELL_MIN; x <= SHELL_MAX; x++) {
-            for (int z = SHELL_MIN; z <= SHELL_MAX; z++) {
+        for (int x = SHELL_MIN + shift; x <= SHELL_MAX + shift; x++) {
+            for (int z = SHELL_MIN + shift; z <= SHELL_MAX + shift; z++) {
                 helper.setBlock(x, 0, z, Blocks.STONE);
             }
         }
