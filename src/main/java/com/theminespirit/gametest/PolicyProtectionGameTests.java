@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,6 +52,22 @@ public final class PolicyProtectionGameTests {
 
     private static boolean isProtected(BlockBreaker.Begin begin, PolicyId policy) {
         return begin instanceof BlockBreaker.Protected protectedBlock && protectedBlock.policy() == policy;
+    }
+
+    private static String tagSelector(String tag) {
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
+    }
+
+    // Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
+    // и команда ложится на чужого духа; тег уникален на запуск и выбирает только духа своего теста.
+    private static String freshTag(String prefix) {
+        return prefix + "_" + UUID.randomUUID();
+    }
+
+    private static SpiritEntity spawnTagged(GameTestHelper helper, BlockPos relative, String tag) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
+        spirit.addTag(tag);
+        return spirit;
     }
 
     private static void placeByPlayer(GameTestHelper helper, ServerPlayer player, BlockPos support, Block block) {
@@ -371,12 +388,13 @@ public final class PolicyProtectionGameTests {
     @GameTest(template = "arena", batch = "protect_command", timeoutTicks = 40)
     public static void zoneCommand_SetThenClear_ChangesTheSpiritWorkZone(GameTestHelper helper) throws CommandSyntaxException {
         prepare(helper);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
+        String tag = freshTag("zone");
+        SpiritEntity spirit = spawnTagged(helper, SPIRIT_AT, tag);
         BlockPos center = helper.absolutePos(new BlockPos(5, 1, 5));
         CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
         CommandSourceStack source = helper.getLevel().getServer().createCommandSourceStack()
                 .withLevel(helper.getLevel()).withPosition(helper.absoluteVec(Vec3.atCenterOf(SPIRIT_AT)));
-        String selector = "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,limit=1]";
+        String selector = tagSelector(tag);
 
         int set = dispatcher.execute("spirit zone " + selector + " " + center.getX() + " " + center.getY() + " " + center.getZ() + " 5", source);
 

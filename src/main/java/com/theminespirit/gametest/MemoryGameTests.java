@@ -24,6 +24,7 @@ import com.theminespirit.neoforge.SpiritMemoryStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -40,9 +41,23 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class MemoryGameTests {
-    private static final String SELECTOR = "@e[type=" + ModIdentity.MOD_ID + ":spirit,distance=..8,sort=nearest,limit=1]";
-
     private MemoryGameTests() {
+    }
+
+    private static String tagSelector(String tag) {
+        return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
+    }
+
+    // Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
+    // и команда ложится на чужого духа; тег уникален на запуск и выбирает только духа своего теста.
+    private static String freshTag(String prefix) {
+        return prefix + "_" + UUID.randomUUID();
+    }
+
+    private static SpiritEntity spawnTagged(GameTestHelper helper, int x, int y, int z, String tag) {
+        SpiritEntity spirit = PerceptionTestSupport.spawnSpirit(helper, x, y, z);
+        spirit.addTag(tag);
+        return spirit;
     }
 
     private static ScriptCall remember(String name, BlockCoord pos, MemoryType type) {
@@ -214,7 +229,9 @@ public final class MemoryGameTests {
     public static void spiritMemoryCommand_RecallAllRecallAndForget_ReportsAndChangesMemory(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
-        SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
+        String tag = freshTag("memory");
+        SpiritEntity spirit = spawnTagged(helper, 4, 1, 4, tag);
+        String selector = tagSelector(tag);
         BlockCoord pos = coordOf(helper, 2, 1, 2);
         spirit.updateMemory(new MemoryStore(List.of(
                 new MemoryPoint("iron", MemoryType.RESOURCE, dimensionOf(helper), pos),
@@ -246,25 +263,25 @@ public final class MemoryGameTests {
         });
         CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
 
-        int listed = dispatcher.execute("spirit memory " + SELECTOR + " all resource", source);
+        int listed = dispatcher.execute("spirit memory " + selector + " all resource", source);
         helper.assertTrue(listed == 1 && messages.size() == 1 && messages.get(0).contains("Точек типа resource: 2")
                         && messages.get(0).contains("iron") && messages.get(0).contains("coal")
                         && !messages.get(0).contains("lava_lake"),
                 "recall all resource обязан перечислить только iron и coal, ответ: " + messages);
         messages.clear();
-        int recalled = dispatcher.execute("spirit memory " + SELECTOR + " recall lava_lake", source);
+        int recalled = dispatcher.execute("spirit memory " + selector + " recall lava_lake", source);
         helper.assertTrue(recalled == 1 && messages.get(0).contains("lava_lake: danger"),
                 "recall обязан назвать имя и тип точки, ответ: " + messages);
         messages.clear();
-        dispatcher.execute("spirit memory " + SELECTOR + " recall gold", source);
+        dispatcher.execute("spirit memory " + selector + " recall gold", source);
         helper.assertTrue(messages.get(0).contains("в памяти нет"),
                 "recall несуществующей точки обязан сказать, что её нет, ответ: " + messages);
         messages.clear();
-        dispatcher.execute("spirit memory " + SELECTOR + " forget iron", source);
+        dispatcher.execute("spirit memory " + selector + " forget iron", source);
         helper.assertTrue(spirit.memory().recall("iron") == null && spirit.memory().all().size() == 2,
                 "forget обязан убрать только iron, в памяти осталось " + spirit.memory().all());
         messages.clear();
-        int rejected = dispatcher.execute("spirit memory " + SELECTOR + " all treasure", source);
+        int rejected = dispatcher.execute("spirit memory " + selector + " all treasure", source);
         helper.assertTrue(rejected == 0 && messages.get(0).contains("resource"),
                 "неизвестный тип обязан отклоняться с перечнем допустимых строчных значений, ответ: " + messages
                         + ", результат " + rejected);
