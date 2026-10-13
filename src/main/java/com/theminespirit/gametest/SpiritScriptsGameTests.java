@@ -39,4 +39,19 @@ public final class SpiritScriptsGameTests {
                 "catalogFor(spirit) обязан совпадать со статическим catalog(): планировщик и REST видят один каталог");
         helper.succeed();
     }
+
+    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    public static void acquire_InCatalogAndRegistry_ListedAsImplemented(GameTestHelper helper) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+
+        List<String> catalogIds = SpiritScripts.catalog().all().stream().map(ScriptSpec::id).toList();
+        Set<String> registryIds = SpiritScripts.registryFor(spirit).ids();
+
+        helper.assertTrue(catalogIds.contains("acquire"),
+                "acquire обязан появиться в каталоге реализованных скриптов после регистрации, каталог: "
+                        + catalogIds);
+        helper.assertTrue(registryIds.contains("acquire"),
+                "acquire обязан попасть в реестр исполнения, реестр: " + registryIds);
+        helper.succeed();
+    }
 }

@@ -65,6 +65,8 @@ public final class RestGameTests {
                         "Реализованные боевые и простые скрипты обязаны быть в capabilities, нет " + script
                                 + ", получено " + ids);
             }
+            problems.expect(ids.contains("acquire"),
+                    "acquire реализован в SpiritScripts и должен обещаться ИИ в capabilities, получено " + ids);
             List<String> required = new ArrayList<>();
             for (JsonNode script : scripts) {
                 if (script.path("id").asText().equals("goto")) {

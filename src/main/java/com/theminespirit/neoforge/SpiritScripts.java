@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.planner.AcquireScript;
+import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
 import com.theminespirit.core.script.AttackParams;
 import com.theminespirit.core.script.DefendParams;
@@ -10,6 +12,7 @@ import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CaptureParams;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
@@ -57,6 +60,7 @@ import com.theminespirit.neoforge.combat.DefendScript;
 import com.theminespirit.neoforge.combat.FleeScript;
 import com.theminespirit.neoforge.combat.RetreatScript;
 import com.theminespirit.neoforge.crafting.CraftScript;
+import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.crafting.SmeltScript;
 import com.theminespirit.neoforge.husbandry.BreedScript;
 import com.theminespirit.neoforge.husbandry.CaptureScript;
@@ -75,6 +79,7 @@ import com.theminespirit.core.script.WanderParams;
 import com.theminespirit.neoforge.inventory.DepositScript;
 import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
+import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
 import com.theminespirit.neoforge.movement.ApproachScript;
@@ -162,6 +167,12 @@ public final class SpiritScripts {
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
+        table.put("acquire", spirit -> params -> {
+            AcquireParams parsed = AcquireParams.from(params);
+            return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()),
+                    new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT),
+                    catalog(), conditionCatalog(), () -> registryFor(spirit), conditions());
+        });
         return table;
     }
 
