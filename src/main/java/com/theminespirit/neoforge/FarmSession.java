@@ -126,6 +126,10 @@ public final class FarmSession {
             outcome = Outcome.SUCCEEDED;
             return outcome;
         }
+        if (!actions.hasSupplies(job, crop)) {
+            lostSupplies();
+            return outcome;
+        }
         ticks++;
         switch (state) {
             case FIND -> find();
@@ -241,10 +245,6 @@ public final class FarmSession {
     }
 
     private void pick() {
-        if (!actions.hasSupplies(job, crop)) {
-            lostSupplies();
-            return;
-        }
         if (buffer.isEmpty()) {
             state = State.FIND;
             return;
@@ -447,8 +447,10 @@ private Outcome refuseWithoutSupplies() {
     }
 
     private void lostSupplies() {
-        int known = done + 1 + buffer.size() + noStand + rejected;
-        fail(actions.lostSuppliesText(job) + ": сделано " + done + " из " + Math.min(count, known));
+        int noTool = job == FarmJob.TILL ? 1 : 0;
+        int noSeeds = job == FarmJob.TILL ? 0 : 1;
+        FarmTally tally = new FarmTally(done, count, ineligible, noStand, noSeeds, noTool, dry, unreachable, radius);
+        fail(((FarmTally.Failed) tally.outcome(job)).text());
     }
 
     private void concludeExhausted() {

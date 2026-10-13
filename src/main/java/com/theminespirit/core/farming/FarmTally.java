@@ -17,6 +17,9 @@ public record FarmTally(int done, int requested, int ineligible, int noStand, in
             throw new IllegalArgumentException("Работа не может быть null: без неё неизвестно, что считать успехом");
         }
         if (noTool > 0) {
+            if (done > 0) {
+                return new Failed(lostTool(job) + ": " + progress(job) + counters(job));
+            }
             return new Failed(missingTool(job) + progressSuffix() + counters(job));
         }
         if (requested <= 0) {
@@ -29,6 +32,15 @@ public record FarmTally(int done, int requested, int ineligible, int noStand, in
             return new Succeeded();
         }
         return new Failed(progress(job) + counters(job));
+    }
+
+    private String lostTool(FarmJob job) {
+        return switch (job) {
+            case TILL -> "мотыга сломалась";
+            case PLANT -> "нет семян";
+            case HARVEST -> "нет семян для пересадки";
+            case BONE_MEAL -> "нет костной муки";
+        };
     }
 
     private String missingTool(FarmJob job) {

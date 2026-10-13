@@ -42,16 +42,6 @@ final class FarmActions {
         };
     }
 
-    String lostSuppliesText(FarmJob job) {
-        return switch (job) {
-            case TILL -> "мотыга сломалась";
-            case PLANT -> "семена закончились";
-            case HARVEST -> throw new IllegalStateException(
-                    "Сбору расходники не нужны: пересадка без семян считается отдельно, а не потерей расходника");
-            case BONE_MEAL -> "костная мука закончилась";
-        };
-    }
-
     int count(Item item) {
         int total = 0;
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {

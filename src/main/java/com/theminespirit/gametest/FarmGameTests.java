@@ -363,6 +363,35 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "farm_till_hoe_breaks", timeoutTicks = 400)
+    public static void till_HoeBreaksAfterFirstCell_FailsNamingTilledProgress(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        helper.setBlock(new BlockPos(3, FLOOR_Y, 3), Blocks.DIRT);
+        helper.setBlock(new BlockPos(4, FLOOR_Y, 3), Blocks.DIRT);
+        helper.setBlock(new BlockPos(5, FLOOR_Y, 3), Blocks.DIRT);
+        ItemStack hoe = new ItemStack(Items.IRON_HOE);
+        hoe.setDamageValue(hoe.getMaxDamage() - 1);
+        SpiritEntity spirit = spawnWith(helper, START, hoe);
+        AtomicReference<FarmSession> session = drive(helper, spirit, ctx -> FarmSession.till(ctx, 4, 3));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.FAILED,
+                    "после поломки мотыги посреди вспашки сессия обязана завершиться провалом с понятным итогом, "
+                            + "а не молча перебирать клетки: " + run.outcome() + ", " + run.failureReason());
+            String reason = run.failureReason() == null ? "" : run.failureReason();
+            helper.assertTrue(reason.contains("мотыга сломалась"),
+                    "причина провала обязана назвать поломку мотыги, фактически: " + reason);
+            helper.assertTrue(reason.contains("вспахано 1"),
+                    "причина провала обязана назвать одну вспаханную клетку, фактически: " + reason);
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 1,
+                    "до поломки вспахана ровно одна клетка, фактически пашни "
+                            + countBlock(helper, Blocks.FARMLAND));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "farm_till_weed", timeoutTicks = 400)
     public static void till_WeedAboveDirt_CutsWeedAndTills(GameTestHelper helper) {
         arenaFloor(helper);
@@ -450,6 +479,33 @@ public final class FarmGameTests {
                     "без семян отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
             helper.assertTrue(changedBlocks(helper, before) == 0,
                     "при отказе мир не меняется, изменилось блоков: " + changedBlocks(helper, before));
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_plant_seeds_run_out", timeoutTicks = 400)
+    public static void plantCrop_SeedsRunOutAfterTwoCells_FailsNamingPlantedProgress(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        for (BlockPos cell : bed()) {
+            helper.setBlock(cell, Blocks.FARMLAND);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 2));
+        AtomicReference<FarmSession> session = drive(helper, spirit,
+                ctx -> FarmSession.plantCrop(ctx, CropKind.WHEAT, 4, 4));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.FAILED,
+                    "после двух посадок из двух семян сессия обязана завершиться провалом с понятным итогом: "
+                            + run.outcome() + ", " + run.failureReason());
+            String reason = run.failureReason() == null ? "" : run.failureReason();
+            helper.assertTrue(reason.contains("посажено 2"),
+                    "причина провала обязана назвать две посаженные клетки, фактически: " + reason);
+            helper.assertTrue(reason.contains("нет семян"),
+                    "причина провала обязана назвать кончившиеся семена, фактически: " + reason);
+            helper.assertTrue(countBlock(helper, Blocks.WHEAT) == 2,
+                    "посажено ровно две клетки, фактически пшеницы " + countBlock(helper, Blocks.WHEAT));
             GameTestFixtures.reset(helper);
         });
     }
