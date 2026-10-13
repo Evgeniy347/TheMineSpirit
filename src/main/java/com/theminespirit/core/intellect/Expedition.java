@@ -10,7 +10,7 @@ public record Expedition(List<UUID> team, Point target, long startedAt) {
         if (team == null) {
             throw new IllegalArgumentException("Экспедиция без команды не идёт: в одиночку в шахту не ходят");
         }
-        if (team.size() < 2 || team.size() > 3) {
+        if (team.size() < IntellectTuning.TEAM_MIN || team.size() > IntellectTuning.TEAM_MAX) {
             throw new IllegalArgumentException("Команда экспедиции = " + team.size()
                     + ": ходят командой 2–3 духа, иначе либо опасно, либо толпа");
         }

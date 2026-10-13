@@ -62,7 +62,7 @@ class ActivityProperties {
 
             assertEquals(activity.demand(view), activity.demand(view),
                     "Спрос " + id + " детерминирован: иначе распределение мигает между пересборками");
-            assertTrue(activity.demand(view) >= 0 && activity.demand(view) <= Activity.MAX_DEMAND,
+            assertTrue(activity.demand(view) >= 0 && activity.demand(view) <= IntellectTuning.MAX_DEMAND,
                     "Спрос " + id + " лежит в 0..MAX_DEMAND: иначе сравнение деятельностей несравнимо");
         }
     }

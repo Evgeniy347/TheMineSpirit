@@ -55,7 +55,7 @@ public final class ActivityAssigner {
         List<ActivityAssignment> assignments = new ArrayList<>();
         Map<ActivityId, Integer> taken = new EnumMap<>(ActivityId.class);
         int defenders = 0;
-        int defendersNeeded = Math.min(view.threats(), 3);
+        int defendersNeeded = Math.min(view.threats(), IntellectTuning.MAX_FIGHTERS);
         for (SpiritSnapshot spirit : view.spirits()) {
             Optional<ActivityAssignment> current = ledger.of(spirit.id());
             if (current.isEmpty() && spirit.workTarget().isPresent()) {
@@ -101,8 +101,9 @@ public final class ActivityAssigner {
         if (current.isPresent() && current.get().activity() != ActivityId.DEFEND
                 && demandById.containsKey(current.get().activity())
                 && eligible(current.get().activity(), spirit, view)
-                && now - current.get().since() < 200
-                && scored(best, demandById, taken) < demandById.get(current.get().activity()) + 0.15) {
+                && now - current.get().since() < IntellectTuning.MIN_SWITCH_TICKS
+                && scored(best, demandById, taken) < demandById.get(current.get().activity())
+                        + IntellectTuning.HYSTERESIS_MARGIN) {
             return current.get().activity();
         }
         return best;
@@ -116,7 +117,7 @@ public final class ActivityAssigner {
             if (demand.id() == excluded || !eligible(demand.id(), spirit, view)) {
                 continue;
             }
-            double score = demand.demand() - 0.2 * taken.getOrDefault(demand.id(), 0);
+            double score = demand.demand() - IntellectTuning.CROWD_PENALTY * taken.getOrDefault(demand.id(), 0);
             if (best == null || score > bestScore || (score == bestScore && demand.id().compareTo(best) < 0)) {
                 best = demand.id();
                 bestScore = score;
@@ -126,7 +127,7 @@ public final class ActivityAssigner {
     }
 
     private double scored(ActivityId id, Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken) {
-        return demandById.get(id) - 0.2 * taken.getOrDefault(id, 0);
+        return demandById.get(id) - IntellectTuning.CROWD_PENALTY * taken.getOrDefault(id, 0);
     }
 
     private boolean eligible(ActivityId id, SpiritSnapshot spirit, SettlementView view) {

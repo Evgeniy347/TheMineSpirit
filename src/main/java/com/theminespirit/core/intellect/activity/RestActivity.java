@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +20,9 @@ public final class RestActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос отдыха без обстановки не считается: зависит от нужд и ночи");
         }
-        double rest = view.needsFood(1, 1.5) || view.needsOre(64, 32, 2) ? 1.0 : 4.5;
+        double rest = view.needsFood(IntellectTuning.FOOD_DAYS, IntellectTuning.FOOD_SAFETY)
+                || view.needsOre(IntellectTuning.ORE_TARGET, IntellectTuning.IRON_TARGET,
+                        IntellectTuning.WEAPON_TARGET) ? 1.0 : 4.5;
         if (view.dayFraction() >= 0.5) {
             rest = Math.max(rest, 6.0);
         }

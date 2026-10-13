@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +20,7 @@ public final class DefendActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос защиты без обстановки не считается: зависит от угроз");
         }
-        return Activity.checkedDemand(id(), view.threats() > 0 ? Activity.MAX_DEMAND : 0.5);
+        return Activity.checkedDemand(id(), view.threats() > 0 ? IntellectTuning.MAX_DEMAND : 0.5);
     }
 
     @Override

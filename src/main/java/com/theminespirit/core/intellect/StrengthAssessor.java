@@ -51,7 +51,7 @@ public final class StrengthAssessor {
             SelfFacts self = selfFacts(spirit);
             double margin = marginOf(self, nearest, profiles, armor, scales);
             Optional<UUID> enemy = enemyId(nearest);
-            if (spirit.hpFraction() < 0.35) {
+            if (spirit.hpFraction() < IntellectTuning.HEAL_FRACTION) {
                 verdicts.add(new StrengthVerdict(spirit.id(), StrengthAction.HEAL, margin, enemy));
             } else if (self.dps() <= 1 && weaponAvailable) {
                 verdicts.add(new StrengthVerdict(spirit.id(), StrengthAction.ARM, margin, enemy));
@@ -63,7 +63,7 @@ public final class StrengthAssessor {
         int target = fighterTarget(enemies, profiles);
         for (int index = 0; index < fighters.size(); index++) {
             Fighter fighter = fighters.get(index);
-            if (index < target && fighter.margin() >= 0) {
+            if (index < target && fighter.margin() >= 1 - IntellectTuning.FLEE_MARGIN) {
                 verdicts.add(new StrengthVerdict(fighter.spirit(), StrengthAction.FIGHT, fighter.margin(),
                         fighter.enemy()));
             } else {
@@ -86,12 +86,12 @@ public final class StrengthAssessor {
         for (EnemyFact enemy : enemies) {
             totalHp += profiles.profile(enemy.type()).hp() * enemy.count();
         }
-        return Math.min(3, Math.max(1, (int) Math.ceil(totalHp / 30)));
+        return Math.min(IntellectTuning.MAX_FIGHTERS, Math.max(1, (int) Math.ceil(totalHp / 30)));
     }
 
     private static SelfFacts selfFacts(SpiritSnapshot spirit) {
-        return new SelfFacts(spirit.pos(), spirit.hpFraction() * 20, 20, 0, spirit.role() == SpiritRole.DEFENDER ? 6
-                : 1, 0.25, 1, 0, 0, false, 0, 0);
+        return new SelfFacts(spirit.pos(), spirit.hpFraction() * 20, 20, 0,
+                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.ARMED_DPS : 1, 0.25, 1, 0, 0, false, 0, 0);
     }
 
     private static double marginOf(SelfFacts self, EnemyFact enemy, EnemyProfiles profiles, ArmorModel armor,

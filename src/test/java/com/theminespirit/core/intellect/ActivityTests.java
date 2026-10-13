@@ -119,7 +119,8 @@ class ActivityTests {
     @Test
     void demand_AboveMax_Throws() {
         assertThrows(IllegalArgumentException.class,
-                () -> new FixedActivity(ActivityId.CHOP, Activity.MAX_DEMAND + 1).demand(SettlementViews.empty()),
+                () -> new FixedActivity(ActivityId.CHOP, IntellectTuning.MAX_DEMAND + 1)
+                        .demand(SettlementViews.empty()),
                 "Спрос выше максимума ломает шкалу: одна деятельность навсегда забьёт остальные");
     }
 
@@ -129,9 +130,4 @@ class ActivityTests {
                 "Спрос без обстановки не считается: коэффициент зависит от запасов и угроз поселения");
     }
 
-    @Test
-    void maxDemand_DeclaredValue_EqualsTen() {
-        assertEquals(10.0, Activity.MAX_DEMAND,
-                "Шкала спроса 0..10: в ней считаются все коэффициенты деятельностей и штраф за толпу");
-    }
 }

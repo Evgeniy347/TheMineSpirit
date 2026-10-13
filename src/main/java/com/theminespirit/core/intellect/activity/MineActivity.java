@@ -6,6 +6,7 @@ import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import java.util.Map;
 import java.util.Optional;
@@ -21,8 +22,9 @@ public final class MineActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос добычи без обстановки не считается: зависит от запасов");
         }
-        double deficit = Math.max(deficit(view.ore(), 64),
-                Math.max(deficit(view.iron(), 32), deficit(view.weapons(), 2)));
+        double deficit = Math.max(deficit(view.ore(), IntellectTuning.ORE_TARGET), Math.max(
+                deficit(view.iron(), IntellectTuning.IRON_TARGET),
+                deficit(view.weapons(), IntellectTuning.WEAPON_TARGET)));
         return Activity.checkedDemand(id(), 1 + 8 * deficit);
     }
 

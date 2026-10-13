@@ -16,7 +16,7 @@ public final class Invitation {
         }
         opened = true;
         openedAt = now;
-        deadline = now + 3600;
+        deadline = now + IntellectTuning.INVITE_TTL_TICKS;
         stage = InvitationStage.OPEN;
         goWithout = false;
         return state(now);
@@ -49,7 +49,7 @@ public final class Invitation {
         }
         if (answer == InvitationAnswer.WAIT_MORE) {
             stage = InvitationStage.EXTENDED;
-            deadline += 1200;
+            deadline += IntellectTuning.INVITE_EXTEND_TICKS;
         } else {
             stage = InvitationStage.GO_WITHOUT;
             goWithout = true;
@@ -58,7 +58,7 @@ public final class Invitation {
     }
 
     private InvitationState state(long now) {
-        int repeats = opened ? (int) ((now - openedAt) / 600) : 0;
+        int repeats = opened ? (int) ((now - openedAt) / IntellectTuning.INVITE_REPEAT_TICKS) : 0;
         return new InvitationState(stage == null ? InvitationStage.GO_WITHOUT : stage, deadline,
                 Math.max(0, repeats), goWithout);
     }
