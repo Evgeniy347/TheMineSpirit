@@ -56,6 +56,29 @@ public final class SpiritSuppliesGameTests {
     }
 
     @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    public static void inventory_MapOfStacks_ReturnsAllItemsWithTotals(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_INGOT, 4));
+        spirit.getInventory().setItem(3, new ItemStack(Items.IRON_INGOT, 3));
+        spirit.getInventory().setItem(5, new ItemStack(Items.COAL, 2));
+        SpiritSupplies supplies = new SpiritSupplies(spirit, 8);
+
+        Map<String, Integer> inventory = supplies.inventory();
+
+        helper.assertTrue(inventory.getOrDefault("iron_ingot", 0) == 7,
+                "инвентарь обязан сложить обе стопки железа (4+3), фактически "
+                        + inventory.getOrDefault("iron_ingot", 0));
+        helper.assertTrue(inventory.getOrDefault("coal", 0) == 2,
+                "инвентарь обязан содержать уголь, фактически " + inventory.getOrDefault("coal", 0));
+        helper.assertTrue(inventory.size() == 2,
+                "инвентарь обязан содержать только занятые предметы, фактически " + inventory);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
     public static void withdraw_SingleChest_ReturnsNearestStepWithCappedCount(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
