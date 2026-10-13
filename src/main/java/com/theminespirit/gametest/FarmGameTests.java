@@ -10,11 +10,13 @@ import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTile;
+import com.theminespirit.core.farming.FarmTuning;
 import com.theminespirit.core.farming.Ground;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.CropRegistry;
 import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
@@ -66,6 +68,15 @@ public final class FarmGameTests {
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmGameTests() {
+    }
+
+    @GameTest(template = "empty", batch = "farm_reach_guard", timeoutTicks = 20)
+    public static void farmTuningReach_ExceedingBlockBreakerReach_IsRejected(GameTestHelper helper) {
+        helper.assertTrue(FarmTuning.REACH <= BlockBreaker.REACH,
+                "Досягаемость фермы " + FarmTuning.REACH + " обязана быть не больше досягаемости ломки "
+                        + BlockBreaker.REACH + ": иначе планировщик поставит дух туда, откуда BlockBreaker "
+                        + "отвергнет обработку клетки");
+        helper.succeed();
     }
 
     @GameTest(template = "empty", batch = "farm_registry", timeoutTicks = 20)

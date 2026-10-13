@@ -13,7 +13,7 @@ public final class FarmStandSpots {
 
     private static final int STAND_RADIUS = 3;
     private static final double EYE_HEIGHT = 1.62;
-    private static final double MAX_REACH_SQUARED = 16.0;
+    private static final double MAX_REACH_SQUARED = FarmTuning.REACH * FarmTuning.REACH;
 
     private FarmStandSpots() {
     }

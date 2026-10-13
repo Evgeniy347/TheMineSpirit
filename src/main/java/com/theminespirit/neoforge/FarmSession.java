@@ -6,6 +6,7 @@ import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
+import com.theminespirit.core.farming.FarmTuning;
 import com.theminespirit.core.farming.SeedPolicy;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
@@ -288,7 +289,7 @@ public final class FarmSession {
     }
 
     private boolean inReachOfTarget() {
-        return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(posOf(currentGround))) <= BlockBreaker.REACH;
+        return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(posOf(currentGround))) <= FarmTuning.REACH;
     }
 
     private void act() {
