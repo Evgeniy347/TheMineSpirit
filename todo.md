@@ -98,6 +98,7 @@
 - [x] Движение: goto_block, come_to_player, return_home (дом духа /spirit home), patrol, wander, keep_distance, walk_careful (CAREFUL), step_over, approach (чеклист 24)
 - [x] Техдолг: потолки GameTest рубки/фермы/добычи по замерам (25 меток [флак] сняты, 4 с обоснованием), ServerThreadCallTests без замера миллисекунд (muse, 13.10)
 - [x] Техдолг: кэш решений переполнения инвентаря (проверка до обхода слотов, счётчик изменений контейнера), GameTest через collect_drops — без кэша 230 вызовов против 40 (muse, 13.10)
+- [x] Изоляция GameTest: политики — уникальные мок-игроки, память и защита — выбор духов по тегу, MineGameTests (18) — пещера внутри arena (muse, 13.10)
 
 ## В работе и техдолг
 
@@ -135,9 +136,8 @@
       GameTest, также в отчёте 20) — воспроизвести на ПК.
 - [ ] `gather_DirtHeap…` второй режим (отчёт td-flakes2): под нагрузкой дух зацикливается на approachFail каждые ~41 тик
       (после ~12 блоков), статус RUNNING до тайм-аута — не граница чанка; возможна ошибка в Approach/выборе стоянок.
-- [ ] Общие риски GameTest (td-flakes2): MineGameTests на шаблоне empty с пещерой за структурой; Policy*/Rest* — общее имя
-      мок-игрока (перевести на GameTestFixtures.mockPlayer); MemoryGameTests/PolicyProtectionGameTests — селекторы по
-      расстоянию (перевести на тег). Новый флек `till_hoebreaksafterfirstcell_failsnamingtilledprogress` («пашни 0»).
+- [ ] Общие риски GameTest: Rest* — общее имя мок-игрока (перевести на GameTestFixtures.mockPlayer после слияния 27);
+      новый флек `till_hoebreaksafterfirstcell_failsnamingtilledprogress` («пашни 0»).
 - [ ] Дом и базы (ревью 24 + решение владельца 13.10): `SpiritHome` — дом семьи (единый источник, вместо `MemoryType.BASE`
       для «дома»); в походе — временная база (лагерь) рядом с целью/боссом, тоже точка отхода. Отход тактики HOME выбирает
       ближайшую безопасную из «дом» и «лагерь похода». Команда/скрипт поставить и снять лагерь.
