@@ -106,6 +106,7 @@
 - [x] Сторож шаблона GameTest: сцена со спавном духа/блоками не на empty, нарушения переведены на arena (deepseek-web; финал — главный агент, 13.10)
 - [x] Техдолг: gather не крутится на недостижимой стоянке — исключение стоянок, ≤3 подхода на цель, Approach отказывает по пройденному тупику (muse, 13.10)
 - [x] Техдолг: clear_area/dig_area бросают недостижимую стоянку — общий ApproachFailureTracker с gather (muse, 13.10)
+- [x] `scripts/gametest.sh` в Git Bash на Windows: запасной замок на `mkdir` без `flock`, тест `check-gametest-lock.sh`, переменные `THEMINESPIRIT_GAMETEST_WAIT`/`NOFLOCK`/`GRADLEW` (4f925c8, 14.10)
 
 ## В работе и техдолг
 
@@ -121,8 +122,6 @@
 - [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
       причина посадки в тёмную клетку — гипотеза (свет пересчитывается отдельно), исправлено условием старта.
-- [ ] `scripts/gametest.sh` не работает в Git Bash на Windows (нет flock): на ПК — запуск без замка или через
-      gametest-local.sh; строка в docs/TESTING.md.
 - [ ] Инвентарь (ревью 16): `HarvestSession` (mine_vein/gather) подбирает в режиме BY_VALUE (выбрасывает дешёвое), рубка,
       ферма и стадо — FAIL (отказ) — решить единое правило (решение владельца).
 - [ ] Тактика (ревью 23): ванильные монстры сами не целятся в духов (в GameTest цель ставится вручную) — решить, должны ли
