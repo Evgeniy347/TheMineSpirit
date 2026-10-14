@@ -16,7 +16,7 @@
 | `./gradlew slowTest` | только `@Tag("slow")`; отчёты в `TestResults/slow/` |
 | `./gradlew check` | быстрый тир (`test`); `slowTest` запускается отдельно | зелёный прогон быстрых тестов |
 | `./gradlew jacocoTestReport` | отчёт покрытия JaCoCo | `TestResults/coverage/` |
-| `scripts/gametest.sh` | GameTest под `flock` (один сервер на машину): поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
+| `scripts/gametest.sh` | GameTest под замком (один сервер на машину): `flock`, а без него — `mkdir`-замок для Git Bash на Windows; поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
@@ -103,7 +103,7 @@ curl -s -X DELETE $H/v1/tasks/t-1        # отмена, повтор безоп
 | Скрипт | Назначение | Проверка |
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
-| [scripts/gametest.sh](scripts/gametest.sh) | GameTest под `flock`: один GameTest-сервер на машину, ждёт до 30 мин (код 75), лишние JVM игры не плодятся | `All N required tests passed`; код 75 — идёт чужой GameTest |
+| [scripts/gametest.sh](scripts/gametest.sh) | GameTest под замком: один GameTest-сервер на машину. На Linux `flock`, в Git Bash на Windows — запасной замок на `mkdir` (`THEMINESPIRIT_GAMETEST_NOFLOCK=1` включает принудительно, `THEMINESPIRIT_GAMETEST_WAIT` — ожидание, `THEMINESPIRIT_GRADLEW` — команда запуска), ждёт до 30 мин (код 75), лишние JVM игры не плодятся | `All N required tests passed`; код 75 — идёт чужой GameTest |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | Сторож памяти на domovoy при параллельных исполнителях: свободно < 15 % — SIGSTOP самой тяжёлой java сборки, > 25 % — SIGCONT | строка в журнале TestResults/mem-guard.log на каждое действие |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: при сбое провайдера (free usage, rate limit, квота, 429), сетевом сбое (нет соединения, «Endpoint is unavailable») или молчании модели ≥ 5 мин — перезапуск той же сессии (5, 5, 10, 30, 60 с), затем режим ожидания: раз в 120 с (`OPENCODE_PROBE_INTERVAL`) короткая проба модели из пустого каталога, провайдер вернулся — та же сессия продолжается, предел ожидания `OPENCODE_WAIT_LIMIT` 7200 с, потом стоп; сбои пишутся в `TestResults/opencode/failures.log`; новое задание не стартует в грязном дереве (там может работать другой агент), `OPENCODE_ALLOW_DIRTY=1` — осознанно | код выхода 0 и `Сессия: ses_…`; 75 (предел ожидания исчерпан) — сообщить пользователю |
 | [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): сбои провайдера, сетевые сбои (json «Cannot connect», stderr «Endpoint is unavailable» опознаются как сбой провайдера, а не молчание), режим ожидания (провайдер вернулся / предел исчерпан), молчание модели, долгая команда, ложные срабатывания на файлах и логе INFO | все строки `OK` |
@@ -119,6 +119,7 @@ curl -s -X DELETE $H/v1/tasks/t-1        # отмена, повтор безоп
 | [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
 | [scripts/git-hooks/pre-commit](scripts/git-hooks/pre-commit) | сторож зелёного коммита: при изменениях в `src/`, `build.gradle`, `gradle.properties`, `settings.gradle` прогоняет `./gradlew test` и отклоняет коммит при красном; документы, скрипты и слияния — без прогона (docs/GIT.md) | коммит с падающим тестом отклоняется с объяснением |
 | [scripts/testing/check-pre-commit.sh](scripts/testing/check-pre-commit.sh) | регрессионная проверка `pre-commit` на временном клоне: красный тест, документ, зелёный тест, `git commit -- путь`, незастейдженная правка, слияние | все строки `OK` |
+| [scripts/testing/check-gametest-lock.sh](scripts/testing/check-gametest-lock.sh) | регрессионная проверка замка `gametest.sh` на фейковом gradlew без Gradle: параллельные запуски не пересекаются, протухший замок снимается, живой замок даёт код 75, код gradlew возвращается, `trap` снимает замок | все строки `OK` |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура
