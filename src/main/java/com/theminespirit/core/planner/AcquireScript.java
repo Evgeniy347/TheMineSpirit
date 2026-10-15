@@ -129,14 +129,22 @@ public final class AcquireScript implements ScriptInstance {
      * осматривали дерево, не запуская вложенный раннер.
      */
     Optional<TaskNode> buildSubplan() {
+        if (attempts == 0) {
+            // Фиксируем стартовые числа только на первой попытке: итог описывает
+            // исходную ситуацию, а не последнюю пересборку.
+            startInventory = supplies.inInventory(item);
+        }
         attempts++;
-        startInventory = supplies.inInventory(item);
         if (startInventory >= count) {
-            chestPlanned = 0;
+            if (attempts == 1) {
+                chestPlanned = 0;
+            }
             return Optional.empty();
         }
         List<ScriptCall> withdraws = supplies.withdraw(item, count - startInventory);
-        chestPlanned = withdraws.stream().mapToInt(step -> count(step)).sum();
+        if (attempts == 1) {
+            chestPlanned = withdraws.stream().mapToInt(step -> count(step)).sum();
+        }
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {

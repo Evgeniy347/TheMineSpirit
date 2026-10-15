@@ -285,6 +285,34 @@ class AcquireScriptTests {
     }
 
     @Test
+    void firstAttemptFails_SecondSucceeds_StartInventoryNotOverwritten() {
+        AtomicInteger inventory = new AtomicInteger(1);
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryLive = inventory;
+        AtomicInteger buildCount = new AtomicInteger();
+        AcquireScript script = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG,
+                ConditionCatalog.empty(),
+                () -> {
+                    buildCount.incrementAndGet();
+                    // Первая попытка падает сразу; вторая — счётный скрипт на 2 тика.
+                    return ScriptRegistry.of(Map.of("gather", params ->
+                            buildCount.get() == 1
+                                    ? new AlwaysFailingInstance()
+                                    : new CountingInstance(2, inventory)));
+                }, NO_CONDITIONS);
+
+        assertEquals(ScriptStatus.SUCCEEDED, run(script, 40),
+                "Первая попытка падает, вторая успешна — acquire обязан дойти до конца");
+        Map<String, Object> fields = ((ScriptResult.Data) script.result().orElseThrow()).fields();
+        assertEquals(1, fields.get("from_inventory"),
+                "startInventory зафиксирован на первой попытке: пересборка не перезаписывает его");
+        assertEquals(2, fields.get("gathered"),
+                "gathered — добыто после первой попытки, пересборка не меняет стартовое число");
+        assertEquals(2, fields.get("attempts"),
+                "Обе попытки учтены: первая упала, вторая успешна");
+    }
+
+    @Test
     void savedRunnerState_AfterFirstTick_SnapshotDecodesBack() {
         AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
                 new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
