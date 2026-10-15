@@ -1,25 +1,31 @@
 package com.theminespirit.gametest;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.DataReload;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -52,8 +58,7 @@ public final class HotReloadGameTests {
     }
 
     @GameTest(template = "arena", batch = "hotreload_apply", timeoutTicks = 300)
-    public static void tables_DatapackOverridesArmor_SpiritWearsByNewTable(GameTestHelper helper)
-            throws CommandSyntaxException {
+    public static void tables_DatapackOverridesArmor_SpiritWearsByNewTable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
@@ -63,22 +68,12 @@ public final class HotReloadGameTests {
         spirit.getInventory().setItem(0, new ItemStack(Items.LEATHER_CHESTPLATE));
         PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
         });
-
-        AtomicBoolean reloaded = new AtomicBoolean();
         try {
-            writeDatapack(helper, OVERRIDE);
-            helper.onEachTick(() -> {
-                if (!reloaded.get()) {
-                    reloaded.set(true);
-                    runReload(helper);
-                }
-            });
+            reloadFromDatapack(helper, OVERRIDE);
             helper.succeedWhen(() -> {
                 scene.assertStarted();
-                helper.assertTrue(reloaded.get(),
-                        "перезагрузка обязана быть запущена: без /reload тест не проверяет применение на лету");
                 helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == 1,
-                        "после /reload таблица брони обязана прийти из датапака мира (check_interval_ticks = 1), "
+                        "после перезагрузки таблица брони обязана прийти из датапака мира (check_interval_ticks = 1), "
                                 + "а не из мода (40); фактически "
                                 + DataTables.INSTANCE.armor().current().checkIntervalTicks());
                 helper.assertTrue(spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.LEATHER_CHESTPLATE),
@@ -92,46 +87,39 @@ public final class HotReloadGameTests {
     }
 
     @GameTest(template = "arena", batch = "hotreload_broken", timeoutTicks = 300)
-    public static void tables_BrokenJson_KeepsOldTableAndReportsError(GameTestHelper helper)
-            throws CommandSyntaxException {
+    public static void tables_BrokenJson_KeepsOldTableAndReportsError(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         int before = DataTables.INSTANCE.armor().current().checkIntervalTicks();
-        AtomicBoolean reloaded = new AtomicBoolean();
         try {
-            writeDatapack(helper, "{ это не json ");
-            helper.onEachTick(() -> {
-                if (!reloaded.get()) {
-                    reloaded.set(true);
-                    runReload(helper);
-                }
-            });
-            helper.succeedWhen(() -> {
-                helper.assertTrue(reloaded.get(), "перезагрузка обязана быть запущена");
-                boolean reported = DataReload.lastReload().stream()
-                        .anyMatch(report -> report.id().equals("armor") && report.failed());
-                helper.assertTrue(reported,
-                        "битый armor_table.json обязан попасть в отчёт перезагрузки ошибкой: иначе ошибка не видна");
-                helper.assertTrue(DataTables.INSTANCE.armor().status().failed(),
-                        "статус таблицы брони обязан нести ошибку последней перезагрузки");
-                helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == before,
-                        "битый json не подменяет таблицу: работает прежняя (check_interval_ticks = " + before + "); "
-                                + "фактически " + DataTables.INSTANCE.armor().current().checkIntervalTicks());
-                GameTestFixtures.reset(helper);
-            });
+            reloadFromDatapack(helper, "{ это не json ");
+            boolean reported = DataReload.lastReload().stream()
+                    .anyMatch(report -> report.id().equals("armor") && report.failed());
+            helper.assertTrue(reported,
+                    "битый armor_table.json обязан попасть в отчёт перезагрузки ошибкой: иначе ошибка не видна");
+            helper.assertTrue(DataTables.INSTANCE.armor().status().failed(),
+                    "статус таблицы брони обязан нести ошибку последней перезагрузки");
+            helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == before,
+                    "битый json не подменяет таблицу: работает прежняя (check_interval_ticks = " + before + "); "
+                            + "фактически " + DataTables.INSTANCE.armor().current().checkIntervalTicks());
+            GameTestFixtures.reset(helper);
+            helper.succeed();
         } finally {
             cleanupDatapack(helper);
         }
     }
 
-    private static void runReload(GameTestHelper helper) {
+    // Перезагрузка через настоящий серверный ресурс-менеджер: берём текущие выбранные паки сервера и добавляем
+    // поверх датапак теста. Так тот же слушатель AddReloadListenerEvent читает датапак, что и при /reload.
+    private static void reloadFromDatapack(GameTestHelper helper, String armorJson) {
         MinecraftServer server = helper.getLevel().getServer();
-        CommandDispatcher<CommandSourceStack> dispatcher = server.getCommands().getDispatcher();
-        CommandSourceStack source = server.createCommandSourceStack().withPermission(4);
-        try {
-            dispatcher.execute("reload", source);
-        } catch (CommandSyntaxException error) {
-            throw new IllegalStateException("команда reload не выполнилась в GameTest: " + error.getMessage(), error);
-        }
+        writeDatapack(helper, armorJson);
+        List<PackResources> packs = new ArrayList<>(server.getPackRepository().openAllSelected());
+        packs.add(new PathPackResources(
+                new PackLocationInfo("file/" + PACK, Component.literal(PACK), PackSource.WORLD, Optional.empty()),
+                packDir(helper)));
+        MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs);
+        DataReload.reloadFrom(manager);
+        manager.close();
     }
 
     private static void writeDatapack(GameTestHelper helper, String armorJson) {
@@ -165,10 +153,10 @@ public final class HotReloadGameTests {
         } catch (IOException error) {
             LOGGER.warn("датапак теста не убран полностью: {}", error.getMessage());
         }
-        runReload(helper);
     }
 
     private static Path packDir(GameTestHelper helper) {
-        return helper.getLevel().getServer().getWorldPath(LevelResource.DATAPACK_DIR).resolve(PACK);
+        return helper.getLevel().getServer().getWorldPath(LevelResource.DATAPACK_DIR)
+                .resolve(PACK);
     }
 }

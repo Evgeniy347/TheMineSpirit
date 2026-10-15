@@ -34,11 +34,11 @@ public final class DataReload {
     public static void register(AddReloadListenerEvent event) {
         event.addListener((barrier, resourceManager, prepareProfiler, applyProfiler, backgroundExecutor, gameExecutor) ->
                 CompletableFuture
-                        .runAsync(() -> apply(resourceManager), backgroundExecutor)
+                        .runAsync(() -> reloadFrom(resourceManager), backgroundExecutor)
                         .thenCompose(barrier::wait));
     }
 
-    private static void apply(ResourceManager resourceManager) {
+    public static void reloadFrom(ResourceManager resourceManager) {
         List<TableRegistry.Report> reports = DataTables.INSTANCE.reload(new ServerContent(resourceManager));
         lastReload = reports;
         for (TableRegistry.Report report : reports) {
