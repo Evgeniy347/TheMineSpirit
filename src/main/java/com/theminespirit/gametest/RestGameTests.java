@@ -90,6 +90,7 @@ public final class RestGameTests {
 
     @GameTest(batch = "rest_bots", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void bots_SpawnedThenDiscardedSpirit_ListedThenAbsent(GameTestHelper helper) throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
@@ -112,6 +113,7 @@ public final class RestGameTests {
 
     @GameTest(batch = "rest_botState", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void botState_IdleThenGotoStarted_ReportsIdleThenBusy(GameTestHelper helper) throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
         buildFloor(helper);
         RestFixture rest = RestFixture.start(minecraft);
@@ -167,6 +169,7 @@ public final class RestGameTests {
     @GameTest(batch = "rest_observe", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_RadiusEightAndInvalidRadius_ReturnsObservationAnd400(GameTestHelper helper)
             throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
@@ -227,6 +230,7 @@ public final class RestGameTests {
 
     @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_SpiritDiscardedMidScan_Returns404WithId(GameTestHelper helper) throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
@@ -260,6 +264,7 @@ public final class RestGameTests {
     @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick(GameTestHelper helper)
             throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
         RestFixture rest = RestFixture.start(minecraft);
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
@@ -302,6 +307,7 @@ public final class RestGameTests {
     @GameTest(batch = "rest_threads", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void threads_ForeignThreadAccess_IndexRejectsWhileGatewayAndHttpWork(GameTestHelper helper)
             throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String id = spirit.getStringUUID();

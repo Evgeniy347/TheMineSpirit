@@ -33,6 +33,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_savedRunningSequence", template = "arena", timeoutTicks = 120)
     public static void savedRunningSequence_ResumesAtSecondStep_AndReachesTarget(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         BlockPos first = helper.absolutePos(new BlockPos(0, 1, 1));
@@ -103,6 +104,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_corruptedSpiritTask", template = "arena", timeoutTicks = 120)
     public static void corruptedSpiritTask_AfterReload_MarksFailedAndStaysAlive(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = loadTask(helper, "{это не json", new BlockPos(1, 1, 1));
 
         helper.runAfterDelay(2, () -> {
@@ -153,6 +155,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_legacySpiritWithoutTaskKey", template = "arena", timeoutTicks = 120)
     public static void legacySpiritWithoutTaskKey_AfterReload_HasNoTaskAndKeepsInventory(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         spirit.getInventory().setItem(0, new ItemStack(Items.DIAMOND, 3));
         CompoundTag tag = new CompoundTag();
@@ -172,6 +175,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_savedTaskAndInventory", template = "arena", timeoutTicks = 120)
     public static void savedTaskAndInventory_AfterReload_KeepsBoth(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
         TaskSnapshot snapshot = new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, null,
                 new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())),
@@ -196,6 +200,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_saveWhileRunning", template = "arena", timeoutTicks = 200)
     public static void saveWhileRunning_DoesNotDisturbOriginalTask_UntilItReachesTarget(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -220,6 +225,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_runningTask", template = "arena", timeoutTicks = 120)
     public static void runningTask_ForHundredTicks_BuildsNoSnapshot(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         BlockPos far = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -236,6 +242,7 @@ public final class TaskPersistenceGameTests {
 
     @GameTest(batch = "task_saveBeforeFirstTick", template = "arena", timeoutTicks = 120)
     public static void saveBeforeFirstTick_OnLiveSpirit_KeepsTaskBytesUnchanged(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
         TaskSnapshot snapshot = new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, null,
                 new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())),

@@ -56,6 +56,7 @@ public final class RestScaleGameTests {
 
     @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_Radius32_ReadsWithinPerTickBudget(GameTestHelper helper) throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
@@ -78,6 +79,7 @@ public final class RestScaleGameTests {
     @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent(GameTestHelper helper)
             throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
@@ -107,6 +109,7 @@ public final class RestScaleGameTests {
 
     @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void index_ThirtySpirits_SnapshotReadsExactlyThirtyEntries(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
         SpiritIndex index = new SpiritIndex(minecraft);
         index.register(NeoForge.EVENT_BUS);

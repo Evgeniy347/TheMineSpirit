@@ -83,6 +83,7 @@ public final class StationGameTests {
 
     @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
     public static void placer_TableInInventory_PlacedOnSolidFloorNextToSpirit(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         SpiritEntity spirit = spawnSpirit(helper, new ItemStack(Items.CRAFTING_TABLE));
 
@@ -108,6 +109,7 @@ public final class StationGameTests {
 
     @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
     public static void placer_FurnaceInInventory_FacesTheSpirit(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         SpiritEntity spirit = spawnSpirit(helper, new ItemStack(Items.FURNACE));
 
@@ -128,6 +130,7 @@ public final class StationGameTests {
 
     @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoFreeCellAround_ReturnsEmptyAndKeepsItem(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         SpiritEntity spirit = spawnSpirit(helper, new ItemStack(Items.CRAFTING_TABLE));
         fillRing(helper, Blocks.STONE);
@@ -144,6 +147,7 @@ public final class StationGameTests {
 
     @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoFloorAround_ReturnsEmpty(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         SpiritEntity spirit = spawnSpirit(helper, new ItemStack(Items.CRAFTING_TABLE));
         for (int dx = -CraftTuning.PLACE_SEARCH_RADIUS; dx <= CraftTuning.PLACE_SEARCH_RADIUS; dx++) {
@@ -165,6 +169,7 @@ public final class StationGameTests {
 
     @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoItemInInventory_ReturnsEmptyAndPlacesNothing(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         SpiritEntity spirit = spawnSpirit(helper, ItemStack.EMPTY);
 

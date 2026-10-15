@@ -52,6 +52,7 @@ public final class SpiritCommandGameTests {
     @GameTest(template = "arena", batch = "command_follow", timeoutTicks = 200)
     public static void commandFollow_MockPlayerSource_SpiritApproachesPlayer(GameTestHelper helper)
             throws CommandSyntaxException {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         String tag = freshTag("follow");
         SpiritEntity spirit = spawnTagged(helper, new BlockPos(0, 1, 1), tag);
@@ -87,6 +88,7 @@ public final class SpiritCommandGameTests {
     @GameTest(template = "empty", timeoutTicks = 100)
     public static void commandGoalThenCancel_OnSelectedSpirit_StartsAndCancelsTask(GameTestHelper helper)
             throws CommandSyntaxException {
+        GameTestFixtures.sweepEntities(helper);
         String tag = freshTag("cancel");
         SpiritEntity spirit = spawnTagged(helper, new BlockPos(1, 1, 1), tag);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 1), "gt_cancel_player");
@@ -121,6 +123,7 @@ public final class SpiritCommandGameTests {
     @GameTest(batch = "cmd_commandGoal", template = "arena", timeoutTicks = 100)
     public static void commandGoal_OnTwoSpirits_AppliesToAllOrNone(GameTestHelper helper)
             throws CommandSyntaxException {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         String tag = freshTag("pair");
         SpiritEntity first = spawnTagged(helper, new BlockPos(0, 1, 1), tag);
