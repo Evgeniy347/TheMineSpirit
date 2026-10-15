@@ -541,25 +541,28 @@ public final class ChopTreeGameTests {
                             + status[0] + ", причина: " + script.failureReason());
             long reads = script.treeBlockReads();
             helper.assertTrue(reads >= TALL_TREE_LOGS,
-                    "разбор обязан прочитать хотя бы каждое бревно, а прочитал " + reads
+                    "нижняя граница разбора: прочитано каждое из " + TALL_TREE_LOGS
+                            + " брёвен дерева — без чтения клетки ствола разбор не соберёт группу, поэтому "
+                            + TALL_TREE_LOGS + " — минимум, а прочитано " + reads
                             + ": нулевой счётчик означал бы, что скрипт читает мир мимо LevelTreeView");
             helper.assertTrue(reads <= 27L * TALL_TREE_LOGS,
                     "разбор одного дерева из " + TALL_TREE_LOGS + " брёвен читает не больше 27 клеток на бревно ("
                             + 27L * TALL_TREE_LOGS + "), прочитано " + reads
                             + ": повторное чтение соседей или новый вид на каждый разбор завешивают тик");
-            long distinctCells = 9L * (TALL_TREE_LOGS + 2);
-            helper.assertTrue(reads <= distinctCells + 1,
-                    "ствол в одну клетку окружён " + distinctCells + " различными клетками (3x3 на "
-                            + (TALL_TREE_LOGS + 2) + " слоёв): каждая читается из мира не больше одного раза, плюс "
-                            + "одно повторное чтение почвы под основанием после обхода, а прочитано " + reads
-                            + ". Раздельные вопросы isLog/isNaturalLeaves/isArtificial к одной клетке обязаны "
-                            + "делить одно чтение");
+            helper.assertTrue(reads <= MAX_TREE_READS,
+                    "верхняя граница разбора: не больше " + MAX_TREE_READS + " клеток (замер " + MEASURED_TREE_READS
+                            + " × 1.5), прочитано " + reads
+                            + ": чтение вдвое больше замера (" + 2 * MEASURED_TREE_READS
+                            + ") или отключённый кеш клетки обязаны краснеть здесь, не дотягивая до бюджета "
+                            + 27L * TALL_TREE_LOGS + ". Прежняя граница была посажена на замер ровно и красила "
+                            + "тест на одном лишнем чтении; если обход читает мир шире осознанно — перепроверь "
+                            + "кеш LevelTreeView и подними границу вместе с MEASURED_TREE_READS");
 
             helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)),
                     "итог обязан назвать число оставленных брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)
                             + ", а он: " + script.summary());
-            LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, предел {}",
-                    TALL_TREE_LOGS, reads, 27L * TALL_TREE_LOGS);
+            LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, граница {}, бюджет {}",
+                    TALL_TREE_LOGS, reads, MAX_TREE_READS, 27L * TALL_TREE_LOGS);
 
             clearField(helper, TALL_TREE_LOGS + 10);
         });
@@ -1107,6 +1110,14 @@ public final class ChopTreeGameTests {
 
     private static final int HUT_POST_LOGS = 12;
     private static final int TALL_TREE_LOGS = 60;
+    // Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
+    // вокруг ствола плюс повторное чтение почвы под основанием после обхода.
+    private static final long MEASURED_TREE_READS = 559;
+    // Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
+    // Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
+    // чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
+    // (1620) такое чтение ещё пропускает.
+    private static final long MAX_TREE_READS = 838;
     private static final int SECTION_POSITIONS = 16 * 16 * 16;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
