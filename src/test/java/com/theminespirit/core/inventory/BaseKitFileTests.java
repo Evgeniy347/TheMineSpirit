@@ -30,13 +30,20 @@ class BaseKitFileTests {
     }
 
     @Test
-    void baseKitFile_Loaded_KeepsToolsFoodAndSupport() {
+    void baseKitFile_Loaded_KeepsWeaponsAmmoFoodAndTorches() {
         assertTrue(KIT.rules().stream().anyMatch(rule -> rule.mode() == KitMode.BEST && rule.keep() == 1
-                        && !rule.match().isEmpty() && rule.match().size() == 1 && rule.match().get(0).endsWith("hoe")),
-                "В базовом наборе обязана быть тяпка (режим best, квота 1): без тяпки дух не соберёт "
-                        + "урожай на базе и пойдёт искать инструмент вместо дела");
+                        && rule.match().contains("*_sword")),
+                "В постоянной части обязан быть меч (режим best, квота 1): без меча дух не защитит "
+                        + "себя в походе");
+        assertTrue(KIT.rules().stream().anyMatch(rule -> rule.match().contains("bow")),
+                "В постоянной части обязан быть лук: без лука дух не добудет еду издалека");
+        assertTrue(KIT.rules().stream().anyMatch(rule -> rule.match().contains("arrow")),
+                "В постоянной части обязаны быть стрелы: без стрел лук бесполезен");
         assertTrue(KIT.rules().stream().anyMatch(rule -> "food".equals(rule.category())),
-                "В базовом наборе обязана быть еда: без еды дух голодает в походе");
+                "В постоянной части обязана быть еда: без еды дух голодает в походе");
+        assertTrue(KIT.rules().stream().anyMatch(rule -> rule.match().contains("torch") && rule.keep() >= 20),
+                "В постоянной части обязаны быть факелы в количестве не меньше 20: без факелов дух "
+                        + "не осветит шахту и не обезопасит базу");
     }
 
     @Test

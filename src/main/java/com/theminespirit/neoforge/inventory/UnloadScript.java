@@ -1,8 +1,10 @@
 package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ContainerChoice;
 import com.theminespirit.core.inventory.ContainerPicker;
+import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
@@ -33,8 +35,8 @@ public final class UnloadScript extends ContainerTask {
 
     @Override
     protected TransferRunner beginTransfer(Container container) {
-        List<Slice> surplus = InventoryTables.kit()
-                .surplus(new StackMapper().map(spirit.getInventory()), InventoryTables.values());
+        BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
+        List<Slice> surplus = kit.surplus(new StackMapper().map(spirit.getInventory()), InventoryTables.values());
         if (surplus.isEmpty()) {
             return null;
         }
@@ -81,7 +83,8 @@ public final class UnloadScript extends ContainerTask {
 
     private List<KindGroup> groupByKind(AutoContainerScan scan) {
         List<Stack> inventory = scan.mapper().map(spirit.getInventory());
-        List<Slice> surplus = InventoryTables.kit().surplus(inventory, InventoryTables.values());
+        BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
+        List<Slice> surplus = kit.surplus(inventory, InventoryTables.values());
         List<KindGroup> result = new ArrayList<>();
         for (Slice slice : surplus) {
             Stack kind = inventory.get(slice.slot());

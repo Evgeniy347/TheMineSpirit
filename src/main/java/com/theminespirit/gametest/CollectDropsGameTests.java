@@ -411,15 +411,12 @@ public final class CollectDropsGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
-        Item[] kit = {Items.IRON_PICKAXE, Items.IRON_AXE, Items.IRON_SHOVEL, Items.IRON_SWORD, Items.IRON_HOE,
-                Items.BUCKET, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.CRAFTING_TABLE};
-        for (int slot = 0; slot < kit.length; slot++) {
-            spirit.getInventory().setItem(slot, new ItemStack(kit[slot]));
-        }
-        spirit.getInventory().setItem(9, new ItemStack(Items.BREAD, 16));
-        spirit.getInventory().setItem(10, new ItemStack(Items.TORCH, 16));
-        spirit.getInventory().setItem(11, new ItemStack(Items.COBBLESTONE, 32));
-        for (int slot = 12; slot < 36; slot++) {
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
+        spirit.getInventory().setItem(1, new ItemStack(Items.BOW));
+        spirit.getInventory().setItem(2, new ItemStack(Items.ARROW, 16));
+        spirit.getInventory().setItem(3, new ItemStack(Items.BREAD, 16));
+        spirit.getInventory().setItem(4, new ItemStack(Items.TORCH, 24));
+        for (int slot = 5; slot < 36; slot++) {
             spirit.getInventory().setItem(slot, new ItemStack(Items.SHULKER_BOX));
         }
         ItemEntity heap = GameTestFixtures.dropAt(helper, Items.DIAMOND, 2, 2.5, 1, 2.5);
@@ -434,13 +431,15 @@ public final class CollectDropsGameTests {
             helper.assertTrue(spirit.taskFailureReason().orElse("").contains("инвентарь полон"),
                     "причина обязана говорить, что инвентарь полон, фактически: "
                             + spirit.taskFailureReason().orElse("нет причины"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.SHULKER_BOX) == 24,
-                    "все 24 шалкера обязаны остаться при духе: never_give_away защищает их даже от двух алмазов "
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.SHULKER_BOX) == 31,
+                    "все 31 шалкер обязаны остаться при духе: never_give_away защищает их даже от двух алмазов "
                             + "(1000 против 500)");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 16
-                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 16
-                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 32,
-                    "квоты базового набора обязаны остаться целыми");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_SWORD) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.BOW) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.ARROW) == 16
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 16
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 24,
+                    "квоты постоянной части обязаны остаться целыми");
             helper.assertTrue(!heap.isRemoved() && heap.getItem().getCount() == 2,
                     "алмазы обязаны остаться в мире нетронутыми");
             GameTestFixtures.reset(helper);

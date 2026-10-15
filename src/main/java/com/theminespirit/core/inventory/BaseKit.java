@@ -10,7 +10,7 @@ import java.util.Set;
 public final class BaseKit {
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "never_give_away");
-    private static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
+    static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
 
     private final String origin;
     private final List<KitRule> rules;
@@ -37,6 +37,13 @@ public final class BaseKit {
         List<String> neverAway = JsonResource.optionalStrings(root.get("never_give_away"), origin,
                 "списка never_give_away");
         return new BaseKit(origin, rules, neverAway);
+    }
+
+    public static BaseKit of(List<KitRule> rules, List<String> neverGiveAway) {
+        Objects.requireNonNull(rules, "Список правил набора не может быть null: набор собирается из правил");
+        Objects.requireNonNull(neverGiveAway, "Список неотдаваемого не может быть null: "
+                + "пустой список задаётся пустым списком");
+        return new BaseKit("kit-for", rules, neverGiveAway);
     }
 
 
@@ -219,7 +226,7 @@ public final class BaseKit {
         }
     }
 
-    private static KitMode modeField(JsonNode node, String origin, String what) {
+    static KitMode modeField(JsonNode node, String origin, String what) {
         if (node == null || !node.isTextual()) {
             throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
                     + " нет режима mode: режим best оставляет лучший предмет набора, any — любое количество");
@@ -232,14 +239,14 @@ public final class BaseKit {
         }
     }
 
-    private static List<String> optionalStringsField(JsonNode node, String origin, String what) {
+    static List<String> optionalStringsField(JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return null;
         }
         return JsonResource.strings(node, origin, what);
     }
 
-    private static String textField(JsonNode node, String origin, String what) {
+    static String textField(JsonNode node, String origin, String what) {
         if (node == null) {
             return null;
         }
@@ -251,7 +258,7 @@ public final class BaseKit {
         return node.asText();
     }
 
-    private static int keepField(JsonNode node, String origin, String what) {
+    static int keepField(JsonNode node, String origin, String what) {
         if (node == null || !node.isInt()) {
             throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what
                     + " нет квоты keep или она не целая: квота это сколько предметов набора остаётся "

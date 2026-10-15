@@ -520,18 +520,19 @@ public final class InventoryGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
-        spirit.getInventory().setItem(1, new ItemStack(Items.STONE_PICKAXE));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
+        spirit.getInventory().setItem(1, new ItemStack(Items.BOW));
+        spirit.getInventory().setItem(2, new ItemStack(Items.ARROW, 16));
         for (int slot = 0; slot < 5; slot++) {
-            spirit.getInventory().setItem(2 + slot, new ItemStack(Items.BREAD, 4));
+            spirit.getInventory().setItem(3 + slot, new ItemStack(Items.BREAD, 4));
         }
         for (int slot = 0; slot < 16; slot++) {
-            spirit.getInventory().setItem(7 + slot, new ItemStack(Items.TORCH, 4));
+            spirit.getInventory().setItem(8 + slot, new ItemStack(Items.TORCH, 4));
         }
         for (int slot = 0; slot < 3; slot++) {
-            spirit.getInventory().setItem(23 + slot, new ItemStack(Items.COBBLESTONE, 64));
+            spirit.getInventory().setItem(24 + slot, new ItemStack(Items.COBBLESTONE, 64));
         }
-        spirit.getInventory().setItem(26, new ItemStack(Items.DIAMOND, 5));
+        spirit.getInventory().setItem(27, new ItemStack(Items.DIAMOND, 5));
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("unload", Map.of("container", "nearest", "radius", 8, "force", false)), 1);
 
@@ -542,29 +543,28 @@ public final class InventoryGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(run.spiritTicks() <= 120,
                     "сценарий обязан укладываться в 120 тиков духа, заняло " + run.spiritTicks());
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1
-                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) == 0,
-                    "лучшая (железная) кирка остаётся, каменная уходит");
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_SWORD) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.BOW) == 1
+                    && GameTestFixtures.countInInventory(spirit.getInventory(), Items.ARROW) == 16,
+                    "постоянная часть остаётся целиком: меч, лук и 16 стрел");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 16
                     && chestCount(helper, Items.BREAD) == 4,
                     "из 20 хлеба 16 остаются, 4 лишних уходят: у духа "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD)
                             + ", в сундуке " + chestCount(helper, Items.BREAD));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 16
-                    && chestCount(helper, Items.TORCH) == 48,
-                    "из 64 факелов 16 остаются, 48 уходят: у духа "
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 24
+                    && chestCount(helper, Items.TORCH) == 40,
+                    "из 64 факелов 24 остаются, 40 уходят: у духа "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH)
                             + ", в сундуке " + chestCount(helper, Items.TORCH));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 32
-                    && chestCount(helper, Items.COBBLESTONE) == 160,
-                    "из 192 булыжника опорные 32 остаются, 160 уходят: у духа "
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0
+                    && chestCount(helper, Items.COBBLESTONE) == 192,
+                    "булыжник вне постоянной части уходит целиком: у духа "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE)
                             + ", в сундуке " + chestCount(helper, Items.COBBLESTONE));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND) == 0
                     && chestCount(helper, Items.DIAMOND) == 5,
-                    "алмазы не входят в базовый набор и уходят целиком");
-            helper.assertTrue(chestCount(helper, Items.STONE_PICKAXE) == 1,
-                    "каменная кирка обязана оказаться в сундуке");
+                    "алмазы не входят в постоянную часть и уходят целиком");
             GameTestFixtures.reset(helper);
         });
     }
@@ -757,18 +757,18 @@ public final class InventoryGameTests {
     }
 
     @GameTest(template = "arena", batch = "inv_unload_auto_partial", timeoutTicks = 400)
-    public static void unloadAuto_PartialCobbleInFarChest_TopsItUpAndLeavesNear(GameTestHelper helper) {
+    public static void unloadAuto_PartialTorchesInFarChest_TopsItUpAndLeavesNear(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.setBlock(2, 1, 7, Blocks.CHEST);
         helper.setBlock(5, 1, 4, Blocks.CHEST);
         Container far = chestAt(helper, 2, 1, 7);
         Container near = chestAt(helper, 5, 1, 4);
-        far.setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        far.setItem(0, new ItemStack(Items.TORCH, 10));
         near.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        // Базовый набор держит 32 булыжника (base_kit.json): 52 = 32 опорных + 20 излишка из шахты.
-        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 52));
+        // Постоянная часть держит 24 факела (base_kit.json): 52 = 24 постоянных + 28 излишка из шахты.
+        spirit.getInventory().setItem(0, new ItemStack(Items.TORCH, 52));
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("unload", Map.of("container", "auto", "radius", 8, "force", true)), 1);
 
@@ -777,23 +777,23 @@ public final class InventoryGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "unload auto обязан завершиться успехом, причина: "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(far, Items.COBBLESTONE) == 30,
-                    "в дальнем сундуке неполная стопка булыжника (10) обязана дополниться 20 излишка до 30, "
-                            + "фактически " + GameTestFixtures.countInInventory(far, Items.COBBLESTONE));
-            helper.assertTrue(GameTestFixtures.countInInventory(near, Items.COBBLESTONE) == 0,
-                    "ближний сундук не тронут: булыжника в нём быть не должно, фактически "
-                            + GameTestFixtures.countInInventory(near, Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(far, Items.TORCH) == 38,
+                    "в дальнем сундуке неполная стопка факелов (10) обязана дополниться 28 излишка до 38, "
+                            + "фактически " + GameTestFixtures.countInInventory(far, Items.TORCH));
+            helper.assertTrue(GameTestFixtures.countInInventory(near, Items.TORCH) == 0,
+                    "ближний сундук не тронут: факелов в нём быть не должно, фактически "
+                            + GameTestFixtures.countInInventory(near, Items.TORCH));
             helper.assertTrue(GameTestFixtures.countInInventory(near, Items.OAK_PLANKS) == 64,
                     "доски в ближнем сундуке обязаны остаться на месте");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 32,
-                    "у духа обязаны остаться 32 опорных булыжника базового набора, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 24,
+                    "у духа обязаны остаться 24 факела постоянной части, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH));
             GameTestFixtures.reset(helper);
         });
     }
 
     @GameTest(template = "arena", batch = "inv_unload_auto_full", timeoutTicks = 400)
-    public static void unloadAuto_FarChestFull_CobbleGoesToNearestFree(GameTestHelper helper) {
+    public static void unloadAuto_FarChestFull_TorchesGoToNearestFree(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.setBlock(2, 1, 7, Blocks.CHEST);
@@ -811,8 +811,8 @@ public final class InventoryGameTests {
         }
         near.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        // Базовый набор держит 32 булыжника: 52 = 32 опорных + 20 излишка, который и разгружается.
-        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 52));
+        // Постоянная часть держит 24 факела: 52 = 24 постоянных + 28 излишка, который и разгружается.
+        spirit.getInventory().setItem(0, new ItemStack(Items.TORCH, 52));
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("unload", Map.of("container", "auto", "radius", 8, "force", true)), 1);
 
@@ -821,12 +821,12 @@ public final class InventoryGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "unload auto при полном дальнем сундуке обязан завершиться успехом, причина: "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(near, Items.COBBLESTONE) == 20,
-                    "дальний сундук полон: 20 излишка булыжника обязаны лечь в ближний свободный, фактически "
-                            + GameTestFixtures.countInInventory(near, Items.COBBLESTONE));
-            helper.assertTrue(GameTestFixtures.countInInventory(far, Items.COBBLESTONE) == 0,
-                    "в полный дальний сундук без булыжника ничего не добавилось, фактически "
-                            + GameTestFixtures.countInInventory(far, Items.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(near, Items.TORCH) == 28,
+                    "дальний сундук полон: 28 излишка факелов обязаны лечь в ближний свободный, фактически "
+                            + GameTestFixtures.countInInventory(near, Items.TORCH));
+            helper.assertTrue(GameTestFixtures.countInInventory(far, Items.TORCH) == 64,
+                    "в полный дальний сундук добавился только заполнитель: факелов в нём быть не должно, "
+                            + "фактически " + GameTestFixtures.countInInventory(far, Items.TORCH));
             GameTestFixtures.reset(helper);
         });
     }

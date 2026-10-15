@@ -8,6 +8,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
+import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.Finding;
@@ -71,6 +72,7 @@ public final class SpiritEntity extends PathfinderMob {
     private String pendingTaskJson;
     private TaskSnapshot pendingSnapshot;
     private String pendingRestoreFailure;
+    private boolean child;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -191,6 +193,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
         SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);
         SpiritHomeStore.write(compound, home);
+        SpiritChildStore.write(compound, child);
     }
 
     private String taskJsonForSave() {
@@ -226,6 +229,7 @@ public final class SpiritEntity extends PathfinderMob {
         }
         restoreHome(compound);
         restoreTactics(compound);
+        child = SpiritChildStore.read(compound);
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
             try {
@@ -310,6 +314,22 @@ public final class SpiritEntity extends PathfinderMob {
 
     public Optional<TaskNode> currentPlan() {
         return brain == null ? Optional.empty() : brain.plan();
+    }
+
+    public Optional<String> currentActivity() {
+        Optional<TaskNode> plan = currentPlan();
+        if (plan.isEmpty()) {
+            return Optional.empty();
+        }
+        return KitFor.activityOfPlan(plan.get());
+    }
+
+    public boolean isChild() {
+        return child;
+    }
+
+    public void setChild(boolean child) {
+        this.child = child;
     }
 
     public Optional<String> currentTaskScript() {

@@ -28,13 +28,15 @@ class OverflowPolicyTests {
             "всё защищено шаблоном|cobblestone:64*36|diamond:1|*|REFUSE|-1|-1",
             "защищён только дешёвый слот|cobblestone:64*35;dirt:64|diamond:1|cobblestone|DROP|35|64",
             "незащищён только дорогой слот|cobblestone:64*35;diamond:1|cobblestone:1|cobblestone|REFUSE|-1|-1",
-            "нужная еда защищена шаблоном|bread:16*35;cobblestone:64|diamond:1|bread|REFUSE|-1|-1",
+            "нужная еда защищена шаблоном|bread:16*36|diamond:1|bread|REFUSE|-1|-1",
             "частичный излишек слота не освобождает слот|bread:20;iron_ingot:64*35|diamond:1| |REFUSE|-1|-1",
-            "защищён дорогой слот|iron_ingot:1*35;cobblestone:64|diamond:1|iron_ingot|REFUSE|-1|-1",
+            "защищён дорогой слот|iron_ingot:1*36|diamond:1|iron_ingot|REFUSE|-1|-1",
             "кучка того же предмета при полном инвентаре|dirt:64*36|dirt:64| |REFUSE|-1|-1",
-            "лучшая кирка остаётся при духе|iron_pickaxe:1*36|diamond:1| |DROP|35|1",
-            "факелы нужны плану|torch:16*35;cobblestone:64|iron_ingot:1|torch|REFUSE|-1|-1",
-            "лишний хлеб отдельной стопкой уходит|bread:16;bread:4;iron_ingot:64*34|diamond:1| |DROP|1|4"})
+            "лучший меч остаётся при духе|iron_sword:1*36|diamond:1| |DROP|35|1",
+            "факелы нужны плану|torch:24*36|iron_ingot:1|torch|REFUSE|-1|-1",
+            "лишний хлеб отдельной стопкой уходит|bread:16;bread:4;iron_ingot:64*34|diamond:1| |DROP|1|4",
+            "кирка вне постоянной части уходит|iron_pickaxe:1*36|diamond:1| |DROP|35|1",
+            "второй лук уходит при переполнении|bow:1*36|diamond:1| |DROP|35|1"})
     void decide_TableOfSituations_MatchesExpected(String situation, String inventorySpec, String incomingSpec,
             String protectedSpec, String expectedAction, int expectedSlot, int expectedCount) {
         List<Stack> inventory = inventory(inventorySpec);
@@ -143,27 +145,21 @@ class OverflowPolicyTests {
 
     @Test
     void decide_BaseKitQuota_DropsOnlySurplusOfItsSlots() {
-        List<Stack> inventory = inventory("bread:16;cobblestone:64*35");
+        List<Stack> inventory = inventory("bread:16*35;torch:24");
 
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
                 VALUES, List.of(), KIT);
 
-        OverflowPolicy.Decision breadFirst = OverflowPolicy.decide(inventory,
-                new Stack("diamond", 0, 1, 64), VALUES, List.of("bread"), KIT);
-
         assertEquals(OverflowPolicy.Action.DROP, decision.action(),
-                "Квота набора не мешает отдать излишек: булыжник сверх 32 уходит в контейнер");
+                "Квота набора не мешает отдать излишек: хлеб сверх 16 уходит стопкой целиком");
         assertEquals(0, Protected.of(List.of(), inventory, KIT, VALUES).giveAway(0),
                 "Хлеб в пределах квоты 16 защищён: из его слота нечего отдавать, поэтому алмаз вытесняет "
-                        + "булыжник, а не еду набора");
-        assertEquals(OverflowPolicy.Action.DROP, breadFirst.action(),
-                "Шаблон плана защищает хлеб, но булыжник остаётся излишком: набор отдаёт его, а не еду. "
-                        + "Причина " + breadFirst.reason());
-        assertEquals(35, decision.slot(),
-                "Из равных стопок булыжника выбрасывается слот с наибольшим номером (35)");
-        assertEquals(64, decision.count(),
-                "Кирка и хлеб остаются на месте, а булыжник уходит стопкой целиком: в выбранном слоте "
-                        + "все 64 предмета — излишек");
+                        + "стопку хлеба сверх квоты, а не еду набора");
+        assertEquals(34, decision.slot(),
+                "Из равных стопок хлеба выбрасывается слот с наибольшим номером (34)");
+        assertEquals(16, decision.count(),
+                "Факелы в квоте 24 остаются на месте, а хлеб уходит стопкой целиком: в выбранном слоте "
+                        + "все 16 предмета — излишек");
     }
 
     @Test
@@ -205,13 +201,15 @@ class OverflowPolicyTests {
 
     @Test
     void decide_SlotInsideKitQuota_IsNeverDropped() {
-        List<Stack> inventory = inventory("bread:16;cobblestone:64*35");
+        List<Stack> inventory = inventory("bread:16*35;torch:24");
         Protected protection = Protected.of(List.of(), inventory, KIT, VALUES);
 
-        assertEquals(0, protection.giveAway(0),
-                "Хлеб ровно по квоте 16 не имеет излишка: отдавать из этого слота нечего");
-        assertTrue(protection.giveAway(1) > 0,
-                "Булыжник сверх квоты 32 имеет излишек: его можно отдать, не трогая набор");
+        assertEquals(0, protection.giveAway(35),
+                "24 факела ровно по квоте 24 не имеют излишка: отдавать из этого слота нечего");
+        assertTrue(protection.giveAway(0) == 0,
+                "Хлеб в слоте 0 получил всю квоту 16: из его слота нечего отдавать");
+        assertTrue(protection.giveAway(34) > 0,
+                "Хлеб в слоте 34 остался без квоты: его можно отдать, не трогая набор");
     }
 
     @Test
@@ -276,19 +274,12 @@ class OverflowPolicyTests {
     @Test
     void decide_KitQuotasAndShulkersWithValuableHeap_RefusesWithoutDropping() {
         List<Stack> inventory = new ArrayList<>();
-        inventory.add(new Stack("iron_pickaxe", 0, 1, 1));
-        inventory.add(new Stack("iron_axe", 0, 1, 1));
-        inventory.add(new Stack("iron_shovel", 0, 1, 1));
         inventory.add(new Stack("iron_sword", 0, 1, 1));
-        inventory.add(new Stack("iron_hoe", 0, 1, 1));
-        inventory.add(new Stack("bucket", 0, 1, 1));
-        inventory.add(new Stack("water_bucket", 0, 1, 1));
-        inventory.add(new Stack("lava_bucket", 0, 1, 1));
-        inventory.add(new Stack("crafting_table", 0, 1, 64));
+        inventory.add(new Stack("bow", 0, 1, 1));
+        inventory.add(new Stack("arrow", 0, 16, 64));
         inventory.add(new Stack("bread", 0, 16, 64));
-        inventory.add(new Stack("torch", 0, 16, 64));
-        inventory.add(new Stack("cobblestone", 0, 32, 64));
-        for (int slot = 12; slot < 36; slot++) {
+        inventory.add(new Stack("torch", 0, 24, 64));
+        for (int slot = 5; slot < 36; slot++) {
             inventory.add(new Stack("shulker_box", 0, 1, 1));
         }
 
@@ -296,7 +287,7 @@ class OverflowPolicyTests {
                 VALUES, List.of(), KIT);
 
         assertEquals(OverflowPolicy.Action.REFUSE, decision.action(),
-                "Инвентарь из квот базового набора и шалкеров не отдаёт ничего даже за два алмаза (1000 "
+                "Инвентарь из квот постоянной части и шалкеров не отдаёт ничего даже за два алмаза (1000 "
                         + "против 500 за шалкер): квоты защищены набором, шалкеры — never_give_away. Причина "
                         + decision.reason());
     }

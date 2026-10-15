@@ -18,27 +18,15 @@ class BaseKitTests {
     private static final BaseKit KIT = BaseKit.load();
 
     @Test
-    void surplus_TwoAxes_KeepsBestAndGivesAwayWorse() {
+    void surplus_TwoSwords_KeepsBestAndGivesAwayWorse() {
         List<Stack> inventory = List.of(
-                new Stack("wooden_axe", 0, 1, 64),
-                new Stack("iron_axe", 0, 1, 1));
+                new Stack("wooden_sword", 0, 1, 64),
+                new Stack("iron_sword", 0, 1, 1));
 
         assertEquals(List.of(new Slice(0, 1)), KIT.surplus(inventory, VALUES),
-                "Из двух топоров набор оставляет лучший по ценности: железный (80) дороже деревянного (5), "
+                "Из двух мечей набор оставляет лучший по ценности: железный (80) дороже деревянного (5), "
                         + "поэтому в контейнер уходит деревянный. Ошибка здесь заставит духа тащить худший "
-                        + "инструмент в поход");
-    }
-
-    @Test
-    void surplus_ThreePickaxes_KeepsMostValuable() {
-        List<Stack> inventory = List.of(
-                new Stack("stone_pickaxe", 0, 1, 1),
-                new Stack("diamond_pickaxe", 0, 1, 1),
-                new Stack("iron_pickaxe", 0, 1, 1));
-
-        assertEquals(List.of(new Slice(0, 1), new Slice(2, 1)), KIT.surplus(inventory, VALUES),
-                "Из трёх кирок набор оставляет алмазную (400), железная (80) и каменная (10) уходят: "
-                        + "при переполнении инвентаря дух берёт самое ценное, а дешёвое отдаёт");
+                        + "меч в походе");
     }
 
     @Test
@@ -62,12 +50,29 @@ class BaseKitTests {
     }
 
     @Test
-    void surplus_CobblestoneAboveQuota_GivesAwayExcess() {
-        List<Stack> inventory = List.of(new Stack("cobblestone", 0, 64, 64));
+    void surplus_ThirtyTorches_GivesAwaySix() {
+        List<Stack> inventory = List.of(new Stack("torch", 0, 30, 64));
 
-        assertEquals(List.of(new Slice(0, 32)), KIT.surplus(inventory, VALUES),
-                "Строительный блок для опоры держится в количестве 32: из стопки 64 в контейнер удут 32, "
-                        + "чтобы после разгрузки дух мог ставить блоки под себя");
+        assertEquals(List.of(new Slice(0, 6)), KIT.surplus(inventory, VALUES),
+                "Квота факелов — 24 (минимум 20 по замыслу набора): из 30 факелов 6 лишних уходят в контейнер");
+    }
+
+    @Test
+    void surplus_SixteenArrowsInsideQuota_GivesNothing() {
+        List<Stack> inventory = List.of(new Stack("arrow", 0, 16, 64));
+
+        assertEquals(List.of(), KIT.surplus(inventory, VALUES),
+                "16 стрел — ровно квота постоянной части: стрелы нужны духу в любом походе");
+    }
+
+    @Test
+    void surplus_SecondBow_GivesAwayWhole() {
+        List<Stack> inventory = List.of(
+                new Stack("bow", 0, 1, 1),
+                new Stack("bow", 0, 1, 1));
+
+        assertEquals(List.of(new Slice(1, 1)), KIT.surplus(inventory, VALUES),
+                "В наборе один лук: второй уходит в контейнер, иначе дух тащил бы запасной лук вместо добычи");
     }
 
     @Test
@@ -75,8 +80,8 @@ class BaseKitTests {
         List<Stack> inventory = List.of(new Stack("oak_log", 0, 12, 64));
 
         assertEquals(List.of(new Slice(0, 12)), KIT.surplus(inventory, VALUES),
-                "Предмет вне базового набора отдаётся целиком: набор решает, что дух берет с собой, "
-                        + "всё остальное — груз на складе");
+                "Предмет вне набора отдаётся целиком: брёвна не входят ни в постоянную часть, ни в деятельность "
+                        + "без её набора, и в контейнере занимали бы место добычи");
     }
 
     @Test
@@ -88,48 +93,36 @@ class BaseKitTests {
     @Test
     void surplus_InventoryInsideQuota_GivesNothing() {
         List<Stack> inventory = List.of(
-                new Stack("iron_pickaxe", 0, 1, 1),
+                new Stack("iron_sword", 0, 1, 1),
+                new Stack("bow", 0, 1, 1),
+                new Stack("arrow", 0, 16, 64),
                 new Stack("bread", 0, 16, 64),
-                new Stack("torch", 0, 16, 64),
-                new Stack("crafting_table", 0, 1, 64));
+                new Stack("torch", 0, 24, 64));
 
         assertEquals(List.of(), KIT.surplus(inventory, VALUES),
                 "Инвентарь ровно по набору не отдаёт ничего: разгрузка «без фанатизма» не забирает "
-                        + "у духа последний инструмент и факел");
+                        + "у духа последний лук и факел");
     }
 
     @Test
     void surplus_EmptySlots_AreIgnored() {
         List<Stack> inventory = Arrays.asList(
-                new Stack("cobblestone", 0, 64, 64),
+                new Stack("torch", 0, 40, 64),
                 null,
-                new Stack("dirt", 0, 40, 64));
+                new Stack("arrow", 0, 32, 64));
 
-        assertEquals(List.of(new Slice(0, 32), new Slice(2, 40)), KIT.surplus(inventory, VALUES),
-                "Пустой слот (null) не даёт излишка и не занимает номер: булыжник и земля делят одну "
-                        + "квоту 32 строительного блока, при равной ценности квота уходит первому слоту, "
-                        + "поэтому остаётся 32 булыжника, а земля уходит целиком");
-    }
-
-    @Test
-    void surplus_DamagedTool_IsSeparateVariantAndNotChosen() {
-        List<Stack> inventory = List.of(
-                new Stack("iron_pickaxe", 0, 1, 1),
-                new Stack("iron_pickaxe", 7, 1, 1));
-
-        assertEquals(List.of(new Slice(1, 1)), KIT.surplus(inventory, VALUES),
-                "Кирка с другими компонентами — другой вариант: набор оставляет первую, "
-                        + "а «такую же» с другими компонентами отдаёт, потому что зачарования "
-                        + "и повреждение ценность по таблице не меняют");
+        assertEquals(List.of(new Slice(0, 16), new Slice(2, 16)), KIT.surplus(inventory, VALUES),
+                "Пустой слот (null) не даёт излишка и не занимает номер: факелы и стрелы делят постоянные "
+                        + "квоты, излишек уходит сверх квоты");
     }
 
     @Test
     void isSatisfiedBy_InventoryReducedBySurplus_ReturnsTrue() {
         List<Stack> inventory = List.of(
-                new Stack("wooden_pickaxe", 0, 1, 1),
-                new Stack("iron_pickaxe", 0, 1, 1),
+                new Stack("wooden_sword", 0, 1, 1),
+                new Stack("iron_sword", 0, 1, 1),
                 new Stack("bread", 0, 20, 64),
-                new Stack("cobblestone", 0, 64, 64),
+                new Stack("torch", 0, 40, 64),
                 new Stack("oak_log", 0, 3, 64));
         List<Slice> surplus = KIT.surplus(inventory, VALUES);
         List<Stack> left = remove(inventory, surplus);
@@ -141,43 +134,39 @@ class BaseKitTests {
 
     @Test
     void isSatisfiedBy_InventoryAboveQuota_ReturnsFalse() {
-        List<Stack> inventory = List.of(new Stack("torch", 0, 17, 64));
+        List<Stack> inventory = List.of(new Stack("torch", 0, 25, 64));
 
         assertEquals(false, KIT.isSatisfiedBy(inventory, VALUES),
-                "17 факелов при квоте 16 набору не удовлетворяют: проверка ловит инвентарь, "
+                "25 факелов при квоте 24 набору не удовлетворяют: проверка ловит инвентарь, "
                         + "который разгружен не полностью");
     }
 
     @Test
     void isSatisfiedBy_WrongToolKept_ReturnsFalse() {
         List<Stack> inventory = List.of(
-                new Stack("wooden_pickaxe", 0, 1, 1),
-                new Stack("iron_pickaxe", 0, 1, 1));
+                new Stack("wooden_sword", 0, 1, 1),
+                new Stack("iron_sword", 0, 1, 1));
 
         assertEquals(false, KIT.isSatisfiedBy(inventory, VALUES),
-                "Две кирки разных материалов набору не удовлетворяют: в наборе одна, лучшая");
+                "Два меча набору не удовлетворяют: в наборе один, лучший");
     }
 
     @Test
-    void load_LoadedKit_CoversToolsFoodAndBuilding() {
-        assertEquals(12, KIT.rules().size(),
-                "Файл базового набора описывает 12 правил: пять инструментов, три ведра, еда, "
-                        + "факелы, строительный блок и верстак. Пропущенное правило — забытый предмет в походе");
+    void load_LoadedKit_CoversWeaponsAmmoFoodAndTorches() {
+        assertEquals(5, KIT.rules().size(),
+                "Постоянная часть описывает 5 правил: меч, лук, стрелы, еда и факелы. Пропущенное правило — "
+                        + "забытый предмет в походе");
     }
 
     @ParameterizedTest(name = "{0}: квота {1}, режим {2}")
     @CsvSource({
-            "iron_pickaxe, 1, BEST",
-            "wooden_axe, 1, BEST",
-            "diamond_shovel, 1, BEST",
-            "bucket, 1, ANY",
-            "water_bucket, 1, ANY",
+            "iron_sword, 1, BEST",
+            "diamond_sword, 1, BEST",
+            "bow, 1, ANY",
+            "arrow, 16, ANY",
             "bread, 16, ANY",
             "cooked_beef, 16, ANY",
-            "torch, 16, ANY",
-            "cobblestone, 32, ANY",
-            "dirt, 32, ANY",
-            "crafting_table, 1, ANY"})
+            "torch, 24, ANY"})
     void rules_ItemCoveredByRule_KeepsQuotaAndMode(String item, int keep, String mode) {
         KitRule rule = ruleFor(item);
 
@@ -212,7 +201,7 @@ class BaseKitTests {
     void parse_RuleWithBothMatchAndCategory_Throws() {
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> BaseKit.parse("""
-                        {"rules": [{"match": ["*_pickaxe"], "category": "tools", "keep": 1, "mode": "best"}]}
+                        {"rules": [{"match": ["*_sword"], "category": "tools", "keep": 1, "mode": "best"}]}
                         """, ORIGIN),
                 "Правило с match и category сразу обязано быть ошибкой: два способа выбора предметов "
                         + "делают квоту неопределённой, и разгрузка станет непредсказуемой");
@@ -267,13 +256,13 @@ class BaseKitTests {
     void parse_PatternOutsideFilterAlphabet_ThrowsWithPattern() {
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> BaseKit.parse("""
-                        {"rules": [{"match": ["*_Pickaxe"], "keep": 1, "mode": "best"}]}
+                        {"rules": [{"match": ["*_Sword"], "keep": 1, "mode": "best"}]}
                         """, ORIGIN),
                 "Шаблон вне алфавита IdFilter обязан быть ошибкой: он не совпадёт ни с одним id "
                         + "и тихо выключит правило набора");
 
-        assertTrue(error.getMessage().contains("*_Pickaxe"),
-                "Сообщение обязано называть плохой шаблон '*_Pickaxe': по нему правят файл. "
+        assertTrue(error.getMessage().contains("*_Sword"),
+                "Сообщение обязано называть плохой шаблон '*_Sword': по нему правят файл. "
                         + "Фактическое: " + error.getMessage());
     }
 
@@ -282,7 +271,7 @@ class BaseKitTests {
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> BaseKit.load("data/theminespirit/inventory/absent-kit.json"),
                 "Отсутствие файла базового набора обязано быть ошибкой: без набора разгрузка "
-                        + "отдала бы в контейнер всё, включая последнюю кирку");
+                        + "отдала бы в контейнер всё, включая последний лук");
 
         assertTrue(error.getMessage().contains("data/theminespirit/inventory/absent-kit.json"),
                 "Сообщение обязано называть путь, по которому файл искали. Фактическое: "

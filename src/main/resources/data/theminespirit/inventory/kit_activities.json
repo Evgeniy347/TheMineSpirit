@@ -1,0 +1,36 @@
+{
+  "activities": {
+    "mining": {
+      "scripts": ["mine_vein", "mine_block", "gather", "collect_drops", "dig_area"],
+      "rules": [
+        { "match": ["*_pickaxe"], "keep": 2, "mode": "any" },
+        { "match": ["torch"], "keep": 32, "mode": "any" }
+      ]
+    },
+    "woodcutting": {
+      "scripts": ["chop_tree"],
+      "rules": [
+        { "match": ["*_axe"], "keep": 1, "mode": "best" }
+      ]
+    },
+    "farming": {
+      "scripts": ["plant_crop", "harvest_crop", "till", "bone_meal"],
+      "rules": [
+        { "match": ["*_hoe"], "keep": 1, "mode": "best" },
+        { "match": ["*_seeds"], "keep": 16, "mode": "any" }
+      ]
+    },
+    "building": {
+      "scripts": ["place_block", "fill", "clear_area", "build_schematic"],
+      "rules": [
+        { "match": ["cobblestone", "dirt"], "keep": 32, "mode": "any" },
+        { "match": ["crafting_table"], "keep": 1, "mode": "any" }
+      ]
+    }
+  },
+  "child": {
+    "rules": [
+      { "category": "food", "keep": 16, "mode": "any" }
+    ]
+  }
+}
