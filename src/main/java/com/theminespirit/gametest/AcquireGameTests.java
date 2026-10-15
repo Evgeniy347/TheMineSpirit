@@ -42,8 +42,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class AcquireGameTests {
     private static final int SETTLE_TICKS = 1;
     private static final int WOOD_TICKS_LIMIT = 400;
-    private static final int STONE_TICKS_LIMIT = 500;
-    private static final int IRON_TICKS_LIMIT = 700;
     private static final int COBBLESTONE_FOR_FURNACE = 3;
     private static final int IRON_ORE_COUNT = 3;
 
@@ -71,7 +69,8 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_stone", timeoutTicks = STONE_TICKS_LIMIT)
+    // [флак] добыча руды, крафт печи и плавка; замерено ~340 тиков духа, запас 2×
+    @GameTest(template = "arena", batch = "acquire_stone", timeoutTicks = 500)
     public static void acquireStonePickaxe_FromScratch_PickaxeInInventory(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -93,13 +92,15 @@ public final class AcquireGameTests {
         });
     }
 
-    // [флак] добыча железной руды и плавка; замерено ~340 тиков духа, запас 2×
-    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = IRON_TICKS_LIMIT)
+    // [флак] добыча железной руды с нуля: дух сам добывает дерево, крафтит кирку и печь,
+    // добывает руду и уголь, плавит слиток; замерено ~340 тиков духа, запас 2×
+    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = 700)
     public static void acquireIronIngot_FromScratch_IngotInInventory(GameTestHelper helper) {
         field(helper);
+        FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
         placeIronOreRow(helper);
-        helper.setBlock(5, 1, 5, Blocks.FURNACE);
-        SpiritEntity spirit = prepare(helper, stack(Items.STONE_PICKAXE, 1), stack(Items.COAL, 2));
+        helper.setBlock(6, 2, 6, Blocks.COAL_ORE);
+        SpiritEntity spirit = prepare(helper);
         TaskNode plan = PlanParser.parse("""
                 {"type":"script","script":"acquire","params":{"item":"iron_ingot","count":1}}
                 """, SpiritScripts.catalog());
@@ -115,7 +116,8 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = IRON_TICKS_LIMIT)
+    // [флак] deepslate_iron_ore: тот же цикл добычи и плавки, запас 2×
+    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = 700)
     public static void acquireIronIngot_DeepslateNearby_GathersIronOre(GameTestHelper helper) {
         field(helper);
         placeIronOreRow(helper);
@@ -232,7 +234,8 @@ public final class AcquireGameTests {
         });
     }
 
-    // HTTP ходит другим потоком: предел берём из общего REST-шаблона, как ResultGameTests.
+    // [флак] REST: HTTP ходит другим потоком, предел берём из общего шаблона (ResultGameTests),
+    // где 20_000 — потолок на медленной машине
     @GameTest(template = "arena", batch = "acquire_rest", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void acquireWoodenPickaxe_SucceededTask_RestResultHoldsNumbers(GameTestHelper helper)
             throws IOException {
@@ -279,12 +282,6 @@ public final class AcquireGameTests {
     private static void placeIronOreRow(GameTestHelper helper) {
         for (int x = 0; x < IRON_ORE_COUNT; x++) {
             helper.setBlock(3 + x, 1, 3, Blocks.IRON_ORE);
-        }
-    }
-
-    private static void placeCobblestoneNear(GameTestHelper helper) {
-        for (int x = 0; x < COBBLESTONE_FOR_FURNACE; x++) {
-            helper.setBlock(3 + x, 1, 4, Blocks.COBBLESTONE);
         }
     }
 
