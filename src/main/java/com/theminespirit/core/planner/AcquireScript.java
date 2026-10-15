@@ -4,6 +4,7 @@ import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
@@ -168,6 +169,21 @@ public final class AcquireScript implements ScriptInstance {
                 + ", попыток " + attempts
                 + (detail == null || detail.isBlank() ? "" : "; причина: " + detail);
         return ScriptStatus.FAILED;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        if (finalStatus != ScriptStatus.SUCCEEDED) {
+            return Optional.empty();
+        }
+        int now = supplies.inInventory(item);
+        return Optional.of(new ScriptResult.Data(Map.of(
+                "item", item,
+                "count", count,
+                "from_inventory", Math.min(count, startInventory),
+                "from_chests", chestPlanned,
+                "gathered", Math.max(0, now - startInventory - chestPlanned),
+                "attempts", attempts)));
     }
 
     @Override

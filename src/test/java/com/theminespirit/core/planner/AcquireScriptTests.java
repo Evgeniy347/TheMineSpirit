@@ -6,9 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.ConditionRegistry;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -315,6 +318,44 @@ class AcquireScriptTests {
     }
 
     @Test
+    void succeededAcquire_Runner_CarriesDataResultWithNumbers() {
+        AtomicInteger gatheredFromWorld = new AtomicInteger();
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryLive = gatheredFromWorld;
+        AcquireScript acquire = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG,
+                ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(1, gatheredFromWorld))),
+                NO_CONDITIONS);
+        TaskRunner runner = TaskRunner.start(new ScriptCall("acquire", Map.of("item", ITEM, "count", 1)),
+                ScriptRegistry.of(Map.of("acquire", params -> acquire)), NO_CONDITIONS);
+
+        assertEquals(RunStatus.SUCCEEDED, runToCompletion(runner),
+                "Сбора одного предмета обязана хватить для успеха задачи");
+        assertTrue(runner.successResult().orElse(null) instanceof ScriptResult.Data,
+                "успешный acquire обязан класть итог в задачу, фактически " + runner.successResult());
+        Map<String, Object> fields = ((ScriptResult.Data) runner.successResult().orElseThrow()).fields();
+        assertEquals(ITEM, fields.get("item"), "итог называет предмет: по нему стратег узнаёт, что добыто");
+        assertEquals(1, fields.get("count"), "итог называет запрошенную цель");
+        assertEquals(0, fields.get("from_inventory"), "из инвентаря ничего не взято");
+        assertEquals(0, fields.get("from_chests"), "из сундуков ничего не взято");
+        assertEquals(1, fields.get("gathered"), "один предмет добыт из мира");
+        assertEquals(1, fields.get("attempts"), "первая попытка успешна — пересборок не было");
+    }
+
+    @Test
+    void failedAcquire_Result_IsEmpty() {
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new AlwaysFailingInstance())),
+                NO_CONDITIONS);
+
+        assertEquals(ScriptStatus.FAILED, run(script, 40),
+                "Шаг падает на каждой пересборке — acquire обязан честно завершиться FAILED");
+        assertTrue(script.result().isEmpty(),
+                "провал обязан отдавать пустой итог: цифры успеха врут, когда цель не достигнута");
+    }
+
+    @Test
     void constructor_BlankItem_IsRejectedWithReason() {
         String reason = assertThrows(IllegalArgumentException.class,
                 () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG,
@@ -336,6 +377,14 @@ class AcquireScriptTests {
         ScriptStatus status = ScriptStatus.RUNNING;
         for (int i = 0; i < maxTicks && status == ScriptStatus.RUNNING; i++) {
             status = script.tick();
+        }
+        return status;
+    }
+
+    private static RunStatus runToCompletion(TaskRunner runner) {
+        RunStatus status = RunStatus.RUNNING;
+        for (int i = 0; i < 20 && status == RunStatus.RUNNING; i++) {
+            status = runner.tick();
         }
         return status;
     }
@@ -368,6 +417,7 @@ class AcquireScriptTests {
         private List<ScriptCall> chestSteps;
         private Map<String, Integer> inventoryOverride = Map.of();
         private Set<String> stations = Set.of();
+        private AtomicInteger inventoryLive;
 
         StubSupplies(int inventory, Map<String, Integer> chests) {
             this.inventory = inventory;
@@ -376,7 +426,7 @@ class AcquireScriptTests {
 
         @Override
         public int inInventory(String item) {
-            return inventory;
+            return inventoryLive == null ? inventory : inventoryLive.get();
         }
 
         @Override
