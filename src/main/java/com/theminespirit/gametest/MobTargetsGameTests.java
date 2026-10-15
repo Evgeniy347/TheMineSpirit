@@ -50,22 +50,23 @@ public final class MobTargetsGameTests {
                 + " pos=" + target.blockPosition().toShortString();
     }
 
-    private static String nearby(GameTestHelper helper, Entity center) {
+    private static String nearby(GameTestHelper helper, Entity center, SpiritEntity spirit) {
         ServerLevel level = helper.getLevel();
         return level.getEntitiesOfClass(Entity.class, center.getBoundingBox().inflate(16)).stream()
-                .map(MobTargetsGameTests::describeNearby)
+                .map(entity -> describeNearby(entity, spirit))
                 .collect(Collectors.joining("; "));
     }
 
-    private static String describeNearby(Entity entity) {
+    private static String describeNearby(Entity entity, SpiritEntity spirit) {
         String target = "нетцели";
         String hurtBy = "нет";
         if (entity instanceof Mob mob) {
             target = describeTarget(mob.getTarget(), null);
             hurtBy = String.valueOf(mob.getLastHurtByMob());
         }
+        boolean targetingSelf = entity instanceof Mob mob && mob.getTarget() == spirit;
         return entity.getType().getDescriptionId() + "@" + entity.blockPosition().toShortString()
-                + " цель=" + target + " бил=" + hurtBy;
+                + " цель=" + target + " бил=" + hurtBy + " targetingSelf=" + targetingSelf;
     }
 
     @SuppressWarnings("deprecation") // ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
@@ -118,7 +119,7 @@ public final class MobTargetsGameTests {
                     "зомбифицированный пиглин нейтрален и не трогает духов без зла, а его цель "
                             + describeTarget(piglin.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
-                            + "; рядом в 16 блоках: [" + nearby(helper, piglin) + "]");
+                            + "; рядом в 16 блоках: [" + nearby(helper, piglin, spirit) + "]");
             helper.assertTrue(spirit.getTarget() == null,
                     "дух не дерётся первым с мирным мобом, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.reset(helper);
@@ -136,7 +137,7 @@ public final class MobTargetsGameTests {
                     "при mobsTargetSpirits=false зомби не берёт духа целью, а его цель "
                             + describeTarget(zombie.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
-                            + "; рядом в 16 блоках: [" + nearby(helper, zombie) + "]");
+                            + "; рядом в 16 блоках: [" + nearby(helper, zombie, spirit) + "]");
             helper.assertTrue(spirit.getTarget() == null,
                     "дух не дерётся первым, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.reset(helper);
