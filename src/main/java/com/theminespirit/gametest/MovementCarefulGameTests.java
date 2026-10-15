@@ -104,6 +104,11 @@ public final class MovementCarefulGameTests {
         });
     }
 
+    // Регрессионный: подлог walk_careful -> goto тест НЕ красит. Ванильный WalkNodeEvaluator ограничивает спуск
+    // mob.getMaxFallDistance() (у духа DropPolicy.MAX_DROP = 2), поэтому и goto, и walk_careful обходят пропасть
+    // и никогда не строят путь с падением глубже MAX_SAFE_DROP: CarefulPath.refusal на реальных путях всегда null.
+    // Тест сторожит «дух идёт вдоль пропасти и не срывается» (общий путь для обоих режимов), а различие режимов
+    // покрывает синтетический carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing.
     @GameTest(template = "arena", batch = "move_careful_edge", timeoutTicks = 300)
     public static void walkCareful_SixBlocksAlongFourDeepChasm_ArrivesAndAlwaysHasFloorBelow(GameTestHelper helper) {
         MovementScene.prepare(helper);
