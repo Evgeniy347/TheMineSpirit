@@ -431,7 +431,20 @@ class ScriptCatalogTests {
                         + "и план не обязан каждый раз называть координаты");
         assertEquals("nearest", container.defaultValue(),
                 "Значение по умолчанию container решает, какой контейнер использовать, если план молчит: "
-                        + "'nearest' — ближайший в радиусе");
+                        + "'nearest' — ближайший в радиусе. Для deposit оставлен ближайший, 'auto' доступен явно");
+    }
+
+    @Test
+    void defaultCatalog_Unload_ContainerDefaultsToAuto() {
+        ScriptSpec unload = CoreScripts.defaultCatalog().find("unload").orElseThrow();
+        ParamSpec container = param(unload, "container");
+
+        assertEquals(false, container.required(),
+                "container в unload необязателен: при разгрузке дух сам раскладывает предметы по сундукам");
+        assertEquals("auto", container.defaultValue(),
+                "Значение по умолчанию container у unload — 'auto': вернувшись из шахты, дух докладывает "
+                        + "стакующиеся предметы в сундук, где уже лежит такой предмет с неполным стаком, "
+                        + "а не в ближайший попавшийся");
     }
 
     @Test

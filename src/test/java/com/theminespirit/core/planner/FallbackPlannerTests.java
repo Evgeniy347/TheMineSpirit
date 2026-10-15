@@ -113,9 +113,9 @@ class FallbackPlannerTests {
         TaskNode plan = plan(new Goal("разгрузись в сундук на складе", Map.of()));
 
         assertEquals(new ScriptCall("unload",
-                Map.of("container", "nearest", "radius", 8, "force", false)), plan,
-                "Просьба разгрузиться обязана давать unload: иначе дух таскает полный инвентарь вместо "
-                        + "того, чтобы сложить лишнее на базе");
+                Map.of("container", "auto", "radius", 8, "force", false)), plan,
+                "Просьба разгрузиться обязана давать unload с container=auto: дух сам раскладывает "
+                        + "стакующиеся предметы к существующим стопкам, а не сваливает всё в ближайший сундук");
     }
 
     @Test
