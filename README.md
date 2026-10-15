@@ -110,6 +110,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [opencode.json](opencode.json) | настройки opencode в проекте: модель big-pickle, полный доступ, вопросы запрещены |
 | [docs/STRATEGIST.md](docs/STRATEGIST.md) | агент-стратег духов (`agents/strategist`): цикл, режимы, журнал, лимиты, смена модели |
 | [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
+| [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | горячая перезагрузка таблиц: датапак мира + /reload, команда /spirit tables |
 | [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
 
 ## Скрипты
