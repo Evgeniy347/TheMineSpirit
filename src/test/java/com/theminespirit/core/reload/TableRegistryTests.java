@@ -17,7 +17,7 @@ class TableRegistryTests {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-16T12:00:00Z"), ZoneOffset.UTC);
 
     private static TableDefinition<String> textTable(String id, String path) {
-        return new TableDefinition<>(id, path, (json, origin) -> json.trim());
+        return TableDefinition.single(id, path, (json, origin) -> json.trim());
     }
 
     private static LoadedContent content(String json, String origin, TableStatus.Source source) {
@@ -67,7 +67,7 @@ class TableRegistryTests {
     @Test
     void reload_BrokenContent_KeepsOldAndReportsError() {
         TableRegistry registry = new TableRegistry(CLOCK);
-        TableDefinition<String> strict = new TableDefinition<>("strict", "data/theminespirit/strict.json",
+        TableDefinition<String> strict = TableDefinition.single("strict", "data/theminespirit/strict.json",
                 (json, origin) -> {
                     if (!json.startsWith("ok")) {
                         throw new IllegalStateException(origin + ": битый json. Исправьте синтаксис");
@@ -90,7 +90,7 @@ class TableRegistryTests {
     @Test
     void reload_OneBrokenTable_DoesNotStopOthers() {
         TableRegistry registry = new TableRegistry(CLOCK);
-        TableDefinition<String> strict = new TableDefinition<>("strict", "data/theminespirit/strict.json",
+        TableDefinition<String> strict = TableDefinition.single("strict", "data/theminespirit/strict.json",
                 (json, origin) -> {
                     if (!json.startsWith("ok")) {
                         throw new IllegalStateException("битый json");

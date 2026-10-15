@@ -1,5 +1,6 @@
 package com.theminespirit.core.inventory;
 
+import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
@@ -15,7 +16,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class KitFor {
-    private static final String RESOURCE_PATH = "data/theminespirit/inventory/kit_activities.json";
     private static final Set<String> ROOT_FIELDS = Set.of("activities", "child");
     private static final Set<String> ACTIVITY_FIELDS = Set.of("scripts", "rules");
     private static final Set<String> CHILD_FIELDS = Set.of("rules");
@@ -34,7 +34,13 @@ public final class KitFor {
     }
 
     public static KitFor load() {
-        return load(RESOURCE_PATH);
+        return DataTables.INSTANCE.kitFor().current();
+    }
+
+    /** Чтение из classpath для начальной версии держателя: не заглядывает в сам держатель. */
+    public static KitFor readClasspath() {
+        return parse(JsonResource.readClasspath("data/theminespirit/inventory/kit_activities.json"),
+                "data/theminespirit/inventory/kit_activities.json");
     }
 
     public static KitFor load(String resourcePath) {

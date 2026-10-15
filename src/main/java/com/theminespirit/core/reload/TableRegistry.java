@@ -7,11 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Единственный реестр держателей таблиц: одно место регистрации (адаптер добавляет определения один раз),
  * одна точка перезагрузки ({@link #reload}). Каждая таблица грузится независимо: ошибка в одной не мешает
  * остальным и не подменяет её содержимое пустым.
+ *
+ * <p>Начальная версия таблицы берётся лениво ({@code seed}): пока таблицу никто не спросил, её файл не читается.
+ * Так сохраняется прежнее поведение «файлы читаются один раз за процесс», а загрузчик вправе заменить версию
+ * до первого чтения (тогда classpath-значение и не понадобится).
  */
 public final class TableRegistry {
     private final Map<String, Registered<?>> byId = new LinkedHashMap<>();
@@ -22,15 +27,25 @@ public final class TableRegistry {
     }
 
     public <T> TableHolder<T> register(TableDefinition<T> definition, T initial) {
+        Objects.requireNonNull(initial, "Начальная версия не может быть null: читатель не должен видеть пустоту");
+        return registerLazy(definition, () -> initial, TableStatus.Source.BUILTIN, "classpath");
+    }
+
+    public <T> TableHolder<T> registerLazy(TableDefinition<T> definition, Supplier<T> seed) {
+        return registerLazy(definition, seed, TableStatus.Source.MOD, "classpath (мод)");
+    }
+
+    private <T> TableHolder<T> registerLazy(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source source,
+            String origin) {
         Objects.requireNonNull(definition, "Определение таблицы не может быть null: регистрировать нечего");
+        Objects.requireNonNull(seed, "Источник начальной версии не может быть null: читатель не должен видеть пустоту");
         if (byId.containsKey(definition.id())) {
             throw new IllegalStateException("Таблица с id '" + definition.id()
                     + "' уже зарегистрирована: два держателя на одну таблицу разошлись бы версиями");
         }
-        TableHolder<T> holder = new TableHolder<>(definition.id(), initial, TableStatus.Source.BUILTIN, "classpath",
-                TableHolder.hashOf(String.valueOf(initial)), clock);
-        byId.put(definition.id(), new Registered<>(definition, holder));
-        return holder;
+        Registered<T> registered = new Registered<>(definition, seed, source, origin, clock);
+        byId.put(definition.id(), registered);
+        return registered.holder();
     }
 
     public Optional<TableHolder<?>> holder(String id) {
@@ -67,29 +82,71 @@ public final class TableRegistry {
         return reports;
     }
 
-    private record Registered<T>(TableDefinition<T> definition, TableHolder<T> holder) {
-        Report reload(ContentSource source, Clock clock) {
-            Optional<LoadedContent> content;
+    private static final class Registered<T> {
+        private final TableDefinition<T> definition;
+        private final Supplier<T> seed;
+        private final TableStatus.Source seedSource;
+        private final String seedOrigin;
+        private final Clock clock;
+        private volatile TableHolder<T> holder;
+
+        Registered(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source seedSource, String seedOrigin,
+                Clock clock) {
+            this.definition = definition;
+            this.seed = seed;
+            this.seedSource = seedSource;
+            this.seedOrigin = seedOrigin;
+            this.clock = clock;
+        }
+
+        TableDefinition<T> definition() {
+            return definition;
+        }
+
+        synchronized TableHolder<T> holder() {
+            if (holder == null) {
+                T value = seed.get();
+                holder = new TableHolder<>(definition.id(), value, seedSource, seedOrigin,
+                        TableHolder.hashOf(String.valueOf(value)), clock);
+            }
+            return holder;
+        }
+
+        Report reload(ContentSource source, Clock reloadClock) {
+            TableHolder<T> target = holder();
+            Optional<List<LoadedContent>> content;
             try {
-                content = source.read(definition.resourcePath());
+                content = definition.read(source);
             } catch (RuntimeException error) {
-                String message = "чтение " + definition.resourcePath() + ": " + error.getMessage();
-                holder.failed(message);
+                String message = "чтение " + definition.resourcePaths() + ": " + error.getMessage();
+                target.failed(message);
                 return new Report(definition.id(), false, message);
             }
             if (content.isEmpty()) {
                 return new Report(definition.id(), true, null);
             }
-            LoadedContent loaded = content.get();
+            List<LoadedContent> loaded = content.get();
             try {
-                T parsed = definition.parser().parse(loaded.json(), loaded.origin());
-                holder.replace(parsed, loaded.source(), loaded.origin(), TableHolder.hashOf(loaded.json()), clock);
+                T parsed = definition.parser().parse(loaded);
+                LoadedContent first = loaded.get(0);
+                target.replace(parsed, first.source(), first.origin(), TableHolder.hashOf(join(loaded)), reloadClock);
                 return new Report(definition.id(), true, null);
             } catch (RuntimeException error) {
-                String message = loaded.origin() + ": " + error.getMessage();
-                holder.failed(message);
+                String message = loaded.get(0).origin() + ": " + error.getMessage();
+                target.failed(message);
                 return new Report(definition.id(), false, message);
             }
+        }
+
+        private static String join(List<LoadedContent> loaded) {
+            StringBuilder text = new StringBuilder();
+            for (LoadedContent content : loaded) {
+                if (text.length() > 0) {
+                    text.append('\n');
+                }
+                text.append(content.json());
+            }
+            return text.toString();
         }
     }
 

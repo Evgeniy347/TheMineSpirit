@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Iterator;
@@ -16,8 +17,6 @@ import java.util.Optional;
 public final class DropTable {
     public static final String RESOURCE = "data/theminespirit/acquire/drops.json";
 
-    private static final DropTable SHARED = load();
-
     private final Map<String, List<String>> sources;
 
     private DropTable(Map<String, List<String>> sources) {
@@ -25,7 +24,7 @@ public final class DropTable {
     }
 
     public static DropTable shared() {
-        return SHARED;
+        return DataTables.INSTANCE.drops().current();
     }
 
     public static DropTable load() {

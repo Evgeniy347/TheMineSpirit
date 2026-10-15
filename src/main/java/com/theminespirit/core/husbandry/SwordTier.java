@@ -1,5 +1,6 @@
 package com.theminespirit.core.husbandry;
 
+import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,7 +25,6 @@ public enum SwordTier {
     public static final String EMPTY_HAND_ID = "minecraft:air";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final Map<String, SwordTier> BY_ITEM = loadFileMap();
 
     public boolean atLeast(SwordTier other) {
         Objects.requireNonNull(other, "Порог не может быть null: без него не с чем сравнивать тир");
@@ -45,7 +45,7 @@ public enum SwordTier {
 
     public static SwordTier ofItem(String itemId) {
         Objects.requireNonNull(itemId, "id предмета не может быть null: без него тир меча не определить");
-        SwordTier tier = BY_ITEM.get(canonicalId(itemId));
+        SwordTier tier = items().get(canonicalId(itemId));
         if (tier == null) {
             throw new IllegalArgumentException("Предмет '" + itemId + "' — не меч из таблицы " + RESOURCE
                     + ": бить им стадо запрещено, возьмите меч из таблицы");
@@ -75,30 +75,33 @@ public enum SwordTier {
         return Map.copyOf(table);
     }
 
-    static Map<String, SwordTier> items() {
-        return BY_ITEM;
+    public static Map<String, SwordTier> items() {
+        return DataTables.INSTANCE.swords().current();
     }
 
-    private static Map<String, SwordTier> loadFileMap() {
-        String json = JsonResource.readClasspath(RESOURCE);
+    public static Map<String, SwordTier> parse(String json, String origin) {
         JsonNode root;
         try {
             root = MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Таблица '" + RESOURCE + "' — не разобран JSON: "
+            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: "
                     + error.getOriginalMessage() + ". Исправьте синтаксис файла");
         }
         if (root == null || !root.isObject()) {
-            throw new IllegalStateException("Таблица '" + RESOURCE + "' — не объект: ожидается объект "
+            throw new IllegalStateException("Таблица '" + origin + "' — не объект: ожидается объект "
                     + "«id предмета → тир»");
         }
         Map<String, String> raw = new LinkedHashMap<>();
         Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
-            raw.put(field.getKey(), JsonResource.text(field.getValue(), RESOURCE, "предмета '" + field.getKey() + "'"));
+            raw.put(field.getKey(), JsonResource.text(field.getValue(), origin, "предмета '" + field.getKey() + "'"));
         }
         return load(raw);
+    }
+
+    public static Map<String, SwordTier> loadFile() {
+        return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
     }
 
     private static String canonicalId(String item) {

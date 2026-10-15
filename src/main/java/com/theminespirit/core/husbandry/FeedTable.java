@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Iterator;
@@ -38,7 +39,7 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public static List<String> feedFor(Species species) {
         Objects.requireNonNull(species, "Вид животного не может быть null: без него неизвестно, чем кормить стадо");
-        return DEFAULTS.feeds().get(species);
+        return DataTables.INSTANCE.feed().current().feedForInstance(species);
     }
 
     public static FeedTable defaults() {

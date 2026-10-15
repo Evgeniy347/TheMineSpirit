@@ -1,5 +1,6 @@
 package com.theminespirit.core.policy;
 
+import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.IdFilter;
@@ -15,6 +16,11 @@ public final class ProtectionConfig {
     }
 
     public static BlockProtection load() {
+        return DataTables.INSTANCE.protection().current();
+    }
+
+    /** Чтение из classpath для начальной версии держателя: не заглядывает в сам держатель. */
+    public static BlockProtection readClasspath() {
         return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
     }
 

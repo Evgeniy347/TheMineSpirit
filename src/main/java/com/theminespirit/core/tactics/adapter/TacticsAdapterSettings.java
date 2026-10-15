@@ -1,5 +1,6 @@
 package com.theminespirit.core.tactics.adapter;
 
+import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
@@ -54,7 +55,12 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
     }
 
     public static TacticsAdapterSettings loadDefault() {
-        return Holder.INSTANCE;
+        return DataTables.INSTANCE.adapter().current();
+    }
+
+    /** Начальная версия для держателя: читается из classpath один раз за процесс. */
+    public static TacticsAdapterSettings readFromClasspath() {
+        return fromJson(readResource());
     }
 
     public static TacticsAdapterSettings fromJson(String json) {
@@ -122,7 +128,4 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         }
     }
 
-    private static final class Holder {
-        private static final TacticsAdapterSettings INSTANCE = fromJson(readResource());
     }
-}
