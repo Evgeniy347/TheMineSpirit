@@ -119,6 +119,8 @@ public final class MobTargetsGameTests {
                             + describeTarget(piglin.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
                             + "; рядом в 16 блоках: [" + nearby(helper, piglin) + "]");
+            helper.assertTrue(spirit.getTarget() == null,
+                    "дух не дерётся первым с мирным мобом, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.reset(helper);
             helper.succeed();
         });
@@ -135,6 +137,8 @@ public final class MobTargetsGameTests {
                             + describeTarget(zombie.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
                             + "; рядом в 16 блоках: [" + nearby(helper, zombie) + "]");
+            helper.assertTrue(spirit.getTarget() == null,
+                    "дух не дерётся первым, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.reset(helper);
             helper.succeed();
         });
@@ -156,6 +160,7 @@ public final class MobTargetsGameTests {
                             + describeTarget(current.getTarget(), spirit)
                             + "; " + spiderLight(helper, current)
                             + "; дух свой uuid=" + spirit.getUUID() + " pos=" + spirit.blockPosition().toShortString()
+                            + "; цель духа " + describeTarget(spirit.getTarget(), spirit)
                             + "; духи в радиусе 16: [" + spiritUuids(helper, current) + "]");
             helper.getLevel().setDayTime(savedDayTime);
             GameTestFixtures.reset(helper);

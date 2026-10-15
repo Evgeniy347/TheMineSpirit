@@ -333,11 +333,14 @@ public final class TacticsService {
         retreat = RetreatCommitment.next(retreat, next, now, settings, progress == RetreatExecutor.Progress.BUILDING);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
-        targetId = designated.map(EnemyFact::id).orElse(null);
-        if (forcedTarget != null && forcedTarget.isAlive()) {
-            spirit.setTarget(forcedTarget);
+        Optional<LivingEntity> forcedTarget = designatedTarget();
+        if (forcedTarget.isPresent()) {
+            targetId = designated.map(EnemyFact::id).orElse(null);
+            spirit.setTarget(forcedTarget.get());
         } else {
-            spirit.setTarget(designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null));
+            boolean engages = engages(designated);
+            targetId = engages ? designated.map(EnemyFact::id).orElse(null) : null;
+            spirit.setTarget(engages ? designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null) : null);
         }
         shootTargetId = collected.context().enemies().stream().filter(EnemyFact::visible)
                 .min(Comparator.comparingDouble(enemy -> enemy.pos().distanceTo(situation.self().pos())))
@@ -352,6 +355,16 @@ public final class TacticsService {
 
     private Optional<LivingEntity> designatedTarget() {
         return Optional.ofNullable(forcedTarget).filter(LivingEntity::isAlive);
+    }
+
+    private boolean engages(Optional<EnemyFact> designated) {
+        if (ordered == CombatMode.PASSIVE) {
+            return false;
+        }
+        if (TacticsConfig.loadDefault().modes().of(ordered).initiates()) {
+            return true;
+        }
+        return spirit.getLastHurtByMob() != null || designated.map(EnemyFact::targetingSelf).orElse(false);
     }
 
     private void replan(WorldFactCollector.Collected collected, Situation situation) {
