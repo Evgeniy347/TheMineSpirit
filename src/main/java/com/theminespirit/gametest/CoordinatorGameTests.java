@@ -172,6 +172,7 @@ public final class CoordinatorGameTests {
 
         boolean[] engaged = {false};
         boolean[] attacked = {false};
+        boolean[] victimAttacked = {false};
         boolean[] removed = {false};
         Set<Point> postsBefore = new HashSet<>();
         SpiritEntity[] victim = {null};
@@ -198,6 +199,12 @@ public final class CoordinatorGameTests {
                 postsBefore.addAll(posts);
                 attacked[0] = true;
             }
+            if (!victimAttacked[0] && SpiritSnapshotReader
+                    .read(victim[0], helper.getLevel().getGameTime()).attacked()) {
+                victimAttacked[0] = true;
+            }
+            helper.assertTrue(victimAttacked[0],
+                    "Жертва помечена атакованной в снимке: иначе координатор не видит нападение и не шлёт помощь");
             helper.assertTrue(engaged[0],
                     "Хотя бы один защитник вступает в бой: иначе помощь не пришла, а поселение не защищается");
             if (!removed[0]) {
