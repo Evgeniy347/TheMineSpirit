@@ -23,6 +23,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -44,6 +45,9 @@ public final class MineGameTests {
     private static final int TOOL_SLOT = 0;
     private static final int SETTLE_TICKS = 5;
     private static final int RADIUS = 16;
+    private static final int DIRT_HEAP_TIMEOUT_TICKS = 1000;
+    private static final int REDSTONE_TIMEOUT_TICKS = 400;
+    private static final int MAX_DROP_LINES = 12;
     private static final int LAVA_TOTAL = 1;
     private static final int CAVE_SHIFT_INSIDE_ARENA = -SHELL_MIN;
 
@@ -317,22 +321,36 @@ public final class MineGameTests {
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
                 Items.IRON_PICKAXE);
         SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18), SETTLE_TICKS);
+        HarvestProbe probe = HarvestProbe.attach(helper, spirit, run::started,
+                () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT),
+                () -> GameTestFixtures.countInWorld(helper, Items.DIRT),
+                () -> dropSummary(helper, Items.DIRT),
+                () -> countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA));
+        helper.onEachTick(() -> {
+            if (run.started() && spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED
+                    && helper.getTick() >= DIRT_HEAP_TIMEOUT_TICKS) {
+                helper.fail(probe.report("тайм-аут " + DIRT_HEAP_TIMEOUT_TICKS + " тиков игры"));
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "куча из 18 блоков земли обязана собраться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет успеха"));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 18,
                     "в инвентаре обязано быть 18 земли, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) + "\n"
+                            + probe.report("недобрал"));
             helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 0, 2 + CAVE_SHIFT_INSIDE_ARENA))
                             .is(Blocks.STONE),
-                    "пол под кучей обязан остаться: блок под ногами не ломается");
+                    "пол под кучей обязан остаться: блок под ногами не ломается" + "\n"
+                            + probe.report("пол сломан"));
             helper.assertTrue(run.spiritTicks() <= 720,
                     "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 565–612, порог ≈1.2×), "
-                            + "заняло " + run.spiritTicks());
+                            + "заняло " + run.spiritTicks() + " тиков духа, рабочих " + probe.workingTicks()
+                            + ", пауз " + probe.pausedTicks() + "\n" + probe.report("не уложился в 720"));
             GameTestFixtures.reset(helper);
         });
     }
@@ -634,17 +652,31 @@ public final class MineGameTests {
         SpiritEntity spirit = spawnWith(helper,
                 SPIRIT_START.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
         SpiritRun run = SpiritRun.launch(helper, spirit, mineCall("redstone", 2), SETTLE_TICKS);
+        HarvestProbe probe = HarvestProbe.attach(helper, spirit, run::started,
+                () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.REDSTONE),
+                () -> GameTestFixtures.countInWorld(helper, Items.REDSTONE),
+                () -> dropSummary(helper, Items.REDSTONE),
+                () -> countBlock(helper, Blocks.REDSTONE_ORE, CAVE_SHIFT_INSIDE_ARENA));
+        helper.onEachTick(() -> {
+            if (run.started() && spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED
+                    && helper.getTick() >= REDSTONE_TIMEOUT_TICKS) {
+                helper.fail(probe.report("тайм-аут " + REDSTONE_TIMEOUT_TICKS + " тиков игры"));
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "две редстоуновые руды обязаны добыться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
-            int total = GameTestFixtures.countInInventory(spirit.getInventory(), Items.REDSTONE)
-                    + GameTestFixtures.countInWorld(helper, Items.REDSTONE);
+                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет успеха"));
+            int inInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.REDSTONE);
+            int inWorld = GameTestFixtures.countInWorld(helper, Items.REDSTONE);
+            int total = inInventory + inWorld;
             helper.assertTrue(total >= 8 && total <= 10,
-                    "две руды дают 8..10 редстоуна вместе в инвентаре и мире, фактически " + total);
+                    "две руды дают 8..10 редстоуна вместе в инвентаре и мире, в инвентаре " + inInventory
+                            + ", в мире " + inWorld + ", фактически " + total + "\n"
+                            + probe.report("дроп не сошёлся"));
             GameTestFixtures.reset(helper);
         });
     }
@@ -786,6 +818,22 @@ public final class MineGameTests {
             throw new IllegalStateException("перезагруженный дух не добавлен в мир: uuid " + reloaded.getUUID());
         }
         return reloaded;
+    }
+
+    private static String dropSummary(GameTestHelper helper, Item item) {
+        List<ItemEntity> drops = GameTestFixtures.dropsInArea(helper, item);
+        StringBuilder text = new StringBuilder("капель: " + drops.size());
+        int shown = 0;
+        for (ItemEntity drop : drops) {
+            if (shown >= MAX_DROP_LINES) {
+                text.append(" ...обрезано");
+                break;
+            }
+            text.append(" [").append(drop.getItem().getCount()).append("× на ")
+                    .append(drop.blockPosition().toShortString()).append("]");
+            shown++;
+        }
+        return text.toString();
     }
 
     private static ScriptCall mineCall(String ore, int count) {
