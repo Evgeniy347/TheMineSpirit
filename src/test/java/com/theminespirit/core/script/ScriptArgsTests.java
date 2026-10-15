@@ -42,4 +42,21 @@ class ScriptArgsTests {
         assertTrue(error.getMessage().contains("replant"),
                 "Сообщение обязано называть пропущенный параметр. Фактическое: " + error.getMessage());
     }
+
+    @Test
+    void optionalInt_MissingKey_ReturnsDefault() {
+        assertEquals(58, ScriptArgs.optionalInt(Map.of(), "y", 58),
+                "Отсутствующий необязательный int обязан давать умолчание каталога без ошибки");
+    }
+
+    @Test
+    void optionalInt_StringValue_NamesParameterAndType() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> ScriptArgs.optionalInt(Map.of("y", "12"), "y", 58),
+                "Строка вместо числа обязана отвергаться до запуска");
+
+        assertTrue(error.getMessage().contains("y") && error.getMessage().contains("String"),
+                "Сообщение обязано называть параметр и полученный тип, чтобы найти ошибку в плане. Фактическое: "
+                        + error.getMessage());
+    }
 }

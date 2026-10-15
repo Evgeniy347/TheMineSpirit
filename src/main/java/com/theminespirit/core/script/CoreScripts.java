@@ -3,6 +3,8 @@ package com.theminespirit.core.script;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.mining.DescentData;
+import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
@@ -158,6 +160,13 @@ public final class CoreScripts {
                                 ParamSpec.integer("size", true, CatalogLimits.DIG_SIZE_MIN,
                                         CatalogLimits.DIG_SIZE_MAX)),
                         List.of(), List.of("блоки области удалены")),
+                spec("dig_descent", "спуститься в шахту вниз по тоннелю",
+                        List.of(
+                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN,
+                                        CatalogLimits.WORLD_Y_MAX, DescentData.defaults().targetY())),
+                        List.of("под ногами духа есть пол шахты"),
+                        List.of("спуск пройден до целевого этажа или остановлен опасностью", "тоннель освещен факелами")),
                 spec("gather", "собрать блоки заданного типа",
                         List.of(ParamSpec.text("block", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),

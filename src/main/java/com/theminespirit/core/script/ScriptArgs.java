@@ -27,7 +27,7 @@ final class ScriptArgs {
         return text;
     }
 
-    static Optional<Integer> optionalInt(Map<String, Object> params, String name) {
+static Optional<Integer> optionalInt(Map<String, Object> params, String name) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);
         if (value == null) {

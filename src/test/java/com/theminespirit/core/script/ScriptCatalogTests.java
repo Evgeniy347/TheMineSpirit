@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.mining.DescentData;
+import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.OreKind;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -164,6 +166,8 @@ class ScriptCatalogTests {
                 spec("dig_area", List.of("x", "y", "z", "size"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX}, "size", new long[]{1, 16})),
+                spec("dig_descent", List.of("direction"),
+                        Map.of("y", new long[]{-64, 319})),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[]{1, 256})),
                 spec("collect_drops", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("harvest_crop", List.of(), Map.of("radius", new long[]{1, 16})),
@@ -292,6 +296,31 @@ class ScriptCatalogTests {
         assertEquals(CatalogLimits.HARVEST_RADIUS_DEFAULT, radius.defaultValue(),
                 "radius в mine_vein по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
                         + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание");
+    }
+
+    @Test
+    void defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData() {
+        ScriptSpec digDescent = CoreScripts.defaultCatalog().find("dig_descent").orElseThrow();
+
+        ParamSpec direction = param(digDescent, "direction");
+        assertEquals(ParamType.ENUM, direction.type(),
+                "direction в dig_descent — enum: валидатор обязан ловить опечатку до запуска, а не копать в никуда");
+        assertEquals(DescentDirection.names(), direction.values(),
+                "Список direction обязан совпадать с осями DescentDirection: иначе каталог обещает направление, "
+                        + "которое ядро не знает");
+        assertEquals(true, direction.required(),
+                "direction в dig_descent обязателен: без направления неизвестно, в какую сторону копать тоннель");
+
+        ParamSpec y = param(digDescent, "y");
+        assertEquals(false, y.required(),
+                "y в dig_descent необязателен: без него спуск идёт до целевого этажа из данных");
+        assertEquals(DescentData.defaults().targetY(), y.defaultValue(),
+                "Default y обязан совпадать с данными спуска: PlanValidator подставляет его в план, "
+                        + "а игрок видит умолчание в /v1/capabilities");
+        assertEquals((double) CatalogLimits.WORLD_Y_MIN, y.min(),
+                "Нижняя граница y обязана совпадать с дном мира каталога");
+        assertEquals((double) CatalogLimits.WORLD_Y_MAX, y.max(),
+                "Верхняя граница y обязана совпадать с потолком мира каталога");
     }
 
     @Test
