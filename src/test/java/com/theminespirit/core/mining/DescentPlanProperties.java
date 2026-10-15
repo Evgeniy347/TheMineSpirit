@@ -38,7 +38,7 @@ class DescentPlanProperties {
         int sideY = entryY - lavaStep;
         BlockCoord entry = new BlockCoord(0, entryY, 0);
         CellWorld world = DescentPlanTests.solidDescent(new CellWorld(), 0, 0, EAST, entryY - 1, targetY)
-                .set(1, sideY, -1, Cell.LAVA);
+                .set(lavaStep, sideY, -1, Cell.LAVA);
 
         DescentPlan plan = DescentPlan.from(world, entry, EAST, targetY, 4);
 
@@ -50,7 +50,7 @@ class DescentPlanProperties {
     }
 
     @Property(tries = 200)
-    void from_Steps_StayInEntryColumnAndOffsetByDirection(
+    void from_Steps_DescendStaircaseAlongDirection(
             @ForAll @IntRange(min = 1, max = 8) int depth,
             @ForAll @IntRange(min = -20, max = 60) int entryY) {
         int targetY = entryY - depth;
@@ -63,11 +63,15 @@ class DescentPlanProperties {
         DescentPlan plan = DescentPlan.from(world, entry, EAST, targetY, 4);
 
         for (DescentStep step : plan.steps()) {
-            assertEquals(new BlockCoord(3, step.stand().y(), -5), step.stand(),
-                    "Ступень обязана оставаться в колонке входа: дух спускается по вертикали, а не гуляет");
+            int columnX = 3 + step.index();
+            int standY = entryY - step.index();
+            assertEquals(new BlockCoord(columnX, standY, -5), step.stand(),
+                    "Ступень обязана спускаться лесенкой: шаг глубже — на этаж ниже и на блок ближе по direction");
+            assertEquals(step.stand(), step.passage().get(0),
+                    "Нижняя клетка прохода обязана быть ступенью: дух встаёт на клетку своего прохода");
             for (BlockCoord cell : step.passage()) {
-                assertEquals(4, cell.x(), "Клетка прохода обязана быть на блок ближе по направлению спуска");
-                assertEquals(-5, cell.z(), "Клетка прохода обязана сохранять координату колонки по Z");
+                assertEquals(columnX, cell.x(), "Клетка прохода обязана оставаться в колонке своей ступени");
+                assertEquals(-5, cell.z(), "Клетка прохода обязана сохранять координату Z колонки");
             }
         }
     }

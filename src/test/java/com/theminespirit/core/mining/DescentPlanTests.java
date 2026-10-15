@@ -41,17 +41,17 @@ class DescentPlanTests {
         assertEquals(new BlockCoord(0, 4, 0), plan.steps().get(0).stand(),
                 "Шаг 0 начинается со ступени входа: дух стоит там, где был");
         assertEquals(List.of(
-                new BlockCoord(1, 4, 0), new BlockCoord(1, 5, 0), new BlockCoord(1, 6, 0)),
+                new BlockCoord(0, 4, 0), new BlockCoord(0, 5, 0), new BlockCoord(0, 6, 0)),
                 plan.steps().get(0).passage(),
-                "Проход шага 0 — клетки перед духом на высотах floor+1..floor+3");
-        assertEquals(new BlockCoord(0, 3, 0), plan.steps().get(1).stand(),
-                "Шаг 1 — ступенью ниже, в колонке входа");
+                "Проход шага 0 — собственная колонка входа на высотах floor+1..floor+3");
+        assertEquals(new BlockCoord(1, 3, 0), plan.steps().get(1).stand(),
+                "Шаг 1 — лесенкой: на этаж ниже и на блок ближе по направлению спуска");
         assertEquals(List.of(
                 new BlockCoord(1, 3, 0), new BlockCoord(1, 4, 0), new BlockCoord(1, 5, 0)),
                 plan.steps().get(1).passage(),
-                "Проход шага 1 — тот же выступ, на этаж ниже");
-        assertEquals(new BlockCoord(0, 2, 0), plan.steps().get(2).stand(),
-                "Последний шаг встаёт на этаж targetY");
+                "Проход шага 1 — колонка его ступени на три клетки вверх");
+        assertEquals(new BlockCoord(2, 2, 0), plan.steps().get(2).stand(),
+                "Последний шаг встаёт на этаж targetY в своей колонке");
     }
 
     @Test
@@ -105,7 +105,7 @@ class DescentPlanTests {
 
     @Test
     void from_LavaInSubfloorOfLaterStep_StopsWithLavaReasonBeforeIt() {
-        CellWorld world = solidDescent(new CellWorld(), 0, 0, EAST, 3, 1).set(0, 1, 0, Cell.LAVA);
+        CellWorld world = solidDescent(new CellWorld(), 0, 0, EAST, 3, 1).set(1, 1, 0, Cell.LAVA);
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
@@ -118,7 +118,7 @@ class DescentPlanTests {
 
     @Test
     void from_WaterInPassageOfFirstStep_StopsWithWaterReason() {
-        CellWorld world = solidDescent(new CellWorld(), 0, 0, EAST, 3, 1).set(1, 4, 0, Cell.WATER);
+        CellWorld world = solidDescent(new CellWorld(), 0, 0, EAST, 3, 1).set(0, 4, 0, Cell.WATER);
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
@@ -230,11 +230,14 @@ class DescentPlanTests {
 
     static CellWorld solidDescent(CellWorld world, int x, int z, DescentDirection direction, int entryFloor,
             int targetY) {
-        for (int floor = entryFloor; floor >= targetY; floor--) {
-            world.set(x, floor, z, Cell.SOLID);
-            world.set(x, floor - 1, z, Cell.SOLID);
+        int index = 0;
+        for (int floor = entryFloor; floor >= targetY; floor--, index++) {
+            int columnX = x + index * direction.dx;
+            int columnZ = z + index * direction.dz;
+            world.set(columnX, floor, columnZ, Cell.SOLID);
+            world.set(columnX, floor - 1, columnZ, Cell.SOLID);
             for (int height = floor + 1; height <= floor + 3; height++) {
-                world.set(x + direction.dx, height, z + direction.dz, Cell.SOLID);
+                world.set(columnX, height, columnZ, Cell.SOLID);
             }
         }
         return world;

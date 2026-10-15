@@ -68,13 +68,16 @@ public record DescentPlan(
         int entryFloor = entry.y() - 1;
         List<DescentStep> steps = new ArrayList<>();
         String dangerReason = null;
-        for (int floor = entryFloor; floor >= targetY; floor--) {
-            BlockCoord stand = new BlockCoord(entry.x(), floor + 1, entry.z());
+        int index = 0;
+        for (int floor = entryFloor; floor >= targetY; floor--, index++) {
+            int columnX = entry.x() + index * direction.dx;
+            int columnZ = entry.z() + index * direction.dz;
+            BlockCoord stand = new BlockCoord(columnX, floor + 1, columnZ);
             List<BlockCoord> passage = List.of(
-                    new BlockCoord(entry.x() + direction.dx, floor + 1, entry.z() + direction.dz),
-                    new BlockCoord(entry.x() + direction.dx, floor + 2, entry.z() + direction.dz),
-                    new BlockCoord(entry.x() + direction.dx, floor + 3, entry.z() + direction.dz));
-            DescentStep step = new DescentStep(steps.size(), floor, stand, passage);
+                    new BlockCoord(columnX, floor + 1, columnZ),
+                    new BlockCoord(columnX, floor + 2, columnZ),
+                    new BlockCoord(columnX, floor + 3, columnZ));
+            DescentStep step = new DescentStep(index, floor, stand, passage);
             String danger = dangerAt(view, step, direction);
             if (danger != null) {
                 dangerReason = danger;

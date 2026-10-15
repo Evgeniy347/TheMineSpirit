@@ -26,6 +26,10 @@ public record DescentStep(int index, int floor, BlockCoord stand, List<BlockCoor
                         + " не стоит на высоте floor+" + (offset + 1) + ": проход идёт ровно три блока вверх");
             }
         }
+        if (!passage.get(0).equals(stand)) {
+            throw new IllegalArgumentException("Нижняя клетка прохода " + passage.get(0) + " шага " + index
+                    + " не ступень " + stand + ": дух встаёт на нижнюю клетку своего прохода");
+        }
         passage = List.copyOf(passage);
     }
 
