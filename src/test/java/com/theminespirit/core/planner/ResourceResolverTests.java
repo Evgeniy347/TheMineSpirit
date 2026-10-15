@@ -46,6 +46,23 @@ class ResourceResolverTests {
     }
 
     @Test
+    void resolve_DropWithSourceAndSmeltable_UsesGatherInsteadOfSmelt() {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("coal", "coal_ore", "oak_log"),
+                Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
+                Map.of("coal", "coal_ore"))
+                .withGatherSource("coal", "coal_ore");
+
+        TaskNode plan = ResourceResolver.resolve("coal", 1, knowledge);
+
+        assertEquals(gather("coal_ore", 1), plan,
+                "Предмет, который падает из блока-источника, обязан добываться сбором раньше плавки: иначе уголь "
+                        + "план строит цепочкой плавки (добыча руды, своё топливо — сбор дров, — и плавка руды в "
+                        + "уголь), и в мире без дерева дух проваливает цель вместо простой добычи руды. Меняя порядок "
+                        + "предпочтений резолвера, перепроверь, что добыча угольной руды даёт уголь без печи");
+    }
+
+    @Test
     void resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE);
 

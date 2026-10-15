@@ -91,6 +91,9 @@ public final class ResourceResolver {
                 if (knowledge.isCraftable(item)) {
                     return craftPlan(item, count, topLevel);
                 }
+                if (dropsFromAnotherBlock(item)) {
+                    return batched("gather", item, count, topLevel);
+                }
                 if (knowledge.isSmeltable(item)) {
                     return smeltPlan(item, count, topLevel);
                 }
@@ -102,6 +105,10 @@ public final class ResourceResolver {
             } finally {
                 path.remove(item);
             }
+        }
+
+        private boolean dropsFromAnotherBlock(String item) {
+            return !knowledge.gatherBlockFor(item).equals(item);
         }
 
         private TaskNode batched(String script, String item, int count, boolean topLevel) {
