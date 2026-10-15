@@ -59,9 +59,12 @@ class DoorWatchProperties {
             @ForAll("spiritSets") List<SpiritRef> spirits) {
         long now = 20_000L;
         List<DoorState> doors = new ArrayList<>();
+        Set<BlockCoord> seen = new HashSet<>();
         for (int i = 0; i + 1 < flat.size(); i += 2) {
-            doors.add(new DoorState(new BlockCoord(64 + flat.get(i), 64, 64 + flat.get(i + 1)), true, now - 100,
-                    List.of()));
+            BlockCoord position = new BlockCoord(64 + flat.get(i), 64, 64 + flat.get(i + 1));
+            if (seen.add(position)) {
+                doors.add(new DoorState(position, true, now - 100, List.of()));
+            }
         }
 
         List<DoorClosing> closings = watch.decide(doors, spirits, now, true);
@@ -95,9 +98,12 @@ class DoorWatchProperties {
             @ForAll("spiritSets") List<SpiritRef> spirits) {
         long now = 20_000L;
         List<DoorState> doors = new ArrayList<>();
+        Set<BlockCoord> seen = new HashSet<>();
         for (int i = 0; i + 1 < flat.size(); i += 2) {
-            doors.add(new DoorState(new BlockCoord(64 + flat.get(i), 64, 64 + flat.get(i + 1)), true, now - 1,
-                    List.of()));
+            BlockCoord position = new BlockCoord(64 + flat.get(i), 64, 64 + flat.get(i + 1));
+            if (seen.add(position)) {
+                doors.add(new DoorState(position, true, now - 1, List.of()));
+            }
         }
 
         List<DoorClosing> closings = watch.decide(doors, spirits, now, true);
