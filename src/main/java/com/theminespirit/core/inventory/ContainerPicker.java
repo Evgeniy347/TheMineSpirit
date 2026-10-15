@@ -1,0 +1,72 @@
+package com.theminespirit.core.inventory;
+
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
+
+public final class ContainerPicker {
+    private ContainerPicker() {
+    }
+
+    public static ContainerChoice choose(List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming) {
+        Objects.requireNonNull(containers, "Список контейнеров не может быть null: выбирать не из чего");
+        Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
+        Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что докладывать");
+        int partial = nearestMatching(containers, origin, container -> container.hasPartial(incoming));
+        if (partial >= 0) {
+            return new ContainerChoice.Chosen(partial);
+        }
+        int present = nearestMatching(containers, origin,
+                container -> container.hasFreeSlot() && container.hasKind(incoming));
+        if (present >= 0) {
+            return new ContainerChoice.Chosen(present);
+        }
+        int free = nearestMatching(containers, origin, ContainerSnapshot::hasFreeSlot);
+        if (free >= 0) {
+            return new ContainerChoice.Chosen(free);
+        }
+        return new ContainerChoice.Refused(refusal(containers, incoming));
+    }
+
+    private static String refusal(List<ContainerSnapshot> containers, Stack incoming) {
+        if (containers.isEmpty()) {
+            return "в радиусе нет допустимого контейнера: некуда положить '" + incoming.item()
+                    + "'. Проверьте, что рядом есть сундук, бочка или шалкер-бокс, и увеличьте радиус";
+        }
+        int withKind = 0;
+        for (ContainerSnapshot container : containers) {
+            if (container.hasKind(incoming)) {
+                withKind++;
+            }
+        }
+        return "во всех " + containers.size() + " контейнерах в радиусе нет свободного слота под '"
+                + incoming.item() + "': ни одного пустого слота, неполных стопок нет, контейнеров с таким "
+                + "предметом " + withKind + ". Освободите место или увеличьте радиус";
+    }
+
+    private static int nearestMatching(List<ContainerSnapshot> containers, BlockCoord origin,
+            Predicate<ContainerSnapshot> test) {
+        int best = -1;
+        long bestDistance = Long.MAX_VALUE;
+        for (int index = 0; index < containers.size(); index++) {
+            ContainerSnapshot container = containers.get(index);
+            if (!test.test(container)) {
+                continue;
+            }
+            long distance = distanceSqr(origin, container.pos());
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = index;
+            }
+        }
+        return best;
+    }
+
+    private static long distanceSqr(BlockCoord from, BlockCoord to) {
+        long dx = (long) from.x() - to.x();
+        long dy = (long) from.y() - to.y();
+        long dz = (long) from.z() - to.z();
+        return dx * dx + dy * dy + dz * dz;
+    }
+}
