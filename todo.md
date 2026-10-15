@@ -106,6 +106,7 @@
 - [x] Стройка: place_block, fill, clear_area, dig_area, build_schematic (свой JSON схем), бронь клеток, свои блоки помечаются, итог данными, перезапуск (чеклист 29)
 - [x] Техдолг: locate_tree проверяет форму дерева кодом рубки — постройка из брёвен не дерево (muse, 13.10)
 - [x] Сторож шаблона GameTest: сцена со спавном духа/блоками не на empty, нарушения переведены на arena (deepseek-web; финал — главный агент, 13.10)
+- [x] Чеклист 34, часть А: ядро лагеря похода и быстрых укреплений — Camp/CampSpot, SafePointChoice, ShelterPlan 4×4 с крышей, BarricadePlan, FortifyBatcher, DismantlePlan, FortifyDecision/FortifyPlan (muse, 15.10); части Б–В ждут 30
 - [x] Техдолг: gather не крутится на недостижимой стоянке — исключение стоянок, ≤3 подхода на цель, Approach отказывает по пройденному тупику (muse, 13.10)
 - [x] Техдолг: clear_area/dig_area бросают недостижимую стоянку — общий ApproachFailureTracker с gather (muse, 13.10)
 - [x] `scripts/gametest.sh` в Git Bash на Windows: запасной замок на `mkdir` без `flock`, тест `check-gametest-lock.sh`, переменные `THEMINESPIRIT_GAMETEST_WAIT`/`NOFLOCK`/`GRADLEW` (4f925c8, 14.10)
