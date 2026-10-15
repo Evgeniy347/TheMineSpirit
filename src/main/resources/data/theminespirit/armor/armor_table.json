@@ -1,0 +1,12 @@
+{
+  "worn_fraction": 0.1,
+  "material_order": [
+    { "match": ["leather_helmet", "leather_chestplate", "leather_leggings", "leather_boots"], "rank": 0 },
+    { "match": ["golden_helmet", "golden_chestplate", "golden_leggings", "golden_boots"], "rank": 1 },
+    { "match": ["chainmail_helmet", "chainmail_chestplate", "chainmail_leggings", "chainmail_boots"], "rank": 2 },
+    { "match": ["iron_helmet", "iron_chestplate", "iron_leggings", "iron_boots"], "rank": 3 },
+    { "match": ["turtle_helmet"], "rank": 3 },
+    { "match": ["diamond_helmet", "diamond_chestplate", "diamond_leggings", "diamond_boots"], "rank": 4 },
+    { "match": ["netherite_helmet", "netherite_chestplate", "netherite_leggings", "netherite_boots"], "rank": 5 }
+  ]
+}
