@@ -52,7 +52,7 @@ final class HerdLure {
                     + " тиков: животное не идёт за кормом");
             return;
         }
-        BlockCoord returnPoint = session.pen.nearestInside(escapeePos, LURE_INSET);
+        BlockCoord returnPoint = session.pen.lureTarget(escapeePos, LURE_INSET);
         if (!session.approach.isActive()) {
             session.approach.begin(new Vec3(returnPoint.x() + 0.5, returnPoint.y(), returnPoint.z() + 0.5), 1.5);
         }

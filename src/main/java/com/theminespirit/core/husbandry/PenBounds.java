@@ -25,6 +25,15 @@ public record PenBounds(BlockCoord center, int radius) {
         return nearestInside(pos, 0);
     }
 
+    /** Точка возврата приманкой: желаемый отступ от кромки, но не больше, чем позволяет радиус загона. */
+    public BlockCoord lureTarget(BlockCoord pos, int preferredInset) {
+        if (preferredInset < 0) {
+            throw new IllegalArgumentException("Отступ возврата " + preferredInset
+                    + " отрицательный: он двигал бы цель наружу загона");
+        }
+        return nearestInside(pos, Math.min(preferredInset, radius - 1));
+    }
+
     public BlockCoord nearestInside(BlockCoord pos, int margin) {
         Objects.requireNonNull(pos, "Позиция не может быть null: неизвестно, куда возвращать");
         if (margin < 0 || margin >= radius) {

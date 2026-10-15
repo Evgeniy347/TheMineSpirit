@@ -67,6 +67,18 @@ class PenBoundsTests {
     }
 
     @Test
+    void lureTarget_SmallestPenWithInsetOverRadius_StaysInsideWithoutThrowing() {
+        PenBounds pen = new PenBounds(CENTER, CatalogLimits.HERD_PEN_RADIUS_MIN);
+        BlockCoord outside = new BlockCoord(12, 64, 0);
+
+        BlockCoord returned = pen.lureTarget(outside, 2);
+
+        assertEquals(new BlockCoord(1, 64, 0), returned,
+                "В самом тесном загоне отступ 2 не помещается: точка возврата обязана сжаться до radius-1 от "
+                        + "кромки, а не уронить приманку исключением");
+    }
+
+    @Test
     void nearestInside_MarginOutOfRange_IsRejected() {
         PenBounds pen = new PenBounds(CENTER, 5);
         assertThrows(IllegalArgumentException.class, () -> pen.nearestInside(new BlockCoord(12, 64, 0), -1),
