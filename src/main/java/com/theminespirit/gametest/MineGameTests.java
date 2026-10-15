@@ -56,6 +56,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_happy", timeoutTicks = 400)
     public static void mineVein_FiveIronOreWithIronPickaxe_SucceedsWithoutTunnelsAndWithinReadBudget(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int z = 0; z <= 4; z++) {
             helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -115,6 +116,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_scale", timeoutTicks = 400)
     public static void mineVein_NoOreInRadius_ScansAtMostFourSlicesPerTick(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         SpiritEntity spirit = spawnWith(helper,
                 SPIRIT_START.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
@@ -145,6 +147,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_no_tool", timeoutTicks = 100)
     public static void mineVein_WoodenPickaxeOnIronOre_FailsFastWithTierReason(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         SpiritEntity spirit = spawnWith(helper,
@@ -169,6 +172,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_lava_neighbor", timeoutTicks = 400)
     public static void mineVein_OreWithLavaBehindFace_SkipsUnsafeAndLeavesLava(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int z = 0; z <= 4; z++) {
             helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -202,6 +206,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_water_above", timeoutTicks = 400)
     public static void mineVein_OreWithWaterAbove_IsNotTouched(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 3, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.WATER);
@@ -227,6 +232,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_sealed", timeoutTicks = 200)
     public static void mineVein_SealedOre_FailsWithoutStand(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         helper.setBlock(1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
@@ -257,6 +263,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_pit", timeoutTicks = 200)
     public static void mineVein_OreAboveThreeDeepPit_StaysAndSpiritKeepsHeight(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         for (int y = 0; y >= -2; y--) {
@@ -284,6 +291,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_gravel_ceiling", timeoutTicks = 400)
     public static void mineVein_OreUnderCeilingGravel_MinesFromSideAndIsNotBuried(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 3, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 4, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.GRAVEL);
@@ -358,6 +366,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_pocket", timeoutTicks = 400)
     public static void gather_DirtRingAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         // Запечатанная стоянка (4,1,4): воздух с каменным полом, с четырёх сторон блоки земли,
         // по диагоналям и снаружи камень, сверху запечатанный колпак (4,2,4): планировщик видит
@@ -404,6 +413,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_refill", timeoutTicks = 400)
     public static void gather_FewTargetsLeft_KeepsRefillingSearchEachTick(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int x = 1; x <= 2; x++) {
             for (int z = 0; z <= 2; z++) {
@@ -451,6 +461,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_logs", timeoutTicks = 200)
     public static void gather_WildcardLogFilter_CollectsAllMatchingLogs(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(1 + CAVE_SHIFT_INSIDE_ARENA, 1, 1 + CAVE_SHIFT_INSIDE_ARENA, Blocks.OAK_LOG);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 1, 1 + CAVE_SHIFT_INSIDE_ARENA, Blocks.OAK_LOG);
@@ -474,6 +485,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_forbidden", timeoutTicks = 100)
     public static void gather_ForbiddenContainerAndBedrock_RefuseAtOnceAndKeepChest(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 1, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.CHEST);
         ChestBlockEntity chest = (ChestBlockEntity) helper.getLevel()
@@ -504,6 +516,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_cancel", timeoutTicks = 400)
     public static void mineVein_CancelledMidWork_LeavesCaveUnchanged(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int z = 0; z <= 4; z++) {
             helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -541,6 +554,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_tool_break", timeoutTicks = 400)
     public static void mineVein_PickaxeWithOneDurabilityAndTwoOre_FailsMidway(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -566,6 +580,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_any", timeoutTicks = 400)
     public static void mineVein_AnyOreWithStonePickaxe_MinesCoalAndSkipsDiamond(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 1 + CAVE_SHIFT_INSIDE_ARENA, Blocks.COAL_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.DIAMOND_ORE);
@@ -592,6 +607,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_any_ore", timeoutTicks = 400)
     public static void gather_WildcardOreWithStonePickaxe_MinesCoalAndSkipsDiamond(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 1 + CAVE_SHIFT_INSIDE_ARENA, Blocks.COAL_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.DIAMOND_ORE);
@@ -620,6 +636,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "gather_any_ore_close", timeoutTicks = 400)
     public static void gather_WildcardOreDiamondCloserThanCoal_SkipsDiamond(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 1 + CAVE_SHIFT_INSIDE_ARENA, Blocks.DIAMOND_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.COAL_ORE);
@@ -695,6 +712,7 @@ public final class MineGameTests {
 
     @GameTest(template = "empty", batch = "mine_registry", timeoutTicks = 100)
     public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
         var ids = SpiritScripts.registryFor(spirit).ids();
         helper.assertTrue(ids.contains("mine_vein") && ids.contains("gather"),
