@@ -190,10 +190,37 @@ class AcquireScriptTests {
 
         script.suspend();
         script.resume();
-        script.cancel();
 
         assertEquals(ScriptStatus.RUNNING, run(script, 5),
                 "Управление до первого тика безопасно: подплан строится после, скрипт не падает");
+    }
+
+    @Test
+    void cancel_BeforeFirstTick_ImmediatelyCancelled() {
+        AcquireScript script = script(1, new StubSupplies(0, Map.of()), alwaysGatherable(),
+                new AtomicInteger());
+
+        script.cancel();
+
+        assertEquals(ScriptStatus.CANCELLED, run(script, 5),
+                "Отмена до первого тика сразу завершает скрипт: финальный статус CANCELLED, не FAILED");
+    }
+
+    @Test
+    void cancel_AfterNestedStarted_InsteadOfFailed() {
+        AtomicInteger ticks = new AtomicInteger();
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
+                NO_CONDITIONS);
+        assertEquals(ScriptStatus.RUNNING, script.tick(), "Первый тик строит подплан");
+        assertEquals(ScriptStatus.RUNNING, script.tick(), "Вложенный скрипт работает");
+
+        script.cancel();
+
+        assertEquals(ScriptStatus.CANCELLED, script.tick(),
+                "Отмена вложенного раннера обязана давать CANCELLED, а не FAILED: отмена — не провал");
+        assertNull(script.failureReason(), "CANCELLED не несёт причины провала: отмена — не ошибка");
     }
 
     @Test

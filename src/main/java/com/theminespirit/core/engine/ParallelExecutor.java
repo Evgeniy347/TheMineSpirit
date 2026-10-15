@@ -77,6 +77,12 @@ final class ParallelExecutor extends NodeExecutor {
             }
         }
         for (ScriptStatus result : results) {
+            if (result == ScriptStatus.CANCELLED) {
+                cancelAll();
+                return ScriptStatus.CANCELLED;
+            }
+        }
+        for (ScriptStatus result : results) {
             if (result == ScriptStatus.RUNNING) {
                 return ScriptStatus.RUNNING;
             }
@@ -94,6 +100,11 @@ final class ParallelExecutor extends NodeExecutor {
         for (ScriptStatus result : results) {
             if (result == ScriptStatus.RUNNING) {
                 return ScriptStatus.RUNNING;
+            }
+        }
+        for (ScriptStatus result : results) {
+            if (result == ScriptStatus.CANCELLED) {
+                return ScriptStatus.CANCELLED;
             }
         }
         String lastReason = null;

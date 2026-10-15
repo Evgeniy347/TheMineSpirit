@@ -62,6 +62,9 @@ public final class TaskRunner {
             reason = root.failureReason();
             cause = root.failureCause().orElse(null);
             failedAt = root.progress();
+        } else if (node == ScriptStatus.CANCELLED) {
+            status = RunStatus.CANCELLED;
+            suspended = false;
         }
         return status;
     }

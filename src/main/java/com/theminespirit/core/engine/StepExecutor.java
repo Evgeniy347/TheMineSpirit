@@ -23,6 +23,9 @@ abstract class StepExecutor extends SingleChildExecutor {
             failFrom(current());
             return ScriptStatus.FAILED;
         }
+        if (child == ScriptStatus.CANCELLED) {
+            return ScriptStatus.CANCELLED;
+        }
         if (child == ScriptStatus.SUCCEEDED) {
             rememberCompleted();
             index++;

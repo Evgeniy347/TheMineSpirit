@@ -31,6 +31,9 @@ final class FallbackExecutor extends SingleChildExecutor {
             rememberCompleted();
             return ScriptStatus.SUCCEEDED;
         }
+        if (child == ScriptStatus.CANCELLED) {
+            return ScriptStatus.CANCELLED;
+        }
         if (child == ScriptStatus.FAILED) {
             lastReason = current().failureReason();
             lastCause = current().failureCause().orElse(null);

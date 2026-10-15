@@ -106,7 +106,8 @@ public final class AcquireScript implements ScriptInstance {
                 return ScriptStatus.SUCCEEDED;
             }
             case CANCELLED -> {
-                return fail("подплан был отменён");
+                finalStatus = ScriptStatus.CANCELLED;
+                return ScriptStatus.CANCELLED;
             }
             case FAILED -> {
                 lastStepFailure = runner.failureReason().orElse("причина шага не указана");
@@ -224,6 +225,9 @@ public final class AcquireScript implements ScriptInstance {
     public void cancel() {
         if (runner != null) {
             runner.cancel();
+        }
+        if (finalStatus == null) {
+            finalStatus = ScriptStatus.CANCELLED;
         }
     }
 
