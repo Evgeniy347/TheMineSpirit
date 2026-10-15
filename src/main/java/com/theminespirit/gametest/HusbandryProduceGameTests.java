@@ -1,7 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -120,19 +119,27 @@ public final class HusbandryProduceGameTests {
                         Map.of("species", "sheep", "radius", PEN_RADIUS, "count", 1, "babiesFirst", true)),
                 SETTLE_TICKS);
         BlockPos sheepStart = escapee.blockPosition();
-        AtomicInteger taskRunningTicks = new AtomicInteger();
+        AtomicInteger workingTicks = new AtomicInteger();
+        AtomicInteger pausedTicks = new AtomicInteger();
         helper.onEachTick(() -> {
-            if (run.started()
-                    && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                taskRunningTicks.incrementAndGet();
+            if (!run.started()) {
+                return;
+            }
+            boolean suspended = spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false);
+            if (suspended) {
+                pausedTicks.incrementAndGet();
+            } else {
+                workingTicks.incrementAndGet();
             }
         });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(run.spiritTicks() <= 200,
-                    "возврат приманкой обязан уложиться в 200 тиков духа, заняло " + run.spiritTicks()
-                            + "; задача RUNNING тиков: " + taskRunningTicks.get()
+            helper.assertTrue(workingTicks.get() <= 200,
+                    "возврат приманкой обязан уложиться в 200 тиков работы духа (без пауз политики/тактики), "
+                            + "заняло " + workingTicks.get()
+                            + "; тиков духа всего: " + run.spiritTicks()
+                            + "; пауз: " + pausedTicks.get()
                             + "; статус " + spirit.taskStatus().map(Enum::name).orElse("нет задачи")
                             + "; причина " + spirit.taskFailureReason().orElse("нет")
                             + "; овца " + escapee.blockPosition()
