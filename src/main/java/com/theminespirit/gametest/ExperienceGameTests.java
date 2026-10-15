@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.experience.SettlementExperience;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -130,6 +131,33 @@ public final class ExperienceGameTests {
         int orbs = orbsNear(helper).size();
         helper.assertTrue(orbs == 0,
                 "опыт за руду, добытую духом, не превращается в сферы на земле: сфер " + orbs);
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "xp_pool", timeoutTicks = 200)
+    public static void blockBreaker_SpiritMinesOreWithNoPlayersOnline_PoolsThenGivesOnLogin(GameTestHelper helper) {
+        SettlementExperience.get(helper.getLevel().getServer()).drain();
+        SpiritEntity spirit = spirit(helper);
+        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
+        helper.setBlock(ORE_AT, Blocks.REDSTONE_ORE);
+        BlockBreaker breaker = new BlockBreaker(spirit);
+        helper.assertTrue(breaker.begin(helper.absolutePos(ORE_AT)) instanceof BlockBreaker.Started,
+                "дух с киркой обязан начать ломать редстоуновую руду");
+        runToEnd(breaker);
+
+        int pooled = SettlementExperience.get(helper.getLevel().getServer()).pending();
+        helper.assertTrue(pooled >= 1 && pooled <= 5,
+                "без игроков опыт за руду обязан копиться в пуле поселения (1..5 за редстоун), а в пуле " + pooled);
+        helper.assertTrue(orbsNear(helper).isEmpty(),
+                "без игроков опыт не бросается сферами на землю: он ждёт игрока в пуле");
+
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 3), "xp_pool_player");
+        helper.assertTrue(player.totalExperience >= 1,
+                "при входе игрока накопленный пул обязан достаться ему, а его опыт " + player.totalExperience);
+        helper.assertTrue(SettlementExperience.get(helper.getLevel().getServer()).pending() == 0,
+                "после выдачи пула игроку пул обязан обнулиться, а в нём "
+                        + SettlementExperience.get(helper.getLevel().getServer()).pending());
         GameTestFixtures.reset(helper);
         helper.succeed();
     }
