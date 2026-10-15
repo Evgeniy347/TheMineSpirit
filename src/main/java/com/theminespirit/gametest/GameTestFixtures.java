@@ -36,6 +36,7 @@ final class GameTestFixtures {
     private static final int SWEEP_MARGIN = 48;
     private static final int SWEEP_BELOW = 16;
     private static final int SWEEP_ABOVE = 40;
+    private static final int SWEEP_MIN_AGE_TICKS = 5;
     private static final int MAX_CHUNKS_EAST = 256;
 
     private GameTestFixtures() {
@@ -57,8 +58,10 @@ final class GameTestFixtures {
     }
 
     static void sweepEntities(GameTestHelper helper) {
+        // Тесты пачки стартуют одновременно: сетапы идут подряд в одном тике, соседи по пачке
+        // в этот момент новорождённые (возраст 0), а leftovers прошлых пачек прожили свои тесты.
         for (Entity entity : helper.getLevel().getEntities((Entity) null, sweepArea(helper),
-                e -> !(e instanceof Player))) {
+                e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS)) {
             entity.discard();
         }
     }
