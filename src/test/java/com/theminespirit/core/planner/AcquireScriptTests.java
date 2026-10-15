@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
@@ -277,6 +278,43 @@ class AcquireScriptTests {
     }
 
     @Test
+    void nearbyFurnace_Present_PlanSkipsConstruction() {
+        FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryOverride = Map.of("coal", 1);
+        supplies.stations = Set.of("furnace");
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
+                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "План обязан быть построен");
+        List<String> scripts = scriptsOf(plan.get());
+        assertTrue(!scripts.contains("craft:furnace"),
+                "Печь уже стоит в мире — подплан не вправе строить вторую: " + scripts);
+        assertTrue(!scripts.contains("gather:cobblestone"),
+                "Без постройки печи план не должен добывать булыжник под неё: " + scripts);
+    }
+
+    @Test
+    void nearbyFurnace_Absent_PlanBuildsFurnace() {
+        FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryOverride = Map.of("coal", 1);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
+                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+
+        Optional<TaskNode> plan = script.buildSubplan();
+
+        assertTrue(plan.isPresent(), "План обязан быть построен");
+        List<String> scripts = scriptsOf(plan.get());
+        assertTrue(scripts.contains("craft:furnace"),
+                "Рядом нет печи — резолвер обязан запланировать её постройку: " + scripts);
+        assertTrue(scripts.contains("gather:cobblestone"),
+                "Под постройку печи обязан быть запланирован булыжник: " + scripts);
+    }
+
+    @Test
     void constructor_BlankItem_IsRejectedWithReason() {
         String reason = assertThrows(IllegalArgumentException.class,
                 () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG,
@@ -329,6 +367,7 @@ class AcquireScriptTests {
         private final Map<String, Integer> chests;
         private List<ScriptCall> chestSteps;
         private Map<String, Integer> inventoryOverride = Map.of();
+        private Set<String> stations = Set.of();
 
         StubSupplies(int inventory, Map<String, Integer> chests) {
             this.inventory = inventory;
@@ -343,6 +382,11 @@ class AcquireScriptTests {
         @Override
         public Map<String, Integer> inventory() {
             return inventoryOverride;
+        }
+
+        @Override
+        public Set<String> nearbyStations() {
+            return stations;
         }
 
         @Override

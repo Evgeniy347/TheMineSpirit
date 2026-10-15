@@ -65,8 +65,9 @@ public final class AcquireBrainGameTests {
                             + (status == null ? "нет задачи" : status)
                             + ", причина: " + reloaded.taskFailureReason().orElse("нет"));
             assertCount(helper, reloaded, Items.WOODEN_PICKAXE, 1, "деревянная кирка после перезапуска");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 0,
-                    "дерево обязано быть израсходовано один раз, а не дважды: осталось "
+            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
+                    "подплан берёт 2 брёвна из 3 (верстак уже стоит, второй не строится), дерево не должно "
+                            + "израсходовываться дважды, осталось "
                             + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
             cleanup(helper, reloaded);
         });

@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class AcquireSuppliesTests {
@@ -122,6 +123,11 @@ class AcquireSuppliesTests {
                     }
                 }
                 return List.copyOf(steps);
+            }
+
+            @Override
+            public Set<String> nearbyStations() {
+                return Set.of();
             }
         };
     }

@@ -139,7 +139,7 @@ public final class AcquireScript implements ScriptInstance {
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {
             nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions,
-                    supplies.inventory()));
+                    supplies.inventory(), supplies.nearbyStations()));
         }
         TaskNode plan = new SequenceNode(nodes);
         plan = PlanValidator.validate(plan, catalog, conditions);

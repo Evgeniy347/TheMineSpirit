@@ -9,19 +9,24 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
+import com.theminespirit.neoforge.crafting.StationType;
 import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 
 /**
  * Снабжение для acquire: считает предмет в инвентаре духа и планирует шаги withdraw
@@ -29,6 +34,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class SpiritSupplies implements AcquireSupplies {
     private static final int SLICES_PER_TICK = 4;
+    private static final Set<Block> STATION_BLOCKS = Stream.of(StationType.values()).map(StationType::block)
+            .collect(Collectors.toUnmodifiableSet());
 
     private final SpiritEntity spirit;
     private final int radius;
@@ -112,6 +119,21 @@ public final class SpiritSupplies implements AcquireSupplies {
             left -= take;
         }
         return steps;
+    }
+
+    @Override
+    public Set<String> nearbyStations() {
+        BlockLocator.Search search = BlockLocator.search(spirit.level(), spirit.blockPosition(),
+                CatalogLimits.STATION_RADIUS_DEFAULT, STATION_BLOCKS);
+        Set<String> found = new LinkedHashSet<>();
+        while (!search.done()) {
+            for (BlockPos pos : search.step(SLICES_PER_TICK)) {
+                StationType.byBlock(spirit.level().getBlockState(pos).getBlock())
+                        .map(StationType::id)
+                        .ifPresent(found::add);
+            }
+        }
+        return found;
     }
 
     private static int count(Container container, IdFilter filter) {

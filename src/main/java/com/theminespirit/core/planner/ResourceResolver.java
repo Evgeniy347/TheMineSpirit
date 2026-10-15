@@ -30,6 +30,12 @@ public final class ResourceResolver {
         return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), inventory);
     }
 
+    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge,
+            Map<String, Integer> inventory, Set<String> presentStations) {
+        return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), inventory,
+                presentStations);
+    }
+
     public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
             ConditionCatalog conditions) {
         return resolve(item, count, knowledge, scripts, conditions, Map.of());
@@ -37,6 +43,11 @@ public final class ResourceResolver {
 
     public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
             ConditionCatalog conditions, Map<String, Integer> inventory) {
+        return resolve(item, count, knowledge, scripts, conditions, inventory, Set.of());
+    }
+
+    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
+            ConditionCatalog conditions, Map<String, Integer> inventory, Set<String> presentStations) {
         Objects.requireNonNull(item, "item не может быть null: без имени предмета резолвер не найдёт способ добычи");
         Objects.requireNonNull(knowledge,
                 "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
@@ -44,23 +55,27 @@ public final class ResourceResolver {
         Objects.requireNonNull(conditions, "conditions не может быть null");
         Objects.requireNonNull(inventory,
                 "inventory не может быть null: без инвентаря резолвер не предпочтёт имеющееся топливо");
+        Objects.requireNonNull(presentStations,
+                "presentStations не может быть null: без снимка станций резолвер построит печь там, где она уже стоит");
         if (count <= 0) {
             throw new IllegalArgumentException(
                     "Количество предмета должно быть больше 0, а получено " + count + ": нулевая цель не имеет смысла");
         }
-        TaskNode plan = new Resolution(knowledge, new HashMap<>(inventory)).resolve(item, count);
+        TaskNode plan = new Resolution(knowledge, new HashMap<>(inventory), presentStations).resolve(item, count);
         return PlanValidator.validate(plan, scripts, conditions);
     }
 
     private static final class Resolution {
         private final ResourceKnowledge knowledge;
         private final Map<String, Integer> remaining;
+        private final Set<String> presentStations;
         private final Set<String> path = new HashSet<>();
         private final Set<String> plannedStations = new HashSet<>();
 
-        private Resolution(ResourceKnowledge knowledge, Map<String, Integer> remaining) {
+        private Resolution(ResourceKnowledge knowledge, Map<String, Integer> remaining, Set<String> presentStations) {
             this.knowledge = knowledge;
             this.remaining = remaining;
+            this.presentStations = presentStations;
         }
 
         private TaskNode resolve(String item, int count) {
@@ -145,10 +160,14 @@ public final class ResourceResolver {
 
         private Optional<TaskNode> stationStep(String item) {
             Optional<String> station = knowledge.stationFor(item);
-            if (station.isEmpty() || !plannedStations.add(station.get())) {
+            if (station.isEmpty()) {
                 return Optional.empty();
             }
-            return Optional.of(resolve(station.get(), 1));
+            String id = station.get();
+            if (presentStations.contains(id) || !plannedStations.add(id)) {
+                return Optional.empty();
+            }
+            return Optional.of(resolve(id, 1));
         }
 
         private static int ingredientCount(Ingredient ingredient, long crafts, String item) {

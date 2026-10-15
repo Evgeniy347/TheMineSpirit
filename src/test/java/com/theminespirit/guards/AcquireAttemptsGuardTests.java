@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 class AcquireAttemptsGuardTests {
     private static final Path NEOFORGE = SourceFiles.MAIN.resolve("com/theminespirit/neoforge");
     private static final Pattern ATTEMPT_CONSTANT =
-            Pattern.compile("static\\s+final\\s+int\\s+\\w*ATTEMPT\\w*\\s*=", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("static\\s+final\\s+int\\s+\\w*ACQUIRE\\w*ATTEMPT\\w*\\s*=", Pattern.CASE_INSENSITIVE);
 
     private static List<String> attemptConstants(String file, String text) {
         List<String> found = new ArrayList<>();
@@ -40,11 +40,11 @@ class AcquireAttemptsGuardTests {
     }
 
     @Test
-    void attemptConstantPattern_ConstantWithAttemptInName_IsDetected() {
+    void attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected() {
         assertEquals(1, attemptConstants("X.java", "static final int ACQUIRE_ATTEMPTS = 3;").size(),
-                "Сторож ослеп: константа с ATTEMPT в имени должна находиться");
-        assertEquals(1, attemptConstants("X.java", "static final int MAX_ATTEMPTS = 5;").size(),
-                "Сторож ослеп: константа MAX_ATTEMPTS должна находиться");
+                "Сторож ослеп: константа с ACQUIRE и ATTEMPT в имени должна находиться");
+        assertEquals(1, attemptConstants("X.java", "static final int ACQUIRE_MAX_ATTEMPTS = 5;").size(),
+                "Сторож ослеп: константа ACQUIRE_MAX_ATTEMPTS должна находиться");
     }
 
     @Test
@@ -53,5 +53,7 @@ class AcquireAttemptsGuardTests {
                 "Сторож ложно срабатывает: константа без ATTEMPT в имени — не нарушение");
         assertTrue(attemptConstants("X.java", "int attempts = 0;").isEmpty(),
                 "Сторож ложно срабатывает: локальная переменная attempts — не константа предела");
+        assertTrue(attemptConstants("X.java", "static final int MAX_ATTEMPTS = 3;").isEmpty(),
+                "Сторож ложно срабатывает: константа попыток StandWalker (движение) не относится к acquire");
     }
 }

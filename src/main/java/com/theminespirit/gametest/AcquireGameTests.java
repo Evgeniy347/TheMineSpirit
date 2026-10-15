@@ -58,9 +58,9 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "деревянная кирка");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 0,
-                    "дерево обязано быть израсходовано: осталось "
-                            + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
+            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
+                    "верстак в мире — подплан строит только недостающие доски и палки (2 брёвна из 3), "
+                            + "осталось " + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
             cleanup(helper, spirit);
         });
     }
@@ -102,8 +102,8 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 1, "железный слиток");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.IRON_ORE) == 0,
-                    "железная руда обязана быть израсходована: осталось "
+            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.IRON_ORE) == IRON_ORE_COUNT - 1,
+                    "план добывает ровно одну руду под слиток — лишняя не нужна, осталось "
                             + FullCycleScene.countBlocks(helper, Blocks.IRON_ORE));
             cleanup(helper, spirit);
         });
@@ -217,8 +217,9 @@ public final class AcquireGameTests {
                                 + (status == null ? "нет задачи" : status)
                                 + ", причина: " + reloaded.taskFailureReason().orElse("нет"));
                 assertCount(helper, reloaded, Items.WOODEN_PICKAXE, 1, "деревянная кирка после перезапуска");
-                helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 0,
-                        "дерево обязано быть израсходовано один раз: осталось "
+                helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
+                        "подплан, переживший перезапуск, строит ту же экономию (2 брёвна из 3 под второй "
+                                + "верстак не идут), осталось "
                                 + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
                 cleanup(helper, reloaded);
             });

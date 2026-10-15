@@ -35,6 +35,10 @@ public enum StationType {
         return Arrays.stream(values()).filter(type -> type.id.equals(ItemIds.normalize(id))).findFirst();
     }
 
+    public static Optional<StationType> byBlock(Block block) {
+        return Arrays.stream(values()).filter(type -> type.block() == block).findFirst();
+    }
+
     public String id() {
         return id;
     }

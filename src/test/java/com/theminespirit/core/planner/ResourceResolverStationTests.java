@@ -82,6 +82,30 @@ class ResourceResolverStationTests {
     }
 
     @Test
+    void resolve_FurnaceStandingInWorld_SkipsFurnaceBuildingPlan() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("furnace"));
+
+        assertEquals(seq(
+                gather("iron_ore", 1),
+                smelt("iron_ingot", 1)), plan,
+                "Печь уже стоит в мире — план обязан плавить сразу: добыча 8 булыжников под вторую печь падает "
+                        + "в мире, где булыжника нет");
+    }
+
+    @Test
+    void resolve_CraftingTableStandingInWorld_FurnacePlannedWithoutTable() {
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1),
+                Set.of("crafting_table"));
+
+        assertEquals(seq(
+                gather("iron_ore", 1),
+                seq(gather("cobblestone", 8), craft("furnace", 1)),
+                smelt("iron_ingot", 1)), plan,
+                "Верстак в мире гасит только свой шаг: печь строится, но без второго верстака — иначе план "
+                        + "тратит 4 доски на дубль того, что уже стоит");
+    }
+
+    @Test
     void resolve_SmeltAndThreeByThreeCraft_EachStationOnce() {
         TaskNode plan = ResourceResolver.resolve("iron_pickaxe", 1, WORLD);
 

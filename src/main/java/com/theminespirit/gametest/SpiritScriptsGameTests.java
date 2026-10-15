@@ -40,7 +40,7 @@ public final class SpiritScriptsGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
     public static void acquire_InCatalogAndRegistry_ListedAsImplemented(GameTestHelper helper) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
 
