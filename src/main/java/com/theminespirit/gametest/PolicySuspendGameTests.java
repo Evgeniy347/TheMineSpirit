@@ -69,7 +69,7 @@ public final class PolicySuspendGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "после возобновления дух обязан дойти до цели: статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет")
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -116,7 +116,7 @@ public final class PolicySuspendGameTests {
                     "после возобновления ломка обязана завершиться: итог " + session.outcome() + ", причина " + session.failureReason());
             helper.assertTrue(helper.getBlockState(DIRT).isAir() && session.mined() == 1,
                     "после возобновления блок обязан быть сломан ровно один раз, добыто " + session.mined());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

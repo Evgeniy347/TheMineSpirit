@@ -58,7 +58,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(new Finding("locate_block", List.of(expected)).equals(finding),
                     "locate_block с фильтром diamond_ore обязан назвать ближайшую алмазную руду в пяти блоках "
                             + expected + ", а не изумрудную рядом и не дальнюю алмазную: " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -78,7 +78,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
                     "locate_tree с породой oak обязан назвать основание дуба в шести блоках " + expected
                             + ", а не берёзу в двух блоках: " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -100,7 +100,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
                     "locate_tree обязан пропустить ближний столб из трёх дубовых брёвен без листвы и назвать "
                             + "основание настоящего дуба в шести блоках " + expected + ": " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -120,7 +120,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(finding != null && finding.script().equals("locate_tree") && finding.isEmpty(),
                     "поиск дерева при одних брёвнах столба без листвы обязан завершиться успехом с пустой находкой "
                             + "(«не найдено»), а не выдуманной позицией столба: " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -141,7 +141,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(new Finding("locate_container", List.of(expected)).equals(finding),
                     "locate_container обязан назвать ближайший сундук в четырёх блоках " + expected
                             + ", а не бочку подальше: " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -159,7 +159,7 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(finding != null && finding.script().equals("locate_block") && finding.isEmpty(),
                     "поиск несуществующей руды обязан завершиться успехом с пустой находкой («не найдено»), а не "
                             + "ошибкой и не выдуманной позицией: " + finding);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -190,7 +190,7 @@ public final class PerceptionLocateGameTests {
         helper.assertTrue(script.maxExaminedPositionsPerTick() <= ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
                 "за тик поиск читает не больше " + ScanTuning.SLICES_PER_TICK + " срезов по " + POSITIONS_PER_SLICE
                         + " позиций, а прочитал " + script.maxExaminedPositionsPerTick());
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 

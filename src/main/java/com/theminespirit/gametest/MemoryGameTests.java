@@ -88,7 +88,7 @@ public final class MemoryGameTests {
                             + spirit.finding().orElse(null));
             helper.assertTrue(spirit.memory().recall("iron") != null,
                     "после remember точка обязана лежать в памяти духа");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -117,7 +117,7 @@ public final class MemoryGameTests {
                     "все точки ответа обязаны быть типа resource: " + finding.sightings());
             helper.assertTrue(spirit.memory().all().size() == 4,
                     "recall_all не должен менять память, точек в ней " + spirit.memory().all().size());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -138,7 +138,7 @@ public final class MemoryGameTests {
                     "после forget recall обязан отвечать «не найдено» (пустая находка), а ответил: " + finding);
             helper.assertTrue(spirit.memory().all().isEmpty(),
                     "после forget единственной точки память обязана быть пустой: " + spirit.memory().all());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -168,7 +168,7 @@ public final class MemoryGameTests {
                             .equals(memory.recall("home")),
                     "после загрузки из NBT дух обязан помнить обе точки с типом и измерением, а помнит: "
                             + memory.all());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -221,7 +221,7 @@ public final class MemoryGameTests {
                     "причина отказа обязана назвать тип и то, что память заполнена, а она: '" + reason + "'");
             helper.assertTrue(spirit.memory().recall("one_more") == null && spirit.memory().all().size() == 16,
                     "отказ не должен ни вытеснять старую точку, ни добавлять новую: " + spirit.memory().all().size());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -285,7 +285,7 @@ public final class MemoryGameTests {
         helper.assertTrue(rejected == 0 && messages.get(0).contains("resource"),
                 "неизвестный тип обязан отклоняться с перечнем допустимых строчных значений, ответ: " + messages
                         + ", результат " + rejected);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 }

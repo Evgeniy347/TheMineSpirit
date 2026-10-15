@@ -65,7 +65,7 @@ public final class HusbandryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 2,
                     "на пару уходит ровно 2 пшеницы из 4, фактически осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -99,7 +99,7 @@ public final class HusbandryGameTests {
                                 + " тиков (естественный рост за тест меньше): иначе кормили ближних кур, "
                                 + "а не дальних цыплят, возраст " + chick.getAge());
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -132,7 +132,7 @@ public final class HusbandryGameTests {
             helper.assertTrue(alive(helper, Cow.class).size() == 2,
                     "кормление не убивает: живых коров обязано остаться 2, фактически "
                             + alive(helper, Cow.class).size());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -153,7 +153,7 @@ public final class HusbandryGameTests {
             List<Cow> cows = alive(helper, Cow.class);
             helper.assertTrue(cows.size() == 2 && cows.stream().noneMatch(Cow::isBaby),
                     "без корма стадо обязано остаться нетронутым (2 взрослые, без телят), фактически " + cows.size());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -177,7 +177,7 @@ public final class HusbandryGameTests {
                             + cows.size());
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
                     "несостоявшаяся пара корм не тратит: пшеницы обязано остаться 4");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -199,7 +199,7 @@ public final class HusbandryGameTests {
                     "чужим кормом свиней не кормят: обе обязаны остаться целы");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
                     "пшеница свиньям не подходит: все 4 обязаны остаться");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -261,7 +261,7 @@ public final class HusbandryGameTests {
                             + again.done());
             helper.assertTrue(alive(helper, Cow.class).size() == 6,
                     "после двух пар коров обязано стать 6, фактически " + alive(helper, Cow.class).size());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -297,7 +297,7 @@ public final class HusbandryGameTests {
             helper.assertTrue(stoppedAtOnce.get(),
                     "после suspend навигация духа обязана остановиться в тот же тик: иначе рефлекс политики не "
                             + "перехватит движение к стаду");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

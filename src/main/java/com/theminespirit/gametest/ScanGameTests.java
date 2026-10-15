@@ -67,7 +67,7 @@ public final class ScanGameTests {
             helper.assertTrue(GameTestFixtures.blockCount(observation, "minecraft:stone") == 0,
                     "фильтр *_ore обязан отсекать камень: иначе filter не уменьшает наблюдение для ИИ, "
                             + "фактически камня " + GameTestFixtures.blockCount(observation, "minecraft:stone"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -90,7 +90,7 @@ public final class ScanGameTests {
                     "scan без фильтра обязан видеть весь камень пола (не меньше 58 блоков), фактически " + stone);
             helper.assertTrue(GameTestFixtures.blockCount(observation, "minecraft:iron_ore") == IRON_ORES,
                     "scan без фильтра обязан видеть и руду: iron_ore ожидалось " + IRON_ORES);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -127,7 +127,7 @@ public final class ScanGameTests {
                 "пустые секции обязаны пропускаться: прочитано " + session.examinedPositions() + " из " + cubeVolume);
         helper.assertTrue(steps <= (125 + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK,
                 "скан радиуса 32 обязан закончиться не более чем за 32 порции, а потребовалось " + steps);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -148,7 +148,7 @@ public final class ScanGameTests {
             helper.assertTrue(took >= 2,
                     "scan радиуса 32 обязан растягиваться на несколько тиков, а закончился за " + took
                             + ": весь куб прочитан одним тиком");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -175,7 +175,7 @@ public final class ScanGameTests {
                 "скан у края загруженной области обязан встретить незагруженные чанки, пропущено " + scan.skippedChunks());
         helper.assertTrue(after == before,
                 "скан порциями не должен грузить чанки: было " + before + ", стало " + after);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -214,7 +214,7 @@ public final class ScanGameTests {
         helper.assertTrue(maxChunksDuringScan == before,
                 "во время скана число загруженных чанков не должно расти: было " + before + ", максимум " + maxChunksDuringScan);
         helper.getLevel().getChunkSource().updateChunkForced(forced, false);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -253,7 +253,7 @@ public final class ScanGameTests {
             helper.assertTrue(spirit.observation().orElse(null) == firstObservation[0],
                     "отменённый scan не должен писать частичное наблюдение: прежнее наблюдение обязано "
                             + "остаться тем же объектом");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

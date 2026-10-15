@@ -80,7 +80,7 @@ public final class PolicyLayerGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "после возобновления goto обязан дойти в обход лавы, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет")
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -116,7 +116,7 @@ public final class PolicyLayerGameTests {
             for (SpiritEntity spirit : spirits) {
                 spirit.discard();
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

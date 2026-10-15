@@ -72,7 +72,7 @@ public final class PolicyDangerGameTests {
                             + cellDistance(helper, spirit, creeperAt));
             helper.assertTrue(spirit.tickCount >= farSince[0] + HOLD_AFTER_FLEE_TICKS, "ещё не прошло 40 тиков после отхода");
             helper.assertTrue(closestAfter[0] >= CREEPER_HOLD, "после отхода дух не должен возвращаться ближе 7 блоков, самое близкое " + closestAfter[0]);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -105,7 +105,7 @@ public final class PolicyDangerGameTests {
             helper.assertTrue(cellDistance(helper, spirit, creeperAt) >= CHARGED_MOVED_AWAY,
                     "заряженный крипер в 10 блоках: радиус урона ~12, дух обязан отойти вдоль края хотя бы до "
                             + CHARGED_MOVED_AWAY + " блоков, сейчас " + cellDistance(helper, spirit, creeperAt));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -124,7 +124,7 @@ public final class PolicyDangerGameTests {
             helper.assertTrue(scene.ticks() >= 40, "ещё не прошло 40 тиков наблюдения");
             helper.assertTrue(spirit.position().distanceTo(start) < 0.3,
                     "крипер дальше 7 блоков: ложного срабатывания быть не должно, дух сместился на " + spirit.position().distanceTo(start));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -153,7 +153,7 @@ public final class PolicyDangerGameTests {
             helper.assertTrue(tnt[0] != null && tnt[0].isRemoved(), "запал 80 тиков ещё не догорел");
             helper.assertTrue(distanceAtBlast[0] >= TNT_HOLD, "к взрыву дух обязан быть не ближе 9 блоков (радиус урона 8 и запас на смещение внутри клетки), было " + distanceAtBlast[0]);
             helper.assertTrue(scene.minHealth() >= spirit.getMaxHealth(), "дух вне радиуса взрыва: здоровье не должно меняться, минимум " + scene.minHealth());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -193,7 +193,7 @@ public final class PolicyDangerGameTests {
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
             helper.assertTrue(!helper.getBlockState(cell).is(Blocks.NETHER_PORTAL) && !helper.getBlockState(cell.above()).is(Blocks.NETHER_PORTAL),
                     "через 100 тиков дух обязан стоять вне клетки портала, клетка " + cell.toShortString());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -218,7 +218,7 @@ public final class PolicyDangerGameTests {
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
             helper.assertTrue(cell.getZ() <= 2 && spirit.level().dimension() == home,
                     "после отказа дух не должен идти к порталу: клетка " + cell.toShortString() + ", измерение " + spirit.level().dimension().location());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -238,7 +238,7 @@ public final class PolicyDangerGameTests {
                     "игрок стоит в клетке портала: follow обязан отказаться идти туда, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал: «" + reason + "»");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

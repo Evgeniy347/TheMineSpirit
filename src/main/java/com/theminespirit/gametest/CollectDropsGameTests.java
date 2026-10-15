@@ -64,7 +64,7 @@ public final class CollectDropsGameTests {
             helper.assertTrue(GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
                     "после подбора в области не должно остаться кучек булыжника: предметы не подобранные, "
                             + "а скрипт завершился — ложный успех");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -91,7 +91,7 @@ public final class CollectDropsGameTests {
                     "булыжник не проходит фильтр *_log: его подбирать нельзя, а кучка обязана остаться нетронутой");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "в инвентарь не должно попасть ни одного булыжника");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -121,7 +121,7 @@ public final class CollectDropsGameTests {
             helper.assertTrue(totalItems(helper, spirit) == totalBefore,
                     "суммарное число предметов (инвентарь + мир) обязано остаться прежним: было " + totalBefore
                             + ", стало " + totalItems(helper, spirit));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -156,7 +156,7 @@ public final class CollectDropsGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(!onPillar.isRemoved() && onPillar.getItem().getCount() == 4,
                     "кучка на столбе обязана остаться целой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -186,7 +186,7 @@ public final class CollectDropsGameTests {
                     "дух не должен спускаться в яму за предметом: y был " + startY + ", стал " + spirit.getY());
             helper.assertTrue(!drop.isRemoved() && drop.getItem().getCount() == 1,
                     "предмет на дне ямы обязан остаться нетронутым");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -216,7 +216,7 @@ public final class CollectDropsGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(!display.isRemoved() && display.getItem().getCount() == 1,
                     "кучка с бесконечной задержкой не должна быть тронута");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -240,7 +240,7 @@ public final class CollectDropsGameTests {
                     "в инвентаре обязана быть только обычная кучка (2): вещь, адресованную игроку, дух не забирает");
             helper.assertTrue(!foreign.isRemoved() && foreign.getItem().getCount() == 4,
                     "кучка, адресованная другому игроку, обязана остаться нетронутой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -260,7 +260,7 @@ public final class CollectDropsGameTests {
             int took = run.spiritTicks();
             helper.assertTrue(took <= 2,
                     "успех без подбора обязан наступить сразу, не позже чем через 2 тика, а наступил через " + took);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -284,7 +284,7 @@ public final class CollectDropsGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             helper.assertTrue(!far.isRemoved() && far.getItem().getCount() == 7,
                     "кучка за пределами радиуса, считая от точки старта духа, не должна трогаться");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -325,7 +325,7 @@ public final class CollectDropsGameTests {
                             + collector.entityQueries() + ": запрос каждый тик нагружает сервер");
             helper.assertTrue(collector.entityQueries() >= 2,
                     "тест на масштаб бессмыслен без повторных опросов: запросов " + collector.entityQueries());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -371,7 +371,7 @@ public final class CollectDropsGameTests {
                     + GameTestFixtures.countInWorld(helper, Items.DIAMOND)
                     + GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 35 * 64 + 64 + 1,
                     "суммарное число предметов обязано сохраниться: было 36 стопок булыжника и алмаз");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -402,7 +402,7 @@ public final class CollectDropsGameTests {
                     "дешёвая кучка обязана остаться в мире целой");
             helper.assertTrue(GameTestFixtures.dropsInArea(helper, Items.IRON_INGOT).isEmpty(),
                     "выброшенных стопок железа быть не должно: новое дешевле лежащего");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -442,7 +442,7 @@ public final class CollectDropsGameTests {
                     "квоты постоянной части обязаны остаться целыми");
             helper.assertTrue(!heap.isRemoved() && heap.getItem().getCount() == 2,
                     "алмазы обязаны остаться в мире нетронутыми");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -484,7 +484,7 @@ public final class CollectDropsGameTests {
                     "железо обязано остаться нетронутым: ничего не выброшено");
             helper.assertTrue(!heap.isRemoved() && heap.getItem().getCount() == 1,
                     "изумруд обязан остаться в мире нетронутым");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -526,7 +526,7 @@ public final class CollectDropsGameTests {
                     "в инвентаре обязано остаться 16 стопок булыжника (36 слотов − 20 алмазов): каждый алмаз "
                             + "вытеснил ровно одну стопку, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

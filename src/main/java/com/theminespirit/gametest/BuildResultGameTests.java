@@ -66,7 +66,7 @@ public final class BuildResultGameTests {
                     && Integer.valueOf(0).equals(data.get("failed"))
                     && Integer.valueOf(0).equals(data.get("missing")),
                     "чистая заливка обязана идти без пропусков, провалов и недостачи, фактически " + data);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -87,7 +87,7 @@ public final class BuildResultGameTests {
             Map<String, Object> data = dataOf(helper, spirit, "успешный place_block");
             helper.assertTrue(Integer.valueOf(1).equals(data.get("placed")) && "cobblestone".equals(data.get("block")),
                     "итог обязан назвать placed=1 и block=cobblestone, фактически " + data);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -112,7 +112,7 @@ public final class BuildResultGameTests {
             helper.assertTrue(Integer.valueOf(2).equals(data.get("removed"))
                     && Integer.valueOf(0).equals(data.get("placed")),
                     "итог обязан назвать removed=2 и placed=0, фактически " + data);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -133,7 +133,7 @@ public final class BuildResultGameTests {
             Map<String, Object> data = dataOf(helper, spirit, "успешный dig_area");
             helper.assertTrue(Integer.valueOf(1).equals(data.get("removed")),
                     "итог обязан назвать removed=1, фактически " + data);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -154,7 +154,7 @@ public final class BuildResultGameTests {
             Map<String, Object> data = dataOf(helper, spirit, "успешный build_schematic");
             helper.assertTrue(Integer.valueOf(17).equals(data.get("placed")),
                     "итог обязан назвать placed=17, фактически " + data);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -178,7 +178,7 @@ public final class BuildResultGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("17") && reason.contains("5"),
                     "причина обязана называть числа 17 и 5, фактически: " + reason);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

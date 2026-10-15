@@ -74,7 +74,7 @@ public final class TacticsFactsGameTests {
         helper.assertTrue(!hidden.visible(), "хаск за стеной высотой два обязан быть невидим: прямая видимость идёт через клетки мира");
         helper.assertTrue("minecraft:husk".equals(seen.type()), "тип врага — id сущности, получено " + seen.type());
         helper.assertTrue(!seen.targetingSelf(), "хаск без цели не целится в духа");
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -99,7 +99,7 @@ public final class TacticsFactsGameTests {
                 + " (песок падает и не годится), получено " + self.blocks());
         helper.assertTrue(self.rangedAmmo() == ARROWS, "стрел при наличии лука " + ARROWS + ", получено " + self.rangedAmmo());
         helper.assertTrue(self.hpFraction() == 1.0, "здоровье духа полное, доля " + self.hpFraction());
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -122,7 +122,7 @@ public final class TacticsFactsGameTests {
         Optional<EnemyFact> nearest = collected.context().enemies().stream()
                 .min(Comparator.comparingDouble(e -> e.pos().distanceTo(collected.context().self().pos())));
         helper.assertTrue(nearest.isPresent(), "ближайший враг обязан быть в фактах");
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 }

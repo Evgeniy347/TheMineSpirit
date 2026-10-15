@@ -103,7 +103,7 @@ public final class CraftScaleGameTests {
             helper.assertTrue(finder.maxSlicesPerTick() <= MAX_SLICES_PER_TICK,
                     "поиск станции обязан брать не больше " + MAX_SLICES_PER_TICK + " срезов за тик, взял "
                             + finder.maxSlicesPerTick());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

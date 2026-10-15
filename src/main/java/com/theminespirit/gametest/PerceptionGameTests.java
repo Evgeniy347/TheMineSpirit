@@ -80,7 +80,7 @@ public final class PerceptionGameTests {
                     "scan_blocks не собирает сущности, а в результате: " + result.entities());
             helper.assertTrue(spirit.observation().isEmpty(),
                     "scan_blocks кладёт результат восприятия, а не полное наблюдение: полный скан остался за scan");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -111,7 +111,7 @@ public final class PerceptionGameTests {
                             + result.entities().stream().map(EntityRef::type).toList());
             helper.assertTrue(result.blocks().isEmpty(),
                     "scan_entities не собирает блоки, а в результате: " + result.blocks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -142,7 +142,7 @@ public final class PerceptionGameTests {
                         + ", иначе «только сущности» стоит как полный скан");
         helper.assertTrue(entities.entityQueries() == 1,
                 "scan_entities опрашивает сущности ровно один раз за скан: запросов " + entities.entityQueries());
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -175,7 +175,7 @@ public final class PerceptionGameTests {
             helper.assertTrue(spirit.blockPosition().equals(before),
                     "sense_hazard отдаёт факты и не двигает духа: было " + before + ", стало " + spirit.blockPosition()
                             + ". Рефлексы остаются за политиками");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -209,7 +209,7 @@ public final class PerceptionGameTests {
                     "лавы и воды на площадке нет, а в фактах: " + result.hazards());
             helper.assertTrue(spirit.blockPosition().equals(before),
                     "sense_hazard отдаёт факты и не двигает духа: было " + before + ", стало " + spirit.blockPosition());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -249,7 +249,7 @@ public final class PerceptionGameTests {
         helper.assertTrue(script.blockReads() > 0,
                 "тест не доказывает порции: ни одного чтения загруженных блоков не было");
         far.discard();
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 

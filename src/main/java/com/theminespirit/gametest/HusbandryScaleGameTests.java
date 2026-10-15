@@ -117,7 +117,7 @@ public final class HusbandryScaleGameTests {
                     && HusbandryGameTests.alive(helper, Pig.class).size() == 3
                     && HusbandryGameTests.alive(helper, Chicken.class).size() == 3,
                     "все 12 голов обязаны остаться целы: сводка и кормление не убивают");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

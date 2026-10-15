@@ -66,7 +66,7 @@ public final class PolicyHazardGameTests {
                     "отход от лавы обязан уложиться в " + REFLEX_LIMIT_TICKS + " тиков духа, ушло " + scene.ticks());
             helper.assertTrue(scene.minHealth() >= spirit.getMaxHealth(),
                     "рядом с лавой дух не должен терять здоровье: минимум " + scene.minHealth() + " из " + spirit.getMaxHealth());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -84,7 +84,7 @@ public final class PolicyHazardGameTests {
             helper.assertTrue(scene.ticks() <= REFLEX_LIMIT_TICKS,
                     "выход из лавы обязан уложиться в " + REFLEX_LIMIT_TICKS + " тиков духа, ушло " + scene.ticks());
             helper.assertTrue(spirit.isAlive() && spirit.getHealth() > 0, "дух обязан остаться живым после выхода из лавы");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -105,7 +105,7 @@ public final class PolicyHazardGameTests {
             helper.assertTrue(reachedWater[0], "горящий дух обязан дойти до воды в 4 блоках, тик духа " + scene.ticks());
             helper.assertTrue(!spirit.isOnFire(), "после воды огонь на духе обязан погаснуть, тик духа " + scene.ticks());
             helper.assertTrue(scene.ticks() <= 120, "тушение обязано уложиться в 120 тиков духа, ушло " + scene.ticks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -148,7 +148,7 @@ public final class PolicyHazardGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.startsWith("застрял") || reason.startsWith("не дошёл"),
                     "причина провала обязана называть, что дух не дошёл: «" + reason + "»");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -270,7 +270,7 @@ public final class PolicyHazardGameTests {
             helper.assertTrue(spirit.getPathfindingMalus(PathType.WATER) == PathingConfigurator.WATER_COST,
                     "вода обязана иметь высокую цену " + PathingConfigurator.WATER_COST + ", а не запрет; штраф " + spirit.getPathfindingMalus(PathType.WATER));
             helper.assertTrue(spirit.getMaxFallDistance() == 2, "предел спуска в пути 2 блока, а у духа " + spirit.getMaxFallDistance());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -315,7 +315,7 @@ public final class PolicyHazardGameTests {
                 helper.setBlock(6, 0, 6, Blocks.STONE);
             }
             LOGGER.info("PATHTYPES {}", report);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }

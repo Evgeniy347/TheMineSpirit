@@ -102,7 +102,7 @@ public final class RestTaskScaleGameTests {
                             + activeTotalDelta.get());
             helper.assertTrue(afterCancelPolls.get() == 0,
                     "После завершения всех задач watcher не должен опрашивать никого: за тик " + afterCancelPolls.get());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

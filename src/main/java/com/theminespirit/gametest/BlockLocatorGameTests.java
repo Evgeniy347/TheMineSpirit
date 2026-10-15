@@ -78,7 +78,7 @@ public final class BlockLocatorGameTests {
         helper.assertTrue(search.examinedPositions() == 0,
                 "секция с камнем, но без искомого блока, обязана пропускаться по палитре, а прочитано "
                         + search.examinedPositions() + " позиций");
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 

@@ -61,7 +61,7 @@ public final class ExperienceGameTests {
             int orbs = orbsNear(helper).size();
             helper.assertTrue(orbs == 0,
                     "сферы опыта на землю не бросаем: опыт уходит игроку напрямую, а на земле сфер " + orbs);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -86,7 +86,7 @@ public final class ExperienceGameTests {
             helper.assertTrue(diff <= 1,
                     "при двух игроках опыт делится поровну с разницей не больше 1, а разница " + diff
                             + " (первый " + first.totalExperience + ", второй " + second.totalExperience + ")");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -194,7 +194,7 @@ public final class ExperienceGameTests {
             helper.assertTrue(player.totalExperience == firstReward + secondReward,
                     "опыт игрока обязан равняться сумме наград двух мобов (" + (firstReward + secondReward)
                             + "), а он " + player.totalExperience);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }

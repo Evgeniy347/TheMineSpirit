@@ -54,7 +54,7 @@ public final class TacticsScaleGameTests {
             for (SpiritEntity spirit : spirits) {
                 spirit.discard();
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

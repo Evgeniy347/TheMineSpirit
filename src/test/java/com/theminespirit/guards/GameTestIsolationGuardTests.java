@@ -130,6 +130,85 @@ class GameTestIsolationGuardTests {
                 "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
     }
 
+    @Test
+    void gameTestBody_SecondResetCall_IsReported() {
+        String sample = "class Sample {\n"
+                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
+                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
+                + "        GameTestFixtures.reset(helper);\n"
+                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
+                + "        helper.succeedWhen(() -> {\n"
+                + "            GameTestFixtures.reset(helper);\n"
+                + "        });\n"
+                + "    }\n"
+                + "}\n";
+
+        assertEquals(List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"), finishOffendersOf(sample),
+                "Сторож ослеп: поздний reset в лямбде убивает давно бегущих соседей по пачке — там обязан "
+                        + "быть узкий finish");
+    }
+
+    @Test
+    void gameTestBody_ResetAndFinish_IsAccepted() {
+        String sample = "class Sample {\n"
+                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
+                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
+                + "        GameTestFixtures.reset(helper);\n"
+                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
+                + "        helper.succeedWhen(() -> {\n"
+                + "            GameTestFixtures.finish(helper);\n"
+                + "        });\n"
+                + "    }\n"
+                + "}\n";
+
+        assertEquals(List.of(), finishOffendersOf(sample),
+                "Сторож ложно срабатывает: стартовый reset плюс узкий finish в лямбде — законная сцена");
+    }
+
+    @Test
+    void gameTestFinish_NestedResets_UseFinishOnly() {
+        List<String> offenders = new ArrayList<>();
+        collectFinishOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
+
+        assertEquals(List.of(), offenders,
+                "Поздняя зачистка (внутри лямбды succeedWhen/runAfterDelay) обязана быть узкой "
+                        + "GameTestFixtures.finish: широкая убивает давно бегущих соседей по пачке — тесты "
+                        + "пачки идут одновременно, что доказал красный прогон after1 (20 падений, 5 тиков 0 "
+                        + "за секунду в пачке build_result). Стартовая зачистка остаётся широкой reset. "
+                        + "Правило: todo.md → «Изоляция сцен GameTest». Нарушители");
+    }
+
+    private static void collectFinishOffenders(Map<Path, String> sources, List<String> offenders) {
+        sources.forEach((file, text) -> {
+            for (Method method : gameTestMethods(text)) {
+                if (countOccurrences(method.body(), "GameTestFixtures.reset(") > 1) {
+                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
+                            + " — " + method.name());
+                }
+            }
+        });
+    }
+
+    private static List<String> finishOffendersOf(String text) {
+        List<String> names = new ArrayList<>();
+        for (Method method : gameTestMethods(text)) {
+            if (countOccurrences(method.body(), "GameTestFixtures.reset(") > 1) {
+                names.add(method.name());
+            }
+        }
+        return names;
+    }
+
+    private static int countOccurrences(String body, String marker) {
+        int count = 0;
+        int at = 0;
+        while ((at = body.indexOf(marker, at)) >= 0) {
+            count++;
+            at += marker.length();
+        }
+        return count;
+    }
+
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {
         sources.forEach((file, text) -> {
             List<String> cleanHelpers = cleanHelpers(text);

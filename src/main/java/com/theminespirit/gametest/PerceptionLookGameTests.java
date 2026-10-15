@@ -47,7 +47,7 @@ public final class PerceptionLookGameTests {
             helper.assertTrue(expected.equals(spirit.finding().orElse(null)),
                     "look_at на золотой блок в трёх блоках обязан описать блок " + expected + ", а описал: "
                             + spirit.finding().orElse(null));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -70,7 +70,7 @@ public final class PerceptionLookGameTests {
             helper.assertTrue(expected.equals(spirit.finding().orElse(null)),
                     "look_at на клетку с коровой обязан описать воздух и корову " + expected + ", а описал: "
                             + spirit.finding().orElse(null));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -91,7 +91,7 @@ public final class PerceptionLookGameTests {
             helper.assertTrue(expected.equals(spirit.finding().orElse(null)),
                     "look_at на сундук рядом обязан описать блок и контейнер " + expected + ", а описал: "
                             + spirit.finding().orElse(null));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -120,7 +120,7 @@ public final class PerceptionLookGameTests {
                         + "превращает вопрос ИИ в загрузку мира");
         helper.assertTrue(script.blockReads() == 0,
                 "в незагруженном чанке блок не читается: чтений " + script.blockReads());
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 }

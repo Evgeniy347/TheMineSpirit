@@ -112,7 +112,7 @@ public final class BuildRestartGameTests {
                     && Integer.valueOf(4).equals(data.fields().get("placed")),
                     "счётчики переживают перезапуск: итог обязан назвать placed=4, фактически "
                             + current.taskResult().map(result -> result.toString()).orElse("пусто"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

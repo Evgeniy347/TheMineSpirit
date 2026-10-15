@@ -155,7 +155,7 @@ public final class PolicyProtectionGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("добыто 1 из 2") && reason.contains("пропущено защищённых: 1"),
                     "итог называет добытое и число пропущенных защищённых блоков: «" + reason + "»");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -243,7 +243,7 @@ public final class PolicyProtectionGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED, "цель вне рабочей зоны: goto обязан провалиться");
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.startsWith("вне рабочей зоны"), "причина называет рабочую зону: «" + reason + "»");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -268,7 +268,7 @@ public final class PolicyProtectionGameTests {
             helper.assertTrue(zone.excess(new BlockCoord(cell.getX(), cell.getY(), cell.getZ())) <= 3,
                     "дух за зоной на " + zone.excess(new BlockCoord(cell.getX(), cell.getY(), cell.getZ())) + " блоков: обязан вернуться в допуск 3");
             helper.assertTrue(spirit.tickCount - teleportedAt[0] <= RETURN_LIMIT_TICKS, "возврат обязан уложиться в " + RETURN_LIMIT_TICKS + " тиков");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -298,7 +298,7 @@ public final class PolicyProtectionGameTests {
             helper.assertTrue(reason.startsWith("цель вышла за границы рабочей зоны"), "причина называет выход цели за зону: «" + reason + "»");
             BlockPos cell = spirit.blockPosition();
             helper.assertTrue(zone.excess(new BlockCoord(cell.getX(), cell.getY(), cell.getZ())) <= 3, "дух обязан остаться в зоне");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

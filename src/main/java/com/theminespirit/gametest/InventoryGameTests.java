@@ -60,7 +60,7 @@ public final class InventoryGameTests {
 
         helper.assertTrue(open instanceof ContainerAccess.Opened opened && opened.container().getContainerSize() == 27,
                 "одиночный сундук обязан открываться как контейнер на 27 слотов, фактически " + describe(open));
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -72,7 +72,7 @@ public final class InventoryGameTests {
 
         helper.assertTrue(open instanceof ContainerAccess.Opened opened && opened.container().getContainerSize() == 54,
                 "два соседних сундука обязаны открываться как двойной на 54 слота, фактически " + describe(open));
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -91,7 +91,7 @@ public final class InventoryGameTests {
         helper.assertTrue(shulker instanceof ContainerAccess.Opened opened
                 && opened.container().getContainerSize() == 27,
                 "шалкер-бокс обязан открываться как контейнер на 27 слотов, фактически " + describe(shulker));
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -110,7 +110,7 @@ public final class InventoryGameTests {
                     "печи, воронки, раздатчики и эндер-сундук запрещены: блок в (" + x + ",1,2) обязан дать отказ "
                             + "с пояснением, фактически " + describe(open));
         }
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -128,7 +128,7 @@ public final class InventoryGameTests {
         helper.assertTrue(open instanceof ContainerAccess.Refused refused && refused.reason().contains("добыч"),
                 "сундук структуры с нераскрытой таблицей добычи обязан дать отказ с пояснением про добычу, "
                         + "иначе дух забрал бы чужую добычу, фактически " + describe(open));
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -157,7 +157,7 @@ public final class InventoryGameTests {
                         + "и повреждённые предметы с обычными и игрок потеряет вещь");
         helper.assertTrue(mapper.sampleFor(stacks.get(0).variant()).is(Items.COBBLESTONE),
                 "образец варианта обязан хранить предмет для обратной раскладки в контейнер");
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -198,7 +198,7 @@ public final class InventoryGameTests {
                             + "тик. Максимум за тик: " + runner.maxMovesPerTick());
             helper.assertTrue(countAll(from) + countAll(chest) == 640,
                     "Предметы не теряются и не дублируются при порционном переносе");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -233,7 +233,7 @@ public final class InventoryGameTests {
             helper.assertTrue(countAll(from) == 128 && countAll(chest) == 256,
                     "Отмена оставляет состояние целым: каждое перемещение — целая операция, в источнике 128, "
                             + "в сундуке 256, фактически " + countAll(from) + " и " + countAll(chest));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -277,7 +277,7 @@ public final class InventoryGameTests {
                     "Бегун не теряет и не дублирует предметы при провале: было 768, извне украдено 192, "
                             + "в контейнерах обязано остаться 576, фактически "
                             + (countAll(from) + countAll(chest)));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -334,7 +334,7 @@ public final class InventoryGameTests {
                     "у духа не должно остаться булыжника: все 10 уехали в сундук");
             helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 10,
                     "в сундуке обязано оказаться 10 булыжника, фактически " + chestCount(helper, Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -369,7 +369,7 @@ public final class InventoryGameTests {
             helper.assertTrue(chest.getItem(1).is(Items.DIRT) && chest.getItem(2).isEmpty(),
                     "земля обязана стоять второй без дырок между стопками: слот 1 — " + chest.getItem(1)
                             + ", слот 2 — " + chest.getItem(2));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -406,7 +406,7 @@ public final class InventoryGameTests {
                     "инвентарь духа обязан остаться нетронутым: все 10 булыжника при нём");
             helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 0,
                     "в полный сундук не должно попасть ни одного булыжника");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -435,7 +435,7 @@ public final class InventoryGameTests {
                             + chestCount(helper, Items.COBBLESTONE));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "у духа не должно остаться булыжника: всё имевшееся уехало");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -485,7 +485,7 @@ public final class InventoryGameTests {
             helper.assertTrue(pickaxeStacks(helper) == 2,
                     "целая и повреждённая кирки обязаны остаться разными стопками: слияние разных вариантов "
                             + "потеряло бы вещь игрока");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -510,7 +510,7 @@ public final class InventoryGameTests {
             helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 100,
                     "в двойном сундуке обязано оказаться 100 булыжника, фактически "
                             + chestCount(helper, Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -565,7 +565,7 @@ public final class InventoryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND) == 0
                     && chestCount(helper, Items.DIAMOND) == 5,
                     "алмазы не входят в постоянную часть и уходят целиком");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -592,7 +592,7 @@ public final class InventoryGameTests {
                     "без триггера сундук обязан остаться пустым: разгрузка ничего не делает");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD) == 20,
                     "инвентарь духа обязан остаться нетронутым");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -636,7 +636,7 @@ public final class InventoryGameTests {
                             + "при смерти. Фактически " + spirit.equipmentDropChance(EquipmentSlot.CHEST));
             helper.assertTrue(snapshotInventory(spirit).equals(afterFirst.get()),
                     "повторный вызов обязан ничего не менять (идемпотентность)");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -663,7 +663,7 @@ public final class InventoryGameTests {
                     && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) == 1
                     && GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 0,
                     "остальные кирки обязаны остаться в инвентаре");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -688,7 +688,7 @@ public final class InventoryGameTests {
                             + spirit.getMainHandItem());
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE) == 1,
                     "прежняя деревянная кирка обязана вернуться в инвентарь");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -710,7 +710,7 @@ public final class InventoryGameTests {
                             + spirit.taskFailureReason().orElse("нет причины"));
             helper.assertTrue(spirit.getMainHandItem().isEmpty(),
                     "при провале рука обязана остаться пустой: ничего не перемещено");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -752,7 +752,7 @@ public final class InventoryGameTests {
             helper.assertTrue(spirit.getMainHandItem().getDamageValue() == 1,
                     "износ обязан списываться с кирки в руке: урон должен быть 1, фактически "
                             + spirit.getMainHandItem().getDamageValue());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -788,7 +788,7 @@ public final class InventoryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH) == 24,
                     "у духа обязаны остаться 24 факела постоянной части, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.TORCH));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -827,7 +827,7 @@ public final class InventoryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(far, Items.TORCH) == 64,
                     "в полный дальний сундук добавился только заполнитель: факелов в нём быть не должно, "
                             + "фактически " + GameTestFixtures.countInInventory(far, Items.TORCH));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -858,7 +858,7 @@ public final class InventoryGameTests {
                             + GameTestFixtures.countInInventory(far, Items.COBBLESTONE));
             helper.assertTrue(GameTestFixtures.countInInventory(near, Items.COBBLESTONE) == 0,
                     "ближний сундук не тронут: булыжник идёт к неполной стопке в дальнем");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -943,7 +943,7 @@ public final class InventoryGameTests {
                             + spirit.taskFailureReason().orElse("нет причины"));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 10,
                     "инвентарь духа обязан остаться нетронутым: в запретный сундук ничего не кладут");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -970,7 +970,7 @@ public final class InventoryGameTests {
                             + spirit.taskFailureReason().orElse("нет причины"));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 10,
                     "инвентарь духа обязан остаться нетронутым");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -991,7 +991,7 @@ public final class InventoryGameTests {
         helper.assertTrue(missing.isEmpty(),
                 "все точные id из item_values.json и base_kit.json обязаны существовать в реестре предметов: "
                         + "иначе ценность и набор ссылаются на несуществующие предметы. Отсутствуют: " + missing);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -1038,7 +1038,7 @@ public final class InventoryGameTests {
                             + "подбор и разгрузка парсили бы JSON заново. Загрузок: " + InventoryTables.valueLoads());
             helper.assertTrue(InventoryTables.kitLoads() == 1,
                     "базовый набор читается один раз за процесс. Загрузок: " + InventoryTables.kitLoads());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -1086,7 +1086,7 @@ public final class InventoryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(live.getInventory(), Items.COBBLESTONE) == 10,
                     "у духа обязано остаться 10 булыжника из 20: перенесены только недостающие 6, фактически "
                             + GameTestFixtures.countInInventory(live.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

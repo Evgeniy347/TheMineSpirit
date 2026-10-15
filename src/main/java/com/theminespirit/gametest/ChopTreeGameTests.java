@@ -137,7 +137,7 @@ public final class ChopTreeGameTests {
                             && spirit.taskFailureReason().orElse("").contains("пропущено защищённых"),
                     "итог называет число пропущенных защищённых брёвен: " + spirit.taskStatus() + ", " + spirit.taskFailureReason());
             PolicyConfig.setProtectedZones(List.of());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

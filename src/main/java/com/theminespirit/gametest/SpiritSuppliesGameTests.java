@@ -51,7 +51,7 @@ public final class SpiritSuppliesGameTests {
                         + supplies.inInventory("iron_ingot"));
         helper.assertTrue(supplies.inInventory("diamond") == 0,
                 "отсутствующий предмет обязан дать ноль, а не ошибку");
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -74,7 +74,7 @@ public final class SpiritSuppliesGameTests {
                 "инвентарь обязан содержать уголь, фактически " + inventory.getOrDefault("coal", 0));
         helper.assertTrue(inventory.size() == 2,
                 "инвентарь обязан содержать только занятые предметы, фактически " + inventory);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -95,7 +95,7 @@ public final class SpiritSuppliesGameTests {
         helper.assertTrue(steps.equals(expected),
                 "один сундук обязан дать один шаг с его мировыми координатами и числом не больше нужного, "
                         + "шаги: " + steps);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -121,7 +121,7 @@ public final class SpiritSuppliesGameTests {
                                 "item", "iron_ingot", "count", 3)));
         helper.assertTrue(steps.equals(expected),
                 "ближний сундук обязан идти первым и отдать всё своё, дальний — добирать остаток, шаги: " + steps);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -145,7 +145,7 @@ public final class SpiritSuppliesGameTests {
         helper.assertTrue(steps.isEmpty(),
                 "пустой сундук и сундук с нераскрытой таблицей добычи обязаны быть пропущены без шагов, "
                         + "шаги: " + steps);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -164,7 +164,7 @@ public final class SpiritSuppliesGameTests {
                 "сундук на расстоянии 4 не должен попадать в радиус 2, шаги: " + near);
         helper.assertTrue(far.size() == 1,
                 "тот же сундук обязан найтись в радиусе 4, шаги: " + far);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 

@@ -105,7 +105,7 @@ public final class BuildingGameTests {
                     "8 блоков обязаны израсходоваться ровно: двойного расхода нет");
             helper.assertTrue(run.spiritTicks() <= 380,
                     "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло " + run.spiritTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -141,7 +141,7 @@ public final class BuildingGameTests {
                     - GameTestFixtures.countInInventory(secondSpirit.getInventory(), Items.COBBLESTONE);
             helper.assertTrue(spent == 4,
                     "потрачено обязано быть ровно 4 блока: двойной постановки и двойного расхода нет, потрачено " + spent);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -173,7 +173,7 @@ public final class BuildingGameTests {
             }
             helper.assertTrue(inWorld == 3,
                     "в мире обязано стоять ровно 3 блока: что было, то поставили, дальше честный отказ, стоит " + inWorld);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -213,7 +213,7 @@ public final class BuildingGameTests {
                 helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
                         "материал при отказе по зоне обязан остаться целым");
                 PolicyConfig.setProtectedZones(List.of());
-                GameTestFixtures.reset(helper);
+                GameTestFixtures.finish(helper);
             });
         } catch (RuntimeException error) {
             PolicyConfig.setProtectedZones(List.of());
@@ -290,7 +290,7 @@ public final class BuildingGameTests {
                     "поставленный духом блок обязан помечаться меткой духа: иначе дух не разберёт свою постройку");
             helper.assertTrue(run.spiritTicks() <= 300,
                     "постановка одного блока обязана уложиться в 300 тиков духа, заняло " + run.spiritTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -313,7 +313,7 @@ public final class BuildingGameTests {
                     "занятая клетка обязана остаться камнем");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
                     "материал при отказе обязан остаться в инвентаре");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -332,7 +332,7 @@ public final class BuildingGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(helper.getBlockState(target).is(Blocks.COBBLESTONE),
                     "в дальней клетке обязан стоять булыжник: дух подошёл и поставил");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -353,7 +353,7 @@ public final class BuildingGameTests {
                     "причина обязана называть числа «нужно 1, есть 0», фактически: " + reason);
             helper.assertTrue(helper.getBlockState(target).isAir(),
                     "без материала клетка обязана остаться пустой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

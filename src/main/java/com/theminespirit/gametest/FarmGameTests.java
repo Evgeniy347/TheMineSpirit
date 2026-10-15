@@ -126,7 +126,7 @@ public final class FarmGameTests {
         helper.assertTrue(view.reads() == 2 * table.size(),
                 "одна клетка читается двумя обращениями к миру (земля и верх): ожидалось " + 2 * table.size()
                         + ", фактически " + view.reads());
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
@@ -162,7 +162,7 @@ public final class FarmGameTests {
                             + "морковь не берётся: ожидалось " + expected + ", найдено " + found);
             helper.assertTrue(targets.maxSlicesPerTick() <= 4,
                     "поиск берёт не больше 4 срезов за тик, максимум за тик: " + targets.maxSlicesPerTick());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -200,7 +200,7 @@ public final class FarmGameTests {
                             + "запрещена");
             helper.assertTrue(targets.maxSlicesPerTick() <= 4,
                     "поиск берёт не больше 4 срезов за тик, максимум за тик: " + targets.maxSlicesPerTick());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -232,7 +232,7 @@ public final class FarmGameTests {
                     "кроме 12 вспаханных клеток мир обязан остаться прежним, изменилось " + changedBlocks(helper, before));
             helper.assertTrue(helper.getBlockState(new BlockPos(5, FLOOR_Y, 5)).is(Blocks.WATER),
                     "вода обязана остаться на месте");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -270,7 +270,7 @@ public final class FarmGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 5,
                     "с пяти зрелых клеток обязано быть собрано ровно 5 пшеницы, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -312,7 +312,7 @@ public final class FarmGameTests {
             helper.assertTrue(changedBlocks(helper, before) == 12,
                     "кроме 12 вспаханных клеток мир обязан остаться прежним, изменилось "
                             + changedBlocks(helper, before));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -336,7 +336,7 @@ public final class FarmGameTests {
                     "земля в 4 блоках от воды обязана стать пашней");
             helper.assertTrue(helper.getBlockState(new BlockPos(6, FLOOR_Y, 5)).is(Blocks.DIRT),
                     "земля в 5 блоках от воды обязана остаться землёй: вспаханная там пашня пересохла бы");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -356,7 +356,7 @@ public final class FarmGameTests {
                     "без мотыги отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
             helper.assertTrue(changedBlocks(helper, before) == 0,
                     "при отказе мир не меняется, изменилось блоков: " + changedBlocks(helper, before));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -387,7 +387,7 @@ public final class FarmGameTests {
                     "до поломки вспахана ровно одна клетка, фактически пашни " + farmland
                             + "; done=" + run.done() + " из 3, тик духа " + run.totalTicks()
                             + ", причина: " + reason);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -410,7 +410,7 @@ public final class FarmGameTests {
                     "сорная трава обязана быть срублена рукой");
             helper.assertTrue(helper.getBlockState(new BlockPos(5, FLOOR_Y, 4)).is(Blocks.FARMLAND),
                     "чистая земля обязана стать пашней");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -430,7 +430,7 @@ public final class FarmGameTests {
                     "земля под камнем не вспахивается");
             helper.assertTrue(helper.getBlockState(new BlockPos(4, FLOOR_Y + 1, 4)).is(Blocks.STONE),
                     "камень над землёй дух не ломает");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -455,7 +455,7 @@ public final class FarmGameTests {
             }
             int seeds = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS);
             helper.assertTrue(seeds == 1, "из 10 семян должно остаться ровно 1, фактически " + seeds);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -477,7 +477,7 @@ public final class FarmGameTests {
                     "без семян отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
             helper.assertTrue(changedBlocks(helper, before) == 0,
                     "при отказе мир не меняется, изменилось блоков: " + changedBlocks(helper, before));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -504,7 +504,7 @@ public final class FarmGameTests {
                     "причина провала обязана назвать кончившиеся семена, фактически: " + reason);
             helper.assertTrue(countBlock(helper, Blocks.WHEAT) == 2,
                     "посажено ровно две клетки, фактически пшеницы " + countBlock(helper, Blocks.WHEAT));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -543,7 +543,7 @@ public final class FarmGameTests {
                     "в тёмной клетке посев не удержится: она обязана остаться пустой");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 3,
                     "семя на тёмную клетку не списывается: из 4 должно остаться 3");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -586,7 +586,7 @@ public final class FarmGameTests {
                     "морковь при crop = wheat обязана остаться нетронутой и зрелой");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.CARROT) == 0,
                     "морковь не должна попасть в инвентарь");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -614,7 +614,7 @@ public final class FarmGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) >= 3,
                     "без пересадки семена только прибавляются: было 3, стало "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -637,7 +637,7 @@ public final class FarmGameTests {
             int spent = 16 - GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL);
             helper.assertTrue(spent >= 2 && spent <= 4,
                     "возраст растёт на 2..5 за единицу, поэтому до зрелости хватит 2..4 единиц, потрачено " + spent);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -655,7 +655,7 @@ public final class FarmGameTests {
             assertSucceeded(helper, spirit, "одна единица муки обязана быть потрачена, задача успешна");
             int left = GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL);
             helper.assertTrue(left == 4, "при count = 1 тратится ровно одна единица: из 5 остаться 4, осталось " + left);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -675,7 +675,7 @@ public final class FarmGameTests {
                     "без муки отказ обязан случиться до первого действия, за 2 тика духа, заняло " + run.spiritTicks());
             helper.assertTrue(changedBlocks(helper, before) == 0 && cropAge(helper, new BlockPos(3, FLOOR_Y, 3)) == 0,
                     "при отказе мир не меняется");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -695,7 +695,7 @@ public final class FarmGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL) == 5,
                     "на зрелые посевы мука не тратится: обязано остаться 5, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.BONE_MEAL));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -738,7 +738,7 @@ public final class FarmGameTests {
             int wheat = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT);
             helper.assertTrue(wheat == 27, "за три сбора по 9 клеток обязано быть собрано 27 пшеницы, фактически "
                     + wheat);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -763,7 +763,7 @@ public final class FarmGameTests {
             for (BlockPos cell : cells) {
                 helper.assertTrue(cropAge(helper, cell) == 0, "каждая клетка обязана быть собрана и пересажена");
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -815,7 +815,7 @@ public final class FarmGameTests {
                         "клетка " + cell + " обязана остаться пашней, а там "
                                 + helper.getBlockState(cell).getBlock());
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -862,7 +862,7 @@ public final class FarmGameTests {
                     "после отмены инвентарь не пополняется");
             helper.assertTrue(navigationStoppedAtCancel.get(),
                     "отмена в движении обязана остановить навигацию сразу, а не дать духу дойти до цели");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -895,7 +895,7 @@ public final class FarmGameTests {
             int standing = countBlock(helper, Blocks.WHEAT);
             helper.assertTrue(standing == 1,
                     "вторая зрелая клетка до сбора не дошла: пшеницы на корню обязано остаться 1, осталось " + standing);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -944,7 +944,7 @@ public final class FarmGameTests {
             for (BlockPos cell : cells) {
                 helper.assertTrue(cropAge(helper, cell) == 0, "каждая клетка обязана быть пересажена");
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -976,7 +976,7 @@ public final class FarmGameTests {
             helper.assertTrue(run.safetyReads() <= safetyBudget,
                     "чтений безопасности обязано быть не больше " + safetyBudget + ", прочитано " + run.safetyReads());
             assertPerTickBudgets(helper, run);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -998,7 +998,7 @@ public final class FarmGameTests {
                             + run.failureReason());
             helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9, "обязано получиться 9 пашни");
             assertPerTickBudgets(helper, run);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -1165,7 +1165,7 @@ public final class FarmGameTests {
                             + "навигация не доводит духа до стоянки, работа обязана идти оттуда, где он стоит, а не "
                             + "считаться «без места для духа». Статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

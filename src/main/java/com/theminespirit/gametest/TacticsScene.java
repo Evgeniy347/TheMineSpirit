@@ -72,7 +72,7 @@ final class TacticsScene {
     static void finish(GameTestHelper helper, SpiritEntity spirit) {
         spirit.discard();
         sweep(helper);
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
     }
 
     static void sweep(GameTestHelper helper) {

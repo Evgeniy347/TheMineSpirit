@@ -49,7 +49,7 @@ public final class ScriptProgressGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             assertCountedProgress(helper, seen, "gather", COBBLE_TARGET);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -67,7 +67,7 @@ public final class ScriptProgressGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             assertCountedProgress(helper, seen, "mine_vein", ORE_TARGET);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -90,7 +90,7 @@ public final class ScriptProgressGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             assertCountedProgress(helper, seen, "chop_tree", CHOP_TARGET);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -114,7 +114,7 @@ public final class ScriptProgressGameTests {
                         && progress.target() == null,
                         "У goto нет счётчика: ожидалось goto (или ещё не созданный скрипт) без done/target, получено " + progress);
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

@@ -87,7 +87,7 @@ public final class CaptureGameTests {
                             + sheep.blockPosition().toShortString() + "\n" + probe.report("овца вышла из кольца"));
             helper.assertTrue(ringBlocks(helper) >= 24,
                     "кольцо вокруг овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -127,7 +127,7 @@ public final class CaptureGameTests {
             helper.assertTrue(maxColumn(helper) == 3,
                     "кольцо у ступеньки местами обязано быть из 3 блоков: стенка в 2 блока от низкой земли "
                             + "лишь на 1 выше высокого пола, и овца уходит прыжком");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -188,7 +188,7 @@ public final class CaptureGameTests {
                     "причина провала обязана объяснять нехватку блоков, фактически: " + reason);
             helper.assertTrue(alive(helper).size() == 1,
                     "провал без блоков обязан оставлять овцу целой: иначе отлов калечит стадо");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

@@ -154,7 +154,7 @@ public final class RestTaskCancelGameTests {
                     "Каждый блок кучи обязан быть либо цел, либо сломан с дропом (в инвентаре или на земле): целых "
                             + blocksLeft(helper) + ", булыжника у духа и на земле " + cobbleTotal(helper, spirit)
                             + " из " + HEAP_SIZE);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

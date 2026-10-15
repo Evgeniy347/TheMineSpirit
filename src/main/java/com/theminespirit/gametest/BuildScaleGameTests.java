@@ -75,7 +75,7 @@ public final class BuildScaleGameTests {
             helper.assertTrue(spirit.tickCount - startTick.get() <= 380,
                     "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло "
                             + (spirit.tickCount - startTick.get()));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

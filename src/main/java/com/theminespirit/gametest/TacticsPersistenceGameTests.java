@@ -62,7 +62,7 @@ public final class TacticsPersistenceGameTests {
                 helper.assertTrue(reloaded.tactics().stepCalls() > 0, "после загрузки тактика оценивает обстановку");
                 reloaded.discard();
                 ward.discard();
-                GameTestFixtures.reset(helper);
+                GameTestFixtures.finish(helper);
                 helper.succeed();
             });
         });
@@ -85,7 +85,7 @@ public final class TacticsPersistenceGameTests {
             helper.assertTrue(reloaded.tactics().combatMode() == CombatMode.DEFENSIVE, "режим после сбоя — по умолчанию DEFENSIVE");
             helper.assertTrue(reloaded.isAlive() && reloaded.tactics().failures() == 0, "дух жив и тактика работает");
             reloaded.discard();
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }

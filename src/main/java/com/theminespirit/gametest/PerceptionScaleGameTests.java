@@ -90,7 +90,7 @@ public final class PerceptionScaleGameTests {
                     "запросов сущностей не больше, чем завершённых сканов, то есть не больше одного на тик на духа: "
                             + entityQueries + " при пределе " + (long) SPIRITS * DRIVEN_TICKS);
             clearSlab(helper, slab);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

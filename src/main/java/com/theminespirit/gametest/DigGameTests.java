@@ -83,7 +83,7 @@ public final class DigGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
                     "камень даёт дроп булыжника: все 8 обязаны подобраться, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -110,7 +110,7 @@ public final class DigGameTests {
                     && spirit.taskFailureReason().orElse("").contains("17")) {
                 helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.STONE),
                         "мир обязан остаться нетронутым: отказ идёт до первого блока");
-                GameTestFixtures.reset(helper);
+                GameTestFixtures.finish(helper);
             }
         });
     }

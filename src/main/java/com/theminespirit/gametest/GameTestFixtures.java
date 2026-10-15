@@ -47,6 +47,21 @@ final class GameTestFixtures {
     }
 
     static void reset(GameTestHelper helper, int clearHeight) {
+        clearBlocks(helper, clearHeight);
+        clearEntities(helper, clearHeight);
+        sweepEntities(helper);
+    }
+
+    static void finish(GameTestHelper helper) {
+        finish(helper, CLEAR_HEIGHT);
+    }
+
+    static void finish(GameTestHelper helper, int clearHeight) {
+        clearBlocks(helper, clearHeight);
+        clearEntities(helper, clearHeight);
+    }
+
+    private static void clearBlocks(GameTestHelper helper, int clearHeight) {
         for (int x = -CLEAR_MARGIN; x < FLOOR_SIZE + CLEAR_MARGIN; x++) {
             for (int y = 0; y < clearHeight; y++) {
                 for (int z = -CLEAR_MARGIN; z < FLOOR_SIZE + CLEAR_MARGIN; z++) {
@@ -54,7 +69,13 @@ final class GameTestFixtures {
                 }
             }
         }
-        sweepEntities(helper);
+    }
+
+    private static void clearEntities(GameTestHelper helper, int clearHeight) {
+        for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper, clearHeight),
+                e -> !(e instanceof Player))) {
+            entity.discard();
+        }
     }
 
     static void sweepEntities(GameTestHelper helper) {

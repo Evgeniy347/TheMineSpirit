@@ -88,7 +88,7 @@ public final class ClearGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 9,
                     "дроп обязан подобраться в инвентарь: 9 булыжников, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -154,7 +154,7 @@ public final class ClearGameTests {
                     "отказ по запечатанной стоянке обязан наступить за 200 тиков духа "
                             + "(общая стоянка исключается после трёх неудачных подходов), заняло "
                             + run.spiritTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -189,7 +189,7 @@ public final class ClearGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 2,
                     "в инвентаре обязан лежать дроп двух убранных блоков, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -213,7 +213,7 @@ public final class ClearGameTests {
                         "опора под духом обязана остаться целой: без вето дух подрубил бы пол и упал");
                 helper.assertTrue(spirit.blockPosition().getY() == helper.absolutePos(new BlockPos(1, 1, 1)).getY(),
                         "дух обязан остаться наверху, а не провалиться вниз");
-                GameTestFixtures.reset(helper);
+                GameTestFixtures.finish(helper);
             }
         });
     }
@@ -244,7 +244,7 @@ public final class ClearGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 1, 2)).isAir()
                     && helper.getBlockState(new BlockPos(3, 1, 2)).isAir(),
                     "оба своих блока обязаны исчезнуть");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -274,7 +274,7 @@ public final class ClearGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(2, 1, 2)).is(Blocks.COBBLESTONE)
                     && helper.getBlockState(new BlockPos(3, 1, 2)).is(Blocks.COBBLESTONE),
                     "стенка игрока обязана остаться целой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

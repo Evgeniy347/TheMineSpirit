@@ -527,7 +527,7 @@ public final class CombatGameTests {
             for (SpiritEntity spirit : spirits) {
                 spirit.discard();
             }
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

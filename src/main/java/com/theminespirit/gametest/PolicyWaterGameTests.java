@@ -74,7 +74,7 @@ public final class PolicyWaterGameTests {
                     "обход озера по суше есть: дух обязан дойти, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет")
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(!touched[0], "вода имеет высокую цену, а обход дёшев: дух не должен заходить в воду");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -100,7 +100,7 @@ public final class PolicyWaterGameTests {
                     "обхода нет, вода — цена, а не запрет: дух обязан переправиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина " + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(touched[0], "переправа идёт через воду: дух обязан побывать в воде");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -117,7 +117,7 @@ public final class PolicyWaterGameTests {
             scene.assertStarted();
             helper.assertTrue(!spirit.isInWater(), "дух без задачи в воде обязан выбраться на берег, тик духа " + scene.ticks());
             helper.assertTrue(scene.ticks() <= 60, "выход из воды обязан уложиться в 60 тиков духа, ушло " + scene.ticks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -145,7 +145,7 @@ public final class PolicyWaterGameTests {
             helper.assertTrue(!spirit.isUnderWater(), "дух на дне пруда глубиной " + POND_DEPTH + " обязан всплыть, тик духа " + scene.ticks());
             helper.assertTrue(lowestAir[0] > 0, "запас воздуха нигде не должен падать до 0, минимум " + lowestAir[0]);
             helper.assertTrue(scene.minHealth() >= spirit.getMaxHealth(), "утопления нет: здоровье не должно падать, минимум " + scene.minHealth());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

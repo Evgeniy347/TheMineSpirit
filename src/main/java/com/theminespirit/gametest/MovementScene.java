@@ -71,6 +71,6 @@ final class MovementScene {
     }
 
     static void finish(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
+        GameTestFixtures.finish(helper);
     }
 }

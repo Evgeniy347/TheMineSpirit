@@ -105,7 +105,7 @@ public final class MobTargetsGameTests {
             helper.assertTrue(zombie.getTarget() == spirit,
                     "зомби в шести блоках от духа без игроков рядом обязан сам выбрать духа целью, а его цель "
                             + zombie.getTarget());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -124,7 +124,7 @@ public final class MobTargetsGameTests {
                             + "; рядом в 16 блоках: [" + nearby(helper, piglin, spirit) + "]");
             helper.assertTrue(!spiritTookTarget[0],
                     "дух не дерётся первым с мирным мобом, а его цель " + describeTarget(spirit.getTarget(), spirit));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -144,7 +144,7 @@ public final class MobTargetsGameTests {
                             + "; рядом в 16 блоках: [" + nearby(helper, zombie, spirit) + "]");
             helper.assertTrue(!spiritTookTarget[0],
                     "дух не дерётся первым, а его цель " + describeTarget(spirit.getTarget(), spirit));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -171,7 +171,7 @@ public final class MobTargetsGameTests {
             helper.assertTrue(!spiritTookTarget[0],
                     "дух не дерётся первым днём на открытом месте, а его цель "
                             + describeTarget(spirit.getTarget(), spirit));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         });
     }
@@ -188,7 +188,7 @@ public final class MobTargetsGameTests {
             helper.assertTrue(current != null && current.getTarget() == spirit,
                     "Паук ночью рядом с духом обязан сам выбрать духа целью за " + OBSERVED_TICKS
                             + " тиков, а его цель " + (current == null ? "ещё не заспавнен" : current.getTarget()));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

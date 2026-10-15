@@ -53,7 +53,7 @@ public final class HusbandryProduceGameTests {
             int wool = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHITE_WOOL);
             helper.assertTrue(wool >= 1,
                     "в инвентаре духа обязано стать больше шерсти на 1 и выше, фактически " + wool);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -77,7 +77,7 @@ public final class HusbandryProduceGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.MILK_BUCKET));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.BUCKET) == 0,
                     "пустое ведро обязано уйти на молоко");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -103,7 +103,7 @@ public final class HusbandryProduceGameTests {
             helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.EGG) == 0,
                     "на полу яиц остаться не должно");
             helper.assertTrue(HusbandryGameTests.alive(helper, Chicken.class).size() == 2, "куры обязаны остаться живы");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -160,7 +160,7 @@ public final class HusbandryProduceGameTests {
             helper.assertTrue(dx * dx + dz * dz <= PEN_RADIUS * PEN_RADIUS,
                     "овца обязана оказаться внутри загона радиуса " + PEN_RADIUS + " от клетки старта духа, "
                             + "а она на смещении (" + dx + ", " + dz + ")");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -186,7 +186,7 @@ public final class HusbandryProduceGameTests {
                     "овца в лаве обязана остаться жива: опасную пропускают, а не добивают");
             helper.assertTrue(!sheep.isSheared(),
                     "овца в лаве обязана остаться с шерстью: её пропускают до подхода");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -209,7 +209,7 @@ public final class HusbandryProduceGameTests {
                     "без ножниц овца обязана остаться нетронутой и с шерстью");
             helper.assertTrue(helper.getBlockState(new BlockPos(6, 1, 6)).getBlock() == before,
                     "при отказе мир не меняется");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -229,7 +229,7 @@ public final class HusbandryProduceGameTests {
             List<Sheep> sheep = HusbandryGameTests.alive(helper, Sheep.class);
             helper.assertTrue(sheep.size() == 1 && sheep.get(0).isSheared(),
                     "первая овца пострижена и жива, второй раз стричь некого");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

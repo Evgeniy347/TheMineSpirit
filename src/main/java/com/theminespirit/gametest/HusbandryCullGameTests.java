@@ -53,7 +53,7 @@ public final class HusbandryCullGameTests {
             int leather = GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER);
             helper.assertTrue(beef >= 2 && beef + leather >= 2,
                     "говядина и кожа с двух туш обязаны подобраться (говядины " + beef + ", кожи " + leather + ")");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -75,7 +75,7 @@ public final class HusbandryCullGameTests {
             HusbandryGameTests.assertFailedWith(helper, spirit, "железным мечом и выше");
             helper.assertTrue(HusbandryGameTests.alive(helper, Cow.class).size() == 4,
                     "каменным мечом стадо не бьют: все 4 обязаны остаться живы");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -96,7 +96,7 @@ public final class HusbandryCullGameTests {
             HusbandryGameTests.assertFailedWith(helper, spirit, "железным мечом и выше");
             helper.assertTrue(HusbandryGameTests.alive(helper, Cow.class).size() == 3,
                     "руками стадо не забивают: все 3 обязаны остаться живы");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -122,7 +122,7 @@ public final class HusbandryCullGameTests {
             int pork = GameTestFixtures.countInInventory(spirit.getInventory(), Items.PORKCHOP);
             helper.assertTrue(pork >= 1,
                     "свинина с диких обязана подобраться, фактически " + pork);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -154,7 +154,7 @@ public final class HusbandryCullGameTests {
                     .findFirst().orElse(null);
             helper.assertTrue(far != null,
                     "дальняя корова под опекой телёнка обязана остаться жива: удар откладывается");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

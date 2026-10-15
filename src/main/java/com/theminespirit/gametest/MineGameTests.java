@@ -110,7 +110,7 @@ public final class MineGameTests {
                     "запросов сущностей обязано быть не больше " + queryBudget + " (раз в "
                             + PickupTuning.REFRESH_TICKS + " тиков и по одному на старте и финале сбора), сделано "
                             + run.entityQueries());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -141,7 +141,7 @@ public final class MineGameTests {
             helper.assertTrue(run.maxSlicesPerTick() <= 4,
                     "за тик поиск обязан просматривать не больше 4 срезов, максимум за тик: "
                             + run.maxSlicesPerTick() + " из " + run.slicesUsed() + " срезов всего");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -166,7 +166,7 @@ public final class MineGameTests {
                     "отказ обязан случиться до первого удара, за 5 тиков духа, заняло " + run.spiritTicks());
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
                     "руда обязана остаться на месте: до начала работы её не трогают");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -200,7 +200,7 @@ public final class MineGameTests {
                     "лавовый блок обязан остаться один, стало " + countBlock(helper, Blocks.LAVA, CAVE_SHIFT_INSIDE_ARENA));
             helper.assertTrue(!helper.getLevel().getBlockState(spirit.blockPosition()).is(Blocks.LAVA),
                     "дух не должен оказаться в лаве");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -226,7 +226,7 @@ public final class MineGameTests {
                     "руда под водой обязана остаться нетронутой");
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 3, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.WATER),
                     "блок воды обязан остаться на месте");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -257,7 +257,7 @@ public final class MineGameTests {
                     "замурованную руду нельзя пробивать через соседей: она обязана остаться");
             helper.assertTrue(run.spiritTicks() <= 40,
                     "отказ по замурованной руде обязан наступить за 40 тиков духа, заняло " + run.spiritTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -285,7 +285,7 @@ public final class MineGameTests {
             helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
                     "дух не должен спускаться в яму глубиной 3 (навигация согласна прыгнуть): без проверки пола "
                             + "стоянки он шагнёт за край. y был " + startY + ", стал " + spirit.getY());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -310,7 +310,7 @@ public final class MineGameTests {
             helper.assertTrue(spiritCell.getX() != targetAbs.getX() || spiritCell.getZ() != targetAbs.getZ(),
                     "стоянку в столбце руды под гравием запрещено выбирать: дух добыл руду, стоя в "
                             + spiritCell + ", столбец руды " + targetAbs);
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -360,7 +360,7 @@ public final class MineGameTests {
                     "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 565–612, порог ≈1.2×), "
                             + "заняло " + run.spiritTicks() + " тиков духа, рабочих " + probe.workingTicks()
                             + ", пауз " + probe.pausedTicks() + "\n" + probe.report("не уложился в 720"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -407,7 +407,7 @@ public final class MineGameTests {
                     "отказ по запечатанной стоянке обязан наступить за 200 тиков духа "
                             + "(общая стоянка исключается после трёх неудачных подходов по ~41 тику), заняло "
                             + run.spiritTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -455,7 +455,7 @@ public final class MineGameTests {
                     "при остатке меньше 8 целей и незаконченном поиске сессия обязана за тик дочитать новую порцию: "
                             + "иначе правило «осталось меньше восьми — искать ещё» мёртвое; срезов у первого поиска "
                             + slicesAtFirstFind.get() + ", всего " + run.slicesUsed());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -479,7 +479,7 @@ public final class MineGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) == 3,
                     "в инвентаре обязано быть 3 бревна, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -548,7 +548,7 @@ public final class MineGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             helper.assertTrue(caveSnapshot(helper, CAVE_SHIFT_INSIDE_ARENA).equals(snapshot.get()),
                     "через 40 тиков после отмены мир обязан остаться прежним");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -574,7 +574,7 @@ public final class MineGameTests {
                     "причина обязана сказать, что инструмент сломался после первой руды, фактически: " + reason);
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
                     "вторая руда обязана остаться: её нечем добыть");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -601,7 +601,7 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.DIAMOND_ORE),
                     "алмазная руда обязана остаться целой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -630,7 +630,7 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.DIAMOND_ORE),
                     "алмазная руда обязана остаться целой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -658,7 +658,7 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
             helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 1 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.DIAMOND_ORE),
                     "ближний алмаз обязан остаться целой");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -696,7 +696,7 @@ public final class MineGameTests {
                     "две руды дают 8..10 редстоуна вместе в инвентаре и мире, в инвентаре " + inInventory
                             + ", в мире " + inWorld + ", фактически " + total + "\n"
                             + probe.report("дроп не сошёлся"));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -761,7 +761,7 @@ public final class MineGameTests {
             helper.assertTrue(countBlock(helper, Blocks.COBBLESTONE) == heapBefore - 6,
                     "в куче обязано остаться " + (heapBefore - 6) + " блоков (исходно " + heapBefore
                             + " минус 6), а не " + countBlock(helper, Blocks.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -804,7 +804,7 @@ public final class MineGameTests {
             helper.assertTrue(countBlock(helper, Blocks.COBBLESTONE) == heapBefore - 6,
                     "после восстановления нельзя добывать ещё: в куче обязано остаться " + (heapBefore - 6)
                             + ", стало " + countBlock(helper, Blocks.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

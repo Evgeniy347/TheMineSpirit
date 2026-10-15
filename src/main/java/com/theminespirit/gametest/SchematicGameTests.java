@@ -97,7 +97,7 @@ public final class SchematicGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "материалы списываются по видам: 17 блоков — 17 булыжников, в инвентаре "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -119,7 +119,7 @@ public final class SchematicGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 17,
                     "уже стоящие блоки ставятся повторно: двойного расхода нет, в инвентаре обязано остаться 17, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -139,7 +139,7 @@ public final class SchematicGameTests {
                     "причина обязана называть числа 17 и 5 (нужно и поставлено), фактически: " + reason);
             helper.assertTrue(countHouse(helper, ANCHOR) == 5,
                     "в мире обязано стоять ровно 5 блоков: что было, то поставили, стоит " + countHouse(helper, ANCHOR));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

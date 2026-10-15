@@ -58,7 +58,7 @@ public final class KitActivityGameTests {
                     "доски вне набора шахты обязаны уйти в сундук: у духа "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_PLANKS)
                             + ", в сундуке " + chestCount(helper, Items.OAK_PLANKS));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -92,7 +92,7 @@ public final class KitActivityGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_PLANKS) == 0
                     && chestCount(helper, Items.OAK_PLANKS) == 64,
                     "доски вне постоянной части обязаны уйти в сундук");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -135,7 +135,7 @@ public final class KitActivityGameTests {
                     && chestCount(helper, Items.IRON_PICKAXE) == 1
                     && chestCount(helper, Items.OAK_PLANKS) == 64,
                     "выгруженное ребёнком обязано оказаться в сундуке");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 

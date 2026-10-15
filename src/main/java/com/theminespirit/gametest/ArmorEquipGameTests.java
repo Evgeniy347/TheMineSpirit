@@ -34,7 +34,7 @@ public final class ArmorEquipGameTests {
             helper.assertTrue(spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.IRON_CHESTPLATE),
                     "Дух с кожаной и железной кирасой в инвентаре обязан сам надеть железную (6 очков против 3), "
                             + "в слоте груди " + spirit.getItemBySlot(EquipmentSlot.CHEST));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -56,7 +56,7 @@ public final class ArmorEquipGameTests {
                             + spirit.getItemBySlot(EquipmentSlot.HEAD));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER_HELMET) == 1,
                     "Снятая кожаная шапка обязана остаться в инвентаре, а не исчезнуть: иначе дух теряет вещь");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
@@ -80,7 +80,7 @@ public final class ArmorEquipGameTests {
                             + "из инвентаря: в слоте груди " + chest + " с уроном " + chest.getDamageValue());
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_CHESTPLATE) == 1,
                     "Снятая почти сломанная кираса обязана остаться в инвентаре");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }

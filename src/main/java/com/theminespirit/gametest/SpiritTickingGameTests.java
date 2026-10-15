@@ -49,7 +49,7 @@ public final class SpiritTickingGameTests {
                             + ", ушёл на " + spirit.position().distanceTo(start));
             helper.assertTrue(spirit.position().distanceTo(start) >= DISTANCE_BEYOND_STRUCTURE - 2,
                     "дух обязан оказаться за пределами площадки, ушёл на " + spirit.position().distanceTo(start));
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 }
