@@ -40,6 +40,7 @@ public final class CaptureGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.spawn(EntityType.SHEEP, FLOCK);
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
         AtomicInteger successTick = new AtomicInteger(-1);
@@ -56,7 +57,7 @@ public final class CaptureGameTests {
             helper.assertTrue(successTick.get() >= 0,
                     "овца на ровной земле обязана пойматься: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
             helper.assertTrue(spirit.tickCount - successTick.get() >= HOLD_TICKS,
                     "после поимки ждём " + HOLD_TICKS + " тиков: иначе неизвестно, держит ли кольцо");
             BlockPos anchor = center.get();
@@ -67,7 +68,7 @@ public final class CaptureGameTests {
                     && sheep.blockPosition().getZ() >= anchor.getZ() - 1
                     && sheep.blockPosition().getZ() <= anchor.getZ() + 2,
                     "через " + HOLD_TICKS + " тиков овца обязана оставаться в кольце вокруг " + anchor + ", фактически "
-                            + sheep.blockPosition().toShortString());
+                            + sheep.blockPosition().toShortString() + "\n" + probe.report("овца вышла из кольца"));
             helper.assertTrue(ringBlocks(helper) >= 24,
                     "кольцо вокруг овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
             GameTestFixtures.reset(helper);
@@ -85,6 +86,7 @@ public final class CaptureGameTests {
         }
         helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
 
@@ -93,7 +95,7 @@ public final class CaptureGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "овца у ступеньки обязана пойматься: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
             helper.assertTrue(maxColumn(helper) == 3,
                     "кольцо у ступеньки местами обязано быть из 3 блоков: стенка в 2 блока от низкой земли "
                             + "лишь на 1 выше высокого пола, и овца уходит прыжком");
