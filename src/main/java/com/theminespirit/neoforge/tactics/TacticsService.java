@@ -17,6 +17,12 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TacticsEngine;
 import com.theminespirit.core.tactics.TacticsMemory;
 import com.theminespirit.core.tactics.adapter.CoreFactCollector;
+import com.theminespirit.core.tactics.adapter.DecisionFacts;
+import com.theminespirit.core.tactics.adapter.DecisionJournal;
+import com.theminespirit.core.tactics.adapter.DecisionObservation;
+import com.theminespirit.core.tactics.adapter.DecisionOrder;
+import com.theminespirit.core.tactics.adapter.DecisionRecord;
+import com.theminespirit.core.tactics.adapter.DecisionText;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
@@ -33,6 +39,7 @@ import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -46,6 +53,7 @@ public final class TacticsService {
     public static final CombatMode DEFAULT_MODE = CombatMode.DEFENSIVE;
     public static final double RETURN_ARRIVAL = 1.5;
     public static final int FAILURE_BACKOFF_TICKS = 100;
+    public static final int DECISIONS_IN_CHAT = 5;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final TacticsEngine ENGINE = new TacticsEngine(TacticsConfig.loadDefault());
@@ -57,6 +65,8 @@ public final class TacticsService {
     private final CoreFactCollector situations = new CoreFactCollector(settings);
     private final IntentActionExecutor intents = new IntentActionExecutor();
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
+    private final DecisionJournal journal = new DecisionJournal(settings.journalCapacity(),
+            settings.journalMaxPerSecond());
     private final Approach approach;
     private final CombatActuator combat;
     private final RetreatExecutor retreating;
@@ -298,6 +308,10 @@ public final class TacticsService {
         return Optional.ofNullable(outcome).map(TacticsTrace::format);
     }
 
+    public List<DecisionRecord> decisions(int limit) {
+        return journal.last(limit);
+    }
+
     public StoredTactics snapshot() {
         return new StoredTactics(ordered, zone, ward.map(UUID::toString), Optional.ofNullable(memory), retreat);
     }
@@ -349,8 +363,17 @@ public final class TacticsService {
         returnTarget = next.returnTo();
         returned = false;
         logChange(next);
+        journalDecision(now, next, situation);
         outcome = next;
         facts = collected;
+    }
+
+    private void journalDecision(long now, TacticalOutcome next, Situation situation) {
+        DecisionOrder order = DecisionOrder.of(ordered, zone.isPresent(), ward.map(UUID::toString),
+                activeDirective());
+        journal.offer(new DecisionObservation(now, spirit.getUUID().toString(), spirit.displayName(), next,
+                Optional.ofNullable(targetId), order, DecisionFacts.of(situation)))
+                .ifPresent(record -> LOGGER.info("{}", DecisionText.format(record)));
     }
 
     private Optional<LivingEntity> designatedTarget() {

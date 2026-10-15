@@ -49,6 +49,8 @@ import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
 public final class SpiritEntity extends PathfinderMob {
+    public static final String DEFAULT_NAME = "spirit";
+
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int INVENTORY_SIZE = 36;
 
@@ -117,6 +119,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public TacticsService tactics() {
         return tactics;
+    }
+
+    public String displayName() {
+        return hasCustomName() ? getCustomName().getString() : DEFAULT_NAME;
     }
 
     public SpiritGear gear() {

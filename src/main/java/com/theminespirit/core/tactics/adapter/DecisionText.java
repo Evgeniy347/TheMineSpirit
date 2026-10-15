@@ -58,7 +58,7 @@ public final class DecisionText {
 
     private static String facts(DecisionFacts facts) {
         return "врагов рядом " + facts.enemies() + " (ближайший " + facts.nearest() + "), здоровье " + health(facts)
-                + ", броня " + armor(facts.armor()) + ", оружие " + facts.weapon();
+                + ", броня " + armor(facts.armor()) + ", бьёт: " + facts.weapon();
     }
 
     private static String health(DecisionFacts facts) {

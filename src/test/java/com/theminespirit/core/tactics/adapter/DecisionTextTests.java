@@ -81,7 +81,7 @@ class DecisionTextTests {
                 "Запись называет ключевые факты — врагов рядом и ближайшего: " + line);
         assertTrue(line.contains("здоровье 20/20"), "Запись называет здоровье духа: " + line);
         assertTrue(line.contains("броня 0"), "Запись называет броню духа: " + line);
-        assertTrue(line.contains("оружие оружие ближнего боя"), "Запись называет оружие духа: " + line);
+        assertTrue(line.contains("бьёт: оружие ближнего боя"), "Запись называет, чем дух дерётся: " + line);
     }
 
     @Test
