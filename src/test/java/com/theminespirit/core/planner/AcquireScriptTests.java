@@ -253,6 +253,38 @@ class AcquireScriptTests {
     }
 
     @Test
+    void saveRestore_MidRun_ResultKeepsSameNumbers() {
+        AtomicInteger firstInventory = new AtomicInteger(1);
+        StubSupplies supplies = new StubSupplies(0, Map.of());
+        supplies.inventoryLive = firstInventory;
+        AcquireScript first = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG,
+                ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, firstInventory))),
+                NO_CONDITIONS);
+        assertEquals(ScriptStatus.RUNNING, first.tick(), "Первый тик строит подплан");
+
+        Map<String, Object> saved = first.saveState();
+        AtomicInteger restoredInventory = new AtomicInteger(1);
+        StubSupplies restoredSupplies = new StubSupplies(0, Map.of());
+        restoredSupplies.inventoryLive = restoredInventory;
+        AcquireScript restored = new AcquireScript(ITEM, 3, alwaysGatherable(), restoredSupplies, CATALOG,
+                ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, restoredInventory))),
+                NO_CONDITIONS);
+        restored.restoreState(saved);
+
+        assertEquals(ScriptStatus.SUCCEEDED, run(restored, 20),
+                "Восстановленный скрипт обязан довести цель до конца");
+        Map<String, Object> fields = ((ScriptResult.Data) restored.result().orElseThrow()).fields();
+        assertEquals(1, fields.get("from_inventory"),
+                "startInventory сохраняется через saveState: перезапуск не теряет число из инвентаря");
+        assertEquals(0, fields.get("from_chests"),
+                "chestPlanned сохраняется через saveState: перезапуск не теряет число из сундуков");
+        assertEquals(2, fields.get("gathered"),
+                "gathered — остаток после инвентаря и сундуков, перезапуск его не меняет");
+    }
+
+    @Test
     void savedRunnerState_AfterFirstTick_SnapshotDecodesBack() {
         AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
                 new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),

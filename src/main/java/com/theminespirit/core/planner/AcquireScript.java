@@ -235,6 +235,14 @@ public final class AcquireScript implements ScriptInstance {
     public Map<String, Object> saveState() {
         Map<String, Object> state = new LinkedHashMap<>();
         state.put("attempts", attempts);
+        state.put("startInventory", startInventory);
+        state.put("chestPlanned", chestPlanned);
+        if (finalStatus != null) {
+            state.put("finalStatus", finalStatus.name());
+        }
+        if (failureReason != null) {
+            state.put("failureReason", failureReason);
+        }
         if (lastStepFailure != null) {
             state.put("lastStepFailure", lastStepFailure);
         }
@@ -250,6 +258,22 @@ public final class AcquireScript implements ScriptInstance {
         Object savedAttempts = state.get("attempts");
         if (savedAttempts instanceof Integer integer) {
             attempts = integer;
+        }
+        Object savedStart = state.get("startInventory");
+        if (savedStart instanceof Integer integer) {
+            startInventory = integer;
+        }
+        Object savedChest = state.get("chestPlanned");
+        if (savedChest instanceof Integer integer) {
+            chestPlanned = integer;
+        }
+        Object savedFinal = state.get("finalStatus");
+        if (savedFinal instanceof String name) {
+            finalStatus = ScriptStatus.valueOf(name);
+        }
+        Object savedFailure = state.get("failureReason");
+        if (savedFailure instanceof String text) {
+            failureReason = text;
         }
         Object failure = state.get("lastStepFailure");
         if (failure instanceof String text) {
