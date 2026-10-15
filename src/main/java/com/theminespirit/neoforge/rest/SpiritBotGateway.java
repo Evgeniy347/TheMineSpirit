@@ -10,6 +10,7 @@ import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ObserveRequest;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
+import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.core.task.TaskRecord;
 import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -94,6 +95,15 @@ public final class SpiritBotGateway implements BotGateway {
         CompletableFuture<WorldObservation> future =
                 serverCall.call(() -> startObserve(id, request), RestTuning.SERVER_CALL_TIMEOUT);
         return serverCall.await(future, RestTuning.OBSERVE_TIMEOUT);
+    }
+
+    @Override
+    public List<DecisionRecord> decisions(String id, int limit) {
+        return serverCall.call(() -> parse(id).flatMap(index::find)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
+                        "Дух '" + id + "' не найден: список живых духов — GET /v1/bots",
+                        Map.of("id", id)))
+                .tactics().decisions(limit), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     private CompletableFuture<WorldObservation> startObserve(String id, ObserveRequest request) {

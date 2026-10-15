@@ -1,12 +1,14 @@
 package com.theminespirit.core.rest;
 
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 final class FakeBotGateway implements BotGateway {
     private final List<BotInfo> bots;
+    private final List<DecisionRecord> decisions = new ArrayList<>();
     private final List<ObserveRequest> observeRequests = new ArrayList<>();
     private ApiException failure;
     private WorldObservation observation;
@@ -25,8 +27,17 @@ final class FakeBotGateway implements BotGateway {
         return this;
     }
 
+    FakeBotGateway deciding(DecisionRecord... records) {
+        decisions.addAll(List.of(records));
+        return this;
+    }
+
     List<ObserveRequest> observeRequests() {
         return observeRequests;
+    }
+
+    List<DecisionRecord> decisionRequests() {
+        return decisions;
     }
 
     @Override
@@ -49,6 +60,15 @@ final class FakeBotGateway implements BotGateway {
             throw new ApiException(ErrorCode.NOT_FOUND, "Дух '" + id + "' не найден");
         }
         return observation;
+    }
+
+    @Override
+    public List<DecisionRecord> decisions(String id, int limit) {
+        throwIfFailing();
+        if (bot(id).isEmpty()) {
+            throw new ApiException(ErrorCode.NOT_FOUND, "Дух '" + id + "' не найден");
+        }
+        return decisions.stream().limit(limit).toList();
     }
 
     private void throwIfFailing() {
