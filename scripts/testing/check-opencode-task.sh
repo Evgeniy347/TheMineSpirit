@@ -44,7 +44,7 @@ check info_log_mentions_limit 0 1 FAKE_INFO_LOG=1
 check unfinished_answer_continues 0 3 FAKE_UNFINISHED=2
 check unfinished_answer_limit 0 4 FAKE_UNFINISHED=99 OPENCODE_UNFINISHED_LIMIT=3
 check compaction_restarts_with_reminder 0 2 FAKE_COMPACTION=1
-grep -q "TestResults/task.md" <(sed -n 2p "$work/compaction_restarts_with_reminder.state.args") && v=OK || v=FAIL
+grep -q "Контекст сессии только что сжат" "$work/compaction_restarts_with_reminder.state.args" && v=OK || v=FAIL
 echo "$v compaction_restarts_with_reminder: второй запуск напоминает перечитать task.md и progress.md"
 [ "$(cat "$OPENCODE_TASK_FILE" 2>/dev/null)" = "тестовое задание" ] && v=OK || v=FAIL
 echo "$v task_file_saved: задание сохранено в TestResults/task.md"
