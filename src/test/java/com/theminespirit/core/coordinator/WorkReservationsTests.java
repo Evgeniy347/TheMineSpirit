@@ -109,6 +109,24 @@ class WorkReservationsTests {
     }
 
     @Test
+    void size_TwoReservations_CountsThem() {
+        WorkReservations reservations = new WorkReservations();
+        reservations.reserve(CELL, ALPHA, 100, 50);
+        reservations.reserve(TREE, BETA, 100, 50);
+
+        assertEquals(2, reservations.size(), "Реестр считает активные брони: утечка видна по размеру");
+    }
+
+    @Test
+    void size_AfterRelease_DropsCount() {
+        WorkReservations reservations = new WorkReservations();
+        reservations.reserve(CELL, ALPHA, 100, 50);
+        reservations.release(CELL, ALPHA);
+
+        assertEquals(0, reservations.size(), "Снятая бронь не считается: иначе размер врёт о занятости");
+    }
+
+    @Test
     void expire_ExpiredReservation_RemovesIt() {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(CELL, ALPHA, 100, 50);

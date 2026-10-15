@@ -1,50 +1,60 @@
 package com.theminespirit.core.building;
 
+import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 public final class BuildReservations {
-    private final Map<BlockCoord, UUID> owners = new HashMap<>();
+    private static final long PERMANENT_LEASE = Long.MAX_VALUE;
+
+    private final WorkReservations leases;
+
+    public BuildReservations() {
+        this(new WorkReservations());
+    }
+
+    public BuildReservations(WorkReservations leases) {
+        this.leases = Objects.requireNonNull(leases,
+                "Общий реестр не может быть null: без него брони клеток не с кем сверять");
+    }
 
     public boolean reserve(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, что бронировать");
         Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чья бронь");
-        UUID current = owners.get(cell);
-        if (current == null) {
-            owners.put(cell, spirit);
-            return true;
-        }
-        return current.equals(spirit);
+        return leases.reserve(target(cell), spirit, 0, PERMANENT_LEASE) != WorkReservations.Outcome.TAKEN_BY_OTHER;
     }
 
     public boolean heldBy(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, чью бронь проверять");
         Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чья бронь");
-        return spirit.equals(owners.get(cell));
+        return leases.owner(target(cell)).map(spirit::equals).orElse(false);
     }
 
     public boolean foreign(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, чья бронь мешает");
         Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чья бронь мешает");
-        UUID current = owners.get(cell);
-        return current != null && !current.equals(spirit);
+        return leases.owner(target(cell)).map(owner -> !owner.equals(spirit)).orElse(false);
     }
 
     public void release(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, что освобождать");
         Objects.requireNonNull(spirit, "Дух не может быть null: чужую бронь снимать нельзя");
-        owners.remove(cell, spirit);
+        leases.release(target(cell), spirit);
     }
 
     public void releaseAll(UUID spirit) {
         Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чьи брони снимать");
-        owners.entrySet().removeIf(entry -> entry.getValue().equals(spirit));
+        leases.releaseAll(spirit);
     }
 
     public int size() {
-        return owners.size();
+        return leases.size();
+    }
+
+    private static WorkTarget target(BlockCoord cell) {
+        return new WorkTarget(WorkKind.CELL, cell);
     }
 }

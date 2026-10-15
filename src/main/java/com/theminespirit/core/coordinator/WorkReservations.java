@@ -84,6 +84,10 @@ public final class WorkReservations {
         return Optional.ofNullable(leases.get(target)).map(Lease::owner);
     }
 
+    public int size() {
+        return leases.size();
+    }
+
     public int expire(long now) {
         if (now < 0) {
             throw new IllegalArgumentException("now = " + now + ": время освобождения не может быть отрицательным");
