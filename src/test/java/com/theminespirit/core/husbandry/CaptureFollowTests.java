@@ -2,6 +2,7 @@ package com.theminespirit.core.husbandry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.husbandry.RingGround.Cell;
@@ -67,5 +68,31 @@ class CaptureFollowTests {
         assertFalse(CaptureFollow.ringCovers(ring, new Cell(3, 0)),
                 "Ушедшая из внутренности клетка обязана считаться непокрытой: тогда дух пересчитывает кольцо "
                         + "вокруг зверя, а не бросает отлов с 'животное ушло'");
+    }
+
+    @Test
+    void enoughMaterial_BuiltBlocksNotChargedTwice_True() {
+        assertTrue(CaptureFollow.enoughMaterial(44, 48, 20),
+                "Материал считается только на ещё не поставленные клетки: кольцо 48, поставлено 20, "
+                        + "нужно 28, в инвентаре 44 — хватает; иначе дух бросает отлов посреди стройки");
+    }
+
+    @Test
+    void enoughMaterial_ShortByOne_False() {
+        assertFalse(CaptureFollow.enoughMaterial(27, 48, 20),
+                "Если материала меньше остатка (28), кольцо не достроить: отлов обязан честно провалиться "
+                        + "по нехватке, а не встать неполным");
+    }
+
+    @Test
+    void enoughMaterial_NothingBuilt_ComparesWithWholeRing() {
+        assertTrue(CaptureFollow.enoughMaterial(48, 48, 0),
+                "Пока ничего не поставлено, материал нужен на всё кольцо: 48 из 48 хватает ровно");
+    }
+
+    @Test
+    void enoughMaterial_ImpossibleCounters_Throws() {
+        assertThrows(IllegalArgumentException.class, () -> CaptureFollow.enoughMaterial(10, 48, 49),
+                "Построено больше, чем в кольце, — счётчики противоречат друг другу: молча решать нельзя");
     }
 }

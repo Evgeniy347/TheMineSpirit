@@ -418,7 +418,7 @@ public final class CaptureSession {
             }
         }
         int have = BlockItems.countIn(spirit.getInventory(), blockId);
-        if (have < remaining.size()) {
+        if (!CaptureFollow.enoughMaterial(have, planSize, planSize - remaining.size())) {
             fail("не хватило блоков '" + blockId + "': нужно " + planSize + ", уже поставлено "
                     + (planSize - remaining.size()) + ", есть " + have);
             return false;

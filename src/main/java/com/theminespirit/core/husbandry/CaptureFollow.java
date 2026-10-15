@@ -24,4 +24,12 @@ public final class CaptureFollow {
         Objects.requireNonNull(animal, "Клетка животного не может быть null: без неё неизвестно, что проверять");
         return ring.interior().contains(animal);
     }
+
+    public static boolean enoughMaterial(int have, int planSize, int alreadyBuilt) {
+        if (have < 0 || planSize < 0 || alreadyBuilt < 0 || alreadyBuilt > planSize) {
+            throw new IllegalArgumentException("Счётчики блоков вне смысла: have=" + have + ", planSize=" + planSize
+                    + ", alreadyBuilt=" + alreadyBuilt + ": по ним нельзя решать, хватает ли материала");
+        }
+        return have >= planSize - alreadyBuilt;
+    }
 }
