@@ -107,6 +107,7 @@
 - [x] Техдолг: locate_tree проверяет форму дерева кодом рубки — постройка из брёвен не дерево (muse, 13.10)
 - [x] Сторож шаблона GameTest: сцена со спавном духа/блоками не на empty, нарушения переведены на arena (deepseek-web; финал — главный агент, 13.10)
 - [x] Цели мобов по условиям ванили: паук/пещерный паук только в темноте, утопленник ночью или в воде; Brain-мобы и дракон убраны из списка (longcat, 15.10)
+- [x] Чеклист 30: боевые (attack/defend/flee/retreat) и простые (say/wait/meet/deliver) скрипты через приказ тактики, итог задачи, say в радиусе 64 (mimo, big-pickle; ревью longcat, 15.10)
 - [x] Чеклист 34, часть А: ядро лагеря похода и быстрых укреплений — Camp/CampSpot, SafePointChoice, ShelterPlan 4×4 с крышей, BarricadePlan, FortifyBatcher, DismantlePlan, FortifyDecision/FortifyPlan (muse, 15.10); части Б–В ждут 30
 - [x] Техдолг: gather не крутится на недостижимой стоянке — исключение стоянок, ≤3 подхода на цель, Approach отказывает по пройденному тупику (muse, 13.10)
 - [x] Техдолг: clear_area/dig_area бросают недостижимую стоянку — общий ApproachFailureTracker с gather (muse, 13.10)
@@ -148,6 +149,9 @@
       проверить, не бьёт ли его кто-то в сцене (HurtByTargetGoal) или не берёт ли он цель от соседней структуры.
 - [ ] Флеки свежих GameTest целей мобов (15.10, прогоны ring-capture): `spider_…daylight` (паук днём берёт цель — свет в
       сцене arena?) и `zombie_…disabled` (выключатель mobsTargetSpirits в @BeforeBatch — зомби из соседней пачки?).
+- [ ] Ревью 30 (rev30, желательное): AttackScript держит ссылку на живую цель вместо скана каждый тик; DeliverScript
+      берёт `count - delivered`; остаток — через DropCollector; meet/deliver — только PLAYER или SPIRIT (валидация в Params);
+      observesWhileTacticsOwns не создаёт экземпляр скрипта.
 - [ ] Новый флек `till_hoebreaksafterfirstcell_failsnamingtilledprogress` («пашни 0»). Не воспроизвёлся за 6 прогонов
       (deepseek-web, 15.10); сообщение теста теперь печатает done и тик духа. Итог «вспахано 1» при пашне 0 значит, что
       пашня вернулась в землю после вспашки. Вытаптывание исключено (deepseek-web, 15.10): объём хитбокса духа ниже
