@@ -40,8 +40,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 
 final class RestFixture {
-    // Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа считается
-    // в секундах (REPLY_DEADLINE), потолок тиков только запасной и заведомо больше любого честного ожидания.
+    // [флак] Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа
+    // считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
+    // честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
     static final int TIMEOUT_TICKS = 20_000;
     static final int FOLLOW_RADIUS = 2;
     static final Duration REPLY_DEADLINE = Duration.ofSeconds(30);
