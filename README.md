@@ -119,7 +119,7 @@ curl -s -X DELETE $H/v1/tasks/t-1        # отмена, повтор безоп
 | [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
 | [scripts/git-hooks/pre-commit](scripts/git-hooks/pre-commit) | сторож зелёного коммита: при изменениях в `src/`, `build.gradle`, `gradle.properties`, `settings.gradle` прогоняет `./gradlew test` и отклоняет коммит при красном; документы, скрипты и слияния — без прогона (docs/GIT.md) | коммит с падающим тестом отклоняется с объяснением |
 | [scripts/testing/check-pre-commit.sh](scripts/testing/check-pre-commit.sh) | регрессионная проверка `pre-commit` на временном клоне: красный тест, документ, зелёный тест, `git commit -- путь`, незастейдженная правка, слияние | все строки `OK` |
-| [scripts/testing/check-gametest-lock.sh](scripts/testing/check-gametest-lock.sh) | регрессионная проверка замка `gametest.sh` на фейковом gradlew без Gradle: параллельные запуски не пересекаются, протухший замок снимается, живой замок даёт код 75, код gradlew возвращается, `trap` снимает замок | все строки `OK` |
+| [scripts/testing/check-gametest-lock.sh](scripts/testing/check-gametest-lock.sh) | регрессионная проверка замка `gametest.sh` на фейковом gradlew без Gradle: параллельные запуски не пересекаются, протухший замок снимает ровно один из двух ожидающих (атомарное переименование), оба отрабатывают по очереди, живой замок даёт код 75, код gradlew возвращается, `trap` снимает замок | все строки `OK` |
 | `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
 
 ## Структура

@@ -80,4 +80,36 @@ wait "$pi" 2>/dev/null
 sleep 1
 [ ! -d "$work/tmp/lock.d" ] && ok "int: каталог замка снят по Ctrl+C" || fail "int: каталог замка остался после Ctrl+C"
 
+# 6. Протухший замок снимает ровно один из двух ожидающих: оба стартуют вместе и видят мёртвый pid,
+# снятие атомарно (mv во временное имя), поэтому сообщение о снятии печатает только победитель,
+# а оба запуска отрабатывают по очереди, без пересечения.
+rm -rf "$work/tmp/lock.d" "$work"/tmp/lock.d.stale.*
+mkdir -p "$work/tmp/lock.d"
+echo 999999 >"$work/tmp/lock.d/pid"
+log="$work/stale-race.log"; : >"$log"
+THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$log" FAKE_SLEEP=2 bash scripts/gametest.sh >"$work/stale-race1.out" 2>&1 &
+r1=$!
+THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$log" FAKE_SLEEP=2 bash scripts/gametest.sh >"$work/stale-race2.out" 2>&1 &
+r2=$!
+wait "$r1"; c1=$?
+wait "$r2"; c2=$?
+msgs=$(cat "$work/stale-race1.out" "$work/stale-race2.out" | grep -c 'снимаю протухший')
+starts=$(grep -c '^start ' "$log")
+ends=$(grep -c '^end ' "$log")
+first_end=$(grep '^end ' "$log" | head -n1 | awk '{print $2}')
+last_start=$(grep '^start ' "$log" | tail -n1 | awk '{print $2}')
+if [ "$c1" = 0 ] && [ "$c2" = 0 ]; then
+    ok "stale-race: оба ожидающих отработали (коды 0 и 0)"
+else
+    fail "stale-race: коды $c1 и $c2 (ожидал 0 и 0)"
+fi
+[ "$msgs" = 1 ] && ok "stale-race: протухший замок снял ровно один ожидающий" || fail "stale-race: сообщений о снятии $msgs (ожидал 1)"
+if [ "$starts" = 2 ] && [ "$ends" = 2 ] && [ "$last_start" -ge "$first_end" ]; then
+    ok "stale-race: запуски отработали по очереди, без пересечения"
+else
+    fail "stale-race: стартов $starts, концов $ends — запуски пересеклись или не все отработали"
+fi
+leftovers=$(ls -d "$work"/tmp/lock.d.stale.* 2>/dev/null | wc -l)
+[ "$leftovers" = 0 ] && ok "stale-race: переименованных остатков .stale.* не осталось" || fail "stale-race: остались $leftovers каталогов .stale.*"
+
 exit $failed

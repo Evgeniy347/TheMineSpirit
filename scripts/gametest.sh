@@ -22,7 +22,7 @@ release_dir_lock() {
 }
 
 acquire_dir_lock() {
-    local waited=0 holder
+    local waited=0 holder stale
     while true; do
         if mkdir "$lock_dir" 2>/dev/null; then
             echo $$ >"$lock_dir/pid"
@@ -31,9 +31,16 @@ acquire_dir_lock() {
         fi
         holder=$(cat "$lock_dir/pid" 2>/dev/null || echo "")
         if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
-            echo "gametest: снимаю протухший замок $lock_dir (процесс $holder мёртв)." >&2
-            release_dir_lock
-            continue
+            # Снятие протухшего замка атомарным переименованием: ровно один из ожидающих
+            # успевает mv (и печатает сообщение), проигравший mv не удался — ждёт дальше.
+            # Прежний rm -rf по очереди у обоих ожидающих мог снести замок, который первый
+            # только что снова взял себе.
+            stale="$lock_dir.stale.$$"
+            if mv "$lock_dir" "$stale" 2>/dev/null; then
+                echo "gametest: снимаю протухший замок $lock_dir (процесс $holder мёртв)." >&2
+                rm -rf "$stale"
+                continue
+            fi
         fi
         [ "$waited" -ge "$wait_seconds" ] && return 75
         sleep 2
