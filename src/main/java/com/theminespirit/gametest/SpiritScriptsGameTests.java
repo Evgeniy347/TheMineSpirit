@@ -20,7 +20,7 @@ public final class SpiritScriptsGameTests {
     private SpiritScriptsGameTests() {
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
+    @GameTest(batch = "spirit_catalog_static", template = "arena", timeoutTicks = 100)
     public static void catalog_Static_ListsExactlyRegistryScriptsInDefaultCatalogOrder(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -41,7 +41,7 @@ public final class SpiritScriptsGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
+    @GameTest(batch = "spirit_acquire_catalog", template = "arena", timeoutTicks = 100)
     public static void acquire_InCatalogAndRegistry_ListedAsImplemented(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));

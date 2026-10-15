@@ -202,7 +202,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_observe_ore_floor", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_OreFloorWithOreFilter_KeepsOnlyOreInBlocks(GameTestHelper helper) throws IOException {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
@@ -228,7 +228,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_observe_discard", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_SpiritDiscardedMidScan_Returns404WithId(GameTestHelper helper) throws IOException {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -261,7 +261,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_observe_stop", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
@@ -401,7 +401,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @GameTest(batch = "rest_oversized", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void oversizedBodies_FourParallelTwelveMebibyteRequests_AllGet400WithoutConnectionDrop(
             GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());

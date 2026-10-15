@@ -24,7 +24,7 @@ public final class RestLifecycleGameTests {
     private RestLifecycleGameTests() {
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest_config_defaults", template = "empty", timeoutTicks = 100)
     public static void config_Defaults_MatchDocumentedValues(GameTestHelper helper) {
         helper.assertTrue(Boolean.TRUE.equals(defaultOf("enabled")),
                 "REST-мост по умолчанию включён (enabled=true): иначе внешний агент не достучится до свежего сервера, "
@@ -42,7 +42,7 @@ public final class RestLifecycleGameTests {
         return value.getDefault();
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest_trystart_taken", template = "empty", timeoutTicks = 100)
     public static void tryStart_PortAlreadyTaken_ReturnsEmptyAndServerKeepsRunning(GameTestHelper helper)
             throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -57,7 +57,7 @@ public final class RestLifecycleGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest_trystart_unresolvable", template = "empty", timeoutTicks = 100)
     public static void tryStart_UnresolvableAddress_ReturnsEmptyAndServerKeepsRunning(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
 
@@ -70,7 +70,7 @@ public final class RestLifecycleGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest", template = "empty", timeoutTicks = 100)
+    @GameTest(batch = "rest_trystart_free", template = "empty", timeoutTicks = 100)
     public static void tryStart_FreePort_ReturnsRunningServerThatStops(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
 
