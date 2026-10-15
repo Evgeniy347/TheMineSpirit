@@ -21,6 +21,7 @@ public final class SpiritCommands {
         SpiritMemoryCommand.register(spirit);
         SpiritZoneCommand.register(spirit);
         SpiritHomeCommand.register(spirit);
+        SpiritDecisionsCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }
