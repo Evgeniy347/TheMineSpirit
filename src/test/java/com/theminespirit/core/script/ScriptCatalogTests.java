@@ -182,6 +182,7 @@ class ScriptCatalogTests {
                 spec("herd_check", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("hunt", List.of("species"),
                         Map.of("radius", new long[]{1, 32}, "count", new long[]{1, 64})),
+                spec("capture", List.of("species"), Map.of("radius", new long[]{1, 16})),
                 spec("craft", List.of("item", "count"),
                         Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("smelt", List.of("item", "count"),

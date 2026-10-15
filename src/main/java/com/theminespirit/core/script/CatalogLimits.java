@@ -121,6 +121,11 @@ public final class CatalogLimits {
     // Охота не трогает животных в домашнем круге старта духа
     public static final int HERD_HOME_RADIUS = 8;
 
+    // Отлов кольцом: радиус поиска животного, предел наращивания слабых мест
+    public static final int CAPTURE_RADIUS_MIN = 1;
+    public static final int CAPTURE_RADIUS_MAX = 16;
+    public static final int CAPTURE_RADIUS_DEFAULT = 8;
+    public static final int CAPTURE_RECHECK_MAX = 4;
     // Дух замечает отбившихся чуть дальше края загона
     public static final int HERD_SIGHT_MARGIN = 4;
 
