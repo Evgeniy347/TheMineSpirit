@@ -25,6 +25,7 @@ import com.theminespirit.core.tactics.adapter.StoredTactics;
 import com.theminespirit.core.tactics.adapter.TacticsFormatException;
 import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.ArmorEquipPolicy;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
 import com.theminespirit.neoforge.policy.ProtectionGate;
@@ -173,6 +174,7 @@ public final class SpiritEntity extends PathfinderMob {
 
     @Override
     public void onRemovedFromLevel() {
+        WorkReserveHub.releaseAll(this);
         Entity.RemovalReason reason = getRemovalReason();
         if (reason != null && (reason.shouldDestroy() || reason == Entity.RemovalReason.CHANGED_DIMENSION)) {
             chunkLoader.release();

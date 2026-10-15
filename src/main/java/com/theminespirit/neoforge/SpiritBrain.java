@@ -9,6 +9,7 @@ import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ public final class SpiritBrain {
         if (runner != null) {
             runner.cancel();
         }
+        WorkReserveHub.releaseAll(spirit);
         runner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), SpiritScripts.conditions());
         generation = GENERATIONS.incrementAndGet();
         suspendReason = null;
@@ -84,6 +86,7 @@ public final class SpiritBrain {
             recordResult();
             runner = null;
         }
+        WorkReserveHub.releaseAll(spirit);
     }
 
     public Optional<RunStatus> status() {
@@ -167,6 +170,7 @@ public final class SpiritBrain {
         if (status != RunStatus.RUNNING) {
             recordResult();
             runner = null;
+            WorkReserveHub.releaseAll(spirit);
         }
     }
 

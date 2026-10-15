@@ -64,4 +64,38 @@ public final class CoordinatorGameTests {
         seeker.discard();
         helper.succeed();
     }
+
+    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    public static void workCancelTask_ReservedTarget_ReleasesIt(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
+        WorkTarget target = tree(helper, new BlockPos(5, 1, 5));
+
+        helper.assertTrue(WorkReserveHub.reserve(owner, target), "Дух занял цель перед задачей");
+        owner.cancelTask();
+        helper.assertTrue(WorkReserveHub.choose(owner, List.of(target)).isPresent(),
+                "Отмена задачи освобождает цель: бронь не держится за снятым заданием");
+        owner.cancelTask();
+        helper.assertTrue(WorkReserveHub.releaseAll(owner) == 0,
+                "Повторное снятие броней без них — не ошибка: выгрузка безопасна");
+
+        TacticsScene.finish(helper, owner);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    public static void workSpiritRemoved_ReservedTarget_ReleasedForOther(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
+        SpiritEntity other = TacticsScene.spirit(helper, new BlockPos(6, 1, 5));
+        WorkTarget target = tree(helper, new BlockPos(5, 1, 5));
+
+        helper.assertTrue(WorkReserveHub.reserve(owner, target), "Дух занял цель");
+        owner.discard();
+        helper.assertTrue(WorkReserveHub.reserve(other, target),
+                "Выгрузка духа освобождает его брони: цель не остаётся занятой навсегда");
+
+        TacticsScene.finish(helper, other);
+        helper.succeed();
+    }
 }
