@@ -23,6 +23,8 @@ class FarmTallyTests {
                         "отказ без мотыги до первого действия", "нет мотыги"),
                 Arguments.of(FarmJob.TILL, new FarmTally(1, 3, 0, 0, 0, 1, 0, 0, 0), false,
                         "мотыга сломалась посреди вспашки", "мотыга сломалась: вспахано 1 из 3"),
+                Arguments.of(FarmJob.TILL, new FarmTally(0, 3, 0, 0, 0, 1, 0, 0, 0), false,
+                        "мотыга пропала до первой вспашки: итог не смеет утверждать «вспахано»", "нет мотыги"),
                 Arguments.of(FarmJob.TILL, new FarmTally(0, 0, 4, 0, 0, 0, 2, 0, 0), false,
                         "пахать нечего", "подходящей земли для вспашки нет"),
                 Arguments.of(FarmJob.PLANT, new FarmTally(9, 9, 0, 0, 0, 0, 0, 0, 0), true,

@@ -382,9 +382,11 @@ public final class FarmGameTests {
                     "причина провала обязана назвать поломку мотыги, фактически: " + reason);
             helper.assertTrue(reason.contains("вспахано 1"),
                     "причина провала обязана назвать одну вспаханную клетку, фактически: " + reason);
-            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 1,
-                    "до поломки вспахана ровно одна клетка, фактически пашни "
-                            + countBlock(helper, Blocks.FARMLAND));
+            int farmland = countBlock(helper, Blocks.FARMLAND);
+            helper.assertTrue(farmland == 1,
+                    "до поломки вспахана ровно одна клетка, фактически пашни " + farmland
+                            + "; done=" + run.done() + " из 3, тик духа " + run.totalTicks()
+                            + ", причина: " + reason);
             GameTestFixtures.reset(helper);
         });
     }
