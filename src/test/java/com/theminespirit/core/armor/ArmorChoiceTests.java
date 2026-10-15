@@ -125,6 +125,27 @@ class ArmorChoiceTests {
     }
 
     @Test
+    void loadedTable_CheckInterval_IsPositive() {
+        assertTrue(TABLE.checkIntervalTicks() > 0,
+                "Интервал проверки брони из файла обязан быть положительным: иначе политика не поняла бы, "
+                        + "когда проверять, фактически " + TABLE.checkIntervalTicks());
+    }
+
+    @Test
+    void parse_ZeroCheckInterval_Throws() {
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> ArmorTable.parse("""
+                        {"worn_fraction": 0.1, "check_interval_ticks": 0,
+                         "material_order": [{"match": ["leather_helmet"], "rank": 0}]}
+                        """, ORIGIN),
+                "Нулевой интервал обязан быть ошибкой: он превратил бы проверку брони в каждый тик "
+                        + "и нагрузил бы серверный тик");
+
+        assertTrue(error.getMessage().contains("check_interval_ticks"),
+                "Сообщение обязано называть поле check_interval_ticks. Фактическое: " + error.getMessage());
+    }
+
+    @Test
     void parse_EmptyMaterialOrder_Throws() {
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> ArmorTable.parse("""

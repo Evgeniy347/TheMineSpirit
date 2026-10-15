@@ -12,18 +12,20 @@ import java.util.Map;
 
 public final class ArmorTable {
     private static final String RESOURCE_PATH = "data/theminespirit/armor/armor_table.json";
-    private static final Set<String> ROOT_FIELDS = Set.of("material_order", "worn_fraction");
+    private static final Set<String> ROOT_FIELDS = Set.of("material_order", "worn_fraction", "check_interval_ticks");
     private static final Set<String> MATERIAL_FIELDS = Set.of("match", "rank");
 
     private final String origin;
     private final List<MaterialRule> materialOrder;
     private final double wornFraction;
+    private final int checkIntervalTicks;
     private final Map<String, Integer> rankCache = new ConcurrentHashMap<>();
 
-    private ArmorTable(String origin, List<MaterialRule> materialOrder, double wornFraction) {
+    private ArmorTable(String origin, List<MaterialRule> materialOrder, double wornFraction, int checkIntervalTicks) {
         this.origin = origin;
         this.materialOrder = List.copyOf(materialOrder);
         this.wornFraction = wornFraction;
+        this.checkIntervalTicks = checkIntervalTicks;
     }
 
     public static ArmorTable load() {
@@ -39,7 +41,8 @@ public final class ArmorTable {
         JsonResource.checkFields(root, ROOT_FIELDS, origin, "файла материалов брони");
         List<MaterialRule> order = parseOrder(root.get("material_order"), origin);
         double worn = parseWornFraction(root.get("worn_fraction"), origin);
-        return new ArmorTable(origin, order, worn);
+        int interval = parseCheckInterval(root.get("check_interval_ticks"), origin);
+        return new ArmorTable(origin, order, worn, interval);
     }
 
     public int materialRank(String item) {
@@ -49,6 +52,10 @@ public final class ArmorTable {
 
     public double wornFraction() {
         return wornFraction;
+    }
+
+    public int checkIntervalTicks() {
+        return checkIntervalTicks;
     }
 
     public String origin() {
@@ -104,6 +111,20 @@ public final class ArmorTable {
             throw new IllegalStateException("Файл материалов брони '" + origin + "': worn_fraction равен " + value
                     + ": порог задаётся строго между 0 и 1, иначе почти сломанным был бы любой предмет "
                     + "или ни один");
+        }
+        return value;
+    }
+
+    private static int parseCheckInterval(JsonNode node, String origin) {
+        if (node == null || !node.isInt()) {
+            throw new IllegalStateException("Файл материалов брони '" + origin + "': у поля check_interval_ticks "
+                    + "ожидается целое число: интервал проверки брони задаётся тиками, дробный или пустой "
+                    + "не имеет смысла");
+        }
+        int value = node.asInt();
+        if (value <= 0) {
+            throw new IllegalStateException("Файл материалов брони '" + origin + "': check_interval_ticks равен "
+                    + value + ": интервал задаётся положительным, нулевой превратил бы проверку в каждый тик");
         }
         return value;
     }

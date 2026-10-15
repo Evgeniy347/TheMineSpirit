@@ -1,5 +1,6 @@
 {
   "worn_fraction": 0.1,
+  "check_interval_ticks": 40,
   "material_order": [
     { "match": ["leather_helmet", "leather_chestplate", "leather_leggings", "leather_boots"], "rank": 0 },
     { "match": ["golden_helmet", "golden_chestplate", "golden_leggings", "golden_boots"], "rank": 1 },
