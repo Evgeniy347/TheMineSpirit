@@ -151,8 +151,7 @@ public final class MobTargetsGameTests {
 
     @GameTest(template = "arena", batch = "mob_targets_spider_day", timeoutTicks = 400)
     public static void spider_NextToSpiritInDaylight_DoesNotTakeSpiritAsTarget(GameTestHelper helper) {
-        long savedDayTime = helper.getLevel().getDayTime();
-        helper.getLevel().setDayTime(DAYLIGHT);
+        GameTestFixtures.holdDayTime(helper, DAYLIGHT);
         SpiritEntity spirit = spirit(helper);
         boolean[] spiritTookTarget = {false};
         helper.onEachTick(() -> spiritTookTarget[0] |= spirit.getTarget() != null);
@@ -172,7 +171,6 @@ public final class MobTargetsGameTests {
             helper.assertTrue(!spiritTookTarget[0],
                     "дух не дерётся первым днём на открытом месте, а его цель "
                             + describeTarget(spirit.getTarget(), spirit));
-            helper.getLevel().setDayTime(savedDayTime);
             GameTestFixtures.reset(helper);
             helper.succeed();
         });
@@ -180,8 +178,7 @@ public final class MobTargetsGameTests {
 
     @GameTest(template = "arena", batch = "mob_targets_spider_night", timeoutTicks = 400)
     public static void spider_NextToSpiritAtNight_TakesSpiritAsTarget(GameTestHelper helper) {
-        long savedDayTime = helper.getLevel().getDayTime();
-        helper.getLevel().setDayTime(NIGHT);
+        GameTestFixtures.holdDayTime(helper, NIGHT);
         SpiritEntity spirit = spirit(helper);
         AtomicReference<Spider> spider = new AtomicReference<>();
         helper.runAfterDelay(2, () -> spider.set(helper.spawn(EntityType.SPIDER, MOB_AT)));
@@ -191,7 +188,6 @@ public final class MobTargetsGameTests {
             helper.assertTrue(current != null && current.getTarget() == spirit,
                     "Паук ночью рядом с духом обязан сам выбрать духа целью за " + OBSERVED_TICKS
                             + " тиков, а его цель " + (current == null ? "ещё не заспавнен" : current.getTarget()));
-            helper.getLevel().setDayTime(savedDayTime);
             GameTestFixtures.reset(helper);
         });
     }

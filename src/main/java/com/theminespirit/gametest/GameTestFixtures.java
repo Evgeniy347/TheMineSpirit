@@ -15,6 +15,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.Container;
@@ -32,6 +33,9 @@ final class GameTestFixtures {
     static final int FLOOR_SIZE = 9;
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
+    private static final int SWEEP_MARGIN = 48;
+    private static final int SWEEP_BELOW = 16;
+    private static final int SWEEP_ABOVE = 40;
     private static final int MAX_CHUNKS_EAST = 256;
 
     private GameTestFixtures() {
@@ -49,10 +53,21 @@ final class GameTestFixtures {
                 }
             }
         }
-        for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper, clearHeight),
+        sweepEntities(helper);
+    }
+
+    static void sweepEntities(GameTestHelper helper) {
+        for (Entity entity : helper.getLevel().getEntities((Entity) null, sweepArea(helper),
                 e -> !(e instanceof Player))) {
             entity.discard();
         }
+    }
+
+    static void holdDayTime(GameTestHelper helper, long dayTime) {
+        ServerLevel level = helper.getLevel();
+        long saved = level.getDayTime();
+        level.setDayTime(dayTime);
+        helper.testInfo.addListener(new TimeRestore(level, saved));
     }
 
     static void buildFloor(GameTestHelper helper, Block block) {
@@ -157,6 +172,33 @@ final class GameTestFixtures {
         @Override
         public void testFailed(GameTestInfo test, GameTestRunner runner) {
             server.getPlayerList().remove(player);
+        }
+
+        @Override
+        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {
+        }
+    }
+
+    private static AABB sweepArea(GameTestHelper helper) {
+        Vec3 first = helper.absoluteVec(new Vec3(-SWEEP_MARGIN, -SWEEP_BELOW, -SWEEP_MARGIN));
+        Vec3 second = helper.absoluteVec(
+                new Vec3(FLOOR_SIZE + SWEEP_MARGIN, SWEEP_ABOVE, FLOOR_SIZE + SWEEP_MARGIN));
+        return new AABB(first, second);
+    }
+
+    private record TimeRestore(ServerLevel level, long savedDayTime) implements GameTestListener {
+        @Override
+        public void testStructureLoaded(GameTestInfo testInfo) {
+        }
+
+        @Override
+        public void testPassed(GameTestInfo test, GameTestRunner runner) {
+            level.setDayTime(savedDayTime);
+        }
+
+        @Override
+        public void testFailed(GameTestInfo test, GameTestRunner runner) {
+            level.setDayTime(savedDayTime);
         }
 
         @Override
