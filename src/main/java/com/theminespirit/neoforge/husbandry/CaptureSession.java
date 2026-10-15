@@ -411,16 +411,17 @@ public final class CaptureSession {
             wanted = BlockStates.stateFor(blockId);
         }
         planSize = ring.blocks().size();
-        int have = BlockItems.countIn(spirit.getInventory(), blockId);
-        if (have < planSize) {
-            fail("не хватило блоков '" + blockId + "': нужно " + planSize + ", есть " + have);
-            return false;
-        }
         remaining.clear();
         for (BlockCoord block : RingBuildOrder.order(ring, center)) {
             if (!alreadyBuilt(block)) {
                 remaining.add(block);
             }
+        }
+        int have = BlockItems.countIn(spirit.getInventory(), blockId);
+        if (have < remaining.size()) {
+            fail("не хватило блоков '" + blockId + "': нужно " + planSize + ", уже поставлено "
+                    + (planSize - remaining.size()) + ", есть " + have);
+            return false;
         }
         needsPlan = false;
         state = State.BUILD;

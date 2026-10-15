@@ -100,11 +100,23 @@ public final class CaptureGameTests {
                 helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
             }
         }
-        helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
+        Sheep sheep = helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
+        sheep.setNoAi(true);
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
+        AtomicInteger successTick = new AtomicInteger(-1);
+        helper.onEachTick(() -> {
+            if (spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && successTick.get() < 0) {
+                successTick.set(spirit.tickCount);
+            }
+            // Овца уходит: кольцо пересчитывается за ней. Материал на уже поставленные блоки не списывается
+            // заново — иначе на 17-й постановке дух видит «нужно 48, есть 47» и бросает отлов.
+            if (successTick.get() < 0) {
+                sheep.move(MoverType.SELF, new Vec3(0.06, 0, 0));
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
