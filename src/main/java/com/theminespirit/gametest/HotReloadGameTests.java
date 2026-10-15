@@ -79,7 +79,7 @@ public final class HotReloadGameTests {
                 helper.assertTrue(spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.LEATHER_CHESTPLATE),
                         "по новой таблице потёртая железная кираса считается сломанной и дух обязан надеть кожаную; "
                                 + "в слоте груди " + spirit.getItemBySlot(EquipmentSlot.CHEST));
-                GameTestFixtures.reset(helper);
+                GameTestFixtures.finish(helper);
             });
         } finally {
             cleanupDatapack(helper);
@@ -101,7 +101,7 @@ public final class HotReloadGameTests {
             helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == before,
                     "битый json не подменяет таблицу: работает прежняя (check_interval_ticks = " + before + "); "
                             + "фактически " + DataTables.INSTANCE.armor().current().checkIntervalTicks());
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
             helper.succeed();
         } finally {
             cleanupDatapack(helper);
