@@ -1,18 +1,23 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
+import com.theminespirit.neoforge.coordinator.SpiritSnapshotReader;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -112,6 +117,26 @@ public final class CoordinatorGameTests {
         CoordinatorRegistry.remove(level);
         helper.assertTrue(first != CoordinatorRegistry.get(level),
                 "После remove реестр выдаёт новый координатор: выгруженный уровень не держит старое состояние");
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_snapshot", timeoutTicks = 100)
+    public static void snapshotRead_AttackerJustBeyondThreatRadius_StillCountsAsThreat(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 22));
+        husk.setPos(helper.absoluteVec(new Vec3(5.5, 1.0, 21.8)));
+        husk.setTarget(spirit);
+
+        SpiritSnapshot snapshot = SpiritSnapshotReader.read(spirit, helper.getLevel().getGameTime());
+
+        helper.assertTrue(snapshot.attacked(),
+                "Моб с целью на духа считается напавшим, даже стоя за радиусом угроз: иначе координатор не зовёт помощь");
+        helper.assertTrue(snapshot.threatsNear() >= 1,
+                "Атакованный дух видит хотя бы одну угрозу: иначе снимок противоречит сам себе и роняет тик");
+
+        husk.discard();
+        TacticsScene.finish(helper, spirit);
         helper.succeed();
     }
 

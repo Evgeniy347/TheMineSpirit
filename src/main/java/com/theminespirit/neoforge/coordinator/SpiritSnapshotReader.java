@@ -46,16 +46,14 @@ public final class SpiritSnapshotReader {
         Set<UUID> attackers = new HashSet<>();
         for (LivingEntity entity : near) {
             if (entity instanceof Enemy || entity instanceof Mob) {
-                double dist = entity.distanceTo(spirit);
-                if (dist <= THREAT_RADIUS) {
-                    threatsNear++;
-                }
+                threatsNear++;
             }
             if (entity instanceof Mob mob && mob.getTarget() == spirit) {
                 attackers.add(mob.getUUID());
             }
         }
         boolean attacked = !attackers.isEmpty();
+        threatsNear = Math.max(threatsNear, attackers.size());
         return new SpiritSnapshot(id, pos, hpFraction, role, mode, threatsNear, attacked,
                 Optional.<WorkTarget>empty(), tick);
     }
