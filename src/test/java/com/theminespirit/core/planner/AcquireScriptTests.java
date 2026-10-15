@@ -308,7 +308,7 @@ class AcquireScriptTests {
     }
 
     @Test
-    void firstAttemptFails_SecondSucceeds_StartInventoryNotOverwritten() {
+    void firstAttemptGathersThenFails_SecondSucceeds_StartInventoryNotOverwritten() {
         AtomicInteger inventory = new AtomicInteger(1);
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryLive = inventory;
@@ -317,20 +317,21 @@ class AcquireScriptTests {
                 ConditionCatalog.empty(),
                 () -> {
                     buildCount.incrementAndGet();
-                    // Первая попытка падает сразу; вторая — счётный скрипт на 2 тика.
+                    // Первая попытка добила 1 предмет и упала; вторая добывает 2.
                     return ScriptRegistry.of(Map.of("gather", params ->
                             buildCount.get() == 1
-                                    ? new AlwaysFailingInstance()
+                                    ? new GatherThenFailInstance(inventory)
                                     : new CountingInstance(2, inventory)));
                 }, NO_CONDITIONS);
 
         assertEquals(ScriptStatus.SUCCEEDED, run(script, 40),
-                "Первая попытка падает, вторая успешна — acquire обязан дойти до конца");
+                "Первая попытка добывает и падает, вторая успешна — acquire обязан дойти до конца");
         Map<String, Object> fields = ((ScriptResult.Data) script.result().orElseThrow()).fields();
         assertEquals(1, fields.get("from_inventory"),
-                "startInventory зафиксирован на первой попытке: пересборка не перезаписывает его");
-        assertEquals(2, fields.get("gathered"),
-                "gathered — добыто после первой попытки, пересборка не меняет стартовое число");
+                "startInventory зафиксирован на первой попытке: пересборка не считает частичную добычу "
+                        + "стартовым инвентарём");
+        assertEquals(3, fields.get("gathered"),
+                "gathered считает обе попытки: 1 предмет до пересборки и 2 после, стартовые числа не съедены");
         assertEquals(2, fields.get("attempts"),
                 "Обе попытки учтены: первая упала, вторая успешна");
     }
@@ -674,6 +675,30 @@ class AcquireScriptTests {
         @Override
         public String failureReason() {
             return "нет блока в радиусе";
+        }
+    }
+
+    private static final class GatherThenFailInstance implements ScriptInstance {
+        private final AtomicInteger shared;
+        private boolean gathered;
+
+        GatherThenFailInstance(AtomicInteger sharedTicks) {
+            this.shared = sharedTicks;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            if (!gathered) {
+                gathered = true;
+                shared.incrementAndGet();
+                return ScriptStatus.RUNNING;
+            }
+            return ScriptStatus.FAILED;
+        }
+
+        @Override
+        public String failureReason() {
+            return "блок пропал после частичной добычи";
         }
     }
 
