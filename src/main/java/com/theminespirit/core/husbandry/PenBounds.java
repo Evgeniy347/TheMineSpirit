@@ -22,19 +22,28 @@ public record PenBounds(BlockCoord center, int radius) {
     }
 
     public BlockCoord nearestInside(BlockCoord pos) {
+        return nearestInside(pos, 0);
+    }
+
+    public BlockCoord nearestInside(BlockCoord pos, int margin) {
         Objects.requireNonNull(pos, "Позиция не может быть null: неизвестно, куда возвращать");
-        if (inside(pos)) {
+        if (margin < 0 || margin >= radius) {
+            throw new IllegalArgumentException("Отступ возврата " + margin + " вне диапазона [0, " + radius
+                    + "): отступ во весь радиус не оставляет места внутри загона");
+        }
+        if (inside(pos) && distanceSquared(pos) <= (long) (radius - margin) * (radius - margin)) {
             return pos;
         }
+        int target = radius - margin;
         long dx = (long) pos.x() - center.x();
         long dz = (long) pos.z() - center.z();
         if (dx == 0 && dz == 0) {
-            return new BlockCoord(center.x() + radius, pos.y(), center.z());
+            return new BlockCoord(center.x() + target, pos.y(), center.z());
         }
-        double scale = radius / Math.sqrt(dx * dx + dz * dz);
+        double scale = target / Math.sqrt(dx * dx + dz * dz);
         BlockCoord inside = new BlockCoord(center.x() + (int) Math.round(dx * scale), pos.y(),
                 center.z() + (int) Math.round(dz * scale));
-        while (!inside(inside)) {
+        while (!shallowInside(inside, target)) {
             int stepX = Integer.compare(center.x(), inside.x());
             int stepZ = Integer.compare(center.z(), inside.z());
             inside = new BlockCoord(inside.x() + stepX, pos.y(), inside.z() + stepZ);
@@ -52,6 +61,12 @@ public record PenBounds(BlockCoord center, int radius) {
             }
         }
         return List.copyOf(escaped);
+    }
+
+    private boolean shallowInside(BlockCoord pos, int target) {
+        long dx = (long) pos.x() - center.x();
+        long dz = (long) pos.z() - center.z();
+        return dx * dx + dz * dz <= (long) target * target;
     }
 
     private long distanceSquared(BlockCoord pos) {

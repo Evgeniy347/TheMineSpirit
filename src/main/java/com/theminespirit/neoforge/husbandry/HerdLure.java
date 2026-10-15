@@ -8,6 +8,9 @@ import net.minecraft.world.phys.Vec3;
 final class HerdLure {
     private static final double LURE_SPEED = 1.0;
     private static final int LURE_TICKS_PER_ESCAPEE = 150;
+    // Возврат ведём не на кромку загона, а на два блока внутрь: вернувшаяся на кромку овца выходит обратно
+    // первым же шагом RandomStroll, и приманка крутится, пока не упрётся в лимит тиков.
+    private static final int LURE_INSET = 2;
 
     private final HerdSession session;
     private final HerdFlock flock;
@@ -49,7 +52,7 @@ final class HerdLure {
                     + " тиков: животное не идёт за кормом");
             return;
         }
-        BlockCoord returnPoint = session.pen.nearestInside(escapeePos);
+        BlockCoord returnPoint = session.pen.nearestInside(escapeePos, LURE_INSET);
         if (!session.approach.isActive()) {
             session.approach.begin(new Vec3(returnPoint.x() + 0.5, returnPoint.y(), returnPoint.z() + 0.5), 1.5);
         }

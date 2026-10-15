@@ -53,6 +53,29 @@ class PenBoundsTests {
     }
 
     @Test
+    void nearestInside_WithMargin_ReturnsAtLeastMarginInsideEdge() {
+        PenBounds pen = new PenBounds(CENTER, 5);
+        BlockCoord outside = new BlockCoord(12, 64, 0);
+
+        BlockCoord returned = pen.nearestInside(outside, 2);
+
+        assertEquals(new BlockCoord(3, 64, 0), returned,
+                "Возврат с отступом 2 обязан встать на расстоянии 5-2=3 от центра: на кромке radius=5 овца "
+                        + "выходит обратно первым шагом, и приманка не заканчивается");
+        assertEquals(returned, pen.nearestInside(returned, 2),
+                "Точка, уже лежащая глубже отступа, не двигается: иначе возврат дёргает животное по кругу");
+    }
+
+    @Test
+    void nearestInside_MarginOutOfRange_IsRejected() {
+        PenBounds pen = new PenBounds(CENTER, 5);
+        assertThrows(IllegalArgumentException.class, () -> pen.nearestInside(new BlockCoord(12, 64, 0), -1),
+                "Отрицательный отступ отвергается: он двигал бы цель наружу загона");
+        assertThrows(IllegalArgumentException.class, () -> pen.nearestInside(new BlockCoord(12, 64, 0), 5),
+                "Отступ во весь радиус отвергается: внутри загона не остаётся места");
+    }
+
+    @Test
     void escapedOf_MixedHerd_ListsOnlyOutsiders() {
         PenBounds pen = new PenBounds(CENTER, 5);
         AnimalRef inside = new AnimalRef("in", Species.COW, false, true, false, new BlockCoord(1, 64, 1), true);
@@ -89,5 +112,19 @@ class PenBoundsTests {
         assertTrue(pen.inside(nearest),
                 "Возврат из (" + dx + ", " + dz + ") обязан приземлиться внутри загона: иначе дух уведёт "
                         + "отбившегося ещё дальше");
+    }
+
+    @Property
+    void nearestInside_AnyOutsidePointWithMargin_LandsAtLeastMarginInside(@ForAll @IntRange(min = -40, max = 40) int dx,
+            @ForAll @IntRange(min = -40, max = 40) int dz) {
+        PenBounds pen = new PenBounds(CENTER, 5);
+
+        BlockCoord returned = pen.nearestInside(new BlockCoord(dx, 64, dz), 2);
+
+        long offsetX = (long) returned.x() - CENTER.x();
+        long offsetZ = (long) returned.z() - CENTER.z();
+        assertTrue(offsetX * offsetX + offsetZ * offsetZ <= 3L * 3L,
+                "Возврат с отступом 2 из (" + dx + ", " + dz + ") обязан лежать не дальше 5-2=3 от центра: "
+                        + "точка на кромке позволила бы животному снова выйти, а приманка не завершилась бы");
     }
 }
