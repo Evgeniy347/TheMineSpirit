@@ -44,7 +44,7 @@ public final class AttackScript implements ScriptInstance {
         if (target != null && (target.isDeadOrDying() || target.isRemoved())) {
             return succeed();
         }
-        if (target == null || true) {
+        if (target == null) {
             Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, selector);
             if (found.isPresent()) {
                 target = found.get();

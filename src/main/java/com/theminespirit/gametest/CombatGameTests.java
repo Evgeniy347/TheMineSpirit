@@ -3,8 +3,10 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.AttackParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
@@ -15,6 +17,7 @@ import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.combat.AttackScript;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.ArrayList;
@@ -301,6 +304,35 @@ public final class CombatGameTests {
                             + "получено " + spirit.taskResult().map(Object::toString).orElse("пусто"));
             TacticsScene.finish(helper, spirit);
         });
+    }
+
+    @GameTest(template = "arena", batch = "combat_attack_queries", timeoutTicks = 150)
+    public static void attack_TargetResolvedOnce_EntityQueriesDontGrowPerTick(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(8, 1, 5));
+        AttackScript script = new AttackScript(spirit, AttackParams.from(Map.of()));
+        int base = spirit.entityQueries();
+
+        ScriptStatus first = script.tick();
+        helper.assertTrue(first == ScriptStatus.RUNNING,
+                "первый тик атаки обязан продолжаться, статус: " + first
+                        + (script.failureReason() != null ? ", причина: " + script.failureReason() : ""));
+        int afterFirst = spirit.entityQueries() - base;
+        helper.assertTrue(afterFirst == 1,
+                "первый тик обязан ровно один раз разрешить цель, запросов: " + afterFirst + " вместо 1");
+        for (int i = 0; i < 30; i++) {
+            script.tick();
+            helper.assertTrue(!(husk.isDeadOrDying() || husk.isRemoved()),
+                    "хуск не вправе погибнуть в этом тесте сам по себе, здоровье: " + husk.getHealth());
+        }
+        int grown = spirit.entityQueries() - base;
+        helper.assertTrue(grown <= 1,
+                "пока цель жива, скрипт не опрашивает мир повторно: запросов " + grown
+                        + " за 31 тик, норма — не больше 1");
+        script.cancel();
+        TacticsScene.finish(helper, spirit);
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = "combat_defend", timeoutTicks = 400)
