@@ -165,7 +165,7 @@ public final class CaptureGameTests {
             helper.assertTrue(anchor != null, "итог поимки обязан нести центр кольца: без него негде искать овцу");
             helper.assertTrue(ringBlocks(helper) >= 24,
                     "кольцо вокруг идущей овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
-            GameTestFixtures.reset(helper);
+            GameTestFixtures.finish(helper);
         });
     }
 
