@@ -317,7 +317,7 @@ public final class TacticsService {
 
     private void evaluate(long now, boolean byEvent) {
         TacticsInputs inputs = new TacticsInputs(ordered, zone, ward, ticksSince(lastHurtTick),
-                ticksSince(combat.lastStrikeTick()));
+                ticksSince(combat.lastStrikeTick()), designatedTarget());
         WorldFactCollector.Collected collected = collector.collect(spirit, inputs);
         blockReads += collected.blockReads();
         entityQueries += collected.entityQueries();
@@ -348,6 +348,10 @@ public final class TacticsService {
         logChange(next);
         outcome = next;
         facts = collected;
+    }
+
+    private Optional<LivingEntity> designatedTarget() {
+        return Optional.ofNullable(forcedTarget).filter(LivingEntity::isAlive);
     }
 
     private void replan(WorldFactCollector.Collected collected, Situation situation) {
@@ -397,13 +401,6 @@ public final class TacticsService {
         }
         LivingEntity target = forcedTarget != null && forcedTarget.isAlive() ? forcedTarget
                 : entity(targetId).orElse(null);
-        if (forcedTarget != null && forcedTarget.isAlive() && directive != null
-                && directive.mode() == CombatMode.AGGRESSIVE) {
-            active = true;
-            retreating.reset();
-            combat.melee(forcedTarget);
-            return;
-        }
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
             retreating.reset();

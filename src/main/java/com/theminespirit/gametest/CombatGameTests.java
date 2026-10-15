@@ -29,6 +29,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -113,12 +114,37 @@ public final class CombatGameTests {
         tactics.setForcedTarget(husk);
 
         int[] huskHealthStart = {(int) husk.getHealth()};
-        helper.onEachTick(() -> {
-        });
         helper.succeedWhen(() -> {
             helper.assertTrue(husk.getHealth() < huskHealthStart[0],
-                    "приказ attack с живой целью обязан бить её даже когда ядро решило IGNORE, "
+                    "приказ attack с живой целью обязан бить её тем же решением ядра тактики, "
                             + "здоровье хуска: " + husk.getHealth() + " из " + huskHealthStart[0]
+                            + ", ударов: " + tactics.combat().strikes());
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "combat_forced_attack_animal", timeoutTicks = 200)
+    public static void forcedAttack_AnimalTarget_SpiritStillStrikes(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        Cow cow = TacticsScene.watcher(helper, EntityType.COW, new BlockPos(8, 1, 5));
+        TacticsService tactics = spirit.tactics();
+        tactics.applyDirective(CombatDirective.attack(TargetSelector.parse("animal")));
+        tactics.setForcedTarget(cow);
+
+        float cowHealthStart = cow.getHealth();
+        boolean[] fought = {false};
+        helper.onEachTick(() -> tactics.lastOutcome()
+                .ifPresent(outcome -> fought[0] |= outcome.decision() == TacticalOption.FIGHT));
+        helper.succeedWhen(() -> {
+            helper.assertTrue(fought[0],
+                    "принудительная цель обязана пройти через ядро тактики решением FIGHT, а не мимо него, "
+                            + "решение: " + tactics.lastOutcome().map(outcome -> outcome.decision().toString())
+                                    .orElse("нет решений")
+                            + ", трасса: " + tactics.explain().orElse("нет"));
+            helper.assertTrue(cow.getHealth() < cowHealthStart,
+                    "приказ attack на не-врага (животное) обязан бить цель, пока ядро тактики видит её в фактах, "
+                            + "здоровье коровы: " + cow.getHealth() + " из " + cowHealthStart
                             + ", ударов: " + tactics.combat().strikes());
             TacticsScene.finish(helper, spirit);
         });

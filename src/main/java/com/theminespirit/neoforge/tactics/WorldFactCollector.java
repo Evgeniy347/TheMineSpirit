@@ -75,6 +75,17 @@ public final class WorldFactCollector {
             byId.put(id, enemy);
             enemies.add(enemyFact(spirit, enemy, id, visible));
         }
+        inputs.forcedTarget()
+                .filter(target -> target.distanceTo(spirit) <= settings.factRadius())
+                .filter(target -> !byId.containsKey(target.getUUID().toString()))
+                .ifPresent(target -> {
+                    String id = target.getUUID().toString();
+                    byId.put(id, target);
+                    enemies.add(enemyFact(spirit, target, id, visible(spirit, target, sight)));
+                    Point self = point(spirit.position());
+                    enemies.sort(Comparator.comparingDouble((EnemyFact fact) -> fact.pos().distanceTo(self))
+                            .thenComparing(EnemyFact::id));
+                });
         total.charge(visibilityBudget.used());
         EnvReading env = enemies.isEmpty() ? EnvReading.NOTHING : scanEnv(spirit, enemies, terrain, total, now);
         Optional<Point> home = home(spirit);
@@ -107,9 +118,13 @@ public final class WorldFactCollector {
                 enemies.add(entity);
             }
         }
+        sortNearestFirst(enemies, spirit);
+        return new Found(enemies, allies);
+    }
+
+    private static void sortNearestFirst(List<LivingEntity> enemies, SpiritEntity spirit) {
         enemies.sort(Comparator.comparingDouble((LivingEntity entity) -> entity.distanceToSqr(spirit))
                 .thenComparing(entity -> entity.getUUID().toString()));
-        return new Found(enemies, allies);
     }
 
     private EnvReading scanEnv(SpiritEntity spirit, List<EnemyFact> enemies, LoadedTerrain terrain, ReadBudget budget,

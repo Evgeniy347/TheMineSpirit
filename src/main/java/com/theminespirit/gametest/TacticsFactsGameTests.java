@@ -48,7 +48,8 @@ public final class TacticsFactsGameTests {
     }
 
     private static TacticsInputs inputs() {
-        return new TacticsInputs(CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), 1_000_000, 1_000_000);
+        return new TacticsInputs(CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), 1_000_000, 1_000_000,
+                Optional.empty());
     }
 
     @GameTest(template = "arena", batch = "tactics_facts_visibility", timeoutTicks = 100)
