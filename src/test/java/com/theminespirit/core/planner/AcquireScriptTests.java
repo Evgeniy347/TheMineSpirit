@@ -207,6 +207,29 @@ class AcquireScriptTests {
     }
 
     @Test
+    void suspend_BeforeFirstTick_NewRunnerIsSuspended() {
+        AtomicInteger ticks = new AtomicInteger();
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
+                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
+                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
+                NO_CONDITIONS);
+
+        script.suspend();
+        assertEquals(ScriptStatus.RUNNING, script.tick(),
+                "suspend до первого тика не ломает сборку подплана");
+        assertEquals(ScriptStatus.RUNNING, script.tick(),
+                "Повторный тик при suspend не двигает вложенный шаг: раннер заморожен");
+        assertEquals(0, ticks.get(),
+                "suspend до первого тика обязан дойти до нового раннера: шаг не тикает");
+
+        script.resume();
+        assertEquals(ScriptStatus.RUNNING, script.tick(),
+                "После resume вложенный шаг снова работает");
+        assertEquals(1, ticks.get(),
+                "resume размораживает раннер, созданный после suspend");
+    }
+
+    @Test
     void cancel_AfterNestedStarted_InsteadOfFailed() {
         AtomicInteger ticks = new AtomicInteger();
         AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),

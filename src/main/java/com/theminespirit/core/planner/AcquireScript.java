@@ -48,6 +48,7 @@ public final class AcquireScript implements ScriptInstance {
     private ScriptStatus finalStatus;
     private String failureReason;
     private String lastStepFailure;
+    private boolean suspendedBeforeStart;
 
     public AcquireScript(String item, int count, ResourceKnowledge knowledge, AcquireSupplies supplies,
             ScriptCatalog catalog, ConditionCatalog conditions, Supplier<ScriptRegistry> registry,
@@ -95,6 +96,9 @@ public final class AcquireScript implements ScriptInstance {
                 return ScriptStatus.SUCCEEDED;
             }
             runner = TaskRunner.start(plan.get(), registry.get(), conditionRegistry);
+            if (suspendedBeforeStart) {
+                runner.suspend();
+            }
         }
         RunStatus status = runner.tick();
         switch (status) {
@@ -219,6 +223,8 @@ public final class AcquireScript implements ScriptInstance {
     public void suspend() {
         if (runner != null) {
             runner.suspend();
+        } else {
+            suspendedBeforeStart = true;
         }
     }
 
@@ -226,6 +232,8 @@ public final class AcquireScript implements ScriptInstance {
     public void resume() {
         if (runner != null) {
             runner.resume();
+        } else {
+            suspendedBeforeStart = false;
         }
     }
 
