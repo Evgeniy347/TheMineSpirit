@@ -30,6 +30,7 @@ public final class SpiritGameTests {
 
     @GameTest(batch = "spirit_adapterRegistry", template = "arena", timeoutTicks = 100)
     public static void adapterRegistry_EveryScriptId_IsDescribedInCatalog(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         ScriptRegistry registry = SpiritScripts.registryFor(spirit);
         ScriptCatalog catalog = CoreScripts.defaultCatalog();
@@ -46,6 +47,7 @@ public final class SpiritGameTests {
 
     @GameTest(batch = "spirit_spawn", template = "arena", timeoutTicks = 100)
     public static void spawn_SpiritEntityType_CreatesLivingSpirit(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
 
         helper.assertTrue(spirit.isAlive(),
@@ -55,6 +57,7 @@ public final class SpiritGameTests {
 
     @GameTest(batch = "spirit_observe", template = "arena", timeoutTicks = 100)
     public static void observe_WorldWithFloor_ReturnsNonEmptyBlocksAndSpectreEntity(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
@@ -79,6 +82,7 @@ public final class SpiritGameTests {
 
     @GameTest(template = "arena", batch = "scan_legacy_unloaded", timeoutTicks = 100)
     public static void scan_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
@@ -119,6 +123,7 @@ public final class SpiritGameTests {
 
     @GameTest(batch = "spirit_gotoScript", template = "arena", timeoutTicks = 200)
     public static void gotoScript_SpiritOnFloor_ReachesTargetWithinTolerance(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -138,6 +143,7 @@ public final class SpiritGameTests {
     // [флак] дух идёт к недостижимой цели, ждём тайм-аут задачи
     @GameTest(batch = "spirit_gotoScript", template = "arena", timeoutTicks = 500)
     public static void gotoScript_UnreachableTarget_KeepsFailureStatusAndReason(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos target = helper.absolutePos(new BlockPos(1, 1, 1));

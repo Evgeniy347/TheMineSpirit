@@ -26,6 +26,7 @@ public final class FollowGameTests {
 
     @GameTest(template = "arena", batch = "follow_hold", timeoutTicks = 300)
     public static void followScript_StationaryMockPlayer_HoldsRadiusWithFewRebuilds(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(PLAYER_X, 1, 1), PLAYER_NAME);

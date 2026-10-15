@@ -143,6 +143,7 @@ public final class ChopTreeGameTests {
 
     @GameTest(template = FIELD, batch = "chop_tree_axe_durability", timeoutTicks = 300)
     public static void chopTree_AxeDurability_DecreasesByLogCount(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
@@ -303,6 +304,7 @@ public final class ChopTreeGameTests {
 
     @GameTest(template = FIELD, batch = "chop_tree_unreachable_island", timeoutTicks = 300)
     public static void chopTree_TreeOnIslandWithPit_RejectedUnreachable(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         digPitAround(helper, 6, 6, 5);
         buildOakTree(helper, 6, 6, 5);
@@ -374,6 +376,7 @@ public final class ChopTreeGameTests {
 
     @GameTest(template = FIELD, batch = "chop_tree_by_hand", timeoutTicks = 300)
     public static void chopTree_WithoutAxeTwoLogs_SucceedsByHand(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         // Крона на высоте 3, а не 2: листья вплотную к земле закрывают духу ростом 1.4 вход в клетку ствола,
         // и дроп оказывается физически недосягаем.
@@ -610,6 +613,7 @@ public final class ChopTreeGameTests {
 
     @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 400)
     public static void chopTree_ReloadedAfterFirstTree_ChopsExactlyThreeTrees(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         buildOakTree(helper, 3, 3, 5);
         buildOakTree(helper, 6, 3, 5);

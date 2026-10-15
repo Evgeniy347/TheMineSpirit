@@ -243,6 +243,7 @@ public final class AcquireGameTests {
     @GameTest(template = "arena", batch = "acquire_rest", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void acquireWoodenPickaxe_SucceededTask_RestResultHoldsNumbers(GameTestHelper helper)
             throws IOException {
+        GameTestFixtures.sweepEntities(helper);
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
         helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
