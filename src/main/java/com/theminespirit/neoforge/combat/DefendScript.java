@@ -47,8 +47,8 @@ public final class DefendScript implements ScriptInstance {
             ward = found.get();
             lastHealth = ward.getHealth();
             safety = WaitCounter.start(CatalogLimits.DEFEND_SAFE_TICKS);
-            spirit.tactics().setWard(ward.getUUID());
             spirit.tactics().applyDirective(directive);
+            spirit.tactics().setWard(ward.getUUID());
             applied = true;
         }
         ticks++;

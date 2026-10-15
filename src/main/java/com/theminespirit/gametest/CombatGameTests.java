@@ -330,6 +330,9 @@ public final class CombatGameTests {
             helper.assertTrue(wardSeen[0],
                     "подопечный обязан быть задан тактике (setWard) хотя бы один тик: без этого защитник "
                             + "не знает, кого защищать");
+            helper.assertTrue(spirit.tactics().snapshot().ward().isEmpty(),
+                    "после снятия приказа defend подопечный обязан выйти из ward, подопечный: "
+                            + spirit.tactics().snapshot().ward().orElse("нет"));
             TacticsScene.finish(helper, spirit);
         });
     }
