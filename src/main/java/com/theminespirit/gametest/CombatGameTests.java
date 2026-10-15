@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
@@ -266,6 +267,12 @@ public final class CombatGameTests {
             helper.assertTrue(spirit.tactics().combatMode() == before,
                     "после SUCCEEDED приказ обязан сняться и вернуть прежний режим, режим: "
                             + spirit.tactics().combatMode() + " вместо " + before);
+            helper.assertTrue(spirit.taskResult().orElse(null) instanceof ScriptResult.Data data
+                    && "AGGRESSIVE".equals(data.fields().get("mode"))
+                    && "hostile".equals(data.fields().get("target"))
+                    && "target_down".equals(data.fields().get("outcome")),
+                    "успешный attack обязан положить итог Data{mode=AGGRESSIVE, target=hostile, outcome=target_down}, "
+                            + "получено " + spirit.taskResult().map(Object::toString).orElse("пусто"));
             TacticsScene.finish(helper, spirit);
         });
     }

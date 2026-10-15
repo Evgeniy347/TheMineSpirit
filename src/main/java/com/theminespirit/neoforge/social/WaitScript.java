@@ -1,17 +1,20 @@
 package com.theminespirit.neoforge.social;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.WaitParams;
 import com.theminespirit.core.social.WaitCounter;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
+import java.util.Optional;
 
 public final class WaitScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final int targetTicks;
     private WaitCounter counter;
     private String failureReason;
+    private ScriptResult result;
 
     public WaitScript(SpiritEntity spirit, WaitParams params) {
         this.spirit = spirit;
@@ -27,6 +30,7 @@ public final class WaitScript implements ScriptInstance {
             counter = WaitCounter.start(targetTicks);
         }
         if (counter.tick()) {
+            result = new ScriptResult.Data(Map.of("ticks", targetTicks));
             return ScriptStatus.SUCCEEDED;
         }
         return ScriptStatus.RUNNING;
@@ -53,6 +57,11 @@ public final class WaitScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.ofNullable(result);
     }
 
     private ScriptStatus fail(String reason) {

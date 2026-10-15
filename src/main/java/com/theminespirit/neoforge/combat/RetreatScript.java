@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.combat;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.RetreatParams;
@@ -9,6 +10,7 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Map;
 import java.util.Optional;
 
 public final class RetreatScript implements ScriptInstance {
@@ -17,6 +19,7 @@ public final class RetreatScript implements ScriptInstance {
     private int ticks;
     private boolean applied;
     private String failureReason;
+    private ScriptResult result;
 
     public RetreatScript(SpiritEntity spirit, RetreatParams params) {
         this.spirit = spirit;
@@ -66,7 +69,17 @@ public final class RetreatScript implements ScriptInstance {
         return failureReason;
     }
 
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.ofNullable(result);
+    }
+
     private ScriptStatus succeed() {
+        result = new ScriptResult.Data(Map.of(
+                "mode", CombatDirective.retreat(destination).mode().name(),
+                "target", destination.toString(),
+                "ticks", ticks,
+                "outcome", "arrived"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

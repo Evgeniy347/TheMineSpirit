@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.combat;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.DefendParams;
@@ -9,6 +10,7 @@ import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -16,17 +18,20 @@ public final class DefendScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final String targetText;
     private final TargetSelector.Target selector;
+    private final CombatDirective directive;
     private LivingEntity ward;
     private WaitCounter safety;
     private float lastHealth;
     private int ticks;
     private boolean applied;
     private String failureReason;
+    private ScriptResult result;
 
     public DefendScript(SpiritEntity spirit, DefendParams params) {
         this.spirit = spirit;
         this.targetText = params.target();
         this.selector = TargetSelector.parse(params.target());
+        this.directive = CombatDirective.defend(selector);
     }
 
     @Override
@@ -43,7 +48,7 @@ public final class DefendScript implements ScriptInstance {
             lastHealth = ward.getHealth();
             safety = WaitCounter.start(CatalogLimits.DEFEND_SAFE_TICKS);
             spirit.tactics().setWard(ward.getUUID());
-            spirit.tactics().applyDirective(CombatDirective.defend(selector));
+            spirit.tactics().applyDirective(directive);
             applied = true;
         }
         ticks++;
@@ -80,7 +85,17 @@ public final class DefendScript implements ScriptInstance {
         return failureReason;
     }
 
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.ofNullable(result);
+    }
+
     private ScriptStatus succeed() {
+        result = new ScriptResult.Data(Map.of(
+                "mode", directive.mode().name(),
+                "target", targetText,
+                "ticks", ticks,
+                "outcome", "ward_safe"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

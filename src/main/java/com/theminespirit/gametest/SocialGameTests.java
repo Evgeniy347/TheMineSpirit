@@ -2,15 +2,20 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.social.SocialTuning;
+import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -179,7 +184,108 @@ public final class SocialGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             helper.assertTrue(run.spiritTicks() >= 40,
                     "wait обязан ждать ровно 40 тиков духа, прошло: " + run.spiritTicks());
+            helper.assertTrue(spirit.taskResult().orElse(null) instanceof ScriptResult.Data data
+                    && Integer.valueOf(40).equals(data.fields().get("ticks")),
+                    "успешный wait обязан положить итог Data{ticks:40}, получено "
+                            + spirit.taskResult().map(Object::toString).orElse("пусто"));
             TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    private static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
+        original.discard();
+        SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
+        reloaded.load(tag);
+        helper.getLevel().addFreshEntity(reloaded);
+        return reloaded;
+    }
+
+    @GameTest(template = "empty", batch = "social_restart_wait", timeoutTicks = 300)
+    public static void wait_SavedMidTask_ResumesFromRemainingTicks(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
+        AtomicReference<SpiritEntity> holder = new AtomicReference<>(spirit);
+        AtomicBoolean saved = new AtomicBoolean(false);
+        int[] savedElapsed = {-1};
+        int[] reloadedAt = {-1};
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("wait", Map.of("ticks", 40)), 10);
+        helper.onEachTick(() -> {
+            if (saved.get() || holder.get() != spirit) {
+                return;
+            }
+            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING && run.spiritTicks() >= 20) {
+                saved.set(true);
+                savedElapsed[0] = run.spiritTicks();
+                CompoundTag tag = new CompoundTag();
+                spirit.saveWithoutId(tag);
+                SpiritEntity reloaded = reload(helper, spirit, tag);
+                holder.set(reloaded);
+                reloadedAt[0] = reloaded.tickCount;
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            SpiritEntity current = holder.get();
+            run.assertStarted();
+            helper.assertTrue(saved.get(), "перезапуск на середине ещё не выполнен");
+            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "wait после перезапуска обязан завершиться успехом, статус "
+                            + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + current.taskFailureReason().orElse("нет"));
+            int elapsedAfterReload = current.tickCount - reloadedAt[0];
+            helper.assertTrue(elapsedAfterReload > 0 && elapsedAfterReload < 40,
+                    "wait обязан продолжить с остатка, а не с нуля: после перезагрузки прошло "
+                            + elapsedAfterReload + " тиков, а сохранились на " + savedElapsed[0] + "-м из 40");
+            helper.assertTrue(current.taskResult().orElse(null) instanceof ScriptResult.Data data
+                    && Integer.valueOf(40).equals(data.fields().get("ticks")),
+                    "итог wait после перезапуска обязан называть ticks=40, получено "
+                            + current.taskResult().map(Object::toString).orElse("пусто"));
+            TacticsScene.finish(helper, current);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_restart_deliver", timeoutTicks = 400)
+    public static void deliver_SavedMidRoute_DeliversExactlyOnce(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "RestartTarget");
+        AtomicReference<SpiritEntity> holder = new AtomicReference<>(spirit);
+        AtomicBoolean saved = new AtomicBoolean(false);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("deliver", Map.of(
+                "item", "cobblestone", "count", 3, "to", "player:RestartTarget")), 10);
+        helper.onEachTick(() -> {
+            if (saved.get() || holder.get() != spirit) {
+                return;
+            }
+            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING && run.spiritTicks() >= 8) {
+                saved.set(true);
+                CompoundTag tag = new CompoundTag();
+                spirit.saveWithoutId(tag);
+                SpiritEntity reloaded = reload(helper, spirit, tag);
+                holder.set(reloaded);
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            SpiritEntity current = holder.get();
+            run.assertStarted();
+            helper.assertTrue(saved.get(), "перезапуск по дороге ещё не выполнен");
+            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deliver после перезапуска обязан довести предмет, статус "
+                            + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + current.taskFailureReason().orElse("нет"));
+            int withPlayer = GameTestFixtures.countInInventory(player.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(withPlayer == 3,
+                    "предмет обязан быть передан ровно один раз: у игрока " + withPlayer + " булыжников");
+            helper.assertTrue(GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE) == 0,
+                    "у духа не остаётся булыжников, осталось "
+                            + GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE));
+            helper.assertTrue(current.taskResult().orElse(null) instanceof ScriptResult.Data data
+                    && Integer.valueOf(3).equals(data.fields().get("delivered")),
+                    "итог deliver после перезапуска обязан назвать delivered=3, получено "
+                            + current.taskResult().map(Object::toString).orElse("пусто"));
+            TacticsScene.finish(helper, current);
         });
     }
 }

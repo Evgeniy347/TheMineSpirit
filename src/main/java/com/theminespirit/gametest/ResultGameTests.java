@@ -59,6 +59,30 @@ public final class ResultGameTests {
         });
     }
 
+    @GameTest(batch = "result_wait", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void wait_SucceededTask_RestResultHoldsTicksObject(GameTestHelper helper) throws IOException {
+        RestFixture rest = arena(helper);
+        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
+        ResultPoller poller = ResultPoller.start(helper, rest);
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest
+                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                        taskBody("wait", Map.of("ticks", 40)))
+                .thenApply(accepted -> {
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
+                    poller.follow(accepted.json().path("task_id").asText());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario, () -> {
+            helper.assertTrue("succeeded".equals(poller.latest()),
+                    "wait 40 тиков обязана завершить задачу успехом; последнее состояние " + poller.latest()
+                            + ", тело " + poller.lastJson());
+            JsonNode result = poller.lastJson().path("result");
+            helper.assertTrue(result.isObject() && result.path("ticks").asInt() == 40,
+                    "итог wait в GET задачи обязан быть объектом с ticks=40, получено " + result);
+        });
+    }
+
     @GameTest(batch = "result_chop_sse", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void chopTree_SucceededTask_SseFinalStateCarriesResult(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);

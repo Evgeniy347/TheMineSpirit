@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.combat;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.FleeParams;
@@ -10,6 +11,7 @@ import com.theminespirit.core.tactics.CombatTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -20,6 +22,7 @@ public final class FleeScript implements ScriptInstance {
     private int ticks;
     private boolean applied;
     private String failureReason;
+    private ScriptResult result;
 
     public FleeScript(SpiritEntity spirit, FleeParams params) {
         this.spirit = spirit;
@@ -67,7 +70,17 @@ public final class FleeScript implements ScriptInstance {
         return failureReason;
     }
 
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.ofNullable(result);
+    }
+
     private ScriptStatus succeed() {
+        result = new ScriptResult.Data(Map.of(
+                "mode", CombatDirective.flee().mode().name(),
+                "target", "hostile",
+                "ticks", ticks,
+                "outcome", "escaped"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

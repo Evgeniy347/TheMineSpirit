@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.social;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.DeliverParams;
 import com.theminespirit.core.social.SocialTuning;
@@ -29,6 +30,7 @@ public final class DeliverScript implements ScriptInstance {
     private int delivered;
     private boolean started;
     private String failureReason;
+    private ScriptResult result;
 
     public DeliverScript(SpiritEntity spirit, DeliverParams params) {
         this.spirit = spirit;
@@ -94,6 +96,11 @@ public final class DeliverScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<ScriptResult> result() {
+        return Optional.ofNullable(result);
     }
 
     @Override
@@ -172,6 +179,11 @@ public final class DeliverScript implements ScriptInstance {
 
     private ScriptStatus succeed() {
         approach.cancel();
+        result = new ScriptResult.Data(Map.of(
+                "item", params.item(),
+                "count", params.count(),
+                "delivered", delivered,
+                "to", params.to()));
         return ScriptStatus.SUCCEEDED;
     }
 
