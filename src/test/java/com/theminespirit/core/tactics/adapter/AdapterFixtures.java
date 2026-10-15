@@ -32,6 +32,14 @@ final class AdapterFixtures {
         return new SelfFacts(new Point(0, 0, 0), 20, 20, 0, 6, 0.3, 1, 0, 0, false, 0, 0);
     }
 
+    static SelfFacts self(double armor) {
+        return new SelfFacts(new Point(0, 0, 0), 20, 20, armor, 6, 0.3, 1, 0, 0, false, 0, 0);
+    }
+
+    static SelfFacts tired(double hpFraction, double armor) {
+        return new SelfFacts(new Point(0, 0, 0), 20 * hpFraction, 20, armor, 6, 0.3, 1, 0, 0, false, 0, 0);
+    }
+
     static EnvFacts env(TimeOfDay time) {
         return new EnvFacts(FAR, 0, 15, time, FAR, false, FAR, FAR);
     }
@@ -62,8 +70,22 @@ final class AdapterFixtures {
         return new SituationContext(self(), enemies, env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0);
     }
 
+    static SituationContext context(List<EnemyFact> enemies, double armor) {
+        return new SituationContext(self(armor), enemies, env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0);
+    }
+
     static Situation collect(List<EnemyFact> enemies) {
         return CoreFactCollector.withDefaultSettings().collect(context(enemies));
+    }
+
+    static Situation collect(List<EnemyFact> enemies, double armor) {
+        return CoreFactCollector.withDefaultSettings().collect(context(enemies, armor));
+    }
+
+    static Situation tiredCollect(List<EnemyFact> enemies, double hpFraction, double armor) {
+        SelfFacts self = tired(hpFraction, armor);
+        return CoreFactCollector.withDefaultSettings().collect(new SituationContext(self, enemies,
+                env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0));
     }
 
     static List<EnemyFact> many(String type, int count, double from) {

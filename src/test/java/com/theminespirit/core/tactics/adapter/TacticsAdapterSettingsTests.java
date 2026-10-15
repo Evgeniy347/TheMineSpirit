@@ -13,17 +13,20 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class TacticsAdapterSettingsTests {
     private static final String GOOD = "{\"evalIntervalTicks\": 10, \"maxEnemies\": 16, \"factRadius\": 32, "
-            + "\"factChunkBudget\": 64, \"retreatHoldTicks\": 200}";
+            + "\"factChunkBudget\": 64, \"retreatHoldTicks\": 200, \"journalCapacity\": 32, "
+            + "\"journalMaxPerSecond\": 1}";
 
     @Test
     void defaults_DocumentedNumbers_MatchShippedResource() {
         TacticsAdapterSettings defaults = TacticsAdapterSettings.defaults();
 
-        assertEquals(List.of(10, 16, 32, 64, 200),
+        assertEquals(List.of(10, 16, 32, 64, 200, 32, 1),
                 List.of(defaults.evalIntervalTicks(), defaults.maxEnemies(), defaults.factRadius(),
-                        defaults.factChunkBudget(), defaults.retreatHoldTicks()),
+                        defaults.factChunkBudget(), defaults.retreatHoldTicks(), defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond()),
                 "Умолчания адаптера: снятие фактов раз в 10 тиков, не более 16 врагов, радиус поиска 32, бюджет 64 "
-                        + "чтения блока, удержание отхода 200 тиков. Изменили число — обновите adapter.json и docs/TACTICS.md");
+                        + "чтения блока, удержание отхода 200 тиков, журнал на 32 записи не чаще одной в секунду. "
+                        + "Изменили число — обновите adapter.json и docs/TACTICS.md");
         assertEquals(TacticsAdapterSettings.defaults(), TacticsAdapterSettings.loadDefault(),
                 "adapter.json обязан повторять умолчания: иначе числа кода и данных разойдутся молча");
     }
@@ -34,7 +37,9 @@ class TacticsAdapterSettingsTests {
                 Arguments.of("maxEnemies", 1), Arguments.of("maxEnemies", 16),
                 Arguments.of("factRadius", 1), Arguments.of("factRadius", 256),
                 Arguments.of("factChunkBudget", 1), Arguments.of("factChunkBudget", 1024),
-                Arguments.of("retreatHoldTicks", 1), Arguments.of("retreatHoldTicks", 6000));
+                Arguments.of("retreatHoldTicks", 1), Arguments.of("retreatHoldTicks", 6000),
+                Arguments.of("journalCapacity", 1), Arguments.of("journalCapacity", 256),
+                Arguments.of("journalMaxPerSecond", 1), Arguments.of("journalMaxPerSecond", 20));
     }
 
     @ParameterizedTest(name = "{0} = {1}")
@@ -52,7 +57,9 @@ class TacticsAdapterSettingsTests {
                 Arguments.of("maxEnemies", 0), Arguments.of("maxEnemies", 17),
                 Arguments.of("factRadius", 0), Arguments.of("factRadius", 257),
                 Arguments.of("factChunkBudget", 0), Arguments.of("factChunkBudget", 1025),
-                Arguments.of("retreatHoldTicks", 0), Arguments.of("retreatHoldTicks", 6001));
+                Arguments.of("retreatHoldTicks", 0), Arguments.of("retreatHoldTicks", 6001),
+                Arguments.of("journalCapacity", 0), Arguments.of("journalCapacity", 257),
+                Arguments.of("journalMaxPerSecond", 0), Arguments.of("journalMaxPerSecond", 21));
     }
 
     @ParameterizedTest(name = "{0} = {1}")
@@ -69,7 +76,7 @@ class TacticsAdapterSettingsTests {
     @Test
     void fromJson_GoodText_LoadsAllFields() {
         assertEquals(TacticsAdapterSettings.defaults(), TacticsAdapterSettings.fromJson(GOOD),
-                "Полный adapter.json читается в запись без подстановок: все пять полей обязательны");
+                "Полный adapter.json читается в запись без подстановок: все семь полей обязательны");
     }
 
     @Test
@@ -157,15 +164,26 @@ class TacticsAdapterSettingsTests {
         TacticsAdapterSettings defaults = TacticsAdapterSettings.defaults();
         return switch (field) {
             case "evalIntervalTicks" -> new TacticsAdapterSettings(value, defaults.maxEnemies(),
-                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks());
+                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(),
+                    defaults.journalCapacity(), defaults.journalMaxPerSecond());
             case "maxEnemies" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), value,
-                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks());
+                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(),
+                    defaults.journalCapacity(), defaults.journalMaxPerSecond());
             case "factRadius" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    value, defaults.factChunkBudget(), defaults.retreatHoldTicks());
+                    value, defaults.factChunkBudget(), defaults.retreatHoldTicks(), defaults.journalCapacity(),
+                    defaults.journalMaxPerSecond());
             case "factChunkBudget" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    defaults.factRadius(), value, defaults.retreatHoldTicks());
+                    defaults.factRadius(), value, defaults.retreatHoldTicks(), defaults.journalCapacity(),
+                    defaults.journalMaxPerSecond());
             case "retreatHoldTicks" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    defaults.factRadius(), defaults.factChunkBudget(), value);
+                    defaults.factRadius(), defaults.factChunkBudget(), value, defaults.journalCapacity(),
+                    defaults.journalMaxPerSecond());
+            case "journalCapacity" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
+                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(), value,
+                    defaults.journalMaxPerSecond());
+            case "journalMaxPerSecond" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(),
+                    defaults.maxEnemies(), defaults.factRadius(), defaults.factChunkBudget(),
+                    defaults.retreatHoldTicks(), defaults.journalCapacity(), value);
             default -> throw new IllegalArgumentException("Неизвестное поле настройки адаптера: " + field);
         };
     }
@@ -177,6 +195,8 @@ class TacticsAdapterSettingsTests {
             case "factRadius" -> settings.factRadius();
             case "factChunkBudget" -> settings.factChunkBudget();
             case "retreatHoldTicks" -> settings.retreatHoldTicks();
+            case "journalCapacity" -> settings.journalCapacity();
+            case "journalMaxPerSecond" -> settings.journalMaxPerSecond();
             default -> throw new IllegalArgumentException("Неизвестное поле настройки адаптера: " + field);
         };
     }

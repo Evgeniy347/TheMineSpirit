@@ -14,22 +14,26 @@ import java.util.Iterator;
 import java.util.Set;
 
 public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int factRadius, int factChunkBudget,
-        int retreatHoldTicks) {
+        int retreatHoldTicks, int journalCapacity, int journalMaxPerSecond) {
     public static final int DEFAULT_EVAL_INTERVAL_TICKS = 10;
     public static final int DEFAULT_MAX_ENEMIES = Situation.MAX_ENEMIES;
     public static final int DEFAULT_FACT_RADIUS = 32;
     public static final int DEFAULT_FACT_CHUNK_BUDGET = 64;
     public static final int DEFAULT_RETREAT_HOLD_TICKS = 200;
+    public static final int DEFAULT_JOURNAL_CAPACITY = 32;
+    public static final int DEFAULT_JOURNAL_MAX_PER_SECOND = 1;
 
     public static final int MAX_EVAL_INTERVAL_TICKS = 6000;
     public static final int MAX_FACT_RADIUS = 256;
     public static final int MAX_FACT_CHUNK_BUDGET = 1024;
     public static final int MAX_RETREAT_HOLD_TICKS = 6000;
+    public static final int MAX_JOURNAL_CAPACITY = 256;
+    public static final int MAX_JOURNAL_MAX_PER_SECOND = DecisionJournal.TICKS_PER_SECOND;
 
     private static final String FILE = "adapter.json";
     private static final String RESOURCE = "/data/theminespirit/tactics/" + FILE;
     private static final Set<String> FIELDS = Set.of("evalIntervalTicks", "maxEnemies", "factRadius",
-            "factChunkBudget", "retreatHoldTicks");
+            "factChunkBudget", "retreatHoldTicks", "journalCapacity", "journalMaxPerSecond");
     private static final ObjectMapper MAPPER = new ObjectMapper(
             JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
 
@@ -39,11 +43,14 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         range("factRadius", factRadius, 1, MAX_FACT_RADIUS);
         range("factChunkBudget", factChunkBudget, 1, MAX_FACT_CHUNK_BUDGET);
         range("retreatHoldTicks", retreatHoldTicks, 1, MAX_RETREAT_HOLD_TICKS);
+        range("journalCapacity", journalCapacity, 1, MAX_JOURNAL_CAPACITY);
+        range("journalMaxPerSecond", journalMaxPerSecond, 1, MAX_JOURNAL_MAX_PER_SECOND);
     }
 
     public static TacticsAdapterSettings defaults() {
         return new TacticsAdapterSettings(DEFAULT_EVAL_INTERVAL_TICKS, DEFAULT_MAX_ENEMIES, DEFAULT_FACT_RADIUS,
-                DEFAULT_FACT_CHUNK_BUDGET, DEFAULT_RETREAT_HOLD_TICKS);
+                DEFAULT_FACT_CHUNK_BUDGET, DEFAULT_RETREAT_HOLD_TICKS, DEFAULT_JOURNAL_CAPACITY,
+                DEFAULT_JOURNAL_MAX_PER_SECOND);
     }
 
     public static TacticsAdapterSettings loadDefault() {
@@ -63,7 +70,8 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         }
         try {
             return new TacticsAdapterSettings(readInt(root, "evalIntervalTicks"), readInt(root, "maxEnemies"),
-                    readInt(root, "factRadius"), readInt(root, "factChunkBudget"), readInt(root, "retreatHoldTicks"));
+                    readInt(root, "factRadius"), readInt(root, "factChunkBudget"), readInt(root, "retreatHoldTicks"),
+                    readInt(root, "journalCapacity"), readInt(root, "journalMaxPerSecond"));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException(FILE + " → " + error.getMessage()
                     + ". Проверьте: значение в границах, которые держит конструктор TacticsAdapterSettings", error);

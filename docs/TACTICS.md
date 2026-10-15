@@ -161,6 +161,14 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
   `tactics().restoreFailure()`, дух начинает с режима по умолчанию DEFENSIVE.
 - **Запись решения**: `TacticsTrace.format` пишется в лог уровня DEBUG при смене решения и доступна как
   `tactics().explain()`.
+- **Журнал решений**: `adapter.json → journalCapacity` (32 записи) и `journalMaxPerSecond` (1) — кольцо последних
+  записей на духа и предел их частоты. `DecisionJournal.offer(DecisionObservation)` сравнивает снимок прежней оценки
+  (решение, режим, цель, приказ) с новой: нет ни одной разницы — записи нет; первая оценка духа только задаёт основу.
+  Запись (`DecisionRecord`) несёт тик, имя и UUID духа, «было → стало» по сменившемуся полю, сработавшее правило или
+  топ-3 фактора с весами (`DecisionReasons`, перевес выбранного варианта над ближайшим конкурентом) и ключевые факты
+  (`DecisionFacts`: враги рядом и ближайший, здоровье, броня, оружие по `dps`/`rangedAmmo`). Строка `DecisionText.format`
+  с префиксом `[tactics]` уходит в лог уровня INFO; те же записи отдаёт `GET /v1/spirits/{id}/decisions`
+  (docs/API.md) и команда `/spirit decisions <дух>`.
 
 ## Откуда берётся угроза
 

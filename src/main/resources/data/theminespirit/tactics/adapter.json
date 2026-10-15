@@ -3,5 +3,7 @@
   "maxEnemies": 16,
   "factRadius": 32,
   "factChunkBudget": 64,
-  "retreatHoldTicks": 200
+  "retreatHoldTicks": 200,
+  "journalCapacity": 32,
+  "journalMaxPerSecond": 1
 }
