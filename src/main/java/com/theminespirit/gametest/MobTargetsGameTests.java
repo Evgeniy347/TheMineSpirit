@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
@@ -11,6 +12,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.level.block.Blocks;
@@ -21,6 +23,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class MobTargetsGameTests {
     private static final int OBSERVED_TICKS = 100;
+    private static final long DAYLIGHT = 6000;
+    private static final long NIGHT = 18000;
     private static final String DISABLED_BATCH = "mob_targets_disabled";
     private static final BlockPos SPIRIT_AT = new BlockPos(4, 1, 4);
     private static final BlockPos MOB_AT = new BlockPos(4, 1, 10);
@@ -82,6 +86,42 @@ public final class MobTargetsGameTests {
                     "при mobsTargetSpirits=false зомби не берёт духа целью, а его цель " + zombie.getTarget());
             GameTestFixtures.reset(helper);
             helper.succeed();
+        });
+    }
+
+    @GameTest(template = "arena", batch = "mob_targets_spider_day", timeoutTicks = 400)
+    public static void spider_NextToSpiritInDaylight_DoesNotTakeSpiritAsTarget(GameTestHelper helper) {
+        long savedDayTime = helper.getLevel().getDayTime();
+        helper.getLevel().setDayTime(DAYLIGHT);
+        spirit(helper);
+        AtomicReference<Spider> spider = new AtomicReference<>();
+        helper.runAfterDelay(2, () -> spider.set(helper.spawn(EntityType.SPIDER, MOB_AT)));
+
+        helper.runAfterDelay(OBSERVED_TICKS, () -> {
+            helper.assertTrue(spider.get().getTarget() == null,
+                    "Паук днём на открытом месте не должен брать духа целью: ванильный SpiderTargetGoal при свете "
+                            + "≥ 0.5 цель не берёт, а его цель " + spider.get().getTarget());
+            helper.getLevel().setDayTime(savedDayTime);
+            GameTestFixtures.reset(helper);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "arena", batch = "mob_targets_spider_night", timeoutTicks = 400)
+    public static void spider_NextToSpiritAtNight_TakesSpiritAsTarget(GameTestHelper helper) {
+        long savedDayTime = helper.getLevel().getDayTime();
+        helper.getLevel().setDayTime(NIGHT);
+        SpiritEntity spirit = spirit(helper);
+        AtomicReference<Spider> spider = new AtomicReference<>();
+        helper.runAfterDelay(2, () -> spider.set(helper.spawn(EntityType.SPIDER, MOB_AT)));
+
+        helper.succeedWhen(() -> {
+            Spider current = spider.get();
+            helper.assertTrue(current != null && current.getTarget() == spirit,
+                    "Паук ночью рядом с духом обязан сам выбрать духа целью за " + OBSERVED_TICKS
+                            + " тиков, а его цель " + (current == null ? "ещё не заспавнен" : current.getTarget()));
+            helper.getLevel().setDayTime(savedDayTime);
+            GameTestFixtures.reset(helper);
         });
     }
 }
