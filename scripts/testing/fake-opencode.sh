@@ -10,6 +10,7 @@
 # FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
 #                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
 # FAKE_UNFINISHED=N — первые N запусков заканчивают ход оборванной фразой «Теперь посмотрю тесты:».
+# FAKE_COMPACTION=N — первые N запусков сжимают контекст (лог agent=compaction и синтетическое «Continue…») и работают дальше.
 state="${FAKE_STATE:?}"
 case "$*" in
     *"ответь OK"*)
@@ -54,6 +55,11 @@ if [ "$count" -lt "${FAKE_NETWORK:-0}" ]; then
     else
         echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Cannot connect to API: fetch failed"}}}'
     fi
+    exec sleep 600
+fi
+if [ "$count" -lt "${FAKE_COMPACTION:-0}" ]; then
+    echo 'timestamp=2026-10-15T16:26:04Z level=INFO run=1 message=stream providerID=opencode modelID=big-pickle session.id=ses_fake123 small=false agent=compaction mode=primary' >&2
+    echo '{"type":"text","sessionID":"ses_fake123","part":{"type":"text","metadata":{"compaction_continue":true},"synthetic":true,"text":"Continue if you have next steps."}}'
     exec sleep 600
 fi
 if [ "$count" -lt "${FAKE_UNFINISHED:-0}" ]; then

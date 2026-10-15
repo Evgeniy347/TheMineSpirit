@@ -7,6 +7,7 @@ mkdir -p "$work"
 export OPENCODE_BIN="$PWD/scripts/testing/fake-opencode.sh"
 export OPENCODE_LOG_ROOT="$PWD/$work/logs"
 export OPENCODE_ALLOW_DIRTY=1
+export OPENCODE_TASK_FILE="$PWD/$work/task.md"
 failures_log="$OPENCODE_LOG_ROOT/failures.log"
 
 check() {
@@ -42,6 +43,11 @@ check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
 check info_log_mentions_limit 0 1 FAKE_INFO_LOG=1
 check unfinished_answer_continues 0 3 FAKE_UNFINISHED=2
 check unfinished_answer_limit 0 4 FAKE_UNFINISHED=99 OPENCODE_UNFINISHED_LIMIT=3
+check compaction_restarts_with_reminder 0 2 FAKE_COMPACTION=1
+grep -q "TestResults/task.md" <(sed -n 2p "$work/compaction_restarts_with_reminder.state.args") && v=OK || v=FAIL
+echo "$v compaction_restarts_with_reminder: второй запуск напоминает перечитать task.md и progress.md"
+[ "$(cat "$OPENCODE_TASK_FILE" 2>/dev/null)" = "тестовое задание" ] && v=OK || v=FAIL
+echo "$v task_file_saved: задание сохранено в TestResults/task.md"
 dirty_repo="$PWD/$work/dirty-repo"
 git init -q "$dirty_repo" && echo "чужая работа" > "$dirty_repo/foreign.txt"
 check dirty_tree_new_task 3 0 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_repo"

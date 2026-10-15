@@ -32,7 +32,16 @@ SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
 NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
 FAILURE_PATTERN="$PROVIDER_PATTERN|$NETWORK_PATTERN"
-CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился."
+CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился. Если не помнишь деталей — сначала \
+перечитай TestResults/task.md (задание) и TestResults/progress.md (твой прогресс)."
+# opencode сжимает разговор, когда контекст модели заполнен (у моделей на 200 тыс. — каждые 20–60 шагов), и подробности
+# задания теряются. Надзор ловит сжатие, останавливает ход и продолжает сессию с напоминанием перечитать файлы.
+COMPACTED_PROMPT="Контекст сессии только что сжат — подробности задания и сделанного могли потеряться. Перечитай \
+TestResults/task.md (задание) и TestResults/progress.md (твой прогресс), сверь с git log и продолжай с нужного места."
+# Ловим конец сжатия (синтетическое «Continue…» после сводки), а не его начало (agent=compaction в логе): оборвать само
+# сжатие — значит вернуть полный контекст и зациклиться на новом сжатии.
+COMPACTION_PATTERN='"compaction_continue":true'
+TASK_FILE="${OPENCODE_TASK_FILE:-$REPO_DIR/TestResults/task.md}"
 UNFINISHED_PROMPT="Ты закончил ход на полуслове, не доделав задание и без итогового отчёта. Продолжай с того места, где \
 остановился, и не заканчивай ход, пока не будет итогового отчёта: хэши коммитов, итог тестов, что не сделано."
 # Модель иногда заканчивает ход фразой «Теперь посмотрю …:» — надзор продолжает ту же сессию, не больше UNFINISHED_LIMIT раз.
@@ -43,7 +52,10 @@ docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом при�
 доказываешь подлогом по существу (ломаешь поведение так, что код компилируется, и видишь красный тест) — «на родителе \
 не компилируется» не доказательство; в проверке предела ожидание — число в самом тесте, а факт — из production (assertEquals(24, Limits.X)), \
 сравнение литерала с литералом — не проверка; GameTest-сервер запускаешь только через bash scripts/gametest.sh (замок «один сервер на машину», память общая); в конце работы переносишь ветку на main (git rebase main) и только потом гоняешь финальные тесты — docs/GIT.md → «Финал ветки»; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
-коммитов, итог тестов, что не сделано и почему."
+коммитов, итог тестов, что не сделано и почему. Контекст модели ограничен и сжимается: задание лежит в TestResults/task.md; \
+веди TestResults/progress.md — после каждого коммита и важного вывода коротко: что сделано (хэши), что дальше, принятые \
+решения и найденные причины; после продолжения сессии сначала перечитай оба файла. Вывод сборок и тестов целиком не \
+печатай: полный лог — в файл, на экран — grep/tail не больше 40 строк."
 POLL_SECONDS=2
 # opencode запускается через setsid и переживает свой надзор: при остановке надзора (tmux kill-session, Ctrl+C)
 # его надо гасить явно, иначе осиротевший процесс продолжит править дерево рядом с новым исполнителем.
@@ -56,6 +68,7 @@ EXIT_PROVIDER_EXHAUSTED=75
 EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
 ATTEMPT_SILENT=201
+ATTEMPT_COMPACTED=202
 
 usage() {
     sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
@@ -160,6 +173,10 @@ run_attempt() {
             stop_attempt "$pid"
             return "$ATTEMPT_PROVIDER"
         fi
+        if grep -qE "$COMPACTION_PATTERN" "$out" 2>/dev/null; then
+            stop_attempt "$pid"
+            return "$ATTEMPT_COMPACTED"
+        fi
         if [ $(( $(date +%s) - $(newest_mtime "$out" "$err") )) -ge "$SILENCE_LIMIT" ] && waiting_for_model "$pid"; then
             failure_text="модель молчит ${SILENCE_LIMIT} с, команд не выполняется; последнее событие: $(tail -n 1 "$out" | cut -c1-200)"
             stop_attempt "$pid"
@@ -263,6 +280,16 @@ attempt=0
 run_no=0
 unfinished=0
 message="$prompt"
+# Задание — в файл: после сжатия контекста модель перечитывает его, а не вспоминает. Продолжение с новым текстом
+# (правки по ревью) дописывается к заданию.
+if [ "$prompt" != "$CONTINUE_PROMPT" ]; then
+    mkdir -p "$(dirname "$TASK_FILE")"
+    if [ -n "$session" ] && [ -s "$TASK_FILE" ]; then
+        printf '\n\n--- Дополнение %s ---\n%s\n' "$(date '+%d.%m %H:%M')" "$prompt" >>"$TASK_FILE"
+    else
+        printf '%s\n' "$prompt" >"$TASK_FILE"
+    fi
+fi
 while true; do
     attempt_log="$log_dir/attempt-$run_no"
     run_no=$((run_no + 1))
@@ -289,6 +316,12 @@ while true; do
             sleep "$delay"
             lost_seconds=$((lost_seconds + delay))
             [ -n "$session" ] && message="$CONTINUE_PROMPT"
+            ;;
+        "$ATTEMPT_COMPACTED")
+            record_failure "сжатие контекста" "продолжаю с напоминанием перечитать task.md и progress.md"
+            echo "opencode: контекст сжат, продолжаю сессию ${session:-новую} с напоминанием перечитать задание" >&2
+            attempt=0
+            message="$COMPACTED_PROMPT"
             ;;
         *)
             if [ "$code" = 0 ] && [ -n "$session" ] && [ "$unfinished" -lt "$UNFINISHED_LIMIT" ] \
