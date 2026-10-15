@@ -5,6 +5,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.MobTargetEvents;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritCommands;
@@ -32,6 +33,7 @@ public final class TheMineSpirit {
         modContainer.registerConfig(ModConfig.Type.SERVER, RestConfig.spec(), RestConfig.FILE_NAME);
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
         NeoForge.EVENT_BUS.addListener(DataReload::register);
+        DoorWatchService.register();
         PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);

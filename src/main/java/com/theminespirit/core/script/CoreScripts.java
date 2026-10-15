@@ -357,7 +357,16 @@ public final class CoreScripts {
                 spec("wait", "ждать заданное число тиков",
                         List.of(ParamSpec.integer("ticks", true, CatalogLimits.WAIT_TICKS_MIN,
                                 CatalogLimits.WAIT_TICKS_MAX)),
-                        List.of(), List.of("время ожидания прошло"))));
+                        List.of(), List.of("время ожидания прошло")),
+                spec("close_door", "подойти к двери и закрыть её",
+                        List.of(
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                        List.of("дверь существует", "к двери есть подход"),
+                        List.of("дверь закрыта"))));
     }
 
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,

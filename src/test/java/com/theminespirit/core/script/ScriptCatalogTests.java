@@ -215,7 +215,10 @@ class ScriptCatalogTests {
                 spec("deliver", List.of("item", "count", "to"), Map.of("count", new long[]{1, 256})),
                 spec("meet", List.of("target"), Map.of()),
                 spec("say", List.of("text"), Map.of()),
-                spec("wait", List.of("ticks"), Map.of("ticks", new long[]{1, 6000})));
+                spec("wait", List.of("ticks"), Map.of("ticks", new long[]{1, 6000})),
+                spec("close_door", List.of("x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})));
 
         return rows.stream().map(row -> Arguments.of(row));
     }

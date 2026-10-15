@@ -15,6 +15,7 @@ import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
+import com.theminespirit.core.script.CloseDoorParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
 import com.theminespirit.core.script.DigAreaParams;
 import com.theminespirit.core.script.FillParams;
@@ -62,6 +63,7 @@ import com.theminespirit.neoforge.combat.RetreatScript;
 import com.theminespirit.neoforge.crafting.CraftScript;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.crafting.SmeltScript;
+import com.theminespirit.neoforge.doors.CloseDoorScript;
 import com.theminespirit.neoforge.husbandry.BreedScript;
 import com.theminespirit.neoforge.husbandry.CaptureScript;
 import com.theminespirit.neoforge.husbandry.CollectEggsScript;
@@ -167,6 +169,7 @@ public final class SpiritScripts {
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
+        table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, CloseDoorParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
             return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()),
