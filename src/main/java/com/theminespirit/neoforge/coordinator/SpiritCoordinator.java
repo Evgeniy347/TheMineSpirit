@@ -155,9 +155,13 @@ public final class SpiritCoordinator {
             if (directives.containsKey(id)) {
                 continue;
             }
-            lastDirectives.remove(id);
+            CombatDirective last = lastDirectives.remove(id);
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
-            if (spirit == null || spirit.isRemoved() || spirit.currentTaskScript().isPresent()) {
+            if (spirit == null || spirit.isRemoved()) {
+                continue;
+            }
+            if (spirit.currentTaskScript().isPresent() && spirit.tactics().activeDirective()
+                    .map(current -> !current.equals(last)).orElse(false)) {
                 continue;
             }
             spirit.tactics().clearDirective();
