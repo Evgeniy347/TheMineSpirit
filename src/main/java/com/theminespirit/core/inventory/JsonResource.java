@@ -103,6 +103,14 @@ public final class JsonResource {
         return node.asInt();
     }
 
+    public static double decimal(JsonNode node, String origin, String what) {
+        if (node == null || !node.isNumber()) {
+            throw new IllegalStateException("Файл '" + origin + "': у " + what
+                    + " ожидается дробное число: целочисленное или текстовое значение правила не имеет смысла");
+        }
+        return node.asDouble();
+    }
+
     static List<JsonNode> items(JsonNode node) {
         List<JsonNode> items = new ArrayList<>(node.size());
         for (int index = 0; index < node.size(); index++) {

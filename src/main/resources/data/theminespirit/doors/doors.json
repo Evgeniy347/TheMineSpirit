@@ -1,0 +1,7 @@
+{
+  "eveningDayFraction": 0.5,
+  "closeAfterOpenTicks": 60,
+  "playerNearbyRadius": 2.0,
+  "settlementRadius": 32,
+  "recheckIntervalTicks": 100
+}
