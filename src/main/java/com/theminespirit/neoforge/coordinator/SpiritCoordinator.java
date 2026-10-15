@@ -4,6 +4,8 @@ import com.theminespirit.core.coordinator.Coordinator;
 import com.theminespirit.core.coordinator.CoordinatorPlan;
 import com.theminespirit.core.coordinator.CoordinatorState;
 import com.theminespirit.core.coordinator.CoordinatorTuning;
+import com.theminespirit.core.coordinator.SettlementGroups;
+import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
 import com.theminespirit.core.coordinator.CoordinatorDirectives;
@@ -15,10 +17,8 @@ import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,41 +27,51 @@ import java.util.UUID;
 
 public final class SpiritCoordinator {
     private final ServerLevel level;
+    private final SettlementKey key;
     private final Coordinator coordinator = new Coordinator();
     private final WorkReservations reservations;
     private final Map<UUID, CombatDirective> lastDirectives = new HashMap<>();
     private long lastSnapshotTick = -1;
+    private int entityQueries;
+    private int planCalls;
     private CoordinatorState lastState = new CoordinatorState(Optional.empty(), 0, List.of(), 0);
 
-    public SpiritCoordinator(ServerLevel level) {
+    public SpiritCoordinator(ServerLevel level, SettlementKey key) {
         if (level == null) {
             throw new IllegalArgumentException("level не может быть null: координатор без уровня не работает");
         }
+        if (key == null) {
+            throw new IllegalArgumentException(
+                    "key не может быть null: координатор ведёт своё поселение, чужой дом он не защищает");
+        }
         this.level = level;
+        this.key = key;
         this.reservations = WorkReserveHub.leasesFor(level);
     }
 
-    public void tick() {
-        long tick = level.getGameTime();
-        if (lastSnapshotTick != -1 && (tick - lastSnapshotTick) < CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS) {
-            return;
+    public void tick(List<SpiritEntity> members, long tick) {
+        if (members == null) {
+            throw new IllegalArgumentException(
+                    "members не может быть null: снимок поселения строится из его духов, пустое — пустой список");
+        }
+        if (tick < 0) {
+            throw new IllegalArgumentException("tick = " + tick + ": тик снимка не может быть отрицательным");
         }
         lastSnapshotTick = tick;
+        entityQueries += CoordinatorTuning.SNAPSHOT_GROUP_QUERIES;
+        planCalls++;
         List<SpiritSnapshot> snapshots = new ArrayList<>();
-        for (Entity entity : level.getAllEntities()) {
-            if (!(entity instanceof SpiritEntity spirit)) {
-                continue;
-            }
+        for (SpiritEntity spirit : members) {
             if (spirit.isRemoved()) {
                 reservations.releaseAll(spirit.getUUID());
                 continue;
             }
-            SpiritSnapshot snap = SpiritSnapshotReader.read(spirit, tick);
-            snapshots.add(snap);
+            snapshots.add(SpiritSnapshotReader.read(spirit, tick));
+            entityQueries += CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
         }
         expireStale(snapshots, tick);
         reservations.expire(tick);
-        Optional<Point> defendedPoint = findDefendedPoint(snapshots);
+        Optional<Point> defendedPoint = SettlementGroups.defendedPoint(key);
         double radius = defendedPoint.isPresent() ? CoordinatorTuning.DEFENSE_RADIUS : 0;
         CoordinatorState state = new CoordinatorState(defendedPoint, radius, snapshots, tick);
         CoordinatorPlan plan = coordinator.plan(state, reservations, tick);
@@ -99,25 +109,20 @@ public final class SpiritCoordinator {
         return List.of();
     }
 
-    private Optional<Point> findDefendedPoint(List<SpiritSnapshot> snapshots) {
-        if (snapshots.isEmpty()) {
-            return Optional.empty();
-        }
-        for (SpiritSnapshot snap : snapshots) {
-            SpiritEntity spirit = level.getEntity(snap.id()) instanceof SpiritEntity se ? se : null;
-            if (spirit != null) {
-                Optional<BlockCoord> home = spirit.home();
-                if (home.isPresent()) {
-                    BlockCoord h = home.get();
-                    return Optional.of(new Point(h.x() + 0.5, h.y(), h.z() + 0.5));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
     public CoordinatorState snapshot() {
         return lastState;
+    }
+
+    public int entityQueries() {
+        return entityQueries;
+    }
+
+    public int planCalls() {
+        return planCalls;
+    }
+
+    long lastTick() {
+        return lastSnapshotTick;
     }
 
     public WorkReservations reservations() {
@@ -136,6 +141,10 @@ public final class SpiritCoordinator {
             if (spirit == null || spirit.isRemoved()) {
                 continue;
             }
+            if (spirit.currentTaskScript().isPresent()) {
+                lastDirectives.remove(id);
+                continue;
+            }
             CombatDirective last = lastDirectives.get(id);
             if (last == null || !last.equals(d)) {
                 applyDirectiveToSpirit(spirit, d, plan);
@@ -143,15 +152,17 @@ public final class SpiritCoordinator {
             }
         }
         for (UUID id : new ArrayList<>(lastDirectives.keySet())) {
-            if (!directives.containsKey(id)) {
-                SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
-                if (spirit != null && !spirit.isRemoved()) {
-                    spirit.tactics().clearDirective();
-                    spirit.tactics().clearGuardZone();
-                    spirit.tactics().setWard(null);
-                }
-                lastDirectives.remove(id);
+            if (directives.containsKey(id)) {
+                continue;
             }
+            lastDirectives.remove(id);
+            SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
+            if (spirit == null || spirit.isRemoved() || spirit.currentTaskScript().isPresent()) {
+                continue;
+            }
+            spirit.tactics().clearDirective();
+            spirit.tactics().clearGuardZone();
+            spirit.tactics().setWard(null);
         }
     }
 

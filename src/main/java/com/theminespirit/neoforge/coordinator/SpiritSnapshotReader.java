@@ -41,7 +41,6 @@ public final class SpiritSnapshotReader {
         AABB box = spirit.getBoundingBox().inflate(THREAT_RADIUS);
         List<LivingEntity> near = level.getEntitiesOfClass(LivingEntity.class, box,
                 entity -> entity != spirit && entity.isAlive());
-        spirit.countEntityQuery();
         int threatsNear = 0;
         Set<UUID> attackers = new HashSet<>();
         for (LivingEntity entity : near) {

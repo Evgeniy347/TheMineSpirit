@@ -1,6 +1,8 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.coordinator.SettlementGroups;
+import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
@@ -11,6 +13,7 @@ import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.coordinator.SpiritSnapshotReader;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -108,15 +111,18 @@ public final class CoordinatorGameTests {
     }
 
     @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)
-    public static void coordinator_RegistryQuery_SameInstancePerLevel(GameTestHelper helper) {
+    public static void coordinator_RegistryQuery_SameInstancePerSettlement(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        SpiritCoordinator first = CoordinatorRegistry.get(level);
+        SettlementKey home = SettlementKey.homed(new BlockCoord(100, 64, -40));
+        SpiritCoordinator first = CoordinatorRegistry.get(level, home);
 
-        helper.assertTrue(first == CoordinatorRegistry.get(level),
-                "Два запроса на уровень отдают один координатор: иначе на уровень приходится два плана");
-        CoordinatorRegistry.remove(level);
-        helper.assertTrue(first != CoordinatorRegistry.get(level),
-                "После remove реестр выдаёт новый координатор: выгруженный уровень не держит старое состояние");
+        helper.assertTrue(first == CoordinatorRegistry.get(level, home),
+                "Два запроса на поселение отдают один координатор: иначе у поселения два плана обороны");
+        helper.assertTrue(CoordinatorRegistry.get(level, SettlementKey.homed(new BlockCoord(-7, 63, 12))) != first,
+                "Чужой дом — другой координатор: иначе приказы одного поселения командуют чужими духами");
+        CoordinatorRegistry.remove(level, home);
+        helper.assertTrue(first != CoordinatorRegistry.get(level, home),
+                "После remove реестр выдаёт новый координатор: исчезнувшее поселение не держит старое состояние");
         helper.succeed();
     }
 
@@ -146,11 +152,12 @@ public final class CoordinatorGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel()).snapshot().tick() > 0,
-                    "Слушатель координатора зарегистрирован: снимок уровня строится сам, без ручного tick()");
-            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel()).snapshot().spirits().stream()
+            SettlementKey key = SettlementGroups.keyOf(Optional.empty(), spirit.getUUID());
+            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel(), key).snapshot().tick() > 0,
+                    "Слушатель координатора зарегистрирован: снимок поселения строится сам, без ручного tick()");
+            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel(), key).snapshot().spirits().stream()
                             .anyMatch(snapshot -> snapshot.id().equals(spirit.getUUID())),
-                    "Снимок координатора видит духа уровня: иначе координатор слеп");
+                    "Снимок поселения видит своего духа: иначе координатор слеп");
             TacticsScene.finish(helper, spirit);
         });
     }

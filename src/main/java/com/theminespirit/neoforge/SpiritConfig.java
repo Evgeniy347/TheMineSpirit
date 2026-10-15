@@ -11,6 +11,7 @@ public final class SpiritConfig {
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
     private static final ModConfigSpec.BooleanValue MOBS_TARGET_SPIRITS;
+    private static final ModConfigSpec.BooleanValue COORDINATOR_ENABLED;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -24,6 +25,10 @@ public final class SpiritConfig {
                 .comment("Добавлять враждебным мобам цель «дух», чтобы они сами нападали на духов.",
                         "false — мобы смотрят только на игроков, как в ванили.")
                 .define("mobsTargetSpirits", true);
+        COORDINATOR_ENABLED = builder
+                .comment("Координатор поселений раздаёт духам с общим домом оборону, помощь и работы.",
+                        "false — аварийный рубильник: координатор не тикает, духи живут без его приказов.")
+                .define("coordinatorEnabled", true);
         builder.pop();
         SPEC = builder.build();
     }
@@ -41,6 +46,14 @@ public final class SpiritConfig {
 
     public static void setMobsTargetSpirits(boolean value) {
         MOBS_TARGET_SPIRITS.set(value);
+    }
+
+    public static boolean coordinatorEnabled() {
+        return COORDINATOR_ENABLED.get();
+    }
+
+    public static void setCoordinatorEnabled(boolean value) {
+        COORDINATOR_ENABLED.set(value);
     }
 
     public static int radiusFor(ServerLevel level) {
