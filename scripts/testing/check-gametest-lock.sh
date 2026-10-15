@@ -8,11 +8,7 @@ rm -rf "$work"
 mkdir -p "$work/bin" "$work/tmp"
 failed=0
 
-# Каталог без flock: запасной путь включается, если PATH его не содержит (kill — встроенная команда bash).
-mkdir -p "$work/nopath"
-for tool in bash sh env cat rm mkdir sleep date dirname awk grep sed head tail; do
-    p=$(command -v "$tool" 2>/dev/null) && ln -sf "$p" "$work/nopath/$tool"
-done
+# Запасной путь включаем явно (THEMINESPIRIT_GAMETEST_NOFLOCK=1): так проверка одинакова на Linux с flock и в Git Bash.
 
 # Фейковый gradlew: время старта/конца в файл и сон на заданное время.
 cat >"$work/fake-gradlew" <<'FAKE'
