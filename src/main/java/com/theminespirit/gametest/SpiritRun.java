@@ -35,6 +35,10 @@ final class SpiritRun {
         return run;
     }
 
+    boolean started() {
+        return startTickCount >= 0;
+    }
+
     void assertStarted() {
         helper.assertTrue(startTickCount >= 0,
                 "дух ещё не начал тикать (чанк площадки не стал активным) или не выполнено условие запуска, "

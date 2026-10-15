@@ -1,11 +1,14 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -116,11 +119,29 @@ public final class HusbandryProduceGameTests {
                 new ScriptCall("feed",
                         Map.of("species", "sheep", "radius", PEN_RADIUS, "count", 1, "babiesFirst", true)),
                 SETTLE_TICKS);
+        BlockPos sheepStart = escapee.blockPosition();
+        AtomicInteger taskRunningTicks = new AtomicInteger();
+        helper.onEachTick(() -> {
+            if (run.started()
+                    && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+                taskRunningTicks.incrementAndGet();
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(run.spiritTicks() <= 200,
-                    "возврат приманкой обязан уложиться в 200 тиков духа, заняло " + run.spiritTicks());
+                    "возврат приманкой обязан уложиться в 200 тиков духа, заняло " + run.spiritTicks()
+                            + "; задача RUNNING тиков: " + taskRunningTicks.get()
+                            + "; статус " + spirit.taskStatus().map(Enum::name).orElse("нет задачи")
+                            + "; причина " + spirit.taskFailureReason().orElse("нет")
+                            + "; овца " + escapee.blockPosition()
+                            + ", дух " + spirit.blockPosition()
+                            + ", дух–овца " + String.format(Locale.ROOT, "%.2f",
+                                    spirit.position().distanceTo(escapee.position()))
+                            + ", овца из " + sheepStart
+                            + ", nav овцы done=" + escapee.getNavigation().isDone()
+                            + ", path=" + (escapee.getNavigation().getPath() != null));
             HusbandryGameTests.assertSucceeded(helper, spirit, "отбившаяся овца обязана вернуться приманкой");
             helper.assertTrue(escapee.isAlive(), "приманка не бьёт: овца обязана остаться жива");
             helper.assertTrue(escapee.getHealth() >= escapee.getMaxHealth(),
