@@ -767,6 +767,58 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "farm_trample_repeat", timeoutTicks = 400)
+    public static void farmland_SpiritDropsOntoFarmlandFiveTimes_StaysFarmland(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = new ArrayList<>();
+        for (int x = 3; x <= 7; x++) {
+            BlockPos cell = new BlockPos(x, FLOOR_Y, 4);
+            helper.setBlock(cell, Blocks.FARMLAND);
+            cells.add(cell);
+        }
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.IRON_HOE));
+        AtomicInteger drop = new AtomicInteger(0);
+        AtomicBoolean lifted = new AtomicBoolean(false);
+
+        helper.onEachTick(() -> {
+            int index = drop.get();
+            if (index >= cells.size()) {
+                return;
+            }
+            BlockPos cell = cells.get(index);
+            double cellY = helper.absolutePos(cell).getY();
+            if (!lifted.get()) {
+                spirit.teleportTo(helper.absolutePos(cell).getX() + 0.5, cellY + 2.0,
+                        helper.absolutePos(cell).getZ() + 0.5);
+                spirit.resetFallDistance();
+                lifted.set(true);
+                return;
+            }
+            if (spirit.onGround() && spirit.getY() <= cellY + 1.1) {
+                drop.set(index + 1);
+                lifted.set(false);
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(drop.get() >= cells.size(),
+                    "подготовка: дух обязан упасть на каждую из " + cells.size() + " клеток пашни, упал на "
+                            + drop.get());
+            int farmland = countBlock(helper, Blocks.FARMLAND);
+            helper.assertTrue(farmland == cells.size(),
+                    "дух упал с высоты на пашню " + cells.size() + " раз: пашня обязана остаться пашней, иначе "
+                            + "растоптанная клетка превращается в землю и ферма в игре теряет грядку. Пашни "
+                            + farmland + " из " + cells.size());
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell).is(Blocks.FARMLAND),
+                        "клетка " + cell + " обязана остаться пашней, а там "
+                                + helper.getBlockState(cell).getBlock());
+            }
+            GameTestFixtures.reset(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "farm_cancel", timeoutTicks = 150)
     public static void harvestCrop_CancelledMidWork_StopsWorldAndNavigation(GameTestHelper helper) {
         arenaFloor(helper);
