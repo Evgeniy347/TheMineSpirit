@@ -11,6 +11,7 @@ public record DeliverParams(String item, int count, String to) {
         if (to == null || to.isBlank()) {
             throw new IllegalArgumentException("Не задан адресат deliver: пустую строку не сопоставить ни с кем");
         }
+        PersonSelector.requirePerson(to, "to");
         if (count < CatalogLimits.COUNT_MIN || count > CatalogLimits.COUNT_MAX) {
             throw new IllegalArgumentException("Число предметов " + count + " вне диапазона ["
                     + CatalogLimits.COUNT_MIN + ", " + CatalogLimits.COUNT_MAX

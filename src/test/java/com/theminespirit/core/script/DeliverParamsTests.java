@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class DeliverParamsTests {
@@ -72,6 +73,32 @@ class DeliverParamsTests {
 
         assertTrue(error.getMessage().contains(String.valueOf(CatalogLimits.COUNT_MAX)),
                 "Отказ обязан называть верхнюю границу. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void from_SpiritAddressee_IsAccepted() {
+        String uuid = UUID.randomUUID().toString();
+        DeliverParams params = DeliverParams.from(Map.of("item", "cobblestone", "count", 3, "to", "spirit:" + uuid));
+
+        assertEquals(new DeliverParams("cobblestone", 3, "spirit:" + uuid), params,
+                "deliver обязан принимать духа-адресата по UUID: передача бывает не только игроку");
+    }
+
+    @Test
+    void from_MonsterKeywordAddressee_IsRejected() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> DeliverParams.from(Map.of("item", "cobblestone", "count", 3, "to", "hostile")),
+                "deliver с адресатом-видом hostile обязан отказывать: предмет некому вручить");
+
+        assertTrue(error.getMessage().contains("to"),
+                "Отказ обязан называть параметр 'to'. Фактическое: " + error.getMessage());
+    }
+
+    @Test
+    void from_UnparsableAddressee_IsRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> DeliverParams.from(Map.of("item", "cobblestone", "count", 3, "to", "кто-то непонятный")),
+                "deliver с нераспознаваемым адресатом обязан отказывать: доставить некому");
     }
 
     @Test

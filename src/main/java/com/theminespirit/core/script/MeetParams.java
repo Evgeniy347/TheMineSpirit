@@ -9,6 +9,7 @@ public record MeetParams(String target) {
             throw new IllegalArgumentException("Не задана цель meet: пустую строку не сопоставить ни с одним игроком "
                     + "или духом, а с кем встретиться — не из чего");
         }
+        PersonSelector.requirePerson(target, "target");
     }
 
     public static MeetParams from(Map<String, Object> params) {
