@@ -342,7 +342,7 @@ public final class ResultGameTests {
         return spirit;
     }
 
-    private static String taskBody(String script, Map<String, Object> params) {
+    static String taskBody(String script, Map<String, Object> params) {
         StringBuilder body = new StringBuilder("{\"request_id\":\"").append(UUID.randomUUID())
                 .append("\",\"plan\":{\"type\":\"script\",\"script\":\"").append(script).append("\",\"params\":{");
         boolean first = true;
@@ -389,7 +389,7 @@ public final class ResultGameTests {
         helper.setBlock(x - 1, height + 1, z - 1, leaves);
     }
 
-    private static final class ResultPoller {
+    static final class ResultPoller {
         private final AtomicReference<String> path = new AtomicReference<>();
         private final AtomicReference<String> latest = new AtomicReference<>();
         private final AtomicReference<JsonNode> lastJson = new AtomicReference<>(MissingNode.getInstance());
