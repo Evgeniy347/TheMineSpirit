@@ -12,11 +12,10 @@ class SpiritTargetsTests {
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {"minecraft:zombie", "minecraft:husk", "minecraft:skeleton", "minecraft:creeper",
             "minecraft:witch", "minecraft:spider", "minecraft:drowned", "minecraft:stray", "minecraft:blaze",
-            "minecraft:warden", "minecraft:wither", "minecraft:zoglin", "minecraft:hoglin", "minecraft:ghast",
-            "minecraft:phantom", "minecraft:slime", "minecraft:magma_cube", "minecraft:silverfish",
-            "minecraft:endermite", "minecraft:shulker", "minecraft:vex", "minecraft:bogged", "minecraft:breeze",
+            "minecraft:wither", "minecraft:ghast", "minecraft:phantom", "minecraft:slime", "minecraft:magma_cube",
+            "minecraft:silverfish", "minecraft:endermite", "minecraft:shulker", "minecraft:vex", "minecraft:bogged",
             "minecraft:giant", "minecraft:guardian", "minecraft:elder_guardian", "minecraft:cave_spider",
-            "minecraft:zombie_villager", "minecraft:wither_skeleton", "minecraft:ender_dragon"})
+            "minecraft:zombie_villager", "minecraft:wither_skeleton"})
     void attacksSpirits_VanillaHostileMonster_ReturnsTrue(String type) {
         assertTrue(SpiritTargets.attacksSpirits(type),
                 "Враждебный моб " + type + " обязан получать цель «дух»: иначе бой в игре начинается только от игрока, "
@@ -27,11 +26,13 @@ class SpiritTargetsTests {
     @ValueSource(strings = {"minecraft:enderman", "minecraft:zombified_piglin", "minecraft:piglin",
             "minecraft:piglin_brute", "minecraft:pillager", "minecraft:vindicator", "minecraft:evoker",
             "minecraft:illusioner", "minecraft:ravager", "minecraft:iron_golem", "minecraft:villager",
-            "minecraft:wolf", "minecraft:bee", "minecraft:sheep"})
-    void attacksSpirits_NeutralPiglinIllagerOrPeaceful_ReturnsFalse(String type) {
+            "minecraft:wolf", "minecraft:bee", "minecraft:sheep", "minecraft:breeze", "minecraft:hoglin",
+            "minecraft:warden", "minecraft:zoglin", "minecraft:ender_dragon"})
+    void attacksSpirits_NeutralBrainMobOrPeaceful_ReturnsFalse(String type) {
         assertFalse(SpiritTargets.attacksSpirits(type),
-                "Нейтральный, пиглин, иллагер или мирный " + type + " не должен получать цель «дух»: у него своя "
-                        + "логика агрессии, и добавление цели сломало бы её");
+                "Нейтральный, пиглин, иллагер, мирный " + type + " или моб, чью цель выбирает Brain (breeze, hoglin, "
+                        + "warden, zoglin) и дракон с его фазами босса, не получает цель «дух»: добавленный в "
+                        + "targetSelector goal игнорируется, а своя логика агрессии сломалась бы");
     }
 
     @Test

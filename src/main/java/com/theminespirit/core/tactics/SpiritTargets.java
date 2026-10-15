@@ -8,22 +8,25 @@ import java.util.Set;
  * <p>Список намеренно явный: моб попадает в него только по решению владельца. Нейтральные
  * (эндермен, зомбифицированный пиглин), пиглины и иллагеры не трогаются — у них своя логика
  * агрессии, и добавление цели сломало бы её.
+ *
+ * <p>Breeze, hoglin, warden, zoglin и дракон в списке отсутствуют: цель у них выбирает Brain
+ * ({@code StartAttacking} по памяти {@code NEAREST_VISIBLE_*}; hoglin вообще видит только
+ * игроков), а не {@code targetSelector}, поэтому добавленный туда goal игнорируется; дракон
+ * выбирает цель фазами босса. Чтобы такой моб получил цель «дух», её вешают на его
+ * сенсор/память Brain — отдельная задача.
  */
 public final class SpiritTargets {
     private static final Set<String> ATTACKERS = Set.of(
             "minecraft:blaze",
             "minecraft:bogged",
-            "minecraft:breeze",
             "minecraft:cave_spider",
             "minecraft:creeper",
             "minecraft:drowned",
             "minecraft:elder_guardian",
-            "minecraft:ender_dragon",
             "minecraft:endermite",
             "minecraft:ghast",
             "minecraft:giant",
             "minecraft:guardian",
-            "minecraft:hoglin",
             "minecraft:husk",
             "minecraft:magma_cube",
             "minecraft:phantom",
@@ -34,11 +37,9 @@ public final class SpiritTargets {
             "minecraft:spider",
             "minecraft:stray",
             "minecraft:vex",
-            "minecraft:warden",
             "minecraft:witch",
             "minecraft:wither",
             "minecraft:wither_skeleton",
-            "minecraft:zoglin",
             "minecraft:zombie",
             "minecraft:zombie_villager");
 
