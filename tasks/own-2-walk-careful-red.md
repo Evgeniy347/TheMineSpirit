@@ -38,3 +38,25 @@
 
 ## Не трогать
 Логику `CarefulPath`. Если окажется, что она неверна, опиши это в `todo.md` отдельным пунктом.
+
+## Итог (2026-10-15)
+
+Выполнено. Сценария, где `walk_careful` зелёный, а подлог на `goto` красный, **не существует** при текущей
+реализации: `walk_careful` идёт тем же ванильным путём, что и `goto`, а `CarefulPath.refusal` лишь отклоняет
+уже построенный путь. Ванильный `WalkNodeEvaluator.tryFindFirstGroundNodeBelow` (исходник Minecraft 1.21.1)
+сам ограничивает спуск `mob.getMaxFallDistance()`, а у духа он равен `DropPolicy.MAX_DROP = 2`, поэтому
+pathfinder не строит путь с падением глубже `MAX_SAFE_DROP` и `CarefulPath.refusal` на реальных путях
+всегда `null`.
+
+Гипотеза проверена диагностическими GameTest (временные, удалены): ванильный путь для ям 1×4 и 2×4 глубиной 4
+обходит пропасть, спускаясь максимум на 1–2 блока, никогда не прыгает и не падает глубже; плато высотой 3
+даёт `canReach=false` и недостижимо для обоих режимов.
+
+Тест `walkCareful_SixBlocksAlongFourDeepChasm_ArrivesAndAlwaysHasFloorBelow` оставлен регрессионным
+с комментарием-обоснованием; различие режимов покрывает синтетический
+`carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing`. Суффикс `_Regression` не добавлен —
+его запрещает `TestNamingGuardTests` (имя строго из трёх частей); пометка о причине — в комментарии и в `todo.md`.
+
+Проверки: `./gradlew test` — зелёный (3850 тестов); GameTest — 6 прогонов из 6 зелёные,
+`All 439 required tests passed`. Коммит: `137e537` (`test: walk_careful вдоль пропасти — регрессионная пометка
+и вывод о недостижимости подлога`). Логика `CarefulPath` не менялась.
