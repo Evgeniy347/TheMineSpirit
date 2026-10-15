@@ -295,6 +295,55 @@ public final class CoordinatorGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    public static void workPull_ThreeSpiritsThreeTrees_EachReservesOwnTree(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(2, 1, 4), new BlockPos(3, 1, 4), new BlockPos(2, 1, 6))) {
+            spirits.add(TacticsScene.spirit(helper, at));
+        }
+        List<WorkTarget> trees = List.of(tree(helper, new BlockPos(2, 1, 5)), tree(helper, new BlockPos(5, 1, 8)),
+                tree(helper, new BlockPos(8, 1, 5)));
+
+        List<WorkTarget> taken = new ArrayList<>();
+        for (SpiritEntity spirit : spirits) {
+            Optional<WorkTarget> pick = WorkReserveHub.choose(spirit, trees);
+            helper.assertTrue(pick.isPresent(),
+                    "Свободный дух находит дерево: иначе pull не даёт работу, хотя цели свободны");
+            helper.assertTrue(WorkReserveHub.reserve(spirit, pick.get()),
+                    "Выбор закрепляется бронью с первого раза: распределитель не предлагает занятое");
+            taken.add(pick.get());
+        }
+        helper.assertTrue(new HashSet<>(taken).size() == 3,
+                "Двух духов на одном дереве нет: иначе брони не защищают цели друг от друга");
+        helper.assertTrue(!WorkReserveHub.reserve(spirits.get(1), taken.get(0)),
+                "Чужая бронь не перезанимается: иначе двое рубят одно дерево");
+
+        helper.assertTrue(WorkReserveHub.releaseAll(spirits.get(0)) == 1, "Снятие брони освобождает дерево");
+        SpiritEntity other = TacticsScene.spirit(helper, new BlockPos(5, 1, 2));
+        helper.assertTrue(WorkReserveHub.reserve(other, taken.get(0)),
+                "После release дерево забирает другой дух: цель не остаётся занятой навсегда");
+        other.discard();
+
+        for (SpiritEntity spirit : spirits) {
+            WorkReserveHub.releaseAll(spirit);
+        }
+        WorkTarget single = tree(helper, new BlockPos(5, 1, 5));
+        for (SpiritEntity spirit : spirits) {
+            helper.assertTrue(WorkReserveHub.choose(spirit, List.of(single)).map(pick -> pick.equals(single))
+                            .orElse(false),
+                    "При одном дереве каждый дух получает работу: иначе двое пустуют, хотя толпа не запрещена");
+        }
+        helper.assertTrue(WorkReserveHub.reserve(spirits.get(0), single),
+                "Первый дух закрепляет единственное дерево бронью");
+        helper.assertTrue(!WorkReserveHub.reserve(spirits.get(1), single),
+                "Второму то же дерево бронью не отдаётся: мягкое распределение — не двойная бронь");
+
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, other);
+        helper.succeed();
+    }
+
     private static List<Point> postsOf(List<SpiritEntity> spirits) {
         List<Point> posts = new ArrayList<>();
         for (SpiritEntity spirit : spirits) {
