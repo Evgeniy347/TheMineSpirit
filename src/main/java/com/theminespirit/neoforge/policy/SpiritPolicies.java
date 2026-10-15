@@ -236,6 +236,10 @@ public final class SpiritPolicies {
 
     private void updateSuspension(Layer owner) {
         Layer controller = owner == Layer.POLICY || owner == Layer.TACTICS ? owner : null;
+        if (controller == Layer.TACTICS && spirit.brainIfPresent()
+                .map(SpiritBrain::observesWhileTacticsOwns).orElse(false)) {
+            controller = null;
+        }
         if (controller != null && controller != suspendedBy) {
             String reason = suspendReason(controller);
             spirit.brainIfPresent().ifPresent(brain -> brain.suspend(reason));

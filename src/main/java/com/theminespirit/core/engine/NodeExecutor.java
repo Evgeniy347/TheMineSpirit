@@ -89,6 +89,10 @@ abstract class NodeExecutor {
 
     abstract String currentScript();
 
+    boolean observesWhileTacticsOwns() {
+        return false;
+    }
+
     Optional<ScriptInstance.Progress> scriptProgress() {
         return Optional.empty();
     }

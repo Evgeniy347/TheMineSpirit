@@ -217,4 +217,21 @@ final class ParallelExecutor extends NodeExecutor {
         }
         return Optional.empty();
     }
+
+    @Override
+    boolean observesWhileTacticsOwns() {
+        if (children == null) {
+            return false;
+        }
+        boolean observes = false;
+        for (int i = 0; i < children.length; i++) {
+            if (results[i] == ScriptStatus.RUNNING) {
+                if (!children[i].observesWhileTacticsOwns()) {
+                    return false;
+                }
+                observes = true;
+            }
+        }
+        return observes;
+    }
 }

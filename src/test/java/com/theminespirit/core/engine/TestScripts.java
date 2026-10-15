@@ -19,6 +19,10 @@ final class TestScripts {
         return params -> new CountingInstance(ticks);
     }
 
+    static ScriptFactory observing(int ticks, boolean observes) {
+        return params -> new ObservingInstance(ticks, observes);
+    }
+
     static ScriptFactory resulting(int ticks, ScriptResult result) {
         return params -> new ResultingInstance(ticks, result);
     }
@@ -45,6 +49,28 @@ final class TestScripts {
         public ScriptStatus tick() {
             elapsed++;
             return elapsed >= total ? terminal : ScriptStatus.RUNNING;
+        }
+    }
+
+    private static final class ObservingInstance implements ScriptInstance {
+        private final int total;
+        private final boolean observes;
+        private int elapsed;
+
+        ObservingInstance(int ticks, boolean observes) {
+            this.total = ticks;
+            this.observes = observes;
+        }
+
+        @Override
+        public ScriptStatus tick() {
+            elapsed++;
+            return elapsed >= total ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+        }
+
+        @Override
+        public boolean observesWhileTacticsOwns() {
+            return observes;
         }
     }
 

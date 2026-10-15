@@ -77,6 +77,21 @@ final class ScriptExecutor extends NodeExecutor {
     }
 
     @Override
+    boolean observesWhileTacticsOwns() {
+        if (instance == null) {
+            if (failed) {
+                return false;
+            }
+            try {
+                instance = createInstance();
+            } catch (UnknownScriptException unknown) {
+                return false;
+            }
+        }
+        return instance.observesWhileTacticsOwns();
+    }
+
+    @Override
     Optional<ScriptInstance.Progress> scriptProgress() {
         return instance == null ? Optional.empty() : instance.progress();
     }

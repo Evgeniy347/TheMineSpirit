@@ -109,6 +109,10 @@ public final class SpiritBrain {
         return runner == null ? Optional.empty() : runner.currentScript();
     }
 
+    public boolean observesWhileTacticsOwns() {
+        return runner != null && runner.observesWhileTacticsOwns();
+    }
+
     public Optional<RunProgress> failedAt() {
         return Optional.ofNullable(lastFailedAt);
     }

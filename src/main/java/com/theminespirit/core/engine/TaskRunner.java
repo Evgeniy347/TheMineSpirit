@@ -93,6 +93,10 @@ public final class TaskRunner {
         return Optional.ofNullable(root.currentScript());
     }
 
+    public boolean observesWhileTacticsOwns() {
+        return status == RunStatus.RUNNING && root.observesWhileTacticsOwns();
+    }
+
     public void suspend() {
         if (status == RunStatus.RUNNING && !suspended) {
             suspended = true;

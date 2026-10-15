@@ -33,6 +33,11 @@ abstract class SingleChildExecutor extends NodeExecutor {
     }
 
     @Override
+    final boolean observesWhileTacticsOwns() {
+        return current != null && current.observesWhileTacticsOwns();
+    }
+
+    @Override
     final Optional<ScriptInstance.Progress> scriptProgress() {
         return current == null ? Optional.empty() : current.scriptProgress();
     }

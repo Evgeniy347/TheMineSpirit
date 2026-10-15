@@ -85,9 +85,13 @@ public final class SpiritEntity extends PathfinderMob {
             return;
         }
         tactics.tick();
-        if (brain != null && !tactics.wantsControl() && policies.owner() != Layer.TACTICS) {
+        if (brain != null && (!strategyOwned() || brain.observesWhileTacticsOwns())) {
             brain.tick();
         }
+    }
+
+    private boolean strategyOwned() {
+        return tactics.wantsControl() || policies.owner() == Layer.TACTICS;
     }
 
     @Override
