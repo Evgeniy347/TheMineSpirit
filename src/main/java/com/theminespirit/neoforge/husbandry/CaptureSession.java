@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.husbandry;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.husbandry.EscapeCheck;
+import com.theminespirit.core.husbandry.RingBuildOrder;
 import com.theminespirit.core.husbandry.RingGround;
 import com.theminespirit.core.husbandry.RingGround.Cell;
 import com.theminespirit.core.husbandry.RingPlan;
@@ -18,7 +19,6 @@ import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -253,7 +253,6 @@ public final class CaptureSession {
             fail("животное ушло: вышло из кольца во время постройки");
             return;
         }
-        sortRemaining();
         while (!remaining.isEmpty() && alreadyBuilt(remaining.get(0))) {
             remaining.remove(0);
         }
@@ -421,7 +420,7 @@ public final class CaptureSession {
             return false;
         }
         remaining.clear();
-        for (BlockCoord block : ring.blocks()) {
+        for (BlockCoord block : RingBuildOrder.order(ring, center)) {
             if (!alreadyBuilt(block)) {
                 remaining.add(block);
             }
@@ -457,19 +456,6 @@ public final class CaptureSession {
             }
         }
         return tops;
-    }
-
-    private void sortRemaining() {
-        BlockPos animalPos = target.blockPosition();
-        remaining.sort(Comparator
-                .comparingInt((BlockCoord block) -> {
-                    int dx = block.x() - animalPos.getX();
-                    int dz = block.z() - animalPos.getZ();
-                    return dx * dx + dz * dz;
-                })
-                .thenComparingInt(BlockCoord::y)
-                .thenComparingInt(BlockCoord::x)
-                .thenComparingInt(BlockCoord::z));
     }
 
     private boolean alreadyBuilt(BlockCoord block) {
