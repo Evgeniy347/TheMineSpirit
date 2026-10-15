@@ -10,6 +10,7 @@ public final class SpiritConfig {
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
+    private static final ModConfigSpec.BooleanValue MOBS_TARGET_SPIRITS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -19,6 +20,10 @@ public final class SpiritConfig {
                         "-1 — как simulation distance сервера: дух держит столько же, сколько игрок.")
                 .defineInRange("chunkLoadingRadius", AUTO_CHUNK_LOADING_RADIUS, AUTO_CHUNK_LOADING_RADIUS,
                         MAX_CHUNK_LOADING_RADIUS);
+        MOBS_TARGET_SPIRITS = builder
+                .comment("Добавлять враждебным мобам цель «дух», чтобы они сами нападали на духов.",
+                        "false — мобы смотрят только на игроков, как в ванили.")
+                .define("mobsTargetSpirits", true);
         builder.pop();
         SPEC = builder.build();
     }
@@ -28,6 +33,14 @@ public final class SpiritConfig {
 
     public static ModConfigSpec spec() {
         return SPEC;
+    }
+
+    public static boolean mobsTargetSpirits() {
+        return MOBS_TARGET_SPIRITS.get();
+    }
+
+    public static void setMobsTargetSpirits(boolean value) {
+        MOBS_TARGET_SPIRITS.set(value);
     }
 
     public static int radiusFor(ServerLevel level) {

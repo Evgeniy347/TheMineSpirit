@@ -2,6 +2,7 @@ package com.theminespirit;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.neoforge.MobTargetEvents;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritCommands;
@@ -29,6 +30,7 @@ public final class TheMineSpirit {
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
         PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
+        MobTargetEvents.register(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
     }
 }
