@@ -18,6 +18,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -114,6 +115,44 @@ public final class CaptureGameTests {
             helper.assertTrue(maxColumn(helper) == 3,
                     "кольцо у ступеньки местами обязано быть из 3 блоков: стенка в 2 блока от низкой земли "
                             + "лишь на 1 выше высокого пола, и овца уходит прыжком");
+            GameTestFixtures.reset(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    public static void capture_SheepWalkingAway_BlockedAndCaught(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        Sheep sheep = helper.spawn(EntityType.SHEEP, FLOCK);
+        sheep.setNoAi(true);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
+        AtomicInteger successTick = new AtomicInteger(-1);
+        AtomicReference<BlockPos> center = new AtomicReference<>();
+        helper.onEachTick(() -> {
+            if (spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && successTick.get() < 0) {
+                successTick.set(spirit.tickCount);
+                center.set(readCenter(spirit));
+            }
+            if (successTick.get() < 0) {
+                sheep.move(MoverType.SELF, new Vec3(0.08, 0, 0));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(successTick.get() >= 0,
+                    "овца, идущая на восток, обязана пойматься: дух обязан отрезать её стенкой впереди. Статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
+            helper.assertTrue(spirit.tickCount - successTick.get() >= HOLD_TICKS,
+                    "после поимки ждём " + HOLD_TICKS + " тиков: иначе неизвестно, держит ли кольцо идущую овцу");
+            BlockPos anchor = center.get();
+            helper.assertTrue(anchor != null, "итог поимки обязан нести центр кольца: без него негде искать овцу");
+            helper.assertTrue(ringBlocks(helper) >= 24,
+                    "кольцо вокруг идущей овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
             GameTestFixtures.reset(helper);
         });
     }

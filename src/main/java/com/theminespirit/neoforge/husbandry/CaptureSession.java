@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.husbandry.CaptureFollow;
 import com.theminespirit.core.husbandry.EscapeCheck;
 import com.theminespirit.core.husbandry.RingBuildOrder;
 import com.theminespirit.core.husbandry.RingGround;
@@ -80,11 +81,8 @@ public final class CaptureSession {
     private int ticks;
     private int queryCooldown;
     private int defers;
-    private int minX;
-    private int maxX;
-    private int minZ;
-    private int maxZ;
     private BlockCoord current;
+    private Cell previousAnimal;
     private boolean needsPlan = true;
 
     public CaptureSession(SpiritEntity spirit, Species species, int radius) {
@@ -244,14 +242,10 @@ public final class CaptureSession {
         if (!refreshTarget()) {
             return;
         }
-        if (needsPlan) {
+        if (needsPlan || !planFollowsAnimal()) {
             if (!plan()) {
                 return;
             }
-        }
-        if (!insideBox(target)) {
-            fail("животное ушло: вышло из кольца во время постройки");
-            return;
         }
         while (!remaining.isEmpty() && alreadyBuilt(remaining.get(0))) {
             remaining.remove(0);
@@ -261,7 +255,8 @@ public final class CaptureSession {
             return;
         }
         BlockPos animalPos = target.blockPosition();
-        current = RingBuildOrder.nextTarget(remaining, current, new Cell(animalPos.getX(), animalPos.getZ()))
+        Cell leading = CaptureFollow.leadingCell(animalCell(animalPos), previousAnimal);
+        current = RingBuildOrder.nextTarget(remaining, current, leading)
                 .orElse(null);
         if (current == null) {
             state = State.VERIFY;
@@ -285,14 +280,10 @@ public final class CaptureSession {
         if (!refreshTarget()) {
             return;
         }
-        if (needsPlan) {
+        if (needsPlan || !planFollowsAnimal()) {
             if (!plan()) {
                 return;
             }
-        }
-        if (!insideBox(target)) {
-            fail("животное ушло: вышло из кольца до проверки");
-            return;
         }
         Map<Cell, Integer> tops = measureTops();
         Optional<EscapeCheck.WeakSpot> escape = EscapeCheck.findEscape(ground, tops, ring.interior());
@@ -431,10 +422,6 @@ public final class CaptureSession {
                 remaining.add(block);
             }
         }
-        this.minX = ring.wall().stream().mapToInt(Cell::x).min().orElseThrow();
-        this.maxX = ring.wall().stream().mapToInt(Cell::x).max().orElseThrow();
-        this.minZ = ring.wall().stream().mapToInt(Cell::z).min().orElseThrow();
-        this.maxZ = ring.wall().stream().mapToInt(Cell::z).max().orElseThrow();
         needsPlan = false;
         state = State.BUILD;
         return true;
@@ -476,6 +463,10 @@ public final class CaptureSession {
 
     private boolean refreshTarget() {
         if (target != null && target.isAlive() && !target.isRemoved()) {
+            if (spirit.position().distanceTo(target.position()) > searchRadius + 2) {
+                fail("животное ушло: цель отлова дальше радиуса " + searchRadius);
+                return false;
+            }
             return true;
         }
         target = null;
@@ -493,9 +484,23 @@ public final class CaptureSession {
         return false;
     }
 
-    private boolean insideBox(Animal animal) {
-        BlockPos pos = animal.blockPosition();
-        return pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
+    private boolean planFollowsAnimal() {
+        if (ring == null || target == null) {
+            return false;
+        }
+        Cell animal = animalCell(target.blockPosition());
+        if (CaptureFollow.ringCovers(ring, animal)) {
+            previousAnimal = animal;
+            return true;
+        }
+        center = animal;
+        previousAnimal = null;
+        current = null;
+        return false;
+    }
+
+    private static Cell animalCell(BlockPos pos) {
+        return new Cell(pos.getX(), pos.getZ());
     }
 
     private BlockCoord spiritCoord() {
