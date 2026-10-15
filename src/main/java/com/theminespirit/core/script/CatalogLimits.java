@@ -144,6 +144,7 @@ public final class CatalogLimits {
     // Боевые и социальные скрипты: тайм-ауты и безопасные интервалы в тиках духа (20/сек)
     public static final int SAY_LENGTH_MAX = 256;
     public static final int SAY_MIN_INTERVAL_TICKS = 20;
+    public static final int SAY_HEARING_RADIUS = 64;
     public static final int ATTACK_TIMEOUT_TICKS = 1200;
     public static final int DEFEND_TIMEOUT_TICKS = 1200;
     public static final int DEFEND_SAFE_TICKS = 60;

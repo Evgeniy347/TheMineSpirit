@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.social;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CatalogLimits;
@@ -10,8 +11,11 @@ import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import org.slf4j.Logger;
 
 public final class SayScript implements ScriptInstance {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final SpiritEntity spirit;
     private final String rawText;
     private String failureReason;
@@ -61,9 +65,17 @@ public final class SayScript implements ScriptInstance {
         }
         String line = "<" + spirit.getDisplayName().getString() + "> " + text;
         Component message = Component.literal(line);
+        int heard = 0;
         for (ServerPlayer player : level.players()) {
+            if (player.distanceTo(spirit) > CatalogLimits.SAY_HEARING_RADIUS) {
+                continue;
+            }
             player.sendSystemMessage(message);
+            heard++;
         }
+        LOGGER.info("Дух {} произнёс '{}' в радиусе {}: слышат {} игроков, дух в {}",
+                spirit.getDisplayName().getString(), text, CatalogLimits.SAY_HEARING_RADIUS, heard,
+                spirit.blockPosition());
     }
 
     private ScriptStatus fail(String reason) {

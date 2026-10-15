@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -139,6 +140,34 @@ public final class SocialGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(messages.stream().anyMatch(m -> m.getString().contains("привет")),
                     "игрок обязан получить сообщение с текстом, сообщения: " + messages);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "empty", batch = "social_say_radius", timeoutTicks = 200)
+    public static void say_ShortText_OnlyPlayersInsideHearingRadiusGetIt(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
+        List<Component> near = new ArrayList<>();
+        List<Component> far = new ArrayList<>();
+        GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "NearSay", near);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(3 + CatalogLimits.SAY_HEARING_RADIUS + 4, 1, 1),
+                "FarSay", far);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("say", Map.of(
+                "text", "слышно")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "say обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(near.stream().anyMatch(m -> m.getString().contains("слышно")),
+                    "игрок в двух блоках обязан услышать духа, сообщения: " + near);
+            helper.assertTrue(far.stream().noneMatch(m -> m.getString().contains("слышно")),
+                    "игрок дальше " + CatalogLimits.SAY_HEARING_RADIUS
+                            + " блоков не должен слышать духа, сообщения: " + far);
             TacticsScene.finish(helper, spirit);
         });
     }

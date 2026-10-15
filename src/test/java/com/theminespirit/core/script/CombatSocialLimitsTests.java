@@ -12,6 +12,9 @@ class CombatSocialLimitsTests {
                         + "а молчаливая правка лимита изменила бы обрезку сообщений игрокам");
         assertEquals(20, CatalogLimits.SAY_MIN_INTERVAL_TICKS,
                 "Анти-спам пропускает речь раз в секунду: чаще — лента реплик забивает чат");
+        assertEquals(64, CatalogLimits.SAY_HEARING_RADIUS,
+                "Духа слышат в64 блоках: шире — речь слышит весь сервер в отсутствие игрока рядом, "
+                        + "уже — игрок в двух блоках рядом теряет реплику");
         assertEquals(1200, CatalogLimits.MEET_TIMEOUT_TICKS,
                 "meet ждёт прихода ровно 60 секунд: дольше — дух стоит впустую, раньше — не успевает дойти");
         assertEquals(1200, CatalogLimits.DELIVER_TIMEOUT_TICKS,
