@@ -50,6 +50,18 @@ class CoordinatorTuningTests {
     }
 
     @Test
+    void snapshotGroupQueries_DeclaredValue_MatchesTuningLiteral() {
+        assertEquals(1, CoordinatorTuning.SNAPSHOT_GROUP_QUERIES,
+                "Перечисление поселения — один запрос за пересборку: чаще — лишние обходы всех сущностей уровня");
+    }
+
+    @Test
+    void snapshotSpiritQueries_DeclaredValue_MatchesTuningLiteral() {
+        assertEquals(1, CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES,
+                "Чтение духа — один запрос за пересборку: чаще — счётчик координатора растёт с духами, а не с периодом");
+    }
+
+    @Test
     void everyConstant_AllValues_PositiveAndFinite() {
         assertTrue(CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS > 0, "Интервал снимка положителен");
         assertTrue(CoordinatorTuning.DEFENSE_RADIUS > 0 && Double.isFinite(CoordinatorTuning.DEFENSE_RADIUS),
@@ -61,5 +73,7 @@ class CoordinatorTuningTests {
                 "Штраф за толпу положителен и конечен");
         assertTrue(CoordinatorTuning.MAX_ASSIST > 0, "Предел помощников положителен");
         assertTrue(CoordinatorTuning.SNAPSHOT_STALE_TICKS > 0, "Просроченность снимка положительна");
+        assertTrue(CoordinatorTuning.SNAPSHOT_GROUP_QUERIES > 0, "Перечисление поселения делает запросы");
+        assertTrue(CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES > 0, "Чтение духа делает запросы");
     }
 }
