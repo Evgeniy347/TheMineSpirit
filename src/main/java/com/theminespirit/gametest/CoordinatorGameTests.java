@@ -8,6 +8,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -16,8 +17,10 @@ import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.coordinator.SpiritSnapshotReader;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -224,6 +227,70 @@ public final class CoordinatorGameTests {
                     "Посты перераспределились после выбытия: иначе координатор держит мёртвые сектора");
             husk.discard();
             rest.forEach(SpiritEntity::discard);
+            TacticsScene.finish(helper, victim[0]);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_assist", timeoutTicks = 400)
+    public static void assist_OneAttacked_NearestFreeDefenderProtectsVictim(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
+        BlockCoord home = new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ());
+        Point defended = new Point(home.x() + 0.5, home.y(), home.z() + 0.5);
+        List<SpiritEntity> defenders = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4), new BlockPos(5, 1, 6))) {
+            SpiritEntity spirit = TacticsScene.spirit(helper, at);
+            spirit.setHome(home);
+            defenders.add(spirit);
+        }
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 5));
+
+        boolean[] attacked = {false};
+        SpiritEntity[] victim = {null};
+        Map<SpiritEntity, Point> postsBefore = new HashMap<>();
+        helper.succeedWhen(() -> {
+            if (!attacked[0]) {
+                List<Point> posts = postsOf(defenders);
+                helper.assertTrue(CoordinatorTuning.DEFENSE_RADIUS == 16.0,
+                        "Радиус обороны 16: посты секторов лежат на этом круге, шире — не сектора");
+                helper.assertTrue(posts.size() == 3 && new HashSet<>(posts).size() == 3,
+                        "У каждого из трёх защитников свой пост: иначе некому идти на помощь");
+                victim[0] = defenders.get(0);
+                Point post = posts.get(0);
+                husk.setPos(new Vec3(post.x(), post.y(), post.z()));
+                husk.setTarget(victim[0]);
+                for (int i = 0; i < defenders.size(); i++) {
+                    postsBefore.put(defenders.get(i), posts.get(i));
+                }
+                attacked[0] = true;
+            }
+            List<SpiritEntity> helpers = new ArrayList<>();
+            for (SpiritEntity defender : defenders) {
+                if (defender != victim[0]
+                        && defender.tactics().combatMode() == CombatMode.PROTECT) {
+                    helpers.add(defender);
+                }
+            }
+            helper.assertTrue(!helpers.isEmpty(),
+                    "Ближайший свободный защитник получает приказ на помощь: иначе атакованный остаётся один");
+            helper.assertTrue(CoordinatorTuning.MAX_ASSIST == 2,
+                    "Предел помощи 2: больше — сектора пустеют, меньше — защитники гибнут");
+            helper.assertTrue(helpers.size() <= CoordinatorTuning.MAX_ASSIST,
+                    "Помощников не больше предела: иначе сектора пустеют, а поселение остаётся без обороны");
+            for (SpiritEntity helperSpirit : helpers) {
+                helper.assertTrue(helperSpirit.tactics().snapshot().ward()
+                                .map(ward -> ward.equals(victim[0].getUUID().toString())).orElse(false),
+                        "Помощник защищает атакованного: иначе приказ помощи ведёт не к тому духу");
+            }
+            for (SpiritEntity defender : defenders) {
+                if (defender == victim[0] || !helpers.contains(defender)) {
+                    helper.assertTrue(postsOf(List.of(defender)).stream()
+                                    .anyMatch(post -> post.equals(postsBefore.get(defender))),
+                            "Посты остальных сохранены: помощь не срывает чужие сектора");
+                }
+            }
+            husk.discard();
+            defenders.forEach(SpiritEntity::discard);
             TacticsScene.finish(helper, victim[0]);
         });
     }
