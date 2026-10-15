@@ -1,5 +1,6 @@
 package com.theminespirit.core.engine;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,6 +11,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class TaskRunnerObserverTests {
@@ -58,6 +60,28 @@ class TaskRunnerObserverTests {
 
         assertFalse(runner.observesWhileTacticsOwns(),
                 "завершённая задача не наблюдает: флаг обязан гаснуть вместе с задачей");
+    }
+
+    @Test
+    void observesWhileTacticsOwns_BeforeFirstTick_DoesNotCreateScriptInstance() {
+        AtomicInteger creations = new AtomicInteger();
+        ScriptRegistry registry = ScriptRegistry.of(Map.of(WATCH, params -> {
+            creations.incrementAndGet();
+            return new ScriptInstance() {
+                @Override
+                public ScriptStatus tick() {
+                    return ScriptStatus.SUCCEEDED;
+                }
+            };
+        }));
+        TaskRunner runner = TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry,
+                TestScripts.condition(CHECK, true));
+
+        runner.observesWhileTacticsOwns();
+
+        assertEquals(0, creations.get(),
+                "флаг обязан читаться без конструирования скрипта: фабрика вызвана " + creations.get()
+                        + " раз — конструирование имеет побочные эффекты и может упасть на невалидных параметрах");
     }
 
     @Test
