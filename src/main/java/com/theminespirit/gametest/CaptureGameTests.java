@@ -5,14 +5,18 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.item.ItemStack;
@@ -30,11 +34,22 @@ public final class CaptureGameTests {
     private static final int HOLD_TICKS = 200;
     private static final BlockPos START = new BlockPos(1, 1, 1);
     private static final BlockPos FLOCK = new BlockPos(4, 1, 4);
+    private static final String BATCH = "capture";
 
     private CaptureGameTests() {
     }
 
-    @GameTest(template = "arena", batch = "capture", timeoutTicks = 400)
+    @BeforeBatch(batch = BATCH)
+    public static void stopMobsTargetingSpirits(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(false);
+    }
+
+    @AfterBatch(batch = BATCH)
+    public static void restoreMobTargeting(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(true);
+    }
+
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
     public static void capture_SheepOnFlat_CaughtAndHeld200Ticks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -75,7 +90,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "capture", timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
     public static void capture_SheepByStep_RingThreeHighAndCaught(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -103,7 +118,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "capture", timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
     public static void capture_WithoutBlocks_FailsExplainingShortage(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
