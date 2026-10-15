@@ -5,11 +5,14 @@ import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
+import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -97,5 +100,33 @@ public final class CoordinatorGameTests {
 
         TacticsScene.finish(helper, other);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)
+    public static void coordinator_RegistryQuery_SameInstancePerLevel(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        SpiritCoordinator first = CoordinatorRegistry.get(level);
+
+        helper.assertTrue(first == CoordinatorRegistry.get(level),
+                "Два запроса на уровень отдают один координатор: иначе на уровень приходится два плана");
+        CoordinatorRegistry.remove(level);
+        helper.assertTrue(first != CoordinatorRegistry.get(level),
+                "После remove реестр выдаёт новый координатор: выгруженный уровень не держит старое состояние");
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)
+    public static void coordinator_ServerTicks_BuildsSnapshotWithoutManualTick(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel()).snapshot().tick() > 0,
+                    "Слушатель координатора зарегистрирован: снимок уровня строится сам, без ручного tick()");
+            helper.assertTrue(CoordinatorRegistry.get(helper.getLevel()).snapshot().spirits().stream()
+                            .anyMatch(snapshot -> snapshot.id().equals(spirit.getUUID())),
+                    "Снимок координатора видит духа уровня: иначе координатор слеп");
+            TacticsScene.finish(helper, spirit);
+        });
     }
 }

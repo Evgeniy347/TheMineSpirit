@@ -15,6 +15,7 @@ import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,9 +47,11 @@ public final class SpiritCoordinator {
             return;
         }
         lastSnapshotTick = tick;
-        List<SpiritEntity> entities = level.getEntitiesOfClass(SpiritEntity.class, level.getWorldBorder().getCollisionShape().bounds().inflate(1));
         List<SpiritSnapshot> snapshots = new ArrayList<>();
-        for (SpiritEntity spirit : entities) {
+        for (Entity entity : level.getAllEntities()) {
+            if (!(entity instanceof SpiritEntity spirit)) {
+                continue;
+            }
             if (spirit.isRemoved()) {
                 reservations.releaseAll(spirit.getUUID());
                 continue;
