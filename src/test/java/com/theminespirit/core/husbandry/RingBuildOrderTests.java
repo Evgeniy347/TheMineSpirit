@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.husbandry.RingGround.Cell;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +65,36 @@ class RingBuildOrderTests {
                             + "стенку, а зверь выходит через ближнюю; блок " + block + " дальше предыдущего");
             previous = distance;
         }
+    }
+
+    @Test
+    void nextTarget_CurrentInFlight_KeepsCurrentEvenIfAnimalMoved() {
+        RingGround ground = RingGround.flat(-2, -2, 6, 6, 10);
+        RingPlan.Ring ring = RingPlan.plan(ground, ANIMAL, RingPlan.Size.LARGE);
+        List<BlockCoord> remaining = new ArrayList<>(ring.blocks());
+        BlockCoord inFlight = remaining.get(remaining.size() - 1);
+
+        Optional<BlockCoord> next = RingBuildOrder.nextTarget(remaining, inFlight, new Cell(0, 0));
+
+        assertEquals(Optional.of(inFlight), next,
+                "Начатая клетка обязана ставиться до конца: иначе дух разворачивается к другой стенке "
+                        + "посреди подхода, кольцо не замыкается и животное уходит в открытую дальнюю стенку");
+    }
+
+    @Test
+    void nextTarget_NoCurrent_PicksBlockNearestAnimal() {
+        RingGround ground = RingGround.flat(-2, -2, 6, 6, 10);
+        RingPlan.Ring ring = RingPlan.plan(ground, ANIMAL, RingPlan.Size.LARGE);
+        List<BlockCoord> remaining = new ArrayList<>(ring.blocks());
+
+        Optional<BlockCoord> next = RingBuildOrder.nextTarget(remaining, null, ANIMAL);
+
+        assertTrue(next.isPresent(), "Пока в остатке есть блоки, следующая цель обязана найтись");
+        BlockCoord block = next.orElseThrow();
+        int distance = Math.abs(block.x() - ANIMAL.x()) + Math.abs(block.z() - ANIMAL.z());
+        assertEquals(1, distance,
+                "Без начатой клетки дух обязан брать ближайший к животному блок: дальняя стенка строится "
+                        + "последней, иначе животное уходит через ближний проход");
     }
 
     @Test

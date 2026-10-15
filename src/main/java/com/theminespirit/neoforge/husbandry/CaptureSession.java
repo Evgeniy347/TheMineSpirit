@@ -19,7 +19,6 @@ import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -261,32 +260,25 @@ public final class CaptureSession {
             state = State.VERIFY;
             return;
         }
+        BlockPos animalPos = target.blockPosition();
+        current = RingBuildOrder.nextTarget(remaining, current, new Cell(animalPos.getX(), animalPos.getZ()))
+                .orElse(null);
         if (current == null) {
-            reprioritize();
-            current = remaining.get(0);
-            if (occupiedByAnimal(current)) {
-                defers++;
-                if (defers > DEFER_LIMIT) {
-                    fail("кольцо не замыкается: животное стоит в стенке");
-                    return;
-                }
-                remaining.remove(0);
-                remaining.add(current);
-                current = null;
+            state = State.VERIFY;
+            return;
+        }
+        if (occupiedByAnimal(current)) {
+            defers++;
+            if (defers > DEFER_LIMIT) {
+                fail("кольцо не замыкается: животное стоит в стенке");
                 return;
             }
+            remaining.remove(current);
+            remaining.add(current);
+            current = null;
+            return;
         }
         placeCurrent(false);
-    }
-
-    private void reprioritize() {
-        BlockPos animalPos = target.blockPosition();
-        Map<BlockCoord, Integer> rank = new HashMap<>();
-        List<BlockCoord> ordered = RingBuildOrder.order(ring, new Cell(animalPos.getX(), animalPos.getZ()));
-        for (int i = 0; i < ordered.size(); i++) {
-            rank.put(ordered.get(i), i);
-        }
-        remaining.sort(Comparator.comparingInt(block -> rank.getOrDefault(block, Integer.MAX_VALUE)));
     }
 
     private void verifyTick() {
