@@ -134,7 +134,7 @@ public final class SpiritScripts {
         table.put("step_over", spirit -> params -> new StepOverScript(spirit, StepOverParams.from(params)));
         table.put("approach", spirit -> params -> new ApproachScript(spirit, ApproachParams.from(params)));
         table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
-        table.put("attack", spirit -> params -> new AttackScript(spirit, AttackParams.from(params)));
+        table.put("attack", AttackScript.Factory::new);
         table.put("defend", spirit -> params -> new DefendScript(spirit, DefendParams.from(params)));
         table.put("flee", spirit -> params -> new FleeScript(spirit, FleeParams.from(params)));
         table.put("retreat", spirit -> params -> new RetreatScript(spirit, RetreatParams.from(params)));

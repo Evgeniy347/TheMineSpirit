@@ -78,17 +78,12 @@ final class ScriptExecutor extends NodeExecutor {
 
     @Override
     boolean observesWhileTacticsOwns() {
-        if (instance == null) {
-            if (failed) {
-                return false;
-            }
-            try {
-                instance = createInstance();
-            } catch (UnknownScriptException unknown) {
-                return false;
-            }
+        if (failed) {
+            return false;
         }
-        return instance.observesWhileTacticsOwns();
+        return registry.find(scriptId)
+                .map(ScriptFactory::observesWhileTacticsOwns)
+                .orElse(false);
     }
 
     @Override

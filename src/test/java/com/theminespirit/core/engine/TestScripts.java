@@ -20,7 +20,17 @@ final class TestScripts {
     }
 
     static ScriptFactory observing(int ticks, boolean observes) {
-        return params -> new ObservingInstance(ticks, observes);
+        return new ScriptFactory() {
+            @Override
+            public ScriptInstance create(Map<String, Object> params) {
+                return new ObservingInstance(ticks, observes);
+            }
+
+            @Override
+            public boolean observesWhileTacticsOwns() {
+                return observes;
+            }
+        };
     }
 
     static ScriptFactory resulting(int ticks, ScriptResult result) {
