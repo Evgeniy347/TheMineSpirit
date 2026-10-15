@@ -1,6 +1,8 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.ScriptFactory;
+import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
 import com.theminespirit.neoforge.ModEntities;
@@ -54,6 +56,25 @@ public final class SpiritScriptsGameTests {
                         + catalogIds);
         helper.assertTrue(registryIds.contains("acquire"),
                 "acquire обязан попасть в реестр исполнения, реестр: " + registryIds);
+        helper.succeed();
+    }
+
+    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
+    public static void observeFlag_LivesOnFactory_ForCombatScripts(GameTestHelper helper) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        ScriptRegistry registry = SpiritScripts.registryFor(spirit);
+
+        for (String id : List.of("attack", "defend", "flee", "retreat")) {
+            ScriptFactory factory = registry.find(id).orElseThrow();
+            helper.assertTrue(factory.observesWhileTacticsOwns(),
+                    "боевой скрипт '" + id + "' обязан заявлять наблюдение на фабрике: иначе под приказом тактики "
+                            + "мозг духа перестаёт тикать и скрипт не завершается");
+        }
+        for (String id : List.of("goto", "wait", "gather")) {
+            ScriptFactory factory = registry.find(id).orElseThrow();
+            helper.assertTrue(!factory.observesWhileTacticsOwns(),
+                    "обычный скрипт '" + id + "' не вправе заявлять наблюдение за тактикой: флаг фабрики поднят зря");
+        }
         helper.succeed();
     }
 }

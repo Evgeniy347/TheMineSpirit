@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptFactory;
+import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.planner.AcquireScript;
 import com.theminespirit.core.script.AcquireParams;
@@ -134,10 +135,10 @@ public final class SpiritScripts {
         table.put("step_over", spirit -> params -> new StepOverScript(spirit, StepOverParams.from(params)));
         table.put("approach", spirit -> params -> new ApproachScript(spirit, ApproachParams.from(params)));
         table.put("mine_vein", spirit -> params -> new MineVeinScript(spirit, MineVeinParams.from(params)));
-        table.put("attack", AttackScript.Factory::new);
-        table.put("defend", spirit -> params -> new DefendScript(spirit, DefendParams.from(params)));
-        table.put("flee", spirit -> params -> new FleeScript(spirit, FleeParams.from(params)));
-        table.put("retreat", spirit -> params -> new RetreatScript(spirit, RetreatParams.from(params)));
+        table.put("attack", spirit -> observing(params -> new AttackScript(spirit, AttackParams.from(params))));
+        table.put("defend", spirit -> observing(params -> new DefendScript(spirit, DefendParams.from(params))));
+        table.put("flee", spirit -> observing(params -> new FleeScript(spirit, FleeParams.from(params))));
+        table.put("retreat", spirit -> observing(params -> new RetreatScript(spirit, RetreatParams.from(params))));
         table.put("deliver", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
         table.put("meet", spirit -> params -> new MeetScript(spirit, MeetParams.from(params)));
         table.put("wait", spirit -> params -> new WaitScript(spirit, WaitParams.from(params)));
@@ -183,6 +184,20 @@ public final class SpiritScripts {
         Map<String, ScriptFactory> factories = new LinkedHashMap<>();
         IMPLEMENTED.forEach((id, builder) -> factories.put(id, builder.apply(spirit)));
         return ScriptRegistry.of(factories);
+    }
+
+    private static ScriptFactory observing(ScriptFactory delegate) {
+        return new ScriptFactory() {
+            @Override
+            public ScriptInstance create(Map<String, Object> params) {
+                return delegate.create(params);
+            }
+
+            @Override
+            public boolean observesWhileTacticsOwns() {
+                return true;
+            }
+        };
     }
 
     public static ConditionRegistry conditions() {

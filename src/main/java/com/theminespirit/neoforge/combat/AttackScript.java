@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.combat;
 
-import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -61,11 +60,6 @@ public final class AttackScript implements ScriptInstance {
     }
 
     @Override
-    public boolean observesWhileTacticsOwns() {
-        return true;
-    }
-
-    @Override
     public void cancel() {
         release();
     }
@@ -100,24 +94,6 @@ public final class AttackScript implements ScriptInstance {
         if (applied) {
             spirit.tactics().clearDirective();
             applied = false;
-        }
-    }
-
-    public static final class Factory implements ScriptFactory {
-        private final SpiritEntity spirit;
-
-        public Factory(SpiritEntity spirit) {
-            this.spirit = spirit;
-        }
-
-        @Override
-        public ScriptInstance create(Map<String, Object> params) {
-            return new AttackScript(spirit, AttackParams.from(params));
-        }
-
-        @Override
-        public boolean observesWhileTacticsOwns() {
-            return true;
         }
     }
 }

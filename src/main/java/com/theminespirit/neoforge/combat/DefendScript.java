@@ -71,11 +71,6 @@ public final class DefendScript implements ScriptInstance {
     }
 
     @Override
-    public boolean observesWhileTacticsOwns() {
-        return true;
-    }
-
-    @Override
     public void cancel() {
         release();
     }

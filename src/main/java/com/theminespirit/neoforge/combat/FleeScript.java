@@ -56,11 +56,6 @@ public final class FleeScript implements ScriptInstance {
     }
 
     @Override
-    public boolean observesWhileTacticsOwns() {
-        return true;
-    }
-
-    @Override
     public void cancel() {
         release();
     }

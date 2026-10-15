@@ -23,7 +23,7 @@ final class TestScripts {
         return new ScriptFactory() {
             @Override
             public ScriptInstance create(Map<String, Object> params) {
-                return new ObservingInstance(ticks, observes);
+                return new TimedInstance(ticks, ScriptStatus.SUCCEEDED);
             }
 
             @Override
@@ -59,28 +59,6 @@ final class TestScripts {
         public ScriptStatus tick() {
             elapsed++;
             return elapsed >= total ? terminal : ScriptStatus.RUNNING;
-        }
-    }
-
-    private static final class ObservingInstance implements ScriptInstance {
-        private final int total;
-        private final boolean observes;
-        private int elapsed;
-
-        ObservingInstance(int ticks, boolean observes) {
-            this.total = ticks;
-            this.observes = observes;
-        }
-
-        @Override
-        public ScriptStatus tick() {
-            elapsed++;
-            return elapsed >= total ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
-        }
-
-        @Override
-        public boolean observesWhileTacticsOwns() {
-            return observes;
         }
     }
 

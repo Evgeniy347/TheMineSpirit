@@ -18,10 +18,6 @@ public interface ScriptInstance {
 
     ScriptStatus tick();
 
-    default boolean observesWhileTacticsOwns() {
-        return false;
-    }
-
     default Optional<Progress> progress() {
         return Optional.empty();
     }

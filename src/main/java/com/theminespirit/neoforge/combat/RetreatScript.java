@@ -55,11 +55,6 @@ public final class RetreatScript implements ScriptInstance {
     }
 
     @Override
-    public boolean observesWhileTacticsOwns() {
-        return true;
-    }
-
-    @Override
     public void cancel() {
         release();
     }
