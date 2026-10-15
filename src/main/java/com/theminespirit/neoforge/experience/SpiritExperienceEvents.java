@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.experience;
 
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -9,7 +8,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
@@ -18,13 +16,13 @@ import net.neoforged.neoforge.event.level.BlockDropsEvent;
  *
  * <p>Единственное место подписки: смерть моба от духа (в том числе от его стрелы), добыча блока
  * духом ({@link BlockDropsEvent} несёт опыт блока) и вход игрока для выдачи накопленного пула.
+ * Пометка «опыт не ронять» ставится самому мобу, а не общему полю: ванильный
+ * {@link LivingEntity#skipDropExperience()} переживает и паузу до удаления, и второго моба,
+ * убитого тем же духом следом.
  */
 public final class SpiritExperienceEvents {
-    private UUID spiritKill;
-
     public SpiritExperienceEvents(IEventBus bus) {
         bus.addListener(this::onDeath);
-        bus.addListener(this::onExperienceDrop);
         bus.addListener(this::onBlockDrops);
         bus.addListener(this::onPlayerLoggedIn);
     }
@@ -46,15 +44,8 @@ public final class SpiritExperienceEvents {
         if (server == null) {
             return;
         }
-        spiritKill = killed.getUUID();
+        killed.skipDropExperience();
         ExperienceAwards.award(server, reward);
-    }
-
-    private void onExperienceDrop(LivingExperienceDropEvent event) {
-        if (event.getEntity().getUUID().equals(spiritKill)) {
-            spiritKill = null;
-            event.setCanceled(true);
-        }
     }
 
     private void onBlockDrops(BlockDropsEvent event) {

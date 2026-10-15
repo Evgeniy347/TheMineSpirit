@@ -31,6 +31,7 @@ public final class ExperienceGameTests {
     private static final int RUNAWAY_LIMIT = 1000;
     private static final int AWARD_DELAY_TICKS = 1;
     private static final float KILL_DAMAGE = 100.0F;
+    private static final float PLAYER_TAP_DAMAGE = 0.5F;
 
     private ExperienceGameTests() {
     }
@@ -160,6 +161,42 @@ public final class ExperienceGameTests {
                         + SettlementExperience.get(helper.getLevel().getServer()).pending());
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "xp_mob_finish_two", timeoutTicks = 200)
+    public static void zombie_TwoPlayerHitZombiesFinishedBySpirit_AwardsBothAndNoOrbs(GameTestHelper helper) {
+        SpiritEntity spirit = spirit(helper);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 3), "xp_finish_player");
+        player.totalExperience = 0;
+        Zombie first = helper.spawn(EntityType.ZOMBIE, ZOMBIE_AT);
+        Zombie second = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 1, 3));
+        first.setHealth(1.0F);
+        second.setHealth(1.0F);
+
+        helper.assertTrue(first.hurt(player.damageSources().playerAttack(player), PLAYER_TAP_DAMAGE),
+                "игрок обязан ранить первого зомби: без недавнего удара игрока ванильный опыт не упал бы сферами");
+        helper.assertTrue(second.hurt(player.damageSources().playerAttack(player), PLAYER_TAP_DAMAGE),
+                "игрок обязан ранить второго зомби: сценарий проверяет двух мобов подряд");
+        int firstReward = first.getExperienceReward(helper.getLevel(), spirit);
+        int secondReward = second.getExperienceReward(helper.getLevel(), spirit);
+        helper.assertTrue(firstReward > 0 && secondReward > 0,
+                "у зомби обязан быть положительный опыт, иначе сумма не проверит дележ");
+
+        first.hurt(spirit.damageSources().mobAttack(spirit), KILL_DAMAGE);
+        second.hurt(spirit.damageSources().mobAttack(spirit), KILL_DAMAGE);
+
+        helper.runAfterDelay(AWARD_DELAY_TICKS, () -> {
+            helper.assertTrue(first.isDeadOrDying() && second.isDeadOrDying(),
+                    "оба зомби обязаны умереть от добивающих ударов духа");
+            int orbs = orbsNear(helper).size();
+            helper.assertTrue(orbs == 0,
+                    "добитые духом мобы не бросают сферы, даже если игрок их ранил: на земле сфер " + orbs);
+            helper.assertTrue(player.totalExperience == firstReward + secondReward,
+                    "опыт игрока обязан равняться сумме наград двух мобов (" + (firstReward + secondReward)
+                            + "), а он " + player.totalExperience);
+            GameTestFixtures.reset(helper);
+            helper.succeed();
+        });
     }
 
     private static List<ExperienceOrb> orbsNear(GameTestHelper helper) {
