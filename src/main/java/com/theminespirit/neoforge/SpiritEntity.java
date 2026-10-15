@@ -24,6 +24,7 @@ import com.theminespirit.core.tactics.adapter.StoredTactics;
 import com.theminespirit.core.tactics.adapter.TacticsFormatException;
 import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.inventory.ArmorEquipPolicy;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
@@ -54,6 +55,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final SpiritPolicies policies = new SpiritPolicies(this);
     private final ProtectionGate protectionGate = new ProtectionGate(this);
     private final SpiritGear gear = new SpiritGear(this);
+    private final ArmorEquipPolicy armorEquip = new ArmorEquipPolicy(this);
     private final TacticsService tactics = new TacticsService(this);
     private SpiritBrain brain;
     private WorldObservation perception;
@@ -79,6 +81,7 @@ public final class SpiritEntity extends PathfinderMob {
         super.customServerAiStep();
         applyPendingRestore();
         chunkLoader.tick();
+        armorEquip.tick();
         policies.tick();
         if (policies.isOverriding()) {
             tactics.pause();
@@ -115,6 +118,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     public SpiritGear gear() {
         return gear;
+    }
+
+    public ArmorEquipPolicy armorEquip() {
+        return armorEquip;
     }
 
     @Override

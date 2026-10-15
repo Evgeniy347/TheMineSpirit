@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ValueTable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,8 +8,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class InventoryTables {
     private static volatile ValueTable values;
     private static volatile BaseKit kit;
+    private static volatile ArmorTable armor;
     private static final AtomicInteger VALUE_LOADS = new AtomicInteger();
     private static final AtomicInteger KIT_LOADS = new AtomicInteger();
+    private static final AtomicInteger ARMOR_LOADS = new AtomicInteger();
 
     private InventoryTables() {
     }
@@ -43,11 +46,30 @@ public final class InventoryTables {
         return cached;
     }
 
+    public static ArmorTable armor() {
+        ArmorTable cached = armor;
+        if (cached == null) {
+            synchronized (InventoryTables.class) {
+                cached = armor;
+                if (cached == null) {
+                    cached = ArmorTable.load();
+                    armor = cached;
+                    ARMOR_LOADS.incrementAndGet();
+                }
+            }
+        }
+        return cached;
+    }
+
     public static int valueLoads() {
         return VALUE_LOADS.get();
     }
 
     public static int kitLoads() {
         return KIT_LOADS.get();
+    }
+
+    public static int armorLoads() {
+        return ARMOR_LOADS.get();
     }
 }
