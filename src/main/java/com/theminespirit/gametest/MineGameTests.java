@@ -310,6 +310,7 @@ public final class MineGameTests {
     // потолок 1000 ≈ 1.7× замера
     @GameTest(template = "arena", batch = "gather_dirt_heap", timeoutTicks = 1000)
     public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int x = 1; x <= 3; x++) {
             for (int y = 1; y <= 2; y++) {
@@ -646,6 +647,7 @@ public final class MineGameTests {
 
     @GameTest(template = "arena", batch = "mine_preserve", timeoutTicks = 400)
     public static void mineVein_TwoRedstoneOre_ConservesAllDrops(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.REDSTONE_ORE);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.REDSTONE_ORE);
