@@ -27,7 +27,7 @@ import java.util.UUID;
 public final class SpiritCoordinator {
     private final ServerLevel level;
     private final Coordinator coordinator = new Coordinator();
-    private final WorkReservations reservations = new WorkReservations();
+    private final WorkReservations reservations;
     private final Map<UUID, CombatDirective> lastDirectives = new HashMap<>();
     private long lastSnapshotTick = -1;
     private CoordinatorState lastState = new CoordinatorState(Optional.empty(), 0, List.of(), 0);
@@ -37,6 +37,7 @@ public final class SpiritCoordinator {
             throw new IllegalArgumentException("level не может быть null: координатор без уровня не работает");
         }
         this.level = level;
+        this.reservations = WorkReserveHub.leasesFor(level);
     }
 
     public void tick() {

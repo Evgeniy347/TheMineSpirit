@@ -109,6 +109,20 @@ class WorkAllocatorTests {
     }
 
     @Test
+    void allocate_OneSpiritTwoCandidates_NearestFreeChosen() {
+        WorkReservations reservations = new WorkReservations();
+        WorkTarget near = target(1, 0);
+        WorkTarget far = target(9, 0);
+
+        List<WorkAssignment> assignments = new WorkAllocator().allocate(List.of(free(ALPHA, 0)),
+                List.of(far, near), reservations, 100);
+
+        assertEquals(1, assignments.size(), "Один свободный дух получает одну цель выбора");
+        assertEquals(near, assignments.get(0).target(),
+                "Выбор отдаёт ближайшую свободную цель: иначе дух бежит через весь участок к дальней");
+    }
+
+    @Test
     void allocate_NullFree_Throws() {
         assertThrows(IllegalArgumentException.class,
                 () -> new WorkAllocator().allocate(null, List.of(target(1, 0)), new WorkReservations(), 100),

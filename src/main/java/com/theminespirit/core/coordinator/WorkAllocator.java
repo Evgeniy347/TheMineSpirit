@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class WorkAllocator {
-    WorkAllocator() {
+    public WorkAllocator() {
     }
 
     public List<WorkAssignment> allocate(List<SpiritSnapshot> free, List<WorkTarget> candidates,
