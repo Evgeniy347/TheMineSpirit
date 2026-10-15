@@ -9,7 +9,7 @@ import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -36,7 +36,7 @@ public final class FleeScript implements ScriptInstance {
             applied = true;
         }
         ticks++;
-        Optional<LivingEntity> threat = SpiritTargets.resolve(spirit, hostile);
+        Optional<LivingEntity> threat = ScriptTargetResolver.resolve(spirit, hostile);
         boolean danger = threat.isPresent()
                 && threat.get().position().distanceTo(spirit.position()) <= CombatTuning.DANGER_RADIUS;
         if (danger) {

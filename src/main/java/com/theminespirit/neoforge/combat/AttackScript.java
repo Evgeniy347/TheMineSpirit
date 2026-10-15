@@ -7,7 +7,7 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -36,7 +36,7 @@ public final class AttackScript implements ScriptInstance {
             applied = true;
         }
         ticks++;
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit, selector);
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, selector);
         if (found.isPresent()) {
             target = found.get();
             spirit.tactics().setForcedTarget(target);

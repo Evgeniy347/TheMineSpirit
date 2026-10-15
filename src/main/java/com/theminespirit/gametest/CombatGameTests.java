@@ -13,7 +13,7 @@ import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.ArrayList;
@@ -129,7 +129,7 @@ public final class CombatGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 3), "Steve42");
 
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit, TargetSelector.parse("player:Steve42"));
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("player:Steve42"));
         helper.assertTrue(found.isPresent(), "игрок по имени обязан находиться, игрок: " + player.getName().getString());
         helper.assertTrue(found.get() == player,
                 "найден должен быть ровно тот игрок, что искали, найден: " + found.get());
@@ -143,7 +143,7 @@ public final class CombatGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         SpiritEntity other = TacticsScene.spirit(helper, new BlockPos(5, 1, 7));
 
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit,
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit,
                 TargetSelector.parse("spirit:" + other.getUUID()));
         helper.assertTrue(found.isPresent(), "дух по UUID обязан находиться, UUID: " + other.getUUID());
         helper.assertTrue(found.get() == other,
@@ -159,7 +159,7 @@ public final class CombatGameTests {
         Husk near = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(6, 1, 6));
         Husk far = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 10));
 
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit, TargetSelector.parse("hostile"));
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("hostile"));
         helper.assertTrue(found.isPresent(), "враждебный моб обязан находиться, мобов: 2, найдено пусто");
         helper.assertTrue(found.get() == near,
                 "ближайший враждебный обязан выбираться первым, найден: " + found.get()
@@ -173,7 +173,7 @@ public final class CombatGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
 
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit, TargetSelector.parse("player:Nobody404"));
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("player:Nobody404"));
         helper.assertTrue(found.isEmpty(),
                 "отсутствующий игрок обязан давать Optional.empty(), а не исключение, найден: " + found.orElse(null));
         TacticsScene.finish(helper, spirit);
@@ -185,7 +185,7 @@ public final class CombatGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
 
-        Optional<LivingEntity> found = SpiritTargets.resolve(spirit, TargetSelector.parse("nearest"));
+        Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("nearest"));
         helper.assertTrue(found.isEmpty(),
                 "на пустой арене ближайший обязан давать Optional.empty(), найден: " + found.orElse(null));
         TacticsScene.finish(helper, spirit);
@@ -198,8 +198,8 @@ public final class CombatGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         int before = spirit.entityQueries();
 
-        SpiritTargets.resolve(spirit, TargetSelector.parse("nearest"));
-        SpiritTargets.resolve(spirit, TargetSelector.parse("hostile"));
+        ScriptTargetResolver.resolve(spirit, TargetSelector.parse("nearest"));
+        ScriptTargetResolver.resolve(spirit, TargetSelector.parse("hostile"));
         helper.assertTrue(spirit.entityQueries() == before + 2,
                 "каждый resolve обязан ровно один раз запросить мир, запросов: "
                         + (spirit.entityQueries() - before) + " вместо 2");
@@ -214,7 +214,7 @@ public final class CombatGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(8, 1, 5));
         CombatMode before = spirit.tactics().combatMode();
-        Optional<LivingEntity> sighted = SpiritTargets.resolve(spirit, TargetSelector.parse("hostile"));
+        Optional<LivingEntity> sighted = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("hostile"));
         helper.assertTrue(sighted.isPresent(),
                 "хуск обязан найтись ДО старта задачи, иначе провал скрипта скажет ложь: дух "
                         + helper.relativeVec(spirit.position()) + ", хуск " + helper.relativeVec(husk.position())
@@ -236,7 +236,7 @@ public final class CombatGameTests {
                 double distance = new Point(spirit.getX(), spirit.getY(), spirit.getZ())
                         .distanceTo(new Point(husk.getX(), husk.getY(), husk.getZ()));
                 closestSeen[0] = Math.min(closestSeen[0], distance);
-                huskSighted[0] |= SpiritTargets.resolve(spirit, TargetSelector.parse("hostile")).isPresent();
+                huskSighted[0] |= ScriptTargetResolver.resolve(spirit, TargetSelector.parse("hostile")).isPresent();
             }
             int strikes = spirit.tactics().combat().strikes();
             if (strikes > strikesSeen[0]) {

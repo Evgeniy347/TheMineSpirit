@@ -7,7 +7,7 @@ import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +53,7 @@ public final class DeliverScript implements ScriptInstance {
                 return fail("предмет '" + params.item() + "' не зарегистрирован: доставлять нечего");
             }
             item = found.get();
-            Optional<LivingEntity> addressee = SpiritTargets.resolve(spirit, TargetSelector.parse(params.to()));
+            Optional<LivingEntity> addressee = ScriptTargetResolver.resolve(spirit, TargetSelector.parse(params.to()));
             if (addressee.isEmpty()) {
                 return fail("адресат '" + params.to() + "' не найден: доставлять некому");
             }

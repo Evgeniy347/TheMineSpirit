@@ -8,7 +8,7 @@ import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -36,7 +36,7 @@ public final class MeetScript implements ScriptInstance {
         }
         if (!started) {
             started = true;
-            Optional<LivingEntity> found = SpiritTargets.resolve(spirit, selector);
+            Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, selector);
             if (found.isEmpty()) {
                 return fail("цель '" + targetText + "' не найдена: некому встречаться");
             }

@@ -8,7 +8,7 @@ import com.theminespirit.core.social.WaitCounter;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritTargets;
+import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -35,7 +35,7 @@ public final class DefendScript implements ScriptInstance {
             return fail("дух исчез, пока защищал '" + targetText + "'");
         }
         if (!applied) {
-            Optional<LivingEntity> found = SpiritTargets.resolve(spirit, selector);
+            Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, selector);
             if (found.isEmpty()) {
                 return fail("подопечный '" + targetText + "' не найден: защищать некого");
             }

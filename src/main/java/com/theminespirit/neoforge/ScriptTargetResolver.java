@@ -13,10 +13,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Enemy;
 
-public final class SpiritTargets {
+public final class ScriptTargetResolver {
     private static final TacticsAdapterSettings SETTINGS = TacticsAdapterSettings.loadDefault();
 
-    private SpiritTargets() {
+    private ScriptTargetResolver() {
     }
 
     public static Optional<LivingEntity> resolve(SpiritEntity spirit, TargetSelector.Target target) {
