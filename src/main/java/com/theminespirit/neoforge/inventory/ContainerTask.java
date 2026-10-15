@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -20,21 +21,35 @@ abstract class ContainerTask implements ScriptInstance {
         SORT
     }
 
+    // Один шаг раскладки "auto": выбранный контейнер и готовый перенос в него.
+    protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {
+    }
+
     protected final SpiritEntity spirit;
 
     private final ContainerFinder finder;
+    private final AutoContainerScan scan;
     private final Approach approach;
     private Phase phase = Phase.FIND;
     private Container container;
+    private AutoMove current;
     private TransferRunner runner;
+    private TransferRunner.Shortage lastShortage = TransferRunner.Shortage.NONE;
     private ScriptStatus status = ScriptStatus.RUNNING;
     private String reason;
     private String finishReason;
     private int movedBase;
+    private int autoMoved;
 
     protected ContainerTask(SpiritEntity spirit, ContainerTarget target, int radius) {
         this.spirit = spirit;
-        this.finder = new ContainerFinder(spirit.level(), spirit.blockPosition(), target, radius);
+        if (target instanceof ContainerTarget.Auto) {
+            this.finder = null;
+            this.scan = new AutoContainerScan(spirit.level(), spirit.blockPosition(), radius);
+        } else {
+            this.finder = new ContainerFinder(spirit.level(), spirit.blockPosition(), target, radius);
+            this.scan = null;
+        }
         this.approach = new Approach(spirit);
     }
 
@@ -52,6 +67,15 @@ abstract class ContainerTask implements ScriptInstance {
 
     protected boolean skipAsDone() {
         return false;
+    }
+
+    // Выбирает контейнер под предмет через ContainerPicker: переопределяют скрипты, умеющие "auto".
+    protected AutoMove nextAutoMove(AutoContainerScan scan) {
+        return null;
+    }
+
+    protected ScriptStatus finishAuto() {
+        return finish(movedTotal(), lastShortage);
     }
 
     @Override
@@ -96,6 +120,9 @@ abstract class ContainerTask implements ScriptInstance {
         if (value instanceof Number number) {
             restoredMoved(Math.max(0, number.intValue()));
         }
+        if (isAuto()) {
+            return;
+        }
         if (container != null && phase == Phase.TRANSFER) {
             if (runner != null) {
                 runner.cancel();
@@ -110,11 +137,11 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     public int movedTotal() {
-        return movedBase + (runner == null ? 0 : runner.moved());
+        return movedBase + autoMoved + (runner == null ? 0 : runner.moved());
     }
 
     public int maxSlicesPerTick() {
-        return finder.maxSlicesPerTick();
+        return isAuto() ? scan.maxSlicesPerTick() : finder.maxSlicesPerTick();
     }
 
     public int maxMovesPerTick() {
@@ -134,7 +161,22 @@ abstract class ContainerTask implements ScriptInstance {
         return Math.max(0, requestedCount() - movedBase);
     }
 
+    protected TransferRunner.Shortage lastShortage() {
+        return lastShortage;
+    }
+
+    private boolean isAuto() {
+        return scan != null;
+    }
+
     private void find() {
+        if (isAuto()) {
+            if (!scan.tick()) {
+                return;
+            }
+            advanceAuto();
+            return;
+        }
         if (!finder.tick()) {
             return;
         }
@@ -153,12 +195,29 @@ abstract class ContainerTask implements ScriptInstance {
         }
     }
 
+    private void advanceAuto() {
+        AutoMove move = nextAutoMove(scan);
+        if (move == null) {
+            ScriptStatus done = finishAuto();
+            if (done == ScriptStatus.FAILED) {
+                fail(finishReason != null ? finishReason : "перенос не завершён: перенесено " + movedTotal());
+            } else {
+                succeed();
+            }
+            return;
+        }
+        current = move;
+        container = move.container();
+        approach.begin(new Vec3(move.pos().x() + 0.5, move.pos().y() + 0.5, move.pos().z() + 0.5), ARRIVAL);
+        phase = Phase.APPROACH;
+    }
+
     private void approach() {
         switch (approach.tick()) {
             case MOVING -> {
             }
             case ARRIVED -> {
-                runner = beginTransfer(container);
+                runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
             }
             case STUCK, TIMEOUT -> fail("дух не дошёл до контейнера: путь заблокирован или слишком далеко");
@@ -173,7 +232,14 @@ abstract class ContainerTask implements ScriptInstance {
         switch (runner.tick()) {
             case RUNNING -> {
             }
-            case DONE -> phase = Phase.SORT;
+            case DONE -> {
+                lastShortage = runner.shortage();
+                if (isAuto()) {
+                    autoMoved += runner.moved();
+                    runner = null;
+                }
+                phase = Phase.SORT;
+            }
             case FAILED -> fail(runner.failureReason());
             case CANCELLED -> fail("перенос прерван");
         }
@@ -181,6 +247,13 @@ abstract class ContainerTask implements ScriptInstance {
 
     private void sort() {
         ContainerSort.apply(container, InventoryTables.values());
+        if (isAuto()) {
+            scan.updateSnapshot(current.snapshotIndex());
+            current = null;
+            runner = null;
+            advanceAuto();
+            return;
+        }
         ScriptStatus done = finish(movedTotal(), runner == null ? TransferRunner.Shortage.NONE : runner.shortage());
         if (done == ScriptStatus.FAILED) {
             fail(finishReason != null ? finishReason : "перенос не завершён: перенесено " + movedTotal());

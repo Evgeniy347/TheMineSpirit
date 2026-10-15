@@ -21,7 +21,6 @@ import com.theminespirit.core.script.CollectEggsParams;
 import com.theminespirit.core.script.CraftParams;
 import com.theminespirit.core.script.CullParams;
 import com.theminespirit.core.script.ConditionCatalog;
-import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.DeliverParams;
 import com.theminespirit.core.script.EquipParams;
@@ -73,11 +72,9 @@ import com.theminespirit.core.script.UnloadParams;
 import com.theminespirit.core.script.WaitParams;
 import com.theminespirit.core.script.WalkCarefulParams;
 import com.theminespirit.core.script.WanderParams;
-import com.theminespirit.neoforge.inventory.DepositAutoScript;
 import com.theminespirit.neoforge.inventory.DepositScript;
 import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
-import com.theminespirit.neoforge.inventory.UnloadAutoScript;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
 import com.theminespirit.neoforge.movement.ApproachScript;
@@ -154,20 +151,10 @@ public final class SpiritScripts {
         table.put("herd_check", spirit -> params -> new HerdCheckScript(spirit, HerdCheckParams.from(params)));
         table.put("hunt", spirit -> params -> new HuntScript(spirit, HuntParams.from(params)));
         table.put("capture", spirit -> params -> new CaptureScript(spirit, CaptureParams.from(params)));
-        table.put("deposit", spirit -> params -> {
-            TransferParams transfer = TransferParams.from(params);
-            return transfer.container() instanceof ContainerTarget.Auto
-                    ? new DepositAutoScript(spirit, transfer)
-                    : new DepositScript(spirit, transfer);
-        });
+        table.put("deposit", spirit -> params -> new DepositScript(spirit, TransferParams.from(params)));
         table.put("withdraw", spirit -> params -> new WithdrawScript(spirit, TransferParams.from(params)));
         table.put("sort_chest", spirit -> params -> new SortChestScript(spirit, SortChestParams.from(params)));
-        table.put("unload", spirit -> params -> {
-            UnloadParams unload = UnloadParams.from(params);
-            return unload.container() instanceof ContainerTarget.Auto
-                    ? new UnloadAutoScript(spirit, unload)
-                    : new UnloadScript(spirit, unload);
-        });
+        table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
