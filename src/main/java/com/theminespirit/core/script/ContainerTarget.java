@@ -2,19 +2,23 @@ package com.theminespirit.core.script;
 
 import java.util.Objects;
 
-public sealed interface ContainerTarget permits ContainerTarget.Nearest, ContainerTarget.Position {
+public sealed interface ContainerTarget permits ContainerTarget.Nearest, ContainerTarget.Position, ContainerTarget.Auto {
     ContainerTarget NEAREST = new Nearest();
+    ContainerTarget AUTO = new Auto();
 
     static ContainerTarget parse(String text) {
-        Objects.requireNonNull(text, "Цель контейнера не может быть null: 'nearest' или координаты x,y,z");
+        Objects.requireNonNull(text, "Цель контейнера не может быть null: 'nearest', 'auto' или координаты x,y,z");
         String trimmed = text.strip();
         if (trimmed.equalsIgnoreCase("nearest")) {
             return NEAREST;
         }
+        if (trimmed.equalsIgnoreCase("auto")) {
+            return AUTO;
+        }
         String[] parts = trimmed.split(",");
         if (parts.length != 3) {
-            throw new IllegalArgumentException("Контейнер '" + text + "' задан неверно: ожидалось 'nearest' "
-                    + "или координаты блока x,y,z (например \"12,64,-7\"). Получено " + parts.length
+            throw new IllegalArgumentException("Контейнер '" + text + "' задан неверно: ожидалось 'nearest', "
+                    + "'auto' или координаты блока x,y,z (например \"12,64,-7\"). Получено " + parts.length
                     + " части вместо 3");
         }
         return new Position(coordinate(parts[0].strip(), "x", text),
@@ -49,6 +53,9 @@ public sealed interface ContainerTarget permits ContainerTarget.Nearest, Contain
     }
 
     record Nearest() implements ContainerTarget {
+    }
+
+    record Auto() implements ContainerTarget {
     }
 
     record Position(int x, int y, int z) implements ContainerTarget {

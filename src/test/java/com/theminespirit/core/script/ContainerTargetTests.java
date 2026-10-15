@@ -13,6 +13,8 @@ class ContainerTargetTests {
     @CsvSource(delimiter = '|', value = {
             "nearest|NEAREST",
             "  nearest  |NEAREST",
+            "auto|AUTO",
+            "  AUTO  |AUTO",
             "12,64,-7|POSITION",
             "0,0,0|POSITION",
             "-30000000,319,30000000|POSITION",
@@ -20,9 +22,21 @@ class ContainerTargetTests {
     void parse_TargetText_GivesExpectedKind(String text, String expected) {
         ContainerTarget target = ContainerTarget.parse(text);
 
-        assertEquals(expected.equals("NEAREST"), target instanceof ContainerTarget.Nearest,
+        boolean matches = switch (expected) {
+            case "NEAREST" -> target instanceof ContainerTarget.Nearest;
+            case "AUTO" -> target instanceof ContainerTarget.Auto;
+            default -> target instanceof ContainerTarget.Position;
+        };
+        assertEquals(true, matches,
                 "Цель '" + text + "' должна разобраться в " + expected + " иначе скрипт контейнера не "
                         + "поймёт, куда идти");
+    }
+
+    @Test
+    void parse_Auto_ReturnsSharedInstance() {
+        assertEquals(ContainerTarget.AUTO, ContainerTarget.parse("auto"),
+                "'auto' всегда даёт одно и то же значение: по нему unload раскладывает предметы по своему "
+                        + "выбору, отдельных экземпляров быть не должно");
     }
 
     @Test
