@@ -22,15 +22,15 @@ public final class MobTargetEvents {
         if (event.getLevel().isClientSide() || !(event.getEntity() instanceof Mob mob)) {
             return;
         }
-        if (!SpiritConfig.mobsTargetSpirits() || !attacksSpirits(mob) || alreadyTargetsSpirits(mob)) {
+        if (!SpiritConfig.mobsTargetSpirits() || !SpiritTargets.attacksSpirits(typeOf(mob)) || alreadyTargetsSpirits(mob)) {
             return;
         }
-        mob.targetSelector.addGoal(targetPriority(mob), new SpiritAttackGoal(mob));
+        mob.targetSelector.addGoal(targetPriority(mob),
+                new SpiritAttackGoal(mob, SpiritTargets.conditionFor(typeOf(mob))));
     }
 
-    private static boolean attacksSpirits(Mob mob) {
-        String type = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
-        return SpiritTargets.attacksSpirits(type);
+    private static String typeOf(Mob mob) {
+        return BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
     }
 
     private static boolean alreadyTargetsSpirits(Mob mob) {
@@ -53,8 +53,17 @@ public final class MobTargetEvents {
     }
 
     private static final class SpiritAttackGoal extends NearestAttackableTargetGoal<SpiritEntity> {
-        private SpiritAttackGoal(Mob mob) {
-            super(mob, SpiritEntity.class, true);
+        private SpiritAttackGoal(Mob mob, SpiritTargets.Condition condition) {
+            super(mob, SpiritEntity.class, true, spirit -> canTargetSpirit(mob, (SpiritEntity) spirit, condition));
+        }
+
+        private static boolean canTargetSpirit(Mob mob, SpiritEntity spirit, SpiritTargets.Condition condition) {
+            return condition.holds(lightMagicValue(mob), mob.level().isDay(), spirit.isInWater());
+        }
+
+        @SuppressWarnings("deprecation") // ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
+        private static float lightMagicValue(Mob mob) {
+            return mob.getLightLevelDependentMagicValue();
         }
     }
 }
