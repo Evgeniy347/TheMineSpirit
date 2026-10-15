@@ -18,7 +18,7 @@
   аппаратным watchdog, поэтому на нём **один** opencode и только лёгкие задачи без Gradle: планирование чеклистов,
   ревью. Запуск — `scripts/opencode-start.sh <worktree> <модель|auto> <задание> <файл-сообщения> [сессия]` (tmux
   `oc-<задание>`, вывод `TestResults/opencode/<задание>.out` с `EXIT=`, строка в `watch.list`). GameTest на сервере —
-  только под `flock /tmp/mc-gametest.lock`.
+  только через `scripts/gametest.sh` (замок `/tmp/theminespirit-gametest.lock`).
 - GameTest ветки сервера можно прогнать на ПК: `F:\repos\minecraft\gametest-local.sh <worktree>` (копирует дерево
   с незакоммиченными правками, ~40 с).
 - Хуки всех worktree берутся из main (`core.hooksPath` абсолютный): после изменений main на сервере —
