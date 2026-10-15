@@ -3,7 +3,9 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.tactics.adapter.DecisionSnapshot;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.tactics.TacticsService;
 import com.theminespirit.neoforge.rest.ObserveJobs;
 import com.theminespirit.neoforge.rest.RestLifecycle;
 import com.theminespirit.neoforge.rest.RestServer;
@@ -25,6 +27,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -41,6 +47,8 @@ public final class RestGameTests {
     private static final int HUGE_PARALLEL_REQUESTS = 4;
     private static final int FAR_TARGET_BLOCKS = 40;
     private static final String UNKNOWN_ID = "00000000-0000-0000-0000-000000000000";
+    private static final float FULL_HP = 20.0F;
+    private static final int JOURNAL_LIMIT = TacticsService.DECISIONS_IN_CHAT;
 
     private RestGameTests() {
     }
@@ -408,6 +416,75 @@ public final class RestGameTests {
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(template = "arena", batch = "rest_decisions", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void decisions_HuskAttacksAfterCalm_ServesIgnoreToFightRecord(GameTestHelper helper)
+            throws IOException {
+        TacticsScene.prepare(helper);
+        MinecraftServer minecraft = helper.getLevel().getServer();
+        RestFixture rest = RestFixture.start(minecraft);
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(5, 1, 5));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
+        BlockPos huskAt = new BlockPos(5, 1, 10);
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, huskAt);
+        PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, true, FULL_HP);
+        String path = "/v1/spirits/" + spirit.getStringUUID() + "/decisions?limit=5";
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> served = new CompletableFuture<>();
+        AtomicBoolean asked = new AtomicBoolean();
+        helper.onEachTick(() -> {
+            if (asked.get() || !scene.started() || spirit.tactics().decisions(JOURNAL_LIMIT).isEmpty()) {
+                return;
+            }
+            asked.set(true);
+            rest.get(path).thenAccept(reply -> {
+                problems.expect(reply.status() == 200,
+                        "GET /v1/spirits/{id}/decisions обязан отвечать 200: " + reply.body());
+                JsonNode root = reply.json();
+                problems.expect(root.path("bot").asText().equals(spirit.getStringUUID()),
+                        "Ответ называет духа по его UUID: " + reply.body());
+                problems.expect(root.path("limit").asInt() == 5,
+                        "limit=5 из запроса возвращается в ответе: " + reply.body());
+                problems.expect(!root.path("decisions").isEmpty(),
+                        "Журнал обязан содержать запись о смене решения: " + reply.body());
+                Optional<JsonNode> change = ignoreToFight(root.path("decisions"));
+                problems.expect(change.isPresent(),
+                        "Среди записей есть «игнор → бой»: хаск напал, дух начал драться: " + reply.body());
+                change.ifPresent(record -> {
+                    problems.expect(record.path("changed").asText().equals(DecisionSnapshot.DECISION),
+                            "Запись называет сменившееся поле decision: " + reply.body());
+                    problems.expect(record.path("tick").asLong() > 0,
+                            "Запись несёт игровой тик решения: " + reply.body());
+                    String rule = record.path("rule").asText();
+                    problems.expect(!rule.isEmpty(), "Запись называет причину — правило или оценку: " + reply.body());
+                    if ("score".equals(rule)) {
+                        problems.expect(!record.path("factors").isEmpty()
+                                        && record.path("factors").get(0).path("weight").asDouble() > 0,
+                                "Решение по оценке называет факторы с весами: " + reply.body());
+                    }
+                    JsonNode facts = record.path("facts");
+                    problems.expect(facts.path("enemies").asInt() >= 1
+                                    && facts.path("nearest").asText().startsWith("minecraft:husk")
+                                    && facts.path("hp").asDouble() == 20.0,
+                            "Ключевые факты идут в записи: враг рядом, здоровье, броня, оружие: " + reply.body());
+                    problems.expect(!facts.path("weapon").asText().isEmpty(),
+                            "Запись называет, чем дух дерётся: " + reply.body());
+                });
+                served.complete(problems.found());
+            });
+        });
+        RestFixture.await(helper, rest, served, () -> TacticsScene.finish(helper, spirit));
+    }
+
+    private static Optional<JsonNode> ignoreToFight(JsonNode decisions) {
+        for (JsonNode record : decisions) {
+            if ("decision".equals(record.path("changed").asText()) && "IGNORE".equals(record.path("from").asText())
+                    && "FIGHT".equals(record.path("to").asText())) {
+                return Optional.of(record);
+            }
+        }
+        return Optional.empty();
     }
 
     private static boolean listsId(JsonNode bots, String id) {
