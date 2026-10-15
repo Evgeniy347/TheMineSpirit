@@ -3,11 +3,15 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
+import com.theminespirit.core.engine.TaskProgress;
+import com.theminespirit.core.engine.TaskSnapshot;
+import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +23,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -315,6 +321,76 @@ public final class SocialGameTests {
                     "итог deliver после перезапуска обязан назвать delivered=3, получено "
                             + current.taskResult().map(Object::toString).orElse("пусто"));
             TacticsScene.finish(helper, current);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_restart_deliver_remainder", timeoutTicks = 300)
+    public static void deliver_RestoredWithPartialDelivery_TakesOnlyRemainder(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "RemainderTarget");
+        TaskSnapshot snapshot = new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, null,
+                new ScriptCall("deliver", Map.of(
+                        "item", "cobblestone", "count", 3, "to", "player:RemainderTarget")),
+                new TaskProgress.ScriptAt(Map.of("delivered", 2)));
+        CompoundTag tag = new CompoundTag();
+        spirit.saveWithoutId(tag);
+        SpiritTaskStore.write(tag, TaskSnapshotCodec.encode(snapshot));
+        SpiritEntity reloaded = reload(helper, spirit, tag);
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(reloaded.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deliver, восстановленный с delivered=2 из 3, обязан довезти остаток и завершиться успехом, "
+                            + "статус " + reloaded.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + reloaded.taskFailureReason().orElse("нет"));
+            int withPlayer = GameTestFixtures.countInInventory(player.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(withPlayer == 1,
+                    "адресат обязан получить только остаток 1 булыжник, а не все 3: у игрока " + withPlayer);
+            int left = GameTestFixtures.countInInventory(reloaded.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(left == 2,
+                    "у духа обязано остаться 2 булыжника (3 в инвентаре минус остаток 1), осталось " + left);
+            helper.assertTrue(reloaded.taskResult().orElse(null) instanceof ScriptResult.Data data
+                    && Integer.valueOf(3).equals(data.fields().get("delivered")),
+                    "итог deliver обязан назвать delivered=3 (2 ранее + 1 остаток), получено "
+                            + reloaded.taskResult().map(Object::toString).orElse("пусто"));
+            TacticsScene.finish(helper, reloaded);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_deliver_leftover", timeoutTicks = 300)
+    public static void deliver_AddresseeInventoryFull_LeftoverDroppedBySpirit(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "FullTarget");
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            inventory.setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("deliver", Map.of(
+                "item", "cobblestone", "count", 3, "to", "player:FullTarget")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deliver при полном инвентаре адресата обязан завершиться успехом, оставив остаток на земле, "
+                            + "статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(inventory, Items.COBBLESTONE) == 0,
+                    "полный инвентарь адресата не принимает булыжник: у игрока "
+                            + GameTestFixtures.countInInventory(inventory, Items.COBBLESTONE));
+            List<ItemEntity> drops = GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE);
+            helper.assertTrue(drops.size() == 1,
+                    "весь остаток обязан упасть одной кучкой на землю, кучек: " + drops.size());
+            ItemEntity drop = drops.get(0);
+            helper.assertTrue(drop.getItem().getCount() == 3,
+                    "на землю обязан упасть весь остаток (3), а упало " + drop.getItem().getCount());
+            helper.assertTrue(drop.getOwner() != null && drop.getOwner().getUUID().equals(spirit.getUUID()),
+                    "упавший остаток обязан быть помечен духом-доставщиком (DropCollector), а владелец="
+                            + drop.getOwner());
+            TacticsScene.finish(helper, spirit);
         });
     }
 }

@@ -249,17 +249,22 @@ public final class DropCollector {
 
     private State dropAndTake(ItemStack stack, int slot) {
         ItemStack exile = spirit.getInventory().removeItemNoUpdate(slot);
-        ItemEntity dropped = new ItemEntity(spirit.level(), spirit.getX(), spirit.getY(), spirit.getZ(), exile);
-        dropped.setThrower(spirit);
-        dropped.setPickUpDelay(PickupTuning.SELF_DROP_DELAY_TICKS);
-        dropped.setDeltaMovement(Vec3.ZERO);
-        spirit.level().addFreshEntity(dropped);
+        drop(spirit, exile);
         spirit.getInventory().setItem(slot, stack.copy());
         spirit.take(target, stack.getCount());
         collected += stack.getCount();
         target.discard();
         target = null;
         return State.RUNNING;
+    }
+
+    public static ItemEntity drop(SpiritEntity spirit, ItemStack stack) {
+        ItemEntity dropped = new ItemEntity(spirit.level(), spirit.getX(), spirit.getY(), spirit.getZ(), stack.copy());
+        dropped.setThrower(spirit);
+        dropped.setPickUpDelay(PickupTuning.SELF_DROP_DELAY_TICKS);
+        dropped.setDeltaMovement(Vec3.ZERO);
+        spirit.level().addFreshEntity(dropped);
+        return dropped;
     }
 
     private boolean isOwnRecentDrop(ItemEntity drop) {

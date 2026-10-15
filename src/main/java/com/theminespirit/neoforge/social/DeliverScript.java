@@ -7,6 +7,7 @@ import com.theminespirit.core.script.DeliverParams;
 import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.Approach;
+import com.theminespirit.neoforge.DropCollector;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
 import java.util.HashMap;
@@ -60,9 +61,10 @@ public final class DeliverScript implements ScriptInstance {
                 return fail("адресат '" + params.to() + "' не найден: доставлять некому");
             }
             target = addressee.get();
+            int remaining = params.count() - delivered;
             int available = countInInventory();
-            if (available < params.count()) {
-                return fail("не хватает предмета '" + params.item() + "': нужно " + params.count()
+            if (available < remaining) {
+                return fail("не хватает предмета '" + params.item() + "': нужно " + remaining
                         + ", в инвентаре " + available + ", передано " + delivered);
             }
             approach.begin(target, SocialTuning.DELIVER_ARRIVAL);
@@ -119,15 +121,15 @@ public final class DeliverScript implements ScriptInstance {
     }
 
     private ScriptStatus transfer() {
-        int taken = takeFromInventory(params.count());
+        int taken = takeFromInventory(params.count() - delivered);
         ItemStack handoff = new ItemStack(item, taken);
         if (target instanceof ServerPlayer player) {
             ItemStack leftover = addToInventory(player, handoff);
             if (!leftover.isEmpty()) {
-                target.spawnAtLocation(leftover);
+                DropCollector.drop(spirit, leftover);
             }
         } else {
-            target.spawnAtLocation(handoff);
+            DropCollector.drop(spirit, handoff);
         }
         delivered += taken;
         return succeed();
