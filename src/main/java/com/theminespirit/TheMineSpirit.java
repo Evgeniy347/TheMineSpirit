@@ -2,6 +2,7 @@ package com.theminespirit;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.MobTargetEvents;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
@@ -30,6 +31,7 @@ public final class TheMineSpirit {
         modContainer.registerConfig(ModConfig.Type.SERVER, SpiritConfig.spec());
         modContainer.registerConfig(ModConfig.Type.SERVER, RestConfig.spec(), RestConfig.FILE_NAME);
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
+        NeoForge.EVENT_BUS.addListener(DataReload::register);
         PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);
