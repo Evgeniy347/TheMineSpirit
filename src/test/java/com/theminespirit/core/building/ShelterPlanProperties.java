@@ -32,7 +32,7 @@ class ShelterPlanProperties {
     }
 
     @Property
-    void shelter_AnyInput_OnlyPerimeterCells(@ForAll("origins") BlockCoord origin,
+    void shelter_AnyInput_OnlyWallsOrRoof(@ForAll("origins") BlockCoord origin,
             @ForAll("heights") int wallHeight, @ForAll("budgets") int budget) {
         List<BlockCoord> cells = ShelterPlan.shelter(origin, wallHeight, budget);
 
@@ -40,12 +40,26 @@ class ShelterPlanProperties {
             int dx = cell.x() - origin.x();
             int dz = cell.z() - origin.z();
             int dy = cell.y() - origin.y();
-            assertTrue(dx >= 0 && dx < ShelterPlan.SHELTER_SIDE && dz >= 0 && dz < ShelterPlan.SHELTER_SIDE
-                    && dy >= 0 && dy < wallHeight,
-                    "Клетка обязана лежать в коробе стен: иначе стройка расползается за укрытие");
-            assertTrue(dx == 0 || dx == ShelterPlan.SHELTER_SIDE - 1 || dz == 0
-                    || dz == ShelterPlan.SHELTER_SIDE - 1,
-                    "Клетка обязана быть периметром, а не интерьером: иначе дух замурован внутри коробки");
+            boolean wall = dy >= 0 && dy < wallHeight && (dx == 0 || dx == ShelterPlan.SHELTER_SIDE - 1
+                    || dz == 0 || dz == ShelterPlan.SHELTER_SIDE - 1);
+            boolean roof = dy == wallHeight && dx >= 0 && dx < ShelterPlan.SHELTER_SIDE
+                    && dz >= 0 && dz < ShelterPlan.SHELTER_SIDE;
+            assertTrue(wall || roof,
+                    "Клетка обязана быть стеной или крышей: интерьер пуст, иначе дух замурован внутри коробки");
+        }
+    }
+
+    @Property
+    void shelter_FullBudget_RoofCoversInterior(@ForAll("origins") BlockCoord origin,
+            @ForAll("heights") int wallHeight) {
+        List<BlockCoord> cells = ShelterPlan.shelter(origin, wallHeight, 128);
+
+        for (int dx = 1; dx < ShelterPlan.SHELTER_SIDE - 1; dx++) {
+            for (int dz = 1; dz < ShelterPlan.SHELTER_SIDE - 1; dz++) {
+                assertTrue(cells.contains(new BlockCoord(origin.x() + dx, origin.y() + wallHeight, origin.z() + dz)),
+                        "Крыша обязана закрывать весь интерьер сверху: иначе пауки лезут внутрь, "
+                                + "а скелеты стреляют поверх стен");
+            }
         }
     }
 

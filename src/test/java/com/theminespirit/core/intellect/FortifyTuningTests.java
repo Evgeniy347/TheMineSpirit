@@ -47,7 +47,7 @@ class FortifyTuningTests {
     @Test
     void shelterWallHeight_DeclaredValue_EqualsTwo() {
         assertEquals(2, FortifyTuning.SHELTER_WALL_HEIGHT,
-                "Стены укрытия высотой 2: дух проходит, мобы не перепрыгивают, крыша не нужна");
+                "Стены укрытия высотой 2 с крышей сверху: дух проходит, пауки не лезут, скелеты не стреляют поверх");
     }
 
     @Test

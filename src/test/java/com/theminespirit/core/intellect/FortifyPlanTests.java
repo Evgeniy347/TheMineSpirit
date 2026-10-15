@@ -28,8 +28,8 @@ class FortifyPlanTests {
 
         assertTrue(plan.order().isPresent(),
                 "Ростер укрытия обязан давать приказ: иначе решение SHELTER висит без исполнителя");
-        assertEquals(24, plan.order().get().cells().size(),
-                "Укрытие 4×4 высотой 2 — это 24 клетки стен: иначе в стене дыра");
+        assertEquals(40, plan.order().get().cells().size(),
+                "Укрытие 4×4 высотой 2 с крышей — это 24 клетки стен и 16 крыши: иначе в стене дыра или пауки внутри");
         assertEquals(crew.guards(), plan.order().get().guards(),
                 "Защитники приказа обязаны совпадать с ростером: иначе кроет не тот, кого назначили");
         assertEquals(crew.builder(), plan.order().get().builder(),
@@ -64,8 +64,34 @@ class FortifyPlanTests {
 
         assertTrue(plan.order().isPresent(),
                 "Шов без берегов обязан откатываться на укрытие, а не пропадать: иначе строитель встаёт без дела");
-        assertEquals(24, plan.order().get().cells().size(),
-                "Откат обязан давать полное укрытие: иначе дух строит огрызок вместо обороны");
+        assertEquals(40, plan.order().get().cells().size(),
+                "Откат обязан давать полное укрытие с крышей: иначе дух строит огрызок вместо обороны");
+    }
+
+    @Test
+    void plan_ShelterOrder_WallsBeforeRoof() {
+        FortifyPlan plan = FortifyPlan.plan(Optional.of(shelterCrew()), new BlockCoord(0, 64, 0), Optional.empty(),
+                Optional.empty());
+
+        List<BlockCoord> cells = plan.order().orElseThrow().cells();
+        int roofLevel = 64 + FortifyTuning.SHELTER_WALL_HEIGHT;
+        int lastWall = -1;
+        int firstRoof = cells.size();
+        for (int index = 0; index < cells.size(); index++) {
+            if (cells.get(index).y() == roofLevel) {
+                firstRoof = Math.min(firstRoof, index);
+            } else {
+                lastWall = Math.max(lastWall, index);
+            }
+        }
+        assertTrue(lastWall < firstRoof,
+                "Стены укрытия обязаны идти раньше крыши: крыша ставится на готовые стены, иначе ей не на что лечь");
+        List<BlockCoord> joined = new ArrayList<>();
+        for (List<BlockCoord> batch : plan.batches()) {
+            joined.addAll(batch);
+        }
+        assertEquals(cells, joined,
+                "Порции обязаны сохранять порядок «стены, потом крыша»: иначе исполнитель кладёт крышу раньше стен");
     }
 
     @Test

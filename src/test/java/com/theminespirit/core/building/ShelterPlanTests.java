@@ -20,14 +20,17 @@ class ShelterPlanTests {
     void shelter_FullBudget_WallCellsPerTier() {
         List<BlockCoord> cells = ShelterPlan.shelter(new BlockCoord(0, 64, 0), 2, 64);
 
-        assertEquals(24, cells.size(),
-                "Стены 4×4 высотой 2 — это 12 клеток на ярус, 24 всего: иначе в стене дыра или лишний расход");
+        assertEquals(40, cells.size(),
+                "Стены 4×4 высотой 2 — это 12 клеток на ярус, плюс крыша 16: иначе в стене дыра или лишний расход");
         long lower = cells.stream().filter(cell -> cell.y() == 64).count();
         long upper = cells.stream().filter(cell -> cell.y() == 65).count();
+        long roof = cells.stream().filter(cell -> cell.y() == 66).count();
         assertEquals(12, lower,
                 "Нижний ярус обязан держать 12 клеток периметра: иначе стена начинается с дыры");
         assertEquals(12, upper,
                 "Верхний ярус обязан держать 12 клеток периметра: иначе мобы перепрыгивают стену");
+        assertEquals(16, roof,
+                "Крыша обязана закрывать все 16 клеток 4×4: иначе пауки лезут внутрь, а скелеты стреляют поверх стен");
     }
 
     @Test
@@ -41,6 +44,28 @@ class ShelterPlanTests {
                         "Интерьер 2×2 обязан оставаться пустым: иначе дух замурован внутри своей коробки");
             }
         }
+    }
+
+    @Test
+    void shelter_FullBudget_RoofCoversInterior() {
+        List<BlockCoord> cells = ShelterPlan.shelter(new BlockCoord(0, 64, 0), 2, 64);
+
+        for (int dx = 1; dx <= 2; dx++) {
+            for (int dz = 1; dz <= 2; dz++) {
+                assertTrue(cells.contains(new BlockCoord(dx, 66, dz)),
+                        "Крыша обязана закрывать каждую клетку интерьера 2×2 сверху: иначе паук падает духу на голову");
+            }
+        }
+    }
+
+    @Test
+    void shelter_FullBudget_WallsBeforeRoof() {
+        List<BlockCoord> cells = ShelterPlan.shelter(new BlockCoord(0, 64, 0), 2, 64);
+
+        int lastWall = cells.lastIndexOf(new BlockCoord(3, 65, 3));
+        int firstRoof = cells.indexOf(new BlockCoord(0, 66, 0));
+        assertTrue(lastWall < firstRoof,
+                "Стены обязаны идти раньше крыши: крыша без стен строителю не на что опереться");
     }
 
     @Test

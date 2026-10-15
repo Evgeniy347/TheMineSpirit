@@ -33,6 +33,11 @@ public final class ShelterPlan {
             }
         }
         cells.sort(Comparator.comparingInt(BlockCoord::y).thenComparingInt(BlockCoord::x).thenComparingInt(BlockCoord::z));
+        for (int dx = 0; dx < SHELTER_SIDE; dx++) {
+            for (int dz = 0; dz < SHELTER_SIDE; dz++) {
+                cells.add(new BlockCoord(origin.x() + dx, origin.y() + wallHeight, origin.z() + dz));
+            }
+        }
         return List.copyOf(cells.subList(0, Math.min(cells.size(), budget)));
     }
 }

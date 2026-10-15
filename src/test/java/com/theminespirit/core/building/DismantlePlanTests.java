@@ -36,6 +36,28 @@ class DismantlePlanTests {
     }
 
     @Test
+    void dismantle_ShelterWithRoof_RoofFirst() {
+        List<BlockCoord> shelter = ShelterPlan.shelter(new BlockCoord(0, 64, 0), 2, 64);
+
+        List<BlockCoord> removed = DismantlePlan.dismantle(shelter, cell -> true);
+
+        assertEquals(shelter.size(), removed.size(),
+                "Разбор обязан снимать все свои клетки укрытия: потерянная крыша захламляет мир похода");
+        int roofLevel = 64 + 2;
+        int lastRoof = -1;
+        int firstWall = removed.size();
+        for (int index = 0; index < removed.size(); index++) {
+            if (removed.get(index).y() == roofLevel) {
+                lastRoof = Math.max(lastRoof, index);
+            } else {
+                firstWall = Math.min(firstWall, index);
+            }
+        }
+        assertTrue(lastRoof < firstWall,
+                "Разбор обязан снимать крышу раньше стен: иначе снятая стена роняет крышу духу на голову");
+    }
+
+    @Test
     void dismantle_EmptyInput_GivesEmpty() {
         assertEquals(List.of(), DismantlePlan.dismantle(List.of(), cell -> true),
                 "Пустой вход обязан давать пустой разбор: иначе дух разбирает то, чего нет");
