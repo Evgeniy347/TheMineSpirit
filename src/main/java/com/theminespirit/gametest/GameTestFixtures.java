@@ -5,7 +5,9 @@ import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestInfo;
@@ -38,6 +40,7 @@ final class GameTestFixtures {
     private static final int SWEEP_ABOVE = 40;
     private static final int SWEEP_MIN_AGE_TICKS = 5;
     private static final int MAX_CHUNKS_EAST = 256;
+    private static final Map<GameTestInfo, AABB> ACTIVE_SCENES = new ConcurrentHashMap<>();
 
     private GameTestFixtures() {
     }
@@ -59,6 +62,7 @@ final class GameTestFixtures {
     static void finish(GameTestHelper helper, int clearHeight) {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
+        unregisterScene(helper);
     }
 
     private static void clearBlocks(GameTestHelper helper, int clearHeight) {
@@ -73,18 +77,49 @@ final class GameTestFixtures {
 
     private static void clearEntities(GameTestHelper helper, int clearHeight) {
         for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper, clearHeight),
-                e -> !(e instanceof Player))) {
+                e -> !(e instanceof Player) && clearable(helper, e))) {
             entity.discard();
         }
     }
 
     static void sweepEntities(GameTestHelper helper) {
-        // Тесты пачки стартуют одновременно: сетапы идут подряд в одном тике, соседи по пачке
-        // в этот момент новорождённые (возраст 0), а leftovers прошлых пачек прожили свои тесты.
+        // Тесты пачки стартуют одновременно: сетапы идут подряд, соседи в этот момент
+        // новорождённые (возраст 0), а leftovers прошлых пачек прожили свои тесты. Живые
+        // сцены пачки дополнительно прикрыты реестром границ: чужой дух, моб и дроп
+        // внутри активной структуры не трогаются в любом возрасте.
+        registerScene(helper);
         for (Entity entity : helper.getLevel().getEntities((Entity) null, sweepArea(helper),
-                e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS)) {
+                e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS && clearable(helper, e))) {
             entity.discard();
         }
+    }
+
+    private static void registerScene(GameTestHelper helper) {
+        pruneScenes();
+        try {
+            ACTIVE_SCENES.put(helper.testInfo, helper.getBounds());
+        } catch (IllegalStateException structureNotPlaced) {
+            // Структура ещё не размещена: регистрации нет, остаётся фильтр возраста.
+        }
+    }
+
+    private static void unregisterScene(GameTestHelper helper) {
+        ACTIVE_SCENES.remove(helper.testInfo);
+        pruneScenes();
+    }
+
+    private static void pruneScenes() {
+        ACTIVE_SCENES.keySet().removeIf(info -> info.hasSucceeded() || info.hasFailed());
+    }
+
+    private static boolean clearable(GameTestHelper helper, Entity entity) {
+        Vec3 at = entity.position();
+        for (Map.Entry<GameTestInfo, AABB> scene : ACTIVE_SCENES.entrySet()) {
+            if (scene.getKey() != helper.testInfo && scene.getValue().contains(at)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     static void holdDayTime(GameTestHelper helper, long dayTime) {
