@@ -92,15 +92,19 @@ public final class AcquireGameTests {
         });
     }
 
-    // [флак] добыча железной руды с нуля: дух сам добывает дерево, крафтит кирку и печь,
-    // добывает руду и уголь, плавит слиток; замерено ~340 тиков духа, запас 2×
+    // [флак] добыча железа с нуля без дерева: верстак и печь в мире, каменная кирка снабжается
+    // заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
+    // остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
     @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = 700)
     public static void acquireIronIngot_FromScratch_IngotInInventory(GameTestHelper helper) {
         field(helper);
-        FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
         placeIronOreRow(helper);
-        helper.setBlock(6, 2, 6, Blocks.COAL_ORE);
-        SpiritEntity spirit = prepare(helper);
+        helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+        helper.setBlock(5, 1, 5, Blocks.FURNACE);
+        helper.setBlock(3, 1, 4, Blocks.COAL_ORE);
+        helper.setBlock(4, 1, 4, Blocks.COAL_ORE);
+        SpiritEntity spirit = prepare(helper, stack(Items.STONE_PICKAXE, 1));
+        speedUpFurnaces(helper);
         TaskNode plan = PlanParser.parse("""
                 {"type":"script","script":"acquire","params":{"item":"iron_ingot","count":1}}
                 """, SpiritScripts.catalog());
