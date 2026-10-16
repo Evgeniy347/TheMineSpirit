@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
@@ -59,6 +60,12 @@ public final class FirstStepsRunner {
                         .orElse(false));
     }
 
+    /**
+     * Факты поселения из снимка мира: деревья (брёвна/листва — земля не зачищена), вход в шахту
+     * (лестница спуска — знак построенного входа), забор (то же множество ограждений, что видит
+     * {@code FenceWatch}, иначе runner и событие говорили бы о разных заборах). Сканирование
+     * бюджетировано радиусом и вызывается раз в пересборку, а не каждый тик.
+     */
     private static SettlementFacts buildFacts(ServerLevel level, BlockCoord home, BoardService service) {
         boolean hasHome = true;
         boolean groundsCleared = true;
@@ -82,6 +89,12 @@ public final class FirstStepsRunner {
                         continue;
                     }
                     var state = level.getBlockState(check);
+                    if (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES)) {
+                        groundsCleared = false;
+                    }
+                    if (state.is(Blocks.LADDER)) {
+                        mineEntrance = true;
+                    }
                     if (state.is(Blocks.CHEST)) {
                         chests++;
                     }
@@ -91,7 +104,7 @@ public final class FirstStepsRunner {
                     if (state.is(Blocks.TORCH) || state.is(Blocks.WALL_TORCH)) {
                         lighting = true;
                     }
-                    if (state.is(Blocks.OAK_FENCE) || state.is(Blocks.OAK_FENCE_GATE)) {
+                    if (FenceWatch.isFence(state)) {
                         fence = true;
                     }
                     if (state.getBlock() instanceof StairBlock || state.getBlock() instanceof SlabBlock) {

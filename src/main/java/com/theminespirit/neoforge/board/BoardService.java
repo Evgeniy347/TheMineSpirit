@@ -190,6 +190,24 @@ public final class BoardService {
         animals.captured(captureId);
     }
 
+    /**
+     * Загон построен: следующее звено — «приманить» с гейтом по приманке. Пара к
+     * {@link #completeCapture}: производство зовёт из учёта исполнителя, GameTest — напрямую.
+     */
+    public void completePen(String penId) {
+        animals.penBuilt(penId);
+    }
+
+    /** Животное в загоне: ставится «разобрать укрытие». */
+    public void completeLure() {
+        animals.lured();
+    }
+
+    /** Животное погибло: «приманить» снимается, ставится «разобрать укрытие». */
+    public void notifyAnimalDied() {
+        animals.animalDied();
+    }
+
     private void settleOwners(List<SpiritEntity> spirits) {
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
