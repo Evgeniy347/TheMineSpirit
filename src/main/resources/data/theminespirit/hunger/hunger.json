@@ -1,0 +1,12 @@
+{
+  "regenFoodThreshold": 18,
+  "regenIntervalTicks": 80,
+  "regenExhaustion": 6.0,
+  "starveIntervalTicks": 80,
+  "starveFloor": 1.0,
+  "eatFoodThreshold": 14,
+  "sprintExhaustionPerMeter": 0.1,
+  "combatExhaustionPerAttack": 0.1,
+  "digExhaustionPerBlock": 0.005,
+  "damageExhaustionPerHit": 0.1
+}
