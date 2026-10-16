@@ -50,6 +50,12 @@
   (процесс жив, логи сессии не пишутся > 30 мин), ресурсы (`res-pc.ps1`: память < 15 %, CPU > 90 % без исполнителей,
   долгоживущий bash/java/find), сироты (`res-pc.ps1` на ПК, `orphan-sweep.sh` на сервере). Перед новым запуском — нет ли
   старых копий: `ps -ef | grep oc-watch.sh`.
+- **Сводка в Telegram раз в 5 мин** (владелец 16.10) — таймер `mc-progress` на сервере
+  (`sudo systemd-run --unit=mc-progress --on-calendar='*:0/5' --setenv=LEAD_AGENTS=/opt/minecraft/lead-agents.txt
+  /opt/minecraft/the-mine-spirit/scripts/opencode-status-notify.sh`): прогресс плана и список агентов
+  «машина; модель; задача; ч:мм». Список ведёт главный агент: при каждой постановке задачи
+  `ssh domovoy 'bash /opt/minecraft/the-mine-spirit/scripts/lead/agent-list.sh start <gtx54|domovoy> <модель> <задача>'`,
+  при завершении — `… agent-list.sh stop <задача>`. Пустой список — сводка молчит.
 - **Сироты** убиваются автоматически, но только свои: на ПК — только `find /` по всему диску и java сервера GameTest
   worktree, где не работает ни один opencode (старше 15 мин); по «мёртвому родителю» на ПК не судим — 16.10 так
   убиты чужой `tail -F` и рабочий запуск deepseek-web; на сервере — PPID 1 и `/opt/minecraft/wt/` или `find /`.
