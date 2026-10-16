@@ -260,6 +260,7 @@ public final class SmeltGameTests {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 4, "слитки железа");
             assertFurnaceEmpty(helper);
+            assertRecipesCleared(helper);
             helper.assertTrue(player.totalExperience > 0,
                     "опыт, накопленный печью за плавку, обязан достаться реальному игроку, а его опыт "
                             + player.totalExperience);
@@ -275,6 +276,13 @@ public final class SmeltGameTests {
         Vec3 second = helper.absoluteVec(
                 new Vec3(GameTestFixtures.FLOOR_SIZE + 2, 8, GameTestFixtures.FLOOR_SIZE + 2));
         return helper.getLevel().getEntitiesOfClass(ExperienceOrb.class, new AABB(first, second));
+    }
+
+    private static void assertRecipesCleared(GameTestHelper helper) {
+        BlockEntity entity = helper.getBlockEntity(FURNACE_CELL);
+        helper.assertTrue(entity instanceof AbstractFurnaceBlockEntity furnace && furnace.recipesUsed.isEmpty(),
+                "после выноса результата счётчик рецептов печи обязан обнулиться, как в ванили: иначе следующий "
+                        + "забор результата выдаст тот же опыт повторно");
     }
 
     private static boolean firstIngotReady(GameTestHelper helper) {
