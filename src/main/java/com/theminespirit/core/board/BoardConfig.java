@@ -69,7 +69,9 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
                 BoardPriorities::modifierKey, true);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
         Map<String, Integer> levels = integers(root.get("levels"), origin, "levels", BoardCase::valueOf, false);
-        return new BoardConfig(priorities, modifiers, intervals, levels, Map.of(), List.of(), Map.of());
+        Map<String, Integer> supplies = integers(root.get("supplies"), origin, "supplies",
+                BoardConfig::supplyKey, false);
+        return new BoardConfig(priorities, modifiers, intervals, levels, Map.of(), List.of(), supplies);
     }
 
     public static BoardConfig readFromClasspath() {
@@ -137,6 +139,13 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             values.put(key, number);
         }
         return values;
+    }
+
+    private static String supplyKey(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("пустое имя предмета");
+        }
+        return key;
     }
 
     private static void checkKey(Function<String, ?> known, String key, String origin,

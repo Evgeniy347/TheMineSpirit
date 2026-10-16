@@ -49,5 +49,10 @@
     "BUILD_PEN": 3,
     "ENCHANT_ROOM": 4,
     "BUILD_HOUSE": 4
+  },
+  "supplies": {
+    "minecraft:bookshelf": 32,
+    "minecraft:book": 32,
+    "minecraft:paper": 128
   }
 }
