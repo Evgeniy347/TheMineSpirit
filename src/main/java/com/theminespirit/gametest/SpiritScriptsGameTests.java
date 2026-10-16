@@ -61,6 +61,7 @@ public final class SpiritScriptsGameTests {
 
     @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
     public static void observeFlag_LivesOnFactory_ForCombatScripts(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         ScriptRegistry registry = SpiritScripts.registryFor(spirit);
 

@@ -47,8 +47,7 @@ public final class DoorsGameTests {
         SpiritEntity second = MovementScene.spirit(helper, new BlockPos(SPIRIT_TWO_X, 1, SPIRIT_Z));
         second.setHome(MovementScene.coord(helper, new BlockPos(SPIRIT_TWO_X, 1, SPIRIT_Z)));
         ServerPlayer player = MovementScene.mockPlayer(helper, new BlockPos(PLAYER_X, 1, PLAYER_Z));
-        long savedDayTime = helper.getLevel().getDayTime();
-        helper.getLevel().setDayTime(NOON);
+        GameTestFixtures.holdDayTime(helper, NOON);
         openDoor(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
 
         helper.succeedWhen(() -> {
@@ -57,7 +56,6 @@ public final class DoorsGameTests {
                     "дверь, открытая игроком и брошенная, обязана быть закрыта духом: иначе ночь найдёт "
                             + "поселение открытым");
             MovementScene.removePlayer(helper, player);
-            helper.getLevel().setDayTime(savedDayTime);
         });
     }
 
@@ -68,8 +66,7 @@ public final class DoorsGameTests {
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(SPIRIT_ONE_X, 1, SPIRIT_Z));
         spirit.setHome(MovementScene.coord(helper, new BlockPos(SPIRIT_ONE_X, 1, SPIRIT_Z)));
         ServerPlayer player = MovementScene.mockPlayer(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
-        long savedDayTime = helper.getLevel().getDayTime();
-        helper.getLevel().setDayTime(NOON);
+        GameTestFixtures.holdDayTime(helper, NOON);
         openDoor(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
 
         helper.succeedWhen(() -> {
@@ -79,7 +76,6 @@ public final class DoorsGameTests {
                             .getValue(BlockStateProperties.OPEN),
                     "игрок стоит в проёме: дверь обязана оставаться открытой, иначе дух зажмёт игрока створкой");
             MovementScene.removePlayer(helper, player);
-            helper.getLevel().setDayTime(savedDayTime);
         });
     }
 
@@ -91,8 +87,7 @@ public final class DoorsGameTests {
         first.setHome(MovementScene.coord(helper, new BlockPos(SPIRIT_ONE_X, 1, SPIRIT_Z)));
         SpiritEntity second = MovementScene.spirit(helper, new BlockPos(SPIRIT_TWO_X, 1, SPIRIT_Z));
         second.setHome(MovementScene.coord(helper, new BlockPos(SPIRIT_TWO_X, 1, SPIRIT_Z)));
-        long savedDayTime = helper.getLevel().getDayTime();
-        helper.getLevel().setDayTime(SUNSET);
+        GameTestFixtures.holdDayTime(helper, SUNSET);
         openDoor(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
         openDoor(helper, new BlockPos(DOOR_TWO_X, DOOR_Y, WALL_Z));
 
@@ -106,7 +101,6 @@ public final class DoorsGameTests {
                             .getValue(BlockStateProperties.OPEN),
                     "вторая открытая дверь обязана быть закрыта другим духом: иначе одна дверь ждёт, "
                             + "пока дух дойдёт до второй");
-            helper.getLevel().setDayTime(savedDayTime);
         });
     }
 
