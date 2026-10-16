@@ -1,9 +1,12 @@
 package com.theminespirit.core.reload;
 
 import com.theminespirit.core.armor.ArmorTable;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.inventory.BaseKit;
+import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.mining.DropTable;
@@ -12,6 +15,7 @@ import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +47,7 @@ public final class DataTables {
     private final TableHolder<Map<String, SwordTier>> swords;
     private final TableHolder<DropTable> drops;
     private final TableHolder<BlockProtection> protection;
+    private final TableHolder<PresetLibrary> presets;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -92,6 +97,23 @@ public final class DataTables {
                 TableDefinition.single("protection", "data/theminespirit/policy/protection.json",
                         ProtectionConfig::parse),
                 ProtectionConfig::readClasspath);
+        this.presets = registry.registerLazy(
+                TableDefinition.indexed(PresetLibrary.INDEX_ID,
+                        PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json",
+                        index -> PresetLibrary.bodyPaths(index.json(), index.origin()),
+                        PresetLibrary::parse),
+                () -> PresetLibrary.parse(loadPresetBodies()));
+    }
+
+    private static List<LoadedContent> loadPresetBodies() {
+        String indexPath = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
+        String indexJson = JsonResource.readClasspath(indexPath);
+        List<LoadedContent> contents = new ArrayList<>();
+        contents.add(new LoadedContent(indexJson, indexPath + " (мод)", TableStatus.Source.MOD));
+        for (String path : PresetLibrary.bodyPaths(indexJson, indexPath)) {
+            contents.add(new LoadedContent(JsonResource.readClasspath(path), path + " (мод)", TableStatus.Source.MOD));
+        }
+        return List.copyOf(contents);
     }
 
     public TableRegistry registry() {
@@ -148,6 +170,10 @@ public final class DataTables {
 
     public TableHolder<BlockProtection> protection() {
         return protection;
+    }
+
+    public TableHolder<PresetLibrary> presets() {
+        return presets;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
