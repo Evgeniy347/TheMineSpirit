@@ -234,9 +234,8 @@ public final class DescentSession {
             }
             case BROKEN -> {
                 blocksDug++;
-                collector = new DropCollector(spirit, IdFilter.matchAll(), currentCell(), COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
-                state = State.COLLECT;
+                cellCursor++;
+                state = State.DIG_BEGIN;
             }
             case GONE -> {
                 cellCursor++;
@@ -251,13 +250,11 @@ public final class DescentSession {
             return;
         }
         collector = null;
-        if (collected == DropCollector.State.FAILED) {
-            stopReason = "не удалось подобрать дроп у " + currentCell() + ": спуск остановлен";
-            complete();
-            return;
+        if (stepIndex % plan.torchInterval() == 0) {
+            state = State.TORCH;
+        } else {
+            stepFinished();
         }
-        cellCursor++;
-        state = State.DIG_BEGIN;
     }
 
     private void approachTick() {
@@ -271,11 +268,9 @@ public final class DescentSession {
             case MOVING -> {
             }
             case ARRIVED -> {
-                if (stepIndex % plan.torchInterval() == 0) {
-                    state = State.TORCH;
-                } else {
-                    stepFinished();
-                }
+                collector = new DropCollector(spirit, IdFilter.matchAll(), step.stand(), COLLECT_RADIUS,
+                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                state = State.COLLECT;
             }
             case STUCK, TIMEOUT -> {
                 String detail = approach.refusal() == null ? "стоянка недостижима" : approach.refusal();

@@ -116,6 +116,30 @@ public final class DescentGameTests {
     }
 
     @GameTest(template = "arena", batch = "descent", timeoutTicks = 400)
+    public static void descend_UnreachableDropInShaft_StillReachesTargetY(GameTestHelper helper) {
+        prepare(helper);
+        helper.setBlock(new BlockPos(3, 2, 4), Blocks.AIR);
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 3.5, 2, 4.5);
+        SpiritEntity spirit = spawnWithKit(helper, new BlockPos(3, 5, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("dig_descent", Map.of("direction", "east", "y", -59)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "недостижимый дроп в шахте не обязан останавливать спуск: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            Map<String, Object> data = dataOf(helper, spirit, "спуск с недостижимым дропом");
+            helper.assertTrue(Boolean.TRUE.equals(data.get("reached")) && Integer.valueOf(-59).equals(data.get("y")),
+                    "спуск обязан дойти до цели, невзирая на дроп в закрытой нише, фактически " + data);
+            helper.assertTrue(Integer.valueOf(9).equals(data.get("blocks_dug")),
+                    "спуск обязан выкопать все 9 блоков шагов, не прерываясь на дроп, фактически " + data);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "descent", timeoutTicks = 400)
     public static void descend_LavaInShaft_WarnsAndStopsWithWorldSafe(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(5, 2, 4), Blocks.LAVA);
