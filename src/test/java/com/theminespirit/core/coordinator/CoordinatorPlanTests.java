@@ -20,12 +20,12 @@ class CoordinatorPlanTests {
 
     private static SpiritSnapshot defender(UUID id, boolean attacked) {
         return new SpiritSnapshot(id, BASE, 1, SpiritRole.DEFENDER, CombatMode.GUARD_AREA, attacked ? 1 : 0,
-                attacked, Optional.empty(), 100);
+                attacked, Optional.empty(), 100, 1.0);
     }
 
     private static SpiritSnapshot worker(UUID id, double x, WorkTarget work) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.WORKER, CombatMode.PASSIVE, 0, false,
-                Optional.ofNullable(work), 100);
+                Optional.ofNullable(work), 100, 1.0);
     }
 
     private static WorkTarget tree(int x) {

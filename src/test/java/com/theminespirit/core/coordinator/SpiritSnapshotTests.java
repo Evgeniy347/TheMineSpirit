@@ -17,14 +17,14 @@ class SpiritSnapshotTests {
 
     private static SpiritSnapshot snapshot(double hp, int threats, boolean attacked) {
         return new SpiritSnapshot(SPIRIT, POS, hp, SpiritRole.WORKER, CombatMode.DEFENSIVE, threats, attacked,
-                Optional.empty(), 42);
+                Optional.empty(), 42, 1.0);
     }
 
     @Test
     void snapshot_ConstructorArgs_AreExposed() {
         WorkTarget tree = new WorkTarget(WorkKind.TREE, new BlockCoord(4, 64, 2));
         SpiritSnapshot withWork = new SpiritSnapshot(SPIRIT, POS, 0.5, SpiritRole.DEFENDER, CombatMode.GUARD_AREA,
-                2, true, Optional.of(tree), 42);
+                2, true, Optional.of(tree), 42, 0.6);
 
         assertEquals(SPIRIT, withWork.id(), "id снимка — кто это: без него координатор не сопоставит решения с духом");
         assertEquals(POS, withWork.pos(), "Позиция снимка — где дух: от неё считаются расстояния до постов и целей");
@@ -38,6 +38,26 @@ class SpiritSnapshotTests {
         assertEquals(Optional.of(tree), withWork.workTarget(),
                 "Цель работы снимка — чем дух занят: координатор не даёт работу занятому и распределяет цели");
         assertEquals(42, withWork.lastSeenTick(), "Тик наблюдения — свежесть снимка: просроченный снимается из плана");
+        assertEquals(0.6, withWork.food(),
+                "Сытость снимка — насколько дух сыт: координатор и оценка сил берут её из реального голода духа");
+    }
+
+    @Test
+    void food_AboveOne_ClampedToOne() {
+        SpiritSnapshot snapshot = new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false,
+                Optional.empty(), 42, 1.5);
+
+        assertEquals(1.0, snapshot.food(),
+                "Доля сытости выше единицы зажимается в 1: иначе дух выглядит сытее полного");
+    }
+
+    @Test
+    void food_Negative_ClampedToZero() {
+        SpiritSnapshot snapshot = new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false,
+                Optional.empty(), 42, -0.5);
+
+        assertEquals(0.0, snapshot.food(),
+                "Отрицательная доля сытости зажимается в 0: иначе голодный дух выглядит сытым");
     }
 
     @Test
@@ -56,7 +76,7 @@ class SpiritSnapshotTests {
     void constructor_NullId_Throws() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(null, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false,
-                        Optional.empty(), 1),
+                        Optional.empty(), 1, 1.0),
                 "Снимок без id не опознает духа: координатор не сможет сопоставить его с решениями");
 
         assertTrue(error.getMessage().contains("id"),
@@ -67,7 +87,7 @@ class SpiritSnapshotTests {
     void constructor_NullPos_Throws() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(SPIRIT, null, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false,
-                        Optional.empty(), 1),
+                        Optional.empty(), 1, 1.0),
                 "Снимок без позиции не опознает, где дух: расстояния до постов и целей не посчитать");
 
         assertTrue(error.getMessage().contains("pos"),
@@ -77,14 +97,14 @@ class SpiritSnapshotTests {
     @Test
     void constructor_NullRole_Throws() {
         assertThrows(IllegalArgumentException.class,
-                () -> new SpiritSnapshot(SPIRIT, POS, 1, null, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1),
+                () -> new SpiritSnapshot(SPIRIT, POS, 1, null, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1, 1.0),
                 "Снимок без роли не говорит, защитник дух или работник: координатор не решит, кому сектор, кому цель");
     }
 
     @Test
     void constructor_NullWorkTarget_Throws() {
         assertThrows(IllegalArgumentException.class,
-                () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, null, 1),
+                () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, null, 1, 1.0),
                 "Снимок с null вместо Optional цели не говорит, занят дух или нет: передавайте Optional.empty()");
     }
 
@@ -92,7 +112,7 @@ class SpiritSnapshotTests {
     void attacked_TrueWithZeroThreats_Throws() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, true,
-                        Optional.empty(), 1),
+                        Optional.empty(), 1, 1.0),
                 "Атакованный без угроз противоречит снимку: координированная помощь уйдёт на ложную тревогу");
 
         assertTrue(error.getMessage().contains("attacked"),
@@ -102,7 +122,7 @@ class SpiritSnapshotTests {
     @Test
     void attacked_FalseWithThreats_IsAccepted() {
         SpiritSnapshot snapshot = new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 3,
-                false, Optional.empty(), 1);
+                false, Optional.empty(), 1, 1.0);
 
         assertEquals(3, snapshot.threatsNear(),
                 "Атакован при угрозах рядом не обязательно: дух может стоять под давлением, не будучи целью");
@@ -114,7 +134,7 @@ class SpiritSnapshotTests {
     void threatsNear_Negative_Throws() {
         assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, -1, false,
-                        Optional.empty(), 1),
+                        Optional.empty(), 1, 1.0),
                 "Отрицательное число угроз противоречит снимку: выбор помощников получил бы неверный порядок");
     }
 
@@ -122,7 +142,7 @@ class SpiritSnapshotTests {
     void lastSeenTick_Negative_Throws() {
         assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false,
-                        Optional.empty(), -1),
+                        Optional.empty(), -1, 1.0),
                 "Отрицательный тик наблюдения противоречит снимку: просроченность считается от него");
     }
 }

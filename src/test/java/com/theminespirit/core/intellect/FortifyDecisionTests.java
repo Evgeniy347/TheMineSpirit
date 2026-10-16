@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class FortifyDecisionTests {
     static SpiritSnapshot snapshot(UUID id, double x, SpiritRole role) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1.0, role, CombatMode.DEFENSIVE, 1, false,
-                Optional.empty(), 0);
+                Optional.empty(), 0, 1.0);
     }
 
     static EnemyFact enemy(String id, double x) {

@@ -86,6 +86,6 @@ class CoordinatorPlanProperties {
                                                         ? Optional.of(new WorkTarget(WorkKind.TREE,
                                                                 new BlockCoord(x * 3, 64, 0)))
                                                         : Optional.empty(),
-                                                threats + 1)))));
+                                                threats + 1, 1.0)))));
     }
 }

@@ -24,7 +24,7 @@ class CoordinatorStateProperties {
                 .filter(attacked -> !attacked || threats > 0)
                 .map(attacked -> new SpiritSnapshot(UUID.randomUUID(), new Point(threats, 64, threats),
                         threats / 4.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, threats, attacked,
-                        Optional.empty(), threats)));
+                        Optional.empty(), threats, 1.0)));
     }
 
     @Property

@@ -28,7 +28,7 @@ public final class SettlementViews {
 
     public static SpiritSnapshot spiritWithRole(UUID id, SpiritRole role) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, role, CombatMode.DEFENSIVE, 0, false,
-                Optional.empty(), 0);
+                Optional.empty(), 0, 1.0);
     }
 
     public static FarmWork farmWork() {
@@ -37,12 +37,12 @@ public final class SettlementViews {
 
     public static SpiritSnapshot threatenedSpirit(UUID id) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 1, false,
-                Optional.empty(), 0);
+                Optional.empty(), 0, 1.0);
     }
 
     public static SpiritSnapshot busySpirit(UUID id) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.of(new WorkTarget(WorkKind.TREE, new BlockCoord(1, 64, 1))), 0);
+                Optional.of(new WorkTarget(WorkKind.TREE, new BlockCoord(1, 64, 1))), 0, 1.0);
     }
 
     public static SettlementView empty() {
@@ -80,7 +80,7 @@ public final class SettlementViews {
                 Arbitraries.of(SpiritRole.values()), Arbitraries.integers().between(0, 3),
                 Arbitraries.longs().between(0, 10000))
                 .as((id, hp, role, threats, tick) -> new SpiritSnapshot(id, new Point(0, 64, 0), hp, role,
-                        CombatMode.DEFENSIVE, threats, false, Optional.empty(), tick));
+                        CombatMode.DEFENSIVE, threats, false, Optional.empty(), tick, 1.0));
         Arbitrary<List<SpiritSnapshot>> unique = spirit.list().ofMaxSize(6).map(list -> list.stream()
                 .collect(Collectors.toMap(SpiritSnapshot::id, item -> item, (first, second) -> first,
                         LinkedHashMap::new))

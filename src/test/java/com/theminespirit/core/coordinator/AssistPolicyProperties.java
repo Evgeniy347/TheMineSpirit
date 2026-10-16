@@ -57,6 +57,6 @@ class AssistPolicyProperties {
                 .filter(attacked -> !attacked || threats > 0)
                 .map(attacked -> new SpiritSnapshot(UUID.randomUUID(), new Point(threats, 64, threats),
                         threats / 4.0, SpiritRole.DEFENDER, CombatMode.GUARD_AREA, threats, attacked,
-                        Optional.empty(), threats)));
+                        Optional.empty(), threats, 1.0)));
     }
 }

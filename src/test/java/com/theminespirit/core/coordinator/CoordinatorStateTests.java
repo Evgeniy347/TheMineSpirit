@@ -18,7 +18,7 @@ class CoordinatorStateTests {
 
     private static SpiritSnapshot spirit(UUID id, SpiritRole role) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1, role, CombatMode.DEFENSIVE, 0, false, Optional.empty(),
-                10);
+                10, 1.0);
     }
 
     @Test

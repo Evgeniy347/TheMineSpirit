@@ -31,7 +31,7 @@ class StrengthAssessorProperties {
                 Arbitraries.integers().between(1, 20).map(step -> step / 20.0), roles,
                 Arbitraries.integers().between(-6, 6), Arbitraries.integers().between(0, 3))
                 .as((id, hp, role, x, threats) -> new SpiritSnapshot(id, new Point(x, 64, 0), hp, role,
-                        CombatMode.DEFENSIVE, threats, false, Optional.empty(), 0))
+                        CombatMode.DEFENSIVE, threats, false, Optional.empty(), 0, 1.0))
                 .list().ofMinSize(1).ofMaxSize(5).map(list -> list.stream()
                         .collect(Collectors.toMap(SpiritSnapshot::id, item -> item, (first, second) -> first,
                                 LinkedHashMap::new))

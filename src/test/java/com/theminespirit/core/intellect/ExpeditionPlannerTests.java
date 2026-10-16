@@ -24,7 +24,7 @@ class ExpeditionPlannerTests {
 
     private static SpiritSnapshot workerAt(UUID id, double x) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.empty(), 0);
+                Optional.empty(), 0, 1.0);
     }
 
     private static UUID uuid(int last) {
@@ -67,7 +67,7 @@ class ExpeditionPlannerTests {
     @Test
     void plan_DefenderAmongCandidates_Excluded() {
         SpiritSnapshot guard = new SpiritSnapshot(uuid(9), new Point(1, 64, 1), 1, SpiritRole.DEFENDER,
-                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 0);
+                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 0, 1.0);
 
         Expedition expedition =
                 PLANNER.plan(needy(), List.of(workerAt(uuid(1), 0), workerAt(uuid(2), 1), guard), MINE).orElseThrow();

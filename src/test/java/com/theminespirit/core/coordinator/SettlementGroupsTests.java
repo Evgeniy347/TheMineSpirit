@@ -22,7 +22,7 @@ class SettlementGroupsTests {
 
     private static SpiritSnapshot snapshot(UUID id) {
         return new SpiritSnapshot(id, POS, 1.0, SpiritRole.DEFENDER, CombatMode.DEFENSIVE, 0, false,
-                Optional.empty(), 7);
+                Optional.empty(), 7, 1.0);
     }
 
     @Test

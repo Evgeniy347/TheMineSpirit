@@ -91,7 +91,8 @@ public final class StrengthAssessor {
 
     private static SelfFacts selfFacts(SpiritSnapshot spirit) {
         return new SelfFacts(spirit.pos(), spirit.hpFraction() * 20, 20, 0,
-                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.ARMED_DPS : 1, 0.25, 1, 0, 0, false, 0, 0);
+                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.ARMED_DPS : 1, 0.25, spirit.food(), 0, 0,
+                false, 0, 0);
     }
 
     private static double marginOf(SelfFacts self, EnemyFact enemy, EnemyProfiles profiles, ArmorModel armor,

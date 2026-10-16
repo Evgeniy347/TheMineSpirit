@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public record SpiritSnapshot(UUID id, Point pos, double hpFraction, SpiritRole role, CombatMode mode,
-        int threatsNear, boolean attacked, Optional<WorkTarget> workTarget, long lastSeenTick) {
+        int threatsNear, boolean attacked, Optional<WorkTarget> workTarget, long lastSeenTick, double food) {
 
     public SpiritSnapshot {
         requireNonNull(id, "id не может быть null: снимок без id не опознает духа");
@@ -14,6 +14,7 @@ public record SpiritSnapshot(UUID id, Point pos, double hpFraction, SpiritRole r
         requireNonNull(role, "role не может быть null: роль духа входит в решение координатора");
         requireNonNull(mode, "mode не может быть null: режим боя входит в решение координатора");
         hpFraction = clampUnit(hpFraction);
+        food = clampUnit(food);
         if (threatsNear < 0) {
             throw new IllegalArgumentException(
                     "threatsNear = " + threatsNear + ": число угроз рядом не может быть отрицательным");

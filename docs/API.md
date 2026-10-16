@@ -49,7 +49,7 @@
 ## Ресурсы
 
 - **Bot** — дух: `id` (UUID сущности), `name`, `state` (`idle`/`busy`/`dead`), `position` (`[x, y, z]` — блок духа),
-  `dimension`, `current_task` (`task_id` активной REST-задачи или `null`; дух, занятый задачей вне REST, `busy` без `current_task`). Состояние `dead` — дух не жив, `busy` —
+  `dimension`, `current_task` (`task_id` активной REST-задачи или `null`; дух, занятый задачей вне REST, `busy` без `current_task`), `food` (доля шкалы голода, `[0; 1]` — `1.0` сыт, `0.0` голоден). Состояние `dead` — дух не жив, `busy` —
   у него идёт задача, иначе `idle`.
 - **Observation** — текстовая модель мира вокруг духа (не картинка): позиция, инвентарь, перечень блоков
   в радиусе, сущности, контейнеры, `hash`.
@@ -230,7 +230,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 `{id}` — UUID сущности духа. Неизвестный `id` (в том числе не UUID) — 404 `not_found` с `id` в тексте.
 
 ```json
-{"bots":[{"id":"6f1c2d3e-0000-4000-8000-000000000001","name":"spirit","state":"idle","position":[10,64,-3],"dimension":"minecraft:overworld","current_task":null}]}
+{"bots":[{"id":"6f1c2d3e-0000-4000-8000-000000000001","name":"spirit","state":"idle","position":[10,64,-3],"dimension":"minecraft:overworld","current_task":null,"food":1.0}]}
 ```
 
 `GET /v1/bots/{id}` возвращает один такой объект без обёртки `bots`.

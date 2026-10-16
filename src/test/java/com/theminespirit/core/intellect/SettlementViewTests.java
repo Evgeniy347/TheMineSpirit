@@ -22,7 +22,7 @@ class SettlementViewTests {
     private static final UUID SECOND = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     private static SpiritSnapshot worker(UUID id, SpiritRole role, Optional<WorkTarget> target) {
-        return new SpiritSnapshot(id, new Point(0, 64, 0), 1, role, CombatMode.DEFENSIVE, 0, false, target, 5);
+        return new SpiritSnapshot(id, new Point(0, 64, 0), 1, role, CombatMode.DEFENSIVE, 0, false, target, 5, 1.0);
     }
 
     private static SettlementView view(int population, int children, double food, double nutrition, int ore, int iron,

@@ -31,7 +31,7 @@ class ExpeditionPlannerProperties {
                 Arbitraries.of(SpiritRole.values()), Arbitraries.integers().between(-50, 50),
                 Arbitraries.integers().between(-50, 50))
                 .as((id, role, x, z) -> new SpiritSnapshot(id, new Point(x, 64, z), 1, role, CombatMode.DEFENSIVE,
-                        0, false, Optional.empty(), 0))
+                        0, false, Optional.empty(), 0, 1.0))
                 .list().ofMinSize(0).ofMaxSize(8).map(list -> list.stream()
                         .collect(Collectors.toMap(SpiritSnapshot::id, item -> item, (first, second) -> first,
                                 LinkedHashMap::new))

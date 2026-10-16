@@ -56,7 +56,7 @@ public final class SpiritSnapshotReader {
         boolean attacked = !attackers.isEmpty();
         threatsNear = Math.max(threatsNear, attackers.size());
         return new SpiritSnapshot(id, pos, hpFraction, role, mode, threatsNear, attacked,
-                Optional.<WorkTarget>empty(), tick);
+                Optional.<WorkTarget>empty(), tick, spirit.hunger().satietyFraction());
     }
 
     private static SpiritRole roleOf(SpiritEntity spirit) {

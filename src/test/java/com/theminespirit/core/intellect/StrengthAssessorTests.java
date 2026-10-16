@@ -31,7 +31,7 @@ class StrengthAssessorTests {
 
     static SpiritSnapshot defender(UUID id, double hp, int threats) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), hp, SpiritRole.DEFENDER, CombatMode.DEFENSIVE, threats,
-                false, Optional.empty(), 0);
+                false, Optional.empty(), 0, 1.0);
     }
 
     static EnemyFact zombie(UUID id, double x) {
@@ -87,7 +87,7 @@ class StrengthAssessorTests {
     void assess_UnarmedWorkerWithStock_Arms() {
         UUID enemy = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         SpiritSnapshot worker = new SpiritSnapshot(FIRST, new Point(0, 64, 0), 1, SpiritRole.WORKER,
-                CombatMode.DEFENSIVE, 1, false, Optional.empty(), 0);
+                CombatMode.DEFENSIVE, 1, false, Optional.empty(), 0, 1.0);
 
         List<StrengthVerdict> verdicts =
                 StrengthAssessor.assess(List.of(worker), List.of(zombie(enemy, 5)), PROFILES, ARMOR, true);

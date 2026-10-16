@@ -15,7 +15,7 @@ class SpiritSnapshotProperties {
     @Property
     void hpFraction_AnyFiniteValue_ClampedIntoUnitRange(@ForAll @DoubleRange(min = -1000000, max = 1000000) double hp) {
         SpiritSnapshot snapshot = new SpiritSnapshot(UUID.randomUUID(), new Point(0, 64, 0), hp, SpiritRole.IDLE,
-                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1);
+                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1, 1.0);
 
         assertTrue(snapshot.hpFraction() >= 0.0 && snapshot.hpFraction() <= 1.0,
                 "Доля здоровья обязана остаться в [0;1] при любом входе: иначе оценка обороны получит духа "
@@ -27,7 +27,7 @@ class SpiritSnapshotProperties {
             @ForAll SpiritRole role, @ForAll CombatMode mode) {
         assertThrows(IllegalArgumentException.class,
                 () -> new SpiritSnapshot(UUID.randomUUID(), new Point(0, 64, 0), hp, role, mode, 0, true,
-                        Optional.empty(), 1),
+                        Optional.empty(), 1, 1.0),
                 "Атакованный без угроз противоречит снимку при любых остальных полях: координированная помощь "
                         + "уходила бы на ложную тревогу");
     }

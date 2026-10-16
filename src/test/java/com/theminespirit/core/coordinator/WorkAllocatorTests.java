@@ -19,7 +19,7 @@ class WorkAllocatorTests {
 
     private static SpiritSnapshot free(UUID id, double x) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.WORKER, CombatMode.PASSIVE, 0, false,
-                Optional.empty(), 10);
+                Optional.empty(), 10, 1.0);
     }
 
     private static WorkTarget target(int x, int z) {

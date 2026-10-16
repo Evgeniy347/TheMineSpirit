@@ -18,12 +18,12 @@ class AssistPolicyTests {
 
     private static SpiritSnapshot defender(UUID id, double x, int threats, boolean attacked) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.DEFENDER, CombatMode.GUARD_AREA, threats,
-                attacked, Optional.empty(), 10);
+                attacked, Optional.empty(), 10, 1.0);
     }
 
     private static SpiritSnapshot worker(UUID id, double x) {
         return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.empty(), 10);
+                Optional.empty(), 10, 1.0);
     }
 
     private static DefenseAssignment post(UUID defender, double x) {

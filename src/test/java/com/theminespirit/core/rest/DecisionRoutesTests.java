@@ -19,8 +19,8 @@ class DecisionRoutesTests {
     private static final String ID = "11111111-1111-1111-1111-111111111111";
     private static final String OTHER = "22222222-2222-2222-2222-222222222222";
     private static final List<BotInfo> BOTS = List.of(new BotInfo(ID, "spirit", BotState.IDLE, 10, 64, -3,
-            "minecraft:overworld", null), new BotInfo(OTHER, "Дух-2", BotState.BUSY, 0, 70, 5, "minecraft:overworld",
-            null));
+            "minecraft:overworld", null, 1.0), new BotInfo(OTHER, "Дух-2", BotState.BUSY, 0, 70, 5,
+            "minecraft:overworld", null, 1.0));
     private static final ScriptCatalog CATALOG = ScriptCatalog.of(List.of(
             new ScriptSpec("scan", "просканировать", List.of(), List.of(), List.of())));
     private static final DecisionRecord IGNORE_TO_FIGHT = new DecisionRecord(1000, ID, "spirit",

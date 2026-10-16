@@ -209,6 +209,7 @@ public final class BlockBreaker {
         boolean wearsTool = broken.getDestroySpeed(level, brokenPos) != 0.0F;
         finish();
         level.destroyBlock(brokenPos, false, spirit);
+        spirit.hunger().onBlockBroken();
         if (dropsAllowed) {
             Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);
         }

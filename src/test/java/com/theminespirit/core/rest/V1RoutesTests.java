@@ -24,9 +24,9 @@ class V1RoutesTests {
     private static final String BUSY_ID = "22222222-2222-2222-2222-222222222222";
     private static final String DEAD_ID = "33333333-3333-3333-3333-333333333333";
     private static final List<BotInfo> BOTS = List.of(
-            new BotInfo(IDLE_ID, "spirit", BotState.IDLE, 10, 64, -3, "minecraft:overworld", null),
-            new BotInfo(BUSY_ID, "Дух-2", BotState.BUSY, 0, 70, 5, "minecraft:the_nether", null),
-            new BotInfo(DEAD_ID, "spirit", BotState.DEAD, 1, 2, 3, "minecraft:overworld", null));
+            new BotInfo(IDLE_ID, "spirit", BotState.IDLE, 10, 64, -3, "minecraft:overworld", null, 0.5),
+            new BotInfo(BUSY_ID, "Дух-2", BotState.BUSY, 0, 70, 5, "minecraft:the_nether", null, 1.0),
+            new BotInfo(DEAD_ID, "spirit", BotState.DEAD, 1, 2, 3, "minecraft:overworld", null, 0.0));
     private static final ScriptCatalog CATALOG = ScriptCatalog.of(List.of(
             new ScriptSpec("scan", "просканировать", List.of(), List.of(), List.of())));
     private static final WorldObservation OBSERVATION = new WorldObservation(IDLE_ID, 100, new BlockCoord(10, 64, -3),
@@ -88,14 +88,14 @@ class V1RoutesTests {
 
         assertEquals("{\"bots\":["
                         + "{\"id\":\"" + IDLE_ID + "\",\"name\":\"spirit\",\"state\":\"idle\",\"position\":[10,64,-3],"
-                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null},"
+                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"food\":0.5},"
                         + "{\"id\":\"" + BUSY_ID + "\",\"name\":\"Дух-2\",\"state\":\"busy\",\"position\":[0,70,5],"
-                        + "\"dimension\":\"minecraft:the_nether\",\"current_task\":null},"
+                        + "\"dimension\":\"minecraft:the_nether\",\"current_task\":null,\"food\":1.0},"
                         + "{\"id\":\"" + DEAD_ID + "\",\"name\":\"spirit\",\"state\":\"dead\",\"position\":[1,2,3],"
-                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null}]}",
+                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"food\":0.0}]}",
                 response.body(),
-                "Список духов — контракт REST: id, name, state, position [x,y,z], dimension и current_task "
-                        + "(null до чеклиста 15) в этом порядке");
+                "Список духов — контракт REST: id, name, state, position [x,y,z], dimension, current_task "
+                        + "(null до чеклиста 15) и food в этом порядке");
     }
 
     @Test

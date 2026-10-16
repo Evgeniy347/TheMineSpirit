@@ -162,9 +162,9 @@ public final class WorldFactCollector {
         double maxHp = Mth.clamp(spirit.getMaxHealth(), 1, 1024);
         return new SelfFacts(point(spirit.position()), Mth.clamp(spirit.getHealth(), 0, (float) maxHp), maxHp,
                 Mth.clamp(spirit.getArmorValue(), 0, 20), Math.min(1000, gear.meleeDamagePerSecond()),
-                Math.min(2.0, spirit.getAttributeValue(Attributes.MOVEMENT_SPEED)), 1.0, Math.min(2304, gear.blocks()),
-                Math.min(2304, gear.arrows()), gear.hasWaterBucket(), Math.min(64, allies),
-                Math.min(2304, gear.healItems()));
+                Math.min(2.0, spirit.getAttributeValue(Attributes.MOVEMENT_SPEED)), spirit.hunger().satietyFraction(),
+                Math.min(2304, gear.blocks()), Math.min(2304, gear.arrows()), gear.hasWaterBucket(),
+                Math.min(64, allies), Math.min(2304, gear.healItems()));
     }
 
     private static Orders orders(SpiritEntity spirit, TacticsInputs inputs, List<LivingEntity> enemies, int allies) {

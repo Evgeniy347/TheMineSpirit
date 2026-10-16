@@ -27,6 +27,7 @@ import com.theminespirit.core.tactics.adapter.TacticsFormatException;
 import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import com.theminespirit.neoforge.hunger.HungerState;
 import com.theminespirit.neoforge.inventory.ArmorEquipPolicy;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
 import com.theminespirit.neoforge.policy.NightLeashGate;
@@ -62,6 +63,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final ProtectionGate protectionGate = new ProtectionGate(this);
     private final SpiritGear gear = new SpiritGear(this);
     private final ArmorEquipPolicy armorEquip = new ArmorEquipPolicy(this);
+    private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
     private SpiritBrain brain;
     private WorldObservation perception;
@@ -91,6 +93,7 @@ public final class SpiritEntity extends PathfinderMob {
         applyPendingRestore();
         chunkLoader.tick();
         armorEquip.tick();
+        hunger.tick();
         NightLeashGate.arm(this);
         policies.tick();
         if (policies.isOverriding()) {
@@ -138,13 +141,27 @@ public final class SpiritEntity extends PathfinderMob {
         return armorEquip;
     }
 
+    public HungerState hunger() {
+        return hunger;
+    }
+
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
         if (hurt) {
             tactics.onHurt(source);
+            hunger.onHurt();
         }
         return hurt;
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit) {
+            hunger.onAttack();
+        }
+        return hit;
     }
 
     public SpiritPolicies policies() {
@@ -228,6 +245,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritHomeStore.write(compound, home);
         SpiritCampStore.write(compound, camp);
         SpiritChildStore.write(compound, child);
+        SpiritHungerStore.write(compound, hunger.state());
     }
 
     private String taskJsonForSave() {
@@ -264,6 +282,7 @@ public final class SpiritEntity extends PathfinderMob {
         restoreHome(compound);
         restoreCamp(compound);
         restoreTactics(compound);
+        restoreHunger(compound);
         child = SpiritChildStore.read(compound);
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
@@ -288,6 +307,14 @@ public final class SpiritEntity extends PathfinderMob {
             camp = SpiritCampStore.read(compound).orElse(null);
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил лагерь: {}", getUUID(), e.getMessage());
+        }
+    }
+
+    private void restoreHunger(CompoundTag compound) {
+        try {
+            SpiritHungerStore.read(compound).ifPresent(hunger::restore);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Дух {} не восстановил сытость, начнёт сытым: {}", getUUID(), e.getMessage());
         }
     }
 

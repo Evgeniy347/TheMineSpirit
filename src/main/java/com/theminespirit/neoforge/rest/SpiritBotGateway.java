@@ -136,7 +136,8 @@ public final class SpiritBotGateway implements BotGateway {
         String id = spirit.getUUID().toString();
         String currentTask = tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null);
         return new BotInfo(id, spirit.displayName(), state(spirit), position.getX(), position.getY(),
-                position.getZ(), spirit.level().dimension().location().toString(), currentTask);
+                position.getZ(), spirit.level().dimension().location().toString(), currentTask,
+                spirit.hunger().satietyFraction());
     }
 
     private static BotState state(SpiritEntity spirit) {

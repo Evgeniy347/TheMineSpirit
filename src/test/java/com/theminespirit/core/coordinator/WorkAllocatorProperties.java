@@ -87,7 +87,7 @@ class WorkAllocatorProperties {
         List<SpiritSnapshot> free = IntStream.range(0, spiritCount)
                 .mapToObj(index -> new SpiritSnapshot(UUID.nameUUIDFromBytes(new byte[] {(byte) index }),
                         new Point(0, 64, 0), 1, SpiritRole.WORKER, CombatMode.PASSIVE, 0, false,
-                                Optional.empty(), 10))
+                                Optional.empty(), 10, 1.0))
                 .toList();
 
         List<WorkAssignment> assignments = new WorkAllocator().allocate(free, CIRCLE_TARGETS,
@@ -114,6 +114,6 @@ class WorkAllocatorProperties {
                         .flatMap(x -> Arbitraries.integers().between(0, 3)
                                 .map(threats -> new SpiritSnapshot(UUID.randomUUID(), new Point(x, 64, x),
                                         threats / 4.0, role, CombatMode.PASSIVE, threats, false,
-                                        Optional.empty(), threats))));
+                                        Optional.empty(), threats, 1.0))));
     }
 }
