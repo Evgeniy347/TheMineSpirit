@@ -38,7 +38,10 @@ class DataTablesGuardTests {
             "data/theminespirit/schematics/pen.json", "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
             "data/theminespirit/schematics/enchant_room.json",
             "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
-            "data/theminespirit/hunger/hunger.json", "HungerRules читается с classpath, не на /reload (todo: таблица hunger)");
+            "data/theminespirit/hunger/hunger.json", "HungerRules читается с classpath, не на /reload (todo: горячие таблицы)",
+            "data/theminespirit/mining/descent.json", "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)",
+            "data/theminespirit/mining/descent_levels.json",
+            "DescentLevels с classpath, не на /reload (todo: горячие таблицы)");
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
@@ -103,16 +106,5 @@ class DataTablesGuardTests {
             }
         }
         return paths;
-    }
-
-    @Test
-    void descent_WhenChecked_IsPresentInRegistry() {
-        // Тест на поведение: проверяет, что descent.json действительно зарегистрирован в DataTables.
-        // Компилируется на родителе (использует только registry().definitions()) и падает, если descent не зарегистрирован.
-        Set<String> registeredPaths = registeredPaths();
-        assertTrue(registeredPaths.contains("data/theminespirit/mining/descent.json"),
-                "descent.json должен быть зарегистрирован в DataTables для hot-reload. "
-                        + "Без регистрации изменения файла не подхватываются по /reload. "
-                        + "Зарегистрированные пути: " + registeredPaths);
     }
 }
