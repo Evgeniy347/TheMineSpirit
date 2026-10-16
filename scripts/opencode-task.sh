@@ -61,7 +61,7 @@ docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом при�
 коммитов, итог тестов, что не сделано и почему. Контекст модели ограничен и сжимается: задание лежит в TestResults/task.md; \
 веди TestResults/progress.md — после каждого коммита и важного вывода коротко: что сделано (хэши), что дальше, принятые \
 решения и найденные причины; после продолжения сессии сначала перечитай оба файла. Вывод сборок и тестов целиком не \
-печатай: полный лог — в файл, на экран — grep/tail не больше 40 строк. Машина общая с другими исполнителями: процессы \nостанавливай только свои, по PID (запомни PID при запуске или найди по своему worktree в /proc/<pid>/cwd); pkill -f, killall \nи kill по общему шаблону (имя замка, gradle, java, GameTestServer) запрещены — они убивают чужие прогоны и чужих исполнителей."
+печатай: полный лог — в файл, на экран — grep/tail не больше 40 строк. Код смотри через инструменты codegraph (MCP: codegraph_search, \ncodegraph_context, codegraph_callers, codegraph_explore, codegraph_impact): где определено, кто вызывает, что сломается; полученному \nот них коду верь — те же файлы заново не перечитывай и grep-ом не перепроверяй. Машина общая с другими исполнителями: процессы \nостанавливай только свои, по PID (запомни PID при запуске или найди по своему worktree в /proc/<pid>/cwd); pkill -f, killall \nи kill по общему шаблону (имя замка, gradle, java, GameTestServer) запрещены — они убивают чужие прогоны и чужих исполнителей."
 POLL_SECONDS=2
 # opencode запускается через setsid и переживает свой надзор: при остановке надзора (tmux kill-session, Ctrl+C)
 # его надо гасить явно, иначе осиротевший процесс продолжит править дерево рядом с новым исполнителем.
@@ -301,6 +301,13 @@ attempt=0
 run_no=0
 unfinished=0
 message="$prompt"
+# Индекс codegraph для инструментов исполнителя: worktree новый на каждую задачу, индекс строится за ~1 мин.
+CODEGRAPH_BIN="${CODEGRAPH_BIN:-$(command -v codegraph || echo "$HOME/.npm-global/bin/codegraph")}"
+if [ -x "$CODEGRAPH_BIN" ] || command -v "$CODEGRAPH_BIN" >/dev/null 2>&1; then
+    if [ ! -d "$REPO_DIR/.codegraph" ]; then
+        nice -n 19 "$CODEGRAPH_BIN" init -i "$REPO_DIR" >"$log_dir/codegraph-init.log" 2>&1             || echo "opencode: индекс codegraph не построен, лог $log_dir/codegraph-init.log" >&2
+    fi
+fi
 # Задание — в файл: после сжатия контекста модель перечитывает его, а не вспоминает. Продолжение с новым текстом
 # (правки по ревью) дописывается к заданию.
 if [ "$prompt" != "$CONTINUE_PROMPT" ]; then
