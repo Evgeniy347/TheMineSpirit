@@ -156,9 +156,8 @@
       проверить, не бьёт ли его кто-то в сцене (HurtByTargetGoal) или не берёт ли он цель от соседней структуры.
 - [ ] Флеки свежих GameTest целей мобов (15.10, прогоны ring-capture): `spider_…daylight` (паук днём берёт цель — свет в
       сцене arena?) и `zombie_…disabled` (выключатель mobsTargetSpirits в @BeforeBatch — зомби из соседней пачки?).
-- [ ] Ревью 30 (rev30, желательное): AttackScript держит ссылку на живую цель вместо скана каждый тик; DeliverScript
-      берёт `count - delivered`; остаток — через DropCollector; meet/deliver — только PLAYER или SPIRIT (валидация в Params);
-      observesWhileTacticsOwns не создаёт экземпляр скрипта.
+- [x] Ревью 30, желательное: attack держит живую цель, deliver — остаток через DropCollector, meet/deliver — только
+      игрок/дух, флаг наблюдения — из фабрики (longcat, big-pickle, 16.10).
 - [ ] Новый флек `till_hoebreaksafterfirstcell_failsnamingtilledprogress` («пашни 0»). Не воспроизвёлся за 6 прогонов
       (deepseek-web, 15.10); сообщение теста теперь печатает done и тик духа. Итог «вспахано 1» при пашне 0 значит, что
       пашня вернулась в землю после вспашки. Вытаптывание исключено (deepseek-web, 15.10): объём хитбокса духа ниже
