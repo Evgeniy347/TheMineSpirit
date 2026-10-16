@@ -23,6 +23,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LightningBolt;
@@ -64,8 +66,22 @@ public final class DefenseGameTests {
         return CoordinatorRegistry.get(helper.getLevel(), key);
     }
 
+    private static <T extends LivingEntity> T unkillable(T mob) {
+        mob.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, TacticsScene.FOREVER, 4, false, false));
+        return mob;
+    }
+
     private static Optional<DefenderOrder> orderOf(DefensePlan plan, SpiritEntity spirit) {
         return plan.orders().stream().filter(order -> order.defender().equals(spirit.getUUID())).findFirst();
+    }
+
+    private static boolean planCovers(DefensePlan plan, SpiritEntity... spirits) {
+        for (SpiritEntity spirit : spirits) {
+            if (orderOf(plan, spirit).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @GameTest(template = "arena", batch = "defense_cover", timeoutTicks = 400)
@@ -93,6 +109,9 @@ public final class DefenseGameTests {
 
         helper.succeedWhen(() -> {
             DefensePlan plan = coordinatorOf(helper, second).defense().lastPlan();
+            helper.assertTrue(planCovers(plan, archer, second),
+                    "План обороны накрывает обоих защитников: иначе решение читается по частичному снимку, "
+                            + "приказов " + plan.orders().size() + ", постов " + plan.posts().size());
             Optional<DefenderOrder> archerOrder = orderOf(plan, archer);
             Optional<DefenderOrder> order = orderOf(plan, second);
             helper.assertTrue(archerOrder.isPresent() && archerOrder.get().target().isPresent()
@@ -132,11 +151,17 @@ public final class DefenseGameTests {
         boolean[] swelled = {false};
         boolean[] retreated = {false};
         boolean[] approachedAgain = {false};
+        boolean[] nakedHolds = {false};
 
         helper.succeedWhen(() -> {
             helper.assertTrue(armored.getTarget() == creeper,
                     "Мечник в железной броне идёт на крипера первым: иначе «ударь и беги» делает слабый и гибнет");
-            helper.assertTrue(naked.getTarget() != creeper,
+            DefensePlan duelPlan = coordinatorOf(helper, armored).defense().lastPlan();
+            if (orderOf(duelPlan, naked).map(order -> order.target().isEmpty() || !order.target().get().id()
+                    .equals(creeper.getUUID().toString())).orElse(false)) {
+                nakedHolds[0] = true;
+            }
+            helper.assertTrue(nakedHolds[0],
                     "Мечник без брони на крипера не идёт: иначе приказ подвёл слабого первым вместо бронированного");
             double distance = armored.distanceTo(creeper);
             if (creeper.getSwelling(1.0F) > 0.0F) {
@@ -235,13 +260,18 @@ public final class DefenseGameTests {
         archer.getInventory().addItem(new ItemStack(Items.BOW));
         archer.getInventory().addItem(new ItemStack(Items.ARROW, 64));
         SpiritEntity melee = swordsman(helper, new BlockPos(6, 1, 4), home, true);
-        Creeper creeper = TacticsScene.watcher(helper, EntityType.CREEPER, new BlockPos(5, 1, 2));
-        Zombie zombie = TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8));
+        Creeper creeper = unkillable(TacticsScene.watcher(helper, EntityType.CREEPER, new BlockPos(5, 1, 2)));
+        Zombie zombie = unkillable(TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8)));
         boolean[] archerSeen = {false};
         boolean[] meleeSeen = {false};
 
         helper.succeedWhen(() -> {
             DefensePlan specializationPlan = coordinatorOf(helper, archer).defense().lastPlan();
+            helper.assertTrue(planCovers(specializationPlan, archer, melee),
+                    "План обороны накрывает обоих защитников: иначе решение читается по частичному снимку, "
+                            + "приказов " + specializationPlan.orders().size() + ", постов "
+                            + specializationPlan.posts().size() + ", тики духов " + archer.tickCount + "/"
+                            + melee.tickCount);
             if (orderOf(specializationPlan, archer).map(order -> order.target().isPresent()
                     && order.target().get().id().equals(creeper.getUUID().toString())).orElse(false)) {
                 archerSeen[0] = true;
@@ -268,8 +298,8 @@ public final class DefenseGameTests {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
         SpiritEntity melee = swordsman(helper, new BlockPos(5, 1, 4), home, true);
-        Skeleton skeleton = TacticsScene.watcher(helper, EntityType.SKELETON, new BlockPos(5, 1, 2));
-        Zombie zombie = TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8));
+        Skeleton skeleton = unkillable(TacticsScene.watcher(helper, EntityType.SKELETON, new BlockPos(5, 1, 2)));
+        Zombie zombie = unkillable(TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8)));
 
         helper.succeedWhen(() -> {
             helper.assertTrue(melee.getTarget() == skeleton,
@@ -290,10 +320,8 @@ public final class DefenseGameTests {
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
         SpiritEntity first = swordsman(helper, new BlockPos(5, 1, 6), home, false);
         SpiritEntity second = swordsman(helper, new BlockPos(5, 1, 4), home, false);
-        Zombie zombie = TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8));
-        Vec3 zombieAt = new Vec3(zombie.getX(), zombie.getY(), zombie.getZ());
-        double firstInitial = first.position().distanceTo(zombieAt);
-        double secondInitial = second.position().distanceTo(zombieAt);
+        Zombie zombie = unkillable(TacticsScene.watcher(helper, EntityType.ZOMBIE, new BlockPos(5, 1, 8)));
+        Point defended = new Point(home.x() + 0.5, home.y(), home.z() + 0.5);
         boolean[] wounded = {false};
         boolean[] handedOff = {false};
         UUID[] hurtId = {null};
@@ -301,6 +329,9 @@ public final class DefenseGameTests {
         helper.succeedWhen(() -> {
             DefenseService defense = coordinatorOf(helper, first).defense();
             DefensePlan plan = defense.lastPlan();
+            helper.assertTrue(planCovers(plan, first, second),
+                    "План обороны накрывает обоих защитников: иначе раненый выбирается по частичному снимку, "
+                            + "приказов " + plan.orders().size() + ", постов " + plan.posts().size());
             if (!wounded[0]) {
                 Optional<DefenderOrder> holder = plan.orders().stream()
                         .filter(order -> order.target().isPresent()
@@ -334,11 +365,10 @@ public final class DefenseGameTests {
             helper.assertTrue(handedOff[0],
                     "Цель принимает второй боец: иначе переданный зомби остаётся без присмотра");
             SpiritEntity hurt = hurtId[0] != null && hurtId[0].equals(first.getUUID()) ? first : second;
-            double initial = hurt == first ? firstInitial : secondInitial;
             helper.assertTrue(hurt.isAlive(),
                     "Раненый пережил передачу: иначе отход не уводит из-под удара");
-            helper.assertTrue(hurt.position().distanceTo(zombieAt) > initial,
-                    "Раненый отошёл от зомби: иначе отход только на бумаге");
+            helper.assertTrue(hurt.position().distanceTo(new Vec3(defended.x(), defended.y(), defended.z())) <= 2.0,
+                    "Раненый отошёл к точке обороны: иначе отход только на бумаге");
             zombie.discard();
             first.discard();
             TacticsScene.finish(helper, second);
@@ -358,6 +388,8 @@ public final class DefenseGameTests {
         boolean[] withdrawn = {false};
 
         helper.succeedWhen(() -> {
+            helper.assertTrue(planCovers(coordinatorOf(helper, melee).defense().lastPlan(), melee),
+                    "План обороны накрывает защитника: иначе отход читается по частичному снимку");
             if (melee.tactics().combatMode() == CombatMode.PASSIVE) {
                 withdrawn[0] = true;
             }

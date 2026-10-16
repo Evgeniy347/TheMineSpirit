@@ -27,6 +27,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
@@ -172,13 +174,16 @@ public final class CoordinatorGameTests {
             defenders.add(spirit);
         }
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 5));
+        husk.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, TacticsScene.FOREVER, 4, false, false));
 
         boolean[] engaged = {false};
         boolean[] attacked = {false};
         boolean[] victimAttacked = {false};
         boolean[] removed = {false};
+        boolean[] secondFront = {false};
         Set<Point> postsBefore = new HashSet<>();
         SpiritEntity[] victim = {null};
+        Husk[] west = {null};
         helper.succeedWhen(() -> {
             if (!engaged[0] && (husk.isDeadOrDying() || husk.isRemoved() || defenders.stream()
                     .anyMatch(defender -> defender.getTarget() == husk))) {
@@ -190,8 +195,9 @@ public final class CoordinatorGameTests {
                         "Радиус обороны 16: посты секторов лежат на этом круге, шире — не сектора");
                 helper.assertTrue(posts.size() == 4,
                         "У каждого из четырёх защитников свой пост: иначе оборона не распределяется по секторам");
-                helper.assertTrue(new HashSet<>(posts).size() == 4,
-                        "Посты не совпадают: иначе два защитника держат один сектор, а остальные открыты");
+                helper.assertTrue(new HashSet<>(posts).size() == 1,
+                        "Одна угроза — один рубеж: взвешенная оборона (33) ставит всех на угрожаемый сектор, "
+                                + "а не размазывает поровну");
                 helper.assertTrue(posts.stream().allMatch(post -> post.distanceTo(defended)
                                 <= CoordinatorTuning.DEFENSE_RADIUS + 1.0),
                         "Посты в радиусе обороны от дома (+1.0 на округление блока): иначе защитник ушёл за радиус");
@@ -218,14 +224,27 @@ public final class CoordinatorGameTests {
             List<Point> posts = postsOf(rest);
             helper.assertTrue(posts.size() == 3,
                     "После снятия защитника у каждого из трёх оставшихся свой пост: иначе оборона не переживает выбытие");
-            helper.assertTrue(new HashSet<>(posts).size() == 3,
-                    "Посты оставшихся не совпадают: иначе сектора схлопнулись после выбытия");
             helper.assertTrue(posts.stream().allMatch(post -> post.distanceTo(defended)
                             <= CoordinatorTuning.DEFENSE_RADIUS + 1.0),
                     "Оставшиеся держатся в радиусе обороны: иначе перераспределение разбросало посты");
-            helper.assertTrue(posts.stream().anyMatch(post -> !postsBefore.contains(post)),
-                    "Посты перераспределились после выбытия: иначе координатор держит мёртвые сектора");
+            if (!secondFront[0]) {
+                west[0] = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(1, 1, 5));
+                west[0].addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, TacticsScene.FOREVER, 4, false, false));
+                secondFront[0] = true;
+            }
+            helper.assertTrue(secondFront[0] && west[0].isAlive(),
+                    "Второй рубеж открыт на западе: ждём перераспределение за новой угрозой");
+            List<Point> shifted = postsOf(rest);
+            helper.assertTrue(shifted.size() == 3,
+                    "Оборона держит три поста на два направления: иначе второй фронт оголяет первый");
+            helper.assertTrue(shifted.stream().allMatch(post -> post.distanceTo(defended)
+                            <= CoordinatorTuning.DEFENSE_RADIUS + 1.0),
+                    "Посты двух фронтов в радиусе обороны: иначе защитники разбрелись");
+            helper.assertTrue(shifted.stream()
+                            .anyMatch(post -> postsBefore.stream().noneMatch(old -> old.distanceTo(post) < 1.5)),
+                    "Посты перераспределились за новой угрозой: иначе координатор держит мёртвые сектора");
             husk.discard();
+            west[0].discard();
             rest.forEach(SpiritEntity::discard);
             TacticsScene.finish(helper, victim[0]);
         });
@@ -253,8 +272,14 @@ public final class CoordinatorGameTests {
                 List<Point> posts = postsOf(defenders);
                 helper.assertTrue(CoordinatorTuning.DEFENSE_RADIUS == 16.0,
                         "Радиус обороны 16: посты секторов лежат на этом круге, шире — не сектора");
-                helper.assertTrue(posts.size() == 3 && new HashSet<>(posts).size() == 3,
+                helper.assertTrue(posts.size() == 3,
                         "У каждого из трёх защитников свой пост: иначе некому идти на помощь");
+                helper.assertTrue(posts.stream().allMatch(post -> post.distanceTo(defended)
+                                <= CoordinatorTuning.DEFENSE_RADIUS + 1.0),
+                        "Посты в радиусе обороны от дома (+1.0 на округление блока): иначе защитник ушёл за радиус");
+                helper.assertTrue(new HashSet<>(posts).size() == 1,
+                        "Одна угроза — один рубеж: взвешенная оборона (33) ставит всех на угрожаемый сектор, "
+                                + "а не размазывает поровну");
                 victim[0] = defenders.get(0);
                 Point post = posts.get(0);
                 husk.setPos(new Vec3(post.x(), post.y(), post.z()));
