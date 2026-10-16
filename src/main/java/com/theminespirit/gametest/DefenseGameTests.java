@@ -297,7 +297,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_specialization", timeoutTicks = 400)
+    @GameTest(template = "arena", batch = "defense_specialization_noarcher", timeoutTicks = 400)
     public static void specialization_NoArcher_MeleeRushesSkeleton(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
