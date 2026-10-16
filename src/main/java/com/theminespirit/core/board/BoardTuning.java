@@ -30,6 +30,16 @@ public final class BoardTuning {
     /** Верхняя граница приоритета задания: приоритеты лежат в [0, MAX_PRIORITY]. */
     public static final int MAX_PRIORITY = 100;
 
+    /**
+     * Кейсы без срока жизни: ремонт и воронка живут до выполнения — просроченный ремонт
+     * забора значил бы открытые ворота навсегда.
+     */
+    public static boolean hasNoTtl(BoardCase boardCase) {
+        return boardCase == BoardCase.REPAIR_FENCE
+                || boardCase == BoardCase.REPAIR_BUILDING
+                || boardCase == BoardCase.FILL_CRATER;
+    }
+
     private BoardTuning() {
     }
 }
