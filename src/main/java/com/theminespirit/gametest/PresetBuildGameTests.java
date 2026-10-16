@@ -104,7 +104,8 @@ public final class PresetBuildGameTests {
         BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("stone_house");
         SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
-                new ItemStack(Items.COBBLESTONE, 78),
+                new ItemStack(Items.COBBLESTONE, 64),
+                new ItemStack(Items.COBBLESTONE, 14),
                 new ItemStack(Items.GLASS_PANE, 2));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "stone_house", anchor), SETTLE_TICKS);
 
