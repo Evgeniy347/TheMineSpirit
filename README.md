@@ -11,12 +11,15 @@
 
 | Команда | Что делает | Результат |
 |---|---|---|
+| `scripts/test.sh unit` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `OK unit: N тестов, T с` |
+| `scripts/test.sh unit --tests "*Guard*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
+| `scripts/test.sh gametest` | GameTest под замком (один сервер на машину): все тесты | `OK gametest: N тестов, T с` |
+| `scripts/test.sh gametest <фильтр>` | GameTest только по имени пачки/класса/теста | `OK gametest: N тестов, T с` |
 | `./gradlew build` | компиляция (`-Werror`), быстрые JUnit-тесты, сборка jar | `build/libs/theminespirit-<версия>.jar`, отчёты в `TestResults/unit/` |
-| `./gradlew test` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `BUILD SUCCESSFUL`, отчёты в `TestResults/unit/` |
 | `./gradlew slowTest` | только `@Tag("slow")`; отчёты в `TestResults/slow/` |
 | `./gradlew check` | быстрый тир (`test`); `slowTest` запускается отдельно | зелёный прогон быстрых тестов |
 | `./gradlew jacocoTestReport` | отчёт покрытия JaCoCo | `TestResults/coverage/` |
-| `scripts/gametest.sh` | GameTest под замком (один сервер на машину): `flock`, а без него — `mkdir`-замок для Git Bash на Windows; поднимает сервер, гоняет все GameTest мода, выходит | в логе `All N required tests passed` |
+| `scripts/gametest.sh` | тонкая обёртка над `scripts/test.sh gametest` (совместимость) | то же, что `scripts/test.sh gametest` |
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
@@ -145,7 +148,8 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | Скрипт | Назначение | Проверка |
 |---|---|---|
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
-| [scripts/gametest.sh](scripts/gametest.sh) | GameTest под замком: один GameTest-сервер на машину. На Linux `flock`, в Git Bash на Windows — запасной замок на `mkdir` (`THEMINESPIRIT_GAMETEST_NOFLOCK=1` включает принудительно, `THEMINESPIRIT_GAMETEST_WAIT` — ожидание, `THEMINESPIRIT_GRADLEW` — команда запуска), ждёт до 30 мин (код 75), лишние JVM игры не плодятся | `All N required tests passed`; код 75 — идёт чужой GameTest |
+| [scripts/test.sh](scripts/test.sh) | единый запуск тестов: `unit [--tests <фильтр>]` и `gametest [имя пачки или теста…]`. Полный лог — в `TestResults/logs/`, на экран — итог. Пределы времени (переменные `THEMINESPIRIT_*_WARN_SECONDS` / `THEMINESPIRIT_*_STOP_SECONDS`): unit — предупреждение 3 мин, стоп 6 мин; gametest — предупреждение 5 мин, стоп 10 мин (жёсткий стоп, код 124). GameTest — под замком «один сервер на машину» | `OK unit: N тестов, T с` / `OK gametest: N тестов, T с`; `FAIL …` + первая ошибка + короткий стек + путь к логу; код 75 — идёт чужой GameTest; код 124 — стоп по пределу |
+| [scripts/gametest.sh](scripts/gametest.sh) | тонкая обёртка над `scripts/test.sh gametest` (совместимость) | то же, что `scripts/test.sh gametest` |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | Сторож памяти на domovoy при параллельных исполнителях: свободно < 15 % — SIGSTOP самой тяжёлой java сборки, > 25 % — SIGCONT | строка в журнале TestResults/mem-guard.log на каждое действие |
 | [scripts/lead/oc-watch.sh](scripts/lead/oc-watch.sh) | слежение главного агента за исполнителями (ПК и domovoy): завершения, зависания, ресурсы, сироты — только события; запуск через Monitor (docs/LEAD-AGENT.md → «Присмотр — инструменты») | строка на каждое событие |
 | [scripts/lead/res-pc.ps1](scripts/lead/res-pc.ps1) | ресурсы ПК и уборка сирот исполнителей (только процессы проекта и `find /`) | строки только при проблеме |

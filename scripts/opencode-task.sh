@@ -49,11 +49,15 @@ UNFINISHED_LIMIT="${OPENCODE_UNFINISHED_LIMIT:-3}"
 # Ответ короче этого при грязном дереве — не итоговый отчёт (отчёт перечисляет коммиты, тесты, несделанное).
 DIRTY_SHORT_ANSWER="${OPENCODE_DIRTY_SHORT_ANSWER:-600}"
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
-и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам, красный JUnit или GameTest не коммитишь; по ходу работы гоняешь только затронутое — ./gradlew test --tests <свои классы> и GameTest только после правки GameTest/адаптера, не больше одного прогона на пункт; полный ./gradlew test перед коммитом запускает хук — сам его не повторяй; полный GameTest — только в финале (3 прогона), машина общая с другими исполнителями; коммитишь сам, частями, по \
+и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь ТОЛЬКО через scripts/test.sh \
+(unit/gametest): не перезапускай ради лога — полный лог уже в TestResults/logs/; красный JUnit или GameTest не коммитишь; \
+по ходу работы гоняешь только затронутое — scripts/test.sh unit --tests <свои классы> и GameTest только после правки \
+GameTest/адаптера, не больше одного прогона на пункт; полный scripts/test.sh unit перед коммитом запускает хук — сам его \
+не повторяй; полный GameTest — только в финале (3 прогона), машина общая с другими исполнителями; коммитишь сам, частями, по \
 docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом прикладываешь вывод scripts/prove-red.sh <коммит>; каждый новый тест \
 доказываешь подлогом по существу (ломаешь поведение так, что код компилируется, и видишь красный тест) — «на родителе \
 не компилируется» не доказательство; в проверке предела ожидание — число в самом тесте, а факт — из production (assertEquals(24, Limits.X)), \
-сравнение литерала с литералом — не проверка; GameTest-сервер запускаешь только через bash scripts/gametest.sh (замок «один сервер на машину», память общая); в конце работы переносишь ветку на main (git rebase main) и только потом гоняешь финальные тесты — docs/GIT.md → «Финал ветки»; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
+сравнение литерала с литералом — не проверка; GameTest-сервер запускаешь только через scripts/test.sh gametest (замок «один сервер на машину», память общая); в конце работы переносишь ветку на main (git rebase main) и только потом гоняешь финальные тесты — docs/GIT.md → «Финал ветки»; публикацию мода и перезапуск сервера не делаешь. Закончи работу целиком, в конце — отчёт: хэши \
 коммитов, итог тестов, что не сделано и почему. Контекст модели ограничен и сжимается: задание лежит в TestResults/task.md; \
 веди TestResults/progress.md — после каждого коммита и важного вывода коротко: что сделано (хэши), что дальше, принятые \
 решения и найденные причины; после продолжения сессии сначала перечитай оба файла. Вывод сборок и тестов целиком не \
@@ -157,6 +161,18 @@ stop_attempt() {
     wait "$1" 2>/dev/null
 }
 
+check_bypass() {
+    local out="$1" bypass_logged_var="$2"
+    local logged="${!bypass_logged_var}"
+    [ "$logged" = 1 ] && return 0
+    if grep -qE '"name":"(bash|Bash)"' "$out" 2>/dev/null \
+        && grep -oE '"command":"[^"]*gradlew[^"]*(test|runGameTestServer)[^"]*"' "$out" 2>/dev/null \
+        | grep -qv "scripts/test.sh"; then
+        record_failure "обход scripts/test.sh" "исполнитель вызвал напрямую gradlew test/runGameTestServer вместо scripts/test.sh"
+        eval "$bypass_logged_var=1"
+    fi
+}
+
 run_attempt() {
     local out="$1.jsonl" err="$1.err" message="$2"
     local args=(run -m "$MODEL" --format json --auto --print-logs --log-level INFO --dir "$REPO_DIR")
@@ -168,9 +184,11 @@ run_attempt() {
     "${detach[@]}" "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES" >"$out" 2>"$err" </dev/null &
     local pid=$!
     current_pid=$pid
+    local bypass_logged=0
     while kill -0 "$pid" 2>/dev/null; do
         sleep "$POLL_SECONDS"
         [ -z "$session" ] && session="$(capture_session_id "$out")"
+        check_bypass "$out" bypass_logged
         if failure_text="$(provider_failure_text "$out" "$err")"; then
             stop_attempt "$pid"
             return "$ATTEMPT_PROVIDER"
@@ -188,6 +206,7 @@ run_attempt() {
     wait "$pid"
     local code=$?
     [ -z "$session" ] && session="$(capture_session_id "$out")"
+    check_bypass "$out" bypass_logged
     if failure_text="$(provider_failure_text "$out" "$err")"; then
         return "$ATTEMPT_PROVIDER"
     fi

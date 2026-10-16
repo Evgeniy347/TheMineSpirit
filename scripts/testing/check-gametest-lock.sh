@@ -52,7 +52,7 @@ mkdir -p "$work/tmp/lock.d"
 echo 999999 >"$work/tmp/lock.d/pid"
 THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$work/stale.log" FAKE_SLEEP=1 bash scripts/gametest.sh >"$work/stale.out" 2>&1
 code=$?
-[ "$code" = 0 ] && ok "stale: код=0" || fail "stale: код=$code (ожидал 0)"
+[ "$code" = 1 ] && ok "stale: код=1 (FAIL)" || fail "stale: код=$code (ожидал 1)"
 [ ! -d "$work/tmp/lock.d" ] && ok "stale: каталог замка удалён после выхода" || fail "stale: каталог замка остался"
 grep -q 'протухший' "$work/stale.out" && ok "stale: сообщение о протухшем замке напечатано" || fail "stale: нет сообщения о протухшем замке"
 
@@ -65,10 +65,10 @@ code=$?
 [ "$code" = 75 ] && ok "busy: код=75" || fail "busy: код=$code (ожидал 75)"
 rm -rf "$work/tmp/lock.d"
 
-# 4. Код выхода фейкового gradlew возвращается как есть.
+# 4. Падение gradlew: test.sh анализирует лог и возвращает 1 (FAIL gametest).
 THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$work/exitcode.log" FAKE_SLEEP=1 FAKE_EXIT=3 bash scripts/gametest.sh >"$work/exitcode.out" 2>&1
 code=$?
-[ "$code" = 3 ] && ok "exitcode: код=3" || fail "exitcode: код=$code (ожидал 3)"
+[ "$code" = 1 ] && ok "exitcode: код=1 (FAIL)" || fail "exitcode: код=$code (ожидал 1)"
 [ ! -d "$work/tmp/lock.d" ] && ok "exitcode: каталог замка удалён после падения gradlew" || fail "exitcode: каталог замка остался"
 
 # 5. Ctrl+C (INT) снимает замок.
@@ -98,10 +98,10 @@ starts=$(grep -c '^start ' "$log")
 ends=$(grep -c '^end ' "$log")
 first_end=$(grep '^end ' "$log" | head -n1 | awk '{print $2}')
 last_start=$(grep '^start ' "$log" | tail -n1 | awk '{print $2}')
-if [ "$c1" = 0 ] && [ "$c2" = 0 ]; then
-    ok "stale-race: оба ожидающих отработали (коды 0 и 0)"
+if [ "$c1" = 1 ] && [ "$c2" = 1 ]; then
+    ok "stale-race: оба ожидающих отработали (коды 1 и 1)"
 else
-    fail "stale-race: коды $c1 и $c2 (ожидал 0 и 0)"
+    fail "stale-race: коды $c1 и $c2 (ожидал 1 и 1)"
 fi
 [ "$msgs" = 1 ] && ok "stale-race: протухший замок снял ровно один ожидающий" || fail "stale-race: сообщений о снятии $msgs (ожидал 1)"
 if [ "$starts" = 2 ] && [ "$ends" = 2 ] && [ "$last_start" -ge "$first_end" ]; then

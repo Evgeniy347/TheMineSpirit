@@ -4,8 +4,11 @@
 
 | Уровень | Где | Что проверяет | Запуск | Время |
 |---|---|---|---|---|
-| JUnit 5 | `src/test/java` | чистая логика пакета `core`, сторожа правил проекта | `./gradlew test` | секунды |
-| GameTest | `src/main/java/.../gametest` | поведение в настоящем мире: блоки, сущности, события | `scripts/gametest.sh` | ~30 с (первый запуск — минуты) |
+| JUnit 5 | `src/test/java` | чистая логика пакета `core`, сторожа правил проекта | `scripts/test.sh unit` | секунды |
+| GameTest | `src/main/java/.../gametest` | поведение в настоящем мире: блоки, сущности, события | `scripts/test.sh gametest` | ~30 с (первый запуск — минуты) |
+
+- Тесты запускаются ТОЛЬКО через `scripts/test.sh` (`unit` / `gametest`): полный лог — в `TestResults/logs/`, на экран — итог.
+  Прямой вызов `./gradlew test` / `./gradlew runGameTestServer` запрещён — надзор пишет обход в `failures.log`.
 
 - Всё, что не требует мира, тестируется в JUnit: classpath тестов не содержит Minecraft/NeoForge,
   поэтому такой код живёт в `core` (см. CONVENTIONS.md → «Быстрый путь»).

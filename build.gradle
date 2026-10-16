@@ -71,6 +71,9 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // Фильтр GameTest по имени пачки/класса/теста (scripts/test.sh gametest <фильтр>):
+            // пусто или не задано — идут все тесты.
+            systemProperty 'theminespirit.gametest.filter', System.getProperty('theminespirit.gametest.filter', '')
             // C1, SerialGC и потолок памяти: замер (docs/research/test-performance.md) дал wall 72–124 → 37–48 с,
             // CPU −60 %. -Xmx1536m — запас над замеренным RSS 0,65 ГБ, чтобы OOM не выглядел падением сервера;
             // ExitOnOutOfMemoryError превращает OOM в понятный выход, а не в зависание.
