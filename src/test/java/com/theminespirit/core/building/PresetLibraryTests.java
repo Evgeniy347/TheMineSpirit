@@ -11,6 +11,7 @@ import com.theminespirit.core.reload.TableStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class PresetLibraryTests {
@@ -40,14 +41,14 @@ class PresetLibraryTests {
     }
 
     @Test
-    void parse_RealIndex_LoadsAllEightPresets() {
+    void parse_RealIndex_LoadsAllTenPresets() {
         PresetLibrary library = loadReal();
 
-        assertEquals(8, library.size(),
-                "Библиотека этапа 0–1 обязана прочитать все восемь пресетов: без них стратегу не из чего "
-                        + "составлять планировку поселения");
+        assertEquals(10, library.size(),
+                "Библиотека обязана прочитать все десять пресетов, включая два уровня чаровальни: без них "
+                        + "стратегу не из чего составлять планировку поселения");
         assertEquals(List.of("palisade_section", "torch_post", "storage_hut", "family_house", "stone_house",
-                "well", "pen_7x7", "mine_entrance_v1"), library.ids(),
+                "well", "pen_7x7", "mine_entrance_v1", "enchant_room_v1", "enchant_room_v2"), library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
 
@@ -175,8 +176,8 @@ class PresetLibraryTests {
 
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
-        assertEquals(8, paths.size(),
-                "Индекс обязан назвать по телу на каждый из восьми пресетов: пропуск тела оставил бы пресет без схемы");
+        assertEquals(10, paths.size(),
+                "Индекс обязан назвать по телу на каждый из десяти пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(PresetLibrary.SCHEMATICS_ROOT + "storage_hut.json", paths.get(2),
                 "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой");
     }
@@ -187,5 +188,87 @@ class PresetLibraryTests {
 
         assertEquals(new BlockCoord(1, 1, 1), well.entry(),
                 "У колодца вход — клетка над водой: спуск к воде, а не в сплошной блок");
+    }
+
+    @Test
+    void byType_Craft_ReturnsEnchantRoomLevels() {
+        PresetLibrary library = loadReal();
+
+        assertEquals(List.of("enchant_room_v1", "enchant_room_v2"),
+                library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
+                "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
+    }
+
+    @Test
+    void requires_EnchantRoomV2_PointsAtLevelOne() {
+        PresetLibrary library = loadReal();
+
+        Preset level1 = library.byId("enchant_room_v1").orElseThrow();
+        Preset level2 = library.byId("enchant_room_v2").orElseThrow();
+
+        assertEquals(1, level1.level(),
+                "Первый уровень чаровальни несёт номер 1: номер называет ступень внутри постройки");
+        assertTrue(level1.requires().isEmpty(),
+                "Первый уровень ничего не требует: предыдущего уровня у него нет");
+        assertEquals(2, level2.level(),
+                "Второй уровень обязан нести номер 2: номер отличает ступень внутри одной постройки");
+        assertEquals(Optional.of("enchant_room_v1"), level2.requires(),
+                "Второй уровень обязан требовать первый: условие доступности «предыдущий уровень построен»");
+    }
+
+    @Test
+    void byIdAndLevel_EnchantRoom_LevelsAreMonotone() {
+        PresetLibrary library = loadReal();
+
+        for (Preset preset : library.byType(BuildingType.CRAFT)) {
+            if (preset.requires().isPresent()) {
+                Preset previous = library.byId(preset.requires().get()).orElseThrow();
+                assertTrue(previous.level() > Preset.LEVEL_NONE && previous.level() < preset.level(),
+                        "У пресета '" + preset.id() + "' предыдущий уровень '" + previous.id()
+                                + "' обязан иметь меньший номер: иначе цепочка уровней не растёт");
+            }
+        }
+    }
+
+    @Test
+    void parse_RequiresUnknownPreset_IsRejected() {
+        LoadedContent index = indexWith("{\"id\":\"room\",\"file\":\"room\",\"name\":\"Зал\",\"stage\":2,"
+                + "\"type\":\"craft\",\"size\":[2,1,1],\"entry\":[0,0,0],\"level\":2,\"requires\":\"ghost\"}");
+        LoadedContent body = bodyContent(body("2,1,1", "{\"pos\":[1,0,0],\"block\":\"minecraft:cobblestone\"}"));
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> PresetLibrary.parse(List.of(index, body)),
+                "Требование неизвестного пресета обязано отвергаться: правило «предыдущий уровень построен» "
+                        + "ссылается на постройку, которой нет");
+
+        assertTrue(error.getMessage().contains("ghost"),
+                "Ошибка обязана называть неизвестный id требования: без него непонятно, что чинить; фактически: "
+                        + error.getMessage());
+    }
+
+    @Test
+    void planned_RealIndex_DescribesFinalLevelWithoutScheme() {
+        PresetLibrary library = loadReal();
+
+        assertEquals(1, library.planned().size(),
+                "Индекс обязан описать финальный уровень чаровальни метаданными, хотя схемы у него ещё нет");
+        PlannedLevel finalLevel = library.planned().get(0);
+        assertEquals(3, finalLevel.level(),
+                "Финальный описанный уровень несёт номер 3 — следующий после второго построенного");
+        assertEquals(Optional.of("enchant_room_v2"), finalLevel.requires(),
+                "Финальный уровень требует второй: его ставят, только когда предыдущий построен");
+        assertTrue(finalLevel.name().contains("40×30"),
+                "Описание финального уровня обязано называть большое здание ~40×30: иначе потеряно, что там "
+                        + "несколько чаровален");
+    }
+
+    @Test
+    void parse_PlannedUnknownRequires_IsRejected() {
+        LoadedContent index = new LoadedContent("{\"version\":1,\"presets\":[],\"planned\":[{\"level\":3,"
+                + "\"name\":\"Финал\",\"requires\":\"ghost\"}]}", "тестовый индекс", TableStatus.Source.BUILTIN);
+
+        assertThrows(IllegalStateException.class, () -> PresetLibrary.parse(List.of(index)),
+                "Запланированный уровень с неизвестным требованием обязан отвергаться: иначе финал числится "
+                        + "доступным без предыдущей постройки");
     }
 }

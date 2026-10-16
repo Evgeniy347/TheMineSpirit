@@ -27,14 +27,17 @@ public final class PresetLibrary {
     public static final String INDEX_ID = "presets";
     public static final String SCHEMATICS_ROOT = "data/theminespirit/schematics/";
     private static final int INDEX_VERSION = 1;
-    private static final Set<String> ROOT_FIELDS = Set.of("version", "presets");
-    private static final Set<String> PRESET_FIELDS = Set.of("id", "file", "name", "stage", "type", "size", "entry");
+    private static final Set<String> ROOT_FIELDS = Set.of("version", "presets", "planned");
+    private static final Set<String> PRESET_FIELDS = Set.of("id", "file", "name", "stage", "type", "size", "entry",
+            "level", "requires");
+    private static final Set<String> PLANNED_FIELDS = Set.of("level", "name", "requires");
     private static final Set<String> ENTRANCE_SUFFIXES = Set.of("_door", "_fence_gate", "_trapdoor", "_gate");
 
     private final List<Preset> presets;
+    private final List<PlannedLevel> planned;
     private final Map<String, Preset> byId;
 
-    private PresetLibrary(List<Preset> presets) {
+    private PresetLibrary(List<Preset> presets, List<PlannedLevel> planned) {
         this.presets = List.copyOf(presets);
         Map<String, Preset> index = new LinkedHashMap<>();
         for (Preset preset : presets) {
@@ -44,14 +47,35 @@ public final class PresetLibrary {
             }
         }
         this.byId = Collections.unmodifiableMap(index);
+        this.planned = List.copyOf(planned);
+        for (Preset preset : this.presets) {
+            checkRequires("Пресета '" + preset.id() + "'", preset.requires());
+        }
+        for (PlannedLevel level : this.planned) {
+            checkRequires("Запланированного уровня '" + level.name() + "'", level.requires());
+        }
+    }
+
+    private void checkRequires(String what, Optional<String> requires) {
+        if (requires.isEmpty() || byId.containsKey(requires.get())) {
+            return;
+        }
+        throw new IllegalStateException("У " + what + " требование '" + requires.get()
+                + "' ссылается на неизвестный пресет: условие доступности «предыдущий уровень построен» "
+                + "не находит предыдущую постройку");
     }
 
     public static PresetLibrary empty() {
-        return new PresetLibrary(List.of());
+        return new PresetLibrary(List.of(), List.of());
     }
 
     public List<Preset> all() {
         return presets;
+    }
+
+    /** Запланированные уровни (пока без схемы): их описывает индекс, но построить по ним нечего. */
+    public List<PlannedLevel> planned() {
+        return planned;
     }
 
     public Optional<Preset> byId(String id) {
@@ -133,7 +157,27 @@ public final class PresetLibrary {
         for (int i = 0; i < entries.size(); i++) {
             presets.add(parsePreset(entries.get(i), contents.get(i + 1), index.origin()));
         }
-        return new PresetLibrary(presets);
+        return new PresetLibrary(presets, parsePlanned(root, index.origin()));
+    }
+
+    private static List<PlannedLevel> parsePlanned(JsonNode root, String origin) {
+        JsonNode node = root.get("planned");
+        if (node == null) {
+            return List.of();
+        }
+        List<PlannedLevel> planned = new ArrayList<>();
+        for (JsonNode item : JsonResource.array(node, origin, "списка planned")) {
+            if (!item.isObject()) {
+                throw new IllegalStateException("Файл '" + origin
+                        + "': запланированный уровень обязан быть объектом с метаданными");
+            }
+            JsonResource.checkFields(item, PLANNED_FIELDS, origin, "запланированного уровня");
+            int level = JsonResource.integer(item.get("level"), origin, "поля level запланированного уровня");
+            String name = JsonResource.text(item.get("name"), origin, "поля name запланированного уровня");
+            planned.add(new PlannedLevel(level, name,
+                    optionalText(item.get("requires"), origin, "поля requires запланированного уровня")));
+        }
+        return List.copyOf(planned);
     }
 
     private static Preset parsePreset(JsonNode node, LoadedContent body, String indexOrigin) {
@@ -149,6 +193,9 @@ public final class PresetLibrary {
                         "поля type пресета '" + id + "'"))
                 .orElseThrow(() -> new IllegalStateException("Файл '" + indexOrigin + "': у пресета '" + id
                         + "' неизвестный тип строения: он должен быть из списка типов поселения"));
+        int level = optionalInt(node.get("level"), indexOrigin, "поля level пресета '" + id + "'");
+        Optional<String> requires = optionalText(node.get("requires"), indexOrigin,
+                "поля requires пресета '" + id + "'");
         Schematic schematic = SchematicParser.parse(body.json(), body.origin());
         int[] declaredSize = triple(node.get("size"), indexOrigin, "поля size пресета '" + id + "'");
         if (declaredSize[0] != schematic.sizeX() || declaredSize[1] != schematic.sizeY()
@@ -162,7 +209,21 @@ public final class PresetLibrary {
         BlockCoord entryPoint = new BlockCoord(entry[0], entry[1], entry[2]);
         checkEntry(id, entryPoint, schematic, indexOrigin);
         Map<String, Integer> materials = countMaterials(schematic);
-        return new Preset(id, name, stage, type, schematic, entryPoint, materials);
+        return new Preset(id, name, stage, type, level, requires, schematic, entryPoint, materials);
+    }
+
+    private static int optionalInt(JsonNode node, String origin, String what) {
+        if (node == null || node.isNull()) {
+            return Preset.LEVEL_NONE;
+        }
+        return JsonResource.integer(node, origin, what);
+    }
+
+    private static Optional<String> optionalText(JsonNode node, String origin, String what) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        return Optional.of(JsonResource.text(node, origin, what));
     }
 
     private static void checkEntry(String id, BlockCoord entry, Schematic schematic, String origin) {
