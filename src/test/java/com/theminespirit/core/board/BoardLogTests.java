@@ -8,6 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableStatus;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -24,6 +29,20 @@ class BoardLogTests {
         return new BoardLogEntry(BoardLog.Event.DONE, 1000, "mine_1", BoardCase.BUILD_MINE, 1,
                 "always", 50, 50, List.of("pen_caught_animal"), "11111111-1111-1111-1111-111111111111",
                 "hash-1", 24_000);
+    }
+
+    @Test
+    void write_HashFromTableStatus_RoundTrips() {
+        TableHolder<String> holder = new TableHolder<>("board", "v1", TableStatus.Source.MOD, "mod",
+                "hash-from-table", Clock.fixed(Instant.parse("2026-10-16T12:00:00Z"), ZoneOffset.UTC));
+        BoardLogEntry entry = new BoardLogEntry(BoardLog.Event.DONE, 1, "t", BoardCase.FILL_CRATER, 1,
+                "always", 0, 0, List.of(), null, ConfigStamp.of(holder), 1);
+
+        BoardLogEntry parsed = BoardLog.parse(BoardLog.write(entry));
+
+        assertEquals("hash-from-table", parsed.configHash(),
+                "configHash берётся из того же источника, что и записи журнала решений: версия "
+                        + "конфигурации одна на запись, а не две разные");
     }
 
     @Test

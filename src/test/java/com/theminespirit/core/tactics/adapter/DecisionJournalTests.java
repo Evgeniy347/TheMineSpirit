@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableStatus;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Situation;
@@ -13,11 +16,15 @@ import com.theminespirit.core.tactics.TacticalOutcome;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TacticsEngine;
 import com.theminespirit.core.tactics.TacticsMemory;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class DecisionJournalTests {
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-16T12:00:00Z"), ZoneOffset.UTC);
     private static final String SPIRIT_ID = "6f1c2d3e-0000-4000-8000-000000000001";
     private static final String HUSK = "minecraft:husk";
     private static final DecisionOrder ORDER =
@@ -167,6 +174,50 @@ class DecisionJournalTests {
         assertEquals(TacticalOption.FIGHT.name(), journal.last(5).get(1).before(),
                 "Самая старая из уцелевших записей — FIGHT→IGNORE: первая (IGNORE→FIGHT) вытеснена буфером");
         assertEquals(TacticalOption.IGNORE.name(), journal.last(5).get(1).after(), "Отход от боя к покою записан");
+    }
+
+    @Test
+    void offer_WithHash_RecordCarriesHash() {
+        DecisionJournal journal = journal();
+        Run run = new Run(AdapterFixtures.collect(List.of()));
+        assertTrue(journal.offer(observe(run, List.of(), 0)).isEmpty(), "Первая оценка задаёт основу");
+
+        Optional<DecisionRecord> record = journal.offer(observe(run, husks(1, 5), 100, 6), "hash-1");
+
+        assertEquals("hash-1", record.orElseThrow().configHash(),
+                "Запись журнала решений несёт хэш конфигурации, по которой принято решение: без него "
+                        + "нельзя отличить решения до и после /reload");
+    }
+
+    @Test
+    void offer_AfterTableReplace_NewRecordsCarryNewHashOldStay() {
+        TableHolder<String> holder = new TableHolder<>("board", "v1", TableStatus.Source.MOD, "mod",
+                "hash-old", CLOCK);
+        DecisionJournal journal = journal();
+        Run run = new Run(AdapterFixtures.collect(List.of()));
+        assertTrue(journal.offer(observe(run, List.of(), 0)).isEmpty(), "Первая оценка задаёт основу");
+        Optional<DecisionRecord> first = journal.offer(observe(run, husks(1, 5), 100, 6), ConfigStamp.of(holder));
+        assertEquals("hash-old", first.orElseThrow().configHash(),
+                "Запись до замены несёт старый хэш");
+
+        holder.replace("v2", TableStatus.Source.DATAPACK, "world/datapacks/p/data/board.json", "hash-new", CLOCK);
+        Optional<DecisionRecord> second = journal.offer(observe(run, List.of(), 200), ConfigStamp.of(holder));
+
+        assertEquals("hash-new", second.orElseThrow().configHash(),
+                "После замены таблицы новые записи несут новый хэш: /reload сменил конфигурацию");
+        assertEquals("hash-old", journal.last(5).get(1).configHash(),
+                "Старая запись не переписывается: переписывание исказило бы журнал прошлого");
+    }
+
+    @Test
+    void offer_NullHash_Rejected() {
+        DecisionJournal journal = journal();
+        Run run = new Run(AdapterFixtures.collect(List.of()));
+        assertTrue(journal.offer(observe(run, List.of(), 0)).isEmpty(), "Первая оценка задаёт основу");
+
+        assertThrows(NullPointerException.class,
+                () -> journal.offer(observe(run, husks(1, 5), 100, 6), null),
+                "Хэш null обязан отвергаться: запись без версии конфигурации несравнима со временем");
     }
 
     @Test

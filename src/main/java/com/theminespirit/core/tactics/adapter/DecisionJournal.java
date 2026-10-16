@@ -1,5 +1,6 @@
 package com.theminespirit.core.tactics.adapter;
 
+import com.theminespirit.core.board.ConfigStamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -34,7 +35,13 @@ public final class DecisionJournal {
     }
 
     public Optional<DecisionRecord> offer(DecisionObservation observation) {
+        return offer(observation, ConfigStamp.current());
+    }
+
+    public Optional<DecisionRecord> offer(DecisionObservation observation, String configHash) {
         Objects.requireNonNull(observation, "observation не может быть null: журнал пишет только наблюдаемую оценку");
+        Objects.requireNonNull(configHash, "configHash не может быть null: запись обязана нести "
+                + "версию конфигурации, по которой принято решение");
         DecisionSnapshot next = observation.snapshot();
         Optional<DecisionSnapshot> previous = baseline;
         if (previous.isEmpty()) {
@@ -48,7 +55,7 @@ public final class DecisionJournal {
         if (observation.tick() - lastRecordTick < minGapTicks) {
             return Optional.empty();
         }
-        DecisionRecord record = record(observation, changed.get(), previous.get(), next);
+        DecisionRecord record = record(observation, changed.get(), previous.get(), next, configHash);
         records.addLast(record);
         while (records.size() > capacity) {
             records.removeFirst();
@@ -82,10 +89,10 @@ public final class DecisionJournal {
     }
 
     private static DecisionRecord record(DecisionObservation observation, String changed, DecisionSnapshot before,
-            DecisionSnapshot after) {
+            DecisionSnapshot after, String configHash) {
         return new DecisionRecord(observation.tick(), observation.spiritId(), observation.spiritName(), changed,
                 before.value(changed), after.value(changed), observation.outcome().trace().rule(),
                 observation.outcome().trace().hold(), DecisionReasons.topFactors(observation.outcome().trace(),
-                        observation.outcome().decision()), observation.facts());
+                        observation.outcome().decision()), observation.facts(), configHash);
     }
 }
