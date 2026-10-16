@@ -163,6 +163,41 @@
 `block` — вид блока (у `clear_area`/`dig_area` с разными видами — пустая строка). У проваленной задачи
 `result` пуст (`null`), числа — в `error`. Прогресс `done`/`target` есть у всех пяти (блоки обработано/всего).
 
+Остальные скрипты каталога (по одному в строке; параметры — из описания скрипта, поведение — в реализации):
+
+- `locate_block` (`filter`, `radius`) — найти ближайший блок по фильтру
+- `locate_tree` (`species`, `radius`) — найти ближайшее дерево заданной породы
+- `locate_container` (`radius`) — найти ближайший контейнер
+- `follow` (`target`, `radius`) — следовать за целью на расстоянии
+- `flee` — убежать от угрозы
+- `collect_drops` (`radius`, `filter`, `overflow`) — подобрать выпавшие предметы вокруг духа
+- `harvest_crop` (`crop`, `radius`, `replant`) — собрать урожай
+- `plant_crop` (`crop`, `radius`, `count`) — посадить культуру
+- `till` (`radius`, `count`) — вспахать землю под грядку
+- `bone_meal` (`crop`, `radius`, `count`) — подкормить посевы костной мукой
+- `breed` (`species`, `radius`, `pairs`) — свести пару животных
+- `feed` (`species`, `radius`, `count`, `babiesFirst`) — покормить стадо
+- `shear` (`radius`, `count`) — постричь овец
+- `milk` (`radius`, `count`) — подоить коров
+- `collect_eggs` (`radius`) — собрать яйца в загоне
+- `cull` (`species`, `keep`, `radius`) — забить лишних голов
+- `herd_check` (`species`, `radius`) — сосчитать стадо
+- `hunt` (`species`, `radius`, `count`) — забить диких животных
+- `capture` (`species`, `radius`) — поймать животное в кольцо из блоков
+- `craft` (`item`, `count`, `radius`) — скрафтить предмет
+- `smelt` (`item`, `count`, `radius`) — переплавить предмет
+- `equip` (`item`) — надеть предмет
+- `acquire` (`item`, `count`) — добыть предмет любым способом
+- `attack` (`target`) — атаковать цель
+- `defend` (`target`) — защитить цель
+- `retreat` — отступить
+- `fill_crater` (`crater`) — засыпать воронку от взрыва ровно до уровня земли
+- `deliver` (`item`, `count`, `to`) — доставить предмет адресату
+- `meet` (`target`) — встретиться с целью
+- `say` (`text`) — произнести сообщение
+- `wait` (`ticks`) — ждать заданное число тиков
+- `close_door` (`x`, `y`, `z`) — подойти к двери и закрыть её
+
 ### GET /v1/bots и GET /v1/bots/{id}
 
 `{id}` — UUID сущности духа. Неизвестный `id` (в том числе не UUID) — 404 `not_found` с `id` в тексте.
