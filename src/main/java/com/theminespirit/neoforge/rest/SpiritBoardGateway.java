@@ -1,18 +1,16 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.ResourceGate;
-import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.BoardGateway;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTaskRequest;
+import com.theminespirit.core.rest.BoardTasks;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
@@ -22,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -69,7 +65,7 @@ public final class SpiritBoardGateway implements BoardGateway {
         StockView stock = service.stock();
         List<BoardTask> tasks = new ArrayList<>();
         for (BoardTicket ticket : board.all()) {
-            tasks.add(toTask(board, ticket, stock));
+            tasks.add(BoardTasks.of(board, ticket, stock));
         }
         return List.copyOf(tasks);
     }
@@ -92,7 +88,7 @@ public final class SpiritBoardGateway implements BoardGateway {
         BoardTicket stored = board.find(id).orElseThrow(() -> new ApiException(ErrorCode.INTERNAL,
                 "Доска приняла задание '" + id + "', но не находит его в очереди: состояние доски "
                         + "испорчено, перезапустите сервер", Map.of("request_id", request.requestId().toString())));
-        return toTask(board, stored, service.stock());
+        return BoardTasks.of(board, stored, service.stock());
     }
 
     private BoardTask cancelTask(String ticketId) {
@@ -102,24 +98,10 @@ public final class SpiritBoardGateway implements BoardGateway {
         BoardTicket ticket = board.find(ticketId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
                 "Задание доски '" + ticketId + "' не найдено: список заданий — GET /v1/board",
                 Map.of("id", ticketId)));
-        service.cancel(ticketId);
+        service.cancel(level, ticketId);
         BoardStatus status = board.statusOf(ticketId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
                 "Задание доски '" + ticketId + "' исчезло после отмены: список заданий — GET /v1/board",
                 Map.of("id", ticketId)));
-        return toTask(board, ticket, status, service.stock());
-    }
-
-    private static BoardTask toTask(Board board, BoardTicket ticket, StockView stock) {
-        BoardStatus status = board.statusOf(ticket.id()).orElse(BoardStatus.PENDING);
-        return toTask(board, ticket, status, stock);
-    }
-
-    private static BoardTask toTask(Board board, BoardTicket ticket, BoardStatus status, StockView stock) {
-        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
-        Optional<UUID> holder = board.holderOf(ticket.id());
-        BoardCase boardCase = ticket.boardCase();
-        return new BoardTask(ticket.id(), boardCase.name(), ticket.priority(),
-                holder.map(UUID::toString).orElse(null), status.name(), ticket.requiredItems(), missing,
-                ticket.dependsOn(), ticket.createdAt(), ticket.ttlTicks());
+        return BoardTasks.of(board, ticket, status, service.stock());
     }
 }

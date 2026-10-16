@@ -139,16 +139,38 @@ public final class BoardService {
     }
 
     /**
-     * Отмена задания: доска снимает его (и зависимые), цель забывается. Мир остаётся
-     * консистентным — выданное задание дух прекращает по {@code cancelTask} координатора,
-     * брони снимает {@code releaseAll} хука 31.
+     * Отмена задания: доска снимает его и зависимые, цели забываются, а духи-держатели
+     * прекращают работу ({@code cancelTask}) и отпускают брони работ — иначе отменённое
+     * задание продолжало бы исполняться, а бронь держала бы занятость духа.
      */
-    public boolean cancel(String ticketId) {
+    public boolean cancel(ServerLevel level, String ticketId) {
+        Set<UUID> holders = new HashSet<>();
+        collectHolders(ticketId, holders, new HashSet<>());
         boolean cancelled = board.cancel(ticketId);
-        if (cancelled) {
-            targets.keySet().remove(ticketId);
+        if (!cancelled) {
+            return false;
         }
-        return cancelled;
+        targets.keySet().removeIf(id -> board.statusOf(id).orElse(null) == BoardStatus.CANCELLED);
+        for (UUID holder : holders) {
+            if (level.getEntity(holder) instanceof SpiritEntity spirit) {
+                spirit.cancelTask();
+                WorkReserveHub.releaseAll(spirit);
+            }
+        }
+        return true;
+    }
+
+    /** Держатели отменяемого задания и всех зависимых от него: их работу отменяем вместе. */
+    private void collectHolders(String ticketId, Set<UUID> holders, Set<String> visited) {
+        if (!visited.add(ticketId)) {
+            return;
+        }
+        board.holderOf(ticketId).ifPresent(holders::add);
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.dependsOn().contains(ticketId)) {
+                collectHolders(ticket.id(), holders, visited);
+            }
+        }
     }
 
     /** Дух погиб: его выданные задания возвращаются в очередь, брони снимаются. */

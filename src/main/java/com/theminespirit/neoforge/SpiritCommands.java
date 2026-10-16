@@ -24,6 +24,7 @@ public final class SpiritCommands {
         SpiritHomeCommand.register(spirit);
         SpiritCampCommand.register(spirit);
         SpiritDecisionsCommand.register(spirit);
+        SpiritBoardCommand.register(spirit);
         SpiritTablesCommand.register(spirit);
         SpiritPresetsCommand.register(spirit);
         CraterCommand.register(spirit);

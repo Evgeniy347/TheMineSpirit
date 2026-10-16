@@ -1,0 +1,52 @@
+package com.theminespirit.core.rest;
+
+import com.theminespirit.core.board.BoardStatus;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.TreeMap;
+
+/** Строка задания доски для чата {@code /spirit board}: кейс, приоритет, владелец, статус, нехватка. */
+public final class BoardText {
+    private BoardText() {
+    }
+
+    public static String line(BoardTask task) {
+        StringBuilder text = new StringBuilder();
+        text.append(task.id()).append(" — ").append(task.boardCase())
+                .append(", приоритет ").append(task.priority())
+                .append(", ").append(statusRu(task.status()));
+        text.append(", владелец: ").append(task.assignee() == null ? "любой свободный" : task.assignee());
+        if (!task.missing().isEmpty()) {
+            text.append(", не хватает: ").append(missing(task.missing()));
+        }
+        if (!task.dependsOn().isEmpty()) {
+            text.append(", после: ").append(String.join(", ", task.dependsOn()));
+        }
+        return text.toString();
+    }
+
+    public static String missing(Map<String, Integer> missing) {
+        StringJoiner parts = new StringJoiner(", ");
+        for (Map.Entry<String, Integer> entry : new TreeMap<>(missing).entrySet()) {
+            parts.add(entry.getKey() + " ×" + entry.getValue());
+        }
+        return parts.toString();
+    }
+
+    public static String statusRu(String status) {
+        BoardStatus parsed;
+        try {
+            parsed = BoardStatus.valueOf(status);
+        } catch (IllegalArgumentException unknown) {
+            return status;
+        }
+        return switch (parsed) {
+            case PENDING -> "ждёт выдачи";
+            case WAITING_RESOURCES -> "ждёт ресурсов";
+            case ASSIGNED -> "выдано";
+            case DONE -> "выполнено";
+            case FAILED -> "провалено";
+            case CANCELLED -> "отменено";
+        };
+    }
+}
