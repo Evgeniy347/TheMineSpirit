@@ -34,7 +34,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Сломанный забор на доске: поломка ограждения рядом с поселением → REPAIR_FENCE с высшим
- * приоритетом; стройка при этом ждёт, чинит один дух. Дальний природный камень — не кейс.
+ * приоритетом; стройка при этом ждёт, чинит один дух. Природный камень — не кейс.
+ * Всё синхронно: событие идёт прямо на шину, тело теста атомарно.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -54,7 +55,7 @@ public final class BoardFenceGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
     public static void fence_BrokenNearBase_RepairFirstSingleHolder(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -62,6 +63,7 @@ public final class BoardFenceGameTests {
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
         spirit.setHome(home);
         ServerLevel level = helper.getLevel();
+        long now = level.getGameTime();
         ServerPlayer witness =
                 GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 2), "board_fence_witness");
         BlockPos fence = new BlockPos(5, 1, 5);
@@ -81,55 +83,44 @@ public final class BoardFenceGameTests {
                 + stoneAbs.getZ();
         BoardService board = BoardRegistry.get(level);
         board.submit(new BoardTicket("board_test_build_low", BoardCase.BUILD_HOUSE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), level.getGameTime(), 6000, List.of(),
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), now, 6000, List.of(),
                 Map.of()), TicketTarget.at(home));
 
-        helper.succeedWhen(() -> {
-            long now = level.getGameTime();
-            BoardTicket repair = board.board().find(repairId).orElse(null);
-            helper.assertTrue(repair != null,
-                    "Сломанный забор рядом с поселением обязан поднять REPAIR_FENCE " + repairId
-                            + ": иначе дыра в ограждении стоит открытой");
-            helper.assertTrue(repair.boardCase() == BoardCase.REPAIR_FENCE,
-                    "Задание сломанного забора — кейс REPAIR_FENCE, фактически "
-                            + repair.boardCase());
-            helper.assertTrue(BoardRules.priorityOf(BoardCase.REPAIR_FENCE) == 100,
-                    "Приоритет ремонта ограждений — 100, высший на доске, фактически "
-                            + BoardRules.priorityOf(BoardCase.REPAIR_FENCE));
-            helper.assertTrue(board.board().find(stoneId).isEmpty(),
-                    "Сломанный природный камень — не ограждение: задание " + stoneId
-                            + " поднялось зря");
-            BoardStatus repairStatus = board.board().statusOf(repairId).orElse(null);
-            if (repairStatus == BoardStatus.PENDING) {
-                List<String> queue = board.board().claimable(new StockView(Map.of()), now).stream()
-                        .map(BoardTicket::id)
-                        .filter(id -> id.equals(repairId) || id.equals("board_test_build_low"))
-                        .toList();
-                helper.assertTrue(List.of(repairId, "board_test_build_low").equals(queue),
-                        "Ремонт выше стройки: очередь " + queue + ": стройка, обошедшая ремонт, "
-                                + "оставляет поселение без забора");
-                helper.assertTrue(board.board().claim(repairId, spirit.getUUID(), now)
-                                == BoardOutcome.CLAIMED,
-                        "Ремонт берёт свободный дух");
-            } else {
-                helper.assertTrue(repairStatus == BoardStatus.ASSIGNED
-                                || repairStatus == BoardStatus.DONE,
-                        "Ремонт уже разобран доской раньше назначенного: статус " + repairStatus
-                                + ": доска выдаёт ремонт первой же пересборкой");
-            }
-            helper.assertTrue(board.board().holderOf(repairId).isPresent(),
-                    "У ремонта ровно один держатель: чинит один, остальные прикрывают "
-                            + "существующим механизмом координатора, а не толпой");
-            helper.assertTrue(board.board().claim(repairId, UUID.randomUUID(), now)
-                            == BoardOutcome.TAKEN_BY_OTHER
-                            || board.board().statusOf(repairId).orElse(null) == BoardStatus.DONE,
-                    "Второй дух тот же ремонт не берёт: выданное задание занято, закрытое — закрыто");
-            helper.assertTrue(board.board().statusOf("board_test_build_low").orElse(null)
-                            == BoardStatus.PENDING,
-                    "Пока ремонт не закрыт, стройка ждёт: статус "
-                            + board.board().statusOf("board_test_build_low").orElse(null));
-            GameTestFixtures.finish(helper);
-        });
+        BoardTicket repair = board.board().find(repairId).orElse(null);
+        helper.assertTrue(repair != null,
+                "Сломанный забор рядом с поселением обязан поднять REPAIR_FENCE " + repairId
+                        + ": иначе дыра в ограждении стоит открытой");
+        helper.assertTrue(repair.boardCase() == BoardCase.REPAIR_FENCE,
+                "Задание сломанного забора — кейс REPAIR_FENCE, фактически " + repair.boardCase());
+        helper.assertTrue(BoardRules.priorityOf(BoardCase.REPAIR_FENCE) == 100,
+                "Приоритет ремонта ограждений — 100, высший на доске, фактически "
+                        + BoardRules.priorityOf(BoardCase.REPAIR_FENCE));
+        helper.assertTrue(board.board().find(stoneId).isEmpty(),
+                "Сломанный природный камень — не ограждение: задание " + stoneId
+                        + " поднялось зря");
+        List<String> queue = board.board().claimable(new StockView(Map.of()), now).stream()
+                .map(BoardTicket::id)
+                .filter(id -> id.equals(repairId) || id.equals("board_test_build_low"))
+                .toList();
+        helper.assertTrue(List.of(repairId, "board_test_build_low").equals(queue),
+                "Ремонт выше стройки: очередь " + queue + ": стройка, обошедшая ремонт, "
+                        + "оставляет поселение без забора");
+        helper.assertTrue(board.board().claim(repairId, spirit.getUUID(), now)
+                        == BoardOutcome.CLAIMED,
+                "Ремонт берёт свободный дух");
+        helper.assertTrue(board.board().claim(repairId, UUID.randomUUID(), now)
+                        == BoardOutcome.TAKEN_BY_OTHER,
+                "Второй дух тот же ремонт не берёт: чинит один, остальные прикрывают "
+                        + "существующим механизмом координатора, а не толпой");
+        helper.assertTrue(spirit.getUUID().equals(board.board().holderOf(repairId).orElse(null)),
+                "Держатель ремонта — взявший его дух: держатель "
+                        + board.board().holderOf(repairId).orElse(null));
+        helper.assertTrue(board.board().statusOf("board_test_build_low").orElse(null)
+                        == BoardStatus.PENDING,
+                "Пока ремонт не закрыт, стройка ждёт: статус "
+                        + board.board().statusOf("board_test_build_low").orElse(null));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {

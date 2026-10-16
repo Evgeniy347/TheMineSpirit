@@ -14,7 +14,6 @@ import com.theminespirit.neoforge.board.FirstStepsRunner;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
@@ -30,6 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /**
  * Первые шаги на доске: новое поселение → CLEAR_GROUNDS; дальше задания идут строго по цепочке,
  * каждое следующее — после выполнения предыдущего; выполненная цепочка новых заданий не плодит.
+ * Всё синхронно: генератор — чистая функция от фактов мира, тело теста атомарно.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -49,7 +49,7 @@ public final class BoardFirstStepsGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
     public static void firstSteps_NewSettlement_ChainInOrderWithoutDuplicates(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -58,10 +58,10 @@ public final class BoardFirstStepsGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = BoardRegistry.get(level);
         placeLogs(helper, false);
-        AtomicInteger prevIndex = new AtomicInteger(-1);
-        final Set<String> seen = new HashSet<>();
+        int prevIndex = -1;
+        Set<String> seen = new HashSet<>();
 
-        helper.succeedWhen(() -> {
+        for (int step = 0; step < 8; step++) {
             long now = level.getGameTime();
             FirstStepsRunner.tick(level, board, List.of(spirit), now);
             List<BoardTicket> active = board.board().all().stream()
@@ -77,26 +77,27 @@ public final class BoardFirstStepsGameTests {
                     "Задание первых шагов всегда одно: активных " + active.size()
                             + ": иначе поселение строится вразнобой");
             if (active.isEmpty()) {
-                helper.assertTrue(prevIndex.get() >= chainIndex(BoardCase.BUILD_MINE),
-                        "Цепочка сошлась не раньше шахты: последний шаг " + prevIndex.get()
-                                + ": ранний конец означает пропуск шагов, а не выполненную цепочку "
-                                + "(соседние сцены видят те же блоки и могут заранее закрыть "
-                                + "поздние факты — порядок и конец цепочки от этого не меняются)");
-                GameTestFixtures.finish(helper);
-            } else {
-                BoardTicket head = active.get(0);
-                int index = chainIndex(head.boardCase());
-                helper.assertTrue(index > prevIndex.get(),
-                        "Следующий шаг " + head.boardCase() + " идёт после предыдущего (индекс "
-                                + prevIndex.get() + "): цепочка не идёт назад и не топчется на месте");
-                helper.assertTrue(seen.add(head.id()),
-                        "Задание " + head.id()
-                                + " уже выполнялось: выполненные шаги повторно не ставятся");
-                satisfy(helper, board, spirit, head.boardCase());
-                closeTicket(board, head.id(), spirit);
-                prevIndex.set(index);
+                break;
             }
-        });
+            BoardTicket head = active.get(0);
+            int index = chainIndex(head.boardCase());
+            helper.assertTrue(index > prevIndex,
+                    "Следующий шаг " + head.boardCase() + " идёт после предыдущего (индекс "
+                            + prevIndex + "): цепочка не идёт назад и не топчется на месте");
+            helper.assertTrue(seen.add(head.id()),
+                    "Задание " + head.id()
+                            + " уже выполнялось: выполненные шаги повторно не ставятся");
+            satisfy(helper, board, spirit, head.boardCase());
+            closeTicket(board, head.id(), spirit);
+            prevIndex = index;
+        }
+        helper.assertTrue(prevIndex >= chainIndex(BoardCase.BUILD_MINE),
+                "Цепочка сошлась не раньше шахты: последний шаг " + prevIndex
+                        + ": ранний конец означает пропуск шагов, а не выполненную цепочку "
+                        + "(соседние сцены видят те же блоки и могут заранее закрыть "
+                        + "поздние факты — порядок и конец цепочки от этого не меняются)");
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     private static int chainIndex(BoardCase boardCase) {
