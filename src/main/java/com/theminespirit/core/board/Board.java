@@ -168,6 +168,35 @@ public final class Board {
         return true;
     }
 
+    /**
+     * Проверка актуальности вместо срока жизни: снимает в {@code CANCELLED} каскадом
+     * по зависимым все задания, чья причина не входит в живые и не {@code "always"}.
+     * Выполненные не трогает — {@code DONE} остаётся условием для других заданий.
+     * Возвращает id снятых в порядке очереди: адаптер пишет их в журнал.
+     */
+    public List<String> retain(Set<String> liveCauses, long now) {
+        Objects.requireNonNull(liveCauses, "liveCauses не может быть null: без живых причин "
+                + "непонятно, что актуально — пустой набор задают пустым множеством");
+        requireNow(now);
+        List<String> detached = new ArrayList<>();
+        for (BoardTicket ticket : tickets.values()) {
+            BoardStatus status = statuses.get(ticket.id());
+            if (status == BoardStatus.DONE || status == BoardStatus.FAILED
+                    || status == BoardStatus.CANCELLED) {
+                continue;
+            }
+            if (BoardTicket.ALWAYS_CAUSE.equals(ticket.cause()) || liveCauses.contains(ticket.cause())) {
+                continue;
+            }
+            detached.add(ticket.id());
+        }
+        Set<String> cancelled = new HashSet<>();
+        for (String id : detached) {
+            cancelWithDependants(id, cancelled);
+        }
+        return List.copyOf(detached);
+    }
+
     public int prune(long now) {
         requireNow(now);
         int removed = 0;
