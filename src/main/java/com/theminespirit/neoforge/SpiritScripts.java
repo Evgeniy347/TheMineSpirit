@@ -182,6 +182,10 @@ public final class SpiritScripts {
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("dig_descent", spirit -> params -> new DescentScript(spirit, DigDescentParams.from(params)));
+        table.put("dig_descent_widen",
+                spirit -> params -> new DigDescentWidenScript(spirit, DigDescentParams.from(params)));
+        table.put("place_descent_stairs",
+                spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));
         table.put("build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
         table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, CloseDoorParams.from(params)));

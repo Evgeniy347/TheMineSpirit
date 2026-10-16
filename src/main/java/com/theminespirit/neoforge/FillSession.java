@@ -39,7 +39,7 @@ public final class FillSession {
     private final Level level;
     private final String blockId;
     private final BlockState wanted;
-    private final BuildBox box;
+    private final Set<BlockCoord> region;
     private final List<BlockCoord> order;
     private final LevelSafetyView safety;
     private final BlockPlacer placer;
@@ -66,18 +66,22 @@ public final class FillSession {
     private final BuildResult tally = new BuildResult();
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
+        this(spirit, blockId, box.cellsBottomUp());
+    }
+
+    public FillSession(SpiritEntity spirit, String blockId, List<BlockCoord> cells) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.blockId = blockId;
         this.wanted = BlockStates.stateFor(blockId);
-        this.box = box;
+        this.region = Set.copyOf(cells);
         this.safety = new LevelSafetyView(level);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         Set<BlockCoord> occupied = spiritCells();
         this.spiritCells = Set.copyOf(occupied);
-        this.order = BuildOrder.placement(box.cellsBottomUp(), occupied);
+        this.order = BuildOrder.placement(List.copyOf(cells), occupied);
         if (insideBox(spirit.blockPosition()) && !occupied.isEmpty()) {
             state = State.EXIT;
         }
@@ -324,17 +328,17 @@ public final class FillSession {
         Set<BlockCoord> cells = new HashSet<>();
         BlockCoord legs = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         BlockCoord head = new BlockCoord(feet.getX(), feet.getY() + 1, feet.getZ());
-        if (box.contains(legs)) {
+        if (region.contains(legs)) {
             cells.add(legs);
         }
-        if (box.contains(head)) {
+        if (region.contains(head)) {
             cells.add(head);
         }
         return cells;
     }
 
     private boolean insideBox(BlockPos pos) {
-        return box.contains(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+        return region.contains(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
     }
 
     private BlockCoord exitStand() {
@@ -345,7 +349,7 @@ public final class FillSession {
             for (int dz = -3; dz <= 3; dz++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     BlockCoord cell = new BlockCoord(from.x() + dx, from.y() + dy, from.z() + dz);
-                    if (box.contains(cell)) {
+                    if (region.contains(cell)) {
                         continue;
                     }
                     if (MiningSafety.canStand(cell, safetyView())) {
