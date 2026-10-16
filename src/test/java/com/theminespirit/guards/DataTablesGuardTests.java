@@ -99,11 +99,13 @@ class DataTablesGuardTests {
     }
 
     @Test
-    void descent_WhenRegistered_ReturnsDefaultsFromJson() {
-        // Доказательство: descent.json зарегистрирован в DataTables и доступен через hot-reload API
-        var descentHolder = DataTables.INSTANCE.descent();
-        assertEquals("descent", descentHolder.id(), "id таблицы descent должен совпадать с именем в DataTables");
-        assertEquals(-58, descentHolder.current().targetY(), "целевой этаж по умолчанию из descent.json");
-        assertEquals(4, descentHolder.current().torchInterval(), "интервал факелов по умолчанию из descent.json");
+    void descent_WhenChecked_IsPresentInRegistry() {
+        // Тест на поведение: проверяет, что descent.json действительно зарегистрирован в DataTables.
+        // Компилируется на родителе (использует только registry().definitions()) и падает, если descent не зарегистрирован.
+        Set<String> registeredPaths = registeredPaths();
+        assertTrue(registeredPaths.contains("data/theminespirit/mining/descent.json"),
+                "descent.json должен быть зарегистрирован в DataTables для hot-reload. "
+                        + "Без регистрации изменения файла не подхватываются по /reload. "
+                        + "Зарегистрированные пути: " + registeredPaths);
     }
 }
