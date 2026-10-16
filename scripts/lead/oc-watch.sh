@@ -23,7 +23,7 @@ stale() {
 }
 res() {
   powershell -NoProfile -ExecutionPolicy Bypass -File "$(dirname "$0")/res-pc.ps1" 2>/dev/null
-  ssh -o ConnectTimeout=10 domovoy@192.168.0.147 'f=$(free | awk "/Mem:/{print int(\$7*100/\$2)}"); [ "$f" -lt 15 ] && echo "domovoy: свободно памяти $f %"; l=$(cut -d" " -f1 /proc/loadavg); n=$(nproc); awk -v l=$l -v n=$n "BEGIN{if (l>n*1.5) print \"domovoy: нагрузка \" l \" на \" n \" ядер\"}"; oc=$(pgrep -c -f "opencode run" || true); ps -eo pid,etimes,pcpu,comm --no-headers | awk -v oc=$oc "\$3>50 && (\$4==\"bash\"||\$4==\"sh\"||\$4==\"python3\"||\$4==\"java\") && (\$2>7200 || oc==0) {print \"domovoy: \" \$4 \" pid=\" \$1 \" ест \" \$3 \" % ядра, живёт \" int(\$2/60) \" мин (opencode: \" oc \")\"}"' 2>/dev/null || true
+  ssh -o ConnectTimeout=10 domovoy@192.168.0.147 'f=$(free | awk "/Mem:/{print int(\$7*100/\$2)}"); [ "$f" -lt 15 ] && echo "domovoy: свободно памяти $f %"; l=$(cut -d" " -f1 /proc/loadavg); n=$(nproc); awk -v l=$l -v n=$n "BEGIN{if (l>n*2) print \"domovoy: нагрузка \" l \" на \" n \" ядер\"}"; oc=$(pgrep -c -f "opencode run" || true); ps -eo pid,etimes,pcpu,comm --no-headers | awk -v oc=$oc "\$3>50 && (\$4==\"bash\"||\$4==\"sh\"||\$4==\"python3\"||\$4==\"java\") && (\$2>7200 || oc==0) {print \"domovoy: \" \$4 \" pid=\" \$1 \" ест \" \$3 \" % ядра, живёт \" int(\$2/60) \" мин (opencode: \" oc \")\"}"' 2>/dev/null || true
 }
 # Монитор живёт 30 мин и не всегда убивает скрипт: выходим сами за минуту до срока, иначе осиротевшие копии
 # молча забирают события себе (они уже записаны в seen).
