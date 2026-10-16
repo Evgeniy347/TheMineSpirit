@@ -44,15 +44,15 @@ class ScriptArgsTests {
     }
 
     @Test
-    void optionalInt_MissingKey_ReturnsDefault() {
-        assertEquals(58, ScriptArgs.optionalInt(Map.of(), "y", 58),
-                "Отсутствующий необязательный int обязан давать умолчание каталога без ошибки");
+    void optionalInt_MissingKey_ReturnsEmpty() {
+        assertEquals(Optional.empty(), ScriptArgs.optionalInt(Map.of(), "y"),
+                "Отсутствующий необязательный int обязан давать Optional.empty(): скрипт тогда берёт умолчание каталога");
     }
 
     @Test
     void optionalInt_StringValue_NamesParameterAndType() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> ScriptArgs.optionalInt(Map.of("y", "12"), "y", 58),
+                () -> ScriptArgs.optionalInt(Map.of("y", "12"), "y"),
                 "Строка вместо числа обязана отвергаться до запуска");
 
         assertTrue(error.getMessage().contains("y") && error.getMessage().contains("String"),
