@@ -149,6 +149,15 @@ public final class CatalogLimits {
     public static final int CAMP_RADIUS_MAX = 32;
     public static final int CAMP_RADIUS_DEFAULT = 16;
 
+    // Рыбалка: радиус поиска открытой воды, число рыбы за запуск и время ловли
+    public static final int FISH_RADIUS_MIN = 1;
+    public static final int FISH_RADIUS_MAX = 32;
+    public static final int FISH_RADIUS_DEFAULT = 16;
+    public static final int FISH_COUNT_DEFAULT = 1;
+    public static final int FISH_DURATION_MIN = 20;
+    public static final int FISH_DURATION_MAX = WAIT_TICKS_MAX;
+    public static final int FISH_DURATION_DEFAULT = 1200;
+
     // Боевые и социальные скрипты: тайм-ауты и безопасные интервалы в тиках духа (20/сек)
     public static final int SAY_LENGTH_MAX = 256;
     public static final int SAY_MIN_INTERVAL_TICKS = 20;

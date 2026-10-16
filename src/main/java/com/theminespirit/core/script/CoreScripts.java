@@ -1,6 +1,7 @@
 package com.theminespirit.core.script;
 
 import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
@@ -280,6 +281,17 @@ public final class CoreScripts {
                                         CatalogLimits.CAPTURE_RADIUS_MAX, CatalogLimits.CAPTURE_RADIUS_DEFAULT)),
                         List.of("в радиусе есть животное вида", "в инвентаре есть дешёвые блоки"),
                         List.of("животное внутри кольца", "слабое место наращено")),
+                spec("fish", "ловить рыбу удочкой в открытой воде",
+                        List.of(ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX,
+                                        CatalogLimits.FISH_COUNT_DEFAULT),
+                                ParamSpec.integer("duration_ticks", false, CatalogLimits.FISH_DURATION_MIN,
+                                        CatalogLimits.FISH_DURATION_MAX, CatalogLimits.FISH_DURATION_DEFAULT),
+                                ParamSpec.integer("radius", false, CatalogLimits.FISH_RADIUS_MIN,
+                                        CatalogLimits.FISH_RADIUS_MAX, CatalogLimits.FISH_RADIUS_DEFAULT)),
+                        List.of("в инвентаре есть удочка",
+                                "в радиусе есть открытая вода не меньше " + waterAreaText()),
+                        List.of("рыба поймана по таблице добычи с учётом зачарований удочки",
+                                "прочность удочки потрачена")),
                 spec("craft", "скрафтить предмет",
                         List.of(ParamSpec.text("item", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
@@ -450,5 +462,10 @@ public final class CoreScripts {
     private static ParamSpec containerRadius() {
         return ParamSpec.integer("radius", false, CatalogLimits.CONTAINER_RADIUS_MIN,
                 CatalogLimits.CONTAINER_RADIUS_MAX, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
+    }
+
+    private static String waterAreaText() {
+        FishingData data = FishingData.defaults();
+        return data.minWidth() + "x" + data.minWidth() + " глубиной " + data.minDepth();
     }
 }
