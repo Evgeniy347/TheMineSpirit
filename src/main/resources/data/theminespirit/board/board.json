@@ -3,8 +3,7 @@
     "REPAIR_FENCE": 100,
     "REPAIR_BUILDING": 90,
     "EAT_TO_FULL": 80,
-    "FILL_CRATER": 80,
-    "CAPTURE_ANIMAL": 70,
+    "CAPTURE_ANIMAL": 75,
     "RESTOCK_FOOD": 70,
     "BUILD_PEN": 65,
     "LURE_ANIMAL": 65,
@@ -22,7 +21,15 @@
     "CRAFT_TOOLS": 40,
     "CRAFTING_STATION": 40,
     "STOCK_CHESTS": 40,
+    "FILL_CRATER": 35,
     "ENCHANT_SHELVES": 30
+  },
+  "modifiers": {
+    "pen_caught_animal": 15,
+    "pen_missing_bait": 10,
+    "pen_species_full": -65,
+    "lure_bait_ready": 10,
+    "relocate_busy": -20
   },
   "intervals": {
     "boardIntervalTicks": 100,

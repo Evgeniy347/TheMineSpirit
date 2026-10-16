@@ -21,10 +21,17 @@ class BoardRulesTests {
     }
 
     @Test
-    void crater_Higher_ThanNewBuild() {
-        assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) > BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
-                "Воронка обязана быть выше новой стройки: открытая яма опаснее отложенного "
-                        + "дома, иначе стройка заберёт духа раньше заделки");
+    void crater_Lower_ThanSupply() {
+        assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) < BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
+                "Воронка обязана быть ниже снабжения (v2: «воронка — задание с низким приоритетом»): "
+                        + "открытая яма ждёт, пока поселение снабжается, иначе снабжение встанет");
+    }
+
+    @Test
+    void crater_Higher_ThanShelves() {
+        assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) > BoardRules.priorityOf(BoardCase.ENCHANT_SHELVES),
+                "Воронка обязана быть выше полок чаровальни: полки — самый низкий приоритет, "
+                        + "яма важнее книг");
     }
 
     @Test
@@ -72,8 +79,8 @@ class BoardRulesTests {
         }
         assertTrue(BoardRules.priorityOf(first) > BoardRules.priorityOf(second),
                 "Порядок приоритетов обязан согласовываться с частичным порядком v2 "
-                        + "«ремонт > воронка и еда > животные и пополнение еды > стройки, перенос, "
-                        + "разведение и контроль > снабжение»: " + first + " ("
+                        + "«ремонт > еда > животные и пополнение еды > стройки, перенос, "
+                        + "разведение и контроль > снабжение > воронка > полки»: " + first + " ("
                         + BoardRules.priorityOf(first) + ") ниже или равен " + second + " ("
                         + BoardRules.priorityOf(second)
                         + "), и доска выдаст сначала менее важное");
@@ -92,7 +99,7 @@ class BoardRulesTests {
         if (boardCase == BoardCase.REPAIR_FENCE || boardCase == BoardCase.REPAIR_BUILDING) {
             return 0;
         }
-        if (boardCase == BoardCase.FILL_CRATER || boardCase == BoardCase.EAT_TO_FULL) {
+        if (boardCase == BoardCase.EAT_TO_FULL) {
             return 1;
         }
         if (boardCase == BoardCase.CAPTURE_ANIMAL || boardCase == BoardCase.BUILD_PEN
@@ -101,9 +108,14 @@ class BoardRulesTests {
             return 2;
         }
         if (boardCase == BoardCase.SUPPLY_SITE || boardCase == BoardCase.CRAFT_TOOLS
-                || boardCase == BoardCase.CRAFTING_STATION || boardCase == BoardCase.STOCK_CHESTS
-                || boardCase == BoardCase.ENCHANT_SHELVES) {
+                || boardCase == BoardCase.CRAFTING_STATION || boardCase == BoardCase.STOCK_CHESTS) {
             return 4;
+        }
+        if (boardCase == BoardCase.FILL_CRATER) {
+            return 5;
+        }
+        if (boardCase == BoardCase.ENCHANT_SHELVES) {
+            return 6;
         }
         return 3;
     }

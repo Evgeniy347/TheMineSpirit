@@ -118,7 +118,7 @@
    `"animal:<id>"`, `"fence:x:y:z"`; по нему проверяется актуальность). Проверки: `cause` не `null`/пуст,
    `level ≥ 1`. Тесты: валидация с текстом; задание с `cause="always"` переживает снятие по актуальности;
    два задания с разными `cause` снимаются независимо. Свойства: неизменяемость, детерминизм.
-- [ ] 3. **`BoardPriorities` (расширение `BoardRules`) — база + модификаторы.** `effective(BaseCase ctx) → int`,
+- [x] 3. **`BoardPriorities` (расширение `BoardRules`) — база + модификаторы.** `effective(BaseCase ctx) → int`,
    где `PriorityContext` — чистые флаги ситуации (`caughtAnimal`, `penBuilt`, `baitMissing`, `speciesFull`,
    `activeRepair`), собирает адаптер. Все числа — в `board.json`: секция `priorities` (база) и новая секция
    `modifiers` (дельты). Итог зажимается в `[0, MAX_PRIORITY]`.

@@ -6,9 +6,71 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.reload.DataTables;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class BoardConfigTests {
+
+    private static Map<String, Integer> expectedPriorities() {
+        return Map.ofEntries(
+                Map.entry("REPAIR_FENCE", 100),
+                Map.entry("REPAIR_BUILDING", 90),
+                Map.entry("EAT_TO_FULL", 80),
+                Map.entry("CAPTURE_ANIMAL", 75),
+                Map.entry("RESTOCK_FOOD", 70),
+                Map.entry("BUILD_PEN", 65),
+                Map.entry("LURE_ANIMAL", 65),
+                Map.entry("DISMANTLE_SHELTER", 65),
+                Map.entry("RELOCATE_BUILDING", 60),
+                Map.entry("BREED_ANIMALS", 55),
+                Map.entry("HERD_CULL", 50),
+                Map.entry("CLEAR_GROUNDS", 50),
+                Map.entry("BUILD_FENCE", 50),
+                Map.entry("LIGHTING", 50),
+                Map.entry("BUILD_HOUSE", 50),
+                Map.entry("BUILD_MINE", 50),
+                Map.entry("ENCHANT_ROOM", 50),
+                Map.entry("SUPPLY_SITE", 40),
+                Map.entry("CRAFT_TOOLS", 40),
+                Map.entry("CRAFTING_STATION", 40),
+                Map.entry("STOCK_CHESTS", 40),
+                Map.entry("FILL_CRATER", 35),
+                Map.entry("ENCHANT_SHELVES", 30));
+    }
+
+    private static Map<String, Integer> expectedModifiers() {
+        return Map.of(
+                "pen_caught_animal", 15,
+                "pen_missing_bait", 10,
+                "pen_species_full", -65,
+                "lure_bait_ready", 10,
+                "relocate_busy", -20);
+    }
+
+    @Test
+    void defaults_FromClasspath_PrioritiesMatchLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(expectedPriorities(), config.priorities(),
+                "Таблица базовых приоритетов обязана совпадать с литералами слово в слово: "
+                        + "лишний ключ в файле без теста и забытый ключ в тесте красят прогон, "
+                        + "а молчаливое расхождение пересортирует выдачу. RESTOCK_FOOD — 70 "
+                        + "(решение владельца 16.10 дало число только для 48 единиц, порядок "
+                        + "«ниже поимки, выше загона» — из таблицы п. 3)");
+    }
+
+    @Test
+    void defaults_FromClasspath_ModifiersMatchLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(expectedModifiers(), config.modifiers(),
+                "Таблица модификаторов обязана совпадать с литералами слово в слово: поменянное "
+                        + "число в файле без правки теста пересортирует выдачу молча");
+        assertEquals(15, config.modifiers().get("pen_caught_animal"),
+                "Предел в тесте, факт из production: дельта пойманного животного — 15");
+        assertEquals(-65, config.modifiers().get("pen_species_full"),
+                "Предел в тесте, факт из production: полный загон гасит BUILD_PEN (65 − 65 = 0)");
+    }
 
     @Test
     void defaults_FromClasspath_PriorityMatchesRules() {
@@ -47,6 +109,18 @@ class BoardConfigTests {
     }
 
     @Test
+    void fromJson_UnknownModifierKey_FailsNamingKey() {
+        String json = "{\"modifiers\":{\"pen_caught_animals\":15}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в имени модификатора обязана падать: молча потерянная дельта "
+                        + "оставила бы задание без повышения, а сирота не провалилась бы молча");
+        assertTrue(failure.getMessage().contains("pen_caught_animals"),
+                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+    }
+
+    @Test
     void fromJson_UnknownIntervalKey_FailsNamingKey() {
         String json = "{\"intervals\":{\"boardIntervalMillis\":100}}";
 
@@ -81,9 +155,10 @@ class BoardConfigTests {
     void fromJson_EmptyTables_AreAllowed() {
         BoardConfig config = BoardConfig.fromJson("{}", "board.json");
 
-        assertTrue(config.priorities().isEmpty() && config.intervals().isEmpty(),
+        assertTrue(config.priorities().isEmpty() && config.modifiers().isEmpty()
+                        && config.intervals().isEmpty(),
                 "Пустые таблицы допустимы: недостающее добирают значения по умолчанию из "
-                        + "BoardRules и BoardTuning");
+                        + "BoardRules, BoardPriorities и BoardTuning");
         assertEquals(BoardRules.priorityOf(BoardCase.REPAIR_FENCE), 100,
                 "Без строки в таблице работает приоритет по умолчанию: доска не падает на пустом файле");
     }

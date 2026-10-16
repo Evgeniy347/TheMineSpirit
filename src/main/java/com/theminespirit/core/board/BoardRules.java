@@ -39,8 +39,7 @@ public final class BoardRules {
         priorities.put(BoardCase.REPAIR_FENCE, 100);
         priorities.put(BoardCase.REPAIR_BUILDING, 90);
         priorities.put(BoardCase.EAT_TO_FULL, 80);
-        priorities.put(BoardCase.FILL_CRATER, 80);
-        priorities.put(BoardCase.CAPTURE_ANIMAL, 70);
+        priorities.put(BoardCase.CAPTURE_ANIMAL, 75);
         priorities.put(BoardCase.RESTOCK_FOOD, 70);
         priorities.put(BoardCase.BUILD_PEN, 65);
         priorities.put(BoardCase.LURE_ANIMAL, 65);
@@ -58,6 +57,7 @@ public final class BoardRules {
         priorities.put(BoardCase.CRAFT_TOOLS, 40);
         priorities.put(BoardCase.CRAFTING_STATION, 40);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
+        priorities.put(BoardCase.FILL_CRATER, 35);
         priorities.put(BoardCase.ENCHANT_SHELVES, 30);
         return Map.copyOf(priorities);
     }

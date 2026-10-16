@@ -11,13 +11,15 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Живые числа доски: приоритеты кейсов и интервалы. Читается из
+ * Живые числа доски: приоритеты кейсов, модификаторы приоритета и интервалы. Читается из
  * JSON-таблицы через {@code DataTables} — правится датапаком мира и перезагружается
  * по {@code /reload} без перезапуска. Ключи приоритетов — имена {@link BoardCase},
+ * ключи модификаторов — {@link BoardPriorities#MODIFIER_KEYS},
  * ключи интервалов — {@link BoardTuning#INTERVAL_KEYS}. Пустые карты допустимы: недостающее
- * добирают значения по умолчанию из {@code BoardRules} и {@code BoardTuning}.
+ * добирают значения по умолчанию из {@code BoardRules}, {@code BoardPriorities} и {@code BoardTuning}.
  */
-public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> intervals) {
+public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
+        Map<String, Long> intervals) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -26,6 +28,9 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> int
         Objects.requireNonNull(priorities,
                 "Приоритеты не могут быть null: пустую таблицу задают пустой картой, а не null");
         priorities = Map.copyOf(priorities);
+        Objects.requireNonNull(modifiers,
+                "Модификаторы не могут быть null: пустую таблицу задают пустой картой, а не null");
+        modifiers = Map.copyOf(modifiers);
         Objects.requireNonNull(intervals,
                 "Интервалы не могут быть null: пустую таблицу задают пустой картой, а не null");
         intervals = Map.copyOf(intervals);
@@ -37,11 +42,14 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> int
         JsonNode root = JsonResource.parse(json, origin);
         if (!root.isObject()) {
             throw new IllegalStateException("Таблица '" + origin + "' — не объект: на верхнем уровне ожидается "
-                    + "объект «priorities → intervals»");
+                    + "объект «priorities → modifiers → intervals»");
         }
-        Map<String, Integer> priorities = integers(root.get("priorities"), origin, "priorities", BoardCase::valueOf);
+        Map<String, Integer> priorities = integers(root.get("priorities"), origin, "priorities",
+                BoardCase::valueOf, false);
+        Map<String, Integer> modifiers = integers(root.get("modifiers"), origin, "modifiers",
+                BoardPriorities::modifierKey, true);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
-        return new BoardConfig(priorities, intervals);
+        return new BoardConfig(priorities, modifiers, intervals);
     }
 
     public static BoardConfig readFromClasspath() {
@@ -49,7 +57,7 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> int
     }
 
     private static Map<String, Integer> integers(JsonNode node, String origin, String field,
-            Function<String, ?> known) {
+            Function<String, ?> known, boolean allowNegative) {
         Map<String, Integer> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -69,13 +77,13 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> int
                         + "' не целое число, получено " + value.getNodeType()
                         + ": приоритет сравнивается числом, строка сломает сортировку выдачи");
             }
-            int priority = value.intValue();
-            if (priority < 0) {
-                throw new IllegalStateException("Поле '" + field + "': ключ '" + key + "' равен " + priority
+            int number = value.intValue();
+            if (!allowNegative && number < 0) {
+                throw new IllegalStateException("Поле '" + field + "': ключ '" + key + "' равен " + number
                         + " и отрицателен: приоритет вне [0, " + BoardTuning.MAX_PRIORITY
                         + "] не участвует в сравнении выдачи");
             }
-            values.put(key, priority);
+            values.put(key, number);
         }
         return values;
     }
