@@ -66,9 +66,9 @@ public final class IntellectScaleGameTests {
                 if (empty && failed && !failTick.containsKey(id)) {
                     failTick.put(id, now);
                 }
-                if (restarted && failTick.containsKey(id) && startedScript(spirit, intellect, id)) {
+                if (restarted && failTick.containsKey(id) && startedScript(spirit)) {
                     helper.assertTrue(now - failTick.get(id) >= IntellectTuning.FAIL_BACKOFF_TICKS,
-                            "Дух " + id + " получил harvest_crop через " + (now - failTick.get(id))
+                            "Дух " + id + " получил работу через " + (now - failTick.get(id))
                                     + " тиков после провала вместо 200: откат не держит");
                     failTick.remove(id);
                 }
@@ -105,23 +105,13 @@ public final class IntellectScaleGameTests {
         });
     }
 
-    private static boolean startedScript(SpiritEntity spirit, SettlementIntellect intellect, String id) {
-        String current = spirit.currentTaskScript().orElse("");
-        if (current.equals("harvest_crop")) {
-            return true;
-        }
-        if (!current.isEmpty()) {
-            return false;
-        }
-        return intellect.decision().map(decision -> decision.activities().assignments().stream()
-                        .anyMatch(assignment -> assignment.spirit().toString().equals(id)
-                                && assignment.activity() == ActivityId.FARM))
-                .orElse(false);
+    private static boolean startedScript(SpiritEntity spirit) {
+        return !spirit.currentTaskScript().orElse("").isEmpty();
     }
 
     // [флак] замер ~410 тиков: провал, окно отката 200 и фаза пересчёта 100
     @GameTest(template = "arena", batch = "intellect_backoff", timeoutTicks = 800)
-    public static void backoff_FailedHarvest_NotRestartedWithinWindow(GameTestHelper helper) {
+    public static void backoff_FailedWork_NotRestartedWithinWindow(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
@@ -149,13 +139,40 @@ public final class IntellectScaleGameTests {
                     failed[0] = true;
                     failTick[0] = now;
                 }
-            } else if (restarted && startedScript(spirit, intellect, id)) {
+            } else if (restarted && startedScript(spirit)) {
                 helper.assertTrue(now - failTick[0] >= IntellectTuning.FAIL_BACKOFF_TICKS,
-                        "Уборка после провала перезапущена через " + (now - failTick[0])
+                        "Работа после провала перезапущена через " + (now - failTick[0])
                                 + " тиков вместо 200: откат не держит");
                 spirit.discard();
                 TacticsScene.finish(helper, spirit);
             }
+        });
+    }
+
+    @GameTest(template = "arena", batch = "intellect_no_farm", timeoutTicks = 200)
+    public static void noFarm_HungryWithoutCrops_DoesNotAssignFarm(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
+        spirit.setHome(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
+
+        helper.succeedWhen(() -> {
+            SettlementKey key = SettlementGroups.keyOf(spirit.home(), spirit.getUUID());
+            SpiritCoordinator coordinator = CoordinatorRegistry.get(helper.getLevel(), key);
+            SettlementIntellect intellect = coordinator.intellect();
+            helper.assertTrue(intellect.decision().isPresent(),
+                    "Интеллект ещё не решил: ждём первый пересчёт спроса");
+            helper.assertTrue(intellect.view().orElseThrow().farmWork().matureCrops() == 0,
+                    "В арене нет зрелых посевов: снимок работы фермы обязан это показать");
+            boolean farmAssigned = intellect.decision().orElseThrow().activities().assignments().stream()
+                    .anyMatch(assignment -> assignment.activity() == ActivityId.FARM);
+            helper.assertFalse(farmAssigned,
+                    "Голодное поселение без зрелых посевов не берёт ферму: иначе harvest_crop падает "
+                            + "«зрелых посевов в радиусе 8 нет»");
+            helper.assertFalse("harvest_crop".equals(spirit.currentTaskScript().orElse("")),
+                    "Дух без грядок не запускает harvest_crop: иначе задача падает на пустой ферме");
+            spirit.discard();
+            TacticsScene.finish(helper, spirit);
         });
     }
 }
