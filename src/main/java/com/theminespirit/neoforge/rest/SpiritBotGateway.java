@@ -25,6 +25,7 @@ import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.IEventBus;
 
 public final class SpiritBotGateway implements BotGateway {
+    private final MinecraftServer server;
     private final SpiritIndex index;
     private final ServerThreadCall serverCall;
     private final ObserveJobs jobs;
@@ -32,6 +33,7 @@ public final class SpiritBotGateway implements BotGateway {
     private final TaskWatcher watcher;
 
     public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus, TaskRegistry tasks) {
+        this.server = server;
         this.index = index;
         this.serverCall = new ServerThreadCall(server);
         this.jobs = new ObserveJobs(bus);
@@ -45,6 +47,10 @@ public final class SpiritBotGateway implements BotGateway {
 
     public SpiritIndex index() {
         return index;
+    }
+
+    public MinecraftServer server() {
+        return server;
     }
 
     public TaskWatcher taskWatcher() {

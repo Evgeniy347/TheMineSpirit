@@ -258,6 +258,19 @@ public final class Board {
         return Optional.ofNullable(statuses.get(ticketId));
     }
 
+    /**
+     * Держатель задания для наблюдателя: владелец из заявки или тот, кто взял задание.
+     * Пустой ответ — задание ждёт любого свободного духа (ещё не выдано или отпущено).
+     */
+    public Optional<UUID> holderOf(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: держатель читается по id задания");
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(holder(ticket));
+    }
+
     private void refreshGateStatuses(StockView stock) {
         for (BoardTicket ticket : tickets.values()) {
             BoardStatus status = statuses.get(ticket.id());

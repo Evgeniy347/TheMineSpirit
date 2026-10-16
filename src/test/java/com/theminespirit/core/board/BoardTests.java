@@ -353,6 +353,37 @@ class BoardTests {
     }
 
     @Test
+    void holderOf_ReportsClaimHolder_ForObserver() {
+        Board board = boardAt(0);
+        board.submit(ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of()));
+
+        assertEquals(Optional.empty(), board.holderOf("supply:dirt"),
+                "Задание без владельца и без выдачи не имеет держателя: наблюдатель видит «любой свободный»");
+
+        board.claim("supply:dirt", SPIRIT_ONE, 0);
+        assertEquals(Optional.of(SPIRIT_ONE), board.holderOf("supply:dirt"),
+                "Держатель задания — тот, кто его взял: по нему наблюдатель REST показывает assignee");
+
+        board.release("supply:dirt");
+        assertEquals(Optional.empty(), board.holderOf("supply:dirt"),
+                "Отпущенное задание снова без держателя: assignee пуст, задание ждёт любого свободного");
+
+        assertEquals(Optional.empty(), board.holderOf("нет-такого"),
+                "Неизвестный id не даёт держателя: наблюдатель не выдумывает духа");
+    }
+
+    @Test
+    void holderOf_ReportsAssignee_FromTicket() {
+        Board board = boardAt(0);
+        BoardTicket addressed = new BoardTicket("house_1", BoardCase.BUILD_HOUSE, Optional.of(SPIRIT_TWO),
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 6000, List.of(), Map.of());
+        board.submit(addressed);
+
+        assertEquals(Optional.of(SPIRIT_TWO), board.holderOf("house_1"),
+                "Адресное задание числится за владельцем из заявки ещё до выдачи: наблюдатель видит адресата");
+    }
+
+    @Test
     void all_Sorted_ByPriority() {
         Board board = boardAt(0);
         BoardTicket house = ticket("house_1", BoardCase.BUILD_HOUSE, 100, 6000, List.of());

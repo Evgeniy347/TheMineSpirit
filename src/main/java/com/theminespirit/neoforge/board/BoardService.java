@@ -48,6 +48,7 @@ public final class BoardService {
     private final AnimalLifecycle animals;
     private final StockReader stockReader;
     private final Map<String, TicketTarget> targets = new HashMap<>();
+    private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
     private int claims;
@@ -71,6 +72,14 @@ public final class BoardService {
 
     public Board board() {
         return board;
+    }
+
+    /**
+     * Последний снимок запасов пересборки: наблюдатель REST показывает по нему {@code missing},
+     * не читая мир лишний раз. До первой пересборки снимок пуст.
+     */
+    public StockView stock() {
+        return stock;
     }
 
     public int rebuilds() {
@@ -121,6 +130,27 @@ public final class BoardService {
         return outcome;
     }
 
+    /**
+     * Постановка задания без точки (источник — REST стратега): цель не задана, при выдаче
+     * берётся дом поселения, как для заявок без цели.
+     */
+    public BoardOutcome submit(BoardTicket ticket) {
+        return board.submit(ticket);
+    }
+
+    /**
+     * Отмена задания: доска снимает его (и зависимые), цель забывается. Мир остаётся
+     * консистентным — выданное задание дух прекращает по {@code cancelTask} координатора,
+     * брони снимает {@code releaseAll} хука 31.
+     */
+    public boolean cancel(String ticketId) {
+        boolean cancelled = board.cancel(ticketId);
+        if (cancelled) {
+            targets.keySet().remove(ticketId);
+        }
+        return cancelled;
+    }
+
     /** Дух погиб: его выданные задания возвращаются в очередь, брони снимаются. */
     public void releaseSpirit(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
@@ -168,7 +198,7 @@ public final class BoardService {
         StockReader.Snapshot snapshot = stockReader.collect(level, spirits, gateCenters(spirits));
         stockBlockReads += snapshot.blockReads();
         stockContainers += snapshot.containers();
-        StockView stock = snapshot.view();
+        stock = snapshot.view();
         ensureSupply(spirits, stock, now);
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);

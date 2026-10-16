@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.rest;
 
+import com.theminespirit.core.rest.BoardRoutes;
 import com.theminespirit.core.rest.IdempotencyCache;
 import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.Router;
@@ -26,6 +27,9 @@ public final class RestRouter {
         TaskRoutes taskRoutes = new TaskRoutes(gateway.taskRegistry(), taskGateway, planning,
                 new IdempotencyCache(), slots);
         routes.addAll(taskRoutes.routes());
+        BoardRoutes boardRoutes = new BoardRoutes(new SpiritBoardGateway(gateway.server()),
+                new IdempotencyCache());
+        routes.addAll(boardRoutes.routes());
         return Router.of(routes);
     }
 }

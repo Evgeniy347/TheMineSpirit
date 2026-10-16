@@ -96,6 +96,10 @@ public final class IdempotencyCache {
         body.put("goal", goal);
         body.put("plan", planJson == null ? null : readPlan(planJson));
         body.put("params", params == null ? Map.of() : params);
+        return fingerprintOf(body);
+    }
+
+    public static String fingerprintOf(Map<String, Object> body) {
         try {
             String canonical = CANONICAL.writeValueAsString(body);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
