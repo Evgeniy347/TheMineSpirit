@@ -50,6 +50,8 @@
   (процесс жив, логи сессии не пишутся > 30 мин), ресурсы (`res-pc.ps1`: память < 15 %, CPU > 90 % без исполнителей,
   долгоживущий bash/java/find), сироты (`res-pc.ps1` на ПК, `orphan-sweep.sh` на сервере). Перед новым запуском — нет ли
   старых копий: `ps -ef | grep oc-watch.sh`.
+- **Статус агентов в чат — коротко** (владелец 16.10): строка на агента «где; модель; задача; что сейчас», без пересказа
+  логов и рассуждений.
 - **Сводка в Telegram раз в 5 мин** (владелец 16.10) — таймер `mc-progress` на сервере
   (`sudo systemd-run --unit=mc-progress --on-calendar='*:0/5' --setenv=LEAD_AGENTS=/opt/minecraft/lead-agents.txt
   /opt/minecraft/the-mine-spirit/scripts/opencode-status-notify.sh`): прогресс плана и список агентов
