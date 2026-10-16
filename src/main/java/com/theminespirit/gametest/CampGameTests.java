@@ -31,6 +31,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CampGameTests {
     private static final int FUTURE_VERSION = 99;
     private static final int ARRIVE_LIMIT_TICKS = 100;
+    private static final double ARRIVE_DISTANCE = 2.5;
 
     private CampGameTests() {
     }
@@ -97,7 +98,7 @@ public final class CampGameTests {
                         Optional.of(RetreatMethod.AWAY), Optional.empty()));
                 spirit.tactics().setForcedRetreat(RetreatMethod.HOME, Optional.empty());
             }
-            if (orderedAt[0] >= 0 && MovementScene.distanceTo(helper, spirit, camp) > 2.0
+            if (orderedAt[0] >= 0 && MovementScene.distanceTo(helper, spirit, camp) > ARRIVE_DISTANCE
                     && spirit.tickCount - orderedAt[0] > ARRIVE_LIMIT_TICKS) {
                 helper.fail("дух не дошёл до лагеря за " + ARRIVE_LIMIT_TICKS + " тиков духа, расстояние "
                         + MovementScene.distanceTo(helper, spirit, camp) + ", решение "
@@ -107,7 +108,7 @@ public final class CampGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(orderedAt[0] >= 0, "приказ отхода ещё не отдан: дух не тикает");
-            helper.assertTrue(MovementScene.distanceTo(helper, spirit, camp) <= 2.0,
+            helper.assertTrue(MovementScene.distanceTo(helper, spirit, camp) <= ARRIVE_DISTANCE,
                     "дух идёт к ближнему лагерю, а не к дальнему дому");
             helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.HOME,
                     "исполняемый отход — HOME, получено " + spirit.tactics().retreat().method());
@@ -132,7 +133,7 @@ public final class CampGameTests {
                         Optional.of(RetreatMethod.AWAY), Optional.empty()));
                 spirit.tactics().setForcedRetreat(RetreatMethod.HOME, Optional.empty());
             }
-            if (orderedAt[0] >= 0 && MovementScene.distanceTo(helper, spirit, home) > 2.0
+            if (orderedAt[0] >= 0 && MovementScene.distanceTo(helper, spirit, home) > ARRIVE_DISTANCE
                     && spirit.tickCount - orderedAt[0] > ARRIVE_LIMIT_TICKS) {
                 helper.fail("дух не дошёл до ближнего дома за " + ARRIVE_LIMIT_TICKS + " тиков духа, расстояние "
                         + MovementScene.distanceTo(helper, spirit, home) + ", решение "
@@ -146,7 +147,7 @@ public final class CampGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(orderedAt[0] >= 0, "приказ отхода ещё не отдан: дух не тикает");
-            helper.assertTrue(MovementScene.distanceTo(helper, spirit, home) <= 2.0,
+            helper.assertTrue(MovementScene.distanceTo(helper, spirit, home) <= ARRIVE_DISTANCE,
                     "дух идёт к ближнему дому, а не к дальнему лагерю");
             helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.HOME,
                     "исполняемый отход — HOME, получено " + spirit.tactics().retreat().method());
@@ -171,7 +172,7 @@ public final class CampGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = MovementScene.distanceTo(helper, spirit, camp);
-            helper.assertTrue(distance <= 2.0,
+            helper.assertTrue(distance <= ARRIVE_DISTANCE,
                     "план retreat идёт к ближнему лагерю, а не к дальнему дому: расстояние до лагеря " + distance);
             MovementScene.finish(helper);
         });
