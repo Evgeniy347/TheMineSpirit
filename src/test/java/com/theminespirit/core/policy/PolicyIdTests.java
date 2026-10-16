@@ -8,15 +8,15 @@ import org.junit.jupiter.api.Test;
 
 class PolicyIdTests {
     @Test
-    void values_ContainsAllExpectedPolicies_ExactlyTen() {
+    void values_ContainsAllExpectedPolicies_ExactlyEleven() {
         EnumSet<PolicyId> expected = EnumSet.of(
                 PolicyId.LAVA_FIRE, PolicyId.DROP, PolicyId.WATER, PolicyId.AIR,
                 PolicyId.EXPLOSIVE, PolicyId.PORTAL, PolicyId.PROTECTED_BLOCKS,
-                PolicyId.PLAYER_BUILDINGS, PolicyId.PROTECTED_ZONE, PolicyId.WORK_ZONE
+                PolicyId.PLAYER_BUILDINGS, PolicyId.PROTECTED_ZONE, PolicyId.WORK_ZONE, PolicyId.HUNGER
         );
 
         assertEquals(expected, EnumSet.allOf(PolicyId.class),
-                "PolicyId должен содержать ровно 10 политик из таблицы чеклиста 20");
+                "PolicyId должен содержать ровно 11 политик из таблицы чеклиста 20 и рефлекса голода");
     }
 
     @Test

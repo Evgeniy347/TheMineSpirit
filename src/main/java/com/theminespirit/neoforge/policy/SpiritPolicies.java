@@ -7,6 +7,7 @@ import com.theminespirit.core.policy.AirPolicy;
 import com.theminespirit.core.policy.BodyFlags;
 import com.theminespirit.core.policy.ExplosionAvoidance;
 import com.theminespirit.core.policy.HazardReflex;
+import com.theminespirit.core.policy.HungerPolicy;
 import com.theminespirit.core.policy.LayerArbiter;
 import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyExemptions;
@@ -208,7 +209,14 @@ public final class SpiritPolicies {
         if (portal instanceof PolicyVerdict.Reflex) {
             return portal;
         }
-        return workZone == null ? CLEAR : ZonePolicy.evaluateInside(feetCoord(), workZone);
+        if (workZone != null) {
+            PolicyVerdict zone = ZonePolicy.evaluateInside(feetCoord(), workZone);
+            if (zone instanceof PolicyVerdict.Reflex) {
+                return zone;
+            }
+        }
+        return HungerPolicy.evaluate(spirit.hunger().foodLevel(), spirit.hunger().rules(),
+                spirit.hunger().hasFood(), spirit.tactics().wantsControl());
     }
 
     private PolicyVerdict guardTimeout(PolicyVerdict candidate, long now) {

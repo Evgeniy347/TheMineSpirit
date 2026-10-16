@@ -10,5 +10,6 @@ public enum PolicyId {
     PROTECTED_BLOCKS,
     PLAYER_BUILDINGS,
     PROTECTED_ZONE,
-    WORK_ZONE
+    WORK_ZONE,
+    HUNGER
 }

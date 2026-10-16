@@ -33,4 +33,7 @@ public sealed interface ReflexAction {
 
     record StopMoving() implements ReflexAction {
     }
+
+    record Eat() implements ReflexAction {
+    }
 }

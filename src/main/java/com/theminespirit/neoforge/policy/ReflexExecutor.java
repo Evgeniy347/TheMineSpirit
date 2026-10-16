@@ -23,6 +23,7 @@ final class ReflexExecutor {
             case ReflexAction.ReturnToZone back -> moveTo(spirit, back.cell());
             case ReflexAction.Surface surface -> swimUp(spirit);
             case ReflexAction.StopMoving stop -> release(spirit);
+            case ReflexAction.Eat eat -> spirit.hunger().eatBest();
         }
     }
 
