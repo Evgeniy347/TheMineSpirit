@@ -206,7 +206,7 @@
    `pen_species_full` (п. 3) и фильтр `CAPTURE_ANIMAL` (новых не ловим). Тесты: 3 в загоне → ловим; 4 → нет;
    5 → нет (защита от гонки); пойманное в укрытии считается к лимиту; лимит из конфига, число в тесте —
    литерал, факт — `assertEquals(4, cfg.maxPerSpecies())`.
-- [ ] 9. **`RelocatePlan` — задание «перенос».** `RELOCATE_BUILDING` несёт в `TicketTarget` `from` и `to`
+- [x] 9. **`RelocatePlan` — задание «перенос».** `RELOCATE_BUILDING` несёт в `TicketTarget` `from` и `to`
    (две точки) и сносит/строит: план = `clear_area`/`dig` постройки в `from` + `build_schematic` в `to`
    (схема та же). Неподвижные постройки — данные `immovable` в `board.json` (`["BUILD_MINE"]` — «пока только
    вход в шахты»): источник и REST не ставят `RELOCATE_BUILDING` для неподвижного кейса. Тесты: перенос

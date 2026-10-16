@@ -58,5 +58,8 @@
   "herd": {
     "maxPerSpecies": 4,
     "minBreed": 2
-  }
+  },
+  "immovable": [
+    "BUILD_MINE"
+  ]
 }

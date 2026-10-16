@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.reload.DataTables;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -102,6 +103,30 @@ class BoardConfigTests {
                         + "по умолчанию без ведома настройщика");
         assertTrue(failure.getMessage().contains("maxPerSpecie"),
                 "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+    }
+
+    @Test
+    void defaults_FromClasspath_ImmovableMatchesLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(List.of("BUILD_MINE"), config.immovable(),
+                "Неподвижные постройки обязаны совпадать с литералами: пока только вход в шахту "
+                        + "(ответ владельца 16.10). Лишний кейс в файле без теста и забытый ключ в "
+                        + "тесте красят прогон");
+        assertTrue(config.immovable().contains("BUILD_MINE"),
+                "Вход в шахту неподвижен: его нельзя переносить");
+    }
+
+    @Test
+    void fromJson_UnknownImmovableCase_FailsNamingCase() {
+        String json = "{\"immovable\":[\"BUILD_MINES\"]}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в имени неподвижного кейса обязана падать: молча потерянная строка "
+                        + "оставила бы постройку переносимой без ведома настройщика");
+        assertTrue(failure.getMessage().contains("BUILD_MINES"),
+                "Сообщение обязано называть неверный кейс: " + failure.getMessage());
     }
 
     @Test

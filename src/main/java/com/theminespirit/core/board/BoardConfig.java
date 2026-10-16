@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,7 +73,8 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Integer> supplies = integers(root.get("supplies"), origin, "supplies",
                 BoardConfig::supplyKey, false);
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
-        return new BoardConfig(priorities, modifiers, intervals, levels, herd, List.of(), supplies);
+        List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
+        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies);
     }
 
     public static BoardConfig readFromClasspath() {
@@ -140,6 +142,32 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             values.put(key, number);
         }
         return values;
+    }
+
+    private static List<String> caseList(JsonNode node, String origin, String field) {
+        List<String> values = new ArrayList<>();
+        if (node == null || node.isNull()) {
+            return values;
+        }
+        if (!node.isArray()) {
+            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "' — не массив: ожидается "
+                    + "список имён кейсов");
+        }
+        for (JsonNode item : node) {
+            if (!item.isTextual() || item.textValue().isBlank()) {
+                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': элемент обязан "
+                        + "быть непустой строкой-именем кейса, получено: " + item);
+            }
+            String key = item.textValue();
+            try {
+                BoardCase.valueOf(key);
+            } catch (IllegalArgumentException unknown) {
+                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': кейс '" + key
+                        + "' неизвестен: опечатка в имени молча потеряла бы строку таблицы", unknown);
+            }
+            values.add(key);
+        }
+        return List.copyOf(values);
     }
 
     private static String supplyKey(String key) {
