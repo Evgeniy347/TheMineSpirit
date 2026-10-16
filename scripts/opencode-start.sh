@@ -22,7 +22,9 @@ fi
 resume=()
 [ -n "$session" ] && resume=(-s "$session")
 # Надзор всегда берётся из main: копии скрипта в worktree устаревают, а правки надзора нужны всем потокам сразу.
-printf -v command 'cd %q && OPENCODE_ALLOW_DIRTY=1 OPENCODE_REPO_DIR=%q OPENCODE_MODEL=%q OPENCODE_LOG_ROOT=%q %q %s "$(cat %q)" > %q 2>&1; echo EXIT=$? >> %q' \
+# Исполнитель и всё, что он запускает (gradle, java GameTest, find…), — с низшим приоритетом CPU и диска: на сервере
+# идут записи видео и игровой сервер (владелец 16.10). Дочерние процессы наследуют nice и ionice.
+printf -v command 'cd %q && OPENCODE_ALLOW_DIRTY=1 OPENCODE_REPO_DIR=%q OPENCODE_MODEL=%q OPENCODE_LOG_ROOT=%q nice -n 19 ionice -c3 %q %s "$(cat %q)" > %q 2>&1; echo EXIT=$? >> %q' \
     "$worktree" "$worktree" "$model" "$results" "$main/scripts/opencode-task.sh" "${resume[*]:-}" "$results/$task.msg" "$results/$task.out" "$results/$task.out"
 tmux new-session -d -s "$tmux_name" "$command"
 echo "$task:$tmux_name" >> "$results/watch.list"
