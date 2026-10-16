@@ -264,11 +264,19 @@ class PresetLibraryTests {
 
     @Test
     void parse_PlannedUnknownRequires_IsRejected() {
-        LoadedContent index = new LoadedContent("{\"version\":1,\"presets\":[],\"planned\":[{\"level\":3,"
-                + "\"name\":\"Финал\",\"requires\":\"ghost\"}]}", "тестовый индекс", TableStatus.Source.BUILTIN);
+        LoadedContent index = new LoadedContent("{\"version\":1,\"presets\":[{\"id\":\"hut\",\"file\":\"hut\","
+                + "\"name\":\"Хижина\",\"stage\":0,\"type\":\"housing\",\"size\":[2,1,1],\"entry\":[0,0,0]}],"
+                + "\"planned\":[{\"level\":3,\"name\":\"Финал\",\"requires\":\"ghost\"}]}",
+                "тестовый индекс", TableStatus.Source.BUILTIN);
+        LoadedContent body = bodyContent(body("2,1,1", "{\"pos\":[1,0,0],\"block\":\"minecraft:oak_planks\"}"));
 
-        assertThrows(IllegalStateException.class, () -> PresetLibrary.parse(List.of(index)),
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> PresetLibrary.parse(List.of(index, body)),
                 "Запланированный уровень с неизвестным требованием обязан отвергаться: иначе финал числится "
                         + "доступным без предыдущей постройки");
+
+        assertTrue(error.getMessage().contains("ghost"),
+                "Ошибка обязана называть неизвестный id требования запланированного уровня; фактически: "
+                        + error.getMessage());
     }
 }
