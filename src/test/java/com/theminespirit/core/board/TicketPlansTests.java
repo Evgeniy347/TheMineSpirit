@@ -172,12 +172,37 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_FillCrater_GathersDirt() {
+    void plan_FillCrater_AcquiresDirtFromStock() {
         TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target().withCraterBlocks(29));
 
-        assertTrue(collectScripts(plan).contains("gather"),
-                "Воронка обязана начинаться с добычи земли через ResourceResolver: без "
-                        + "сбора дух пришёл бы засыпать яму пустыми руками");
+        assertTrue(collectScripts(plan).contains("acquire"),
+                "Воронка обязана брать землю через acquire: гейт уже проверил склад, "
+                        + "и план берёт из запаса, а не копает заново");
+        assertTrue(!collectScripts(plan).contains("gather"),
+                "План воронки не копает вслепую: gather игнорирует склад и проваливается "
+                        + "там, где земли рядом нет, хотя гейт её уже нашёл");
+    }
+
+    @Test
+    void plan_SupplySite_ClampsHugeCount() {
+        TaskNode plan = TicketPlans.plan(BoardCase.SUPPLY_SITE,
+                target().withSupply("dirt", 5000));
+        ScriptCall acquire = findCall(plan, "acquire");
+
+        assertEquals(256, acquire.params().get("count"),
+                "Снабжение режет партию пределом каталога: AcquireParams принимает не больше "
+                        + "COUNT_MAX, без нарезки дух падает на выдаче (" + acquire.params().get("count")
+                        + "), а остаток доска дозакажет следующим заданием");
+    }
+
+    @Test
+    void plan_FillCrater_ClampsHugeEstimate() {
+        TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target().withCraterBlocks(10000));
+        ScriptCall acquire = findCall(plan, "acquire");
+
+        assertEquals(256, acquire.params().get("count"),
+                "Оценка большой воронки тоже режется пределом каталога: иначе acquire "
+                        + "падает на выдаче (" + acquire.params().get("count") + ")");
     }
 
     @Test

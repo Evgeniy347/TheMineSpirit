@@ -5,9 +5,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
-import com.theminespirit.core.planner.ResourceKnowledge;
-import com.theminespirit.core.planner.ResourceResolver;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,38 +31,6 @@ public final class TicketPlans {
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
-
-    private static final ResourceKnowledge SIMPLE_KNOWLEDGE = new ResourceKnowledge() {
-        @Override
-        public boolean isGatherable(String item) {
-            return true;
-        }
-
-        @Override
-        public boolean isCraftable(String item) {
-            return false;
-        }
-
-        @Override
-        public int outputCount(String item) {
-            return 1;
-        }
-
-        @Override
-        public List<Ingredient> ingredientsFor(String item) {
-            return List.of();
-        }
-
-        @Override
-        public boolean isSmeltable(String item) {
-            return false;
-        }
-
-        @Override
-        public String smeltInputFor(String item) {
-            return item;
-        }
-    };
 
     private TicketPlans() {
     }
@@ -101,8 +66,8 @@ public final class TicketPlans {
                 : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
         return sequence(
                 gotoTarget(target),
-                ResourceResolver.resolve("dirt", blocks,
-                        target.knowledge() == null ? SIMPLE_KNOWLEDGE : target.knowledge()),
+                new ScriptCall("acquire", Map.of("item", "dirt", "count",
+                        Math.min(blocks, CatalogLimits.COUNT_MAX))),
                 fillArea(target, "dirt", CRATER_FILL_RADIUS));
     }
 
@@ -173,9 +138,10 @@ public final class TicketPlans {
     private static TaskNode supplySite(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
+        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         return sequence(gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", item, "count", count)),
-                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", count,
+                new ScriptCall("acquire", Map.of("item", item, "count", batch)),
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", batch,
                         "radius", SUPPLY_CONTAINER_RADIUS)));
     }
 

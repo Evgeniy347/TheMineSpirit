@@ -39,6 +39,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /**
  * Воронка от крипера на доске: взрыв за территорией → FILL_CRATER с числом блоков земли;
  * взрыв не крипера → задания нет; с землёй — ровная заделка, без — ожидание и добыча.
+ * Проводка события синхронна (пост идёт прямо на шину); заделка ждёт духа через succeedWhen
+ * только конечным состоянием — без фаз (лямбда succeedWhen завершает тест при первом
+ * нормальном выходе, фазы после первого прохода не выполняются никогда).
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -63,7 +66,7 @@ public final class BoardCraterGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
     public static void crater_BlastOutsideTerritory_TicketWithDirtCount(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -89,40 +92,39 @@ public final class BoardCraterGameTests {
                         false, Explosion.BlockInteraction.DESTROY_WITH_DECAY),
                 List.of()));
         String alienId = "crater:" + alienX + "," + home.y() + "," + alienZ;
+        BoardService board = BoardRegistry.get(level);
 
-        helper.succeedWhen(() -> {
-            BoardService board = BoardRegistry.get(level);
-            BoardTicket ticket = board.board().find(craterId).orElse(null);
-            helper.assertTrue(ticket != null,
-                    "Взрыв крипера за территорией обязан поднять FILL_CRATER " + craterId
-                            + ": иначе воронки за городом не заделываются");
-            helper.assertTrue(ticket.boardCase() == BoardCase.FILL_CRATER,
-                    "Задание воронки — кейс FILL_CRATER, фактически " + ticket.boardCase());
-            helper.assertTrue(Map.of("dirt", BLAST_DIRT).equals(ticket.requiredItems()),
-                    "Воронка радиуса 5 требует 79 земли (ceil(pi*25)), фактически "
-                            + ticket.requiredItems() + ": гейт с неверным числом либо держит "
-                            + "лишнее, либо отпускает без запаса");
-            helper.assertTrue(board.board().find(alienId).isEmpty(),
-                    "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId
-                            + " поднялось зря");
-            helper.assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) == 80,
-                    "Приоритет воронки — 80 (ниже ремонта 100, выше стройки 50), фактически "
-                            + BoardRules.priorityOf(BoardCase.FILL_CRATER));
-            List<Point> homes = List.of(new Point(home.x(), home.z()));
-            helper.assertTrue(!CraterNeed.outsideTerritory(new Point(home.x() + 4, home.z()), homes,
-                            BoardTuning.craterTerritoryRadius()),
-                    "Взрыв в 4 блоках от дома — внутри территории: воронку закрывает координатор, "
-                            + "а не доска");
-            helper.assertTrue(CraterNeed.outsideTerritory(new Point(farX, farZ), homes,
-                            BoardTuning.craterTerritoryRadius()),
-                    "Взрыв в 100000 блоках — за территорией: предикат обязан это видеть");
-            board.board().cancel(craterId);
-            helper.assertTrue(board.board().statusOf(craterId).orElse(null)
-                            == BoardStatus.CANCELLED,
-                    "Проверенная воронка снимается отменой, а не висит в очереди: статус "
-                            + board.board().statusOf(craterId).orElse(null));
-            GameTestFixtures.finish(helper);
-        });
+        BoardTicket ticket = board.board().find(craterId).orElse(null);
+        helper.assertTrue(ticket != null,
+                "Взрыв крипера за территорией обязан поднять FILL_CRATER " + craterId
+                        + ": иначе воронки за городом не заделываются");
+        helper.assertTrue(ticket.boardCase() == BoardCase.FILL_CRATER,
+                "Задание воронки — кейс FILL_CRATER, фактически " + ticket.boardCase());
+        helper.assertTrue(Map.of("dirt", BLAST_DIRT).equals(ticket.requiredItems()),
+                "Воронка радиуса 5 требует 79 земли (ceil(pi*25)), фактически "
+                        + ticket.requiredItems() + ": гейт с неверным числом либо держит "
+                        + "лишнее, либо отпускает без запаса");
+        helper.assertTrue(board.board().find(alienId).isEmpty(),
+                "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId
+                        + " поднялось зря");
+        helper.assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) == 80,
+                "Приоритет воронки — 80 (ниже ремонта 100, выше стройки 50), фактически "
+                        + BoardRules.priorityOf(BoardCase.FILL_CRATER));
+        List<Point> homes = List.of(new Point(home.x(), home.z()));
+        helper.assertTrue(!CraterNeed.outsideTerritory(new Point(home.x() + 4, home.z()), homes,
+                        BoardTuning.craterTerritoryRadius()),
+                "Взрыв в 4 блоках от дома — внутри территории: воронку закрывает координатор, "
+                        + "а не доска");
+        helper.assertTrue(CraterNeed.outsideTerritory(new Point(farX, farZ), homes,
+                        BoardTuning.craterTerritoryRadius()),
+                "Взрыв в 100000 блоках — за территорией: предикат обязан это видеть");
+        board.board().cancel(craterId);
+        helper.assertTrue(board.board().statusOf(craterId).orElse(null)
+                        == BoardStatus.CANCELLED,
+                "Проверенная воронка снимается отменой, а не висит в очереди: статус "
+                        + board.board().statusOf(craterId).orElse(null));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = FILL_TIMEOUT_TICKS)
@@ -151,14 +153,16 @@ public final class BoardCraterGameTests {
         board.rebuild(level, level.getGameTime());
 
         helper.succeedWhen(() -> {
+            long now = level.getGameTime();
             helper.assertTrue(board.board().statusOf("board_test_crater_wait").orElse(null)
                             == BoardStatus.WAITING_RESOURCES,
                     "Без 5000 земли задание висит в WAITING_RESOURCES, статус "
                             + board.board().statusOf("board_test_crater_wait").orElse(null)
                             + ": стройка, стартовавшая без ресурсов, ломает гейт доски");
-            helper.assertTrue(board.board().statusOf("supply:dirt").isPresent(),
+            helper.assertTrue(board.board().statusOf("supply:dirt").isPresent()
+                            || board.board().recentlyFailed("supply:dirt", now),
                     "При нехватке доска ставит добычу supply:dirt: без неё ждущее задание "
-                            + "зависнет навсегда");
+                            + "зависнет навсегда (добыча видна как задание, либо как свежий провал)");
             helper.assertTrue(spirit.getUUID()
                             .equals(board.board().holderOf("board_test_crater_fill").orElse(null)),
                     "Заделку держит назначенный дух: держатель "
