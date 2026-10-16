@@ -228,6 +228,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 - `herd_check` (`species`, `radius`) — сосчитать стадо
 - `hunt` (`species`, `radius`, `count`) — забить диких животных
 - `capture` (`species`, `radius`) — поймать животное в кольцо из блоков
+- `fish` (`count`, `duration_ticks`, `radius`) — ловить рыбу удочкой у открытой воды
 - `craft` (`item`, `count`, `radius`) — скрафтить предмет
 - `smelt` (`item`, `count`, `radius`) — переплавить предмет
 - `equip` (`item`) — надеть предмет

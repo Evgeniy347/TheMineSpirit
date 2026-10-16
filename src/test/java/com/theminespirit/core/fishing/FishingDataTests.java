@@ -19,7 +19,7 @@ class FishingDataTests {
     }
 
     @Test
-    void parse_Boundaries_AcceptedAndOutside_Rejected() {
+    void parse_BoundaryWater_AcceptsEdgesRejectsOutside() {
         assertEquals(new FishingData(2, 1), FishingData.parse("""
                 {"minWidth": 2, "minDepth": 1}""", "test"),
                 "Наименьшая допустимая вода — 2x2 глубиной 1");

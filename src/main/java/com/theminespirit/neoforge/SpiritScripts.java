@@ -24,6 +24,7 @@ import com.theminespirit.core.script.DigAreaParams;
 import com.theminespirit.core.script.DigDescentParams;
 import com.theminespirit.core.script.FillCraterParams;
 import com.theminespirit.core.script.FillParams;
+import com.theminespirit.core.script.FishingParams;
 import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.CollectEggsParams;
@@ -170,6 +171,7 @@ public final class SpiritScripts {
         table.put("herd_check", spirit -> params -> new HerdCheckScript(spirit, HerdCheckParams.from(params)));
         table.put("hunt", spirit -> params -> new HuntScript(spirit, HuntParams.from(params)));
         table.put("capture", spirit -> params -> new CaptureScript(spirit, CaptureParams.from(params)));
+        table.put("fish", spirit -> params -> new FishScript(spirit, FishingParams.from(params)));
         table.put("deposit", spirit -> params -> new DepositScript(spirit, TransferParams.from(params)));
         table.put("withdraw", spirit -> params -> new WithdrawScript(spirit, TransferParams.from(params)));
         table.put("eat", spirit -> params -> new EatScript(spirit, EatParams.from(params)));
