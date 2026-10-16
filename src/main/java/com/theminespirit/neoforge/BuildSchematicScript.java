@@ -12,17 +12,39 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 final class BuildSchematicScript implements ScriptInstance {
+    private enum PlaceOutcome {
+        DONE,
+        RETRY
+    }
+
+    private enum ScaffoldPhase {
+        NONE,
+        APPROACH,
+        USE
+    }
+
+    private static final String[] SCAFFOLD_MATERIALS = {
+            "minecraft:cobblestone", "minecraft:oak_planks", "minecraft:dirt", "minecraft:stone"
+    };
+
     private final SpiritEntity spirit;
     private final Level level;
     private final String file;
@@ -32,6 +54,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private final BlockPlacer placer;
     private final Approach approach;
     private final BuildReservations reservations;
+    private final Set<BlockCoord> scaffolds = new LinkedHashSet<>();
 
     private int cursor;
     private int placed;
@@ -44,6 +67,9 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private List<BlockCoord> stands = List.of();
     private int standIndex;
+    private ScaffoldPhase scaffoldPhase = ScaffoldPhase.NONE;
+    private BlockCoord scaffold;
+    private String scaffoldBlock;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -70,6 +96,7 @@ final class BuildSchematicScript implements ScriptInstance {
             BlockState current = level.getBlockState(toPos(entry.pos()));
             BlockState wanted = BlockStates.stateFor(entry.block());
             if (current.is(wanted.getBlock())) {
+                resetEntry();
                 cursor++;
                 continue;
             }
@@ -79,37 +106,17 @@ final class BuildSchematicScript implements ScriptInstance {
                 continue;
             }
             reservations.reserve(entry.pos(), spirit.getUUID());
-            if (!approach.isActive()) {
-                if (stands.isEmpty()) {
-                    stands = standCandidates(entry.pos());
-                    standIndex = 0;
-                }
-                if (standIndex >= stands.size()) {
-                    skipEntry(entry);
-                    return ScriptStatus.RUNNING;
-                }
-                BlockCoord stand = stands.get(standIndex);
-                approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-            }
-            switch (approach.tick()) {
-                case MOVING -> {
-                    return ScriptStatus.RUNNING;
-                }
-                case ARRIVED -> {
-                    place(entry, wanted);
-                    resetEntry();
-                }
-                case STUCK, TIMEOUT -> {
-                    approach.cancel();
-                    standIndex++;
-                    if (standIndex >= stands.size()) {
-                        skipEntry(entry);
-                    }
-                }
+            if (scaffoldPhase == ScaffoldPhase.APPROACH) {
+                scaffoldApproachTick(entry, wanted);
+            } else if (scaffoldPhase == ScaffoldPhase.USE) {
+                scaffoldUseTick(entry, wanted);
+            } else {
+                targetTick(entry, wanted);
             }
             return ScriptStatus.RUNNING;
         }
         reservations.releaseAll(spirit.getUUID());
+        removeScaffolds();
         if (failed > 0) {
             return outcome;
         }
@@ -122,13 +129,178 @@ final class BuildSchematicScript implements ScriptInstance {
         return outcome;
     }
 
+    private void targetTick(Schematic.PlacedEntry entry, BlockState wanted) {
+        if (!approach.isActive()) {
+            if (stands.isEmpty()) {
+                stands = standCandidates(entry.pos());
+                standIndex = 0;
+            }
+            if (standIndex >= stands.size()) {
+                beginScaffold(entry);
+                return;
+            }
+            approachTo(stands.get(standIndex));
+        }
+        switch (approach.tick()) {
+            case MOVING -> {
+            }
+            case ARRIVED -> {
+                if (place(entry, wanted) == PlaceOutcome.RETRY) {
+                    approach.cancel();
+                    standIndex++;
+                    if (standIndex >= stands.size()) {
+                        beginScaffold(entry);
+                    }
+                } else {
+                    resetEntry();
+                }
+            }
+            case STUCK, TIMEOUT -> {
+                approach.cancel();
+                standIndex++;
+                if (standIndex >= stands.size()) {
+                    beginScaffold(entry);
+                }
+            }
+        }
+    }
+
+    private void beginScaffold(Schematic.PlacedEntry entry) {
+        if (scaffoldPhase != ScaffoldPhase.NONE) {
+            skipEntry(entry);
+            return;
+        }
+        BlockCoord below = below(entry.pos());
+        String material = scaffoldMaterial();
+        if (material == null || scaffolds.contains(below) || !canBeScaffold(below)) {
+            skipEntry(entry);
+            return;
+        }
+        scaffold = below;
+        scaffoldBlock = material;
+        scaffoldPhase = ScaffoldPhase.APPROACH;
+        stands = standCandidates(below);
+        standIndex = 0;
+        if (stands.isEmpty()) {
+            skipEntry(entry);
+            return;
+        }
+        approachTo(stands.get(0));
+    }
+
+    private void scaffoldApproachTick(Schematic.PlacedEntry entry, BlockState wanted) {
+        switch (approach.tick()) {
+            case MOVING -> {
+            }
+            case ARRIVED -> {
+                BlockPlacer.Begin begin = placer.begin(toPos(scaffold), BlockStates.stateFor(scaffoldBlock), scaffoldBlock);
+                if (begin instanceof BlockPlacer.Started) {
+                    scaffolds.add(scaffold);
+                    scaffoldPhase = ScaffoldPhase.USE;
+                    approachTo(scaffold);
+                } else {
+                    skipEntry(entry);
+                }
+            }
+            case STUCK, TIMEOUT -> skipEntry(entry);
+        }
+    }
+
+    private void scaffoldUseTick(Schematic.PlacedEntry entry, BlockState wanted) {
+        switch (approach.tick()) {
+            case MOVING -> {
+            }
+            case ARRIVED -> {
+                place(entry, wanted);
+                resetEntry();
+            }
+            case STUCK, TIMEOUT -> skipEntry(entry);
+        }
+    }
+
+    private void approachTo(BlockCoord stand) {
+        approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+    }
+
     private List<BlockCoord> standCandidates(BlockCoord cell) {
         List<BlockCoord> candidates = new ArrayList<>(StandSpots.of(cell, safety, spiritCoord()));
         BlockCoord below = below(cell);
         if (!candidates.contains(below) && MiningSafety.canStand(below, safety)) {
             candidates.add(below);
         }
+        addStandOnTop(candidates, new BlockCoord(cell.x() + 1, cell.y(), cell.z()));
+        addStandOnTop(candidates, new BlockCoord(cell.x() - 1, cell.y(), cell.z()));
+        addStandOnTop(candidates, new BlockCoord(cell.x(), cell.y(), cell.z() + 1));
+        addStandOnTop(candidates, new BlockCoord(cell.x(), cell.y(), cell.z() - 1));
+        addDeepBelow(candidates, cell);
+        addColumnBelow(candidates, cell, 1, 0);
+        addColumnBelow(candidates, cell, -1, 0);
+        addColumnBelow(candidates, cell, 0, 1);
+        addColumnBelow(candidates, cell, 0, -1);
         return List.copyOf(candidates);
+    }
+
+    private void addColumnBelow(List<BlockCoord> candidates, BlockCoord cell, int dx, int dz) {
+        BlockCoord column = new BlockCoord(cell.x() + dx, cell.y(), cell.z() + dz);
+        if (!level.getBlockState(toPos(column)).isAir()) {
+            return;
+        }
+        for (int depth = 0; depth <= 6; depth++) {
+            BlockCoord stand = new BlockCoord(column.x(), column.y() - depth, column.z());
+            if (MiningSafety.canStand(stand, safety)) {
+                if (reachable(cell, stand) && !candidates.contains(stand)) {
+                    candidates.add(stand);
+                }
+                return;
+            }
+        }
+    }
+
+    private void addDeepBelow(List<BlockCoord> candidates, BlockCoord cell) {
+        for (int depth = 1; depth <= 6; depth++) {
+            BlockCoord stand = new BlockCoord(cell.x(), cell.y() - depth, cell.z());
+            if (!MiningSafety.canStand(stand, safety)) {
+                continue;
+            }
+            if (reachable(cell, stand) && !candidates.contains(stand)) {
+                candidates.add(stand);
+            }
+        }
+    }
+
+    private boolean reachable(BlockCoord cell, BlockCoord stand) {
+        double dx = stand.x() + 0.5 - (cell.x() + 0.5);
+        double dy = stand.y() + 1.6 - (cell.y() + 0.5);
+        double dz = stand.z() + 0.5 - (cell.z() + 0.5);
+        return Math.sqrt(dx * dx + dy * dy + dz * dz) <= BlockBreaker.REACH;
+    }
+
+    private void addStandOnTop(List<BlockCoord> candidates, BlockCoord neighbour) {
+        if (level.getBlockState(toPos(neighbour)).isAir()) {
+            return;
+        }
+        BlockCoord top = new BlockCoord(neighbour.x(), neighbour.y() + 1, neighbour.z());
+        if (!candidates.contains(top) && MiningSafety.canStand(top, safety)) {
+            candidates.add(top);
+        }
+    }
+
+    private String scaffoldMaterial() {
+        for (String candidate : SCAFFOLD_MATERIALS) {
+            if (BlockItems.countIn(spirit.getInventory(), candidate) > 0) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean canBeScaffold(BlockCoord cell) {
+        BlockState state = level.getBlockState(toPos(cell));
+        if (!state.isAir() && !state.canBeReplaced()) {
+            return false;
+        }
+        BlockPos floor = toPos(below(cell));
+        return level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP);
     }
 
     private static BlockCoord below(BlockCoord cell) {
@@ -147,16 +319,19 @@ final class BuildSchematicScript implements ScriptInstance {
         approach.cancel();
         stands = List.of();
         standIndex = 0;
+        scaffoldPhase = ScaffoldPhase.NONE;
+        scaffold = null;
+        scaffoldBlock = null;
     }
 
-    private void place(Schematic.PlacedEntry entry, BlockState wanted) {
+    private PlaceOutcome place(Schematic.PlacedEntry entry, BlockState wanted) {
         BlockPlacer.Begin begin = placer.begin(toPos(entry.pos()), wanted, entry.block());
         release(entry.pos());
         if (begin instanceof BlockPlacer.Started) {
             placed++;
             tally.placed(entry.block());
             cursor++;
-            return;
+            return PlaceOutcome.DONE;
         }
         if (begin instanceof BlockPlacer.Protected single) {
             protectedSkipped++;
@@ -166,7 +341,7 @@ final class BuildSchematicScript implements ScriptInstance {
             if (placed == 0 && cursor >= entries.size()) {
                 fail("строить запрещено: " + single.reason() + "; поставлено 0 из " + entries.size());
             }
-            return;
+            return PlaceOutcome.DONE;
         }
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
@@ -177,11 +352,9 @@ final class BuildSchematicScript implements ScriptInstance {
             tally.supplies(have, Math.max(countNeeded(entry.block()) - BlockItems.countIn(spirit.getInventory(), entry.block()), 0));
             fail("не хватило материала '" + entry.block() + "': поставлено " + placed + " из " + entries.size()
                     + "; нужно " + countNeeded(entry.block()) + ", есть " + BlockItems.countIn(spirit.getInventory(), entry.block()));
-            return;
+            return PlaceOutcome.DONE;
         }
-        skipped++;
-        tally.skipped();
-        cursor++;
+        return PlaceOutcome.RETRY;
     }
 
     private int countNeeded(String blockId) {
@@ -195,6 +368,22 @@ final class BuildSchematicScript implements ScriptInstance {
             }
         }
         return Math.max(total, 1);
+    }
+
+    private void removeScaffolds() {
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+        PlacedBlocksData data = PlacedBlocksData.get(server);
+        for (BlockCoord cell : scaffolds) {
+            BlockState current = level.getBlockState(toPos(cell));
+            if (current.is(Blocks.COBBLESTONE) || current.is(Blocks.OAK_PLANKS) || current.is(Blocks.DIRT)
+                    || current.is(Blocks.STONE)) {
+                level.setBlock(toPos(cell), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            }
+            data.unmarkSpirit(toPos(cell));
+        }
+        scaffolds.clear();
     }
 
     private ScriptStatus fail(String reason) {
@@ -220,6 +409,7 @@ final class BuildSchematicScript implements ScriptInstance {
     public void cancel() {
         approach.cancel();
         reservations.releaseAll(spirit.getUUID());
+        removeScaffolds();
     }
 
     @Override

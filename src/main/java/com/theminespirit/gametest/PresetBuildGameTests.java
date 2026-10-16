@@ -119,6 +119,9 @@ public final class PresetBuildGameTests {
             helper.assertTrue(matches == schematic.blocks().size(),
                     "дом обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
+            helper.assertTrue(helper.getBlockState(anchor.offset(4, 3, 0)).is(Blocks.COBBLESTONE)
+                            && helper.getBlockState(anchor.offset(1, 3, 4)).is(Blocks.COBBLESTONE),
+                    "дальние клетки крыши обязаны быть поставлены: иначе дух не дотягивается до края постройки");
             helper.assertTrue(helper.getBlockState(anchor.offset(2, 3, 2)).is(Blocks.COBBLESTONE),
                     "крыша дома обязана быть на месте: без неё постройка не закрыта");
             helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir(),
