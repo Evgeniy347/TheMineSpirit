@@ -7,6 +7,7 @@ package com.theminespirit.core.board;
  * по имени константы (детерминизм набора на любой JVM).
  */
 public enum BoardCase {
+    BREED_ANIMALS,
     BUILD_FENCE,
     BUILD_HOUSE,
     BUILD_MINE,
@@ -16,13 +17,17 @@ public enum BoardCase {
     CRAFTING_STATION,
     CRAFT_TOOLS,
     DISMANTLE_SHELTER,
+    EAT_TO_FULL,
     ENCHANT_ROOM,
     ENCHANT_SHELVES,
     FILL_CRATER,
+    HERD_CULL,
     LIGHTING,
     LURE_ANIMAL,
+    RELOCATE_BUILDING,
     REPAIR_BUILDING,
     REPAIR_FENCE,
+    RESTOCK_FOOD,
     STOCK_CHESTS,
     SUPPLY_SITE
 }

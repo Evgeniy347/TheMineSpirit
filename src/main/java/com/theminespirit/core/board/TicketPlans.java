@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * План задания по кейсу: чистая функция «кейс + точка → TaskNode» из скриптов
@@ -31,6 +32,15 @@ public final class TicketPlans {
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
+    private static final int RESTOCK_FOOD_COUNT = 48;
+    private static final int RELOCATE_CLEAR_RADIUS = 4;
+
+    /**
+     * Кейсы без плана доски: задание исполняется вне очереди планов (дух ест сам,
+     * без выдачи TaskNode). Список явный: новый кейс без плана встаёт сюда, а не
+     * проваливается в исключение молча.
+     */
+    public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
     private TicketPlans() {
     }
@@ -55,9 +65,14 @@ public final class TicketPlans {
             case ENCHANT_ROOM -> sequence(gotoTarget(target), schematic(ENCHANT_ROOM_SCHEME, target));
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
+            case BREED_ANIMALS -> breedAnimals(target);
+            case HERD_CULL -> herdCull(target);
+            case RELOCATE_BUILDING -> relocateBuilding(target);
+            case RESTOCK_FOOD -> restockFood(target);
             default -> throw new IllegalArgumentException("Кейс " + boardCase
                     + " не имеет плана на доске: выдача задания без плана оставила бы духа "
-                    + "без задачи — новый кейс обязан прийти со своей строкой плана");
+                    + "без задачи — новый кейс обязан прийти со своей строкой плана "
+                    + "или записью в EXTERNAL_CASES");
         };
     }
 
@@ -165,6 +180,51 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), schematic(scheme, target));
     }
 
+    private static TaskNode breedAnimals(TicketTarget target) {
+        Species species = target.species() == null ? Species.COW : target.species();
+        return new ScriptCall("breed", Map.of("species",
+                species.name().toLowerCase(Locale.ROOT),
+                "radius", CatalogLimits.HERD_RADIUS_DEFAULT,
+                "pairs", CatalogLimits.HERD_PAIRS_DEFAULT));
+    }
+
+    private static TaskNode herdCull(TicketTarget target) {
+        Species species = target.species() == null ? Species.COW : target.species();
+        return new ScriptCall("cull", Map.of("species",
+                species.name().toLowerCase(Locale.ROOT),
+                "radius", CatalogLimits.HERD_RADIUS_DEFAULT));
+    }
+
+    private static TaskNode relocateBuilding(TicketTarget target) {
+        if (target.from() == null || target.to() == null) {
+            throw new IllegalArgumentException("Перенос без from/to: снос идёт в from, "
+                    + "стройка — в to, без обеих точек план не собрать");
+        }
+        if (target.from().equals(target.to())) {
+            throw new IllegalArgumentException("Перенос из " + target.from() + " в ту же точку: "
+                    + "сносить и строить на одном месте нечего");
+        }
+        if (target.schemeFile() == null) {
+            throw new IllegalArgumentException("Перенос без схемы: в to строится та же постройка, "
+                    + "что стояла в from, без имени схемы строить нечего");
+        }
+        return new SequenceNode(List.of(
+                gotoPoint(target.from()),
+                clearBox(target.from(), RELOCATE_CLEAR_RADIUS),
+                gotoPoint(target.to()),
+                new ScriptCall("build_schematic", Map.of("file", target.schemeFile(),
+                        "x", target.to().x(), "y", target.to().y(), "z", target.to().z()))));
+    }
+
+    private static TaskNode restockFood(TicketTarget target) {
+        if (target.supplyItem() == null) {
+            throw new IllegalArgumentException("Пополнение еды без supplyItem: со склада забирают "
+                    + "конкретный продукт, без имени предмета withdraw нечего взять");
+        }
+        return new ScriptCall("withdraw", Map.of("container", "nearest", "item", target.supplyItem(),
+                "count", RESTOCK_FOOD_COUNT, "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+    }
+
     private static ScriptCall schematic(String scheme, TicketTarget target) {
         return new ScriptCall("build_schematic", Map.of("file", scheme, "x", target.target().x(),
                 "y", target.target().y(), "z", target.target().z()));
@@ -182,8 +242,22 @@ public final class TicketPlans {
     }
 
     private static ScriptCall gotoTarget(TicketTarget target) {
-        return new ScriptCall("goto", Map.of("x", target.target().x(), "y", target.target().y(),
-                "z", target.target().z()));
+        return gotoPoint(target.target());
+    }
+
+    private static ScriptCall gotoPoint(BlockCoord point) {
+        return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(),
+                "z", point.z()));
+    }
+
+    private static ScriptCall clearBox(BlockCoord center, int radius) {
+        return new ScriptCall("clear_area", Map.of(
+                "x1", center.x() - radius,
+                "y1", center.y(),
+                "z1", center.z() - radius,
+                "x2", center.x() + radius,
+                "y2", center.y() + 2,
+                "z2", center.z() + radius));
     }
 
     private static TaskNode sequence(TaskNode... steps) {

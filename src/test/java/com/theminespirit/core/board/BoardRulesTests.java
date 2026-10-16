@@ -71,8 +71,9 @@ class BoardRulesTests {
             return;
         }
         assertTrue(BoardRules.priorityOf(first) > BoardRules.priorityOf(second),
-                "Порядок приоритетов обязан согласовываться с частичным порядком "
-                        + "«ремонт > воронка > животные > стройки > снабжение»: " + first + " ("
+                "Порядок приоритетов обязан согласовываться с частичным порядком v2 "
+                        + "«ремонт > воронка и еда > животные и пополнение еды > стройки, перенос, "
+                        + "разведение и контроль > снабжение»: " + first + " ("
                         + BoardRules.priorityOf(first) + ") ниже или равен " + second + " ("
                         + BoardRules.priorityOf(second)
                         + "), и доска выдаст сначала менее важное");
@@ -91,11 +92,12 @@ class BoardRulesTests {
         if (boardCase == BoardCase.REPAIR_FENCE || boardCase == BoardCase.REPAIR_BUILDING) {
             return 0;
         }
-        if (boardCase == BoardCase.FILL_CRATER) {
+        if (boardCase == BoardCase.FILL_CRATER || boardCase == BoardCase.EAT_TO_FULL) {
             return 1;
         }
         if (boardCase == BoardCase.CAPTURE_ANIMAL || boardCase == BoardCase.BUILD_PEN
-                || boardCase == BoardCase.LURE_ANIMAL || boardCase == BoardCase.DISMANTLE_SHELTER) {
+                || boardCase == BoardCase.LURE_ANIMAL || boardCase == BoardCase.DISMANTLE_SHELTER
+                || boardCase == BoardCase.RESTOCK_FOOD) {
             return 2;
         }
         if (boardCase == BoardCase.SUPPLY_SITE || boardCase == BoardCase.CRAFT_TOOLS

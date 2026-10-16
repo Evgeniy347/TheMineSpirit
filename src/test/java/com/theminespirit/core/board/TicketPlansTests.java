@@ -52,7 +52,11 @@ class TicketPlansTests {
             Map.entry(BoardCase.LIGHTING, "place_block"),
             Map.entry(BoardCase.ENCHANT_ROOM, "build_schematic"),
             Map.entry(BoardCase.ENCHANT_SHELVES, "craft"),
-            Map.entry(BoardCase.DISMANTLE_SHELTER, "clear_area"));
+            Map.entry(BoardCase.DISMANTLE_SHELTER, "clear_area"),
+            Map.entry(BoardCase.BREED_ANIMALS, "breed"),
+            Map.entry(BoardCase.HERD_CULL, "cull"),
+            Map.entry(BoardCase.RELOCATE_BUILDING, "build_schematic"),
+            Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -93,10 +97,16 @@ class TicketPlansTests {
                 .withKnowledge(GATHER_EVERYTHING);
     }
 
+    private static TicketTarget fullTarget() {
+        return target().withScheme("pen")
+                .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
+                .withSupply("bread", 1);
+    }
+
     @Test
     void plan_EveryCase_ContainsCaseScript() {
         for (BoardCase boardCase : PLANNED_CASES) {
-            TaskNode plan = TicketPlans.plan(boardCase, target());
+            TaskNode plan = TicketPlans.plan(boardCase, fullTarget());
 
             assertTrue(collectScripts(plan).contains(CASE_SCRIPTS.get(boardCase)),
                     "План кейса " + boardCase + " обязан содержать целевой скрипт "
@@ -107,7 +117,7 @@ class TicketPlansTests {
     @Test
     void plan_EveryCase_PassesCatalog() {
         for (BoardCase boardCase : PLANNED_CASES) {
-            TaskNode plan = TicketPlans.plan(boardCase, target());
+            TaskNode plan = TicketPlans.plan(boardCase, fullTarget());
 
             PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         }
@@ -116,12 +126,18 @@ class TicketPlansTests {
     @Test
     void plan_EveryCase_HasPlan() {
         for (BoardCase boardCase : BoardCase.values()) {
-            TaskNode plan = TicketPlans.plan(boardCase, target());
+            if (TicketPlans.EXTERNAL_CASES.contains(boardCase)) {
+                continue;
+            }
+            TaskNode plan = TicketPlans.plan(boardCase, fullTarget());
 
             assertTrue(plan != null && !collectScripts(plan).isEmpty(),
-                    "Каждый кейс обязан иметь план: кейс " + boardCase
+                    "Каждый не внешний кейс обязан иметь план: кейс " + boardCase
                             + " без плана не выдавался бы духу, а выдача без плана — задание в пустоту");
         }
+        assertTrue(TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
+                "Внешний список обязан называть EAT_TO_FULL: дух ест сам скриптом eat, "
+                        + "план доски ему не нужен, а пустой список спрятал бы кейс без плана");
     }
 
     @Test
@@ -272,6 +288,65 @@ class TicketPlansTests {
                         + "предметы в склад (радиус " + radius + ")");
     }
 
+    @Test
+    void plan_BreedAnimals_BreedsSpeciesPair() {
+        TaskNode plan = TicketPlans.plan(BoardCase.BREED_ANIMALS,
+                target().withSpecies(Species.COW));
+        ScriptCall breed = findCall(plan, "breed");
+
+        assertEquals("cow", breed.params().get("species"),
+                "Разведение сводит пару своего вида: чужой вид в загоне плодит помеси мимо плана");
+        assertEquals(CatalogLimits.HERD_PAIRS_DEFAULT, breed.params().get("pairs"),
+                "Разведение сводит одну пару за запуск: приплод ограничен пределами каталога, "
+                        + "а не аппетитом доски");
+    }
+
+    @Test
+    void plan_HerdCull_CullsOwnSpecies() {
+        TaskNode plan = TicketPlans.plan(BoardCase.HERD_CULL,
+                target().withSpecies(Species.SHEEP));
+
+        assertTrue(collectScripts(plan).contains("cull"),
+                "Контроль численности идёт существующим скриптом cull: второй забойный "
+                        + "скрипт не заводим");
+        assertEquals("sheep", findCall(plan, "cull").params().get("species"),
+                "Забивают лишний свой вид: чужой вид под нож пускать нельзя");
+    }
+
+    @Test
+    void plan_RestockFood_WithdrawsOwnerCount() {
+        TaskNode plan = TicketPlans.plan(BoardCase.RESTOCK_FOOD,
+                target().withSupply("bread", 1));
+        ScriptCall withdraw = findCall(plan, "withdraw");
+
+        assertEquals(48, withdraw.params().get("count"),
+                "Пополнение личной еды забирает со склада 48 единиц (ответы владельца 16.10): "
+                        + "меньше — дух снова голоден через день, больше — тащит лишний запас");
+        assertEquals("bread", withdraw.params().get("item"),
+                "Забирают названный продукт: склад отдаёт конкретное, а не «еду вообще»");
+    }
+
+    @Test
+    void plan_Relocate_ClearsSourceAndBuildsDestination() {
+        TaskNode plan = TicketPlans.plan(BoardCase.RELOCATE_BUILDING, fullTarget());
+        List<String> scripts = collectScripts(plan);
+
+        assertTrue(scripts.contains("clear_area") && scripts.contains("build_schematic"),
+                "Перенос сносит постройку в from и строит ту же схему в to: перенос без сноса "
+                        + "удвоил бы постройку, а без стройки — снёс бы её");
+    }
+
+    @Test
+    void plan_RelocateSamePoint_IsRejected() {
+        TicketTarget same = target().withScheme("pen")
+                .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(10, 60, -5));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TicketPlans.plan(BoardCase.RELOCATE_BUILDING, same),
+                "Перенос в ту же точку обязан падать: сносить и строить на одном месте нечего, "
+                        + "а молча принятый перенос гонял бы духа вхолостую");
+    }
+
     private static ScriptCall findCall(TaskNode root, String script) {
         Deque<TaskNode> queue = new ArrayDeque<>();
         queue.add(root);
@@ -302,14 +377,14 @@ class TicketPlansTests {
 
     @Property
     void plan_AnyPlannedCase_ValidByCatalog(@ForAll("plannedCases") BoardCase boardCase) {
-        TaskNode plan = TicketPlans.plan(boardCase, target().withCraterBlocks(29));
+        TaskNode plan = TicketPlans.plan(boardCase, fullTarget().withCraterBlocks(29));
 
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
     }
 
     @Property
     void plan_AnyPlannedCase_OnlyCatalogScripts(@ForAll("plannedCases") BoardCase boardCase) {
-        TaskNode plan = TicketPlans.plan(boardCase, target().withCraterBlocks(29));
+        TaskNode plan = TicketPlans.plan(boardCase, fullTarget().withCraterBlocks(29));
         List<String> catalogScripts = CoreScripts.defaultCatalog().all().stream()
                 .map(ScriptSpec::id)
                 .toList();
