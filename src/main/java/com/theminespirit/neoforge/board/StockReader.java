@@ -71,7 +71,7 @@ public final class StockReader {
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.map(container.container())) {
                     if (stack != null) {
-                        available.merge(stack.item(), stack.count(), Integer::sum);
+                        add(available, stack);
                     }
                 }
                 reads++;
@@ -128,6 +128,14 @@ public final class StockReader {
             return;
         }
         available.merge(shortId(StackMapper.itemId(stack)), stack.getCount(), Integer::sum);
+    }
+
+    /**
+     * Контейнеры отдают полный id ({@code minecraft:oak_log}): без приведения к короткому виду
+     * гейт искал бы {@code oak_log} и не видел бы склад, выдавая задание добычи снова и снова.
+     */
+    private static void add(Map<String, Integer> available, Stack stack) {
+        available.merge(shortId(stack.item()), stack.count(), Integer::sum);
     }
 
     private static String shortId(String itemId) {
