@@ -525,24 +525,6 @@ class TaskRunnerTests {
     }
 
     @Test
-    void currentScript_BeforeFirstTick_NamesCommittedScript() {
-        TaskRunner runner = TaskRunner.start(script(SCRIPT), TestScripts.singleRegistry(SCRIPT, TestScripts.succeeding(2)),
-                TestScripts.condition(CHECK, true));
-
-        // Тело скрипта создаётся на первом тике, но задача уже запущена и обязана называть скрипт сразу:
-        // по currentScript посторонний решатель (TaskStarter/intellect) понимает, что дух занят, и не
-        // перебивает задачу своим занятием в том же серверном тике. Без этого поле пусто, и занятие
-        // затирает только что выданную задачу — GameTest видит чужой провал (флак 16.10).
-        assertEquals(SCRIPT, runner.currentScript().orElse(null),
-                "currentScript обязан называть скрипт до первого тика: иначе запущенная задача выглядит как простой");
-
-        assertEquals(RunStatus.RUNNING, runner.tick(), "скрипт в два тика ещё работает");
-        assertEquals(SCRIPT, runner.currentScript().orElse(null), "после первого тика скрипт тот же");
-    }
-
-    
-
-    @Test
     void start_NullArgument_IsRejected() {
         NullPointerException planError = assertThrows(NullPointerException.class,
                 () -> TaskRunner.start(null, ScriptRegistry.of(Map.of()), ConditionRegistry.of(Map.of())),

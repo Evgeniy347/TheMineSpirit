@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.intellect.TaskAdmission;
 import com.theminespirit.core.intellect.TaskBackoff;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -37,32 +38,34 @@ public final class TaskStarter {
         if (backoff.blocked(id, script, tick)) {
             return false;
         }
+        var status = spirit.taskStatus();
         var current = spirit.currentTaskScript();
-        if (current.isPresent()) {
-            if (current.get().equals(script)) {
+        // Запущенная задача (в т.ч. чужая, ещё не назвавшая скрипт) не перебивается: иначе занятие,
+        // выданное в том же серверном тике, затирает задачу и её итог (флак GameTest 16.10).
+        var admission = TaskAdmission.decide(current, status.orElse(null), issued.get(id), script);
+        switch (admission) {
+            case SKIP_SAME, SKIP_FOREIGN, SKIP_BUSY -> {
                 return false;
             }
-            if (!current.get().equals(issued.get(id))) {
-                return false;
-            }
-            spirit.cancelTask();
-        } else {
-            var status = spirit.taskStatus();
-            RunStatus previous = observed.put(id, status.orElse(null));
-            if (status.isPresent() && status.get() != RunStatus.RUNNING && previous != status.get()) {
-                // Первый тик терминального исхода: не выдаём новое занятие, иначе итог (успех или причина
-                // падения, их читает наблюдатель, в т.ч. GameTest) затирается в том же серверном тике.
-                // Следующий тик — обычный откат.
-                return false;
-            }
-            String last = issued.remove(id);
-            if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
-                backoff.noteFailure(id, last, tick);
-                failures++;
-                if (last.equals(script)) {
+            case CANCEL_AND_START -> spirit.cancelTask();
+            case START -> {
+                RunStatus previous = observed.put(id, status.orElse(null));
+                if (status.isPresent() && status.get() != RunStatus.RUNNING && previous != status.get()) {
+                    // Первый тик терминального исхода: не выдаём новое занятие, иначе итог (успех или
+                    // причина падения, их читает наблюдатель, в т.ч. GameTest) затирается в том же
+                    // серверном тике. Следующий тик — обычный откат.
                     return false;
                 }
+                String last = issued.remove(id);
+                if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
+                    backoff.noteFailure(id, last, tick);
+                    failures++;
+                    if (last.equals(script)) {
+                        return false;
+                    }
+                }
             }
+            default -> throw new IllegalStateException("Неизвестный вердикт допуска задачи: " + admission);
         }
         spirit.startTask(task);
         issued.put(id, script);
