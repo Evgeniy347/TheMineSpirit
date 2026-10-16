@@ -97,4 +97,13 @@ class DataTablesGuardTests {
         }
         return paths;
     }
+
+    @Test
+    void descent_WhenRegistered_ReturnsDefaultsFromJson() {
+        // Доказательство: descent.json зарегистрирован в DataTables и доступен через hot-reload API
+        var descentHolder = DataTables.INSTANCE.descent();
+        assertEquals("descent", descentHolder.id(), "id таблицы descent должен совпадать с именем в DataTables");
+        assertEquals(-58, descentHolder.current().targetY(), "целевой этаж по умолчанию из descent.json");
+        assertEquals(4, descentHolder.current().torchInterval(), "интервал факелов по умолчанию из descent.json");
+    }
 }

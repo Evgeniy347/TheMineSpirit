@@ -11,6 +11,7 @@ import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.ValueTable;
+import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
@@ -52,6 +53,7 @@ public final class DataTables {
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
     private final TableHolder<DoorRules> doors;
+    private final TableHolder<DescentData> descent;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -113,6 +115,9 @@ public final class DataTables {
         this.doors = registry.registerLazy(
                 TableDefinition.single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse),
                 DoorTuning::loadDefault);
+        this.descent = registry.registerLazy(
+                TableDefinition.single("descent", "data/theminespirit/mining/descent.json", DescentData::parse),
+                DescentData::load);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -192,6 +197,10 @@ public final class DataTables {
 
     public TableHolder<DoorRules> doors() {
         return doors;
+    }
+
+    public TableHolder<DescentData> descent() {
+        return descent;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
