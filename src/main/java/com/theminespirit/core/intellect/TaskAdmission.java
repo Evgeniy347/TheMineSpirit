@@ -20,7 +20,6 @@ public final class TaskAdmission {
             String requestedScript) {
         Objects.requireNonNull(currentScript,
                 "Текущий скрипт не может быть null: отсутствие — это Optional.empty()");
-        Objects.requireNonNull(status, "Статус задачи не может быть null: по нему видно, занят ли дух");
         Objects.requireNonNull(requestedScript, "Запрошенный скрипт не может быть null: что именно выдаём");
         if (currentScript.isPresent()) {
             if (currentScript.get().equals(requestedScript)) {

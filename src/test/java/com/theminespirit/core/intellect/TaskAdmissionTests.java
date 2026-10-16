@@ -53,13 +53,17 @@ class TaskAdmissionTests {
     }
 
     @Test
+    void decide_NoTaskAtAll_Starts() {
+        assertEquals(TaskAdmission.Verdict.START,
+                TaskAdmission.decide(Optional.empty(), null, null, FARM),
+                "дух без задачи (статуса нет) занимается: null-статус — это «нет задачи», а не ошибка");
+    }
+
+    @Test
     void decide_NullArguments_AreRejected() {
         assertThrows(NullPointerException.class,
                 () -> TaskAdmission.decide(null, RunStatus.RUNNING, null, FARM),
                 "currentScript null отклоняется: отсутствие — это Optional.empty()");
-        assertThrows(NullPointerException.class,
-                () -> TaskAdmission.decide(Optional.empty(), null, null, FARM),
-                "статус null отклоняется: по нему видно, занят ли дух");
         assertThrows(NullPointerException.class,
                 () -> TaskAdmission.decide(Optional.empty(), RunStatus.RUNNING, null, null),
                 "запрошенный скрипт null отклоняется: неясно, что выдаём");
