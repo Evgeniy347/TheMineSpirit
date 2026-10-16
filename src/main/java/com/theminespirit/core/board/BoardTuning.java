@@ -39,9 +39,6 @@ public final class BoardTuning {
     /** Проваленное задание не переиздаётся раньше этого срока: 200 тиков (10 с). */
     public static final long FAIL_BACKOFF_TICKS = 200;
 
-    /** Сколько завершённых заданий доска помнит для зависимостей после снятия из очереди. */
-    public static final int COMPLETED_MEMORY = 1024;
-
     /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
     public static final long FENCE_PATROL_INTERVAL = 1000;
 

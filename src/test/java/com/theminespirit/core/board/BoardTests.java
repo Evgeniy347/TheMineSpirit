@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -293,7 +295,7 @@ class BoardTests {
     }
 
     @Test
-    void prune_Removes_ClosedTickets() {
+    void prune_KeepsDone_RemovesFailedAndCancelled() {
         Board board = boardAt(0);
         board.submit(ticket("done_1", BoardCase.BUILD_HOUSE, 0, List.of()));
         board.submit(ticket("failed_1", BoardCase.SUPPLY_SITE, 0, List.of()));
@@ -307,13 +309,15 @@ class BoardTests {
 
         int removed = board.prune(200);
 
-        assertEquals(3, removed,
-                "prune снимает закрытые задания (DONE/FAILED/CANCELLED): очередь не хранит "
-                        + "историю, она — в журнале");
-        assertEquals(Optional.empty(), board.find("done_1"),
-                "Завершённое задание снято из очереди");
+        assertEquals(2, removed,
+                "prune снимает FAILED и CANCELLED, но не DONE: выполненное задание — отметка "
+                        + "для зависимых, а история провалов и отмен — в журнале, не в очереди");
+        assertEquals(Optional.of(BoardStatus.DONE), board.statusOf("done_1"),
+                "Завершённое задание остаётся на доске со статусом DONE: по нему другие задания "
+                        + "видят условие «постройка стоит»");
         assertEquals(Optional.empty(), board.find("failed_1"),
-                "Проваленное задание снято из очереди");
+                "Проваленное задание снято из очереди: иначе повторная постановка того же id "
+                        + "давала бы DUPLICATE вечно и ретрай после отката не работал бы");
         assertEquals(Optional.empty(), board.find("cancelled_1"),
                 "Отменённое задание снято из очереди");
         assertEquals(Optional.of(BoardStatus.PENDING), board.statusOf("pending_1"),
@@ -485,6 +489,123 @@ class BoardTests {
         assertTrue(board.find(ticket.id()).isPresent(),
                 "После prune ждущее задание на месте: без срока жизни пересборка не снимает "
                         + "задания, снятие — только по актуальности причины");
+    }
+
+    @Test
+    void complete_DoneTicket_StaysVisibleInAll() {
+        Board board = boardAt(0);
+        board.submit(ticket("mine_1", BoardCase.BUILD_MINE, 0, List.of()));
+        board.claim("mine_1", SPIRIT_ONE, 0);
+        board.complete("mine_1");
+
+        assertEquals(Optional.of(BoardStatus.DONE), board.statusOf("mine_1"),
+                "Завершённое задание читается со статусом DONE");
+        assertTrue(board.all().stream().anyMatch(ticket -> ticket.id().equals("mine_1")),
+                "Завершённое задание видно в all(): DONE — отметка выполнения на доске, "
+                        + "а не удалённая строка");
+        assertTrue(board.ledger().has(BoardCase.BUILD_MINE, 1),
+                "Завершение пишет отметку в ledger: условие «уровень 1 шахты готов» переживает "
+                        + "даже снятие билета и перезапуск через журнал");
+    }
+
+    @Test
+    void claimable_BuildingDependency_UnlockedByLevelDone() {
+        Board board = boardAt(0);
+        BoardTicket levelOne = new BoardTicket("mine_1", BoardCase.BUILD_MINE, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_MINE), 0, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of());
+        BoardTicket levelTwo = new BoardTicket("mine_2", BoardCase.BUILD_MINE, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_MINE), 1, 2, BoardTicket.ALWAYS_CAUSE,
+                List.of("building:BUILD_MINE:1"), Map.of());
+        board.submit(levelOne);
+        board.submit(levelTwo);
+
+        assertEquals(List.of(), board.claimable(new StockView(Map.of()), 0).stream()
+                        .filter(ticket -> ticket.id().equals("mine_2")).toList(),
+                "Уровень 2 не выдаётся раньше уровня 1: уровень не прыгает");
+        board.claim("mine_1", SPIRIT_ONE, 0);
+        board.complete("mine_1");
+
+        assertEquals(List.of(levelTwo), board.claimable(new StockView(Map.of()), 0).stream()
+                        .filter(ticket -> ticket.id().equals("mine_2")).toList(),
+                "Зависимое от building:BUILD_MINE:1 выдаётся после выполнения уровня 1: условие "
+                        + "считается по живому DONE-заданию");
+    }
+
+    @Test
+    void claimable_BuildingDependency_LedgerNoteSatisfies() {
+        Board board = boardAt(0);
+        BoardTicket levelTwo = new BoardTicket("mine_2", BoardCase.BUILD_MINE, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_MINE), 1, 2, BoardTicket.ALWAYS_CAUSE,
+                List.of("building:BUILD_MINE:1"), Map.of());
+        board.submit(levelTwo);
+        board.ledger().note(BoardCase.BUILD_MINE, 1);
+
+        assertEquals(List.of(levelTwo), board.claimable(new StockView(Map.of()), 0),
+                "Отметка ledger закрывает условие без живого билета: так восстанавливается "
+                        + "«выполнено» прошлой сессии из журнала при старте");
+    }
+
+    @Test
+    void evictOverflow_DonePresent_SparesDone() {
+        Board board = boardAt(0);
+        board.submit(ticket("done_1", BoardCase.BUILD_HOUSE, 0, List.of()));
+        board.claim("done_1", SPIRIT_ONE, 0);
+        board.complete("done_1");
+        for (int index = 0; index < BoardTuning.MAX_PENDING + 1; index++) {
+            board.submit(ticket("build_" + index, BoardCase.BUILD_HOUSE, index, List.of()));
+        }
+
+        int removed = board.prune(0);
+
+        assertEquals(1, removed,
+                "Вытеснение снимает только самое старое невыданное: DONE не участвует в подсчёте "
+                        + "переполнения");
+        assertEquals(Optional.of(BoardStatus.DONE), board.statusOf("done_1"),
+                "Вытеснение переполнения не трогает DONE: выполненная постройка остаётся условием");
+        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("build_0"),
+                "Вытеснено самое старое невыданное задание");
+    }
+
+    @Property
+    void all_AfterThousandOps_IsDeterministic(@ForAll long seed) {
+        assertEquals(runOps(seed), runOps(seed),
+                "После 1000 submit/complete/cancel очередь детерминирована: при том же входе та же "
+                        + "очередь, иначе пересборки плывут и журнал невоспроизводим");
+    }
+
+    private static List<BoardTicket> runOps(long seed) {
+        Random random = new Random(seed);
+        Board board = boardAt(0);
+        List<String> known = new ArrayList<>();
+        StockView stock = new StockView(Map.of());
+        for (int step = 0; step < 1000; step++) {
+            int op = random.nextInt(6);
+            String id = "op_" + random.nextInt(300);
+            switch (op) {
+                case 0 -> {
+                    BoardCase boardCase = BoardCase.values()[random.nextInt(BoardCase.values().length)];
+                    board.submit(new BoardTicket(id, boardCase, Optional.empty(),
+                            BoardRules.priorityOf(boardCase), step, 1 + random.nextInt(3),
+                            random.nextBoolean() ? BoardTicket.ALWAYS_CAUSE : "crater:1:64:2",
+                            List.of(), Map.of()));
+                    known.add(id);
+                }
+                case 1 -> board.claim(id, SPIRIT_ONE, 0);
+                case 2 -> board.complete(id);
+                case 3 -> board.fail(id);
+                case 4 -> board.cancel(id);
+                default -> {
+                    board.claimable(stock, 0);
+                    board.prune(0);
+                }
+            }
+            if (!known.isEmpty() && random.nextInt(10) == 0) {
+                String victim = known.get(random.nextInt(known.size()));
+                board.cancel(victim);
+            }
+        }
+        return board.all();
     }
 
     @Provide

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +27,7 @@ public final class Board {
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
-    private final Set<String> completed = new LinkedHashSet<>();
+    private final BoardLedger ledger = new BoardLedger();
     private final LongSupplier nowTicks;
 
     public Board(LongSupplier nowTicks) {
@@ -124,11 +123,12 @@ public final class Board {
 
     public boolean complete(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: завершение идёт по id задания");
-        if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
             return false;
         }
         statuses.put(ticketId, BoardStatus.DONE);
-        completed.add(ticketId);
+        ledger.note(ticket.boardCase(), ticket.level());
         return true;
     }
 
@@ -203,8 +203,7 @@ public final class Board {
         List<String> removableIds = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
             BoardStatus status = statuses.get(ticket.id());
-            if (status == BoardStatus.CANCELLED || status == BoardStatus.DONE
-                    || status == BoardStatus.FAILED) {
+            if (status == BoardStatus.CANCELLED || status == BoardStatus.FAILED) {
                 removableIds.add(ticket.id());
             }
         }
@@ -214,16 +213,8 @@ public final class Board {
             removed++;
         }
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
-        trimCompleted();
         removed += evictOverflow();
         return removed;
-    }
-
-    /** Отметки о завершённых заданиях ограничены: память доски не растёт от прогонов. */
-    private void trimCompleted() {
-        while (completed.size() > BoardTuning.COMPLETED_MEMORY) {
-            completed.remove(completed.iterator().next());
-        }
     }
 
     public List<BoardTicket> pendingFor(UUID spirit) {
@@ -298,6 +289,11 @@ public final class Board {
         return Optional.ofNullable(statuses.get(ticketId));
     }
 
+    /** Отметки «постройка стоит»: условие для зависимых и восстановление после перезапуска. */
+    public BoardLedger ledger() {
+        return ledger;
+    }
+
     /**
      * Держатель задания для наблюдателя: владелец из заявки или тот, кто взял задание.
      * Пустой ответ — задание ждёт любого свободного духа (ещё не выдано или отпущено).
@@ -333,12 +329,32 @@ public final class Board {
      * рвалась бы на первом же {@code prune}.
      */
     private boolean dependenciesDone(BoardTicket ticket) {
-        for (String dependencyId : ticket.dependsOn()) {
-            if (statuses.getOrDefault(dependencyId, null) != BoardStatus.DONE && !completed.contains(dependencyId)) {
+        for (String dependency : ticket.dependsOn()) {
+            Optional<BoardLedger.BuildingMark> mark = BoardLedger.parse(dependency);
+            if (mark.isPresent()) {
+                if (!buildingDone(mark.orElseThrow())) {
+                    return false;
+                }
+                continue;
+            }
+            if (statuses.getOrDefault(dependency, null) != BoardStatus.DONE) {
                 return false;
             }
         }
         return true;
+    }
+
+    private boolean buildingDone(BoardLedger.BuildingMark mark) {
+        if (ledger.has(mark.boardCase(), mark.level())) {
+            return true;
+        }
+        for (BoardTicket ticket : tickets.values()) {
+            if (ticket.boardCase() == mark.boardCase() && ticket.level() == mark.level()
+                    && statuses.get(ticket.id()) == BoardStatus.DONE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void cancelWithDependants(String ticketId, Set<String> cancelled) {
