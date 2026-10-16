@@ -81,6 +81,30 @@ class BoardConfigTests {
     }
 
     @Test
+    void defaults_FromClasspath_HerdMatchesLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(Map.of("maxPerSpecies", 4, "minBreed", 2), config.herd(),
+                "Таблица стада обязана совпадать с литералами слово в слово: лимит 4 на вид "
+                        + "(ответ владельца 16.10) и минимум пара для разведения. Лишний ключ в "
+                        + "файле без теста и забытый ключ в тесте красят прогон");
+        assertEquals(4, config.herd().get("maxPerSpecies"),
+                "Предел в тесте, факт из production: не больше 4 животных каждого вида");
+    }
+
+    @Test
+    void fromJson_UnknownHerdKey_FailsNamingKey() {
+        String json = "{\"herd\":{\"maxPerSpecie\":4}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в ключе стада обязана падать: молча потерянный ключ оставил бы лимит "
+                        + "по умолчанию без ведома настройщика");
+        assertTrue(failure.getMessage().contains("maxPerSpecie"),
+                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+    }
+
+    @Test
     void defaults_FromClasspath_ModifiersMatchLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
 

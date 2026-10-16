@@ -71,7 +71,8 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Integer> levels = integers(root.get("levels"), origin, "levels", BoardCase::valueOf, false);
         Map<String, Integer> supplies = integers(root.get("supplies"), origin, "supplies",
                 BoardConfig::supplyKey, false);
-        return new BoardConfig(priorities, modifiers, intervals, levels, Map.of(), List.of(), supplies);
+        Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
+        return new BoardConfig(priorities, modifiers, intervals, levels, herd, List.of(), supplies);
     }
 
     public static BoardConfig readFromClasspath() {

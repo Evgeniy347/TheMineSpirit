@@ -54,5 +54,9 @@
     "minecraft:bookshelf": 32,
     "minecraft:book": 32,
     "minecraft:paper": 128
+  },
+  "herd": {
+    "maxPerSpecies": 4,
+    "minBreed": 2
   }
 }
