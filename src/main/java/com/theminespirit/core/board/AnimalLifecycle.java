@@ -1,44 +1,60 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.husbandry.Species;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Жизненный цикл животного на доске: отлов → загон → приманка → разбор укрытия.
+ * Жизненный цикл животного одного вида на доске: отлов → загон → приманка → разбор укрытия.
  * Переходы — чистые функции состояния адаптер вызывает: captured (capture выполнен),
  * penBuilt (загон стоит), lured (животное в загоне), animalDied (гибель: «приманить»
  * снимается, появляется «разобрать укрытие»). Повторные вызовы не плодят дублей.
+ * Префикс id делает цикл независимым: реестр {@link HerdCycles} держит по циклу на вид.
  */
 public final class AnimalLifecycle {
-    private static final String PEN_ID = "animal_pen";
-    private static final String LURE_ID = "animal_lure";
-    private static final String DISMANTLE_ID = "animal_dismantle";
+    private static final String DEFAULT_PREFIX = "animal";
 
     private final Board board;
+    private final String prefix;
     private final String lureItem;
     private Stage stage = Stage.NONE;
     private String cause = BoardTicket.ALWAYS_CAUSE;
 
     public AnimalLifecycle(Board board, String lureItem) {
+        this(board, DEFAULT_PREFIX, lureItem);
+    }
+
+    public AnimalLifecycle(Board board, Species species) {
+        this(board, species.name().toLowerCase(Locale.ROOT), FeedTable.feedFor(species).get(0));
+    }
+
+    private AnimalLifecycle(Board board, String prefix, String lureItem) {
         this.board = Objects.requireNonNull(board, "board не может быть null: доска — "
                 + "канал постановки и снятия заданий цикла");
+        if (prefix == null || prefix.isBlank()) {
+            throw new IllegalArgumentException("prefix цикла пуст: по нему различают циклы видов, "
+                    + "без префикса два вида писали бы в одни id");
+        }
         if (lureItem == null || lureItem.isBlank()) {
             throw new IllegalArgumentException("lureItem пустое: приманка — гейт задания "
                     + "«приманить», без неё доска не отличит готовность к свиданию");
         }
+        this.prefix = prefix;
         this.lureItem = lureItem;
     }
 
     public void captured(String captureId) {
         Objects.requireNonNull(captureId, "captureId не может быть null: загон зависит от "
                 + "задания отлова по id, без связи доска выдаст «приманить» без загона");
-        if (stage != Stage.NONE || hasActive(BoardCase.BUILD_PEN)) {
+        if (stage != Stage.NONE || hasActive(penId())) {
             return;
         }
         cause = "animal:" + captureId;
-        board.submit(new BoardTicket(PEN_ID, BoardCase.BUILD_PEN, Optional.empty(),
+        board.submit(new BoardTicket(penId(), BoardCase.BUILD_PEN, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.BUILD_PEN), board.now(), 1, cause,
                 List.of(), Map.of()));
         stage = Stage.CAPTURED;
@@ -47,20 +63,20 @@ public final class AnimalLifecycle {
     public void penBuilt(String captureId) {
         Objects.requireNonNull(captureId, "captureId не может быть null: «приманить» зависит "
                 + "от отлова по id");
-        if (stage != Stage.CAPTURED || hasActive(BoardCase.LURE_ANIMAL)) {
+        if (stage != Stage.CAPTURED || hasActive(lureId())) {
             return;
         }
-        board.submit(new BoardTicket(LURE_ID, BoardCase.LURE_ANIMAL, Optional.empty(),
+        board.submit(new BoardTicket(lureId(), BoardCase.LURE_ANIMAL, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.LURE_ANIMAL), board.now(), 1, cause,
                 List.of(captureId), Map.of(lureItem, 1)));
         stage = Stage.PEN_BUILT;
     }
 
     public void lured() {
-        if (stage != Stage.PEN_BUILT || hasActive(BoardCase.DISMANTLE_SHELTER)) {
+        if (stage != Stage.PEN_BUILT || hasActive(dismantleId())) {
             return;
         }
-        board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
+        board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), 1, cause,
                 List.of(), Map.of()));
         stage = Stage.LURED;
@@ -70,30 +86,33 @@ public final class AnimalLifecycle {
         if (stage == Stage.NONE) {
             return;
         }
-        board.all().stream()
-                .filter(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL)
-                .filter(ticket -> board.statusOf(ticket.id())
-                        .map(status -> status == BoardStatus.PENDING
-                                || status == BoardStatus.WAITING_RESOURCES
-                                || status == BoardStatus.ASSIGNED)
-                        .orElse(false))
-                .forEach(ticket -> board.cancel(ticket.id()));
-        if (!hasActive(BoardCase.DISMANTLE_SHELTER)) {
-            board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
+        board.cancel(lureId());
+        if (!hasActive(dismantleId())) {
+            board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
                     BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(),
                     1, cause, List.of(), Map.of()));
         }
         stage = Stage.DISMANTLED;
     }
 
-    private boolean hasActive(BoardCase boardCase) {
-        return board.all().stream()
-                .filter(ticket -> ticket.boardCase() == boardCase)
-                .anyMatch(ticket -> board.statusOf(ticket.id())
-                        .map(status -> status == BoardStatus.PENDING
-                                || status == BoardStatus.WAITING_RESOURCES
-                                || status == BoardStatus.ASSIGNED)
-                        .orElse(false));
+    private boolean hasActive(String ticketId) {
+        return board.statusOf(ticketId)
+                .map(status -> status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
+                        || status == BoardStatus.ASSIGNED)
+                .orElse(false);
+    }
+
+    private String penId() {
+        return prefix + "_pen";
+    }
+
+    private String lureId() {
+        return prefix + "_lure";
+    }
+
+    private String dismantleId() {
+        return prefix + "_dismantle";
     }
 
     private enum Stage {
