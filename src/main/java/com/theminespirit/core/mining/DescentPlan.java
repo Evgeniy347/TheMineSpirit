@@ -96,12 +96,12 @@ public record DescentPlan(
         Objects.requireNonNull(direction, "Направление спуска не может быть null: от него зависят боковые клетки");
         int floor = step.floor();
         BlockCoord stand = step.stand();
-        String floorDanger = solidFloorDanger(view, new BlockCoord(stand.x(), floor, stand.z()),
+        String floorDanger = DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor, stand.z()),
                 "пол", step.index());
         if (floorDanger != null) {
             return floorDanger;
         }
-        String subFloorDanger = solidFloorDanger(view, new BlockCoord(stand.x(), floor - 1, stand.z()),
+        String subFloorDanger = DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor - 1, stand.z()),
                 "подпол", step.index());
         if (subFloorDanger != null) {
             return subFloorDanger;
@@ -109,56 +109,21 @@ public record DescentPlan(
         int sideX = -direction.dz;
         int sideZ = direction.dx;
         for (BlockCoord cell : step.passage()) {
-            String forward = liquidDanger(view, new BlockCoord(cell.x() + sideX, cell.y(), cell.z() + sideZ),
+            String forward = DescentDanger.fluidPassage(view, new BlockCoord(cell.x() + sideX, cell.y(), cell.z() + sideZ),
                     "стенка", cell);
             if (forward != null) {
                 return forward;
             }
-            String backward = liquidDanger(view, new BlockCoord(cell.x() - sideX, cell.y(), cell.z() - sideZ),
+            String backward = DescentDanger.fluidPassage(view, new BlockCoord(cell.x() - sideX, cell.y(), cell.z() - sideZ),
                     "стенка", cell);
             if (backward != null) {
                 return backward;
             }
-            String passage = liquidDanger(view, cell, "проход", cell);
+            String passage = DescentDanger.fluidPassage(view, cell, "проход", cell);
             if (passage != null) {
                 return passage;
             }
         }
         return null;
-    }
-
-    private static String solidFloorDanger(SafetyView view, BlockCoord cell, String what, int stepIndex) {
-        Cell value = view.cellAt(cell);
-        if (value == Cell.SOLID || value == Cell.FALLING) {
-            return null;
-        }
-        return "опасность: " + label(value) + " вместо " + what + "а в клетке " + coords(cell)
-                + " шага " + stepIndex;
-    }
-
-    private static String liquidDanger(SafetyView view, BlockCoord cell, String what, BlockCoord passageCell) {
-        Cell value = view.cellAt(cell);
-        if (value != Cell.LAVA && value != Cell.WATER) {
-            return null;
-        }
-        return "опасность: " + label(value) + " в клетке " + coords(cell) + " (" + what + " прохода "
-                + coords(passageCell) + ")";
-    }
-
-    private static String label(Cell cell) {
-        return switch (cell) {
-            case SOLID -> "твёрдый блок";
-            case PASSABLE -> "пустота";
-            case WATER -> "вода";
-            case LAVA -> "лава";
-            case FIRE -> "огонь";
-            case HAZARD -> "опасный блок";
-            case FALLING -> "сыпучий блок";
-            case PORTAL -> "портал";
-        };
-    }
-
-    private static String coords(BlockCoord cell) {
-        return "(" + cell.x() + ", " + cell.y() + ", " + cell.z() + ")";
     }
 }
