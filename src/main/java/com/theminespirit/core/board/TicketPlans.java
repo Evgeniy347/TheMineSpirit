@@ -142,7 +142,7 @@ public final class TicketPlans {
 
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(gotoTarget(target), new ScriptCall("craft",
-                Map.of("item", item, "count", count)));
+                Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
     private static TaskNode lighting(TicketTarget target) {

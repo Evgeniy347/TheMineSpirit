@@ -217,6 +217,23 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_CraftCases_CarryStationRadius() {
+        for (BoardCase craftCase : List.of(BoardCase.STOCK_CHESTS, BoardCase.CRAFTING_STATION,
+                BoardCase.CRAFT_TOOLS, BoardCase.ENCHANT_SHELVES)) {
+            TaskNode plan = TicketPlans.plan(craftCase, target());
+            ScriptCall craft = findCall(plan, "craft");
+            Object radius = craft.params().get("radius");
+
+            assertTrue(radius instanceof Integer distance
+                            && distance >= CatalogLimits.STATION_RADIUS_MIN
+                            && distance <= CatalogLimits.STATION_RADIUS_MAX,
+                    "craft обязан нести радиус поиска станции в границах каталога: CraftParams.from "
+                            + "читает radius обязательным, без него дух проваливает задание " + craftCase
+                            + " на выдаче (радиус " + radius + ")");
+        }
+    }
+
+    @Test
     void plan_SupplySite_DepositCarriesContainerRadius() {
         TaskNode plan = TicketPlans.plan(BoardCase.SUPPLY_SITE, target());
         ScriptCall deposit = findCall(plan, "deposit");
