@@ -69,4 +69,26 @@ class FoodNormTests {
         assertThrows(IllegalArgumentException.class, () -> FoodNorm.perSoul(4, 1, TABLE, -1),
                 "Отрицательный паёк переворачивает нужду: ферма остановится при голоде");
     }
+
+    @Test
+    void best_TastiestPresent_Chosen() {
+        assertEquals("minecraft:bread", FoodNorm.best(TABLE, Map.of("minecraft:bread", 1, "minecraft:cookie", 9)),
+                "Из еды склада берут самую сытную: хлеб 5 выше печенья 2, даже если печенья больше");
+    }
+
+    @Test
+    void best_NoFoodInItems_Empty() {
+        assertEquals("", FoodNorm.best(TABLE, Map.of("minecraft:raw_iron", 64)),
+                "Без еды в описи лучшая еда пустая: добыче нечего брать из сундука");
+        assertEquals("", FoodNorm.best(TABLE, Map.of("minecraft:bread", 0)),
+                "Ноль хлеба — еды нет: пустой сундук не считается способом добычи");
+    }
+
+    @Test
+    void best_NullInputs_Throw() {
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.best(null, Map.of()),
+                "Лучшая еда без таблицы сытности не выбирается: сытность — данные");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.best(TABLE, null),
+                "Лучшая еда без описи не выбирается: пустой набор задают пустой картой");
+    }
 }

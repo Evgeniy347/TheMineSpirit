@@ -195,10 +195,13 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 Один на поселение, внутри тика координатора (`neoforge/coordinator/SpiritCoordinator` владеет
 `neoforge/intellect/SettlementIntellect`): отдельного цикла и реестра нет, снимок и бюджет — общие
 с координатором. Раз в `DEMAND_INTERVAL_TICKS` (100) собирает `SettlementView` (запасы из инвентарей
-духов и до 8 контейнеров рядом с домом — `StockReader`, враги одним запросом — `EnemyCollector`),
-зовёт `TacticalIntellect.decide` и применяет: деятельности — push через `SpiritBrain.start`
+духов и до 8 контейнеров рядом с домом — `StockReader`, вместе с лучшей едой склада; враги и дикая
+живность одним запросом — `SettlementScanner`), зовёт `TacticalIntellect.decide` и применяет:
+деятельности — push через `SpiritBrain.start`
 (`CHOP` → `chop_tree`, `FARM` → `harvest_crop`, `MINE` → `mine_vein`, `REST` → `wait`,
-`DEFEND` — пусто, обороной владеет координатор), точечные брони целей — pull 31 внутри скриптов;
+`FORAGE` → `withdraw`/`hunt` (готовая еда склада дороже охоты, охота — только с оружием и по дичи вне
+домашнего загона), `DEFEND` — пусто, обороной владеет координатор), точечные брони целей — pull 31
+внутри скриптов;
 оценка сил — `StrengthDirector` (`FLEE`/`HEAL` — приказ отхода, `ARM` — `withdraw`+`equip` и затем бой,
 `FIGHT` — приказ атаки, только если координатор приказа не дал). Очередь заданий стратегического
 интеллекта (`StrategicQueue`) первой; REST-контракта очереди пока нет — очередь пуста

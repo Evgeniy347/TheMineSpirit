@@ -39,4 +39,20 @@ public final class FoodNorm {
                 .map(Map.Entry::getKey)
                 .toList();
     }
+
+    public static String best(NutritionTable table, Map<String, Integer> items) {
+        if (table == null) {
+            throw new IllegalArgumentException("Лучшая еда без таблицы сытности не выбирается: сытность — данные");
+        }
+        if (items == null) {
+            throw new IllegalArgumentException("Лучшая еда без описи не выбирается: пустой набор задают пустой картой");
+        }
+        for (String id : rankScore(table)) {
+            Integer count = items.get(id);
+            if (count != null && count > 0) {
+                return id;
+            }
+        }
+        return "";
+    }
 }

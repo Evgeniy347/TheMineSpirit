@@ -8,7 +8,6 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.ActivityLedger;
 import com.theminespirit.core.intellect.Expedition;
-import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrategicQueue;
@@ -24,7 +23,6 @@ import com.theminespirit.core.intellect.activity.RestActivity;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.ArmorModel;
-import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
@@ -79,12 +77,13 @@ public final class SettlementIntellect {
         StockReader.Stocks stocks = StockReader.read(level, members, home);
         stockReads += stocks.reads();
         stockContainers += stocks.containers();
-        List<EnemyFact> enemies = EnemyCollector.collect(level, members, snapshots);
+        SettlementScanner.Scan scan =
+                SettlementScanner.scan(level, members, snapshots, home, stocks.containerFood());
         entityQueries++;
-        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, enemies,
-                Forage.NONE, level, tick);
+        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, scan.enemies(),
+                scan.forage(), level, tick);
         lastView = view;
-        intellect.trackEnemies(enemies);
+        intellect.trackEnemies(scan.enemies());
         intellect.trackWeaponStock(stocks.lots().weapons() > 0);
         intellect.trackVein(veinBelow(home, view));
         TacticalDecision decision = intellect.decide(view, ledger, reservations, queue, tick);

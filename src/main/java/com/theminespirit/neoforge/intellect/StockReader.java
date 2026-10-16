@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.intellect.FoodNorm;
+import com.theminespirit.core.intellect.NutritionTable;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.intellect.StockLots;
 import com.theminespirit.core.tactics.Point;
@@ -26,7 +28,13 @@ public final class StockReader {
     private StockReader() {
     }
 
-    public record Stocks(StockLots lots, int reads, int containers) {
+    public record Stocks(StockLots lots, String containerFood, int reads, int containers) {
+        public Stocks {
+            if (lots == null || containerFood == null) {
+                throw new IllegalArgumentException(
+                        "Запасы без долей или еды склада не описываются: отсутствие задают пустыми значениями");
+            }
+        }
     }
 
     public static Stocks read(ServerLevel level, List<SpiritEntity> members, Optional<Point> home) {
@@ -43,6 +51,7 @@ public final class StockReader {
             }
             tallyContainer(spirit.getInventory(), items);
         }
+        Map<String, Integer> containerItems = new HashMap<>();
         int reads = 0;
         int containers = 0;
         BlockPos center = centerOf(members, home);
@@ -62,13 +71,16 @@ public final class StockReader {
                         }
                         if (ContainerAccess.open(level, pos) instanceof ContainerAccess.Opened opened) {
                             tallyContainer(opened.container(), items);
+                            tallyContainer(opened.container(), containerItems);
                             containers++;
                         }
                     }
                 }
             }
         }
-        return new Stocks(new StockCatalog(StockCatalog.defaultTable()).tally(items), reads, containers);
+        NutritionTable table = StockCatalog.defaultTable();
+        return new Stocks(new StockCatalog(table).tally(items), FoodNorm.best(table, containerItems), reads,
+                containers);
     }
 
     private static void tallyContainer(Container container, Map<String, Integer> items) {
