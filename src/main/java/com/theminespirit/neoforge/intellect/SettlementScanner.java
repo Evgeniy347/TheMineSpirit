@@ -17,16 +17,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 public final class SettlementScanner {
     public static final double ENEMY_RADIUS = 16.0;
+    public static final int FORAGE_WATER_RADIUS = 8;
 
     public record Scan(List<EnemyFact> enemies, Forage forage) {
         public Scan {
@@ -95,7 +99,36 @@ public final class SettlementScanner {
             }
         }
         facts.sort(Comparator.comparing(EnemyFact::type).thenComparing(EnemyFact::id));
-        return new Scan(List.copyOf(facts), forage(containerFood, wild));
+        boolean water = false;
+        boolean rod = false;
+        for (SpiritEntity spirit : alive) {
+            rod |= hasRod(spirit);
+            water |= waterNear(level, spirit);
+        }
+        return new Scan(List.copyOf(facts), forage(containerFood, wild, water, rod));
+    }
+
+    private static boolean hasRod(SpiritEntity spirit) {
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            if (spirit.getInventory().getItem(slot).is(Items.FISHING_ROD)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean waterNear(ServerLevel level, SpiritEntity spirit) {
+        BlockPos center = spirit.blockPosition();
+        for (int dx = -FORAGE_WATER_RADIUS; dx <= FORAGE_WATER_RADIUS; dx++) {
+            for (int dz = -FORAGE_WATER_RADIUS; dz <= FORAGE_WATER_RADIUS; dz++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (level.getFluidState(center.offset(dx, dy, dz)).is(FluidTags.WATER)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static PenBounds homePen(Optional<Point> home) {
@@ -112,7 +145,7 @@ public final class SettlementScanner {
         return !homePen.inside(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
     }
 
-    private static Forage forage(String containerFood, Map<Species, Integer> wild) {
+    private static Forage forage(String containerFood, Map<Species, Integer> wild, boolean water, boolean rod) {
         Species best = null;
         int count = 0;
         for (Map.Entry<Species, Integer> entry : wild.entrySet()) {
@@ -123,9 +156,9 @@ public final class SettlementScanner {
             }
         }
         if (best == null) {
-            return containerFood.isBlank() ? Forage.NONE : new Forage(containerFood, 0, "");
+            return new Forage(containerFood, 0, "", water, rod);
         }
-        return new Forage(containerFood, count, best.name().toLowerCase(Locale.ROOT));
+        return new Forage(containerFood, count, best.name().toLowerCase(Locale.ROOT), water, rod);
     }
 
     private static boolean visible(LivingEntity entity) {

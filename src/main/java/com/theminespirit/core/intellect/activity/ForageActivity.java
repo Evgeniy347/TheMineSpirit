@@ -55,6 +55,13 @@ public final class ForageActivity implements Activity {
         if (view.farmWork().hasHarvest()) {
             return new ActivityIntent(id(), Optional.of("harvest_crop"), Map.of(), Optional.of(WorkKind.CELL));
         }
+        if (forage.canFish()) {
+            return new ActivityIntent(id(), Optional.of("fish"),
+                    Map.of("count", IntellectTuning.FORAGE_FISH_COUNT,
+                            "radius", IntellectTuning.FORAGE_FISH_RADIUS,
+                            "duration_ticks", IntellectTuning.FORAGE_FISH_DURATION),
+                    Optional.empty());
+        }
         if (forage.hasPrey() && view.weapons() > 0) {
             return new ActivityIntent(id(), Optional.of("hunt"),
                     Map.of("species", forage.preySpecies(), "radius", IntellectTuning.FORAGE_HUNT_RADIUS,
@@ -66,6 +73,7 @@ public final class ForageActivity implements Activity {
 
     private static boolean hasMethod(SettlementView view) {
         return view.forage().hasContainerFood() || view.farmWork().hasHarvest()
+                || view.forage().canFish()
                 || (view.forage().hasPrey() && view.weapons() > 0);
     }
 }

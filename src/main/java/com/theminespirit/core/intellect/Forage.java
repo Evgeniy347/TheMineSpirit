@@ -1,7 +1,11 @@
 package com.theminespirit.core.intellect;
 
-public record Forage(String containerFood, int prey, String preySpecies) {
-    public static final Forage NONE = new Forage("", 0, "");
+public record Forage(String containerFood, int prey, String preySpecies, boolean water, boolean rod) {
+    public static final Forage NONE = new Forage("", 0, "", false, false);
+
+    public Forage(String containerFood, int prey, String preySpecies) {
+        this(containerFood, prey, preySpecies, false, false);
+    }
 
     public Forage {
         if (containerFood == null) {
@@ -27,5 +31,17 @@ public record Forage(String containerFood, int prey, String preySpecies) {
 
     public boolean hasPrey() {
         return prey > 0;
+    }
+
+    public boolean hasWater() {
+        return water;
+    }
+
+    public boolean hasRod() {
+        return rod;
+    }
+
+    public boolean canFish() {
+        return water && rod;
     }
 }

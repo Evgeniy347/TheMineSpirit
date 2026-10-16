@@ -15,6 +15,9 @@ public final class IntellectTuning {
     public static final int FORAGE_WITHDRAW_RADIUS = 8;
     public static final int FORAGE_HUNT_RADIUS = 16;
     public static final int FORAGE_HUNT_COUNT = 1;
+    public static final int FORAGE_FISH_RADIUS = 16;
+    public static final int FORAGE_FISH_COUNT = 1;
+    public static final int FORAGE_FISH_DURATION = 1200;
     public static final int ORE_TARGET = 64;
     public static final int IRON_TARGET = 32;
     public static final int WEAPON_TARGET = 2;
