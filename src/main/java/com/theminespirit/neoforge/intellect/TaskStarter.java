@@ -11,6 +11,7 @@ import java.util.UUID;
 public final class TaskStarter {
     private final TaskBackoff backoff = new TaskBackoff();
     private final Map<UUID, String> issued = new HashMap<>();
+    private final Map<UUID, RunStatus> observed = new HashMap<>();
     private int starts;
     private int failures;
 
@@ -47,6 +48,13 @@ public final class TaskStarter {
             spirit.cancelTask();
         } else {
             var status = spirit.taskStatus();
+            RunStatus previous = observed.put(id, status.orElse(null));
+            if (status.isPresent() && status.get() != RunStatus.RUNNING && previous != status.get()) {
+                // Первый тик терминального исхода: не выдаём новое занятие, иначе итог (успех или причина
+                // падения, их читает наблюдатель, в т.ч. GameTest) затирается в том же серверном тике.
+                // Следующий тик — обычный откат.
+                return false;
+            }
             String last = issued.remove(id);
             if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
                 backoff.noteFailure(id, last, tick);

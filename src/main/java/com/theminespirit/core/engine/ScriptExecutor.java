@@ -11,6 +11,7 @@ final class ScriptExecutor extends NodeExecutor {
     private final ScriptRegistry registry;
     private ScriptInstance instance;
     private boolean failed;
+    private boolean finished;
     private Optional<ScriptResult> collectedResult = Optional.empty();
 
     ScriptExecutor(ScriptCall call, ScriptRegistry registry) {
@@ -30,6 +31,7 @@ final class ScriptExecutor extends NodeExecutor {
             if (result != ScriptStatus.RUNNING) {
                 collectedResult = live.result();
                 instance = null;
+                finished = true;
             }
             if (result == ScriptStatus.FAILED) {
                 failed = true;
@@ -73,7 +75,10 @@ final class ScriptExecutor extends NodeExecutor {
 
     @Override
     String currentScript() {
-        return instance == null && !failed ? null : scriptId;
+        // Пока задача не завершилась, текущий скрипт назван: тело создаётся на первом тике, но задача уже
+        // запущена, и по ней решается, можно ли её перебивать (TaskStarter/intellect). null — только у
+        // успешно завершённого скрипта внутри плана; провал имя сохраняет (по нему строится причина).
+        return finished && !failed ? null : scriptId;
     }
 
     @Override
