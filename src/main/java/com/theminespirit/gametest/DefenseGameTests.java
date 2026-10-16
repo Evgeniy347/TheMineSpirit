@@ -4,10 +4,13 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.coordinator.CoordinatorTuning;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.intellect.defense.CombatStance;
 import com.theminespirit.core.intellect.defense.DefenderOrder;
 import com.theminespirit.core.intellect.defense.DefensePlan;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -17,6 +20,7 @@ import com.theminespirit.neoforge.defense.BlockerProbe;
 import com.theminespirit.neoforge.defense.DefenseService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -437,6 +441,30 @@ public final class DefenseGameTests {
         } catch (IllegalArgumentException expected) {
             helper.assertTrue(true, "отказ без мира");
         }
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "defense_busy_task", timeoutTicks = 100)
+    public static void busy_SpiritWithRunningTask_NoDefenseOrder(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 4));
+        spirit.setHome(home);
+        spirit.startTask(new SequenceNode(List.of(new ScriptCall("wait", Map.of("ticks", 200)))));
+        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                "Задача запущена: иначе занятость духа проверять не на чем");
+        helper.assertTrue(spirit.currentTaskScript().isEmpty(),
+                "У запущенной задачи из шагов первый скрипт назван только с первого тика мозга: это окно, в котором "
+                        + "оборона глушила занятых; назван: " + spirit.currentTaskScript().orElse("?"));
+        SpiritCoordinator coordinator = coordinatorOf(helper, spirit);
+        coordinator.tick(List.of(spirit), helper.getLevel().getGameTime());
+        helper.assertTrue(coordinator.defense().lastPlan().posts().isEmpty(),
+                "Занятому духу не выдан пост обороны, пока задача RUNNING без названного скрипта: иначе пост "
+                        + "держит тактику владельцем тика и задача встаёт; постов "
+                        + coordinator.defense().lastPlan().posts().size());
+        helper.assertTrue(spirit.tactics().activeDirective().isEmpty(),
+                "Занятому духу не выдан приказ обороны: иначе тактика глушит его задачу, а пост тянет к якорю; "
+                        + "приказ " + spirit.tactics().activeDirective().map(d -> d.mode().toString()).orElse("нет"));
         helper.succeed();
     }
 }

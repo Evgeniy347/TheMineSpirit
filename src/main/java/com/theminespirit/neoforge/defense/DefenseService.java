@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.defense;
 
 import com.theminespirit.core.coordinator.CoordinatorState;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.intellect.defense.CombatStance;
 import com.theminespirit.core.intellect.defense.CoverFinder;
 import com.theminespirit.core.intellect.defense.DefenderCapability;
@@ -66,7 +67,7 @@ public final class DefenseService {
         }
         List<DefenderCapability> defenders = new ArrayList<>();
         for (SpiritEntity spirit : members) {
-            if (spirit == null || spirit.isRemoved() || spirit.currentTaskScript().isPresent()) {
+            if (spirit == null || spirit.isRemoved() || busy(spirit)) {
                 continue;
             }
             DefenderReader.read(spirit).ifPresent(defenders::add);
@@ -99,6 +100,11 @@ public final class DefenseService {
 
     public int blockReads() {
         return probe.blockReads();
+    }
+
+    private static boolean busy(SpiritEntity spirit) {
+        return spirit.currentTaskScript().isPresent()
+                || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
     }
 
     private Set<String> charged(ServerLevel level, DefensePlan plan) {
