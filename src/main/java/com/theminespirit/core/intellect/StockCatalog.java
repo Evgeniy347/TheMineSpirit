@@ -13,6 +13,8 @@ public final class StockCatalog {
     public static final Set<String> WEAPON_IDS = Set.of("minecraft:wooden_sword", "minecraft:stone_sword",
             "minecraft:iron_sword", "minecraft:diamond_sword", "minecraft:netherite_sword", "minecraft:bow",
             "minecraft:crossbow", "minecraft:trident", "minecraft:shield", "minecraft:iron_axe");
+    public static final Set<String> SEED_IDS = Set.of("minecraft:wheat_seeds", "minecraft:carrot",
+            "minecraft:potato", "minecraft:beetroot_seeds");
 
     private final NutritionTable table;
 
@@ -45,6 +47,7 @@ public final class StockCatalog {
         int ore = 0;
         int iron = 0;
         int weapons = 0;
+        int seeds = 0;
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             String id = entry.getKey();
             Integer count = entry.getValue();
@@ -69,7 +72,10 @@ public final class StockCatalog {
             if (WEAPON_IDS.contains(id)) {
                 weapons += count;
             }
+            if (SEED_IDS.contains(id)) {
+                seeds += count;
+            }
         }
-        return new StockLots(foodItems, foodNutrition, ore, iron, weapons);
+        return new StockLots(foodItems, foodNutrition, ore, iron, weapons, seeds);
     }
 }

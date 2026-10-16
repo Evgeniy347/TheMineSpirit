@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 public record SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
-        int iron, int weapons, int threats, double dayFraction, List<SpiritSnapshot> spirits, long tick) {
+        int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, List<SpiritSnapshot> spirits,
+        long tick) {
     public SettlementView {
         if (population < 0) {
             throw new IllegalArgumentException(
@@ -41,6 +42,9 @@ public record SettlementView(int population, int children, double foodPerSoul, d
         }
         if (Double.isNaN(dayFraction) || dayFraction < 0 || dayFraction > 1) {
             throw new IllegalArgumentException("Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
+        }
+        if (farmWork == null) {
+            throw new IllegalArgumentException("Работа фермы не может быть null: её задают FarmWork.NONE");
         }
         if (spirits == null) {
             throw new IllegalArgumentException("Список духов не может быть null: пустое поселение задают пустым списком");

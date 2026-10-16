@@ -1,6 +1,6 @@
 package com.theminespirit.core.intellect;
 
-public record StockLots(int foodItems, double foodNutrition, int ore, int iron, int weapons) {
+public record StockLots(int foodItems, double foodNutrition, int ore, int iron, int weapons, int seeds) {
     public StockLots {
         if (foodItems < 0) {
             throw new IllegalArgumentException(
@@ -18,6 +18,9 @@ public record StockLots(int foodItems, double foodNutrition, int ore, int iron, 
         }
         if (weapons < 0) {
             throw new IllegalArgumentException("Оружия = " + weapons + ": запас не может быть отрицательным");
+        }
+        if (seeds < 0) {
+            throw new IllegalArgumentException("Семян = " + seeds + ": запас не может быть отрицательным");
         }
     }
 }

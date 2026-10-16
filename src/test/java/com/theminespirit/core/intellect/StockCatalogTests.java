@@ -30,6 +30,15 @@ class StockCatalogTests {
     }
 
     @Test
+    void tally_Seeds_CountsAsSeeds() {
+        StockLots lots = new StockCatalog(TABLE).tally(Map.of("minecraft:wheat_seeds", 7, "minecraft:beetroot_seeds",
+                3));
+
+        assertEquals(10, lots.seeds(),
+                "Семена пшеницы и свёклы считаются семенами: снимок работы фермы видит запас для посадки");
+    }
+
+    @Test
     void tally_EmptyMap_Zeroes() {
         StockLots lots = new StockCatalog(TABLE).tally(Map.of());
 

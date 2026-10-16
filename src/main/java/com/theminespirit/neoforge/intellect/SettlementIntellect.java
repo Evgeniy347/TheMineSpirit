@@ -79,7 +79,7 @@ public final class SettlementIntellect {
         stockContainers += stocks.containers();
         List<EnemyFact> enemies = EnemyCollector.collect(level, members, snapshots);
         entityQueries++;
-        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), enemies,
+        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, enemies,
                 level, tick);
         lastView = view;
         intellect.trackEnemies(enemies);

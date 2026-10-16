@@ -27,7 +27,8 @@ class SettlementViewTests {
 
     private static SettlementView view(int population, int children, double food, double nutrition, int ore, int iron,
             int weapons, List<SpiritSnapshot> spirits) {
-        return new SettlementView(population, children, food, nutrition, ore, iron, weapons, 0, 0.5, spirits, 7);
+        return new SettlementView(population, children, food, nutrition, ore, iron, weapons, 0, 0.5,
+                new FarmWork(4, 0, 0), spirits, 7);
     }
 
     @Test
@@ -103,8 +104,11 @@ class SettlementViewTests {
         assertThrows(IllegalArgumentException.class, () -> view(2, 0, 2, 2, -1, 32, 2, List.of()),
                 "Отрицательная руда противоречит запасам: нужда в добыче посчитается неверно");
         assertThrows(IllegalArgumentException.class,
-                () -> new SettlementView(2, 0, 2, 2, 64, 32, 2, 0, 1.5, List.of(), 7),
+                () -> new SettlementView(2, 0, 2, 2, 64, 32, 2, 0, 1.5, FarmWork.NONE, List.of(), 7),
                 "Доля суток вне 0..1 противоречит времени: ночной отдых включится не вовремя");
+        assertThrows(IllegalArgumentException.class,
+                () -> new SettlementView(2, 0, 2, 2, 64, 32, 2, 0, 0.5, null, List.of(), 7),
+                "Работа фермы без значения не описывается: спрос фермы без неё сравнивает неизвестное");
     }
 
     @Test

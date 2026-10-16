@@ -46,7 +46,7 @@ class ActivityAssignerTests {
 
     @Test
     void assign_ThreatPresent_DefendOnlyThreatened() {
-        SettlementView view = new SettlementView(3, 0, 2, 2, 64, 32, 2, 1, 0.2,
+        SettlementView view = new SettlementView(3, 0, 2, 2, 64, 32, 2, 1, 0.2, SettlementViews.farmWork(),
                 List.of(SettlementViews.threatenedSpirit(FIRST), SettlementViews.spirit(SECOND),
                         SettlementViews.spirit(THIRD)),
                 100);
