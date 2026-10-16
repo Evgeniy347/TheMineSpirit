@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.combat;
 
+import com.theminespirit.core.base.Camp;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -34,9 +35,9 @@ public final class RetreatScript implements ScriptInstance {
             Point self = new Point(spirit.getX(), spirit.getY(), spirit.getZ());
             Optional<Point> retreatPoint = SafePointChoice.nearest(self,
                     spirit.home().map(home -> new Point(home.x() + 0.5, home.y(), home.z() + 0.5)),
-                    SafePointChoice.NO_CAMP);
+                    spirit.camp().map(Camp::center));
             if (retreatPoint.isEmpty()) {
-                return fail("точки отхода нет: поставьте дом командой /spirit home");
+                return fail("точки отхода нет: поставьте дом командой /spirit home или лагерь командой /spirit camp");
             }
             destination = retreatPoint.get();
             spirit.tactics().applyDirective(CombatDirective.retreat(destination));

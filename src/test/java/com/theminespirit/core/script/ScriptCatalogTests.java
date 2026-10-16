@@ -219,7 +219,12 @@ class ScriptCatalogTests {
                 spec("wait", List.of("ticks"), Map.of("ticks", new long[]{1, 6000})),
                 spec("close_door", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
-                                "z", new long[]{WORLD_MIN, WORLD_MAX})));
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("set_camp", List.of(),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX},
+                                "radius", new long[]{CatalogLimits.CAMP_RADIUS_MIN, CatalogLimits.CAMP_RADIUS_MAX})),
+                spec("clear_camp", List.of(), Map.of()));
 
         return rows.stream().map(row -> Arguments.of(row));
     }

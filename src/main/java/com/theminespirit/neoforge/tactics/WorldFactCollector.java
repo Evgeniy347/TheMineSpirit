@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.tactics;
 
+import com.theminespirit.core.base.Camp;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.MemoryPoint;
 import com.theminespirit.core.perception.MemoryType;
@@ -49,7 +50,7 @@ public final class WorldFactCollector {
     public static final long NIGHT_END = 23000;
 
     public record Collected(SituationContext context, Map<String, LivingEntity> entities, EnvReading env, int blockReads,
-            int entityQueries, Optional<Point> home) {
+            int entityQueries, Optional<Point> home, Optional<Point> camp) {
     }
 
     private final TacticsAdapterSettings settings;
@@ -89,12 +90,13 @@ public final class WorldFactCollector {
         total.charge(visibilityBudget.used());
         EnvReading env = enemies.isEmpty() ? EnvReading.NOTHING : scanEnv(spirit, enemies, terrain, total, now);
         Optional<Point> home = home(spirit);
+        Optional<Point> camp = camp(spirit);
         EnvFacts envFacts = EnvFactsBuilder.build(env, point(spirit.position()), lightAt(spirit), timeOfDay(level), home);
         Orders orders = orders(spirit, inputs, found.enemies, found.allies);
         SelfFacts self = selfFacts(spirit, found.allies);
         SituationContext context = new SituationContext(self, enemies, envFacts, orders, inputs.ticksSinceHit(),
                 inputs.ticksSinceStrike());
-        return new Collected(context, byId, env, terrain.reads(), 1, home);
+        return new Collected(context, byId, env, terrain.reads(), 1, home, camp);
     }
 
     public void invalidate(BlockPos pos) {
@@ -180,6 +182,10 @@ public final class WorldFactCollector {
         }
         boolean threatened = enemies.stream().anyMatch(enemy -> enemy instanceof Mob mob && mob.getTarget() == ward);
         return Optional.of(new OrdersBuilder.Ward(point(ward.position()), threatened));
+    }
+
+    private static Optional<Point> camp(SpiritEntity spirit) {
+        return spirit.camp().map(Camp::center);
     }
 
     private static Optional<Point> home(SpiritEntity spirit) {

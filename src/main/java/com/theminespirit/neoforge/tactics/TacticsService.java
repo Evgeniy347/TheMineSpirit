@@ -419,7 +419,7 @@ public final class TacticsService {
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
         Optional<Point> retreatPoint = forcedPoint.isPresent() ? forcedPoint
-                : SafePointChoice.nearest(situation.self().pos(), collected.home(), SafePointChoice.NO_CAMP);
+                : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
         RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
                 retreatPoint, situation.self().blocks());

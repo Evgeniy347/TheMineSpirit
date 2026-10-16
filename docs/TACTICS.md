@@ -157,6 +157,13 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
   `RetreatCommitment` держит отход: бой прерывает бег, но не постройку, запасной AWAY уступает найденному лучшему способу.
 - **Приказы**: `setCombatMode`, `setGuardZone`, `setWard` (будущая REST-команда `set_combat_mode` вызывает их); зона
   охраны — только явная, рабочая зона политик в приказы тактики не попадает.
+- **Дом, лагерь и укрепления**: отход `HOME` идёт к ближайшей из дома (`SpiritHome`) и лагеря похода (`Camp`,
+  NBT `SpiritCamp`) через `SafePointChoice` — ничья за домом, нет обеих точек — «точки отхода нет»; скрипт
+  `retreat` выбирает так же. Точка обороны поселения (`CoordinatorState.defendedPoint`) — ближайшая из дома
+  и лагеря к духам. Укрепление — решение единого интеллекта (`FortifyDecision`/`FortifyPlan` в `core/intellect`,
+  геометрия в `core/building`): ровно один строитель ставит блоки порциями `FORTIFY_BLOCKS_PER_TICK` за тик
+  через `BlockPlacer` с бронью клеток, остальные прикрывают приказом `defend`; после боя строитель разбирает
+  только свои блоки (`markSpirit`), сверху вниз.
 - **Состояние**: ключ NBT `SpiritTactics`, JSON версии 1 (`TacticsStateCodec`); испорченное состояние — ошибка в логе и
   `tactics().restoreFailure()`, дух начинает с режима по умолчанию DEFENSIVE.
 - **Запись решения**: `TacticsTrace.format` пишется в лог уровня DEBUG при смене решения и доступна как

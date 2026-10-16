@@ -371,7 +371,19 @@ public final class CoreScripts {
                                 ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
                         List.of("дверь существует", "к двери есть подход"),
-                        List.of("дверь закрыта"))));
+                        List.of("дверь закрыта")),
+                spec("set_camp", "поставить лагерь похода",
+                        List.of(
+                                ParamSpec.integer("x", false, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", false, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("radius", false, CatalogLimits.CAMP_RADIUS_MIN,
+                                        CatalogLimits.CAMP_RADIUS_MAX, CatalogLimits.CAMP_RADIUS_DEFAULT)),
+                        List.of(), List.of("лагерь поставлен и переживёт перезапуск")),
+                spec("clear_camp", "снять лагерь похода",
+                        List.of(), List.of(), List.of("лагеря у духа нет"))));
     }
 
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,

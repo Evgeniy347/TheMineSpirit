@@ -14,6 +14,8 @@ import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.ClearCampParams;
+import com.theminespirit.core.script.SetCampParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.CloseDoorParams;
@@ -129,6 +131,8 @@ public final class SpiritScripts {
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("return_home", spirit -> params -> new ReturnHomeScript(spirit));
+        table.put("set_camp", spirit -> params -> new SetCampScript(spirit, SetCampParams.from(params)));
+        table.put("clear_camp", spirit -> params -> new ClearCampScript(spirit, ClearCampParams.from(params)));
         table.put("goto_block", spirit -> params -> new GotoBlockScript(spirit, GotoBlockParams.from(params)));
         table.put("come_to_player", spirit -> params -> new ComeToPlayerScript(spirit, ComeToPlayerParams.from(params)));
         table.put("patrol", spirit -> params -> new PatrolScript(spirit, PatrolParams.from(params)));

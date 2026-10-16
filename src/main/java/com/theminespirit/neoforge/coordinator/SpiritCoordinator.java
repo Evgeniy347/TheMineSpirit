@@ -8,10 +8,12 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.base.Camp;
 import com.theminespirit.core.coordinator.CoordinatorDirectives;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -20,6 +22,7 @@ import com.theminespirit.neoforge.tactics.TacticsService;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,13 +76,40 @@ public final class SpiritCoordinator {
         }
         expireStale(snapshots, tick);
         reservations.expire(tick);
-        Optional<Point> defendedPoint = SettlementGroups.defendedPoint(key);
+        Optional<Point> defendedPoint = defendedPoint(members);
         double radius = defendedPoint.isPresent() ? CoordinatorTuning.DEFENSE_RADIUS : 0;
         CoordinatorState state = new CoordinatorState(defendedPoint, radius, snapshots, tick);
         CoordinatorPlan plan = coordinator.plan(state, reservations, tick);
         lastState = state;
         applyPlan(plan, tick);
         intellect.tick(level, members, snapshots, defendedPoint, reservations, tick);
+    }
+
+    private Optional<Point> defendedPoint(List<SpiritEntity> members) {
+        Optional<Point> home = SettlementGroups.defendedPoint(key);
+        List<Camp> camps = new ArrayList<>();
+        for (SpiritEntity spirit : members) {
+            spirit.camp().ifPresent(camps::add);
+        }
+        if (camps.isEmpty() || members.isEmpty()) {
+            return home;
+        }
+        Point reference = centroid(members);
+        Optional<Point> camp = camps.stream().map(Camp::center)
+                .min(Comparator.comparingDouble(reference::distanceTo));
+        return SafePointChoice.nearest(reference, home, camp);
+    }
+
+    private static Point centroid(List<SpiritEntity> members) {
+        double x = 0;
+        double y = 0;
+        double z = 0;
+        for (SpiritEntity spirit : members) {
+            x += spirit.getX();
+            y += spirit.getY();
+            z += spirit.getZ();
+        }
+        return new Point(x / members.size(), y / members.size(), z / members.size());
     }
 
     private void expireStale(List<SpiritSnapshot> snapshots, long tick) {
