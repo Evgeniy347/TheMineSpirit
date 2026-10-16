@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +29,7 @@ public final class Board {
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
+    private final Set<String> completed = new LinkedHashSet<>();
     private final LongSupplier nowTicks;
 
     public Board(LongSupplier nowTicks) {
@@ -122,6 +124,7 @@ public final class Board {
             return false;
         }
         statuses.put(ticketId, BoardStatus.DONE);
+        completed.add(ticketId);
         return true;
     }
 
@@ -182,8 +185,16 @@ public final class Board {
             removed++;
         }
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
+        trimCompleted();
         removed += evictOverflow();
         return removed;
+    }
+
+    /** Отметки о завершённых заданиях ограничены: память доски не растёт от прогонов. */
+    private void trimCompleted() {
+        while (completed.size() > BoardTuning.COMPLETED_MEMORY) {
+            completed.remove(completed.iterator().next());
+        }
     }
 
     public List<BoardTicket> pendingFor(UUID spirit) {
@@ -286,9 +297,15 @@ public final class Board {
         }
     }
 
+    /**
+     * Зависимости выполнены: предшественник либо ещё стоит {@code DONE}, либо уже снят
+     * пересборкой, оставив отметку в {@link #completed}. Без отметки снятое завершённое
+     * задание навсегда блокировало бы зависящие: цепочка «отлов → загон → приманка»
+     * рвалась бы на первом же {@code prune}.
+     */
     private boolean dependenciesDone(BoardTicket ticket) {
         for (String dependencyId : ticket.dependsOn()) {
-            if (statuses.getOrDefault(dependencyId, null) != BoardStatus.DONE) {
+            if (statuses.getOrDefault(dependencyId, null) != BoardStatus.DONE && !completed.contains(dependencyId)) {
                 return false;
             }
         }

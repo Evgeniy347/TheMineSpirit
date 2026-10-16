@@ -143,6 +143,23 @@ class BoardTests {
     }
 
     @Test
+    void claimable_AfterPruneOfDone_RetainsDependency() {
+        Board board = boardAt(0);
+        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("capture_1"));
+        board.submit(capture);
+        board.submit(lure);
+        board.claim("capture_1", SPIRIT_ONE, 0);
+        board.complete("capture_1");
+        board.prune(1);
+
+        assertEquals(List.of(lure), board.claimable(new StockView(Map.of()), 1),
+                "Снятое пересборкой завершённое задание остаётся выполненным для зависимого: "
+                        + "иначе «приманить» после «окружить» не выдалось бы никогда, и жизненный "
+                        + "цикл животного рвался бы на первом же prune");
+    }
+
+    @Test
     void claimable_Chain_Unlocks() {
         Board board = boardAt(0);
         BoardTicket pen = ticket("pen_1", BoardCase.BUILD_PEN, 0, 6000, List.of());

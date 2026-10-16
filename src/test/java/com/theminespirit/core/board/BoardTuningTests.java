@@ -57,6 +57,20 @@ class BoardTuningTests {
     }
 
     @Test
+    void completedMemory_Is_Bounded() {
+        assertEquals(1024, BoardTuning.COMPLETED_MEMORY,
+                "Память завершённых заданий ограничена 1024: доска помнит выполненные ради "
+                        + "зависимостей, но не растёт бесконечно от прогонов");
+    }
+
+    @Test
+    void fenceWatchRadius_Is_LocalToSettlement() {
+        assertEquals(32, BoardTuning.FENCE_WATCH_RADIUS,
+                "Сломанный забор считается своим в 32 блоках от дома/духа: дальше него поломка "
+                        + "природная, и доска не наряжает духа чинить чужой лес");
+    }
+
+    @Test
     void craterBlocksEstimateRadius_Equals_CreeperPower() {
         assertEquals(3, BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS,
                 "Радиус воронки крипера по умолчанию — 3 (сила взрыва ванильного крипера): "
@@ -126,7 +140,9 @@ class BoardTuningTests {
                 (long) BoardTuning.STOCK_READ_BUDGET,
                 (long) BoardTuning.STOCK_BLOCK_BUDGET,
                 BoardTuning.FAIL_BACKOFF_TICKS,
+                (long) BoardTuning.COMPLETED_MEMORY,
                 BoardTuning.FENCE_PATROL_INTERVAL,
+                (long) BoardTuning.FENCE_WATCH_RADIUS,
                 BoardTuning.ENCHANT_CHECK_INTERVAL,
                 (long) BoardTuning.ENCHANT_SHELVES_MIN);
     }
