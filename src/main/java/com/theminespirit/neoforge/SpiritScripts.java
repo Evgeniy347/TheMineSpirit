@@ -47,6 +47,7 @@ import com.theminespirit.core.script.MemoryParams;
 import com.theminespirit.core.script.MeetParams;
 import com.theminespirit.core.script.HerdCheckParams;
 import com.theminespirit.core.script.HuntParams;
+import com.theminespirit.core.script.LightAreaParams;
 import com.theminespirit.core.script.MilkParams;
 import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.PatrolParams;
@@ -176,6 +177,7 @@ public final class SpiritScripts {
         table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
+        table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put("fill_crater", spirit -> params -> new FillCraterScript(spirit,
                 CraterResolver.resolve(spirit, FillCraterParams.from(params))));
