@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 
 class ActivitiesTests {
     private static final UUID SPIRIT = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private static final List<Activity> ALL = List.of(new ChopActivity(), new FarmActivity(), new MineActivity(),
-            new RestActivity(), new DefendActivity());
+    private static final List<Activity> ALL = List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(),
+            new MineActivity(), new RestActivity(), new DefendActivity());
 
     private static double demandOf(ActivityId id, SettlementView view) {
         for (Activity activity : ALL) {
@@ -87,6 +87,10 @@ class ActivitiesTests {
             if (activity.id() == ActivityId.DEFEND) {
                 assertEquals(Optional.empty(), script,
                         "Защита исполняется координатором: скрипта у неё нет, намерение пустое");
+            } else if (activity.id() == ActivityId.FORAGE) {
+                assertEquals(Optional.empty(), script,
+                        "Добыча еды без способа добычи не зовёт скрипт: пустая арена — ни сундука, ни грядок, "
+                                + "ни дичи, и задача упала бы на пустом месте");
             } else {
                 assertEquals(Optional.of(expected.get(activity.id())), script,
                         "Намерение " + activity.id() + " ссылается на существующий скрипт: "

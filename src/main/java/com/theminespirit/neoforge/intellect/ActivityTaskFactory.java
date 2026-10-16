@@ -37,6 +37,7 @@ public final class ActivityTaskFactory {
         return switch (activity) {
             case CHOP -> Optional.of("chop_tree");
             case FARM -> Optional.of("harvest_crop");
+            case FORAGE -> Optional.empty();
             case MINE -> Optional.of("mine_vein");
             case REST -> Optional.of("wait");
             case DEFEND -> Optional.empty();

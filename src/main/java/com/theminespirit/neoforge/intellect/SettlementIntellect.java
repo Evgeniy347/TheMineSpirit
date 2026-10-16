@@ -8,6 +8,7 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.ActivityLedger;
 import com.theminespirit.core.intellect.Expedition;
+import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrategicQueue;
@@ -17,6 +18,7 @@ import com.theminespirit.core.intellect.TacticalIntellect;
 import com.theminespirit.core.intellect.activity.ChopActivity;
 import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
+import com.theminespirit.core.intellect.activity.ForageActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
 import com.theminespirit.core.plan.ScriptCall;
@@ -54,8 +56,8 @@ public final class SettlementIntellect {
 
     public SettlementIntellect() {
         this.catalog = ActivityCatalog.adultsOnly(
-                List.of(new ChopActivity(), new FarmActivity(), new MineActivity(), new RestActivity(),
-                        new DefendActivity()));
+                List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
+                        new RestActivity(), new DefendActivity()));
         ArmorModel armor = TacticsConfig.loadDefault().weights().scales().armor();
         this.intellect = new TacticalIntellect(catalog, profiles, armor);
     }
@@ -80,7 +82,7 @@ public final class SettlementIntellect {
         List<EnemyFact> enemies = EnemyCollector.collect(level, members, snapshots);
         entityQueries++;
         SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, enemies,
-                level, tick);
+                Forage.NONE, level, tick);
         lastView = view;
         intellect.trackEnemies(enemies);
         intellect.trackWeaponStock(stocks.lots().weapons() > 0);

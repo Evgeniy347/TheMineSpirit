@@ -16,8 +16,8 @@ import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 
 class ActivitiesProperties {
-    private static final List<Activity> ALL = List.of(new ChopActivity(), new FarmActivity(), new MineActivity(),
-            new RestActivity(), new DefendActivity());
+    private static final List<Activity> ALL = List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(),
+            new MineActivity(), new RestActivity(), new DefendActivity());
 
     @Provide
     Arbitrary<SettlementView> views() {

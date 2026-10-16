@@ -46,7 +46,7 @@ public final class SettlementViews {
     }
 
     public static SettlementView empty() {
-        return new SettlementView(0, 0, 0, 0, 0, 0, 0, 0, 0.5, FarmWork.NONE, List.of(), 0);
+        return new SettlementView(0, 0, 0, 0, 0, 0, 0, 0, 0.5, FarmWork.NONE, Forage.NONE, List.of(), 0);
     }
 
     public static SettlementView settlement(double food, double nutrition, int ore, int iron, int weapons,
@@ -58,13 +58,20 @@ public final class SettlementViews {
     public static SettlementView settlementWithFarm(double food, double nutrition, int ore, int iron, int weapons,
             int threats, double dayFraction, FarmWork farmWork) {
         return new SettlementView(3, 0, food, nutrition, ore, iron, weapons, threats, dayFraction, farmWork,
+                Forage.NONE, List.of(), 100);
+    }
+
+    public static SettlementView settlementWithForage(double food, double nutrition, int ore, int iron, int weapons,
+            int threats, FarmWork farmWork, Forage forage) {
+        return new SettlementView(3, 0, food, nutrition, ore, iron, weapons, threats, 0.2, farmWork, forage,
                 List.of(), 100);
     }
 
     public static SettlementView withSpirits(List<SpiritSnapshot> spirits) {
         List<SpiritSnapshot> ordered = new ArrayList<>(spirits);
         ordered.sort(Comparator.comparing(SpiritSnapshot::id));
-        return new SettlementView(ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), ordered, 100);
+        return new SettlementView(ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), Forage.NONE,
+                ordered, 100);
     }
 
     public static Arbitrary<SettlementView> views() {
@@ -93,7 +100,8 @@ public final class SettlementViews {
                 .as((counted, stocked, farm, spirits, tick, kids) -> {
                     int population = spirits.size() + counted[0];
                     return new SettlementView(population, Math.min(kids, population), stocked[0], stocked[1],
-                            counted[1], counted[2], counted[3], counted[4], stocked[2], farm, spirits, tick);
+                            counted[1], counted[2], counted[3], counted[4], stocked[2], farm, Forage.NONE, spirits,
+                            tick);
                 });
     }
 }

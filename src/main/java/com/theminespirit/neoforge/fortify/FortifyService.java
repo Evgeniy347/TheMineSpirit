@@ -10,6 +10,7 @@ import com.theminespirit.core.intellect.FortifyOrder;
 import com.theminespirit.core.intellect.FortifyPlan;
 import com.theminespirit.core.intellect.FortifyRoster;
 import com.theminespirit.core.intellect.FarmWork;
+import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.FortifyTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.observation.BlockCoord;
@@ -283,7 +284,7 @@ public final class FortifyService {
         List<SpiritSnapshot> spirits = new ArrayList<>(state.spirits());
         long tick = state.tick();
         int population = spirits.size();
-        return new SettlementView(population, 0, 0, 0, 0, 0, 0, 0, 0.5, FarmWork.NONE, spirits, tick);
+        return new SettlementView(population, 0, 0, 0, 0, 0, 0, 0, 0.5, FarmWork.NONE, Forage.NONE, spirits, tick);
     }
 
     private static SpiritEntity member(List<SpiritEntity> members, UUID id) {

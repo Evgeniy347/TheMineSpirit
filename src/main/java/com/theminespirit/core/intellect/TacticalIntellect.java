@@ -96,7 +96,7 @@ public final class TacticalIntellect {
         }
         SettlementView workers = new SettlementView(view.population(), view.children(), view.foodPerSoul(),
                 view.foodNutritionPerSoul(), view.ore(), view.iron(), view.weapons(), view.threats(),
-                view.dayFraction(), view.farmWork(),
+                view.dayFraction(), view.farmWork(), view.forage(),
                 view.spirits().stream().filter(spirit -> !displaced.contains(spirit.id())).toList(),
                 view.tick());
         List<ActivityDemand> demands = DemandModel.evaluate(view, catalog);

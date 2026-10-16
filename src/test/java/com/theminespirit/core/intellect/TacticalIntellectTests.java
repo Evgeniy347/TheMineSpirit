@@ -60,7 +60,8 @@ class TacticalIntellectTests {
         TacticalIntellect mind = intellect();
         mind.trackEnemies(List.of(StrengthAssessorTests.zombie(ENEMY, 5)));
         SettlementView danger = new SettlementView(2, 0, 2, 2, 64, 32, 2, 1, 0.2, SettlementViews.farmWork(),
-                List.of(StrengthAssessorTests.defender(FIRST, 1, 1), SettlementViews.spirit(SECOND)), 100);
+                Forage.NONE, List.of(StrengthAssessorTests.defender(FIRST, 1, 1), SettlementViews.spirit(SECOND)),
+                100);
         ActivityLedger ledger = new ActivityLedger();
         ledger.assign(FIRST, ActivityId.CHOP, 0, 3.0);
 
@@ -100,7 +101,8 @@ class TacticalIntellectTests {
                         UUID.fromString("33333333-3333-3333-3333-333333333333"))));
 
         TacticalDecision decision = mind.decide(
-                new SettlementView(3, 0, 2, 2, 0, 0, 0, 0, 0.2, SettlementViews.farmWork(), needy.spirits(), 100),
+                new SettlementView(3, 0, 2, 2, 0, 0, 0, 0, 0.2, SettlementViews.farmWork(), Forage.NONE,
+                        needy.spirits(), 100),
                 new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
 
         assertTrue(decision.expedition().isPresent(),

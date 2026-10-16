@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.activity.ChopActivity;
 import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
+import com.theminespirit.core.intellect.activity.ForageActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
 import java.util.ArrayList;
@@ -20,8 +21,8 @@ public final class ActivityAssigner {
 
     public ActivityAssigner() {
         this(ActivityCatalog.adultsOnly(
-                List.of(new ChopActivity(), new FarmActivity(), new MineActivity(), new RestActivity(),
-                        new DefendActivity())));
+                List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
+                        new RestActivity(), new DefendActivity())));
     }
 
     public ActivityAssigner(ActivityCatalog catalog) {
