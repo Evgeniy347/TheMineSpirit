@@ -68,11 +68,14 @@ public final class SleepGameTests {
         SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("sleep", Map.of()),
                 MovementScene.SETTLE_TICKS);
         AtomicBoolean slept = new AtomicBoolean(false);
+        AtomicBoolean dawn = new AtomicBoolean(false);
 
         helper.onEachTick(() -> {
             if (spirit.isSleeping()) {
                 slept.set(true);
-                helper.getLevel().setDayTime(NOON);
+                if (dawn.compareAndSet(false, true)) {
+                    GameTestFixtures.holdDayTime(helper, NOON);
+                }
             }
         });
 
