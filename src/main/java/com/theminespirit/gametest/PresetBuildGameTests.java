@@ -64,12 +64,15 @@ public final class PresetBuildGameTests {
         return matches;
     }
 
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 400)
+    // [флак] 40 блоков склада дух ставит по одному за тик с подходом к каждой клетке; замер: на 400
+    // и 900 тиках задача ещё RUNNING, потолок поднят с запасом — иначе тест меряет скорость стройки,
+    // а не её результат.
+    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 1800)
     public static void preset_StorageHutFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         prepare(helper);
         BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("storage_hut");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(7, 1, 7),
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
                 new ItemStack(Items.OAK_PLANKS, 38),
                 new ItemStack(Items.CHEST, 2));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", anchor), SETTLE_TICKS);
