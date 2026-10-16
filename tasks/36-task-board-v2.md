@@ -213,7 +213,7 @@
    загона — задание с `from`/`to`, план оба участка; перенос входа в шахту — отказ с текстом («постройка
    неподвижна»); чужой кейс (не постройка) — отказ; модификатор `relocate_busy` понижает при ремонте (п. 3).
    Свойства: план переноса валиден каталогом; `from = to` — отказ.
-- [ ] 10. **`BoardLog` — журнал выполненных заданий на диске (ядро).** Формат — JSONL, одна строка на событие
+- [x] 10. **`BoardLog` — журнал выполненных заданий на диске (ядро).** Формат — JSONL, одна строка на событие
    (`ASSIGNED`, `DONE`, `FAILED`, `CANCELLED`, `DETACHED` — снятие по актуальности): `tick`, `ticketId`, `case`,
    `level`, `cause`, `basePriority`, `effectivePriority`, `modifiers` (сработавшие ключи), `spirit`, `configHash`,
    `worldTime`. Ядро: `BoardLogEntry` (record) + `BoardLog.write(entry) → String` / `BoardLog.parse(line)` —
