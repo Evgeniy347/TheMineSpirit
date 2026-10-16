@@ -170,10 +170,12 @@ public final class CampGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "план retreat при ближнем лагере обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "; "
+                            + MovementScene.facts(helper, spirit, helper.getLevel().getDayTime()));
             double distance = MovementScene.distanceTo(helper, spirit, camp);
             helper.assertTrue(distance <= ARRIVE_DISTANCE,
-                    "план retreat идёт к ближнему лагерю, а не к дальнему дому: расстояние до лагеря " + distance);
+                    "план retreat идёт к ближнему лагерю, а не к дальнему дому: расстояние до лагеря " + distance
+                            + "; " + MovementScene.facts(helper, spirit, helper.getLevel().getDayTime()));
             MovementScene.finish(helper);
         });
     }

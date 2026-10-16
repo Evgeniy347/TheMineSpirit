@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -27,7 +28,10 @@ public final class NightLeashGameTests {
     private static final long NOON = 6000L;
     private static final int SETTLEMENT_RADIUS = 32;
     private static final int OBSERVE_TICKS = 40;
-    private static final String PLAYER_NAME = "gt_night_leash_player";
+    // У каждого теста своё имя мок-игрока: с общим именем findPlayer/come берёт первого игрока с таким
+    // именем, и соседняя сцена (или протёкший игрок) уводит духа к чужой цели — скрипт висит RUNNING.
+    private static final String FOLLOW_PLAYER_NAME = "gt_night_leash_follow_player";
+    private static final String COME_PLAYER_NAME = "gt_night_leash_come_player";
 
     private NightLeashGameTests() {
     }
@@ -45,7 +49,8 @@ public final class NightLeashGameTests {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "ночью цель за границей поселения обязана быть отвергнута, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + "; "
+                            + MovementScene.facts(helper, spirit, NIGHT));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("ночь: за границу поселения не выходим"),
                     "причина обязана говорить про ночь и границу поселения, фактически: " + reason);
@@ -70,7 +75,8 @@ public final class NightLeashGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "днём граница поселения не держит: goto за радиус обязан дойти, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + "; "
+                            + MovementScene.facts(helper, spirit, NOON));
             double distance = MovementScene.distanceTo(helper, spirit, OUTSIDE);
             helper.assertTrue(distance <= MovementScene.ARRIVAL,
                     "дух обязан встать у цели в пределах допуска " + MovementScene.ARRIVAL + ", расстояние " + distance);
@@ -83,17 +89,23 @@ public final class NightLeashGameTests {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
         spirit.setHome(MovementScene.coord(helper, HOME));
-        GameTestFixtures.mockPlayer(helper, FOLLOW_PLAYER, PLAYER_NAME);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, FOLLOW_PLAYER, FOLLOW_PLAYER_NAME);
         GameTestFixtures.holdDayTime(helper, NIGHT);
         SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("follow", Map.of("target", PLAYER_NAME, "radius", 3)), MovementScene.SETTLE_TICKS);
+                new ScriptCall("follow", Map.of("target", FOLLOW_PLAYER_NAME, "radius", 3)), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             double fromHome = MovementScene.distanceTo(helper, spirit, HOME);
             helper.assertTrue(fromHome > SETTLEMENT_RADIUS,
                     "следование за игроком — исключение: дух обязан перейти границу поселения, расстояние от дома "
-                            + fromHome);
+                            + fromHome + "; игрок " + player.blockPosition() + " (от духа "
+                            + spirit.distanceTo(player) + "), статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет") + ", решение "
+                            + spirit.tactics().explain().orElse("нет") + ", сбоев тактики "
+                            + spirit.tactics().failures() + " " + spirit.tactics().lastFailure().orElse("нет")
+                            + "; " + MovementScene.facts(helper, spirit, NIGHT));
             MovementScene.finish(helper);
         });
     }
@@ -103,20 +115,26 @@ public final class NightLeashGameTests {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
         spirit.setHome(MovementScene.coord(helper, HOME));
-        GameTestFixtures.mockPlayer(helper, FOLLOW_PLAYER, PLAYER_NAME);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, FOLLOW_PLAYER, COME_PLAYER_NAME);
         GameTestFixtures.holdDayTime(helper, NIGHT);
         SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("come_to_player", Map.of("player", PLAYER_NAME)), MovementScene.SETTLE_TICKS);
+                new ScriptCall("come_to_player", Map.of("player", COME_PLAYER_NAME)), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
+            String playerFact = "; игрок " + player.blockPosition() + " (от духа "
+                    + spirit.distanceTo(player) + "), тик духа " + spirit.tickCount
+                    + ", тиков задачи " + run.spiritTicks()
+                    + ", тик игры " + helper.getLevel().getGameTime();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "подход к игроку — исключение ночного поводка: come_to_player обязан дойти, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + playerFact + "; "
+                            + MovementScene.facts(helper, spirit, NIGHT));
             double toPlayer = MovementScene.distanceTo(helper, spirit, FOLLOW_PLAYER);
             helper.assertTrue(toPlayer <= 2.0,
-                    "дух обязан дойти к игроку за границей поселения, расстояние до игрока " + toPlayer);
+                    "дух обязан дойти к игроку за границей поселения, расстояние до игрока " + toPlayer
+                            + playerFact + "; " + MovementScene.facts(helper, spirit, NIGHT));
             MovementScene.finish(helper);
         });
     }
@@ -153,7 +171,7 @@ public final class NightLeashGameTests {
                     "наблюдение за погоней ещё идёт: тик духа " + spirit.tickCount);
             helper.assertTrue(refusal.get() != null && refusal.get().contains("ночь: за границу поселения не выходим"),
                     "погоня за врагом за границей поселения обязана остановиться с причиной, фактически: "
-                            + refusal.get());
+                            + refusal.get() + "; " + MovementScene.facts(helper, spirit, NIGHT));
             double toEnemy = MovementScene.distanceTo(helper, spirit, OUTSIDE);
             helper.assertTrue(toEnemy > CombatActuator.MELEE_ARRIVAL,
                     "погоня не переступает границу: до врага " + toEnemy);

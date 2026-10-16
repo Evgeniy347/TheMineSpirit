@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
@@ -8,6 +9,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,14 +58,42 @@ final class MovementScene {
         return eye.distanceTo(Vec3.atCenterOf(helper.absolutePos(relative)));
     }
 
-    // NeoForge 21.1 не даёт иного способа получить ServerPlayer, попавшего в players() уровня; метод помечен
-    // deprecated, но в этой версии работает и удаления не произошло.
-    @SuppressWarnings("removal")
+    // Факты для разбора флака: время дня общее у всех сцен, поэтому печатаем и мир, и то, что сцена
+    // выставляла (sceneDayTime). Иначе падение «статус RUNNING» не отличить от отказа поводка или
+    // заморозки тактикой. Вечер и принадлежность поселению считает сам NightLeash — вторая формула
+    // разошлась бы с production. Формат — одна строка, пригодная для grep в логе сервера.
+    static String facts(GameTestHelper helper, SpiritEntity spirit, long sceneDayTime) {
+        NightLeash leash = NightLeash.withDefaultRules();
+        long worldDayTime = helper.getLevel().getDayTime();
+        double worldFraction = Math.floorMod(worldDayTime, 24000L) / 24000.0;
+        double sceneFraction = Math.floorMod(sceneDayTime, 24000L) / 24000.0;
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord cell = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        String inside = spirit.home()
+                .map(home -> Boolean.toString(leash.insideSettlement(cell, home, leash.settlementRadius())))
+                .orElse("нет дома");
+        return "факты: мир t=" + worldDayTime + " (" + worldFraction + ", вечер="
+                + leash.isEvening(worldFraction) + ")"
+                + ", сцена t=" + sceneDayTime + " (" + sceneFraction + ")"
+                + ", в поселении=" + inside
+                + ", поводок взведён=" + spirit.nightLeashArmed()
+                + ", режим тактики=" + spirit.tactics().combatMode()
+                + ", тактика владеет=" + spirit.tactics().wantsControl()
+                + ", мозг заморожен=" + spirit.brainIfPresent().map(brain -> brain.suspendReason()
+                        .orElse("нет")).orElse("нет мозга")
+                + ", дом=" + spirit.home().map(Object::toString).orElse("нет")
+                + ", лагерь=" + spirit.camp().map(Object::toString).orElse("нет");
+    }
+
+    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow/keep_distance/come
+    // берут первого игрока с таким именем: чужой (в т.ч. протёкший из соседней сцены) игрок уводит духа к
+    // чужой цели, скрипт не доходит и висит RUNNING до тайм-аута. Уникальное имя теста и снятие игрока при
+    // любом исходе даёт GameTestFixtures.mockPlayer (образец — RestFixture.mockPlayer).
+    private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
+
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        return player;
+        return GameTestFixtures.mockPlayer(helper, relative,
+                "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
     }
 
     static void removePlayer(GameTestHelper helper, ServerPlayer player) {
