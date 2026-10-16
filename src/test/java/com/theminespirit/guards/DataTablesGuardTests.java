@@ -3,6 +3,8 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableDefinition;
 import com.theminespirit.core.reload.TableRegistry;
@@ -12,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -27,18 +30,15 @@ import org.junit.jupiter.api.Test;
  */
 class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
-    private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "data/theminespirit/tactics/priorities.json (orphan: не читается кодом, подлежит удалению или интеграции)",
-            "data/theminespirit/schematics/family_house.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/house.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/mine_entrance_v1.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/palisade_section.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/pen_7x7.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/stone_house.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/storage_hut.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/torch_post.json (тело схемы: грузится динамически через indexed-таблицу presets)",
-            "data/theminespirit/schematics/well.json (тело схемы: грузится динамически через indexed-таблицу presets)"
-    );
+    /** Не таблицы /reload — путь и причина. Тела пресетов из индекса presets сторож берёт сам (presetBodies). */
+    private static final Map<String, String> EXCLUDED = Map.of(
+            "data/theminespirit/tactics/priorities.json", "не читается кодом: удалить или подключить",
+            "data/theminespirit/schematics/house.json", "схема грузится по имени, не на /reload (todo: горячие схемы)",
+            "data/theminespirit/schematics/fence.json", "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
+            "data/theminespirit/schematics/pen.json", "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
+            "data/theminespirit/schematics/enchant_room.json",
+            "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
+            "data/theminespirit/hunger/hunger.json", "HungerRules читается с classpath, не на /reload (todo: таблица hunger)");
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
@@ -53,10 +53,12 @@ class DataTablesGuardTests {
                 .collect(Collectors.toList());
 
         Set<String> registeredPaths = registeredPaths();
+        Set<String> presetBodies = presetBodies();
         List<String> unregistered = new ArrayList<>();
 
         for (String path : jsonFiles) {
-            if (!registeredPaths.contains(path) && !EXCLUDED_PATHS.stream().anyMatch(e -> e.startsWith(path + " "))) {
+            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path)
+                    && !presetBodies.contains(path)) {
                 unregistered.add(path);
             }
         }
@@ -64,7 +66,7 @@ class DataTablesGuardTests {
         assertEquals(List.of(), unregistered,
                 "JSON-файл данных не зарегистрирован в DataTables и не в исключениях: "
                         + "таблица без регистрации не перечитается на лету по /reload, изменение в датапаке мира игнорируется. "
-                        + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED_PATHS "
+                        + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED "
                         + "внутри DataTablesGuardTests с явной причиной. Правило: каждый json в data/theminespirit "
                         + "должен быть в DataTables или в исключениях. Незарегистрированные файлы");
     }
@@ -86,6 +88,11 @@ class DataTablesGuardTests {
                         + "загрузчик DataReload упадёт или вернёт ошибку при /reload, таблица не обновится. "
                         + "Как исправить: создайте файл по указанному пути или удалите регистрацию из DataTables. "
                         + "Правило: каждая зарегистрированная таблица обязана существовать как файл. Отсутствующие файлы");
+    }
+
+    private static Set<String> presetBodies() {
+        String indexPath = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
+        return Set.copyOf(PresetLibrary.bodyPaths(JsonResource.readClasspath(indexPath), indexPath));
     }
 
     private static Set<String> registeredPaths() {
