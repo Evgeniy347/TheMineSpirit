@@ -54,6 +54,8 @@ public final class BoardGameTests {
     public static void supply_BuildNeedsWood_WaitsThenIssuesAfterGather(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        BoardService board = BoardRegistry.get(helper.getLevel());
+        drainForeignTickets(board);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
         spirit.setHome(home);
@@ -63,7 +65,6 @@ public final class BoardGameTests {
             }
         }
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.CHEST);
-        BoardService board = BoardRegistry.get(helper.getLevel());
         board.submit(new BoardTicket(BUILD_ID, BoardCase.BUILD_HOUSE, Optional.of(spirit.getUUID()), 50,
                 helper.getLevel().getGameTime(), 6000, List.of(), Map.of("oak_log", GATE_LOGS)),
                 TicketTarget.at(home));
@@ -101,10 +102,24 @@ public final class BoardGameTests {
                 helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "Стройка обязана быть выдана духу-владельцу: статус духа "
                                 + spirit.taskStatus().orElse(null));
+                board.board().cancel(BUILD_ID);
+                board.board().cancel(SUPPLY_ID);
                 helper.succeed();
                 GameTestFixtures.finish(helper);
             }
         });
+    }
+
+    /**
+     * Общая доска уровня переживает границы сцен: до начала теста на ней висят билеты прошлых
+     * сцен, оставленные глобальным {@code FirstStepsRunner}. Билет без гейта приоритетнее добычи
+     * и забирает единственного свободного духа раньше supply — тест видит вечный PENDING.
+     * Чужие билеты снимаем до своей постановки (как тесты пачки firststeps в 35Б).
+     */
+    private static void drainForeignTickets(BoardService board) {
+        for (BoardTicket ticket : board.board().all()) {
+            board.board().cancel(ticket.id());
+        }
     }
 
     private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {
