@@ -15,6 +15,7 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.intellect.SettlementIntellect;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import net.minecraft.server.level.ServerLevel;
 
@@ -30,6 +31,7 @@ public final class SpiritCoordinator {
     private final SettlementKey key;
     private final Coordinator coordinator = new Coordinator();
     private final WorkReservations reservations;
+    private final SettlementIntellect intellect = new SettlementIntellect();
     private final Map<UUID, CombatDirective> lastDirectives = new HashMap<>();
     private long lastSnapshotTick = -1;
     private int entityQueries;
@@ -77,6 +79,7 @@ public final class SpiritCoordinator {
         CoordinatorPlan plan = coordinator.plan(state, reservations, tick);
         lastState = state;
         applyPlan(plan, tick);
+        intellect.tick(level, members, snapshots, defendedPoint, reservations, tick);
     }
 
     private void expireStale(List<SpiritSnapshot> snapshots, long tick) {
@@ -127,6 +130,10 @@ public final class SpiritCoordinator {
 
     public WorkReservations reservations() {
         return reservations;
+    }
+
+    public SettlementIntellect intellect() {
+        return intellect;
     }
 
     public CoordinatorPlan lastPlan() {
