@@ -37,6 +37,18 @@ class TaskBackoffTests {
     }
 
     @Test
+    void backoff_OtherScriptFailsLater_FirstScriptStillBlocked() {
+        TaskBackoff backoff = new TaskBackoff();
+        backoff.noteFailure(SPIRIT, "harvest_crop", 1000);
+        backoff.noteFailure(SPIRIT, "chop_tree", 1100);
+
+        assertTrue(backoff.blocked(SPIRIT, "harvest_crop", 1150),
+                "Провал рубки не снимает откат уборки: иначе чередование двух гиблых задач выдаёт каждую без окна");
+        assertTrue(backoff.blocked(SPIRIT, "chop_tree", 1150),
+                "Свежий провал рубки держит свой откат: окно каждого скрипта считается от своего провала");
+    }
+
+    @Test
     void backoff_RepeatedFailure_ExtendsFromLatestTick() {
         TaskBackoff backoff = new TaskBackoff();
         backoff.noteFailure(SPIRIT, "harvest_crop", 1000);

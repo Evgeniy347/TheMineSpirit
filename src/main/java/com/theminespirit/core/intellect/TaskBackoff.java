@@ -6,10 +6,13 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class TaskBackoff {
-    private record Mark(String script, long failTick) {
+    private record Mark(long failTick) {
     }
 
-    private final Map<UUID, Mark> marks = new LinkedHashMap<>();
+    private record BackoffKey(UUID spirit, String script) {
+    }
+
+    private final Map<BackoffKey, Mark> marks = new LinkedHashMap<>();
 
     public void noteFailure(UUID spirit, String script, long now) {
         if (spirit == null) {
@@ -23,7 +26,7 @@ public final class TaskBackoff {
             throw new IllegalArgumentException("Откат в тике " + now + ": время не может быть отрицательным");
         }
         prune(now);
-        marks.put(spirit, new Mark(script, now));
+        marks.put(new BackoffKey(spirit, script), new Mark(now));
     }
 
     public boolean blocked(UUID spirit, String script, long now) {
@@ -37,8 +40,8 @@ public final class TaskBackoff {
         if (now < 0) {
             throw new IllegalArgumentException("Откат в тике " + now + ": время не может быть отрицательным");
         }
-        Mark mark = marks.get(spirit);
-        return mark != null && mark.script().equals(script) && now - mark.failTick() < IntellectTuning.FAIL_BACKOFF_TICKS;
+        Mark mark = marks.get(new BackoffKey(spirit, script));
+        return mark != null && now - mark.failTick() < IntellectTuning.FAIL_BACKOFF_TICKS;
     }
 
     public int size() {
@@ -46,7 +49,7 @@ public final class TaskBackoff {
     }
 
     private void prune(long now) {
-        Iterator<Map.Entry<UUID, Mark>> entries = marks.entrySet().iterator();
+        Iterator<Map.Entry<BackoffKey, Mark>> entries = marks.entrySet().iterator();
         while (entries.hasNext()) {
             if (now - entries.next().getValue().failTick() >= IntellectTuning.FAIL_BACKOFF_TICKS) {
                 entries.remove();
