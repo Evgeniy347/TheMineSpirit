@@ -95,9 +95,16 @@ class IntellectTuningTests {
     }
 
     @Test
+    void failBackoff_DeclaredValue_MatchesTuningLiteral() {
+        assertEquals(200, IntellectTuning.FAIL_BACKOFF_TICKS,
+                "Откат провала 200 тиков: короче — дух долбит закрытую дверь, дольше — простаивает без дела");
+    }
+
+    @Test
     void everyConstant_AllValues_PositiveAndFinite() {
         assertTrue(IntellectTuning.DEMAND_INTERVAL_TICKS > 0, "Интервал пересборки положителен");
         assertTrue(IntellectTuning.MIN_SWITCH_TICKS > 0, "Окно удержания положительно");
+        assertTrue(IntellectTuning.FAIL_BACKOFF_TICKS > 0, "Окно отката провала положительно");
         assertTrue(Double.isFinite(IntellectTuning.HYSTERESIS_MARGIN) && IntellectTuning.HYSTERESIS_MARGIN > 0,
                 "Порог переключения положителен и конечен");
         assertTrue(Double.isFinite(IntellectTuning.CROWD_PENALTY) && IntellectTuning.CROWD_PENALTY > 0,

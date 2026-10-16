@@ -3,6 +3,7 @@ package com.theminespirit.core.intellect;
 public final class IntellectTuning {
     public static final long DEMAND_INTERVAL_TICKS = 100;
     public static final long MIN_SWITCH_TICKS = 200;
+    public static final long FAIL_BACKOFF_TICKS = 200;
     public static final double HYSTERESIS_MARGIN = 0.15;
     public static final double CROWD_PENALTY = 0.2;
     public static final double MAX_DEMAND = 10.0;
