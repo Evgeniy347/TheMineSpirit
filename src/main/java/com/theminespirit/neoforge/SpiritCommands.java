@@ -4,6 +4,7 @@ import static net.minecraft.commands.Commands.literal;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.theminespirit.neoforge.crater.CraterCommand;
 import net.minecraft.commands.CommandSourceStack;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -23,6 +24,7 @@ public final class SpiritCommands {
         SpiritHomeCommand.register(spirit);
         SpiritDecisionsCommand.register(spirit);
         SpiritTablesCommand.register(spirit);
+        CraterCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }

@@ -12,6 +12,7 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
     private static final ModConfigSpec.BooleanValue MOBS_TARGET_SPIRITS;
     private static final ModConfigSpec.BooleanValue COORDINATOR_ENABLED;
+    private static final ModConfigSpec.IntValue CRATER_HOME_RADIUS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -29,6 +30,10 @@ public final class SpiritConfig {
                 .comment("Координатор поселений раздаёт духам с общим домом оборону, помощь и работы.",
                         "false — аварийный рубильник: координатор не тикает, духи живут без его приказов.")
                 .define("coordinatorEnabled", true);
+        CRATER_HOME_RADIUS = builder
+                .comment("Радиус вокруг дома духа, в котором взрыв крипера запоминается как воронка поселения.",
+                        "Вне радиуса взрывы не запоминаются: дух заделывает только воронки своего поселения.")
+                .defineInRange("craterHomeRadius", 64, 1, 512);
         builder.pop();
         SPEC = builder.build();
     }
@@ -54,6 +59,10 @@ public final class SpiritConfig {
 
     public static void setCoordinatorEnabled(boolean value) {
         COORDINATOR_ENABLED.set(value);
+    }
+
+    public static int craterHomeRadius() {
+        return CRATER_HOME_RADIUS.get();
     }
 
     public static int radiusFor(ServerLevel level) {

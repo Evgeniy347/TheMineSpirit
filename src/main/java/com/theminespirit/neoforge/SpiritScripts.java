@@ -19,6 +19,7 @@ import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.CloseDoorParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
 import com.theminespirit.core.script.DigAreaParams;
+import com.theminespirit.core.script.FillCraterParams;
 import com.theminespirit.core.script.FillParams;
 import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.CollectDropsParams;
@@ -84,6 +85,8 @@ import com.theminespirit.neoforge.inventory.EquipScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import com.theminespirit.neoforge.inventory.UnloadScript;
+import com.theminespirit.neoforge.crater.CraterResolver;
+import com.theminespirit.neoforge.crater.FillCraterScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
 import com.theminespirit.neoforge.movement.ApproachScript;
 import com.theminespirit.neoforge.movement.ComeToPlayerScript;
@@ -166,6 +169,8 @@ public final class SpiritScripts {
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
+        table.put("fill_crater", spirit -> params -> new FillCraterScript(spirit,
+                CraterResolver.resolve(spirit, FillCraterParams.from(params))));
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("build_schematic",
