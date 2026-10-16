@@ -41,7 +41,9 @@ class DataTablesGuardTests {
             "data/theminespirit/hunger/hunger.json", "HungerRules читается с classpath, не на /reload (todo: горячие таблицы)",
             "data/theminespirit/mining/descent.json", "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)",
             "data/theminespirit/mining/descent_levels.json",
-            "DescentLevels с classpath, не на /reload (todo: горячие таблицы)");
+            "DescentLevels с classpath, не на /reload (todo: горячие таблицы)",
+            "data/theminespirit/fishing/fishing.json",
+            "FishingData.load() с classpath, не на /reload (todo: горячие таблицы)");
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
