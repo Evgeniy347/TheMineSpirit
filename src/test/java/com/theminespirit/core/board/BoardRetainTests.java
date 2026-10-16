@@ -93,7 +93,7 @@ class BoardRetainTests {
         Board board = boardAt(0);
         board.submit(ticket("pen_1", BoardCase.BUILD_PEN, "animal:capture_1"));
         board.submit(ticket("lure_1", BoardCase.LURE_ANIMAL, "animal:capture_1", List.of("pen_1")));
-        board.claim("pen_1", java.util.UUID.randomUUID(), 0);
+        board.claim("pen_1", UUID.randomUUID(), 0);
         board.complete("pen_1");
 
         board.retain(Set.of(), 0);
