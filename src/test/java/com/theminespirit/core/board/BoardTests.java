@@ -55,6 +55,25 @@ class BoardTests {
     }
 
     @Test
+    void submit_DoneTicket_Replaced() {
+        Board board = boardAt(0);
+        board.submit(ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of()));
+        board.claim("build_1", SPIRIT_ONE, 0);
+        board.complete("build_1");
+
+        BoardOutcome outcome = board.submit(ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of()));
+
+        assertEquals(BoardOutcome.ACCEPTED, outcome,
+                "Новый билет с тем же id заменяет выполненный: иначе переиздание шага (например, "
+                        + "после отката мира) упиралось бы в DONE-тень и шаг не повторился бы никогда");
+        assertEquals(BoardStatus.PENDING, board.statusOf("build_1").orElse(null),
+                "Заменённый билет снова ждёт выдачи, а не остаётся DONE");
+        assertTrue(board.ledger().has(BoardCase.BUILD_HOUSE, 1),
+                "Отметка ledger переживает замену: условие «постройка стоит» не теряется, когда "
+                        + "задание переиздано");
+    }
+
+    @Test
     void submit_OldTicket_Accepted() {
         Board board = boardAt(1_000_000);
         BoardTicket late = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());

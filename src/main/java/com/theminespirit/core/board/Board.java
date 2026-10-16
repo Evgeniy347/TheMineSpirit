@@ -48,6 +48,12 @@ public final class Board {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, "
                 + "а не пустую заявку");
         if (tickets.containsKey(ticket.id())) {
+            if (statuses.get(ticket.id()) == BoardStatus.DONE) {
+                tickets.put(ticket.id(), ticket);
+                statuses.put(ticket.id(), BoardStatus.PENDING);
+                claimAssignees.remove(ticket.id());
+                return BoardOutcome.ACCEPTED;
+            }
             return BoardOutcome.DUPLICATE;
         }
         long now = nowTicks.getAsLong();
