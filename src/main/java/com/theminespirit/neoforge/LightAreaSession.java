@@ -22,7 +22,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
 public final class LightAreaSession {
@@ -224,8 +223,8 @@ public final class LightAreaSession {
                 if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) {
                     continue;
                 }
-                BlockPos pos = surface(x, z);
-                if (pos == null || Math.abs(pos.getY() - centerY) > radius) {
+                BlockPos pos = surface(x, z, centerY, radius);
+                if (pos == null) {
                     continue;
                 }
                 cells.add(new LightCell(new BlockCoord(x, pos.getY(), z),
@@ -235,13 +234,17 @@ public final class LightAreaSession {
         return cells;
     }
 
-    private BlockPos surface(int x, int z) {
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        BlockPos pos = new BlockPos(x, y, z);
-        if (!level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) {
-            return null;
+    // Поверхность ищется вниз от уровня точки: высотная карта мира берёт верхний блок (крышу постройки
+    // или рельеф над шахтой), а духу нужна клетка прямо над полом области.
+    private BlockPos surface(int x, int z, int centerY, int radius) {
+        for (int y = centerY + 1; y >= centerY - radius; y--) {
+            BlockPos pos = new BlockPos(x, y, z);
+            if (level.getBlockState(pos).isAir()
+                    && level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) {
+                return pos;
+            }
         }
-        return pos;
+        return null;
     }
 
     private boolean isPlaceable(BlockPos pos) {
