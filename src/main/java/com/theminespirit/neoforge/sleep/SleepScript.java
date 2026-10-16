@@ -127,7 +127,7 @@ public final class SleepScript implements ScriptInstance {
         boolean inside = spirit.home()
                 .map(home -> leash.insideSettlement(cell(), home, leash.settlementRadius()))
                 .orElse(false);
-        boolean defence = spirit.tactics().activeDirective().isPresent();
+        boolean defence = spirit.isDefenceAssigned();
         return new SleepFacts(night, danger, inside, defence);
     }
 

@@ -83,6 +83,7 @@ public final class SpiritEntity extends PathfinderMob {
     private String pendingRestoreFailure;
     private boolean child;
     private boolean nightLeashArmed;
+    private boolean defenceAssigned;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -215,6 +216,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void setNightLeashArmed(boolean armed) {
         this.nightLeashArmed = armed;
+    }
+
+    public boolean isDefenceAssigned() {
+        return defenceAssigned;
+    }
+
+    public void setDefenceAssigned(boolean assigned) {
+        this.defenceAssigned = assigned;
     }
 
     public Optional<Camp> camp() {

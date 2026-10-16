@@ -176,6 +176,17 @@ public final class SettlementIntellect {
         }
         Set<UUID> team = new HashSet<>();
         expeditions.active().ifPresent(stand -> team.addAll(stand.team()));
+        Set<UUID> defenders = new HashSet<>();
+        for (var assignment : decision.activities().assignments()) {
+            if (assignment.activity() == ActivityId.DEFEND) {
+                defenders.add(assignment.spirit());
+            }
+        }
+        for (SpiritEntity spirit : members) {
+            if (!spirit.isRemoved()) {
+                spirit.setDefenceAssigned(defenders.contains(spirit.getUUID()));
+            }
+        }
         for (var assignment : decision.activities().assignments()) {
             if (assignment.activity() == ActivityId.DEFEND) {
                 continue;
