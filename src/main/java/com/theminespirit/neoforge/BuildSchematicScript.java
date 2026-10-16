@@ -8,9 +8,11 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BuildSchematicParams;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,9 @@ final class BuildSchematicScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private final BuildResult tally = new BuildResult();
+
+    private List<BlockCoord> stands = List.of();
+    private int standIndex;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -75,25 +80,31 @@ final class BuildSchematicScript implements ScriptInstance {
             }
             reservations.reserve(entry.pos(), spirit.getUUID());
             if (!approach.isActive()) {
-                List<BlockCoord> stands = StandSpots.of(entry.pos(), safety, spiritCoord());
                 if (stands.isEmpty()) {
-                    skipped++;
-                    release(entry.pos());
-                    cursor++;
-                    continue;
+                    stands = standCandidates(entry.pos());
+                    standIndex = 0;
                 }
-                BlockCoord stand = stands.get(0);
+                if (standIndex >= stands.size()) {
+                    skipEntry(entry);
+                    return ScriptStatus.RUNNING;
+                }
+                BlockCoord stand = stands.get(standIndex);
                 approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
             }
             switch (approach.tick()) {
                 case MOVING -> {
                     return ScriptStatus.RUNNING;
                 }
-                case ARRIVED -> place(entry, wanted);
+                case ARRIVED -> {
+                    place(entry, wanted);
+                    resetEntry();
+                }
                 case STUCK, TIMEOUT -> {
-                    skipped++;
-                    release(entry.pos());
-                    cursor++;
+                    approach.cancel();
+                    standIndex++;
+                    if (standIndex >= stands.size()) {
+                        skipEntry(entry);
+                    }
                 }
             }
             return ScriptStatus.RUNNING;
@@ -109,6 +120,33 @@ final class BuildSchematicScript implements ScriptInstance {
         tally.supplies(placed, 0);
         outcome = ScriptStatus.SUCCEEDED;
         return outcome;
+    }
+
+    private List<BlockCoord> standCandidates(BlockCoord cell) {
+        List<BlockCoord> candidates = new ArrayList<>(StandSpots.of(cell, safety, spiritCoord()));
+        BlockCoord below = below(cell);
+        if (!candidates.contains(below) && MiningSafety.canStand(below, safety)) {
+            candidates.add(below);
+        }
+        return List.copyOf(candidates);
+    }
+
+    private static BlockCoord below(BlockCoord cell) {
+        return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
+    }
+
+    private void skipEntry(Schematic.PlacedEntry entry) {
+        skipped++;
+        tally.skipped();
+        release(entry.pos());
+        resetEntry();
+        cursor++;
+    }
+
+    private void resetEntry() {
+        approach.cancel();
+        stands = List.of();
+        standIndex = 0;
     }
 
     private void place(Schematic.PlacedEntry entry, BlockState wanted) {
@@ -228,7 +266,9 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private void release(BlockCoord cell) {
-        reservations.release(cell, spirit.getUUID());
+        if (cell != null) {
+            reservations.release(cell, spirit.getUUID());
+        }
     }
 
     private static BlockPos toPos(BlockCoord coord) {
