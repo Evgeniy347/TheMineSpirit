@@ -18,6 +18,8 @@
   владельца 13.10; сторож памяти tmux `mem-guard`, `~/.gradle/gradle.properties` — 1 воркер). Worktree —
   `/opt/minecraft/wt/<имя>`, запуск — `scripts/opencode-start.sh <worktree> <модель> <задание> <файл-сообщения> [сессия]`
   (tmux `oc-<задание>`, вывод `TestResults/opencode/<задание>.out` с `EXIT=`). Ветки на сервере локальные.
+- **Модели моста** (`deepseekbridge/deepseek-web`, `deepseekbridge/qwen*-web`, только ПК): не больше одного
+  `deepseek-web` и одного `qwen*-web` одновременно (владелец 16.10); правила — docs/EXECUTOR-MODELS.md → «Модели моста».
 - Лимит бесплатного провайдера считается **на клиента**: ПК и сервер проверять отдельно. Если на ПК все модели молчат
   (`ожидание провайдера` в .out), а на сервере работают — это лимит ПК: ждать или переносить задачи на сервер.
 - GameTest — только через `scripts/gametest.sh` (замок «один сервер на машину»: flock, на Windows — mkdir).
