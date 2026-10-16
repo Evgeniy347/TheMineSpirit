@@ -19,7 +19,7 @@ import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.intellect.EnemyCollector;
+import com.theminespirit.neoforge.intellect.SettlementScanner;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -72,7 +72,8 @@ public final class DefenseService {
             }
             DefenderReader.read(spirit).ifPresent(defenders::add);
         }
-        List<EnemyFact> sighted = EnemyCollector.collect(level, members, state.spirits());
+        List<EnemyFact> sighted =
+                SettlementScanner.scan(level, members, state.spirits(), state.defendedPoint(), "").enemies();
         entityQueries++;
         planCalls++;
         DefensePlan plan = DefensePlanner.plan(state, defenders, sighted, enemies, profile());
