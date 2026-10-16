@@ -16,6 +16,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
@@ -213,6 +214,48 @@ class TicketPlansTests {
 
         assertTrue(collectScripts(plan).contains("dig_area"),
                 "Вход в шахту — копка спуска dig_area: версия 1, размер 3");
+    }
+
+    @Test
+    void plan_SupplySite_DepositCarriesContainerRadius() {
+        TaskNode plan = TicketPlans.plan(BoardCase.SUPPLY_SITE, target());
+        ScriptCall deposit = findCall(plan, "deposit");
+        Object radius = deposit.params().get("radius");
+
+        assertTrue(radius instanceof Integer distance
+                        && distance >= CatalogLimits.CONTAINER_RADIUS_MIN
+                        && distance <= CatalogLimits.CONTAINER_RADIUS_MAX,
+                "deposit обязан нести радиус поиска контейнера в границах каталога: TransferParams.from "
+                        + "читает radius обязательным, без него план падает на выдаче и добыча не кладёт "
+                        + "предметы в склад (радиус " + radius + ")");
+    }
+
+    private static ScriptCall findCall(TaskNode root, String script) {
+        Deque<TaskNode> queue = new ArrayDeque<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            TaskNode node = queue.poll();
+            switch (node) {
+                case ScriptCall call -> {
+                    if (call.script().equals(script)) {
+                        return call;
+                    }
+                }
+                case SequenceNode sequence -> queue.addAll(sequence.steps());
+                case RepeatNode repeat -> queue.add(repeat.step());
+                case FallbackNode fallback -> queue.addAll(fallback.steps());
+                case ParallelNode parallel -> queue.addAll(parallel.steps());
+                case ConditionNode condition -> {
+                    queue.add(condition.thenStep());
+                    if (condition.elseStep() != null) {
+                        queue.add(condition.elseStep());
+                    }
+                }
+                default -> {
+                }
+            }
+        }
+        throw new AssertionError("В плане нет вызова скрипта " + script + ": без него задание не работает");
     }
 
     @Property

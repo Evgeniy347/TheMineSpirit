@@ -33,6 +33,7 @@ public final class TicketPlans {
     private static final int LIGHTING_OFFSET = 2;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
+    private static final int SUPPLY_CONTAINER_RADIUS = 8;
 
     private static final ResourceKnowledge SIMPLE_KNOWLEDGE = new ResourceKnowledge() {
         @Override
@@ -174,7 +175,8 @@ public final class TicketPlans {
         int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
         return sequence(gotoTarget(target),
                 new ScriptCall("acquire", Map.of("item", item, "count", count)),
-                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", count)));
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", count,
+                        "radius", SUPPLY_CONTAINER_RADIUS)));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {
