@@ -682,6 +682,10 @@
 - [x] Таблицы данных мода перечитываются по /reload из датапака мира (DataTables, ошибка json — старая таблица в силе,
       /spirit tables; docs/HOT-RELOAD.md; deepseek-web, 16.10). Журнал решений тактики — /spirit decisions, REST
       /v1/spirits/{id}/decisions, лог [tactics] (step-5, 16.10).
+- [x] Сторож DataTablesGuardTests: каждый json данных — в DataTables или в исключениях с причиной (qwen3.8-max-web, 16.10).
+- [ ] Горячие таблицы, которые сейчас мимо /reload (исключения сторожа): hunger.json, mining/descent.json,
+      mining/descent_levels.json, схемы доски fence/pen/enchant_room и house — регистрация в DataTables и потребители
+      читают через TableHolder, а не с classpath; tactics/priorities.json не читается — удалить или подключить.
 - [ ] Таблица ценностей и все основные коэффициенты меняются на лету — без установки мода и перезапуска сервера.
       Менять на живом сервере — только по согласованию с пользователем (владелец 15.10).
 - [ ] В процессе будем корректировать таблицу ценностей; журнал решений — основа для этих правок.
