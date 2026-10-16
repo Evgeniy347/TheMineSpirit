@@ -47,6 +47,7 @@ public final class BoardService {
     private final Board board;
     private final AnimalLifecycle animals;
     private final StockReader stockReader;
+    private final BoardSources sources;
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
@@ -55,19 +56,22 @@ public final class BoardService {
     private long stockBlockReads;
     private long stockContainers;
 
-    public BoardService(Board board, AnimalLifecycle animals, StockReader stockReader) {
+    public BoardService(Board board, AnimalLifecycle animals, StockReader stockReader, BoardSources sources) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
         this.animals = Objects.requireNonNull(animals,
                 "animals не может быть null: жизненный цикл животного — составная часть доски");
         this.stockReader = Objects.requireNonNull(stockReader,
                 "stockReader не может быть null: снимок запасов собирает адаптер");
+        this.sources = Objects.requireNonNull(sources,
+                "sources не может быть null: источники событий доски");
     }
 
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
         Board board = new Board(now);
         return new BoardService(board, new AnimalLifecycle(board, "wheat"),
-                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()));
+                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                BoardSources.create());
     }
 
     public Board board() {
@@ -118,6 +122,7 @@ public final class BoardService {
         List<SpiritEntity> spirits = census(level);
         settleOwners(spirits);
         issue(level, spirits, now);
+        sources.tick(level, this, spirits, stock, now);
         rebuilds++;
         lastRebuild = now;
     }
@@ -208,8 +213,22 @@ public final class BoardService {
     private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success) {
         if (success) {
             board.complete(ticket.id());
+            switch (ticket.boardCase()) {
+                case CAPTURE_ANIMAL -> animals.captured(ticket.id());
+                case BUILD_PEN -> animals.penBuilt(ticket.id());
+                case LURE_ANIMAL -> animals.lured();
+                case DISMANTLE_SHELTER -> {
+                }
+                default -> {
+                }
+            }
         } else {
             board.fail(ticket.id());
+            if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL
+                    || ticket.boardCase() == BoardCase.BUILD_PEN
+                    || ticket.boardCase() == BoardCase.LURE_ANIMAL) {
+                animals.animalDied();
+            }
         }
         WorkReserveHub.releaseAll(spirit);
         LOGGER.info("Дух {} {} задание {}: статус закрыт доской", spirit.displayName(),
