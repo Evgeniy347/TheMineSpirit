@@ -90,6 +90,19 @@ class AssistPolicyTests {
     }
 
     @Test
+    void assist_ThreatenedButNotAttacked_HelpsWard() {
+        SpiritSnapshot ward = defender(WARD, 0, 1, true);
+        SpiritSnapshot helper = defender(NEAR, 3, 2, false);
+
+        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, helper),
+                List.of(post(WARD, 0), post(NEAR, 3)), 2);
+
+        assertEquals(List.of(NEAR), helpers,
+                "Присутствие угрозы рядом — не бой: передовые посты (33) всегда в радиусе угроз, "
+                        + "помощь идёт от неатакованного, иначе подмена друг друга умирает");
+    }
+
+    @Test
     void assist_ShuffledInput_SameHelpers() {
         SpiritSnapshot ward = worker(WARD, 0);
         SpiritSnapshot near = defender(NEAR, 2, 0, false);

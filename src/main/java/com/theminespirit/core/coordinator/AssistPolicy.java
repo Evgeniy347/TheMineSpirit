@@ -42,7 +42,7 @@ public final class AssistPolicy {
         return spirits.stream()
                 .filter(spirit -> onDuty.contains(spirit.id()))
                 .filter(spirit -> !spirit.id().equals(attacked))
-                .filter(spirit -> !spirit.attacked() && spirit.threatsNear() == 0)
+                .filter(spirit -> !spirit.attacked())
                 .sorted(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(ward.pos()))
                         .thenComparing(spirit -> spirit.id()))
                 .limit(maxHelpers)
