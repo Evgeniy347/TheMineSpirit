@@ -22,24 +22,26 @@ foreach ($p in $perf) {
         "ПК: $name pid=$($p.IDProcess) ест $($p.PercentProcessorTime) % ядра, живёт $ageMin мин (opencode запущено: $opencode)"
     }
 }
-# Сироты: процессы исполнителей, у которых исчез родитель (сессия opencode закончилась, а find/bash/java остались).
-# Демон Gradle переживает сессию намеренно — его не трогаем; node и powershell не трогаем (мост deepseek, свои мониторы).
-$orphanNames = 'find.exe','grep.exe','bash.exe','sh.exe','timeout.exe','sleep.exe','tail.exe','head.exe','xargs.exe','java.exe','python.exe','opencode.exe'
+# Сироты исполнителей. У процессов Git Bash (MSYS) Windows часто показывает «мёртвого» родителя, хотя логически он жив
+# (16.10 так убиты чужой tail -F и рабочий запуск opencode deepseek-web), поэтому по родителю не судим. Убиваем только:
+# 1) find.exe с поиском по всему диску (find / …) старше 15 мин; 2) java сервера GameTest (fml.modFolders=…wt-<имя>)
+# старше 15 мин, если в этом worktree не работает ни один opencode. Демон Gradle не трогаем.
 $all = Get-CimInstance Win32_Process
-$alive = @{}; foreach ($p in $all) { $alive[[int]$p.ProcessId] = $true }
+$opencodeDirs = @($all | Where-Object { $_.Name -eq 'opencode.exe' } | ForEach-Object {
+    if ($_.CommandLine -match '--dir\s+(\S+)') { $Matches[1].ToLower() } })
 foreach ($p in $all) {
-    if ($orphanNames -notcontains $p.Name.ToLower()) { continue }
-    if ($alive.ContainsKey([int]$p.ParentProcessId)) { continue }
-    if ($p.CommandLine -like '*GradleDaemon*') { continue }
-    # Родитель у процессов MSYS (Git Bash) в Windows часто «мёртвый», хотя логически жив — поэтому трогаем только
-    # процессы нашего проекта (путь репозитория в командной строке) и поиск по всему диску (find / …).
     $cl = [string]$p.CommandLine
-    if ($cl -like '*AppData*claude*' -or $cl -like '*oc-watch*' -or $cl -like '*keepawake*') { continue }
-    $ours = ($cl -like '*repos/minecraft*') -or ($cl -like '*repos\minecraft*') -or ($p.Name -eq 'find.exe' -and $cl -match 'find(\.exe)?"?\s+/\s')
-    if (-not $ours) { continue }
+    if (-not $p.CreationDate) { continue }
     $age = ($now - $p.CreationDate).TotalMinutes
     if ($age -lt 15) { continue }
-    $cmd = if ($p.CommandLine) { $p.CommandLine.Substring(0, [Math]::Min(90, $p.CommandLine.Length)) } else { '' }
+    $kill = $false
+    if ($p.Name -eq 'find.exe' -and $cl -match 'find(\.exe)?"?\s+/\s') { $kill = $true }
+    if ($p.Name -eq 'java.exe' -and $cl -notlike '*GradleDaemon*' -and $cl -match 'fml\.modFolders=\S*?(wt-[A-Za-z0-9-]+)') {
+        $wt = $Matches[1].ToLower()
+        if (-not ($opencodeDirs | Where-Object { $_ -like "*$wt*" })) { $kill = $true }
+    }
+    if (-not $kill) { continue }
+    $cmd = $cl.Substring(0, [Math]::Min(90, $cl.Length))
     & taskkill.exe /F /T /PID $p.ProcessId 2>&1 | Out-Null
     "ПК: убит сирота $($p.Name) pid=$($p.ProcessId), жил $([math]::Round($age)) мин: $cmd"
 }
