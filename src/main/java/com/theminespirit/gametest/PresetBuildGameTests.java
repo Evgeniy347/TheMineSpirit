@@ -37,6 +37,14 @@ public final class PresetBuildGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
     }
 
+    private static void wideFloor(GameTestHelper helper) {
+        for (int x = 0; x <= 10; x++) {
+            for (int z = 0; z <= 10; z++) {
+                helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
+    }
+
     private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         for (int i = 0; i < stacks.length; i++) {
@@ -58,6 +66,35 @@ public final class PresetBuildGameTests {
         for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
             if (helper.getLevel().getBlockState(new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z()))
                     .is(BlockStates.blockFor(entry.block()))) {
+                matches++;
+            }
+        }
+        return matches;
+    }
+
+    private static String mismatchReport(GameTestHelper helper, Schematic schematic, BlockPos anchor) {
+        BlockPos absolute = helper.absolutePos(anchor);
+        BlockCoord origin = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+        StringBuilder report = new StringBuilder();
+        int shown = 0;
+        for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
+            var state = helper.getLevel().getBlockState(new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z()));
+            if (!state.is(BlockStates.blockFor(entry.block())) && shown < 12) {
+                report.append(entry.block()).append("@").append(entry.pos()).append("->").append(state.getBlock())
+                        .append("; ");
+                shown++;
+            }
+        }
+        return report.toString();
+    }
+
+    private static int countOf(GameTestHelper helper, Schematic schematic, BlockPos anchor, String block) {
+        BlockPos absolute = helper.absolutePos(anchor);
+        BlockCoord origin = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+        int matches = 0;
+        for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
+            if (entry.block().equals(block) && helper.getLevel().getBlockState(
+                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z())).is(BlockStates.blockFor(block))) {
                 matches++;
             }
         }
@@ -126,6 +163,44 @@ public final class PresetBuildGameTests {
                     "крыша дома обязана быть на месте: без неё постройка не закрыта");
             helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir(),
                     "дверной проём дома обязан остаться пустым: дух выходит наружу");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // [флак] 244 блока чаровальни дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
+    // иначе тест меряет скорость стройки, а не её результат.
+    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 24000)
+    public static void preset_EnchantRoomV1FromLibrary_StandsWithFifteenShelves(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        wideFloor(helper);
+        BlockPos anchor = new BlockPos(1, 1, 1);
+        Schematic schematic = SchematicResources.load("enchant_room_v1");
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(0, 1, 0),
+                new ItemStack(Items.COBBLESTONE, 64),
+                new ItemStack(Items.STONE_BRICKS, 64),
+                new ItemStack(Items.STONE_BRICKS, 64),
+                new ItemStack(Items.STONE_BRICKS, 64),
+                new ItemStack(Items.OAK_PLANKS, 64),
+                new ItemStack(Items.OAK_PLANKS, 8),
+                new ItemStack(Items.BOOKSHELF, 15),
+                new ItemStack(Items.ENCHANTING_TABLE, 1),
+                new ItemStack(Items.TORCH, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "enchant_room_v1", anchor), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "чаровальня уровня 1 по пресету обязана построиться целиком, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int matches = countMatches(helper, schematic, anchor);
+            helper.assertTrue(matches == schematic.blocks().size(),
+                    "постройка обязана совпасть с пресетом блок в блок: поставлено " + matches + " из "
+                            + schematic.blocks().size() + "; расхождения: "
+                            + mismatchReport(helper, schematic, anchor));
+            int shelves = countOf(helper, schematic, anchor, "minecraft:bookshelf");
+            helper.assertTrue(shelves == 15,
+                    "в чаровальне уровня 1 обязано стоять 15 книжных полок под 30 уровень: на месте " + shelves);
             GameTestFixtures.finish(helper);
         });
     }
