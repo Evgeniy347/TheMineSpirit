@@ -196,6 +196,7 @@ class ScriptCatalogTests {
                         Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 16})),
                 spec("withdraw", List.of("item", "count"),
                         Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 16})),
+                spec("eat", List.of(), Map.of()),
                 spec("sort_chest", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("unload", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("acquire", List.of("item", "count"), Map.of("count", new long[]{1, 256})),
