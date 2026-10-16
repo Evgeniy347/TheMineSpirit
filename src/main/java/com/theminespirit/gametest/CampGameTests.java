@@ -11,6 +11,7 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.RetreatMethod;
+import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritCampStore;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -31,7 +32,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CampGameTests {
     private static final int FUTURE_VERSION = 99;
     private static final int ARRIVE_LIMIT_TICKS = 100;
-    private static final double ARRIVE_DISTANCE = 2.5;
+    private static final double ARRIVE_DISTANCE = RetreatPlanner.HOME_ARRIVAL;
 
     private CampGameTests() {
     }
