@@ -235,6 +235,7 @@ class ScriptCatalogTests {
                 spec("meet", List.of("target"), Map.of()),
                 spec("say", List.of("text"), Map.of()),
                 spec("wait", List.of("ticks"), Map.of("ticks", new long[]{1, 6000})),
+                spec("sleep", List.of(), Map.of()),
                 spec("close_door", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

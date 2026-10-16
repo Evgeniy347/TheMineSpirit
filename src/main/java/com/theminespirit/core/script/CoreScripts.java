@@ -415,6 +415,10 @@ public final class CoreScripts {
                         List.of(ParamSpec.integer("ticks", true, CatalogLimits.WAIT_TICKS_MIN,
                                 CatalogLimits.WAIT_TICKS_MAX)),
                         List.of(), List.of("время ожидания прошло")),
+                spec("sleep", "лечь спать в кровать",
+                        List.of(),
+                        List.of("ночь, дух внутри поселения и не в обороне", "в поселении есть свободная кровать"),
+                        List.of("дух спит в кровати и просыпается утром, при угрозе или уроне")),
                 spec("close_door", "подойти к двери и закрыть её",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,

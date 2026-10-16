@@ -6,6 +6,7 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.sleep.SleepRule;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public final class RestActivity implements Activity {
         double rest = view.needsFood(IntellectTuning.FOOD_DAYS, IntellectTuning.FOOD_SAFETY)
                 || view.needsOre(IntellectTuning.ORE_TARGET, IntellectTuning.IRON_TARGET,
                         IntellectTuning.WEAPON_TARGET) ? 1.0 : 4.5;
-        if (view.dayFraction() >= 0.5) {
+        if (SleepRule.isNight(view.dayFraction())) {
             rest = Math.max(rest, 6.0);
         }
         return Activity.checkedDemand(id(), rest);
@@ -42,6 +43,7 @@ public final class RestActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение отдыха без духа или обстановки не строится");
         }
-        return new ActivityIntent(id(), Optional.of("wait"), Map.of(), Optional.empty());
+        String script = SleepRule.isNight(view.dayFraction()) ? "sleep" : "wait";
+        return new ActivityIntent(id(), Optional.of(script), Map.of(), Optional.empty());
     }
 }

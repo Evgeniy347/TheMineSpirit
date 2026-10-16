@@ -71,6 +71,7 @@ public final class SpiritEntity extends PathfinderMob {
     private Finding finding;
     private MemoryStore memory = MemoryStore.empty();
     private BlockCoord home;
+    private BlockCoord bed;
     private Camp camp;
     private DropCollector activeCollector;
     private int pathBuilds;
@@ -196,6 +197,18 @@ public final class SpiritEntity extends PathfinderMob {
         this.home = null;
     }
 
+    public Optional<BlockCoord> bed() {
+        return Optional.ofNullable(bed);
+    }
+
+    public void setBed(BlockCoord bed) {
+        this.bed = bed;
+    }
+
+    public void clearBed() {
+        this.bed = null;
+    }
+
     public boolean nightLeashArmed() {
         return nightLeashArmed;
     }
@@ -243,6 +256,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
         SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);
         SpiritHomeStore.write(compound, home);
+        SpiritBedStore.write(compound, bed);
         SpiritCampStore.write(compound, camp);
         SpiritChildStore.write(compound, child);
         SpiritHungerStore.write(compound, hunger.state());
@@ -280,6 +294,7 @@ public final class SpiritEntity extends PathfinderMob {
             LOGGER.warn("Дух {} не восстановил рабочую зону: {}", getUUID(), e.getMessage());
         }
         restoreHome(compound);
+        restoreBed(compound);
         restoreCamp(compound);
         restoreTactics(compound);
         restoreHunger(compound);
@@ -299,6 +314,14 @@ public final class SpiritEntity extends PathfinderMob {
             home = SpiritHomeStore.read(compound).orElse(null);
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил дом: {}", getUUID(), e.getMessage());
+        }
+    }
+
+    private void restoreBed(CompoundTag compound) {
+        try {
+            bed = SpiritBedStore.read(compound).orElse(null);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Дух {} не восстановил свою кровать: {}", getUUID(), e.getMessage());
         }
     }
 

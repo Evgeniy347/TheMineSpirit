@@ -108,4 +108,20 @@ class ActivitiesTests {
         assertEquals(6.0, demandOf(ActivityId.REST, night),
                 "Ночной отдых 6: выше дневного 4.5, но ниже защиты 10 при угрозе");
     }
+
+    @Test
+    void order_Night_RestSleepsInBed() {
+        SettlementView night = SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.8);
+
+        assertEquals(Optional.of("sleep"), new RestActivity().order(SettlementViews.spirit(SPIRIT), night).script(),
+                "Ночью отдых ставит сон в кровати, а не пустое ожидание: иначе духи стоят всю ночь вместо сна");
+    }
+
+    @Test
+    void order_Day_RestWaits() {
+        SettlementView day = SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.2);
+
+        assertEquals(Optional.of("wait"), new RestActivity().order(SettlementViews.spirit(SPIRIT), day).script(),
+                "Днём отдых — короткая пауза wait: спать среди дня негде и незачем");
+    }
 }

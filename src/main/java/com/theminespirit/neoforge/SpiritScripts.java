@@ -107,7 +107,7 @@ import com.theminespirit.neoforge.movement.WanderScript;
 import com.theminespirit.neoforge.social.DeliverScript;
 import com.theminespirit.neoforge.social.SayScript;
 import com.theminespirit.neoforge.social.WaitScript;
-import java.util.LinkedHashMap;
+import com.theminespirit.neoforge.sleep.SleepScript;import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -154,6 +154,7 @@ public final class SpiritScripts {
         table.put("deliver", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
         table.put("meet", spirit -> params -> new MeetScript(spirit, MeetParams.from(params)));
         table.put("wait", spirit -> params -> new WaitScript(spirit, WaitParams.from(params)));
+        table.put("sleep", spirit -> observing(params -> new SleepScript(spirit)));
         table.put("say", spirit -> params -> new SayScript(spirit, SayParams.from(params)));
         table.put("gather", spirit -> params -> new GatherScript(spirit, GatherParams.from(params)));
         table.put("till", spirit -> params -> new TillScript(spirit, TillParams.from(params)));
