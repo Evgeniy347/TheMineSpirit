@@ -40,7 +40,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.BUILD_PEN, "build_schematic"),
             Map.entry(BoardCase.LURE_ANIMAL, "withdraw"),
             Map.entry(BoardCase.BUILD_MINE, "dig_area"),
-            Map.entry(BoardCase.SUPPLY_SITE, "deliver"),
+            Map.entry(BoardCase.SUPPLY_SITE, "acquire"),
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),

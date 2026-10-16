@@ -172,7 +172,9 @@ public final class TicketPlans {
     private static TaskNode supplySite(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
-        return new ScriptCall("deliver", Map.of("item", item, "count", count, "to", "site"));
+        return sequence(gotoTarget(target),
+                new ScriptCall("acquire", Map.of("item", item, "count", count)),
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", count)));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {

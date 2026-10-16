@@ -11,6 +11,7 @@ import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritCommands;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.policy.PolicyEvents;
+import com.theminespirit.neoforge.board.BoardLifecycle;
 import com.theminespirit.neoforge.coordinator.CoordinatorLifecycle;
 import com.theminespirit.neoforge.crater.CraterEvents;
 import com.theminespirit.neoforge.rest.RestConfig;
@@ -38,6 +39,7 @@ public final class TheMineSpirit {
         PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);
+        BoardLifecycle.register(NeoForge.EVENT_BUS);
         MobTargetEvents.register(NeoForge.EVENT_BUS);
         CraterEvents.register(NeoForge.EVENT_BUS);
         new SpiritExperienceEvents(NeoForge.EVENT_BUS);
