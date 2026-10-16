@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class BoardCaseTests {
 
     @Test
-    void caseSet_IsCompleteAndFixed() {
+    void caseSet_Is_Complete() {
         Set<String> actual = Arrays.stream(BoardCase.values()).map(Enum::name).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(
@@ -27,7 +27,7 @@ class BoardCaseTests {
     }
 
     @Test
-    void caseNames_AreStableAndReadable() {
+    void caseNames_Are_Stable() {
         for (BoardCase boardCase : BoardCase.values()) {
             assertEquals(boardCase, BoardCase.valueOf(boardCase.name()),
                     "Имя кейса должно читаться обратно через valueOf: по имени кейс ищется "
@@ -36,7 +36,7 @@ class BoardCaseTests {
     }
 
     @Property
-    void caseNames_AreAllDistinct() {
+    void caseNames_Are_AllDistinct() {
         Set<String> names = Arrays.stream(BoardCase.values()).map(Enum::name).collect(Collectors.toSet());
 
         assertEquals(BoardCase.values().length, names.size(),
@@ -45,7 +45,7 @@ class BoardCaseTests {
     }
 
     @Property
-    void iteration_IsOrderedByConstantName() {
+    void iteration_Is_OrderedByName() {
         String[] names = Arrays.stream(BoardCase.values()).map(Enum::name).toArray(String[]::new);
         String[] sorted = names.clone();
         Arrays.sort(sorted);
