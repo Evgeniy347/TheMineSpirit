@@ -61,6 +61,14 @@ public final class BoardFirstStepsGameTests {
         int prevIndex = -1;
         Set<String> seen = new HashSet<>();
 
+        // Чужие шаги из общей доски (поставлены глобальным тиком для других сцен) закрываем
+        // помечая выполненными: иначе активных больше одного и тест видит чужую работу.
+        for (BoardTicket ticket : board.board().all()) {
+            if (ticket.id().startsWith("first:")) {
+                closeTicket(board, ticket.id(), spirit);
+            }
+        }
+
         for (int step = 0; step < 8; step++) {
             long now = level.getGameTime();
             FirstStepsRunner.tick(level, board, List.of(spirit), now);
@@ -159,6 +167,8 @@ public final class BoardFirstStepsGameTests {
         }
         if (board.board().statusOf(id).orElse(null) == BoardStatus.ASSIGNED) {
             board.board().complete(id);
+        } else if (board.board().statusOf(id).orElse(null) == BoardStatus.WAITING_RESOURCES) {
+            board.board().cancel(id);
         }
     }
 

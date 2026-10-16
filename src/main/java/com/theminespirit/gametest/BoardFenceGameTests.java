@@ -119,6 +119,10 @@ public final class BoardFenceGameTests {
                         == BoardStatus.PENDING,
                 "Пока ремонт не закрыт, стройка ждёт: статус "
                         + board.board().statusOf("board_test_build_low").orElse(null));
+        // Ремонт и стройку снимаем с доски: иначе стройка без гейта уйдёт свободному духу
+        // чужой сцены, а ремонт вечно держит счётчик занятости тестового духа.
+        board.board().cancel(repairId);
+        board.board().cancel("board_test_build_low");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

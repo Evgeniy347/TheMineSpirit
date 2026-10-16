@@ -116,6 +116,12 @@ public final class BoardAnimalGameTests {
                         + board.board().statusOf("animal_lure").orElse(null));
         helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
                 "После гибели укрытие всё равно разбирается ровно одним заданием");
+        // Разбор снимаем с доски: иначе PENDING без гейта уйдёт свободному духу чужой сцены.
+        for (BoardTicket ticket : board.board().all()) {
+            if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER) {
+                board.board().cancel(ticket.id());
+            }
+        }
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

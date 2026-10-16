@@ -174,6 +174,10 @@ public final class BoardCraterGameTests {
                             == BoardStatus.DONE,
                     "После заделки задание закрыто как DONE, статус "
                             + board.board().statusOf("board_test_crater_fill").orElse(null));
+            // Ждущее невыполнимое и его добычу снимаем с доски: иначе вечное WAITING плодит
+            // supply:dirt до конца прогона и доска уводит свободных духов чужих сцен.
+            board.board().cancel("board_test_crater_wait");
+            board.board().cancel("supply:dirt");
             GameTestFixtures.finish(helper);
         });
     }
