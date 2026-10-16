@@ -22,11 +22,11 @@ public final class MobTargetEvents {
         if (event.getLevel().isClientSide() || !(event.getEntity() instanceof Mob mob)) {
             return;
         }
-        if (!SpiritConfig.mobsTargetSpirits() || !SpiritTargets.attacksSpirits(typeOf(mob)) || alreadyTargetsSpirits(mob)) {
+        if (!SpiritConfig.mobsTargetSpirits() || alreadyTargetsSpirits(mob)) {
             return;
         }
-        mob.targetSelector.addGoal(targetPriority(mob),
-                new SpiritAttackGoal(mob, SpiritTargets.conditionFor(typeOf(mob))));
+        SpiritTargets.conditionFor(typeOf(mob)).ifPresent(condition -> mob.targetSelector.addGoal(
+                targetPriority(mob), new SpiritAttackGoal(mob, condition)));
     }
 
     private static String typeOf(Mob mob) {

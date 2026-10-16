@@ -2,10 +2,10 @@ package com.theminespirit.core.tactics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -41,26 +41,27 @@ class SpiritTargetsTests {
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {"minecraft:spider", "minecraft:cave_spider"})
     void conditionFor_SpiderFamily_ReturnsLightBelowHalf(String type) {
-        assertEquals(SpiritTargets.Condition.LIGHT_BELOW_HALF, SpiritTargets.conditionFor(type),
+        assertEquals(Optional.of(SpiritTargets.Condition.LIGHT_BELOW_HALF), SpiritTargets.conditionFor(type),
                 "Паук и пещерный паук берут цель «дух» как игрока в SpiderTargetGoal: только при свете < 0.5, "
                         + "иначе днём на солнце сами нападают на духов без ванильного правила");
     }
 
     @Test
     void conditionFor_Drowned_ReturnsNightOrInWater() {
-        assertEquals(SpiritTargets.Condition.NIGHT_OR_IN_WATER, SpiritTargets.conditionFor("minecraft:drowned"),
+        assertEquals(Optional.of(SpiritTargets.Condition.NIGHT_OR_IN_WATER),
+                SpiritTargets.conditionFor("minecraft:drowned"),
                 "Утопленник берёт духа как игрока в Drowned.okTarget: ночь или цель в воде");
     }
 
     @Test
     void conditionFor_Zombie_ReturnsAlways() {
-        assertEquals(SpiritTargets.Condition.ALWAYS, SpiritTargets.conditionFor("minecraft:zombie"),
+        assertEquals(Optional.of(SpiritTargets.Condition.ALWAYS), SpiritTargets.conditionFor("minecraft:zombie"),
                 "Зомби без условий: ванильная цель на игрока не имеет фильтра");
     }
 
     @Test
-    void conditionFor_UnknownType_ReturnsNull() {
-        assertNull(SpiritTargets.conditionFor("minecraft:never_seen"),
+    void conditionFor_UnknownType_ReturnsEmpty() {
+        assertEquals(Optional.empty(), SpiritTargets.conditionFor("minecraft:never_seen"),
                 "Неизвестный тип не получает цель: белый список явный, и новый мод-моб не станет охотником за духами "
                         + "без решения владельца");
     }

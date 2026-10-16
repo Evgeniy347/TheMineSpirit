@@ -1,6 +1,7 @@
 package com.theminespirit.core.tactics;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Кому из ванильных враждебных мобов мод добавляет цель «дух» и при каких условиях моб её берёт.
@@ -75,14 +76,14 @@ public final class SpiritTargets {
     }
 
     public static boolean attacksSpirits(String entityTypeId) {
-        return conditionFor(entityTypeId) != null;
+        return conditionFor(entityTypeId).isPresent();
     }
 
-    public static Condition conditionFor(String entityTypeId) {
+    public static Optional<Condition> conditionFor(String entityTypeId) {
         if (entityTypeId == null || entityTypeId.isBlank()) {
             throw new IllegalArgumentException("entityTypeId пуст: тип моба называется его id, "
                     + "например minecraft:zombie");
         }
-        return RULES.get(entityTypeId);
+        return Optional.ofNullable(RULES.get(entityTypeId));
     }
 }
