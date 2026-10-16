@@ -32,8 +32,6 @@ class BoardConfigTests {
                         + "а не в константе, иначе /reload его не поменяет");
         assertEquals(200, config.intervals().get("herdScanIntervalTicks"),
                 "Опрос животных раз в 200 тиков: каждый тик scan_entities грузил бы тик сервера");
-        assertEquals(0, config.ttl().get("FILL_CRATER"),
-                "Воронка живёт до выполнения (TTL 0): просроченная воронка — открытая яма навсегда");
     }
 
     @Test
@@ -83,21 +81,10 @@ class BoardConfigTests {
     void fromJson_EmptyTables_AreAllowed() {
         BoardConfig config = BoardConfig.fromJson("{}", "board.json");
 
-        assertTrue(config.priorities().isEmpty() && config.ttl().isEmpty() && config.intervals().isEmpty(),
+        assertTrue(config.priorities().isEmpty() && config.intervals().isEmpty(),
                 "Пустые таблицы допустимы: недостающее добирают значения по умолчанию из "
                         + "BoardRules и BoardTuning");
         assertEquals(BoardRules.priorityOf(BoardCase.REPAIR_FENCE), 100,
                 "Без строки в таблице работает приоритет по умолчанию: доска не падает на пустом файле");
-    }
-
-    @Test
-    void noTtl_RepairAndCrater_LiveForever() {
-        assertTrue(BoardTuning.noTtlFor(BoardCase.REPAIR_FENCE),
-                "Ремонт ограждений живёт до выполнения: просроченный ремонт значил бы открытые ворота");
-        assertTrue(BoardTuning.noTtlFor(BoardCase.FILL_CRATER),
-                "Воронка живёт до выполнения: просроченная яма — открытая воронка навсегда");
-        assertFalse(BoardTuning.noTtlFor(BoardCase.LURE_ANIMAL),
-                "«Приманить» имеет TTL: ждавшая приманки задание обязано возвращаться в очередь, "
-                        + "а не висеть вечно");
     }
 }

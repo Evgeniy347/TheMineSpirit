@@ -28,6 +28,6 @@ public final class BoardTasks {
         Optional<UUID> holder = board.holderOf(ticket.id());
         return new BoardTask(ticket.id(), ticket.boardCase().name(), ticket.priority(),
                 holder.map(UUID::toString).orElse(null), status.name(), ticket.requiredItems(), missing,
-                ticket.dependsOn(), ticket.createdAt(), ticket.ttlTicks());
+                ticket.dependsOn(), ticket.createdAt(), ticket.level(), ticket.cause());
     }
 }

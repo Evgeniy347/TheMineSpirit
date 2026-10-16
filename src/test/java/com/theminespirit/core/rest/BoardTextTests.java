@@ -11,7 +11,7 @@ class BoardTextTests {
 
     private static BoardTask task(Map<String, Integer> missing, List<String> dependsOn, String assignee) {
         return new BoardTask("board-1", "SUPPLY_SITE", 20, assignee, "WAITING_RESOURCES",
-                Map.of("oak_log", 16), missing, dependsOn, 7, 6000);
+                Map.of("oak_log", 16), missing, dependsOn, 7, 1, "always");
     }
 
     @Test

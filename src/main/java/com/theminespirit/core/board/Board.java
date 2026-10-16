@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
@@ -53,9 +52,6 @@ public final class Board {
             return BoardOutcome.DUPLICATE;
         }
         long now = nowTicks.getAsLong();
-        if (expiredAt(ticket, now).isPresent()) {
-            return BoardOutcome.EXPIRED;
-        }
         if (recentlyFailed(ticket.id(), now)) {
             return BoardOutcome.BACKOFF;
         }
@@ -180,10 +176,6 @@ public final class Board {
             BoardStatus status = statuses.get(ticket.id());
             if (status == BoardStatus.CANCELLED || status == BoardStatus.DONE
                     || status == BoardStatus.FAILED) {
-                removableIds.add(ticket.id());
-                continue;
-            }
-            if (expiredAt(ticket, now).isPresent()) {
                 removableIds.add(ticket.id());
             }
         }
@@ -357,15 +349,7 @@ public final class Board {
     private void requireNow(long now) {
         if (now < 0) {
             throw new IllegalArgumentException("now равен " + now + " и отрицателен: время пересборки "
-                    + "не может идти назад, иначе просрочка и сортировка сломаются");
+                    + "не может идти назад, иначе сортировка сломается");
         }
-    }
-
-    private OptionalLong expiredAt(BoardTicket ticket, long now) {
-        if (BoardTuning.noTtlFor(ticket.boardCase())) {
-            return OptionalLong.empty();
-        }
-        long deadline = ticket.createdAt() + ticket.ttlTicks();
-        return deadline <= now ? OptionalLong.of(deadline) : OptionalLong.empty();
     }
 }

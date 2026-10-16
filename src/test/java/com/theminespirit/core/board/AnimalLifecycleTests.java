@@ -31,7 +31,7 @@ class AnimalLifecycleTests {
 
     private static void captureOnBoard(Board board, String captureId) {
         board.submit(new BoardTicket(captureId, BoardCase.CAPTURE_ANIMAL, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.CAPTURE_ANIMAL), 0, BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.CAPTURE_ANIMAL), 0, 1, "animal:capture_1",
                 List.of(), Map.of()));
         board.claimable(new StockView(Map.of()), 0);
         board.claim(captureId, UUID.randomUUID(), 0);

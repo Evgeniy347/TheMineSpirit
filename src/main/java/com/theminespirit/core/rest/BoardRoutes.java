@@ -74,7 +74,8 @@ public final class BoardRoutes {
         body.put("assignee", request.assignee().map(Object::toString).orElse(null));
         body.put("requiredItems", request.requiredItems());
         body.put("dependsOn", request.dependsOn());
-        body.put("ttlTicks", request.ttlTicks());
+        body.put("level", request.level());
+        body.put("cause", request.cause());
         return IdempotencyCache.fingerprintOf(body);
     }
 }

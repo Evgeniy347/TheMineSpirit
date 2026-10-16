@@ -66,8 +66,8 @@ public final class BoardGameTests {
         }
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.CHEST);
         board.submit(new BoardTicket(BUILD_ID, BoardCase.BUILD_HOUSE, Optional.of(spirit.getUUID()), 50,
-                helper.getLevel().getGameTime(), 6000, List.of(), Map.of("oak_log", GATE_LOGS)),
-                TicketTarget.at(home));
+                helper.getLevel().getGameTime(), 1, BoardTicket.ALWAYS_CAUSE, List.of(),
+                Map.of("oak_log", GATE_LOGS)), TicketTarget.at(home));
         board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
         AtomicInteger phase = new AtomicInteger(0);
         AtomicInteger supplyWaited = new AtomicInteger(0);

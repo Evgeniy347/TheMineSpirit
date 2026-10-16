@@ -83,8 +83,8 @@ public final class BoardFenceGameTests {
                 + stoneAbs.getZ();
         BoardService board = BoardRegistry.get(level);
         board.submit(new BoardTicket("board_test_build_low", BoardCase.BUILD_HOUSE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), now, 6000, List.of(),
-                Map.of()), TicketTarget.at(home));
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), now, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of()), TicketTarget.at(home));
 
         BoardTicket repair = board.board().find(repairId).orElse(null);
         helper.assertTrue(repair != null,

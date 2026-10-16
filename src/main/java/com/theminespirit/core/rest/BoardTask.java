@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public record BoardTask(String id, String boardCase, int priority, String assignee, String status,
         Map<String, Integer> requiredItems, Map<String, Integer> missing, List<String> dependsOn,
-        long createdAt, long ttlTicks) {
+        long createdAt, int level, String cause) {
 
     public BoardTask {
         if (id == null || id.isBlank()) {
@@ -32,9 +32,13 @@ public record BoardTask(String id, String boardCase, int priority, String assign
             throw new IllegalArgumentException("createdAt равен " + createdAt + " и отрицателен: время постановки "
                     + "не может быть до начала отсчёта");
         }
-        if (ttlTicks <= 0) {
-            throw new IllegalArgumentException("ttlTicks равен " + ttlTicks + " и не положителен: у задания "
-                    + "на доске всегда есть срок жизни или метка «без TTL»");
+        if (level < 1) {
+            throw new IllegalArgumentException("Уровень " + level + " меньше 1: первая постройка "
+                    + "ставится уровнем 1");
+        }
+        if (cause == null || cause.isBlank()) {
+            throw new IllegalArgumentException("Причина задания пуста: по ней пересборка проверяет "
+                    + "актуальность, постоянное задание задают причиной always");
         }
         requiredItems = Map.copyOf(Objects.requireNonNull(requiredItems,
                 "requiredItems не может быть null: задание без ресурсов задают пустой картой"));

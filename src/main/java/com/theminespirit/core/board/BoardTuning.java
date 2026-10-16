@@ -12,9 +12,6 @@ public final class BoardTuning {
     /** Пересборка доски: раз в 100 тиков (5 с), образец DEMAND_INTERVAL_TICKS. */
     public static final long BOARD_INTERVAL_TICKS = 100;
 
-    /** Срок жизни задания по умолчанию: 5 минут. */
-    public static final long DEFAULT_TTL_TICKS = 6000;
-
     /** Активных заданий одного духа по умолчанию — одно. */
     public static final int MAX_ACTIVE_PER_SPIRIT = 1;
 
@@ -71,16 +68,6 @@ public final class BoardTuning {
             "enchantCheckInterval",
             "enchantShelvesMin");
 
-    /**
-     * Кейсы без срока жизни: ремонт и воронка живут до выполнения — просроченный ремонт
-     * забора значил бы открытые ворота навсегда.
-     */
-    public static boolean hasNoTtl(BoardCase boardCase) {
-        return boardCase == BoardCase.REPAIR_FENCE
-                || boardCase == BoardCase.REPAIR_BUILDING
-                || boardCase == BoardCase.FILL_CRATER;
-    }
-
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
     }
@@ -123,16 +110,6 @@ public final class BoardTuning {
 
     public static int enchantShelvesMin() {
         return (int) interval("enchantShelvesMin", ENCHANT_SHELVES_MIN);
-    }
-
-    /** Есть ли у кейса TTL по живой таблице: 0 в таблице — задание живёт до выполнения. */
-    public static boolean noTtlFor(BoardCase boardCase) {
-        if (boardCase == null) {
-            throw new IllegalArgumentException("Кейс не может быть null: TTL читается по имени кейса");
-        }
-        long ttl = DataTables.INSTANCE.board().current().ttl().getOrDefault(boardCase.name(),
-                hasNoTtl(boardCase) ? 0L : DEFAULT_TTL_TICKS);
-        return ttl == 0;
     }
 
     private BoardTuning() {

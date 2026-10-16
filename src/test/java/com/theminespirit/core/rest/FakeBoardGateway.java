@@ -42,7 +42,7 @@ final class FakeBoardGateway implements BoardGateway {
         submits.add(id);
         BoardTask task = new BoardTask(id, request.boardCase().name(), 50,
                 request.assignee().map(UUID::toString).orElse(null), "PENDING", request.requiredItems(),
-                Map.of(), request.dependsOn(), 0, request.ttlTicks());
+                Map.of(), request.dependsOn(), 0, request.level(), request.cause());
         tasks.put(id, task);
         return task;
     }
@@ -58,7 +58,7 @@ final class FakeBoardGateway implements BoardGateway {
         cancels.add(ticketId);
         BoardTask cancelled = new BoardTask(task.id(), task.boardCase(), task.priority(), task.assignee(),
                 "CANCELLED", task.requiredItems(), task.missing(), task.dependsOn(), task.createdAt(),
-                task.ttlTicks());
+                task.level(), task.cause());
         tasks.put(ticketId, cancelled);
         return cancelled;
     }

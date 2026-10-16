@@ -57,8 +57,13 @@ public final class FenceWatch {
         BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         service.submit(new BoardTicket(fenceId(pos), BoardCase.REPAIR_FENCE, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE), level.getGameTime(),
-                BoardTuning.DEFAULT_TTL_TICKS, List.of(), Map.of()),
+                1, fenceCause(pos), List.of(), Map.of()),
                 TicketTarget.at(target).withFenceBlock(blockId));
+    }
+
+    /** Причина задания ремонта — сломанная клетка: починенный забор уходит из живых причин. */
+    static String fenceCause(BlockPos pos) {
+        return "fence:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
     }
 
     static boolean isFence(BlockState state) {

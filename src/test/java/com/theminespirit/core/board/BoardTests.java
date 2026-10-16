@@ -27,23 +27,23 @@ class BoardTests {
         return new Board(() -> now);
     }
 
-    private static BoardTicket ticket(String id, BoardCase boardCase, long createdAt, long ttlTicks,
+    private static BoardTicket ticket(String id, BoardCase boardCase, long createdAt,
             List<String> dependsOn) {
         return new BoardTicket(id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase), createdAt,
-                ttlTicks, dependsOn, Map.of());
+                1, BoardTicket.ALWAYS_CAUSE, dependsOn, Map.of());
     }
 
     private static BoardTicket ticketWithResources(String id, BoardCase boardCase, long createdAt,
-            long ttlTicks, List<String> dependsOn, Map<String, Integer> requiredItems) {
+            List<String> dependsOn, Map<String, Integer> requiredItems) {
         return new BoardTicket(id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase), createdAt,
-                ttlTicks, dependsOn, requiredItems);
+                1, BoardTicket.ALWAYS_CAUSE, dependsOn, requiredItems);
     }
 
     @Test
     void submit_DuplicateId_Rejected() {
         Board board = boardAt(0);
-        BoardTicket first = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
-        BoardTicket second = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+        BoardTicket first = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
+        BoardTicket second = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
 
         assertEquals(BoardOutcome.ACCEPTED, board.submit(first),
                 "Первое задание обязано быть принято: доска хранит его в очереди");
@@ -53,13 +53,13 @@ class BoardTests {
     }
 
     @Test
-    void submit_ExpiredTicket_Rejected() {
-        Board board = boardAt(200);
-        BoardTicket expired = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 100, List.of());
+    void submit_OldTicket_Accepted() {
+        Board board = boardAt(1_000_000);
+        BoardTicket late = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
 
-        assertEquals(BoardOutcome.EXPIRED, board.submit(expired),
-                "Просроченное задание обязано не попадать в очередь: дух получил бы "
-                        + "задание, срок которого истёк до выдачи");
+        assertEquals(BoardOutcome.ACCEPTED, board.submit(late),
+                "У задания нет срока жизни: давняя постановка обязана попадать в очередь, "
+                        + "актуальность проверяется причиной при пересборке, а не смертью по таймеру");
     }
 
     @Test
@@ -69,19 +69,19 @@ class BoardTests {
     }
 
     @Test
-    void submit_RepairCase_HasNoTtl() {
+    void submit_RepairCase_AcceptedLate() {
         Board board = boardAt(1_000_000);
-        BoardTicket repair = ticket("fence_1", BoardCase.REPAIR_FENCE, 0, 6000, List.of());
+        BoardTicket repair = ticket("fence_1", BoardCase.REPAIR_FENCE, 0, List.of());
 
         assertEquals(BoardOutcome.ACCEPTED, board.submit(repair),
-                "Ремонт ограждений живёт до выполнения без срока (поправка 8): просроченный "
-                        + "ремонт значил бы открытые ворота навсегда");
+                "Ремонт ограждений живёт до выполнения: несделанный ремонт значил бы "
+                        + "открытые ворота навсегда");
     }
 
     @Test
     void release_AssignedTicket_ReturnsToQueueWithoutOwner() {
         Board board = boardAt(0);
-        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
 
         board.submit(build);
         assertEquals(BoardOutcome.CLAIMED, board.claim("build_1", SPIRIT_ONE, 0),
@@ -97,8 +97,8 @@ class BoardTests {
     @Test
     void release_UnassignedTicket_NotTouched() {
         Board board = boardAt(0);
-        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
-        BoardTicket waiting = ticket("supply_1", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
+        BoardTicket waiting = ticket("supply_1", BoardCase.SUPPLY_SITE, 0, List.of());
 
         board.submit(build);
         board.submit(waiting);
@@ -111,8 +111,8 @@ class BoardTests {
     @Test
     void claimable_UnfinishedDependency_Excluded() {
         Board board = boardAt(0);
-        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of());
-        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("capture_1"));
+        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, List.of("capture_1"));
         board.submit(capture);
         board.submit(lure);
 
@@ -126,8 +126,8 @@ class BoardTests {
     @Test
     void claimable_Complete_UnlocksChain() {
         Board board = boardAt(0);
-        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of());
-        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("capture_1"));
+        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, List.of("capture_1"));
         board.submit(capture);
         board.submit(lure);
 
@@ -145,8 +145,8 @@ class BoardTests {
     @Test
     void claimable_AfterPruneOfDone_RetainsDependency() {
         Board board = boardAt(0);
-        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of());
-        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("capture_1"));
+        BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, List.of("capture_1"));
         board.submit(capture);
         board.submit(lure);
         board.claim("capture_1", SPIRIT_ONE, 0);
@@ -162,9 +162,9 @@ class BoardTests {
     @Test
     void claimable_Chain_Unlocks() {
         Board board = boardAt(0);
-        BoardTicket pen = ticket("pen_1", BoardCase.BUILD_PEN, 0, 6000, List.of());
-        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("pen_1"));
-        BoardTicket dismantle = ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, 0, 6000,
+        BoardTicket pen = ticket("pen_1", BoardCase.BUILD_PEN, 0, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, List.of("pen_1"));
+        BoardTicket dismantle = ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, 0,
                 List.of("lure_1"));
         board.submit(pen);
         board.submit(lure);
@@ -185,7 +185,7 @@ class BoardTests {
     @Test
     void claimable_Gating_HoldsInQueue() {
         Board board = boardAt(0);
-        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of(),
+        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, List.of(),
                 Map.of("dirt", 9));
         board.submit(build);
 
@@ -200,7 +200,7 @@ class BoardTests {
     @Test
     void claimable_StockArrived_ReleasesWaiting() {
         Board board = boardAt(0);
-        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of(),
+        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, List.of(),
                 Map.of("dirt", 9));
         board.submit(build);
 
@@ -215,7 +215,7 @@ class BoardTests {
     @Test
     void claim_SameTicket_TakenByOther() {
         Board board = boardAt(0);
-        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
         board.submit(build);
         board.claimable(new StockView(Map.of()), 0);
 
@@ -232,7 +232,7 @@ class BoardTests {
     @Test
     void claim_MissingResources_GateBlocked() {
         Board board = boardAt(0);
-        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of(),
+        BoardTicket build = ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 0, List.of(),
                 Map.of("dirt", 9));
         board.submit(build);
         board.claimable(new StockView(Map.of()), 0);
@@ -254,19 +254,19 @@ class BoardTests {
     @Test
     void claim_NegativeNow_Rejected() {
         Board board = boardAt(0);
-        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
         board.submit(build);
 
         assertThrows(IllegalArgumentException.class, () -> board.claim("build_1", SPIRIT_ONE, -1),
-                "Отрицательное время обязано отвергаться: оно сломало бы просрочку и сортировку");
+                "Отрицательное время обязано отвергаться: оно сломало бы сортировку выдачи");
     }
 
     @Test
     void cancel_Dependants_Removed() {
         Board board = boardAt(0);
-        BoardTicket pen = ticket("pen_1", BoardCase.BUILD_PEN, 0, 6000, List.of());
-        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, 6000, List.of("pen_1"));
-        BoardTicket dismantle = ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, 0, 6000,
+        BoardTicket pen = ticket("pen_1", BoardCase.BUILD_PEN, 0, List.of());
+        BoardTicket lure = ticket("lure_1", BoardCase.LURE_ANIMAL, 0, List.of("pen_1"));
+        BoardTicket dismantle = ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, 0,
                 List.of("lure_1"));
         board.submit(pen);
         board.submit(lure);
@@ -293,29 +293,38 @@ class BoardTests {
     }
 
     @Test
-    void prune_Removes_OnlyExpired() {
+    void prune_Removes_ClosedTickets() {
         Board board = boardAt(0);
-        BoardTicket expired = ticket("old_1", BoardCase.BUILD_HOUSE, 0, 100, List.of());
-        BoardTicket fresh = ticket("new_1", BoardCase.BUILD_HOUSE, 100, 1000, List.of());
-        board.submit(expired);
-        board.submit(fresh);
+        board.submit(ticket("done_1", BoardCase.BUILD_HOUSE, 0, List.of()));
+        board.submit(ticket("failed_1", BoardCase.SUPPLY_SITE, 0, List.of()));
+        board.submit(ticket("cancelled_1", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+        board.submit(ticket("pending_1", BoardCase.LIGHTING, 0, List.of()));
+        board.claim("done_1", SPIRIT_ONE, 0);
+        board.complete("done_1");
+        board.claim("failed_1", SPIRIT_ONE, 0);
+        board.fail("failed_1");
+        board.cancel("cancelled_1");
 
         int removed = board.prune(200);
 
-        assertEquals(1, removed,
-                "prune снимает только просроченные: свежее задание живёт дальше, иначе "
-                        + "пересборка выкидывала бы работу при каждом тике");
-        assertEquals(Optional.empty(), board.find("old_1"),
-                "Просроченное задание удалено из очереди");
-        assertEquals(Optional.of(fresh), board.find("new_1"),
-                "Свежее задание осталось в очереди");
+        assertEquals(3, removed,
+                "prune снимает закрытые задания (DONE/FAILED/CANCELLED): очередь не хранит "
+                        + "историю, она — в журнале");
+        assertEquals(Optional.empty(), board.find("done_1"),
+                "Завершённое задание снято из очереди");
+        assertEquals(Optional.empty(), board.find("failed_1"),
+                "Проваленное задание снято из очереди");
+        assertEquals(Optional.empty(), board.find("cancelled_1"),
+                "Отменённое задание снято из очереди");
+        assertEquals(Optional.of(BoardStatus.PENDING), board.statusOf("pending_1"),
+                "Ждущее задание остаётся в очереди: prune не трогает работу");
     }
 
     @Test
     void prune_Oldest_Evicted() {
         Board board = boardAt(0);
         for (int i = 0; i < BoardTuning.MAX_PENDING + 1; i++) {
-            board.submit(ticket("build_" + i, BoardCase.BUILD_HOUSE, i, 6000, List.of()));
+            board.submit(ticket("build_" + i, BoardCase.BUILD_HOUSE, i, List.of()));
         }
 
         int removed = board.prune(0);
@@ -332,9 +341,11 @@ class BoardTests {
     void pendingFor_Returns_SpiritTickets() {
         Board board = boardAt(0);
         BoardTicket mine = new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.of(SPIRIT_ONE),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 6000, List.of(), Map.of());
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of());
         BoardTicket other = new BoardTicket("build_2", BoardCase.BUILD_HOUSE, Optional.of(SPIRIT_TWO),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 6000, List.of(), Map.of());
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of());
         board.submit(mine);
         board.submit(other);
 
@@ -347,7 +358,7 @@ class BoardTests {
     @Test
     void assignedTo_Returns_TicketClaimedBySpirit() {
         Board board = boardAt(0);
-        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, List.of());
         board.submit(supply);
         board.claim("supply:dirt", SPIRIT_ONE, 0);
 
@@ -361,7 +372,7 @@ class BoardTests {
     @Test
     void assignedCounts_Counts_ClaimedTicket() {
         Board board = boardAt(0);
-        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, List.of());
         board.submit(supply);
         board.claim("supply:dirt", SPIRIT_ONE, 0);
 
@@ -372,7 +383,7 @@ class BoardTests {
     @Test
     void holderOf_ReportsClaimHolder_ForObserver() {
         Board board = boardAt(0);
-        board.submit(ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of()));
+        board.submit(ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, List.of()));
 
         assertEquals(Optional.empty(), board.holderOf("supply:dirt"),
                 "Задание без владельца и без выдачи не имеет держателя: наблюдатель видит «любой свободный»");
@@ -393,7 +404,8 @@ class BoardTests {
     void holderOf_ReportsAssignee_FromTicket() {
         Board board = boardAt(0);
         BoardTicket addressed = new BoardTicket("house_1", BoardCase.BUILD_HOUSE, Optional.of(SPIRIT_TWO),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 6000, List.of(), Map.of());
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), 0, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of());
         board.submit(addressed);
 
         assertEquals(Optional.of(SPIRIT_TWO), board.holderOf("house_1"),
@@ -403,9 +415,9 @@ class BoardTests {
     @Test
     void all_Sorted_ByPriority() {
         Board board = boardAt(0);
-        BoardTicket house = ticket("house_1", BoardCase.BUILD_HOUSE, 100, 6000, List.of());
-        BoardTicket crater = ticket("crater_1", BoardCase.FILL_CRATER, 200, 6000, List.of());
-        BoardTicket fence = ticket("fence_1", BoardCase.REPAIR_FENCE, 300, 6000, List.of());
+        BoardTicket house = ticket("house_1", BoardCase.BUILD_HOUSE, 100, List.of());
+        BoardTicket crater = ticket("crater_1", BoardCase.FILL_CRATER, 200, List.of());
+        BoardTicket fence = ticket("fence_1", BoardCase.REPAIR_FENCE, 300, List.of());
         board.submit(house);
         board.submit(crater);
         board.submit(fence);
@@ -420,8 +432,8 @@ class BoardTests {
     @Test
     void all_Is_Deterministic() {
         Board board = boardAt(0);
-        board.submit(ticket("house_1", BoardCase.BUILD_HOUSE, 100, 6000, List.of()));
-        board.submit(ticket("fence_1", BoardCase.REPAIR_FENCE, 300, 6000, List.of()));
+        board.submit(ticket("house_1", BoardCase.BUILD_HOUSE, 100, List.of()));
+        board.submit(ticket("fence_1", BoardCase.REPAIR_FENCE, 300, List.of()));
 
         assertEquals(board.all(), board.all(),
                 "Порядок обхода детерминирован: по нему доска выдаёт задания и наблюдатель "
@@ -463,33 +475,26 @@ class BoardTests {
     }
 
     @Property
-    void prune_AfterRun_LeavesNoExpired(@ForAll("boardTickets") BoardTicket ticket) {
+    void prune_AfterRun_KeepsPending(@ForAll("boardTickets") BoardTicket ticket) {
         Board board = boardAt(1_000_000);
         board.submit(ticket);
 
         board.prune(1_000_000);
 
-        assertTrue(board.claimable(new StockView(Map.of()), 1_000_000).stream()
-                        .noneMatch(remaining -> remaining.id().equals(ticket.id())
-                                && expiredInPast(remaining, 1_000_000)),
-                "После prune просроченных нет: пересборка не оставляет задания с истёкшим "
-                        + "сроком, которые дух взял бы впустую");
-    }
-
-    private boolean expiredInPast(BoardTicket ticket, long now) {
-        return !BoardTuning.hasNoTtl(ticket.boardCase())
-                && ticket.createdAt() + ticket.ttlTicks() <= now;
+        assertTrue(board.find(ticket.id()).isPresent(),
+                "После prune ждущее задание на месте: без срока жизни пересборка не снимает "
+                        + "задания, снятие — только по актуальности причины");
     }
 
     @Provide
     Arbitrary<BoardTicket> boardTickets() {
         return Arbitraries.of(
-                ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of()),
-                ticket("pen_1", BoardCase.BUILD_PEN, 10, 6000, List.of("capture_1")),
-                ticket("lure_1", BoardCase.LURE_ANIMAL, 20, 6000, List.of("pen_1")),
-                ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 30, 6000, List.of(),
+                ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, List.of()),
+                ticket("pen_1", BoardCase.BUILD_PEN, 10, List.of("capture_1")),
+                ticket("lure_1", BoardCase.LURE_ANIMAL, 20, List.of("pen_1")),
+                ticketWithResources("build_1", BoardCase.BUILD_HOUSE, 30, List.of(),
                         Map.of("dirt", 9)),
-                ticket("fence_1", BoardCase.REPAIR_FENCE, 40, 6000, List.of()));
+                ticket("fence_1", BoardCase.REPAIR_FENCE, 40, List.of()));
     }
 
     @Provide

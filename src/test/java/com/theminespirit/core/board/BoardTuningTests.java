@@ -21,13 +21,6 @@ class BoardTuningTests {
     }
 
     @Test
-    void defaultTtl_Is_FiveMinutes() {
-        assertEquals(6000, BoardTuning.DEFAULT_TTL_TICKS,
-                "Срок жизни задания по умолчанию — 5 минут (6000 тиков): задание, которое "
-                        + "взяли и не закончили, возвращается в очередь, а не висит вечно");
-    }
-
-    @Test
     void maxActivePerSpirit_Is_One() {
         assertEquals(1, BoardTuning.MAX_ACTIVE_PER_SPIRIT,
                 "Активных заданий одного духа по умолчанию один: один исполнитель — один "
@@ -130,7 +123,6 @@ class BoardTuningTests {
     Arbitrary<Number> boardNumbers() {
         return Arbitraries.of(
                 BoardTuning.BOARD_INTERVAL_TICKS,
-                BoardTuning.DEFAULT_TTL_TICKS,
                 (long) BoardTuning.MAX_ACTIVE_PER_SPIRIT,
                 (long) BoardTuning.MAX_PENDING,
                 (long) BoardTuning.CRATER_TERRITORY_RADIUS,

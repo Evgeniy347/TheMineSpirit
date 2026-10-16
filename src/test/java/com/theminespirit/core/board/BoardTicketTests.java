@@ -25,7 +25,7 @@ class BoardTicketTests {
     @Test
     void ticket_Fields_AreRead() {
         BoardTicket ticket = new BoardTicket("fence_1", BoardCase.REPAIR_FENCE, Optional.of(SPIRIT),
-                100, 500, 6000, List.of("capture_1"), Map.of("dirt", 9));
+                100, 500, 2, "fence:1:64:2", List.of("capture_1"), Map.of("dirt", 9));
 
         assertEquals("fence_1", ticket.id(), "id задания обязан читаться: по нему доска находит задание");
         assertEquals(BoardCase.REPAIR_FENCE, ticket.boardCase(),
@@ -33,8 +33,11 @@ class BoardTicketTests {
         assertEquals(Optional.of(SPIRIT), ticket.assignee(),
                 "Владелец-дух обязан читаться: доска проверяет занятость владельца");
         assertEquals(100, ticket.priority(), "Приоритет обязан читаться: им доска сортирует очередь");
-        assertEquals(500, ticket.createdAt(), "Момент постановки обязан читаться: им считается просрочка");
-        assertEquals(6000, ticket.ttlTicks(), "Срок жизни обязан читаться: им считается просрочка");
+        assertEquals(500, ticket.createdAt(), "Момент постановки обязан читаться: им доска сортирует очередь");
+        assertEquals(2, ticket.level(), "Уровень обязан читаться: по нему доска отличает "
+                + "расширение шахты от её входа");
+        assertEquals("fence:1:64:2", ticket.cause(),
+                "Причина обязана читаться: по ней пересборка проверяет актуальность");
         assertEquals(List.of("capture_1"), ticket.dependsOn(),
                 "Зависимости обязаны читаться: без них доска не разблокирует задание");
         assertEquals(Map.of("dirt", 9), ticket.requiredItems(),
@@ -44,7 +47,7 @@ class BoardTicketTests {
     @Test
     void ticket_EmptyOwner_AnyFreeSpirit() {
         BoardTicket ticket = new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(),
-                50, 0, 6000, List.of(), Map.of());
+                50, 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
 
         assertFalse(ticket.assignee().isPresent(),
                 "Пустой владелец означает «любой свободный дух»: доска сама назначает "
@@ -54,13 +57,13 @@ class BoardTicketTests {
     @Test
     void ticket_EmptyId_Rejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "Пустой id обязан отвергаться: по id доска находит задание и связывает "
                         + "зависимости, пустое имя слило бы разные задания");
         assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("  ", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("  ", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "id из пробелов обязан отвергаться: он выглядит пустым для наблюдателя, "
                         + "но проходит мимо проверки на пустую строку");
     }
@@ -68,44 +71,70 @@ class BoardTicketTests {
     @Test
     void ticket_NullCase_Rejected() {
         assertThrows(NullPointerException.class,
-                () -> new BoardTicket("build_1", null, Optional.empty(), 50, 0, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("build_1", null, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "Кейс обязан быть задан: без него доска не знает приоритет, гейт и план");
     }
 
     @Test
     void ticket_NegativeCreatedAt_Rejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, -1, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, -1, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "Отрицательный момент постановки обязан отвергаться: время до начала отсчёта "
-                        + "сломает проверку просрочки и сортировку по createdAt");
+                        + "сломает сортировку по createdAt");
     }
 
     @Test
-    void ticket_NonPositiveTtl_Rejected() {
-        assertThrows(IllegalArgumentException.class,
+    void ticket_ZeroLevel_Rejected() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 0,
-                        List.of(), Map.of()),
-                "Нулевой срок жизни обязан отвергаться: задание без TTL висит в очереди "
-                        + "навсегда, а кейсы без срока живут по правилу доски, а не в билете");
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+                "Нулевой уровень обязан отвергаться: первая постройка ставится уровнем 1, "
+                        + "нулевой уровень снял бы условие «уровень 1 готов» с доски");
+        assertTrue(error.getMessage().contains("1"),
+                "Сообщение обязано называть минимальный уровень: " + error.getMessage());
         assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, -100,
-                        List.of(), Map.of()),
-                "Отрицательный срок жизни обязан отвергаться: мгновенно просроченное задание "
-                        + "выбывает из очереди, не дойдя до выдачи");
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, -2,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+                "Отрицательный уровень обязан отвергаться: уровень ниже первого ломает "
+                        + "цепочку уровней постройки");
+    }
+
+    @Test
+    void ticket_BlankCause_Rejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        null, List.of(), Map.of()),
+                "Причина null обязана отвергаться: без причины пересборка не проверит "
+                        + "актуальность, и задание повиснет после отпадения причины");
+        assertThrows(IllegalArgumentException.class,
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        "  ", List.of(), Map.of()),
+                "Причина из пробелов обязана отвергаться: она не совпадёт ни с одной живой "
+                        + "причиной, и задание снимут на первой же пересборке");
+    }
+
+    @Test
+    void ticket_AlwaysCause_MarksEvergreen() {
+        BoardTicket ticket = new BoardTicket("eat_1", BoardCase.EAT_TO_FULL, Optional.empty(),
+                80, 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
+
+        assertEquals("always", ticket.cause(),
+                "Постоянное задание задают причиной always: такая причина переживает снятие "
+                        + "по актуальности, иначе вечное задание умрёт на первой пересборке");
     }
 
     @Test
     void ticket_PriorityOutOfRange_Rejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), -1, 0, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), -1, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "Приоритет ниже нуля обязан отвергаться: доска сравнивает задания с ремонтом, "
                         + "отрицательный приоритет утащил бы задание под все остальные");
         assertThrows(IllegalArgumentException.class,
                 () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(),
-                        BoardTuning.MAX_PRIORITY + 1, 0, 6000, List.of(), Map.of()),
+                        BoardTuning.MAX_PRIORITY + 1, 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "Приоритет выше максимума обязан отвергаться: выход за границу означает, "
                         + "что доска не сможет сравнить задание с ремонтом ограждений");
     }
@@ -113,8 +142,8 @@ class BoardTicketTests {
     @Test
     void ticket_SelfDependency_Rejected() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 6000,
-                        List.of("build_1"), Map.of()),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of("build_1"), Map.of()),
                 "Самозависимость обязана отвергаться: задание навсегда ждало бы самого себя "
                         + "и никогда не попало бы в выдачу");
         assertTrue(error.getMessage().contains("build_1"),
@@ -124,16 +153,16 @@ class BoardTicketTests {
     @Test
     void ticket_NullCollections_Rejected() {
         assertThrows(NullPointerException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 6000,
-                        null, Map.of()),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, null, Map.of()),
                 "dependsOn=null обязан отвергаться: задание без зависимостей задают пустым списком");
         assertThrows(NullPointerException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 6000,
-                        List.of(), null),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, Optional.empty(), 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), null),
                 "requiredItems=null обязан отвергаться: задание без ресурсов задают пустой картой");
         assertThrows(NullPointerException.class,
-                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, null, 50, 0, 6000,
-                        List.of(), Map.of()),
+                () -> new BoardTicket("build_1", BoardCase.BUILD_HOUSE, null, 50, 0, 1,
+                        BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
                 "assignee=null обязан отвергаться: «любой свободный дух» — это пустой Optional");
     }
 
@@ -142,7 +171,7 @@ class BoardTicketTests {
         List<String> dependsOn = new ArrayList<>(List.of("capture_1"));
         Map<String, Integer> requiredItems = new HashMap<>(Map.of("dirt", 9));
         BoardTicket ticket = new BoardTicket("fence_1", BoardCase.REPAIR_FENCE, Optional.empty(),
-                100, 500, 6000, dependsOn, requiredItems);
+                100, 500, 1, "fence:1:64:2", dependsOn, requiredItems);
         dependsOn.add("other_1");
         requiredItems.put("stone", 5);
 
@@ -162,7 +191,8 @@ class BoardTicketTests {
     @Property
     void ticket_EmptyCollections_Normalized(@ForAll("ticketIds") String id,
             @ForAll("boardCases") BoardCase boardCase) {
-        BoardTicket ticket = new BoardTicket(id, boardCase, Optional.empty(), 0, 0, 1, List.of(), Map.of());
+        BoardTicket ticket = new BoardTicket(id, boardCase, Optional.empty(), 0, 0, 1,
+                BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
 
         assertTrue(ticket.dependsOn().isEmpty(),
                 "Задание без зависимостей обязано читаться пустым списком: гейт и выдача "
@@ -174,13 +204,14 @@ class BoardTicketTests {
 
     @Property
     void ticket_Fields_Deterministic(@ForAll("ticketIds") String id,
-            @ForAll("boardCases") BoardCase boardCase, @ForAll long createdAt, @ForAll int priority) {
+            @ForAll("boardCases") BoardCase boardCase, @ForAll long createdAt, @ForAll int priority,
+            @ForAll("levels") int level, @ForAll("causes") String cause) {
         long safeCreatedAt = Math.floorMod(createdAt, 1_000_000_000L);
         int safePriority = Math.floorMod(priority, BoardTuning.MAX_PRIORITY + 1);
         BoardTicket first = new BoardTicket(id, boardCase, Optional.empty(), safePriority,
-                safeCreatedAt, 6000, List.of(), Map.of());
+                safeCreatedAt, level, cause, List.of(), Map.of());
         BoardTicket second = new BoardTicket(id, boardCase, Optional.empty(), safePriority,
-                safeCreatedAt, 6000, List.of(), Map.of());
+                safeCreatedAt, level, cause, List.of(), Map.of());
 
         assertEquals(first, second,
                 "Два билета с одними полями обязаны быть равны: доска ищет дубликаты по id, "
@@ -195,5 +226,15 @@ class BoardTicketTests {
     @Provide
     Arbitrary<BoardCase> boardCases() {
         return Arbitraries.of(BoardCase.values());
+    }
+
+    @Provide
+    Arbitrary<Integer> levels() {
+        return Arbitraries.integers().between(1, 4);
+    }
+
+    @Provide
+    Arbitrary<String> causes() {
+        return Arbitraries.of("always", "crater:1:64:2", "fence:3:64:1", "animal:capture_1");
     }
 }

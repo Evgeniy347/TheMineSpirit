@@ -19,6 +19,7 @@ public final class AnimalLifecycle {
     private final Board board;
     private final String lureItem;
     private Stage stage = Stage.NONE;
+    private String cause = BoardTicket.ALWAYS_CAUSE;
 
     public AnimalLifecycle(Board board, String lureItem) {
         this.board = Objects.requireNonNull(board, "board не может быть null: доска — "
@@ -36,8 +37,9 @@ public final class AnimalLifecycle {
         if (stage != Stage.NONE || hasActive(BoardCase.BUILD_PEN)) {
             return;
         }
+        cause = "animal:" + captureId;
         board.submit(new BoardTicket(PEN_ID, BoardCase.BUILD_PEN, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_PEN), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.BUILD_PEN), board.now(), 1, cause,
                 List.of(), Map.of()));
         stage = Stage.CAPTURED;
     }
@@ -49,7 +51,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.submit(new BoardTicket(LURE_ID, BoardCase.LURE_ANIMAL, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.LURE_ANIMAL), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.LURE_ANIMAL), board.now(), 1, cause,
                 List.of(captureId), Map.of(lureItem, 1)));
         stage = Stage.PEN_BUILT;
     }
@@ -59,7 +61,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), 1, cause,
                 List.of(), Map.of()));
         stage = Stage.LURED;
     }
@@ -79,7 +81,7 @@ public final class AnimalLifecycle {
         if (!hasActive(BoardCase.DISMANTLE_SHELTER)) {
             board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
                     BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(),
-                    BoardTuning.DEFAULT_TTL_TICKS, List.of(), Map.of()));
+                    1, cause, List.of(), Map.of()));
         }
         stage = Stage.DISMANTLED;
     }

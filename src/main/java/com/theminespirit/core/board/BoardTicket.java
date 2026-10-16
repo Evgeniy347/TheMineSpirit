@@ -8,12 +8,16 @@ import java.util.UUID;
 
 /**
  * Задание доски: кейс, приоритет, владелец (конкретный дух или «любой свободный»),
- * требуемые ресурсы (гейт), зависимости (id заданий-предшественников), срок жизни.
+ * уровень постройки, причина (ключ актуальности), требуемые ресурсы (гейт),
+ * зависимости (id заданий-предшественников). Срока жизни нет: актуальность проверяется
+ * причиной при каждой пересборке, а не смертью по таймеру.
  * Неизменяем: доска хранит билеты в очереди и отдаёт наблюдателю, подмена полей
  * сломала бы и сортировку, и гейт.
  */
 public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assignee, int priority,
-        long createdAt, long ttlTicks, List<String> dependsOn, Map<String, Integer> requiredItems) {
+        long createdAt, int level, String cause, List<String> dependsOn, Map<String, Integer> requiredItems) {
+
+    public static final String ALWAYS_CAUSE = "always";
 
     public BoardTicket {
         if (id == null || id.isBlank()) {
@@ -26,9 +30,14 @@ public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assigne
             throw new IllegalArgumentException("createdAt равен " + createdAt
                     + " и отрицателен: время постановки задания не может быть до начала отсчёта");
         }
-        if (ttlTicks <= 0) {
-            throw new IllegalArgumentException("ttlTicks равен " + ttlTicks
-                    + " и не положителен: задание без срока жизни зависло бы в очереди навсегда");
+        if (level < 1) {
+            throw new IllegalArgumentException("Уровень " + level + " меньше 1: первая постройка "
+                    + "ставится уровнем 1, нулевого уровня не существует");
+        }
+        if (cause == null || cause.isBlank()) {
+            throw new IllegalArgumentException("Причина задания пуста: по ней пересборка проверяет "
+                    + "актуальность («воронка ещё есть?»), постоянное задание задают причиной "
+                    + ALWAYS_CAUSE);
         }
         if (priority < 0 || priority > BoardTuning.MAX_PRIORITY) {
             throw new IllegalArgumentException("Приоритет " + priority + " вне диапазона [0, "

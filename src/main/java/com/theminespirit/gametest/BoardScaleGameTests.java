@@ -68,8 +68,8 @@ public final class BoardScaleGameTests {
         for (int ticket = 0; ticket < TICKETS; ticket++) {
             SpiritEntity owner = spirits.get(ticket);
             board.submit(new BoardTicket("scale_build_" + ticket, BoardCase.BUILD_HOUSE,
-                    Optional.of(owner.getUUID()), 50, level.getGameTime(), 6000, List.of(),
-                    Map.of("dirt", REQUIRED_DIRT)),
+                    Optional.of(owner.getUUID()), 50, level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE,
+                    List.of(), Map.of("dirt", REQUIRED_DIRT)),
                     TicketTarget.at(homes.get(ticket)));
         }
         helper.succeedWhen(() -> {

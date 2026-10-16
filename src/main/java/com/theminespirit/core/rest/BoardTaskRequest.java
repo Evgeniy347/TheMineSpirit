@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardTuning;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,22 +19,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Тело POST /v1/board/tasks: кейс доски, владелец, гейт, зависимости и срок жизни.
+ * Тело POST /v1/board/tasks: кейс доски, владелец, гейт, зависимости, уровень и причина.
  * Id задания доска назначает сама — стратег ссылается на него из {@code dependsOn} после
  * постановки. Неизвестный кейс отклоняется со списком допустимых: опечатка в имени кейса
  * не должна тихо ставить задание-сироту.
  */
 public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUID> assignee,
-        Map<String, Integer> requiredItems, List<String> dependsOn, long ttlTicks) {
+        Map<String, Integer> requiredItems, List<String> dependsOn, int level, String cause) {
 
     private static final String REQUEST_ID = "request_id";
     private static final String CASE = "case";
     private static final String ASSIGNEE = "assignee";
     private static final String REQUIRED_ITEMS = "requiredItems";
     private static final String DEPENDS_ON = "dependsOn";
-    private static final String TTL_TICKS = "ttlTicks";
+    private static final String LEVEL = "level";
+    private static final String CAUSE = "cause";
     private static final List<String> FIELDS = List.of(REQUEST_ID, CASE, ASSIGNEE, REQUIRED_ITEMS,
-            DEPENDS_ON, TTL_TICKS);
+            DEPENDS_ON, LEVEL, CAUSE);
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
@@ -52,9 +52,13 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
                     "Поле 'case' обязательно: без кейса доска не знает приоритет, гейт и план задания",
                     Map.of("field", CASE, "allowed", caseNames()));
         }
-        if (ttlTicks <= 0) {
-            throw new IllegalArgumentException("ttlTicks равен " + ttlTicks + " и не положителен: задание "
-                    + "без срока жизни зависло бы в очереди навсегда");
+        if (level < 1) {
+            throw invalid("Поле 'level' = " + level + " меньше 1: первая постройка ставится "
+                    + "уровнем 1, отсутствующий уровень задают единицей", Map.of("field", LEVEL));
+        }
+        if (cause == null || cause.isBlank()) {
+            throw invalid("Поле 'cause' пусто: по причине пересборка проверяет актуальность, "
+                    + "постоянное задание задают причиной always", Map.of("field", CAUSE));
         }
         assignee = assignee == null ? Optional.empty() : assignee;
         requiredItems = Map.copyOf(requiredItems == null ? Map.of() : requiredItems);
@@ -70,7 +74,8 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         if (root == null || root.isNull() || !root.isObject()) {
             throw invalid("Тело POST board tasks должно быть JSON-объектом вида "
                     + "{\"request_id\":\"<uuid>\",\"case\":\"BUILD_FENCE\",\"assignee\":\"<uuid>\","
-                    + "\"requiredItems\":{\"oak_log\":16},\"dependsOn\":[\"…\"],\"ttlTicks\":6000}, получено: "
+                    + "\"requiredItems\":{\"oak_log\":16},\"dependsOn\":[\"…\"],\"level\":1,"
+                    + "\"cause\":\"always\"}, получено: "
                     + (root == null ? "пустое тело" : root.getNodeType()), Map.of("allowed", FIELDS));
         }
         rejectUnknownFields(root);
@@ -79,8 +84,9 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         Optional<UUID> assignee = assignee(root.get(ASSIGNEE));
         Map<String, Integer> requiredItems = items(root.get(REQUIRED_ITEMS));
         List<String> dependsOn = dependsOn(root.get(DEPENDS_ON));
-        long ttlTicks = ttl(root.get(TTL_TICKS));
-        return new BoardTaskRequest(requestId, boardCase, assignee, requiredItems, dependsOn, ttlTicks);
+        int level = level(root.get(LEVEL));
+        String cause = cause(root.get(CAUSE));
+        return new BoardTaskRequest(requestId, boardCase, assignee, requiredItems, dependsOn, level, cause);
     }
 
     private static UUID requestId(JsonNode node) {
@@ -171,20 +177,31 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         return List.copyOf(ids);
     }
 
-    private static long ttl(JsonNode node) {
+    private static int level(JsonNode node) {
         if (node == null || node.isNull()) {
-            return BoardTuning.DEFAULT_TTL_TICKS;
+            return 1;
         }
-        if (!node.isIntegralNumber() || !node.canConvertToLong()) {
-            throw invalid("Поле 'ttlTicks' должно быть целым числом тиков, получено: " + node.getNodeType(),
-                    Map.of("field", TTL_TICKS));
+        if (!node.isIntegralNumber() || !node.canConvertToInt()) {
+            throw invalid("Поле 'level' должно быть целым числом уровня постройки, получено: "
+                    + node.getNodeType(), Map.of("field", LEVEL));
         }
-        long ttl = node.longValue();
-        if (ttl <= 0) {
-            throw invalid("Поле 'ttlTicks' = " + ttl + " не положительно: задание без срока жизни зависло бы "
-                    + "в очереди навсегда", Map.of("field", TTL_TICKS));
+        int level = node.intValue();
+        if (level < 1) {
+            throw invalid("Поле 'level' = " + level + " меньше 1: первая постройка ставится "
+                    + "уровнем 1", Map.of("field", LEVEL));
         }
-        return ttl;
+        return level;
+    }
+
+    private static String cause(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return "always";
+        }
+        if (!node.isTextual() || node.textValue().isBlank()) {
+            throw invalid("Поле 'cause' обязано быть непустой строкой-ключом причины "
+                    + "(«always» для постоянных), получено: " + node, Map.of("field", CAUSE));
+        }
+        return node.textValue();
     }
 
     private static JsonNode read(byte[] body) {

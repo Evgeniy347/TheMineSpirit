@@ -388,7 +388,7 @@ public final class BoardService {
                     .filter(supply -> item.equals(supply.supplyItem())).findFirst()
                     .orElse(TicketTarget.at(homeOf(spirits)));
             submit(new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.SUPPLY_SITE), now, BoardTuning.DEFAULT_TTL_TICKS,
+                    BoardRules.priorityOf(BoardCase.SUPPLY_SITE), now, 1, BoardTicket.ALWAYS_CAUSE,
                     List.of(), Map.of()), target.withSupply(item, count));
         }
     }

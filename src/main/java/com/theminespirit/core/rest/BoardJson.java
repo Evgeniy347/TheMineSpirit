@@ -33,7 +33,8 @@ public final class BoardJson {
         map.put("missing", task.missing());
         map.put("dependsOn", task.dependsOn());
         map.put("createdAt", task.createdAt());
-        map.put("ttlTicks", task.ttlTicks());
+        map.put("level", task.level());
+        map.put("cause", task.cause());
         return map;
     }
 }

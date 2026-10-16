@@ -58,7 +58,7 @@
 - **Decision** — запись журнала решений тактики: тик, дух, «было → стало» по полю `decision` / `mode` / `target` /
   `order`, сработавшее правило или топ-3 фактора с весами, ключевые факты (враги рядом, здоровье, броня, оружие).
 - **BoardTask** — задание доски поселения: `id`, `case`, `priority`, `assignee` (держатель или `null`), `status`,
-  `requiredItems` (гейт), `missing` (нехватка по снимку запасов), `dependsOn`, `createdAt`, `ttlTicks`.
+  `requiredItems` (гейт), `missing` (нехватка по снимку запасов), `dependsOn`, `createdAt`, `level`, `cause`.
 
 ## Конечные точки
 
@@ -437,7 +437,7 @@ data: {"state":"failed"}
   {"id":"board-6f1c2d3e-0000-4000-8000-000000000001","case":"SUPPLY_SITE","priority":20,
    "assignee":"11111111-2222-3333-4444-555555555555","status":"WAITING_RESOURCES",
    "requiredItems":{"oak_log":16},"missing":{"oak_log":10},"dependsOn":["board-root"],
-   "createdAt":1234,"ttlTicks":6000}
+   "createdAt":1234,"level":1,"cause":"always"}
 ]}
 ```
 
@@ -446,8 +446,9 @@ data: {"state":"failed"}
 - `status` — `PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`DONE`/`FAILED`/`CANCELLED`;
 - `requiredItems` — нужда гейта; `missing` — сколько чего не хватает по последнему снимку запасов (`null`-полей нет,
   пустая нехватка — `{}`);
-- `dependsOn` — id заданий-предшественников; `createdAt` — тик постановки; `ttlTicks` — срок жизни (кейсы ремонта и
-  воронки живут без TTL — до выполнения).
+- `dependsOn` — id заданий-предшественников; `createdAt` — тик постановки; `level` — уровень постройки (≥ 1);
+  `cause` — причина задания (`always` у постоянных, иначе ключ вида `crater:x:y:z`): по ней пересборка проверяет
+  актуальность, срока жизни у заданий нет.
 
 ### POST /v1/board/tasks
 
@@ -458,7 +459,7 @@ data: {"state":"failed"}
 ```json
 {"request_id":"6f1c2d3e-0000-4000-8000-000000000001","case":"BUILD_FENCE",
  "assignee":"11111111-2222-3333-4444-555555555555","requiredItems":{"oak_log":16},
- "dependsOn":["board-root"],"ttlTicks":6000}
+ "dependsOn":["board-root"],"level":1,"cause":"always"}
 ```
 
 - `case` — обязателен, одно из имён `BoardCase`; неизвестный кейс — 422 `invalid_plan` с перечнем `allowed` (текст
@@ -466,7 +467,8 @@ data: {"state":"failed"}
 - `assignee` — необязателен: UUID духа-владельца или отсутствует/`null` («любой свободный»);
 - `requiredItems` — необязателен: `{предмет: количество ≥ 0}` (гейт по ресурсам);
 - `dependsOn` — необязателен: список id заданий-предшественников;
-- `ttlTicks` — необязателен, по умолчанию `DEFAULT_TTL_TICKS`; должен быть положительным;
+- `level` — необязателен, по умолчанию 1; обязан быть ≥ 1;
+- `cause` — необязательна, по умолчанию `always`; обязана быть непустой строкой;
 - лишнее поле — 400 `invalid_request` с именем поля.
 
 Ответ `202` — задание целиком (как элемент `GET /v1/board`) плюс `request_id` клиента. Идём через `IdempotencyCache`,

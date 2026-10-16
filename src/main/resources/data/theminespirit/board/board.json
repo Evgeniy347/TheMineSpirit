@@ -24,11 +24,6 @@
     "STOCK_CHESTS": 40,
     "ENCHANT_SHELVES": 30
   },
-  "ttl": {
-    "REPAIR_FENCE": 0,
-    "REPAIR_BUILDING": 0,
-    "FILL_CRATER": 0
-  },
   "intervals": {
     "boardIntervalTicks": 100,
     "herdScanIntervalTicks": 200,

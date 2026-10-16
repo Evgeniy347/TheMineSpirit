@@ -34,7 +34,7 @@ public final class EnchantRoomWatch {
             int book = stock.available().getOrDefault("minecraft:book", 0);
             if (lapis >= 4 && book >= 1) {
                 service.submit(new BoardTicket("enchant_room", BoardCase.ENCHANT_ROOM, Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.ENCHANT_ROOM), now, BoardTuning.DEFAULT_TTL_TICKS,
+                        BoardRules.priorityOf(BoardCase.ENCHANT_ROOM), now, 1, BoardTicket.ALWAYS_CAUSE,
                         List.of(), Map.of()), TicketTarget.at(home));
                 return;
             }
@@ -46,7 +46,7 @@ public final class EnchantRoomWatch {
                 + stock.available().getOrDefault("minecraft:book", 0);
         if (shelvesBooks < BoardTuning.enchantShelvesMin()) {
             service.submit(new BoardTicket("enchant_shelves", BoardCase.ENCHANT_SHELVES, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.ENCHANT_SHELVES), now, BoardTuning.DEFAULT_TTL_TICKS,
+                    BoardRules.priorityOf(BoardCase.ENCHANT_SHELVES), now, 1, BoardTicket.ALWAYS_CAUSE,
                     List.of(), Map.of("minecraft:book", 16)), TicketTarget.at(home));
         }
     }

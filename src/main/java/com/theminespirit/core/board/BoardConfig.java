@@ -11,13 +11,13 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Живые числа доски: приоритеты кейсов, сроки жизни (TTL) и интервалы. Читается из
+ * Живые числа доски: приоритеты кейсов и интервалы. Читается из
  * JSON-таблицы через {@code DataTables} — правится датапаком мира и перезагружается
- * по {@code /reload} без перезапуска. Ключи приоритетов и TTL — имена {@link BoardCase},
+ * по {@code /reload} без перезапуска. Ключи приоритетов — имена {@link BoardCase},
  * ключи интервалов — {@link BoardTuning#INTERVAL_KEYS}. Пустые карты допустимы: недостающее
  * добирают значения по умолчанию из {@code BoardRules} и {@code BoardTuning}.
  */
-public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> ttl, Map<String, Long> intervals) {
+public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> intervals) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -26,8 +26,6 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> ttl
         Objects.requireNonNull(priorities,
                 "Приоритеты не могут быть null: пустую таблицу задают пустой картой, а не null");
         priorities = Map.copyOf(priorities);
-        Objects.requireNonNull(ttl, "TTL не может быть null: пустую таблицу задают пустой картой, а не null");
-        ttl = Map.copyOf(ttl);
         Objects.requireNonNull(intervals,
                 "Интервалы не могут быть null: пустую таблицу задают пустой картой, а не null");
         intervals = Map.copyOf(intervals);
@@ -39,12 +37,11 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Long> ttl
         JsonNode root = JsonResource.parse(json, origin);
         if (!root.isObject()) {
             throw new IllegalStateException("Таблица '" + origin + "' — не объект: на верхнем уровне ожидается "
-                    + "объект «priorities → ttl → intervals»");
+                    + "объект «priorities → intervals»");
         }
         Map<String, Integer> priorities = integers(root.get("priorities"), origin, "priorities", BoardCase::valueOf);
-        Map<String, Long> ttl = longs(root.get("ttl"), origin, "ttl", BoardCase::valueOf);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
-        return new BoardConfig(priorities, ttl, intervals);
+        return new BoardConfig(priorities, intervals);
     }
 
     public static BoardConfig readFromClasspath() {

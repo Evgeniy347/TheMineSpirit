@@ -48,7 +48,7 @@ class BoardRoutesTests {
     @Test
     void get_Tasks_ReturnsQueueWithMissing() throws Exception {
         gateway.with(new BoardTask("board-a", "SUPPLY_SITE", 20, "дух-1", "WAITING_RESOURCES",
-                Map.of("oak_log", 16), Map.of("oak_log", 10), List.of("board-root"), 7, 6000));
+                Map.of("oak_log", 16), Map.of("oak_log", 10), List.of("board-root"), 7, 1, "always"));
 
         RestResponse response = send("GET", "/v1/board", "");
 
@@ -69,7 +69,7 @@ class BoardRoutesTests {
         String requestId = uuid();
 
         RestResponse response = send("POST", "/v1/board/tasks", body(requestId,
-                ",\"assignee\":\"" + uuid() + "\",\"requiredItems\":{\"oak_log\":16},\"ttlTicks\":600"));
+                ",\"assignee\":\"" + uuid() + "\",\"requiredItems\":{\"oak_log\":16},\"level\":2,\"cause\":\"fence:1:64:2\""));
 
         assertEquals(202, response.status(), "Постановка задания обязана приниматься 202: " + response.body());
         JsonNode parsed = MAPPER.readTree(response.body());
@@ -115,7 +115,7 @@ class BoardRoutesTests {
         String requestId = uuid();
         send("POST", "/v1/board/tasks", body(requestId, ",\"requiredItems\":{\"oak_log\":16}"));
 
-        RestResponse response = send("POST", "/v1/board/tasks", body(requestId, ",\"ttlTicks\":600"));
+        RestResponse response = send("POST", "/v1/board/tasks", body(requestId, ",\"level\":2"));
 
         assertEquals(409, response.status(), "Тот же request_id с другим телом обязан давать 409: "
                 + response.body());
@@ -143,11 +143,26 @@ class BoardRoutesTests {
     }
 
     @Test
-    void post_NonPositiveTtl_Returns400() {
-        RestResponse response = send("POST", "/v1/board/tasks", body(uuid(), ",\"ttlTicks\":0"));
+    void post_ZeroLevel_Returns400() {
+        RestResponse response = send("POST", "/v1/board/tasks", body(uuid(), ",\"level\":0"));
 
-        assertEquals(400, response.status(), "Неположительный ttlTicks обязан давать 400: " + response.body());
-        assertTrue(response.body().contains("ttlTicks"), "400 обязан называть ttlTicks: " + response.body());
+        assertEquals(400, response.status(), "Нулевой уровень обязан давать 400: " + response.body());
+        assertTrue(response.body().contains("level"), "400 обязан называть level: " + response.body());
+    }
+
+    @Test
+    void post_LevelAndCause_AreStored() throws Exception {
+        String requestId = uuid();
+
+        RestResponse response = send("POST", "/v1/board/tasks",
+                body(requestId, ",\"level\":2,\"cause\":\"fence:1:64:2\""));
+
+        assertEquals(202, response.status(), "Постановка с уровнем и причиной обязана приниматься: "
+                + response.body());
+        assertEquals("fence:1:64:2", MAPPER.readTree(response.body()).get("cause").asText(),
+                "202 обязан отдавать причину задания: по ней стратег сверяет актуальность");
+        assertEquals(2, MAPPER.readTree(response.body()).get("level").asInt(),
+                "202 обязан отдавать уровень задания: " + response.body());
     }
 
     @Test

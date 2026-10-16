@@ -58,8 +58,13 @@ public final class CraterWatch {
         BlockCoord target = new BlockCoord(center.getX(), center.getY(), center.getZ());
         service.submit(new BoardTicket(craterId(center), BoardCase.FILL_CRATER, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(),
-                BoardTuning.DEFAULT_TTL_TICKS, List.of(), need),
+                1, craterCause(center), List.of(), need),
                 TicketTarget.at(target).withCraterBlocks(need.values().stream().mapToInt(Integer::intValue).sum()));
+    }
+
+    /** Причина задания воронки — её клетка: засыпанная воронка уходит из живых причин. */
+    static String craterCause(BlockPos center) {
+        return "crater:" + center.getX() + ":" + center.getY() + ":" + center.getZ();
     }
 
     /** Задание воронки адресуется её клеткой: повторный взрыв той же точки — дубль, а не второе задание. */

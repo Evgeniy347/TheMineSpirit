@@ -19,7 +19,8 @@ class BoardTasksTests {
 
     private static BoardTicket ticket(String id, Map<String, Integer> required) {
         return new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.SUPPLY_SITE), 0, 6000, List.of(), required);
+                BoardRules.priorityOf(BoardCase.SUPPLY_SITE), 0, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), required);
     }
 
     @Test

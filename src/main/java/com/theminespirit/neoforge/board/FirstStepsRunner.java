@@ -4,7 +4,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.TicketTarget;
@@ -48,7 +47,7 @@ public final class FirstStepsRunner {
         }
         String id = "first:" + caseValue.name().toLowerCase(Locale.ROOT);
         service.submit(new BoardTicket(id, caseValue, Optional.empty(), BoardRules.priorityOf(caseValue), now,
-                BoardTuning.DEFAULT_TTL_TICKS, List.of(), Map.of()), TicketTarget.at(home));
+                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), TicketTarget.at(home));
     }
 
     private static boolean hasActive(BoardService service, BoardCase boardCase) {

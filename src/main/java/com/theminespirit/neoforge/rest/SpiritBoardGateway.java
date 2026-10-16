@@ -76,13 +76,13 @@ public final class SpiritBoardGateway implements BoardGateway {
         Board board = service.board();
         String id = ID_PREFIX + request.requestId();
         BoardTicket ticket = new BoardTicket(id, request.boardCase(), request.assignee(),
-                BoardRules.priorityOf(request.boardCase()), level.getGameTime(), request.ttlTicks(),
-                request.dependsOn(), request.requiredItems());
+                BoardRules.priorityOf(request.boardCase()), level.getGameTime(), request.level(),
+                request.cause(), request.dependsOn(), request.requiredItems());
         BoardOutcome outcome = service.submit(ticket);
-        if (outcome == BoardOutcome.BACKOFF || outcome == BoardOutcome.EXPIRED) {
+        if (outcome == BoardOutcome.BACKOFF) {
             throw new ApiException(ErrorCode.CONFLICT,
                     "Задание '" + id + "' не принято доской: " + outcome + " — задание с этим request_id "
-                            + "недавно провалено или просрочено, повторите с новым request_id",
+                            + "недавно провалено, повторите с новым request_id",
                     Map.of("request_id", request.requestId().toString(), "outcome", outcome.name()));
         }
         BoardTicket stored = board.find(id).orElseThrow(() -> new ApiException(ErrorCode.INTERNAL,

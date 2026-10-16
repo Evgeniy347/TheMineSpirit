@@ -145,11 +145,11 @@ public final class BoardCraterGameTests {
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
         board.submit(new BoardTicket("board_test_crater_fill", BoardCase.FILL_CRATER,
                 Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
-                level.getGameTime(), 6000, List.of(), Map.of("dirt", 9)),
+                level.getGameTime(), 1, "crater:1:1:1", List.of(), Map.of("dirt", 9)),
                 TicketTarget.at(center).withCraterBlocks(9));
         board.submit(new BoardTicket("board_test_crater_wait", BoardCase.FILL_CRATER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(), 6000, List.of(),
-                Map.of("dirt", 5000)), TicketTarget.at(center).withCraterBlocks(5000));
+                BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(), 1, "crater:2:1:1",
+                List.of(), Map.of("dirt", 5000)), TicketTarget.at(center).withCraterBlocks(5000));
         board.rebuild(level, level.getGameTime());
 
         helper.succeedWhen(() -> {

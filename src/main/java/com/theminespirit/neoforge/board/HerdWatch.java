@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.phys.Vec3;
@@ -57,8 +58,9 @@ public final class HerdWatch {
             BlockCoord target = new BlockCoord(animal.blockPosition().getX(), animal.blockPosition().getY(),
                     animal.blockPosition().getZ());
             service.submit(new BoardTicket(id, BoardCase.CAPTURE_ANIMAL, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.CAPTURE_ANIMAL), now, BoardTuning.DEFAULT_TTL_TICKS,
-                    List.of(), Map.of()), TicketTarget.at(target).withSpecies(species.orElseThrow()));
+                    BoardRules.priorityOf(BoardCase.CAPTURE_ANIMAL), now, 1,
+                    animalCause(species.orElseThrow(), animal.blockPosition()), List.of(), Map.of()),
+                    TicketTarget.at(target).withSpecies(species.orElseThrow()));
             return;
         }
     }
@@ -86,5 +88,11 @@ public final class HerdWatch {
             }
         }
         return new BlockCoord(0, 64, 0);
+    }
+
+    /** Причина задания отлова — вид и клетка животного: погибшее уходит из живых причин. */
+    static String animalCause(Species species, BlockPos pos) {
+        return "animal:" + species.name().toLowerCase(Locale.ROOT) + ":" + pos.getX() + ":"
+                + pos.getY() + ":" + pos.getZ();
     }
 }

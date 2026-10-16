@@ -20,7 +20,8 @@ class BoardBackoffTests {
 
     private static BoardTicket supply(long createdAt) {
         return new BoardTicket("supply:dirt", BoardCase.SUPPLY_SITE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.SUPPLY_SITE), createdAt, 6000, List.of(), Map.of());
+                BoardRules.priorityOf(BoardCase.SUPPLY_SITE), createdAt, 1, BoardTicket.ALWAYS_CAUSE,
+                List.of(), Map.of());
     }
 
     @Test

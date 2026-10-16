@@ -8,7 +8,6 @@ package com.theminespirit.core.board;
 public enum BoardOutcome {
     ACCEPTED,
     DUPLICATE,
-    EXPIRED,
     BACKOFF,
     CLAIMED,
     TAKEN_BY_OTHER,
