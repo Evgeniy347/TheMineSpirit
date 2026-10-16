@@ -1,5 +1,8 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.reload.DataTables;
+import java.util.Set;
+
 /**
  * Числа доски: значения по умолчанию. Источник истины для работающего мода — JSON-таблица
  * через DataTables (горячая перезагрузка /reload); здесь живут только значения, которые
@@ -30,6 +33,30 @@ public final class BoardTuning {
     /** Верхняя граница приоритета задания: приоритеты лежат в [0, MAX_PRIORITY]. */
     public static final int MAX_PRIORITY = 100;
 
+    /** Сколько контейнеров склада читается за одну пересборку доски. */
+    public static final int STOCK_READ_BUDGET = 8;
+
+    /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
+    public static final long FENCE_PATROL_INTERVAL = 1000;
+
+    /** Проверка чаровальни раз в 500 тиков (25 с). */
+    public static final long ENCHANT_CHECK_INTERVAL = 500;
+
+    /** Книг меньше — на доску задание «дополнить полки». */
+    public static final int ENCHANT_SHELVES_MIN = 4;
+
+    /** Ключи интервалов таблицы board.json: неизвестный ключ — опечатка, падает с путём файла. */
+    public static final Set<String> INTERVAL_KEYS = Set.of(
+            "boardIntervalTicks",
+            "herdScanIntervalTicks",
+            "craterTerritoryRadius",
+            "maxPending",
+            "maxActivePerSpirit",
+            "stockReadBudget",
+            "fencePatrolInterval",
+            "enchantCheckInterval",
+            "enchantShelvesMin");
+
     /**
      * Кейсы без срока жизни: ремонт и воронка живут до выполнения — просроченный ремонт
      * забора значил бы открытые ворота навсегда.
@@ -40,6 +67,65 @@ public final class BoardTuning {
                 || boardCase == BoardCase.FILL_CRATER;
     }
 
+    public static long boardIntervalTicks() {
+        return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
+    }
+
+    public static long herdScanIntervalTicks() {
+        return interval("herdScanIntervalTicks", HERD_SCAN_INTERVAL_TICKS);
+    }
+
+    public static int craterTerritoryRadius() {
+        return (int) interval("craterTerritoryRadius", CRATER_TERRITORY_RADIUS);
+    }
+
+    public static int maxPending() {
+        return (int) interval("maxPending", MAX_PENDING);
+    }
+
+    public static int maxActivePerSpirit() {
+        return (int) interval("maxActivePerSpirit", MAX_ACTIVE_PER_SPIRIT);
+    }
+
+    public static int stockReadBudget() {
+        return (int) interval("stockReadBudget", STOCK_READ_BUDGET);
+    }
+
+    public static long fencePatrolInterval() {
+        return interval("fencePatrolInterval", FENCE_PATROL_INTERVAL);
+    }
+
+    public static long enchantCheckInterval() {
+        return interval("enchantCheckInterval", ENCHANT_CHECK_INTERVAL);
+    }
+
+    public static int enchantShelvesMin() {
+        return (int) interval("enchantShelvesMin", ENCHANT_SHELVES_MIN);
+    }
+
+    /** Есть ли у кейса TTL по живой таблице: 0 в таблице — задание живёт до выполнения. */
+    public static boolean noTtlFor(BoardCase boardCase) {
+        if (boardCase == null) {
+            throw new IllegalArgumentException("Кейс не может быть null: TTL читается по имени кейса");
+        }
+        long ttl = DataTables.INSTANCE.board().current().ttl().getOrDefault(boardCase.name(),
+                hasNoTtl(boardCase) ? 0L : DEFAULT_TTL_TICKS);
+        return ttl == 0;
+    }
+
     private BoardTuning() {
+    }
+
+    private static long interval(String key, long fallback) {
+        Long value = DataTables.INSTANCE.board().current().intervals().get(key);
+        return value == null || value <= 0 ? fallback : value;
+    }
+
+    static String intervalKey(String key) {
+        if (!INTERVAL_KEYS.contains(key)) {
+            throw new IllegalArgumentException("Неизвестный ключ интервала '" + key + "': допустимы "
+                    + INTERVAL_KEYS + ", сверьтесь с BoardTuning.INTERVAL_KEYS");
+        }
+        return key;
     }
 }

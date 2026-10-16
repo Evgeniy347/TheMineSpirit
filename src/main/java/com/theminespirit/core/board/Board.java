@@ -233,7 +233,7 @@ public final class Board {
         }
         unissued.sort(Comparator.comparingLong(BoardTicket::createdAt).thenComparing(BoardTicket::id));
         int evicted = 0;
-        while (unissued.size() > BoardTuning.MAX_PENDING) {
+        while (unissued.size() > BoardTuning.maxPending()) {
             BoardTicket oldest = unissued.remove(0);
             cancel(oldest.id());
             evicted++;
@@ -249,7 +249,7 @@ public final class Board {
     }
 
     private OptionalLong expiredAt(BoardTicket ticket, long now) {
-        if (BoardTuning.hasNoTtl(ticket.boardCase())) {
+        if (BoardTuning.noTtlFor(ticket.boardCase())) {
             return OptionalLong.empty();
         }
         long deadline = ticket.createdAt() + ticket.ttlTicks();

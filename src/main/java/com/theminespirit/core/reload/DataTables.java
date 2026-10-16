@@ -1,11 +1,11 @@
 package com.theminespirit.core.reload;
 
 import com.theminespirit.core.armor.ArmorTable;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.inventory.BaseKit;
-import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.ValueTable;
@@ -48,6 +48,7 @@ public final class DataTables {
     private final TableHolder<DropTable> drops;
     private final TableHolder<BlockProtection> protection;
     private final TableHolder<PresetLibrary> presets;
+    private final TableHolder<BoardConfig> board;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -103,6 +104,9 @@ public final class DataTables {
                         index -> PresetLibrary.bodyPaths(index.json(), index.origin()),
                         PresetLibrary::parse),
                 () -> PresetLibrary.parse(loadPresetBodies()));
+        this.board = registry.registerLazy(
+                TableDefinition.single("board", BoardConfig.RESOURCE, BoardConfig::fromJson),
+                BoardConfig::readFromClasspath);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -174,6 +178,10 @@ public final class DataTables {
 
     public TableHolder<PresetLibrary> presets() {
         return presets;
+    }
+
+    public TableHolder<BoardConfig> board() {
+        return board;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */

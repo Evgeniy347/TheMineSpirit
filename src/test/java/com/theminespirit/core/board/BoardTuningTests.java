@@ -71,6 +71,20 @@ class BoardTuningTests {
                         + "сравнить задание с ремонтом");
     }
 
+    @Test
+    void liveNumbers_Match_TuningDefaults() {
+        assertEquals(100, BoardTuning.boardIntervalTicks(),
+                "Пересборка доски читается из живой таблицы: 100 тиков по умолчанию, "
+                        + "иначе /reload интервал не поменяет");
+        assertEquals(64, BoardTuning.maxPending(),
+                "Предел очереди из живой таблицы — 64: иначе датапак не сможет поднять очередь");
+        assertEquals(8, BoardTuning.stockReadBudget(),
+                "Бюджет чтения склада — 8 контейнеров за пересборку: иначе снимок запасов "
+                        + "читает склад целиком каждый интервал");
+        assertEquals(4, BoardTuning.enchantShelvesMin(),
+                "Полки дополняются при книгах меньше 4: иначе чаровальня ждёт полный ряд");
+    }
+
     @Property
     void anyNumber_Is_PositiveAndFinite(@ForAll("boardNumbers") Number number) {
         double value = number.doubleValue();
@@ -89,6 +103,10 @@ class BoardTuningTests {
                 (long) BoardTuning.CRATER_TERRITORY_RADIUS,
                 BoardTuning.HERD_SCAN_INTERVAL_TICKS,
                 (long) BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS,
-                (long) BoardTuning.MAX_PRIORITY);
+                (long) BoardTuning.MAX_PRIORITY,
+                (long) BoardTuning.STOCK_READ_BUDGET,
+                BoardTuning.FENCE_PATROL_INTERVAL,
+                BoardTuning.ENCHANT_CHECK_INTERVAL,
+                (long) BoardTuning.ENCHANT_SHELVES_MIN);
     }
 }

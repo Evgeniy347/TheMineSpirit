@@ -1,13 +1,15 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.reload.DataTables;
 import java.util.EnumMap;
 import java.util.Map;
 
 /**
  * Приоритеты кейсов — таблица данных, а не ветка в коде: порядок «важнее» читается
  * из одной строки на кейс. Источник истины для работающего мода — JSON-таблица
- * через DataTables; здесь значения по умолчанию. Кейс без строки — сирота: доска
- * не решит, что важнее, поэтому обращение падает, а не проваливается молча.
+ * через DataTables (правится датапаком и перезагружается по /reload); здесь значения
+ * по умолчанию. Кейс без строки — сирота: доска не решит, что важнее, поэтому
+ * обращение падает, а не проваливается молча.
  */
 public final class BoardRules {
     private static final Map<BoardCase, Integer> PRIORITIES = buildPriorities();
@@ -20,12 +22,16 @@ public final class BoardRules {
             throw new IllegalArgumentException(
                     "Приоритет кейса не задан: доска не решит, что важнее, без кейса");
         }
-        Integer priority = PRIORITIES.get(boardCase);
-        if (priority == null) {
-            throw new IllegalArgumentException("Приоритет кейса не задан: " + boardCase
-                    + " отсутствует в таблице приоритетов — добавьте строку в BoardRules");
+        Integer priority = DataTables.INSTANCE.board().current().priorities().get(boardCase.name());
+        if (priority != null) {
+            return priority;
         }
-        return priority;
+        Integer fallback = PRIORITIES.get(boardCase);
+        if (fallback != null) {
+            return fallback;
+        }
+        throw new IllegalArgumentException("Приоритет кейса не задан: " + boardCase
+                + " отсутствует в таблице приоритетов — добавьте строку в BoardRules");
     }
 
     private static Map<BoardCase, Integer> buildPriorities() {

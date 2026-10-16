@@ -1,0 +1,38 @@
+{
+  "priorities": {
+    "REPAIR_FENCE": 100,
+    "REPAIR_BUILDING": 90,
+    "FILL_CRATER": 80,
+    "CAPTURE_ANIMAL": 70,
+    "BUILD_PEN": 65,
+    "LURE_ANIMAL": 65,
+    "DISMANTLE_SHELTER": 65,
+    "CLEAR_GROUNDS": 50,
+    "BUILD_FENCE": 50,
+    "LIGHTING": 50,
+    "BUILD_HOUSE": 50,
+    "BUILD_MINE": 50,
+    "ENCHANT_ROOM": 50,
+    "SUPPLY_SITE": 40,
+    "CRAFT_TOOLS": 40,
+    "CRAFTING_STATION": 40,
+    "STOCK_CHESTS": 40,
+    "ENCHANT_SHELVES": 30
+  },
+  "ttl": {
+    "REPAIR_FENCE": 0,
+    "REPAIR_BUILDING": 0,
+    "FILL_CRATER": 0
+  },
+  "intervals": {
+    "boardIntervalTicks": 100,
+    "herdScanIntervalTicks": 200,
+    "craterTerritoryRadius": 64,
+    "maxPending": 64,
+    "maxActivePerSpirit": 1,
+    "stockReadBudget": 8,
+    "fencePatrolInterval": 1000,
+    "enchantCheckInterval": 500,
+    "enchantShelvesMin": 4
+  }
+}
