@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.movement;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.NightLeashGate;
 
 public final class TravelCheck {
     private TravelCheck() {
@@ -15,6 +16,6 @@ public final class TravelCheck {
         if (spirit.protectionGate().checkPortalTarget(goal) instanceof BlockProtection.Refused refused) {
             return refused.reason();
         }
-        return null;
+        return NightLeashGate.refusal(spirit, goal);
     }
 }

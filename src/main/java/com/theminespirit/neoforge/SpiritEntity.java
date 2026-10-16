@@ -28,6 +28,7 @@ import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.ArmorEquipPolicy;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
+import com.theminespirit.neoforge.policy.NightLeashGate;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import com.theminespirit.neoforge.policy.SpiritNavigation;
 import com.theminespirit.neoforge.policy.SpiritPolicies;
@@ -76,6 +77,7 @@ public final class SpiritEntity extends PathfinderMob {
     private TaskSnapshot pendingSnapshot;
     private String pendingRestoreFailure;
     private boolean child;
+    private boolean nightLeashArmed;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -87,6 +89,7 @@ public final class SpiritEntity extends PathfinderMob {
         applyPendingRestore();
         chunkLoader.tick();
         armorEquip.tick();
+        NightLeashGate.arm(this);
         policies.tick();
         if (policies.isOverriding()) {
             tactics.pause();
@@ -172,6 +175,14 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void clearHome() {
         this.home = null;
+    }
+
+    public boolean nightLeashArmed() {
+        return nightLeashArmed;
+    }
+
+    public void setNightLeashArmed(boolean armed) {
+        this.nightLeashArmed = armed;
     }
 
     public Optional<SpiritBrain> brainIfPresent() {

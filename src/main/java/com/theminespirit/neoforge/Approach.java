@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.movement.GotoTuning;
 import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.movement.StuckWatcher;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.policy.NightLeashGate;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
@@ -56,6 +58,12 @@ public final class Approach {
         if (spirit.position().distanceTo(target) <= arrival) {
             finish();
             return State.ARRIVED;
+        }
+        String night = NightLeashGate.refusal(spirit, blockCoord(target));
+        if (night != null) {
+            refusal = night;
+            finish();
+            return State.STUCK;
         }
         if (elapsed++ >= timeoutTicks) {
             finish();
@@ -132,6 +140,10 @@ public final class Approach {
 
     private Vec3 currentTarget() {
         return targetEntity == null ? targetPoint : targetEntity.position();
+    }
+
+    private static BlockCoord blockCoord(Vec3 point) {
+        return new BlockCoord((int) Math.floor(point.x), (int) Math.floor(point.y), (int) Math.floor(point.z));
     }
 
     private String deadEndRefusal(Vec3 target) {
