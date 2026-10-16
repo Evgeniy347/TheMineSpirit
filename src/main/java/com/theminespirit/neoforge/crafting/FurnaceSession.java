@@ -4,6 +4,8 @@ import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.crafting.FuelLoad;
 import com.theminespirit.core.crafting.SmeltTiming;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.experience.ExperienceAwards;
+import com.theminespirit.neoforge.experience.FurnaceExperience;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -141,8 +144,19 @@ public final class FurnaceSession {
         ItemStack remainder = spirit.getInventory().addItem(result.copy());
         furnace.setItem(SLOT_RESULT, remainder);
         collected += before - remainder.getCount();
-        return remainder.isEmpty() ? Optional.empty()
-                : Optional.of("нет места в инвентаре для продуктов: переплавлено " + collected + " из " + wanted);
+        if (!remainder.isEmpty()) {
+            return Optional.of("нет места в инвентаре для продуктов: переплавлено " + collected + " из " + wanted);
+        }
+        awardWithdrawnExperience(furnace);
+        return Optional.empty();
+    }
+
+    private void awardWithdrawnExperience(AbstractFurnaceBlockEntity furnace) {
+        MinecraftServer server = level.getServer();
+        if (server == null) {
+            return;
+        }
+        ExperienceAwards.award(server, FurnaceExperience.withdraw(furnace, level));
     }
 
     private boolean fuelExhausted(AbstractFurnaceBlockEntity furnace) {

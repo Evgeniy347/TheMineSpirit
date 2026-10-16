@@ -16,15 +16,20 @@ import static com.theminespirit.gametest.CraftTestSupport.stack;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -238,6 +243,38 @@ public final class SmeltGameTests {
                             + "сырого и слитков вместе " + total + " из 8");
             cleanup(helper, spirit);
         });
+    }
+
+    @GameTest(template = FIELD, batch = "smelt_experience", timeoutTicks = TIMEOUT)
+    public static void smelt_FourRawIronWithPlayerOnline_AwardsExperienceToPlayerWithoutOrbs(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(7, 1, 7), "xp_smelt_player");
+        player.totalExperience = 0;
+        SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 4), stack(Items.COAL, 1));
+        speedUpFurnaces(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "iron_ingot", 4);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.IRON_INGOT, 4, "слитки железа");
+            assertFurnaceEmpty(helper);
+            helper.assertTrue(player.totalExperience > 0,
+                    "опыт, накопленный печью за плавку, обязан достаться реальному игроку, а его опыт "
+                            + player.totalExperience);
+            int orbs = orbsNear(helper).size();
+            helper.assertTrue(orbs == 0,
+                    "опыт плавки уходит игроку напрямую, а не сферами на землю: на земле сфер " + orbs);
+            cleanup(helper, spirit);
+        });
+    }
+
+    private static List<ExperienceOrb> orbsNear(GameTestHelper helper) {
+        Vec3 first = helper.absoluteVec(new Vec3(-2, 0, -2));
+        Vec3 second = helper.absoluteVec(
+                new Vec3(GameTestFixtures.FLOOR_SIZE + 2, 8, GameTestFixtures.FLOOR_SIZE + 2));
+        return helper.getLevel().getEntitiesOfClass(ExperienceOrb.class, new AABB(first, second));
     }
 
     private static boolean firstIngotReady(GameTestHelper helper) {
