@@ -277,21 +277,21 @@ analyze_unit() {
 analyze_gametest() {
     local log="$1"
 
-    local failed_line=$(grep -E "FAILED|failed" "$log" | grep -i "test" | head -1)
-
+    # Провал — по строке-итогу сервера «N required tests failed :(», а не по любому «failed»:
+    # имена пачек вроде rest_events_failed содержат «failed» и давали ложный FAIL.
+    local failed_line=$(grep -E "[0-9]+ required tests failed" "$log" | tail -1)
     if [ -n "$failed_line" ]; then
-        local failed_count=$(grep -c "FAILED" "$log" 2>/dev/null || echo 0)
-        echo "FAIL gametest: упало $failed_count"
-        echo "$failed_line"
+        local failed_count=$(printf '%s' "$failed_line" | grep -oE "[0-9]+ required tests failed" | grep -oE '[0-9]+' | head -1)
+        echo "FAIL gametest: упало ${failed_count:-неизвестно}"
+        grep -A 20 "required tests failed" "$log" | sed -n '2,11p'
         echo "полный лог: $log"
         return 1
     fi
 
-    local passed_line=$(grep -E "All [0-9]+ required tests passed|required tests passed" "$log" | tail -1)
+    local passed_line=$(grep -E "All [0-9]+ required tests passed" "$log" | tail -1)
 
     if [ -n "$passed_line" ]; then
-        local count=$(printf '%s' "$passed_line" | grep -oE "All [0-9]+ required tests passed" | grep -oE '[0-9]+' | head -1)
-        [ -n "$count" ] || count=$(printf '%s' "$passed_line" | grep -oE '[0-9]+' | head -1)
+        local count=$(printf '%s' "$passed_line" | grep -oE "[0-9]+ required tests passed" | grep -oE '[0-9]+' | head -1)
         echo "OK gametest: $count тестов, $ELAPSED с"
         return 0
     fi

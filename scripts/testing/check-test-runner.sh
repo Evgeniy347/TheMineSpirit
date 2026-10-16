@@ -72,19 +72,21 @@ sleep 30
 exit 0
 FAKE
 
-# Успех gametest: строка с таймстампом, как в настоящем логе сервера — число тестов не должно
-# браться из часов таймстампа
+# Успех gametest: таймстамп (число тестов не берётся из часов) и имя пачки со словом «failed»
+# (не должно читаться как провал)
 cat >"$work/bin/gametest-success" <<'FAKE'
 #!/usr/bin/env bash
+echo "[10:18:40] [Server thread/INFO] [minecraft/GameTestRunner]: Running test batch 'rest_events_failed:0' (1 tests)..."
 echo "[10:18:43] [Server thread/INFO] [minecraft/GameTestServer]: All 42 required tests passed :)"
 exit 0
 FAKE
 
-# Падение gametest
+# Падение gametest: формат строки-итога сервера
 cat >"$work/bin/gametest-fail" <<'FAKE'
 #!/usr/bin/env bash
-echo "combat_target_spirit FAILED"
-echo "39 required tests passed, 1 failed"
+echo "[10:00:00] [Server thread/INFO] [minecraft/GameTestRunner]: Running test batch 'combat_directive:0' (1 tests)..."
+echo "[10:00:01] [Server thread/INFO] [minecraft/GameTestServer]: 1 required tests failed :("
+echo "[10:00:01] [Server thread/INFO] [minecraft/GameTestServer]:    - combatgametests.combat_target_spirit"
 exit 1
 FAKE
 
