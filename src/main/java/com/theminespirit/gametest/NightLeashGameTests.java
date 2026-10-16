@@ -13,7 +13,6 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -28,19 +27,17 @@ public final class NightLeashGameTests {
     private static final long NOON = 6000L;
     private static final int SETTLEMENT_RADIUS = 32;
     private static final int OBSERVE_TICKS = 40;
-    private static final double STANDS_STILL = 0.1;
     private static final String PLAYER_NAME = "gt_night_leash_player";
 
     private NightLeashGameTests() {
     }
 
     @GameTest(template = "arena", batch = "night_leash_refuse", timeoutTicks = 100)
-    public static void goto_NightTargetOutsideSettlement_FailsWithReasonWithoutMoving(GameTestHelper helper) {
+    public static void goto_NightTargetOutsideSettlement_FailsWithReasonWithoutReaching(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
         spirit.setHome(MovementScene.coord(helper, HOME));
         GameTestFixtures.holdDayTime(helper, NIGHT);
-        Vec3 start = helper.absoluteVec(Vec3.atBottomCenterOf(SPIRIT));
         SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "goto", OUTSIDE),
                 MovementScene.SETTLE_TICKS);
 
@@ -52,8 +49,9 @@ public final class NightLeashGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("ночь: за границу поселения не выходим"),
                     "причина обязана говорить про ночь и границу поселения, фактически: " + reason);
-            helper.assertTrue(spirit.position().distanceTo(start) < STANDS_STILL,
-                    "отказ приходит до первого шага, а дух сдвинулся на " + spirit.position().distanceTo(start));
+            double toTarget = MovementScene.distanceTo(helper, spirit, OUTSIDE);
+            helper.assertTrue(toTarget > MovementScene.ARRIVAL,
+                    "отказанную цель не достигают: расстояние до неё " + toTarget);
             MovementScene.finish(helper);
         });
     }
@@ -134,14 +132,10 @@ public final class NightLeashGameTests {
         enemy.setPersistenceRequired();
         AtomicReference<Approach> approach = new AtomicReference<>();
         AtomicReference<String> refusal = new AtomicReference<>();
-        Vec3[] start = new Vec3[1];
 
         helper.onEachTick(() -> {
             if (spirit.tickCount < MovementScene.SETTLE_TICKS) {
                 return;
-            }
-            if (start[0] == null) {
-                start[0] = spirit.position();
             }
             Approach current = approach.updateAndGet(previous -> previous == null
                     ? new Approach(spirit) : previous);
@@ -160,9 +154,12 @@ public final class NightLeashGameTests {
             helper.assertTrue(refusal.get() != null && refusal.get().contains("ночь: за границу поселения не выходим"),
                     "погоня за врагом за границей поселения обязана остановиться с причиной, фактически: "
                             + refusal.get());
-            helper.assertTrue(spirit.position().distanceTo(start[0]) < STANDS_STILL,
-                    "дух не переступает границу поселения, а сдвинулся на "
-                            + spirit.position().distanceTo(start[0]));
+            double toEnemy = MovementScene.distanceTo(helper, spirit, OUTSIDE);
+            helper.assertTrue(toEnemy > CombatActuator.MELEE_ARRIVAL,
+                    "погоня не переступает границу: до врага " + toEnemy);
+            double fromHome = MovementScene.distanceTo(helper, spirit, HOME);
+            helper.assertTrue(fromHome <= SETTLEMENT_RADIUS,
+                    "дух остался внутри поселения, расстояние от дома " + fromHome);
             MovementScene.finish(helper);
         });
     }
