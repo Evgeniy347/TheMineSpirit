@@ -328,6 +328,31 @@ class BoardTests {
     }
 
     @Test
+    void assignedTo_Returns_TicketClaimedBySpirit() {
+        Board board = boardAt(0);
+        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+        board.submit(supply);
+        board.claim("supply:dirt", SPIRIT_ONE, 0);
+
+        assertEquals(List.of(supply), board.assignedTo(SPIRIT_ONE),
+                "Задание без владельца в заявке, взятое духом, числится за ним: иначе провал "
+                        + "духа не закрыл бы добычу, и она висела бы ASSIGNED до срока");
+        assertEquals(List.of(), board.assignedTo(SPIRIT_TWO),
+                "Чужое задание не числится за вторым духом: занятость считается по держателю");
+    }
+
+    @Test
+    void assignedCounts_Counts_ClaimedTicket() {
+        Board board = boardAt(0);
+        BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+        board.submit(supply);
+        board.claim("supply:dirt", SPIRIT_ONE, 0);
+
+        assertEquals(Map.of(SPIRIT_ONE, 1), board.assignedCounts(),
+                "Держатель задания виден в счётчике занятости: по нему доска решает, свободен ли дух");
+    }
+
+    @Test
     void all_Sorted_ByPriority() {
         Board board = boardAt(0);
         BoardTicket house = ticket("house_1", BoardCase.BUILD_HOUSE, 100, 6000, List.of());

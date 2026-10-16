@@ -31,6 +31,8 @@
     "maxPending": 64,
     "maxActivePerSpirit": 1,
     "stockReadBudget": 8,
+    "stockBlockBudget": 4096,
+    "failBackoffTicks": 200,
     "fencePatrolInterval": 1000,
     "enchantCheckInterval": 500,
     "enchantShelvesMin": 4

@@ -36,6 +36,12 @@ public final class BoardTuning {
     /** Сколько контейнеров склада читается за одну пересборку доски. */
     public static final int STOCK_READ_BUDGET = 8;
 
+    /** Сколько блоков мира читает снимок запасов за одну пересборку (образец ветки 32). */
+    public static final int STOCK_BLOCK_BUDGET = 4096;
+
+    /** Проваленное задание не переиздаётся раньше этого срока: 200 тиков (10 с). */
+    public static final long FAIL_BACKOFF_TICKS = 200;
+
     /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
     public static final long FENCE_PATROL_INTERVAL = 1000;
 
@@ -53,6 +59,8 @@ public final class BoardTuning {
             "maxPending",
             "maxActivePerSpirit",
             "stockReadBudget",
+            "stockBlockBudget",
+            "failBackoffTicks",
             "fencePatrolInterval",
             "enchantCheckInterval",
             "enchantShelvesMin");
@@ -89,6 +97,14 @@ public final class BoardTuning {
 
     public static int stockReadBudget() {
         return (int) interval("stockReadBudget", STOCK_READ_BUDGET);
+    }
+
+    public static int stockBlockBudget() {
+        return (int) interval("stockBlockBudget", STOCK_BLOCK_BUDGET);
+    }
+
+    public static long failBackoffTicks() {
+        return interval("failBackoffTicks", FAIL_BACKOFF_TICKS);
     }
 
     public static long fencePatrolInterval() {

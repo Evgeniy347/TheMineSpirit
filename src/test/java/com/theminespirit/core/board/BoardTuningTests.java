@@ -85,6 +85,25 @@ class BoardTuningTests {
                 "Полки дополняются при книгах меньше 4: иначе чаровальня ждёт полный ряд");
     }
 
+    @Test
+    void stockBlockBudget_Is_BoundedSample() {
+        assertEquals(4096, BoardTuning.STOCK_BLOCK_BUDGET,
+                "Снимок запасов читает не больше 4096 блоков за пересборку (образец ветки 32): "
+                        + "без этого предела обход куба вокруг каждого духа грузил чанки на "
+                        + "главном потоке — причина 41-минутного GameTest");
+        assertEquals(4096, BoardTuning.stockBlockBudget(),
+                "Бюджет блоков читается из живой таблицы: иначе /reload не изменил бы предел обхода");
+    }
+
+    @Test
+    void failBackoff_Is_TenSeconds() {
+        assertEquals(200, BoardTuning.FAIL_BACKOFF_TICKS,
+                "Проваленное задание не переиздаётся 200 тиков (10 с): короче — доска ставила бы "
+                        + "добычу каждую пересборку, длиннее — поселение надолго замирало бы");
+        assertEquals(200, BoardTuning.failBackoffTicks(),
+                "Откат провала читается из живой таблицы: датапак правит срок без перезапуска");
+    }
+
     @Property
     void anyNumber_Is_PositiveAndFinite(@ForAll("boardNumbers") Number number) {
         double value = number.doubleValue();
@@ -105,6 +124,8 @@ class BoardTuningTests {
                 (long) BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS,
                 (long) BoardTuning.MAX_PRIORITY,
                 (long) BoardTuning.STOCK_READ_BUDGET,
+                (long) BoardTuning.STOCK_BLOCK_BUDGET,
+                BoardTuning.FAIL_BACKOFF_TICKS,
                 BoardTuning.FENCE_PATROL_INTERVAL,
                 BoardTuning.ENCHANT_CHECK_INTERVAL,
                 (long) BoardTuning.ENCHANT_SHELVES_MIN);

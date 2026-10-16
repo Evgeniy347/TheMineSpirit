@@ -27,6 +27,7 @@ public final class Board {
     private final Map<String, BoardStatus> statuses = new LinkedHashMap<>();
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
+    private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final LongSupplier nowTicks;
 
     public Board(LongSupplier nowTicks) {
@@ -45,9 +46,24 @@ public final class Board {
         if (expiredAt(ticket, now).isPresent()) {
             return BoardOutcome.EXPIRED;
         }
+        if (recentlyFailed(ticket.id(), now)) {
+            return BoardOutcome.BACKOFF;
+        }
         tickets.put(ticket.id(), ticket);
         statuses.put(ticket.id(), BoardStatus.PENDING);
         return BoardOutcome.ACCEPTED;
+    }
+
+    /**
+     * Задание с этим id провалено недавно: до {@link BoardTuning#FAIL_BACKOFF_TICKS} его не
+     * переиздают. Метка держится по id задания, а не по духу (урок ветки 32): одна метка на
+     * духа вытесняла бы провал другого задания и доска выдавала бы проваленное заново.
+     */
+    public boolean recentlyFailed(String ticketId, long now) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: откат считается по id задания");
+        requireNow(now);
+        Long failedAt = failTicks.get(ticketId);
+        return failedAt != null && now - failedAt < BoardTuning.failBackoffTicks();
     }
 
     public List<BoardTicket> claimable(StockView stock, long now) {
@@ -115,6 +131,7 @@ public final class Board {
             return false;
         }
         statuses.put(ticketId, BoardStatus.FAILED);
+        failTicks.put(ticketId, nowTicks.getAsLong());
         return true;
     }
 
@@ -164,6 +181,7 @@ public final class Board {
             statuses.remove(id);
             removed++;
         }
+        failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
         removed += evictOverflow();
         return removed;
     }
@@ -181,6 +199,47 @@ public final class Board {
         }
         pending.sort(QUEUE_ORDER);
         return List.copyOf(pending);
+    }
+
+    /**
+     * Задания, выданные доской и ещё не закрытые, где дух назван держателем: либо владельцем
+     * из заявки, либо тем, кто взял задание (claim). Одного {@code pendingFor} мало: у задания
+     * без владельца (добыча, поставленная доской) держателя видно только по выдаче, и без этого
+     * провал духа не закрывает задание — оно висит ASSIGNED до срока и блокирует духа.
+     */
+    public List<BoardTicket> assignedTo(UUID spirit) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: держатель задания — дух");
+        List<BoardTicket> held = new ArrayList<>();
+        for (BoardTicket ticket : tickets.values()) {
+            if (statuses.get(ticket.id()) == BoardStatus.ASSIGNED && holds(ticket, spirit)) {
+                held.add(ticket);
+            }
+        }
+        held.sort(QUEUE_ORDER);
+        return List.copyOf(held);
+    }
+
+    /** Число незакрытых выданных заданий на каждого духа-держателя: занятость для выдачи. */
+    public Map<UUID, Integer> assignedCounts() {
+        Map<UUID, Integer> counts = new LinkedHashMap<>();
+        for (BoardTicket ticket : tickets.values()) {
+            if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED) {
+                continue;
+            }
+            UUID holder = holder(ticket);
+            if (holder != null) {
+                counts.merge(holder, 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
+
+    private boolean holds(BoardTicket ticket, UUID spirit) {
+        return ticket.assignee().orElse(null) == spirit || spirit.equals(claimAssignees.get(ticket.id()));
+    }
+
+    private UUID holder(BoardTicket ticket) {
+        return ticket.assignee().orElseGet(() -> claimAssignees.get(ticket.id()));
     }
 
     public List<BoardTicket> all() {

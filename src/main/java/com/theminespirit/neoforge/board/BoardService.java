@@ -51,6 +51,8 @@ public final class BoardService {
     private long lastRebuild = -1;
     private int rebuilds;
     private int claims;
+    private long stockBlockReads;
+    private long stockContainers;
 
     public BoardService(Board board, AnimalLifecycle animals, StockReader stockReader) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
@@ -64,7 +66,7 @@ public final class BoardService {
         LongSupplier now = level::getGameTime;
         Board board = new Board(now);
         return new BoardService(board, new AnimalLifecycle(board, "wheat"),
-                new StockReader(BoardTuning.stockReadBudget()));
+                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()));
     }
 
     public Board board() {
@@ -77,6 +79,16 @@ public final class BoardService {
 
     public int claims() {
         return claims;
+    }
+
+    /** Блоков мира, прочитанных снимком запасов: тест масштаба держит число в бюджете. */
+    public long stockBlockReads() {
+        return stockBlockReads;
+    }
+
+    /** Контейнеров, прочитанных снимком запасов: тест масштаба держит число в бюджете. */
+    public long stockContainers() {
+        return stockContainers;
     }
 
     public void tick(ServerLevel level, long now) {
@@ -94,8 +106,9 @@ public final class BoardService {
             alive.add(ticket.id());
         }
         targets.keySet().retainAll(alive);
-        settleOwners(level);
-        issue(level, now);
+        List<SpiritEntity> spirits = census(level);
+        settleOwners(spirits);
+        issue(level, spirits, now);
         rebuilds++;
         lastRebuild = now;
     }
@@ -110,7 +123,7 @@ public final class BoardService {
 
     /** Дух погиб: его выданные задания возвращаются в очередь, брони снимаются. */
     public void releaseSpirit(SpiritEntity spirit) {
-        for (BoardTicket ticket : board.pendingFor(spirit.getUUID())) {
+        for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             board.release(ticket.id());
         }
         WorkReserveHub.releaseAll(spirit);
@@ -120,20 +133,23 @@ public final class BoardService {
         animals.captured(captureId);
     }
 
-    private void settleOwners(ServerLevel level) {
-        for (SpiritEntity spirit : census(level)) {
+    private void settleOwners(List<SpiritEntity> spirits) {
+        for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 releaseSpirit(spirit);
                 continue;
             }
-            for (BoardTicket ticket : board.pendingFor(spirit.getUUID())) {
-                switch (spirit.taskStatus().orElse(null)) {
-                    case SUCCEEDED -> settle(spirit, ticket, true);
-                    case FAILED -> settle(spirit, ticket, false);
-                    default -> {
-                    }
-                }
+            RunStatus status = spirit.taskStatus().orElse(null);
+            if (status != RunStatus.SUCCEEDED && status != RunStatus.FAILED) {
+                continue;
             }
+            List<BoardTicket> held = board.assignedTo(spirit.getUUID());
+            if (held.isEmpty()) {
+                continue;
+            }
+            // Дух исполняет одно задание за раз (MAX_ACTIVE_PER_SPIRIT): закрываем первое
+            // по очереди, а остальные — следующими пересборками.
+            settle(spirit, held.get(0), status == RunStatus.SUCCEEDED);
         }
     }
 
@@ -148,13 +164,18 @@ public final class BoardService {
                 success ? "завершил" : "провалил", ticket.id());
     }
 
-    private void issue(ServerLevel level, long now) {
-        List<SpiritEntity> spirits = census(level);
-        StockView stock = stockReader.collect(level, spirits);
+    private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
+        StockReader.Snapshot snapshot = stockReader.collect(level, spirits, gateCenters(spirits));
+        stockBlockReads += snapshot.blockReads();
+        stockContainers += snapshot.containers();
+        StockView stock = snapshot.view();
         ensureSupply(spirits, stock, now);
-        for (BoardTicket ticket : board.claimable(stock, now)) {
-            SpiritEntity spirit = chooseSpirit(ticket, spirits, level);
+        Map<UUID, Integer> held = board.assignedCounts();
+        List<BoardTicket> claimable = board.claimable(stock, now);
+        for (BoardTicket ticket : claimable) {
+            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held);
             if (spirit == null) {
+                LOGGER.debug("Задание {} ждёт свободного духа: все духи уровня заняты", ticket.id());
                 return;
             }
             TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
@@ -166,35 +187,80 @@ public final class BoardService {
                         failure.getMessage());
                 continue;
             }
-            spirit.startTask(plan);
-            if (board.claim(ticket.id(), spirit.getUUID(), now) == BoardOutcome.CLAIMED) {
+            try {
+                spirit.startTask(plan);
+            } catch (RuntimeException failure) {
+                LOGGER.error("Задание {}: дух {} не принял задание: {}", ticket.id(), spirit.displayName(),
+                        failure.getMessage());
+                continue;
+            }
+            BoardOutcome outcome = board.claim(ticket.id(), spirit.getUUID(), now);
+            if (outcome == BoardOutcome.CLAIMED) {
                 claims++;
+                held.merge(spirit.getUUID(), 1, Integer::sum);
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
+                LOGGER.info("Доска выдала задание {} (кейс {}) духу {}", ticket.id(), ticket.boardCase(),
+                        spirit.displayName());
+            } else {
+                LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
             }
         }
     }
 
-    private SpiritEntity chooseSpirit(BoardTicket ticket, List<SpiritEntity> spirits, ServerLevel level) {
+    /**
+     * Центры чтения склада — цели заданий, ждущих ресурса: склад ищется там, где идёт работа,
+     * и число мест обхода не растёт от числа духов. Если ждущих заявок нет, берём дом как
+     * последнюю опору — иначе снимок не увидел бы даже собранного духами.
+     */
+    private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
+        List<BlockCoord> centers = new ArrayList<>();
+        for (BoardTicket ticket : board.all()) {
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
+                continue;
+            }
+            if (ticket.requiredItems().isEmpty()) {
+                continue;
+            }
+            TicketTarget target = targets.get(ticket.id());
+            BlockCoord center = target != null ? target.target() : homeOf(spirits);
+            if (!centers.contains(center)) {
+                centers.add(center);
+            }
+        }
+        if (centers.isEmpty()) {
+            centers.add(homeOf(spirits));
+        }
+        return centers;
+    }
+
+    private SpiritEntity chooseSpirit(BoardTicket ticket, List<SpiritEntity> spirits, ServerLevel level,
+            Map<UUID, Integer> held) {
         if (ticket.assignee().isPresent()) {
             Entity entity = level.getEntity(ticket.assignee().orElseThrow());
-            if (entity instanceof SpiritEntity spirit && free(spirit)) {
+            if (entity instanceof SpiritEntity spirit && free(spirit, held)) {
                 return spirit;
             }
             return null;
         }
-        return nearestFree(spirits, targets.get(ticket.id()));
+        return nearestFree(spirits, targets.get(ticket.id()), held);
     }
 
-    private boolean free(SpiritEntity spirit) {
-        return spirit.taskStatus().isEmpty() && spirit.currentTaskScript().isEmpty()
-                && board.pendingFor(spirit.getUUID()).size() < BoardTuning.maxActivePerSpirit();
+    private boolean free(SpiritEntity spirit, Map<UUID, Integer> held) {
+        RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent()) {
+            return false;
+        }
+        // Занятость — только RUNNING (идиома проекта, SpiritBotGateway): SUCCEEDED/FAILED
+        // после закрытия задания духа не держат, иначе доска выдала бы духу одно задание навсегда.
+        return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit();
     }
 
-    private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target) {
+    private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held) {
         SpiritEntity best = null;
         double bestDistance = Double.MAX_VALUE;
         for (SpiritEntity spirit : spirits) {
-            if (!free(spirit)) {
+            if (!free(spirit, held)) {
                 continue;
             }
             double distance = target == null ? 0
@@ -226,7 +292,7 @@ public final class BoardService {
             String item = entry.getKey();
             int count = entry.getValue();
             String id = "supply:" + item;
-            if (board.statusOf(id).isPresent()) {
+            if (board.statusOf(id).isPresent() || board.recentlyFailed(id, now)) {
                 continue;
             }
             TicketTarget target = targets.values().stream()
@@ -239,9 +305,16 @@ public final class BoardService {
     }
 
     private boolean hasActiveSupply(String item) {
-        return board.all().stream().filter(ticket -> ticket.boardCase() == BoardCase.SUPPLY_SITE)
-                .anyMatch(supply -> supply.requiredItems().containsKey(item)
-                        && board.statusOf(supply.id()).isPresent());
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.boardCase() != BoardCase.SUPPLY_SITE || board.statusOf(ticket.id()).isEmpty()) {
+                continue;
+            }
+            TicketTarget target = targets.get(ticket.id());
+            if (target != null && item.equals(target.supplyItem())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {

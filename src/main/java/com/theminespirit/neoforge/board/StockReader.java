@@ -1,65 +1,72 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.block.Block;
 import org.slf4j.Logger;
 
 /**
- * Снимок запасов поселения для гейта доски: инвентари духов плюс контейнеры в радиусе
- * чтения. Бюджетирован: за одну пересборку читает не больше {@code containerBudget}
- * контейнеров — иначе снимок разросся бы на мире с десятками сундуков. Идентификаторы
- * предметов приводятся к короткому виду ({@code minecraft:dirt} → {@code dirt}):
+ * Снимок запасов поселения для гейта доски: инвентари духов плюс контейнеры вокруг заявок.
+ * Мир читается только через {@link StockScan}: обход бюджетирован счётчиком блоков и
+ * контейнеров, незагруженные чанки пропускаются (загрузка чанка ждёт генерации и подвесила
+ * бы серверный тик — причина 41-минутного GameTest). Центры обхода — цели заявок, а не
+ * позиции духов: снимок читает склад там, где идёт работа, и не растёт от числа духов.
+ * Идентификаторы предметов приводятся к короткому виду ({@code minecraft:dirt} → {@code dirt}):
  * гейт сравнивает с ключами {@code CraterNeed.estimate} и {@code AnimalLifecycle}.
  */
 public final class StockReader {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CONTAINER_RADIUS = 8;
+    private static final int SCAN_HEIGHT = 4;
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
     private final int containerBudget;
+    private final int blockBudget;
+    private int cursor;
 
-    public StockReader(int containerBudget) {
+    public StockReader(int containerBudget, int blockBudget) {
         if (containerBudget <= 0) {
             throw new IllegalArgumentException("containerBudget равен " + containerBudget
                     + " и не положителен: снимок без бюджета читает склад целиком за пересборку");
         }
+        if (blockBudget <= 0) {
+            throw new IllegalArgumentException("blockBudget равен " + blockBudget
+                    + " и не положителен: снимок без бюджета обходит мир целиком за пересборку");
+        }
         this.containerBudget = containerBudget;
+        this.blockBudget = blockBudget;
     }
 
-    public StockView collect(ServerLevel level, List<SpiritEntity> spirits) {
+    public Snapshot collect(ServerLevel level, List<SpiritEntity> spirits, List<BlockCoord> centers) {
         Map<String, Integer> available = new HashMap<>();
         for (SpiritEntity spirit : spirits) {
             for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
                 add(available, spirit.getInventory().getItem(slot));
             }
         }
+        StockScan.Result found = StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT,
+                blockBudget, blocks(level));
         int reads = 0;
-        Set<BlockPos> opened = new HashSet<>();
-        for (BlockPos pos : containersNear(level, spirits)) {
+        for (BlockCoord pos : found.containers()) {
             if (reads >= containerBudget) {
                 break;
             }
-            if (!opened.add(pos)) {
-                continue;
-            }
-            ContainerAccess.Open open = ContainerAccess.open(level, pos);
+            ContainerAccess.Open open = ContainerAccess.open(level, new BlockPos(pos.x(), pos.y(), pos.z()));
             if (open instanceof ContainerAccess.Opened container) {
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.map(container.container())) {
@@ -74,35 +81,45 @@ public final class StockReader {
             LOGGER.debug("Снимок запасов обрезан бюджетом {} контейнеров: остальные сундуки "
                     + "дочитаются на следующей пересборке", containerBudget);
         }
-        return new StockView(available);
+        return new Snapshot(new StockView(available), found.blockReads(), reads);
     }
 
-    private List<BlockPos> containersNear(ServerLevel level, List<SpiritEntity> spirits) {
-        Set<BlockPos> found = new HashSet<>();
-        for (SpiritEntity spirit : spirits) {
-            AABB area = new AABB(spirit.blockPosition()).inflate(CONTAINER_RADIUS);
-            int minChunkX = (int) Math.floor(area.minX) >> 4;
-            int maxChunkX = (int) Math.floor(area.maxX) >> 4;
-            int minChunkZ = (int) Math.floor(area.minZ) >> 4;
-            int maxChunkZ = (int) Math.floor(area.maxZ) >> 4;
-            for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-                for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                    LevelChunk chunk = level.getChunk(chunkX, chunkZ);
-                    for (Map.Entry<BlockPos, BlockEntity> entry : chunk
-                            .getBlockEntities().entrySet()) {
-                        BlockPos pos = entry.getKey();
-                        if (area.contains(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)
-                                && ContainerAccess.allowedBlocks().contains(entry.getValue().getBlockState()
-                                        .getBlock())) {
-                            found.add(pos.immutable());
-                        }
-                    }
-                }
+    /**
+     * Итог снимка: запасы и израсходованные бюджеты — по ним тест масштаба видит, что обход
+     * мира не растёт от числа духов и пересборок.
+     */
+    public record Snapshot(StockView view, int blockReads, int containers) {
+        public Snapshot {
+            if (blockReads < 0 || containers < 0) {
+                throw new IllegalArgumentException("Счётчики снимка не бывают отрицательными: чтений "
+                        + blockReads + ", контейнеров " + containers);
             }
         }
-        List<BlockPos> ordered = new ArrayList<>(found);
-        ordered.sort(Comparator.comparingLong(pos -> spirits.stream()
-                .mapToLong(spirit -> (long) pos.distSqr(spirit.blockPosition())).min().orElse(Long.MAX_VALUE)));
+    }
+
+    private static StockScan.Blocks blocks(ServerLevel level) {
+        Set<Block> allowed = ContainerAccess.allowedBlocks();
+        return new StockScan.Blocks() {
+            @Override
+            public boolean isLoaded(BlockCoord pos) {
+                return level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z()));
+            }
+
+            @Override
+            public boolean isContainer(BlockCoord pos) {
+                return allowed.contains(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).getBlock());
+            }
+        };
+    }
+
+    /** Крутит центры между пересборками: при жёстком бюджете разные пересборки видят разные сундуки. */
+    private List<BlockCoord> rotate(List<BlockCoord> centers) {
+        if (centers.size() <= 1) {
+            return centers;
+        }
+        List<BlockCoord> ordered = new ArrayList<>(centers);
+        Collections.rotate(ordered, -(cursor % ordered.size()));
+        cursor++;
         return ordered;
     }
 
