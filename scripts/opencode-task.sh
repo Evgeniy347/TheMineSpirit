@@ -46,6 +46,8 @@ UNFINISHED_PROMPT="Ты закончил ход на полуслове, не д
 остановился, и не заканчивай ход, пока не будет итогового отчёта: хэши коммитов, итог тестов, что не сделано."
 # Модель иногда заканчивает ход фразой «Теперь посмотрю …:» — надзор продолжает ту же сессию, не больше UNFINISHED_LIMIT раз.
 UNFINISHED_LIMIT="${OPENCODE_UNFINISHED_LIMIT:-3}"
+# Ответ короче этого при грязном дереве — не итоговый отчёт (отчёт перечисляет коммиты, тесты, несделанное).
+DIRTY_SHORT_ANSWER="${OPENCODE_DIRTY_SHORT_ANSWER:-600}"
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
 и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь сам, красный JUnit или GameTest не коммитишь; по ходу работы гоняешь только затронутое — ./gradlew test --tests <свои классы> и GameTest только после правки GameTest/адаптера, не больше одного прогона на пункт; полный ./gradlew test перед коммитом запускает хук — сам его не повторяй; полный GameTest — только в финале (3 прогона), машина общая с другими исполнителями; коммитишь сам, частями, по \
 docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом прикладываешь вывод scripts/prove-red.sh <коммит>; каждый новый тест \
@@ -324,8 +326,12 @@ while true; do
             message="$COMPACTED_PROMPT"
             ;;
         *)
+            # Короткий последний ответ при незакоммиченных правках — тоже обрыв: модель ушла посреди подлога или правки.
+            last_answer="$(print_last_answer "$attempt_log.jsonl")"
+            dirty_now="$(git -C "$REPO_DIR" status --short --untracked-files=no)"
             if [ "$code" = 0 ] && [ -n "$session" ] && [ "$unfinished" -lt "$UNFINISHED_LIMIT" ] \
-                && print_last_answer "$attempt_log.jsonl" | answer_unfinished; then
+                && { printf '%s' "$last_answer" | answer_unfinished \
+                     || { [ -n "$dirty_now" ] && [ "${#last_answer}" -lt "$DIRTY_SHORT_ANSWER" ]; }; }; then
                 unfinished=$((unfinished + 1))
                 record_failure "ответ оборван" "$(print_last_answer "$attempt_log.jsonl" | head -c 200)"
                 echo "opencode: ответ оборван на полуслове, продолжаю сессию ${session} (${unfinished}/${UNFINISHED_LIMIT})" >&2

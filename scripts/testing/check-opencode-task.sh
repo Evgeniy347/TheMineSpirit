@@ -7,6 +7,8 @@ mkdir -p "$work"
 export OPENCODE_BIN="$PWD/scripts/testing/fake-opencode.sh"
 export OPENCODE_LOG_ROOT="$PWD/$work/logs"
 export OPENCODE_ALLOW_DIRTY=1
+# Правило «короткий ответ при грязном дереве — обрыв» проверяется отдельным случаем: рабочее дерево проверки само бывает грязным.
+export OPENCODE_DIRTY_SHORT_ANSWER=0
 export OPENCODE_TASK_FILE="$PWD/$work/task.md"
 failures_log="$OPENCODE_LOG_ROOT/failures.log"
 
@@ -54,6 +56,9 @@ check dirty_tree_new_task 3 0 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_re
 task_args=(-s ses_existing)
 check dirty_tree_continue_session 0 1 OPENCODE_ALLOW_DIRTY= OPENCODE_REPO_DIR="$dirty_repo"
 task_args=()
+edited_repo="$PWD/$work/edited-repo"
+git init -q "$edited_repo" && echo v1 > "$edited_repo/a.txt" && git -C "$edited_repo" add a.txt     && git -C "$edited_repo" -c user.email=t@t -c user.name=t commit -qm init --no-verify && echo v2 > "$edited_repo/a.txt"
+check dirty_short_answer_continues 0 2 OPENCODE_REPO_DIR="$edited_repo" OPENCODE_DIRTY_SHORT_ANSWER=600 OPENCODE_UNFINISHED_LIMIT=1
 check exhausted 75 6 FAKE_FAILURES=99 OPENCODE_WAIT_LIMIT=0
 grep "перезапуск\|Остановлено" "$work/exhausted.out" | sed 's/^/  /'
 failures_after=$(wc -l < "$failures_log")
