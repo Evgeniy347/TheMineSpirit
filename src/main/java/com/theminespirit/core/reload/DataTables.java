@@ -3,6 +3,8 @@ package com.theminespirit.core.reload;
 import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.doors.DoorTuning;
+import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.inventory.BaseKit;
@@ -49,6 +51,7 @@ public final class DataTables {
     private final TableHolder<BlockProtection> protection;
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
+    private final TableHolder<DoorRules> doors;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -107,6 +110,9 @@ public final class DataTables {
         this.board = registry.registerLazy(
                 TableDefinition.single("board", BoardConfig.RESOURCE, BoardConfig::fromJson),
                 BoardConfig::readFromClasspath);
+        this.doors = registry.registerLazy(
+                TableDefinition.single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse),
+                DoorTuning::loadDefault);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -182,6 +188,10 @@ public final class DataTables {
 
     public TableHolder<BoardConfig> board() {
         return board;
+    }
+
+    public TableHolder<DoorRules> doors() {
+        return doors;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
