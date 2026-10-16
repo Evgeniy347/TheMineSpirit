@@ -40,7 +40,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.CAPTURE_ANIMAL, "capture"),
             Map.entry(BoardCase.BUILD_PEN, "build_schematic"),
             Map.entry(BoardCase.LURE_ANIMAL, "withdraw"),
-            Map.entry(BoardCase.BUILD_MINE, "dig_area"),
+            Map.entry(BoardCase.BUILD_MINE, "dig_descent"),
             Map.entry(BoardCase.SUPPLY_SITE, "acquire"),
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
@@ -250,11 +250,130 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_BuildMine_DigsDescent() {
+    void plan_MineLevelOne_DigsDescent() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_MINE, target());
 
+        assertTrue(collectScripts(plan).contains("dig_descent"),
+                "Уровень 1 шахты — спуск dig_descent: проход 1×3 вниз, версия 1");
+        ScriptCall descent = findCall(plan, "dig_descent");
+        assertEquals("south", descent.params().get("direction"),
+                "Спуск идёт в названную сторону: без направления неизвестно, куда копать тоннель");
+    }
+
+    @Test
+    void plan_MineLevelTwo_ExpandsTunnel() {
+        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_MINE, 2, target());
+
         assertTrue(collectScripts(plan).contains("dig_area"),
-                "Вход в шахту — копка спуска dig_area: версия 1, размер 3");
+                "Уровень 2 шахты — расширение тоннеля dig_area: шире и выше прохода уровня 1");
+    }
+
+    @Test
+    void plan_MineLevelThree_BuildsSteps() {
+        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_MINE, 3, target());
+
+        assertTrue(collectScripts(plan).contains("dig_area") && collectScripts(plan).contains("fill"),
+                "Уровень 3 шахты — ступеньки: выкопать уступ и заполнить ступень");
+    }
+
+    @Test
+    void plan_MineLevelFour_WaitsForRails() {
+        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_MINE, 4, target());
+
+        assertTrue(collectScripts(plan).contains("dig_area"),
+                "Уровень 4 шахты — рельсы и вагонетка: скрипта рельсов в каталоге нет, план — "
+                        + "заглушка dig_area минимальной длины до появления скрипта");
+    }
+
+    @Test
+    void plan_MineAboveMax_Throws() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TicketPlans.plan(BoardCase.BUILD_MINE, 5, target()),
+                "Уровень выше максимума обязан падать: выдача несуществующего уровня оставила бы "
+                        + "духа без настоящей работы");
+    }
+
+    @Test
+    void plan_BuildPen_LevelsUseGrowingSchemes() {
+        ScriptCall one = findCall(TicketPlans.plan(BoardCase.BUILD_PEN, 1, target()), "build_schematic");
+        ScriptCall two = findCall(TicketPlans.plan(BoardCase.BUILD_PEN, 2, target()), "build_schematic");
+        ScriptCall three = findCall(TicketPlans.plan(BoardCase.BUILD_PEN, 3, target()), "build_schematic");
+
+        assertEquals("pen_4x5", one.params().get("file"),
+                "Уровень 1 загона — схема pen_4x5: ограда в 1 блок с калиткой, минимум 4×5");
+        assertEquals("pen_7x7", two.params().get("file"),
+                "Уровень 2 загона — схема pen_7x7: загон из библиотеки пресетов");
+        assertEquals("pen_9x9", three.params().get("file"),
+                "Уровень 3 загона — схема больше 7×7: рост данными без правки кода");
+    }
+
+    @Test
+    void plan_EnchantRoom_LevelsUseGrowingSchemes() {
+        ScriptCall one = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 1, target()), "build_schematic");
+        ScriptCall two = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 2, target()), "build_schematic");
+
+        assertEquals("enchant_room", one.params().get("file"),
+                "Уровень 1 чаровальни — схема enchant_room: маленькое здание со столом по центру");
+        assertEquals("enchant_room_30", two.params().get("file"),
+                "Уровень 2 чаровальни — схема enchant_room_30: кольцо 15 полок для 30 уровня");
+    }
+
+    @Test
+    void plan_DefaultLevel_UsesFirst() {
+        TaskNode byLevel = TicketPlans.plan(BoardCase.BUILD_MINE, 1, target());
+        TaskNode byCase = TicketPlans.plan(BoardCase.BUILD_MINE, target());
+
+        assertEquals(byLevel, byCase,
+                "plan(case, target) — это plan(case, 1, target): старый вызов выдаёт первый уровень, "
+                        + "иначе адаптер и тесты разошлись бы в плане одного задания");
+    }
+
+    @Test
+    void plan_NonLeveledLevel_UsesSamePlan() {
+        assertEquals(TicketPlans.plan(BoardCase.FILL_CRATER, 1, target()),
+                TicketPlans.plan(BoardCase.FILL_CRATER, 1, target()),
+                "У кейса без уровней план не зависит от уровня: он всегда один");
+    }
+
+    @Test
+    void plan_ZeroLevel_Throws() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TicketPlans.plan(BoardCase.BUILD_MINE, 0, target()),
+                "Уровень 0 обязан падать: первая постройка ставится уровнем 1");
+    }
+
+    @Property
+    void plan_LeveledLevel_ValidByCatalog(@ForAll("levelledCases") BoardCase boardCase,
+            @ForAll("levels") int level) {
+        TaskNode plan = TicketPlans.plan(boardCase, level, fullTarget());
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+    }
+
+    @Property
+    void plan_LeveledLevel_OnlyCatalogScripts(@ForAll("levelledCases") BoardCase boardCase,
+            @ForAll("levels") int level) {
+        TaskNode plan = TicketPlans.plan(boardCase, level, fullTarget());
+        List<String> catalogScripts = CoreScripts.defaultCatalog().all().stream()
+                .map(ScriptSpec::id)
+                .toList();
+
+        for (String script : collectScripts(plan)) {
+            assertTrue(catalogScripts.contains(script),
+                    "План уровня " + level + " кейса " + boardCase + " ссылается на скрипт вне "
+                            + "каталога: " + script);
+        }
+    }
+
+    @Provide
+    Arbitrary<BoardCase> levelledCases() {
+        return Arbitraries.of(BoardCase.BUILD_MINE, BoardCase.BUILD_PEN, BoardCase.ENCHANT_ROOM,
+                BoardCase.BUILD_HOUSE);
+    }
+
+    @Provide
+    Arbitrary<Integer> levels() {
+        return Arbitraries.integers().between(1, 3);
     }
 
     @Test

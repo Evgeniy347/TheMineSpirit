@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -19,7 +20,8 @@ import java.util.function.Function;
  * добирают значения по умолчанию из {@code BoardRules}, {@code BoardPriorities} и {@code BoardTuning}.
  */
 public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
-        Map<String, Long> intervals) {
+        Map<String, Long> intervals, Map<String, Integer> levels, Map<String, Integer> herd,
+        List<String> immovable, Map<String, Integer> supplies) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -34,6 +36,23 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Objects.requireNonNull(intervals,
                 "Интервалы не могут быть null: пустую таблицу задают пустой картой, а не null");
         intervals = Map.copyOf(intervals);
+        Objects.requireNonNull(levels,
+                "Уровни не могут быть null: пустую таблицу задают пустой картой, а не null");
+        levels = Map.copyOf(levels);
+        Objects.requireNonNull(herd,
+                "Данные стада не могут быть null: пустую таблицу задают пустой картой, а не null");
+        herd = Map.copyOf(herd);
+        Objects.requireNonNull(immovable,
+                "Неподвижные постройки не могут быть null: пустой список задают пустым списком, а не null");
+        immovable = List.copyOf(immovable);
+        Objects.requireNonNull(supplies,
+                "Запасы не могут быть null: пустую таблицу задают пустой картой, а не null");
+        supplies = Map.copyOf(supplies);
+    }
+
+    public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
+            Map<String, Long> intervals) {
+        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -49,7 +68,8 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Integer> modifiers = integers(root.get("modifiers"), origin, "modifiers",
                 BoardPriorities::modifierKey, true);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
-        return new BoardConfig(priorities, modifiers, intervals);
+        Map<String, Integer> levels = integers(root.get("levels"), origin, "levels", BoardCase::valueOf, false);
+        return new BoardConfig(priorities, modifiers, intervals, levels, Map.of(), List.of(), Map.of());
     }
 
     public static BoardConfig readFromClasspath() {

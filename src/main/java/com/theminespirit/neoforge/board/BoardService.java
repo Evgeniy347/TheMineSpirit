@@ -270,7 +270,7 @@ public final class BoardService {
             TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
             TaskNode plan;
             try {
-                plan = TicketPlans.plan(ticket.boardCase(), target);
+                plan = TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
             } catch (RuntimeException failure) {
                 LOGGER.error("Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(),
                         failure.getMessage());

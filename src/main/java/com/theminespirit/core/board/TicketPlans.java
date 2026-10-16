@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -23,7 +25,6 @@ public final class TicketPlans {
     private static final String DEFAULT_LURE_ITEM = "wheat";
     private static final String DEFAULT_SUPPLY_ITEM = "dirt";
     private static final int DEFAULT_SUPPLY_COUNT = 64;
-    private static final int MINE_DESCENT_SIZE = 3;
     private static final int GROUNDS_CLEAR_RADIUS = 16;
     private static final int CRATER_FILL_RADIUS = 1;
     private static final int DISMANTLE_RADIUS = 4;
@@ -31,7 +32,10 @@ public final class TicketPlans {
     private static final int LIGHTING_OFFSET = 2;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
+    private static final String ENCHANT_ROOM_30_SCHEME = "enchant_room_30";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
+    private static final int MINE_TUNNEL_SIZE = 5;
+    private static final int MINE_STEPS_SIZE = 3;
     private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
 
@@ -46,23 +50,43 @@ public final class TicketPlans {
     }
 
     public static TaskNode plan(BoardCase boardCase, TicketTarget target) {
+        return plan(boardCase, 1, target);
+    }
+
+    public static TaskNode plan(BoardCase boardCase, int level, TicketTarget target) {
+        Objects.requireNonNull(boardCase, "Кейс плана не может быть null: без него непонятно, что строить");
+        if (level < 1) {
+            throw new IllegalArgumentException("Уровень плана " + level + " меньше 1: первая постройка "
+                    + "ставится уровнем 1, нулевого уровня не существует");
+        }
+        int max = BuildingLevels.maxLevel(boardCase);
+        if (level > max) {
+            throw new IllegalArgumentException("Уровень " + level + " кейса " + boardCase + " выше максимального "
+                    + max + ": уровень постройки не существует и выдавать его нельзя");
+        }
+        return switch (boardCase) {
+            case BUILD_MINE -> buildMineLevel(level, target);
+            case BUILD_PEN -> buildPenLevel(level, target);
+            case ENCHANT_ROOM -> enchantRoomLevel(level, target);
+            case BUILD_HOUSE -> buildHouse(target);
+            default -> legacyPlan(boardCase, target);
+        };
+    }
+
+    private static TaskNode legacyPlan(BoardCase boardCase, TicketTarget target) {
         return switch (boardCase) {
             case FILL_CRATER -> fillCrater(target);
             case REPAIR_FENCE -> repairFence(target);
             case CAPTURE_ANIMAL -> captureAnimal(target);
-            case BUILD_PEN -> buildPen(target);
             case LURE_ANIMAL -> lureAnimal(target);
-            case BUILD_MINE -> buildMine(target);
             case SUPPLY_SITE -> supplySite(target);
             case CLEAR_GROUNDS -> clearGrounds(target);
-            case BUILD_HOUSE -> buildHouse(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
             case CRAFT_TOOLS -> craft("minecraft:wooden_pickaxe", 1, target);
             case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
             case LIGHTING -> lighting(target);
-            case ENCHANT_ROOM -> sequence(gotoTarget(target), schematic(ENCHANT_ROOM_SCHEME, target));
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);
@@ -74,6 +98,44 @@ public final class TicketPlans {
                     + "без задачи — новый кейс обязан прийти со своей строкой плана "
                     + "или записью в EXTERNAL_CASES");
         };
+    }
+
+    private static TaskNode buildMineLevel(int level, TicketTarget target) {
+        return switch (level) {
+            case 1 -> new ScriptCall("dig_descent", Map.of("direction", "south",
+                    "y", DescentData.defaults().targetY()));
+            case 2 -> new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
+                    "z", target.target().z(), "size", MINE_TUNNEL_SIZE));
+            case 3 -> sequence(
+                    new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
+                            "z", target.target().z(), "size", MINE_STEPS_SIZE)),
+                    new ScriptCall("fill", Map.of("block", "minecraft:cobblestone",
+                            "x1", target.target().x() - MINE_STEPS_SIZE,
+                            "y1", target.target().y() - 1,
+                            "z1", target.target().z() - MINE_STEPS_SIZE,
+                            "x2", target.target().x() + MINE_STEPS_SIZE,
+                            "y2", target.target().y() - 1,
+                            "z2", target.target().z() + MINE_STEPS_SIZE)));
+            default -> sequence(gotoPoint(target.target()),
+                    new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
+                            "z", target.target().z(), "size", MINE_TUNNEL_SIZE)));
+        };
+    }
+
+    private static TaskNode buildPenLevel(int level, TicketTarget target) {
+        String scheme = switch (level) {
+            case 1 -> "pen_4x5";
+            case 2 -> "pen_7x7";
+            default -> "pen_9x9";
+        };
+        return sequence(gotoTarget(target), new ScriptCall("build_schematic",
+                Map.of("file", scheme, "x", target.target().x(), "y", target.target().y(),
+                        "z", target.target().z())));
+    }
+
+    private static TaskNode enchantRoomLevel(int level, TicketTarget target) {
+        String scheme = level == 1 ? ENCHANT_ROOM_SCHEME : ENCHANT_ROOM_30_SCHEME;
+        return sequence(gotoTarget(target), schematic(scheme, target));
     }
 
     private static TaskNode fillCrater(TicketTarget target) {
@@ -101,23 +163,11 @@ public final class TicketPlans {
                 "radius", CatalogLimits.CAPTURE_RADIUS_DEFAULT));
     }
 
-    private static TaskNode buildPen(TicketTarget target) {
-        String scheme = target.schemeFile() == null ? "pen" : target.schemeFile();
-        return sequence(gotoTarget(target), new ScriptCall("build_schematic",
-                Map.of("file", scheme, "x", target.target().x(), "y", target.target().y(),
-                        "z", target.target().z())));
-    }
-
     private static TaskNode lureAnimal(TicketTarget target) {
         String lure = target.lureItem() == null ? DEFAULT_LURE_ITEM : target.lureItem();
         return sequence(
                 new ScriptCall("withdraw", Map.of("container", "nearest", "item", lure, "count", 1)),
                 gotoTarget(target));
-    }
-
-    private static TaskNode buildMine(TicketTarget target) {
-        return new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
-                "z", target.target().z(), "size", MINE_DESCENT_SIZE));
     }
 
     private static TaskNode craft(String item, int count, TicketTarget target) {

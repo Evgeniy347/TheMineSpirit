@@ -43,5 +43,11 @@
     "fencePatrolInterval": 1000,
     "enchantCheckInterval": 500,
     "enchantShelvesMin": 4
+  },
+  "levels": {
+    "BUILD_MINE": 4,
+    "BUILD_PEN": 3,
+    "ENCHANT_ROOM": 4,
+    "BUILD_HOUSE": 4
   }
 }

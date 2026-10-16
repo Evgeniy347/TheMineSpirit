@@ -59,6 +59,27 @@ class BoardConfigTests {
                         + "«ниже поимки, выше загона» — из таблицы п. 3)");
     }
 
+    private static Map<String, Integer> expectedLevels() {
+        return Map.of(
+                "BUILD_MINE", 4,
+                "BUILD_PEN", 3,
+                "ENCHANT_ROOM", 4,
+                "BUILD_HOUSE", 4);
+    }
+
+    @Test
+    void defaults_FromClasspath_LevelsMatchLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(expectedLevels(), config.levels(),
+                "Таблица уровней обязана совпадать с литералами слово в слово: лишний ключ в "
+                        + "файле без теста и забытый ключ в тесте красят прогон, а молчаливое "
+                        + "расхождение изменило бы число уровней постройки");
+        assertEquals(4, config.levels().get("BUILD_MINE"),
+                "Предел в тесте, факт из production: у шахты 4 уровня (проход, расширение, "
+                        + "ступеньки, рельсы)");
+    }
+
     @Test
     void defaults_FromClasspath_ModifiersMatchLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
@@ -117,6 +138,18 @@ class BoardConfigTests {
                 "Опечатка в имени модификатора обязана падать: молча потерянная дельта "
                         + "оставила бы задание без повышения, а сирота не провалилась бы молча");
         assertTrue(failure.getMessage().contains("pen_caught_animals"),
+                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+    }
+
+    @Test
+    void fromJson_UnknownLevelKey_FailsNamingCase() {
+        String json = "{\"levels\":{\"BUILD_MINES\":4}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в имени кейса уровней обязана падать: молча потерянная строка оставила "
+                        + "бы постройку без развития, а сирота не провалилась бы молча");
+        assertTrue(failure.getMessage().contains("BUILD_MINES"),
                 "Сообщение обязано называть неверный ключ: " + failure.getMessage());
     }
 
