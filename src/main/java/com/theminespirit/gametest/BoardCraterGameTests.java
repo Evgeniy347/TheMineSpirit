@@ -107,9 +107,8 @@ public final class BoardCraterGameTests {
         helper.assertTrue(board.board().find(alienId).isEmpty(),
                 "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId
                         + " поднялось зря");
-        helper.assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) == 35,
-                "Приоритет воронки — 35 (ниже снабжения 40, ниже стройки 50): воронка — задание "
-                        + "с низким приоритетом (п. 3), фактически "
+        helper.assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) == 80,
+                "Приоритет воронки — 80 (ниже ремонта 100, выше стройки 50), фактически "
                         + BoardRules.priorityOf(BoardCase.FILL_CRATER));
         List<Point> homes = List.of(new Point(home.x(), home.z()));
         helper.assertTrue(!CraterNeed.outsideTerritory(new Point(home.x() + 4, home.z()), homes,
@@ -129,7 +128,7 @@ public final class BoardCraterGameTests {
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = FILL_TIMEOUT_TICKS)
-    public static void crater_DirtGate_FillsFlat(GameTestHelper helper) {
+    public static void crater_DirtGate_FillsFlatAndWaitsSupply(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         for (int dx = 0; dx < 3; dx++) {
@@ -138,7 +137,8 @@ public final class BoardCraterGameTests {
             }
         }
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
+        spirit.setHome(home);
         spirit.getInventory().setItem(0, new ItemStack(Items.DIRT, 16));
         ServerLevel level = helper.getLevel();
         BoardService board = BoardRegistry.get(level);
@@ -147,33 +147,6 @@ public final class BoardCraterGameTests {
                 Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
                 level.getGameTime(), 1, "crater:1:1:1", List.of(), Map.of("dirt", 9)),
                 TicketTarget.at(center).withCraterBlocks(9));
-        board.rebuild(level, level.getGameTime());
-
-        helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.getUUID()
-                            .equals(board.board().holderOf("board_test_crater_fill").orElse(null)),
-                    "Заделку держит назначенный дух: держатель "
-                            + board.board().holderOf("board_test_crater_fill").orElse(null));
-            helper.assertTrue(countHoles(helper) == 0,
-                    "С землёй воронка 3×3 заделана ровно: осталось " + countHoles(helper)
-                            + " пустот на уровне пола");
-            helper.assertTrue(board.board().statusOf("board_test_crater_fill").orElse(null)
-                            == BoardStatus.DONE,
-                    "После заделки задание закрыто как DONE, статус "
-                            + board.board().statusOf("board_test_crater_fill").orElse(null));
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = FILL_TIMEOUT_TICKS)
-    public static void crater_DirtGate_WaitsSupply(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
-        ServerLevel level = helper.getLevel();
-        BoardService board = BoardRegistry.get(level);
-        BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
         board.submit(new BoardTicket("board_test_crater_wait", BoardCase.FILL_CRATER, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(), 1, "crater:2:1:1",
                 List.of(), Map.of("dirt", 5000)), TicketTarget.at(center).withCraterBlocks(5000));
@@ -190,6 +163,17 @@ public final class BoardCraterGameTests {
                             || board.board().recentlyFailed("supply:dirt", now),
                     "При нехватке доска ставит добычу supply:dirt: без неё ждущее задание "
                             + "зависнет навсегда (добыча видна как задание, либо как свежий провал)");
+            helper.assertTrue(spirit.getUUID()
+                            .equals(board.board().holderOf("board_test_crater_fill").orElse(null)),
+                    "Заделку держит назначенный дух: держатель "
+                            + board.board().holderOf("board_test_crater_fill").orElse(null));
+            helper.assertTrue(countHoles(helper) == 0,
+                    "С землёй воронка 3×3 заделана ровно: осталось " + countHoles(helper)
+                            + " пустот на уровне пола");
+            helper.assertTrue(board.board().statusOf("board_test_crater_fill").orElse(null)
+                            == BoardStatus.DONE,
+                    "После заделки задание закрыто как DONE, статус "
+                            + board.board().statusOf("board_test_crater_fill").orElse(null));
             // Ждущее невыполнимое и его добычу снимаем с доски: иначе вечное WAITING плодит
             // supply:dirt до конца прогона и доска уводит свободных духов чужих сцен.
             board.board().cancel("board_test_crater_wait");
