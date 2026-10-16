@@ -79,6 +79,36 @@ class BoardTests {
     }
 
     @Test
+    void release_AssignedTicket_ReturnsToQueueWithoutOwner() {
+        Board board = boardAt(0);
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+
+        board.submit(build);
+        assertEquals(BoardOutcome.CLAIMED, board.claim("build_1", SPIRIT_ONE, 0),
+                "Перед проверкой возврата задание обязано быть выдано первому духу");
+        assertTrue(board.release("build_1"),
+                "Выданное задание обязано возвращаться в очередь: погибший владелец не "
+                        + "должен держать задание навсегда");
+        assertEquals(BoardOutcome.CLAIMED, board.claim("build_1", SPIRIT_TWO, 0),
+                "После возврата владелец сброшен: задание обязано быть выдано любому "
+                        + "свободному духу, а не лежать в очереди с мёртвым владельцем");
+    }
+
+    @Test
+    void release_UnassignedTicket_NotTouched() {
+        Board board = boardAt(0);
+        BoardTicket build = ticket("build_1", BoardCase.BUILD_HOUSE, 0, 6000, List.of());
+        BoardTicket waiting = ticket("supply_1", BoardCase.SUPPLY_SITE, 0, 6000, List.of());
+
+        board.submit(build);
+        board.submit(waiting);
+        assertFalse(board.release("build_1"),
+                "Задание, которое никто не брал, возвращать нечего: оно уже в очереди");
+        assertFalse(board.release("missing"),
+                "Неизвестный id возвращать нечего: доска не плодит задания из отказов");
+    }
+
+    @Test
     void claimable_UnfinishedDependency_Excluded() {
         Board board = boardAt(0);
         BoardTicket capture = ticket("capture_1", BoardCase.CAPTURE_ANIMAL, 0, 6000, List.of());

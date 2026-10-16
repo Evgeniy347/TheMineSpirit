@@ -28,6 +28,11 @@ public final class TicketPlans {
     private static final int MINE_DESCENT_SIZE = 3;
     private static final int GROUNDS_CLEAR_RADIUS = 16;
     private static final int CRATER_FILL_RADIUS = 1;
+    private static final int DISMANTLE_RADIUS = 4;
+    private static final int LIGHTING_TORCHES = 4;
+    private static final int LIGHTING_OFFSET = 2;
+    private static final String FENCE_SCHEME = "fence";
+    private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
 
     private static final ResourceKnowledge SIMPLE_KNOWLEDGE = new ResourceKnowledge() {
         @Override
@@ -76,9 +81,17 @@ public final class TicketPlans {
             case CLEAR_GROUNDS -> clearGrounds(target);
             case BUILD_HOUSE -> buildHouse(target);
             case REPAIR_BUILDING -> repairBuilding(target);
+            case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
+            case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
+            case CRAFT_TOOLS -> craft("minecraft:wooden_pickaxe", 1, target);
+            case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
+            case LIGHTING -> lighting(target);
+            case ENCHANT_ROOM -> sequence(gotoTarget(target), schematic(ENCHANT_ROOM_SCHEME, target));
+            case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
+            case DISMANTLE_SHELTER -> dismantleShelter(target);
             default -> throw new IllegalArgumentException("Кейс " + boardCase
-                    + " не имеет плана на доске: план собирается только для кейсов с точкой "
-                    + "исполнения, остальные кейсы — внутренние шаги поселения");
+                    + " не имеет плана на доске: выдача задания без плана оставила бы духа "
+                    + "без задачи — новый кейс обязан прийти со своей строкой плана");
         };
     }
 
@@ -124,6 +137,36 @@ public final class TicketPlans {
     private static TaskNode buildMine(TicketTarget target) {
         return new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
                 "z", target.target().z(), "size", MINE_DESCENT_SIZE));
+    }
+
+    private static TaskNode craft(String item, int count, TicketTarget target) {
+        return sequence(gotoTarget(target), new ScriptCall("craft",
+                Map.of("item", item, "count", count)));
+    }
+
+    private static TaskNode lighting(TicketTarget target) {
+        int[][] offsets = {{LIGHTING_OFFSET, LIGHTING_OFFSET}, {-LIGHTING_OFFSET, LIGHTING_OFFSET},
+                {LIGHTING_OFFSET, -LIGHTING_OFFSET}, {-LIGHTING_OFFSET, -LIGHTING_OFFSET}};
+        int torches = Math.min(LIGHTING_TORCHES, offsets.length);
+        List<TaskNode> steps = new ArrayList<>(torches + 1);
+        steps.add(gotoTarget(target));
+        for (int index = 0; index < torches; index++) {
+            int[] offset = offsets[index];
+            steps.add(new ScriptCall("place_block", Map.of("block", "minecraft:torch",
+                    "x", target.target().x() + offset[0], "y", target.target().y() + 1,
+                    "z", target.target().z() + offset[1])));
+        }
+        return new SequenceNode(steps);
+    }
+
+    private static TaskNode dismantleShelter(TicketTarget target) {
+        return new ScriptCall("clear_area", Map.of(
+                "x1", target.target().x() - DISMANTLE_RADIUS,
+                "y1", target.target().y(),
+                "z1", target.target().z() - DISMANTLE_RADIUS,
+                "x2", target.target().x() + DISMANTLE_RADIUS,
+                "y2", target.target().y() + 2,
+                "z2", target.target().z() + DISMANTLE_RADIUS));
     }
 
     private static TaskNode supplySite(TicketTarget target) {

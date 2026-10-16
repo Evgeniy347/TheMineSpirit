@@ -128,6 +128,22 @@ public final class Board {
         return true;
     }
 
+    /**
+     * Возврат задания в очередь после выдачи: исполнитель погиб, не завершив задание,
+     * — задание снова доступно любому свободному, а не висит навсегда. Выданное задание
+     * ({@code ASSIGNED}) возвращается в {@code PENDING} со сбросом владельца; задание в другом
+     * статусе не трогаем — вернуть в работу завершённое нельзя.
+     */
+    public boolean release(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
+        if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+            return false;
+        }
+        statuses.put(ticketId, BoardStatus.PENDING);
+        claimAssignees.remove(ticketId);
+        return true;
+    }
+
     public int prune(long now) {
         requireNow(now);
         int removed = 0;

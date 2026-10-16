@@ -33,17 +33,25 @@ import org.junit.jupiter.api.Test;
 
 class TicketPlansTests {
 
-    private static final Map<BoardCase, String> CASE_SCRIPTS = Map.of(
-            BoardCase.FILL_CRATER, "fill",
-            BoardCase.REPAIR_FENCE, "fill",
-            BoardCase.CAPTURE_ANIMAL, "capture",
-            BoardCase.BUILD_PEN, "build_schematic",
-            BoardCase.LURE_ANIMAL, "withdraw",
-            BoardCase.BUILD_MINE, "dig_area",
-            BoardCase.SUPPLY_SITE, "deliver",
-            BoardCase.CLEAR_GROUNDS, "clear_area",
-            BoardCase.BUILD_HOUSE, "build_schematic",
-            BoardCase.REPAIR_BUILDING, "build_schematic");
+    private static final Map<BoardCase, String> CASE_SCRIPTS = Map.ofEntries(
+            Map.entry(BoardCase.FILL_CRATER, "fill"),
+            Map.entry(BoardCase.REPAIR_FENCE, "fill"),
+            Map.entry(BoardCase.CAPTURE_ANIMAL, "capture"),
+            Map.entry(BoardCase.BUILD_PEN, "build_schematic"),
+            Map.entry(BoardCase.LURE_ANIMAL, "withdraw"),
+            Map.entry(BoardCase.BUILD_MINE, "dig_area"),
+            Map.entry(BoardCase.SUPPLY_SITE, "deliver"),
+            Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
+            Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
+            Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
+            Map.entry(BoardCase.STOCK_CHESTS, "craft"),
+            Map.entry(BoardCase.CRAFTING_STATION, "craft"),
+            Map.entry(BoardCase.CRAFT_TOOLS, "craft"),
+            Map.entry(BoardCase.BUILD_FENCE, "build_schematic"),
+            Map.entry(BoardCase.LIGHTING, "place_block"),
+            Map.entry(BoardCase.ENCHANT_ROOM, "build_schematic"),
+            Map.entry(BoardCase.ENCHANT_SHELVES, "craft"),
+            Map.entry(BoardCase.DISMANTLE_SHELTER, "clear_area"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -105,22 +113,51 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_UnknownCase_Rejected() {
-        List<BoardCase> unplanned = new ArrayList<>();
+    void plan_EveryCase_HasPlan() {
         for (BoardCase boardCase : BoardCase.values()) {
-            if (!CASE_SCRIPTS.containsKey(boardCase)) {
-                unplanned.add(boardCase);
-            }
-        }
+            TaskNode plan = TicketPlans.plan(boardCase, target());
 
-        for (BoardCase boardCase : unplanned) {
-            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                    () -> TicketPlans.plan(boardCase, target()),
-                    "Кейс " + boardCase + " не имеет плана на доске: молчаливый пропуск "
-                            + "выдал бы духу пустой план");
-            assertTrue(error.getMessage().contains("не имеет плана"),
-                    "Сообщение обязано называть причину: плана нет. Фактическое: " + error.getMessage());
+            assertTrue(plan != null && !collectScripts(plan).isEmpty(),
+                    "Каждый кейс обязан иметь план: кейс " + boardCase
+                            + " без плана не выдавался бы духу, а выдача без плана — задание в пустоту");
         }
+    }
+
+    @Test
+    void plan_Lighting_PlacesFourTorches() {
+        TaskNode plan = TicketPlans.plan(BoardCase.LIGHTING, target());
+        long torches = collectScripts(plan).stream().filter("place_block"::equals).count();
+
+        assertEquals(4, torches,
+                "Освещение — четыре факела по углам: один факел не освещает территорию, "
+                        + "а больше — перерасход ресурсов доски");
+    }
+
+    @Test
+    void plan_BuildFence_UsesFenceScheme() {
+        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, target());
+
+        assertTrue(collectScripts(plan).contains("build_schematic"),
+                "Забор строится схемой-кольцом fence: новый скрипт не заводим, кольцо "
+                        + "описано файлом схемы");
+    }
+
+    @Test
+    void plan_EnchantShelves_CraftsBookshelves() {
+        TaskNode plan = TicketPlans.plan(BoardCase.ENCHANT_SHELVES, target());
+
+        assertTrue(collectScripts(plan).contains("craft"),
+                "Полки достраиваются крафтом книжных полок: книги гейтят задание, "
+                        + "а план их собирает в полки");
+    }
+
+    @Test
+    void plan_DismantleShelter_ClearsShelter() {
+        TaskNode plan = TicketPlans.plan(BoardCase.DISMANTLE_SHELTER, target());
+
+        assertTrue(collectScripts(plan).contains("clear_area"),
+                "Разбор укрытия — существующий clear_area: второй разборочный скрипт "
+                        + "не заводим");
     }
 
     @Test
