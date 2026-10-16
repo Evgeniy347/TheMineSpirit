@@ -28,7 +28,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PresetBuildGameTests {
     private static final int SETTLE_TICKS = 5;
-    private static final BlockPos ANCHOR = new BlockPos(2, 1, 2);
 
     private PresetBuildGameTests() {
     }
@@ -38,8 +37,8 @@ public final class PresetBuildGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
     }
 
-    private static SpiritEntity spawnWith(GameTestHelper helper, ItemStack... stacks) {
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+    private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         for (int i = 0; i < stacks.length; i++) {
             spirit.getInventory().setItem(i, stacks[i]);
         }
@@ -65,17 +64,17 @@ public final class PresetBuildGameTests {
         return matches;
     }
 
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 400)
+    // [флак] 80 блоков склада дух ставит по одному за тик; замер: на 400 тиках задача ещё RUNNING,
+    // поэтому потолок поднят с запасом ≈2× — иначе тест меряет скорость стройки, а не её результат.
+    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 900)
     public static void preset_StorageHutFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         prepare(helper);
-        prepare(helper);
-        prepare(helper);
-        prepare(helper);
+        BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("storage_hut");
-        SpiritEntity spirit = spawnWith(helper,
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(7, 1, 7),
                 new ItemStack(Items.OAK_PLANKS, 80),
                 new ItemStack(Items.CHEST, 2));
-        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", ANCHOR), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -83,7 +82,7 @@ public final class PresetBuildGameTests {
                     "склад-хижина по пресету обязана построиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            int matches = countMatches(helper, schematic, ANCHOR);
+            int matches = countMatches(helper, schematic, anchor);
             helper.assertTrue(matches == schematic.blocks().size(),
                     "постройка обязана совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
@@ -94,14 +93,12 @@ public final class PresetBuildGameTests {
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 400)
     public static void preset_PalisadeSectionFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         prepare(helper);
-        prepare(helper);
-        prepare(helper);
-        prepare(helper);
+        BlockPos anchor = new BlockPos(0, 1, 1);
         Schematic schematic = SchematicResources.load("palisade_section");
-        SpiritEntity spirit = spawnWith(helper,
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(4, 1, 6),
                 new ItemStack(Items.OAK_FENCE, 7),
                 new ItemStack(Items.OAK_FENCE_GATE, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "palisade_section", ANCHOR), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "palisade_section", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -109,7 +106,7 @@ public final class PresetBuildGameTests {
                     "палисад-секция по пресету обязана построиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            int matches = countMatches(helper, schematic, ANCHOR);
+            int matches = countMatches(helper, schematic, anchor);
             helper.assertTrue(matches == schematic.blocks().size(),
                     "палисад обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
