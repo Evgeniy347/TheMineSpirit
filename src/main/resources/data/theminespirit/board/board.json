@@ -61,5 +61,22 @@
   },
   "immovable": [
     "BUILD_MINE"
-  ]
+  ],
+  "products": {
+    "cow": {
+      "minecraft:beef": 1,
+      "minecraft:leather": 1
+    },
+    "sheep": {
+      "minecraft:mutton": 1,
+      "minecraft:white_wool": 1
+    },
+    "pig": {
+      "minecraft:porkchop": 1
+    },
+    "chicken": {
+      "minecraft:chicken": 1,
+      "minecraft:egg": 1
+    }
+  }
 }

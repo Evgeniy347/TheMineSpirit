@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,7 +23,8 @@ import java.util.function.Function;
  */
 public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
         Map<String, Long> intervals, Map<String, Integer> levels, Map<String, Integer> herd,
-        List<String> immovable, Map<String, Integer> supplies) {
+        List<String> immovable, Map<String, Integer> supplies,
+        Map<String, Map<String, Integer>> products) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -49,11 +51,21 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Objects.requireNonNull(supplies,
                 "Запасы не могут быть null: пустую таблицу задают пустой картой, а не null");
         supplies = Map.copyOf(supplies);
+        Objects.requireNonNull(products,
+                "Продукты не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Map<String, Map<String, Integer>> checkedProducts = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<String, Integer>> entry : products.entrySet()) {
+            checkedProducts.put(entry.getKey(),
+                    Map.copyOf(Objects.requireNonNull(entry.getValue(),
+                            "Продукты вида '" + entry.getKey() + "' не могут быть null: пустую "
+                                    + "таблицу задают пустой картой")));
+        }
+        products = Map.copyOf(checkedProducts);
     }
 
     public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
             Map<String, Long> intervals) {
-        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of());
+        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of(), Map.of());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -74,7 +86,8 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
                 BoardConfig::supplyKey, false);
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
-        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies);
+        Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
+        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies, products);
     }
 
     public static BoardConfig readFromClasspath() {
@@ -168,6 +181,51 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             values.add(key);
         }
         return List.copyOf(values);
+    }
+
+    private static Map<String, Map<String, Integer>> productMap(JsonNode node, String origin, String field) {
+        Map<String, Map<String, Integer>> values = new LinkedHashMap<>();
+        if (node == null || node.isNull()) {
+            return values;
+        }
+        if (!node.isObject()) {
+            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "' — не объект: ожидается "
+                    + "карта «вид → предмет → норма на душу»");
+        }
+        Iterator<Map.Entry<String, JsonNode>> species = node.fields();
+        while (species.hasNext()) {
+            Map.Entry<String, JsonNode> entry = species.next();
+            String speciesName = entry.getKey();
+            try {
+                Species.parse(speciesName);
+            } catch (IllegalArgumentException unknown) {
+                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': вид '" + speciesName
+                        + "' неизвестен: опечатка в имени молча потеряла бы норму продуктов", unknown);
+            }
+            JsonNode items = entry.getValue();
+            if (!items.isObject()) {
+                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': у вида '" + speciesName
+                        + "' ожидается объект «предмет → норма на душу»");
+            }
+            Map<String, Integer> perCapita = new LinkedHashMap<>();
+            Iterator<Map.Entry<String, JsonNode>> productFields = items.fields();
+            while (productFields.hasNext()) {
+                Map.Entry<String, JsonNode> product = productFields.next();
+                if (product.getKey().isBlank()) {
+                    throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': у вида '"
+                            + speciesName + "' пустое имя предмета");
+                }
+                JsonNode value = product.getValue();
+                if (!value.isIntegralNumber() || value.intValue() < 0) {
+                    throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': у вида '"
+                            + speciesName + "' норма '" + product.getKey() + "' обязана быть "
+                            + "неотрицательным целым, получено " + value);
+                }
+                perCapita.put(product.getKey(), value.intValue());
+            }
+            values.put(speciesName, Map.copyOf(perCapita));
+        }
+        return Map.copyOf(values);
     }
 
     private static String supplyKey(String key) {

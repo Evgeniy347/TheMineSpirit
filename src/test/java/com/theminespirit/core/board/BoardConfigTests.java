@@ -130,6 +130,34 @@ class BoardConfigTests {
     }
 
     @Test
+    void defaults_FromClasspath_ProductsMatchLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(Map.of(
+                        "cow", Map.of("minecraft:beef", 1, "minecraft:leather", 1),
+                        "sheep", Map.of("minecraft:mutton", 1, "minecraft:white_wool", 1),
+                        "pig", Map.of("minecraft:porkchop", 1),
+                        "chicken", Map.of("minecraft:chicken", 1, "minecraft:egg", 1)),
+                config.products(),
+                "Нормы продуктов на душу обязаны совпадать с литералами: мясо/шерсть/яйца по виду. "
+                        + "Лишний ключ в файле без теста и забытый ключ в тесте красят прогон");
+        assertEquals(1, config.products().get("cow").get("minecraft:leather"),
+                "Предел в тесте, факт из production: с коровы — одна шкура на душу");
+    }
+
+    @Test
+    void fromJson_UnknownProductSpecies_FailsNamingSpecies() {
+        String json = "{\"products\":{\"cows\":{\"minecraft:beef\":1}}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в имени вида продуктов обязана падать: молча потерянная норма оставила бы "
+                        + "вид без запаса продуктов");
+        assertTrue(failure.getMessage().contains("cows"),
+                "Сообщение обязано называть неверный вид: " + failure.getMessage());
+    }
+
+    @Test
     void defaults_FromClasspath_ModifiersMatchLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
 
