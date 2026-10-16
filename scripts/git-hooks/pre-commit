@@ -19,6 +19,7 @@ unstaged="$( { git diff --name-only; git ls-files --others --exclude-standard; }
 echo "pre-commit: в коммите есть изменения в src/ или сборке — прогоняю scripts/test.sh unit (зелёный нужен до коммита)…" >&2
 
 # GIT_* из окружения хука не нужны сборке и могут увести её git-команды в чужой индекс.
+mkdir -p TestResults/logs
 env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX bash scripts/test.sh unit >"TestResults/logs/pre-commit-latest.log" 2>&1
 code=$?
 

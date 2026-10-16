@@ -28,7 +28,7 @@ check() {
     local started=$(date +%s)
     "$@" >"$work/$name.out" 2>&1
     local code=$? ran=нет verdict=OK
-    grep -q "прогоняю ./gradlew test" "$work/$name.out" && ran=да
+    grep -q "прогоняю scripts/test.sh unit" "$work/$name.out" && ran=да
     [ "$code" = "$want_code" ] && [ "$ran" = "$want_run" ] || verdict=FAIL
     echo "$verdict $name: код=$code (ожидал $want_code), прогон хука=$ran (ожидал $want_run), $(( $(date +%s) - started )) с"
 }
