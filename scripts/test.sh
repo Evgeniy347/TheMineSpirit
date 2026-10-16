@@ -290,7 +290,8 @@ analyze_gametest() {
     local passed_line=$(grep -E "All [0-9]+ required tests passed|required tests passed" "$log" | tail -1)
 
     if [ -n "$passed_line" ]; then
-        local count=$(echo "$passed_line" | grep -o '[0-9]\+' | head -1)
+        local count=$(printf '%s' "$passed_line" | grep -oE "All [0-9]+ required tests passed" | grep -oE '[0-9]+' | head -1)
+        [ -n "$count" ] || count=$(printf '%s' "$passed_line" | grep -oE '[0-9]+' | head -1)
         echo "OK gametest: $count тестов, $ELAPSED с"
         return 0
     fi
@@ -340,10 +341,12 @@ if [ "$MODE" = "unit" ]; then
     exit $?
 
 else
-    # GameTest
+    # GameTest. Фильтр идёт системным свойством Gradle: его читает build.gradle на этапе
+    # конфигурации и перекладывает в JVM игры (переменной окружения gradle-демон не увидит).
+    GAMETEST_GRADLE_ARGS=()
     if [ ${#GAMETEST_FILTERS[@]} -gt 0 ]; then
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
-        export THEMINESPIRIT_GAMETEST_FILTER="$FILTER_VALUE"
+        GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.filter=$FILTER_VALUE")
     fi
 
     if noflock; then
@@ -360,12 +363,13 @@ else
     set +e
     if noflock; then
         if command -v setsid >/dev/null 2>&1; then
-            setsid "$GRADLEW" runGameTestServer >"$LOG_FILE" 2>&1 &
+            setsid "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
         else
-            "$GRADLEW" runGameTestServer >"$LOG_FILE" 2>&1 &
+            "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
         fi
     else
-        flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c "'$GRADLEW' runGameTestServer" >"$LOG_FILE" 2>&1 &
+        flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '"$@"' bash \
+            "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"

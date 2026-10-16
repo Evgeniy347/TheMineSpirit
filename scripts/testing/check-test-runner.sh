@@ -72,10 +72,11 @@ sleep 30
 exit 0
 FAKE
 
-# Успех gametest
+# Успех gametest: строка с таймстампом, как в настоящем логе сервера — число тестов не должно
+# браться из часов таймстампа
 cat >"$work/bin/gametest-success" <<'FAKE'
 #!/usr/bin/env bash
-echo "All 42 required tests passed"
+echo "[10:18:43] [Server thread/INFO] [minecraft/GameTestServer]: All 42 required tests passed :)"
 exit 0
 FAKE
 
@@ -153,6 +154,29 @@ code=$?
 [ "$code" = 1 ] && echo "$out" | grep -q "FAIL gametest" \
     && ok "gametest-fail: код=1, FAIL" \
     || fail "gametest-fail: код=$code, вывод: $out"
+
+# Фильтр должен дойти до gradle системным свойством (build.gradle читает его через System.getProperty)
+cat >"$work/bin/args-record" <<'FAKE'
+#!/usr/bin/env bash
+printf '%s\n' "$@" >"${ARGS_FILE:?}"
+echo "All 2 required tests passed"
+exit 0
+FAKE
+chmod +x "$work/bin/args-record"
+export THEMINESPIRIT_GRADLEW="$work/bin/args-record"
+argsfile="$work/gradle-args.txt"
+out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_target_spirit 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=combat_target_spirit" "$argsfile" \
+    && grep -qx "runGameTestServer" "$argsfile" \
+    && ok "gametest-filter: имя пачки уходит в gradle системным свойством" \
+    || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
+out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_a combat_b 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=combat_a,combat_b" "$argsfile" \
+    && ok "gametest-filter: несколько фильтров через запятую" \
+    || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
 # Параллельный gametest ждёт замок: занимаем замок живым процессом
 rm -rf "$work/tmp/lock.d"

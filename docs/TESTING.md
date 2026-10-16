@@ -32,7 +32,7 @@
   дополнительно прикрыты реестром границ (`GameTestFixtures` знает, чья структура активна):
   чужой дух, моб и дроп внутри активной структуры не трогаются в любом возрасте. Production
   при этом не меняется. Сторожа — `GameTestIsolationGuardTests`, `GameTestTimeGuardTests`.
-- GameTest запускается только через `scripts/gametest.sh`: он держит замок «один сервер на машину», поэтому
+- GameTest запускается через `scripts/test.sh gametest`: он держит замок «один сервер на машину», поэтому
   работает ровно один GameTest-сервер. Прямой `./gradlew runGameTestServer` в обход блокировки запрещён —
   параллельные JVM игры душат машину и множат флаки. На Linux замок — `flock`; в Git Bash на Windows его нет,
   поэтому запасной замок берётся атомарным `mkdir` каталога `${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}.d`
@@ -41,8 +41,13 @@
   Ожидание — `THEMINESPIRIT_GAMETEST_WAIT` (по умолчанию 1800 с, опрос раз в 2 с); не дождались — те же две
   строки в stderr и код 75. Команду запуска задаёт `THEMINESPIRIT_GRADLEW` (по умолчанию `./gradlew`);
   принудительно включить запасной путь можно через `THEMINESPIRIT_GAMETEST_NOFLOCK=1`.
-- `scripts/gametest.sh` завершается с ненулевым кодом, если упал хотя бы один обязательный тест.
-- Замок `scripts/gametest.sh` проверяет `scripts/testing/check-gametest-lock.sh` на фейковом `gradlew` (без Gradle, секунды).
+  `scripts/gametest.sh` — тонкая обёртка над `scripts/test.sh gametest` (совместимость).
+- Фильтр GameTest (`scripts/test.sh gametest <имя пачки/класса/теста…>`) уходит в игру системным свойством
+  `theminespirit.gametest.filter`: `GameTestFilter` на `ServerAboutToStartEvent` выкидывает несовпавшие
+  `TestFunction` из `GameTestServer` ещё до сборки пачек. Фильтр, не совпавший ни с чем, роняет прогон
+  с ошибкой, а не зеленеет на нуле тестов.
+- `scripts/test.sh gametest` завершается с ненулевым кодом, если упал хотя бы один обязательный тест.
+- Замок проверяет `scripts/testing/check-gametest-lock.sh` на фейковом `gradlew` (без Gradle, секунды).
 - Отчёты JUnit пишутся в `TestResults/unit/`.
 
 ## Property-based тесты (jqwik)

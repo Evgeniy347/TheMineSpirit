@@ -1,105 +1,114 @@
 package com.theminespirit.gametest;
 
+import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-import net.minecraft.gametest.framework.GameTestRegistry;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestServer;
 import net.minecraft.gametest.framework.TestFunction;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @EventBusSubscriber(modid = "theminespirit", value = Dist.DEDICATED_SERVER)
-public class GameTestFilter {
+public final class GameTestFilter {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String FILTER_PROPERTY = "theminespirit.gametest.filter";
 
+    private GameTestFilter() {
+    }
+
     @SubscribeEvent
-    public static void onServerStarting(ServerStartingEvent event) {
-        String filter = System.getProperty(FILTER_PROPERTY, "");
-        if (filter.isBlank()) {
+    public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+        if (!(event.getServer() instanceof GameTestServer server)) {
             return;
         }
-
-        String[] parts = filter.split(",");
-        List<String> filters = new ArrayList<>();
-        for (String part : parts) {
-            String trimmed = part.trim();
-            if (!trimmed.isEmpty()) {
-                filters.add(trimmed);
-            }
-        }
-
+        List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         if (filters.isEmpty()) {
             return;
         }
-
         try {
-            applyFilter(filters);
-        } catch (Exception e) {
-            LOGGER.error("Failed to apply GameTest filter", e);
+            applyFilter(server, filters);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Не удалось применить фильтр GameTest " + filters, e);
         }
     }
 
-    private static void applyFilter(List<String> filters) throws Exception {
-        Field functionsField = GameTestRegistry.class.getDeclaredField("TEST_FUNCTIONS");
-        functionsField.setAccessible(true);
+    private static List<String> parseFilters(String raw) {
+        List<String> filters = new ArrayList<>();
+        for (String part : raw.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                filters.add(trimmed.toLowerCase(Locale.ROOT));
+            }
+        }
+        return filters;
+    }
+
+    private static void applyFilter(GameTestServer server, List<String> filters) throws ReflectiveOperationException {
+        Field field = GameTestServer.class.getDeclaredField("testFunctions");
+        field.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Collection<TestFunction> functions = (Collection<TestFunction>) functionsField.get(null);
+        List<TestFunction> functions = (List<TestFunction>) field.get(server);
+        Map<String, Set<String>> classTests = classToTests();
+        int before = functions.size();
+        functions.removeIf(function -> filters.stream().noneMatch(filter -> matches(function, filter, classTests)));
+        int removed = before - functions.size();
+        if (removed == before) {
+            throw new IllegalStateException("Фильтр GameTest " + filters + " не совпал ни с одной пачкой, "
+                    + "классом или тестом — проверьте имя: прогон не состоится");
+        }
+        LOGGER.info("GameTest filter {}: удалено {} тестов из {}, осталось {}", filters, removed, before, functions.size());
+    }
 
-        Field classNamesField = GameTestRegistry.class.getDeclaredField("TEST_CLASS_NAMES");
-        classNamesField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        Set<String> classNames = (Set<String>) classNamesField.get(null);
+    private static boolean matches(TestFunction function, String filter, Map<String, Set<String>> classTests) {
+        String batch = function.batchName().toLowerCase(Locale.ROOT);
+        String test = function.testName().toLowerCase(Locale.ROOT);
+        if (filter.equals(batch) || filter.equals(test)) {
+            return true;
+        }
+        int dot = filter.indexOf('.');
+        if (dot >= 0) {
+            return filter.substring(dot + 1).equals(test)
+                    && classTests.getOrDefault(filter.substring(0, dot), Set.of()).contains(test);
+        }
+        return classTests.getOrDefault(filter, Set.of()).contains(test);
+    }
 
-        Set<TestFunction> toRemove = new HashSet<>();
+    private static Map<String, Set<String>> classToTests() {
+        Map<String, Set<String>> classTests = new HashMap<>();
+        for (ModFileScanData scanData : ModList.get().getAllScanData()) {
+            scanData.getAnnotatedBy(GameTestHolder.class, ElementType.TYPE)
+                    .forEach(annotation -> collectTests(annotation.clazz().getClassName(), classTests));
+        }
+        return classTests;
+    }
 
-        for (TestFunction tf : functions) {
-            boolean keep = false;
-            for (String filter : filters) {
-                if (matches(tf, filter)) {
-                    keep = true;
-                    break;
+    private static void collectTests(String className, Map<String, Set<String>> classTests) {
+        try {
+            Class<?> testClass = Class.forName(className, false, GameTestFilter.class.getClassLoader());
+            for (Method method : testClass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(GameTest.class)) {
+                    String simpleName = testClass.getSimpleName().toLowerCase(Locale.ROOT);
+                    classTests.computeIfAbsent(simpleName, key -> new HashSet<>())
+                            .add(method.getName().toLowerCase(Locale.ROOT));
                 }
             }
-            if (!keep) {
-                toRemove.add(tf);
-            }
+        } catch (ClassNotFoundException e) {
+            LOGGER.warn("GameTest-класс {} из сканирования не загрузился для фильтра", className, e);
         }
-
-        for (TestFunction tf : toRemove) {
-            functions.remove(tf);
-        }
-
-        for (String className : classNames) {
-            boolean hasTests = functions.stream().anyMatch(tf -> tf.testName().startsWith(className + "."));
-            if (!hasTests) {
-                classNames.remove(className);
-            }
-        }
-
-        LOGGER.info("GameTest filter applied: {} tests removed, {} remaining", toRemove.size(), functions.size());
-    }
-
-    private static boolean matches(TestFunction tf, String filter) {
-        if (filter.equals(tf.batchName())) {
-            return true;
-        }
-
-        if (filter.equals(tf.testName())) {
-            return true;
-        }
-
-        if (tf.testName().startsWith(filter + ".")) {
-            return true;
-        }
-
-        return false;
     }
 }
