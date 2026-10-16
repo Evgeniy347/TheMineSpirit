@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -180,6 +181,20 @@ class AnimalLifecycleTests {
                         + "повторный penBuilt не оживляет мёртвое задание");
         assertFalse(hasActive(board, BoardCase.LURE_ANIMAL),
                 "После гибели цикла новых заданий «приманить» нет: сначала новый отлов");
+    }
+
+    @Test
+    void captured_LateClock_SubmitsPen() {
+        AtomicLong clock = new AtomicLong(100_000);
+        Board board = new Board(clock::get);
+        AnimalLifecycle lifecycle = new AnimalLifecycle(board, "wheat");
+
+        lifecycle.captured("capture_1");
+
+        assertTrue(hasActive(board, BoardCase.BUILD_PEN),
+                "Отлов ставит загон временем доски, а не нулевым createdAt: иначе через 5 минут "
+                        + "работы сервера (тик " + clock.get() + ") задание просрочено уже при постановке "
+                        + "и цикл животного молча не идёт");
     }
 
     @Test

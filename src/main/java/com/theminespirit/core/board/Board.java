@@ -38,6 +38,14 @@ public final class Board {
         this.nowTicks = nowTicks;
     }
 
+    /**
+     * Текущее время доски: источники жизненного цикла ставят задания этим временем,
+     * а не нулём — иначе через 5 минут работы сервера задание просрочено уже при постановке.
+     */
+    public long now() {
+        return nowTicks.getAsLong();
+    }
+
     public BoardOutcome submit(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, "
                 + "а не пустую заявку");

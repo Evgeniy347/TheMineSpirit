@@ -37,7 +37,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.submit(new BoardTicket(PEN_ID, BoardCase.BUILD_PEN, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_PEN), 0, BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.BUILD_PEN), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
                 List.of(), Map.of()));
         stage = Stage.CAPTURED;
     }
@@ -49,7 +49,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.submit(new BoardTicket(LURE_ID, BoardCase.LURE_ANIMAL, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.LURE_ANIMAL), 0, BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.LURE_ANIMAL), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
                 List.of(captureId), Map.of(lureItem, 1)));
         stage = Stage.PEN_BUILT;
     }
@@ -59,7 +59,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), 0, BoardTuning.DEFAULT_TTL_TICKS,
+                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), BoardTuning.DEFAULT_TTL_TICKS,
                 List.of(), Map.of()));
         stage = Stage.LURED;
     }
@@ -78,7 +78,7 @@ public final class AnimalLifecycle {
                 .forEach(ticket -> board.cancel(ticket.id()));
         if (!hasActive(BoardCase.DISMANTLE_SHELTER)) {
             board.submit(new BoardTicket(DISMANTLE_ID, BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), 0,
+                    BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(),
                     BoardTuning.DEFAULT_TTL_TICKS, List.of(), Map.of()));
         }
         stage = Stage.DISMANTLED;
