@@ -70,7 +70,7 @@ public final class PresetBuildGameTests {
         BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("storage_hut");
         SpiritEntity spirit = spawnWith(helper, new BlockPos(7, 1, 7),
-                new ItemStack(Items.OAK_PLANKS, 40),
+                new ItemStack(Items.OAK_PLANKS, 38),
                 new ItemStack(Items.CHEST, 2));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", anchor), SETTLE_TICKS);
 
