@@ -102,7 +102,7 @@ class PickupSpotTests {
     @Test
     void forDrop_WaterBesideStand_StillReturnsStand() {
         MapSafety safety = plantedBed();
-        safety.set(-3, 0, -1, Cell.WATER);
+        safety.set(1, 0, -1, Cell.WATER);
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
