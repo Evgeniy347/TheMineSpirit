@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -76,12 +77,12 @@ class BuildSquadTests {
     }
 
     @Test
-    void members_ReturnsSnapshotInEntryOrder() {
+    void members_AfterTwoJoins_SnapshotKeepsEntryOrder() {
         BuildSquad squad = new BuildSquad();
         squad.join(BETA);
         squad.join(GAMMA);
 
-        assertEquals(java.util.List.of(BETA, GAMMA), squad.members(),
+        assertEquals(List.of(BETA, GAMMA), squad.members(),
                 "Снимок участников идёт в порядке входа: по нему строится разбиение");
     }
 
