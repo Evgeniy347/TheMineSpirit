@@ -241,6 +241,7 @@ class CycleRunner:
             decision = parse_reply(reply.text)
         except ReplyError as error:
             summary.rejected += 1
+            self.brain.keep_reply_failure(reply)
             rt.log("rejected", cycle=cycle, bot=bot_id, stage="parse", reason=str(error), reply=reply.text, model=reply.model,
                    prompt_sha=prompt_sha)
             return Evaluation("retry", str(error))

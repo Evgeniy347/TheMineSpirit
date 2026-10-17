@@ -126,6 +126,20 @@ class OpencodeBrainTests(BrainTestCase):
         self.brain().complete("с", "п")
         self.assertEqual(1, len(list((self.cfg.home / "runs").glob("failed-*.err"))), "успешный вызов ничего не сохраняет")
 
+    def test_keepReplyFailure_SavesRawOutputWithSecondsForUnparsableReply(self):
+        brain = self.brain()
+        reply = brain.complete("с", "п")
+        brain.keep_reply_failure(reply)
+        runs = self.cfg.home / "runs"
+        metas = list(runs.glob("failed-*.meta"))
+        self.assertEqual(1, len(metas), "отказ разбора ответа сохраняет время ответа рядом с сырым выводом")
+        meta = json.loads(metas[0].read_text(encoding="utf-8"))
+        self.assertEqual(reply.model, meta["model"])
+        self.assertGreaterEqual(meta["seconds"], 0)
+        outs = list(runs.glob("failed-*.out"))
+        self.assertEqual(1, len(outs), "сырой stdout opencode сохранён для разбора обрыва")
+        self.assertIn('"type": "text"', outs[0].read_text(encoding="utf-8"))
+
     def test_subprocessEnv_DataHomeIsStrategyOwnDirectoryNotGlobalShare(self):
         hostile = str(self.dir / "чужие-данные")
         with mock.patch.dict(os.environ, {"XDG_DATA_HOME": hostile}):
