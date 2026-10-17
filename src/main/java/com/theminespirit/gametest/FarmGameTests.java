@@ -361,32 +361,30 @@ public final class FarmGameTests {
     }
 
     @GameTest(template = "arena", batch = "farm_till_hoe_breaks", timeoutTicks = 400)
-    public static void till_HoeBreaksAfterFirstCell_FailsNamingTilledProgress(GameTestHelper helper) {
+    public static void till_HoeOnLastUse_FailsBeforeTillingWithoutWear(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
         helper.setBlock(new BlockPos(3, FLOOR_Y, 3), Blocks.DIRT);
         helper.setBlock(new BlockPos(4, FLOOR_Y, 3), Blocks.DIRT);
         helper.setBlock(new BlockPos(5, FLOOR_Y, 3), Blocks.DIRT);
         ItemStack hoe = new ItemStack(Items.IRON_HOE);
-        hoe.setDamageValue(hoe.getMaxDamage() - 1);
+        int lastUseDamage = hoe.getMaxDamage() - 1;
+        hoe.setDamageValue(lastUseDamage);
         SpiritEntity spirit = spawnWith(helper, START, hoe);
-        AtomicReference<FarmSession> session = drive(helper, spirit, ctx -> FarmSession.till(ctx, 4, 3));
+        SpiritRun run = launch(helper, spirit, tillCall(6, 5));
 
         helper.succeedWhen(() -> {
-            FarmSession run = finished(helper, session);
-            helper.assertTrue(run.outcome() == FarmSession.Outcome.FAILED,
-                    "после поломки мотыги посреди вспашки сессия обязана завершиться провалом с понятным итогом, "
-                            + "а не молча перебирать клетки: " + run.outcome() + ", " + run.failureReason());
-            String reason = run.failureReason() == null ? "" : run.failureReason();
-            helper.assertTrue(reason.contains("мотыга сломалась"),
-                    "причина провала обязана назвать поломку мотыги, фактически: " + reason);
-            helper.assertTrue(reason.contains("вспахано 1"),
-                    "причина провала обязана назвать одну вспаханную клетку, фактически: " + reason);
-            int farmland = countBlock(helper, Blocks.FARMLAND);
-            helper.assertTrue(farmland == 1,
-                    "до поломки вспахана ровно одна клетка, фактически пашни " + farmland
-                            + "; done=" + run.done() + " из 3, тик духа " + run.totalTicks()
-                            + ", причина: " + reason);
+            run.assertStarted();
+            assertFailedWith(helper, spirit, "мотыги");
+            helper.assertTrue(run.spiritTicks() <= 2,
+                    "изношенная мотыга не тратит последний удар: отказ обязан случиться до первого действия, за 2 тика "
+                            + "духа, заняло " + run.spiritTicks());
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 0,
+                    "ни одна клетка не вспахана изношенной мотыгой, фактически пашни "
+                            + countBlock(helper, Blocks.FARMLAND));
+            helper.assertTrue(spirit.getInventory().getItem(0).getDamageValue() == lastUseDamage,
+                    "мотыга не должна изнашиваться дальше, фактический износ "
+                            + spirit.getInventory().getItem(0).getDamageValue());
             GameTestFixtures.finish(helper);
         });
     }

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
+import com.theminespirit.core.mining.ToolReserve;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -84,11 +85,18 @@ final class FarmActions {
     }
 
     private int hoeSlot() {
+        ToolReserve reserve = MiningTables.toolReserve();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);
-            if (!stack.isEmpty() && stack.is(ItemTags.HOES)) {
-                return slot;
+            if (stack.isEmpty() || !stack.is(ItemTags.HOES)) {
+                continue;
             }
+            if (stack.isDamageableItem()
+                    && reserve.spent(stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage(),
+                            stack.isEnchanted())) {
+                continue;
+            }
+            return slot;
         }
         return NO_SLOT;
     }
