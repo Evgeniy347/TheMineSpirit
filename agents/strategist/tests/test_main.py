@@ -118,6 +118,14 @@ class MainTests(unittest.TestCase):
                        "последний сбой: нет", "PAUSE"):
             self.assertIn(needle, out, f"status должен показывать «{needle}»")
 
+    def test_status_ShowsModelFromJournalNotCurrentEnvironment(self):
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], STRATEGIST_MODEL="opencode/model-a-free")
+        self.assertEqual(0, code, f"once должен пройти; stderr: {err}")
+        code, out, _ = self.run_main(["status"], STRATEGIST_MODEL="opencode/model-b-free")
+        self.assertEqual(0, code)
+        self.assertIn("модель opencode/model-a-free", out, "status показывает модель запущенного процесса из журнала")
+        self.assertNotIn("модель opencode/model-b-free", out, "модель из текущего окружения не подменяет запущенную")
+
     def test_status_WithoutHome_DoesNotCrash(self):
         code, out, _ = self.run_main(["status"], STRATEGIST_HOME=str(self.dir / "nowhere"))
         self.assertEqual(0, code)
