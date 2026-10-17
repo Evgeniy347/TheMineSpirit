@@ -111,11 +111,11 @@ class PlanValidatorRulesTests {
     void harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList() {
         PlanValidationException error = assertThrows(PlanValidationException.class,
                 () -> PlanParser.parse(
-                        "{\"type\":\"script\",\"script\":\"harvest_crop\",\"params\":{\"crop\":\"melon\"}}", CATALOG),
-                "crop=\"melon\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
+                        "{\"type\":\"script\",\"script\":\"harvest_crop\",\"params\":{\"crop\":\"rice\"}}", CATALOG),
+                "crop=\"rice\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
 
-        assertTrue(error.getMessage().contains("melon"),
-                "Отказ обязан называть неизвестный вид 'melon'. Фактическое: " + error.getMessage());
+        assertTrue(error.getMessage().contains("rice"),
+                "Отказ обязан называть неизвестный вид 'rice'. Фактическое: " + error.getMessage());
         for (String allowed : CropKind.names()) {
             assertTrue(error.getMessage().contains(allowed),
                     "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "

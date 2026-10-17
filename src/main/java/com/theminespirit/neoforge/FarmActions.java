@@ -17,6 +17,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -81,6 +82,16 @@ final class FarmActions {
         }
         BlockPlaceContext context = new BlockPlaceContext(level, null, InteractionHand.MAIN_HAND, seeds,
                 topFace(ground));
+        return placing.place(context).consumesAction();
+    }
+
+    boolean plantOnSide(BlockPos support, Direction side, CropKind kind) {
+        ItemStack seeds = firstStack(CropRegistry.plantItem(kind));
+        if (seeds.isEmpty() || !(seeds.getItem() instanceof BlockItem placing)) {
+            return false;
+        }
+        Direction facing = side.getOpposite();
+        BlockPlaceContext context = new DirectionalPlaceContext(level, support.relative(side), facing, seeds, facing);
         return placing.place(context).consumesAction();
     }
 
