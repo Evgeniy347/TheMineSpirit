@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.InventorySpace;
@@ -16,6 +18,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
@@ -56,6 +59,7 @@ public final class HarvestSession {
     private final SpiritEntity spirit;
     private final Level level;
     private final HarvestTargets targets;
+    private final WorkKind kind;
     private final String label;
     private final int count;
     private final int radius;
@@ -79,6 +83,7 @@ public final class HarvestSession {
     private boolean depositMandatory;
     private boolean depositFreed;
     private String depositBlockedItem;
+    private WorkTarget reserved;
 
     private int mined;
     private int unsafe;
@@ -92,11 +97,12 @@ public final class HarvestSession {
     private int ticks;
     private int entityQueries;
 
-    private HarvestSession(SpiritEntity spirit, HarvestTargets targets, String label, int count, int radius,
-            boolean skipWithoutTool, boolean vein) {
+    private HarvestSession(SpiritEntity spirit, HarvestTargets targets, WorkKind kind, String label, int count,
+            int radius, boolean skipWithoutTool, boolean vein) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.targets = targets;
+        this.kind = kind;
         this.label = label;
         this.count = count;
         this.radius = radius;
@@ -110,12 +116,12 @@ public final class HarvestSession {
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
         return new HarvestSession(spirit, new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
-                ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true);
+                WorkKind.VEIN, ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true);
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
         return new HarvestSession(spirit, new GatherTargets(spirit.level(), spirit.blockPosition(), radius,
-                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block), false);
+                IdFilter.of(List.of(block))), WorkKind.GATHER, block, count, radius, IdFilter.isPattern(block), false);
     }
 
     public Outcome tick() {
@@ -146,6 +152,7 @@ public final class HarvestSession {
     }
 
     public void cancel() {
+        releaseReserved();
         breaker.cancel();
         approach.cancel();
         if (collector != null) {
@@ -374,7 +381,23 @@ public final class HarvestSession {
                 return;
             }
         }
+        WorkTarget target = new WorkTarget(kind, currentTarget);
+        if (!WorkReserveHub.reserve(spirit, target)) {
+            breaker.cancel();
+            currentTarget = null;
+            currentStand = null;
+            state = State.PICK;
+            return;
+        }
+        reserved = target;
         state = State.BREAK;
+    }
+
+    private void releaseReserved() {
+        if (reserved != null) {
+            WorkReserveHub.release(spirit, reserved);
+            reserved = null;
+        }
     }
 
     private void startDeposit(List<Stack> incoming, boolean mandatory) {
@@ -431,6 +454,7 @@ public final class HarvestSession {
             case BREAKING -> {
             }
             case BROKEN -> {
+                releaseReserved();
                 mined++;
                 watchdog.progress();
                 collectRuns++;
@@ -440,6 +464,7 @@ public final class HarvestSession {
                 state = State.COLLECT;
             }
             case GONE -> {
+                releaseReserved();
                 currentTarget = null;
                 currentStand = null;
                 state = State.PICK;

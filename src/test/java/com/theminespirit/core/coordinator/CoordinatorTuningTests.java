@@ -32,12 +32,6 @@ class CoordinatorTuningTests {
     }
 
     @Test
-    void crowdPenalty_DeclaredValue_MatchesTuningLiteral() {
-        assertEquals(8.0, CoordinatorTuning.CROWD_PENALTY,
-                "Штраф за толпу 8 блоков на духа: мягко разводит духов по целям, не запрещая работу вдвоём");
-    }
-
-    @Test
     void maxAssist_DeclaredValue_MatchesTuningLiteral() {
         assertEquals(2, CoordinatorTuning.MAX_ASSIST,
                 "Не больше двух помощников: больше — сектора пустеют, меньше — защитники гибнут");
@@ -69,8 +63,6 @@ class CoordinatorTuningTests {
         assertTrue(CoordinatorTuning.DEFENSE_POST_RADIUS > 0 && Double.isFinite(CoordinatorTuning.DEFENSE_POST_RADIUS),
                 "Радиус поста положителен и конечен");
         assertTrue(CoordinatorTuning.WORK_LEASE_TICKS > 0, "Срок брони положителен");
-        assertTrue(CoordinatorTuning.CROWD_PENALTY > 0 && Double.isFinite(CoordinatorTuning.CROWD_PENALTY),
-                "Штраф за толпу положителен и конечен");
         assertTrue(CoordinatorTuning.MAX_ASSIST > 0, "Предел помощников положителен");
         assertTrue(CoordinatorTuning.SNAPSHOT_STALE_TICKS > 0, "Просроченность снимка положительна");
         assertTrue(CoordinatorTuning.SNAPSHOT_GROUP_QUERIES > 0, "Перечисление поселения делает запросы");

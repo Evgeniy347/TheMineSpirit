@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -15,6 +17,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +55,8 @@ public final class ChopTreeScript implements ScriptInstance {
     private int unreachable;
     private int consecutiveUnreachable;
     private String failureReason;
+    private WorkTarget reserved;
+    private Tree crowded;
 
     public ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
         this.spirit = spirit;
@@ -80,6 +85,7 @@ public final class ChopTreeScript implements ScriptInstance {
     @Override
     public void cancel() {
         chop.cancel();
+        releaseReserved();
     }
 
     @Override
@@ -175,7 +181,10 @@ public final class ChopTreeScript implements ScriptInstance {
         locate();
         Optional<BlockCoord> start = candidates.nearest(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
         if (start.isEmpty()) {
-            return search.done() ? outOfTrees() : ScriptStatus.RUNNING;
+            if (!search.done()) {
+                return ScriptStatus.RUNNING;
+            }
+            return crowdOrOutOfTrees();
         }
         if (!treeView.isLog(start.get())) {
             candidates.markKnown(List.of(start.get()));
@@ -185,7 +194,34 @@ public final class ChopTreeScript implements ScriptInstance {
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
         }
-        return startChop((Tree) detection);
+        Tree found = (Tree) detection;
+        WorkTarget target = new WorkTarget(WorkKind.TREE, found.base());
+        if (!target.equals(reserved)) {
+            releaseReserved();
+            if (!WorkReserveHub.reserve(spirit, target)) {
+                crowded = found;
+                candidates.markKnown(found.logs());
+                return ScriptStatus.RUNNING;
+            }
+            reserved = target;
+        }
+        return startChop(found);
+    }
+
+    private ScriptStatus crowdOrOutOfTrees() {
+        if (crowded != null) {
+            Tree deferred = crowded;
+            crowded = null;
+            return startChop(deferred);
+        }
+        return outOfTrees();
+    }
+
+    private void releaseReserved() {
+        if (reserved != null) {
+            WorkReserveHub.release(spirit, reserved);
+            reserved = null;
+        }
     }
 
     private void locate() {
@@ -221,6 +257,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus finishTree(TreeChop.Outcome outcome) {
+        releaseReserved();
         chopped++;
         standingLogs += outcome.standingLogs();
         plantedSaplings += outcome.plantedSaplings();
@@ -238,6 +275,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus protectedTree() {
+        releaseReserved();
         protectedLogs++;
         candidates.markKnown(tree.logs());
         tree = null;
@@ -246,6 +284,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus unreachableTree() {
+        releaseReserved();
         unreachable++;
         consecutiveUnreachable++;
         candidates.markKnown(tree.logs());
