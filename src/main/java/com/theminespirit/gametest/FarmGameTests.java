@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
@@ -50,6 +51,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -84,6 +86,9 @@ public final class FarmGameTests {
     private static final String BAMBOO_BATCH = "farm_column_bamboo";
     private static final String CACTUS_BATCH = "farm_column_cactus";
     private static final String SINGLE_COLUMN_BATCH = "farm_column_single";
+    private static final String MELON_BATCH = "farm_fruit_melon";
+    private static final String PUMPKIN_BATCH = "farm_fruit_pumpkin";
+    private static final String COCOA_BATCH = "farm_cocoa";
 
     @BeforeBatch(batch = BERRY_HARVEST_BATCH)
     public static void stopSettlementForBerryHarvest(ServerLevel level) {
@@ -142,6 +147,36 @@ public final class FarmGameTests {
 
     @AfterBatch(batch = SINGLE_COLUMN_BATCH)
     public static void restoreSettlementForSingleColumn(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = MELON_BATCH)
+    public static void stopSettlementForMelon(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = MELON_BATCH)
+    public static void restoreSettlementForMelon(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = PUMPKIN_BATCH)
+    public static void stopSettlementForPumpkin(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = PUMPKIN_BATCH)
+    public static void restoreSettlementForPumpkin(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = COCOA_BATCH)
+    public static void stopSettlementForCocoa(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = COCOA_BATCH)
+    public static void restoreSettlementForCocoa(ServerLevel level) {
         settlementSystems(true);
     }
 
@@ -1205,6 +1240,78 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = MELON_BATCH, timeoutTicks = 300)
+    public static void harvestCrop_MelonStemWithFruit_BreaksFruitKeepsStemAndFarmland(GameTestHelper helper) {
+        fruitHarvest(helper, CropKind.MELON, Blocks.MELON_STEM, Blocks.MELON, Items.MELON_SLICE, 3,
+                "плод арбуза даёт 3–7 ломтиков");
+    }
+
+    @GameTest(template = "arena", batch = PUMPKIN_BATCH, timeoutTicks = 300)
+    public static void harvestCrop_PumpkinStemWithFruit_BreaksFruitKeepsStemAndFarmland(GameTestHelper helper) {
+        fruitHarvest(helper, CropKind.PUMPKIN, Blocks.PUMPKIN_STEM, Blocks.PUMPKIN, Items.PUMPKIN, 1,
+                "плод тыквы даёт одну тыкву");
+    }
+
+    private static void fruitHarvest(GameTestHelper helper, CropKind kind, Block stemBlock, Block fruitBlock,
+            Item produce, int minProduce, String produceNote) {
+        arenaFloor(helper);
+        BlockPos ground = new BlockPos(4, FLOOR_Y, 4);
+        setCrop(helper, ground, kind, kind.maxAge());
+        BlockPos fruit = new BlockPos(5, FLOOR_Y + 1, 4);
+        helper.setBlock(fruit, fruitBlock);
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(kind, false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "зрелый стебель " + kind + " с плодом обязан собрать плод");
+            helper.assertTrue(helper.getBlockState(ground.above()).is(stemBlock),
+                    "стебель " + kind + " обязан остаться целым, а там "
+                            + helper.getBlockState(ground.above()).getBlock());
+            helper.assertTrue(helper.getBlockState(ground).is(Blocks.FARMLAND),
+                    "пашня под стеблем " + kind + " обязана остаться, а там " + helper.getBlockState(ground).getBlock());
+            helper.assertTrue(helper.getBlockState(fruit).isAir(),
+                    "плод " + kind + " обязан быть собран, а там " + helper.getBlockState(fruit).getBlock());
+            int collected = GameTestFixtures.countInInventory(spirit.getInventory(), produce);
+            helper.assertTrue(collected >= minProduce,
+                    produceNote + ", фактически " + collected);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = COCOA_BATCH, timeoutTicks = 300)
+    public static void harvestCrop_CocoaOnJungleLog_CollectsAndReplantsOnSameSide(GameTestHelper helper) {
+        arenaFloor(helper);
+        BlockPos log = new BlockPos(4, FLOOR_Y + 1, 4);
+        helper.setBlock(log, Blocks.JUNGLE_LOG);
+        BlockPos cocoa = new BlockPos(5, FLOOR_Y + 1, 4);
+        helper.setBlock(cocoa, Blocks.COCOA.defaultBlockState()
+                .setValue(CocoaBlock.AGE, CropKind.COCOA.maxAge())
+                .setValue(CocoaBlock.FACING, Direction.WEST));
+        helper.setBlock(new BlockPos(4, FLOOR_Y + 1, 3), Blocks.STONE);
+        helper.setBlock(new BlockPos(4, FLOOR_Y + 1, 5), Blocks.STONE);
+        helper.setBlock(new BlockPos(3, FLOOR_Y + 1, 4), Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.COCOA_BEANS, 1));
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.COCOA, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "спелое какао обязано собраться и пересадиться на тот же бок");
+            helper.assertTrue(helper.getBlockState(log).is(Blocks.JUNGLE_LOG),
+                    "ствол джунглей обязан остаться, а там " + helper.getBlockState(log).getBlock());
+            helper.assertTrue(helper.getBlockState(cocoa).is(Blocks.COCOA),
+                    "какао обязано быть пересажено на тот же бок ствола, а там "
+                            + helper.getBlockState(cocoa).getBlock());
+            helper.assertTrue(blockAge(helper, cocoa) <= 1,
+                    "пересаженный боб моложе спелого: возраст " + blockAge(helper, cocoa)
+                            + ", а исходное спелое какао было возраста " + CropKind.COCOA.maxAge());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COCOA_BEANS) >= 1,
+                    "собранные бобы минус один пересаженный обязаны остаться в инвентаре, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COCOA_BEANS));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     private static void columnHarvest(GameTestHelper helper, CropKind kind, Block columnBlock, Block groundBlock) {
         arenaFloor(helper);
         List<BlockPos> bases = List.of(new BlockPos(3, FLOOR_Y, 3), new BlockPos(5, FLOOR_Y, 5));
@@ -1464,9 +1571,13 @@ public final class FarmGameTests {
     }
 
     private static int cropAge(GameTestHelper helper, BlockPos ground) {
-        BlockState state = helper.getBlockState(ground.above());
+        return blockAge(helper, ground.above());
+    }
+
+    private static int blockAge(GameTestHelper helper, BlockPos pos) {
+        BlockState state = helper.getBlockState(pos);
         Property<?> age = state.getBlock().getStateDefinition().getProperty("age");
-        helper.assertTrue(age instanceof IntegerProperty, "над клеткой " + ground + " обязан расти посев, а там "
+        helper.assertTrue(age instanceof IntegerProperty, "в " + pos + " обязан быть блок с возрастом, а там "
                 + state.getBlock());
         return state.getValue((IntegerProperty) age);
     }
@@ -1529,7 +1640,7 @@ public final class FarmGameTests {
                 Above.BLOCKED));
         table.add(plain("грязь, камень", Blocks.DIRT, Blocks.STONE, Ground.DIRT, Above.BLOCKED));
         table.add(plain("грязь, вода", Blocks.DIRT, Blocks.WATER, Ground.DIRT, Above.BLOCKED));
-        table.add(plain("пашня, стебель арбуза (чужой посев)", Blocks.FARMLAND, Blocks.MELON_STEM, Ground.FARMLAND,
+        table.add(plain("пашня, плод арбуза (не посев)", Blocks.FARMLAND, Blocks.MELON, Ground.FARMLAND,
                 Above.BLOCKED));
         for (int age = 0; age <= 7; age++) {
             table.add(crop(CropKind.WHEAT, age));

@@ -23,7 +23,10 @@ class CropKindTests {
                         "sweet_berries"),
                 Arguments.of(CropKind.parse("sugar_cane"), "minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane"),
                 Arguments.of(CropKind.parse("bamboo"), "minecraft:bamboo", 1, "bamboo", "bamboo"),
-                Arguments.of(CropKind.parse("cactus"), "minecraft:cactus", 15, "cactus", "cactus"));
+                Arguments.of(CropKind.parse("cactus"), "minecraft:cactus", 15, "cactus", "cactus"),
+                Arguments.of(CropKind.parse("melon"), "minecraft:melon_stem", 7, "melon_seeds", "melon_slice"),
+                Arguments.of(CropKind.parse("pumpkin"), "minecraft:pumpkin_stem", 7, "pumpkin_seeds", "pumpkin"),
+                Arguments.of(CropKind.parse("cocoa"), "minecraft:cocoa", 2, "cocoa_beans", "cocoa_beans"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -45,7 +48,7 @@ class CropKindTests {
     void names_AllKinds_AreLowercaseInDeclarationOrder() {
         assertEquals(
                 List.of("any", "wheat", "carrot", "potato", "beetroot", "sweet_berry_bush", "sugar_cane", "bamboo",
-                        "cactus"),
+                        "cactus", "melon", "pumpkin", "cocoa"),
                 CropKind.names(),
                 "Список значений для каталога обязан идти в порядке объявления и нижним регистром: "
                         + "по нему валидатор плана показывает допустимые виды культур ИИ");
@@ -55,7 +58,7 @@ class CropKindTests {
     void plantableNames_AnyKind_IsExcluded() {
         assertEquals(
                 List.of("wheat", "carrot", "potato", "beetroot", "sweet_berry_bush", "sugar_cane", "bamboo",
-                        "cactus"),
+                        "cactus", "melon", "pumpkin", "cocoa"),
                 CropKind.plantableNames(),
                 "plant_crop требует конкретный вид: any в списке позволил бы план «посади что-нибудь», "
                         + "а дух не знает, какие семена тратить");
@@ -75,11 +78,11 @@ class CropKindTests {
 
     @Test
     void parse_UnknownKind_ThrowsWithAllowedList() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> CropKind.parse("melon"),
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> CropKind.parse("rice"),
                 "Неизвестный вид культуры обязан отвергаться: иначе скрипт ищет посевы, которых не знает, "
                         + "и молча завершается без работы");
 
-        assertTrue(error.getMessage().contains("melon"),
+        assertTrue(error.getMessage().contains("rice"),
                 "Отказ обязан называть неизвестное значение. Фактическое: " + error.getMessage());
         assertTrue(error.getMessage().contains("wheat"),
                 "Отказ обязан перечислять допустимые виды культур. Фактическое: " + error.getMessage());

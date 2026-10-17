@@ -26,8 +26,8 @@ class BoneMealParamsTests {
     @Test
     void from_UnknownCrop_IsRejectedWithAllowedList() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> BoneMealParams.from(Map.of("crop", "melon", "radius", 8, "count", 16)),
-                "bone_meal с crop=melon обязан отказывать: арбуз не входит в фермерство чеклиста");
+                () -> BoneMealParams.from(Map.of("crop", "rice", "radius", 8, "count", 16)),
+                "bone_meal с crop=rice обязан отказывать: риса нет в видах CropKind");
 
         assertEquals(true, error.getMessage().contains("carrot"),
                 "Отказ обязан перечислять допустимые виды культур. Фактическое: " + error.getMessage());

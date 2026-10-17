@@ -38,6 +38,11 @@ public final class MineActivity implements Activity {
     }
 
     @Override
+    public boolean external() {
+        return true;
+    }
+
+    @Override
     public ActivityIntent order(SpiritSnapshot spirit, SettlementView view) {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение добычи без духа или обстановки не строится");

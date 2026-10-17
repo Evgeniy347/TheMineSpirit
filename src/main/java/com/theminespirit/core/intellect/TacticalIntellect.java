@@ -19,9 +19,11 @@ public final class TacticalIntellect {
     private final EnemyProfiles profiles;
     private final ArmorModel armor;
     private final ExpeditionPlanner expeditions = new ExpeditionPlanner();
+    private final OutsideGate outsideGate = OutsideGate.withDefaults();
     private List<EnemyFact> enemies = List.of();
     private Point vein;
     private boolean weaponStock;
+    private boolean playerEscort;
 
     public TacticalIntellect(ActivityCatalog catalog, EnemyProfiles profiles, ArmorModel armor) {
         if (catalog == null) {
@@ -53,6 +55,14 @@ public final class TacticalIntellect {
 
     public void trackWeaponStock(boolean available) {
         weaponStock = available;
+    }
+
+    public void trackPlayerEscort(boolean accompanied) {
+        playerEscort = accompanied;
+    }
+
+    public OutsideGate outsideGate() {
+        return outsideGate;
     }
 
     public TacticalDecision decide(SettlementView view, ActivityLedger ledger, WorkReservations reservations,
@@ -99,7 +109,8 @@ public final class TacticalIntellect {
                 view.dayFraction(), view.farmWork(), view.forage(),
                 view.spirits().stream().filter(spirit -> !displaced.contains(spirit.id())).toList(),
                 view.tick(), view.processing(), view.inventoryFills());
-        List<ActivityDemand> demands = DemandModel.evaluate(view, catalog);
+        List<String> refusals = new ArrayList<>();
+        List<ActivityDemand> demands = admitOutside(workers, DemandModel.evaluate(view, catalog), refusals);
         ActivityPlan plan = assigner.assign(workers, demands, ledger, now);
         for (ActivityAssignment assignment : plan.assignments()) {
             ledger.assign(assignment.spirit(), assignment.activity(), assignment.since(), assignment.demand());
@@ -111,6 +122,31 @@ public final class TacticalIntellect {
         reservations.expire(now);
         Optional<Expedition> expedition =
                 vein == null ? Optional.empty() : expeditions.plan(view, workers.freeWorkers(), vein);
-        return new TacticalDecision(List.copyOf(orders), strengths, plan, expedition);
+        return new TacticalDecision(List.copyOf(orders), strengths, plan, expedition, refusals);
+    }
+
+    private List<ActivityDemand> admitOutside(SettlementView workers, List<ActivityDemand> demands,
+            List<String> refusals) {
+        List<ActivityDemand> allowed = new ArrayList<>();
+        for (ActivityDemand demand : demands) {
+            Activity activity = catalog.byId(demand.id());
+            if (!activity.external()) {
+                allowed.add(demand);
+                continue;
+            }
+            int party = 0;
+            for (SpiritSnapshot spirit : workers.spirits()) {
+                if (activity.eligible(spirit, workers)) {
+                    party++;
+                }
+            }
+            OutsideGate.Decision decision = outsideGate.admitExternal(party, playerEscort);
+            if (decision instanceof OutsideGate.Refused refused) {
+                refusals.add(demand.id() + ": " + refused.reason());
+            } else {
+                allowed.add(demand);
+            }
+        }
+        return allowed;
     }
 }

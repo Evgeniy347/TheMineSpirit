@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.server.level.ServerLevel;
 
@@ -16,6 +17,11 @@ public final class BoardRegistry {
             throw new IllegalArgumentException("level не может быть null: доска привязана к своему уровню");
         }
         return BY_LEVEL.computeIfAbsent(level, BoardService::create);
+    }
+
+    /** Доска, если она уже создана: наблюдатель не создаёт доску ради чтения задания. */
+    public static Optional<BoardService> peek(ServerLevel level) {
+        return level == null ? Optional.empty() : Optional.ofNullable(BY_LEVEL.get(level));
     }
 
     public static void remove(ServerLevel level) {

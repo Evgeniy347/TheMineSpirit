@@ -5,9 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public final class ObservationHash {
     private static final char FIELD_SEPARATOR = '\u001f';
@@ -34,10 +32,56 @@ public final class ObservationHash {
         appendEntities(builder, obs.entities());
         builder.append(FIELD_SEPARATOR);
         appendContainers(builder, obs.containers());
+        builder.append(FIELD_SEPARATOR);
+        appendSpirit(builder, obs.spirit());
+        builder.append(FIELD_SEPARATOR);
+        appendGroundItems(builder, obs.groundItems());
+        builder.append(FIELD_SEPARATOR);
+        appendContainerItems(builder, obs.containerItems());
+        builder.append(FIELD_SEPARATOR);
+        appendTime(builder, obs.time());
         return builder.toString();
     }
 
+    private static void appendSpirit(StringBuilder builder, SpiritStatus spirit) {
+        if (spirit == null) {
+            return;
+        }
+        if (spirit.held() != null) {
+            builder.append(spirit.held().item()).append('@').append(spirit.held().durability());
+        }
+        builder.append('|').append(spirit.health()).append('|').append(spirit.food());
+        if (spirit.boardTask() != null) {
+            builder.append('|').append(spirit.boardTask().caseName()).append(':').append(spirit.boardTask().status());
+        }
+        builder.append(RECORD_SEPARATOR);
+    }
 
+    private static void appendGroundItems(StringBuilder builder, List<GroundItem> items) {
+        for (GroundItem item : items) {
+            builder.append(item.item()).append(':').append(item.count()).append(RECORD_SEPARATOR);
+        }
+    }
+
+    private static void appendContainerItems(StringBuilder builder, List<ContainerContents> containers) {
+        for (ContainerContents contents : containers) {
+            appendCoord(builder, contents.pos());
+            for (ItemCount item : contents.items()) {
+                builder.append(':').append(item.item()).append('=').append(item.count());
+            }
+            builder.append(RECORD_SEPARATOR);
+        }
+    }
+
+    /**
+     * В хэш входит только день/ночь, но не точный тик суток: тик растёт каждую секунду игры и ломал бы
+     * сравнение «мир не изменился», из-за чего стратег звал бы модель на каждый цикл.
+     */
+    private static void appendTime(StringBuilder builder, WorldTime time) {
+        if (time != null) {
+            builder.append(time.day());
+        }
+    }
 
     private static void appendInventory(StringBuilder builder, List<ItemCount> entries) {
         for (ItemCount entry : entries) {

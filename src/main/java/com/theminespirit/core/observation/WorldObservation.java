@@ -15,15 +15,28 @@ public record WorldObservation(
         List<ItemCount> blocks,
         List<EntityRef> entities,
         List<ContainerRef> containers,
-        int radius) {
+        int radius,
+        SpiritStatus spirit,
+        List<GroundItem> groundItems,
+        List<ContainerContents> containerItems,
+        WorldTime time) {
 
     public WorldObservation {
         Objects.requireNonNull(botId, "botId не может быть null: наблюдение принадлежит конкретному духу");
         Objects.requireNonNull(position, "position не может быть null: наблюдение без позиции духа бессмысленно");
-        inventory = normalizeInventory(inventory);
-        blocks = normalizeInventory(blocks);
+        inventory = ItemCounts.aggregate(inventory, "inventory");
+        blocks = ItemCounts.aggregate(blocks, "blocks");
         entities = sortEntities(entities);
         containers = sortContainers(containers);
+        groundItems = aggregateGroundItems(groundItems);
+        containerItems = sortContainerItems(containerItems);
+    }
+
+    /** Наблюдение без данных о самом духе, выпавших предметах, содержимом контейнеров и времени суток. */
+    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
+            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius) {
+        this(botId, tick, position, inventory, blocks, entities, containers, radius,
+                null, List.of(), List.of(), null);
     }
 
     public String hash() {
@@ -36,18 +49,6 @@ public record WorldObservation(
 
     public static WorldObservation fromJson(String json) {
         return ObservationJson.fromJson(json);
-    }
-
-    private static List<ItemCount> normalizeInventory(List<ItemCount> entries) {
-        List<ItemCount> input = requireList(entries, "inventory/blocks");
-        Map<String, Integer> aggregated = new LinkedHashMap<>();
-        for (ItemCount entry : input) {
-            aggregated.merge(entry.item(), entry.count(), Integer::sum);
-        }
-        List<ItemCount> result = new ArrayList<>(aggregated.size());
-        aggregated.forEach((item, count) -> result.add(new ItemCount(item, count)));
-        result.sort(Comparator.comparing(ItemCount::item));
-        return List.copyOf(result);
     }
 
     private static List<EntityRef> sortEntities(List<EntityRef> entries) {
@@ -64,6 +65,23 @@ public record WorldObservation(
         copy.sort(Comparator.comparing(ContainerRef::type)
                 .thenComparing(ContainerRef::pos)
                 .thenComparing(c -> c.id() == null ? "" : c.id()));
+        return List.copyOf(copy);
+    }
+
+    private static List<GroundItem> aggregateGroundItems(List<GroundItem> entries) {
+        Map<String, Integer> merged = new LinkedHashMap<>();
+        for (GroundItem entry : requireList(entries, "groundItems")) {
+            merged.merge(entry.item(), entry.count(), Integer::sum);
+        }
+        List<GroundItem> result = new ArrayList<>(merged.size());
+        merged.forEach((item, count) -> result.add(new GroundItem(item, count)));
+        result.sort(Comparator.comparing(GroundItem::item));
+        return List.copyOf(result);
+    }
+
+    private static List<ContainerContents> sortContainerItems(List<ContainerContents> entries) {
+        List<ContainerContents> copy = new ArrayList<>(requireList(entries, "containerItems"));
+        copy.sort(Comparator.comparing(ContainerContents::pos));
         return List.copyOf(copy);
     }
 

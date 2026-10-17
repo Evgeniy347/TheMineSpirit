@@ -28,6 +28,14 @@ public final class CropRegistry {
         return lookup(BuiltInRegistries.ITEM, DEFAULT_NAMESPACE + kind.produceItem(), kind, "предмет урожая");
     }
 
+    public static Block fruitBlock(CropKind kind) {
+        return lookup(BuiltInRegistries.BLOCK, kind.fruitBlockId(), kind, "блок плода");
+    }
+
+    public static Block supportBlock(CropKind kind) {
+        return lookup(BuiltInRegistries.BLOCK, kind.supportBlockId(), kind, "блок опоры");
+    }
+
     public static Set<Block> blocks(CropKind filter) {
         return Arrays.stream(CropKind.values())
                 .filter(kind -> kind != CropKind.ANY && (filter == CropKind.ANY || kind == filter))

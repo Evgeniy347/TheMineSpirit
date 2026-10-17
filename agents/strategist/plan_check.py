@@ -142,10 +142,21 @@ def context_from_observation(observation: dict) -> PlanContext:
     blocks = observation.get("blocks")
     observed = frozenset(normalize_block(entry["item"]) for entry in blocks if isinstance(entry, dict)
                          and isinstance(entry.get("item"), str)) if isinstance(blocks, list) else frozenset()
-    items = observation.get("inventory")
-    inventory = frozenset(normalize_block(entry["item"]) for entry in items if isinstance(entry, dict)
-                          and isinstance(entry.get("item"), str)) if isinstance(items, list) else None
+    inventory = _inventory_from(observation)
     return PlanContext(position, observed, inventory)
+
+
+def _inventory_from(observation: dict) -> frozenset | None:
+    items = observation.get("inventory")
+    known = isinstance(items, list)
+    inventory = frozenset(normalize_block(entry["item"]) for entry in items if isinstance(entry, dict)
+                          and isinstance(entry.get("item"), str)) if known else frozenset()
+    held = observation.get("held")
+    held_item = held.get("item") if isinstance(held, dict) and isinstance(held.get("item"), str) else None
+    if held_item is not None:
+        inventory = inventory | {normalize_block(held_item)}
+        known = True
+    return inventory if known else None
 
 
 def load_policy(path: Path) -> Policy:

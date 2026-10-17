@@ -27,7 +27,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -226,6 +229,66 @@ public final class RestGameTests {
             return problems.found();
         });
         RestFixture.await(helper, rest, scenario);
+    }
+
+    @GameTest(batch = "rest_observe_rich", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    public static void observe_SpiritWithResources_ReportsHeldDropChestContentsAndTime(GameTestHelper helper)
+            throws IOException {
+        GameTestFixtures.reset(helper);
+        MinecraftServer minecraft = helper.getLevel().getServer();
+        RestFixture rest = RestFixture.start(minecraft);
+        SpiritEntity spirit = rest.spawn(helper, new BlockPos(4, 1, 4));
+        spirit.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
+        BlockPos chestAt = new BlockPos(7, 1, 4);
+        helper.setBlock(chestAt, Blocks.CHEST);
+        ((Container) helper.getLevel().getBlockEntity(helper.absolutePos(chestAt)))
+                .setItem(0, new ItemStack(Items.IRON_INGOT, 7));
+        BlockPos dropAt = helper.absolutePos(new BlockPos(6, 2, 6));
+        helper.getLevel().addFreshEntity(new ItemEntity(helper.getLevel(),
+                dropAt.getX() + 0.5, dropAt.getY() + 0.5, dropAt.getZ() + 0.5, new ItemStack(Items.OAK_LOG, 3)));
+        String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
+        RestFixture.Problems problems = new RestFixture.Problems();
+        CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":8}".getBytes(StandardCharsets.UTF_8))
+                .thenApply(reply -> {
+                    JsonNode observation = reply.json();
+                    problems.expect(reply.status() == 200, "observe обязан отвечать 200: " + reply.body());
+                    JsonNode held = observation.path("held");
+                    problems.expect("minecraft:iron_pickaxe".equals(held.path("item").asText()),
+                            "Предмет в руке духа обязан быть в наблюдении полем held: " + reply.body());
+                    problems.expect(held.path("durability").isNumber() && held.path("durability").asInt() > 0,
+                            "У предмета в руке обязана быть прочность: " + reply.body());
+                    problems.expect(groundItemCount(observation, "minecraft:oak_log") == 3,
+                            "Выпавший предмет с id и количеством обязан быть в ground_items: " + reply.body());
+                    problems.expect(containerItemCount(observation, "minecraft:iron_ingot") == 7,
+                            "Содержимое сундука (id → количество) обязано быть в container_items: " + reply.body());
+                    JsonNode time = observation.path("time");
+                    problems.expect(time.isObject() && time.path("day").isBoolean() && time.path("day_time").isNumber(),
+                            "Время суток (день/ночь и тик дня) обязано быть в наблюдении: " + reply.body());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario);
+    }
+
+    private static int groundItemCount(JsonNode observation, String item) {
+        int total = 0;
+        for (JsonNode entry : observation.path("ground_items")) {
+            if (entry.path("item").asText().equals(item)) {
+                total += entry.path("count").asInt();
+            }
+        }
+        return total;
+    }
+
+    private static int containerItemCount(JsonNode observation, String item) {
+        int total = 0;
+        for (JsonNode container : observation.path("container_items")) {
+            for (JsonNode entry : container.path("items")) {
+                if (entry.path("item").asText().equals(item)) {
+                    total += entry.path("count").asInt();
+                }
+            }
+        }
+        return total;
     }
 
     @GameTest(batch = "rest_observe_discard", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)

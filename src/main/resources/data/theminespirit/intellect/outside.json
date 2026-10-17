@@ -1,0 +1,9 @@
+{
+  "partyMin": 2,
+  "escortRadius": 8.0,
+  "mineKit": [
+    { "match": ["*_pickaxe"], "count": 1 },
+    { "match": ["torch"], "count": 8 },
+    { "category": "food", "count": 3 }
+  ]
+}
