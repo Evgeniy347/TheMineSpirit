@@ -105,6 +105,9 @@ public final class ResultGameTests {
                     "Поток событий обязан закрыться после финального state; кадры пока: "
                             + (stream.get() == null ? "нет потока" : stream.get().lines()));
             List<RestFixture.Frame> frames = stream.get().frames();
+            helper.assertTrue(!frames.isEmpty(),
+                    "Поток событий обязан принести хотя бы один кадр state; кадры: " + stream.get().lines()
+                            + ": пустой поток означает, что задача завершилась раньше подписки, — проверять нечего");
             RestFixture.Frame last = frames.get(frames.size() - 1);
             helper.assertTrue(last.event().equals("state")
                     && last.json().path("state").asText().equals("succeeded"),
