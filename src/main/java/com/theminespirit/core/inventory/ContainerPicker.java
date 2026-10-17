@@ -10,6 +10,11 @@ public final class ContainerPicker {
     }
 
     public static ContainerChoice choose(List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming) {
+        return choose(containers, origin, incoming, 0);
+    }
+
+    public static ContainerChoice choose(List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming,
+            int minFreeSlotsPercent) {
         Objects.requireNonNull(containers, "Список контейнеров не может быть null: выбирать не из чего");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что докладывать");
@@ -18,11 +23,13 @@ public final class ContainerPicker {
             return new ContainerChoice.Chosen(partial);
         }
         int present = nearestMatching(containers, origin,
-                container -> container.hasFreeSlot() && container.hasKind(incoming));
+                container -> WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent)
+                        && container.hasKind(incoming));
         if (present >= 0) {
             return new ContainerChoice.Chosen(present);
         }
-        int free = nearestMatching(containers, origin, ContainerSnapshot::hasFreeSlot);
+        int free = nearestMatching(containers, origin,
+                container -> WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent));
         if (free >= 0) {
             return new ContainerChoice.Chosen(free);
         }

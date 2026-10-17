@@ -47,6 +47,10 @@ public final class JournalService {
                 ticket.modifiers(), holder == null ? null : holder.toString(), ConfigStamp.current(), tick));
     }
 
+    public void recordEntry(BoardLogEntry entry) {
+        journal.enqueue(entry);
+    }
+
     public int flush(int maxLines) {
         return journal.flush(maxLines);
     }

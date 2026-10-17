@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.InventorySpace;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ApproachFailureTracker;
@@ -13,7 +14,9 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.inventory.StackMapper;
+import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -42,7 +45,8 @@ public final class HarvestSession {
         PICK,
         APPROACH,
         BREAK,
-        COLLECT
+        COLLECT,
+        DEPOSIT
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
@@ -67,6 +71,11 @@ public final class HarvestSession {
     private BlockCoord currentStand;
     private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
     private DropCollector collector;
+    private UnloadScript deposit;
+    private boolean depositTried;
+    private boolean depositMandatory;
+    private boolean depositFreed;
+    private String depositBlockedItem;
 
     private int mined;
     private int unsafe;
@@ -123,6 +132,7 @@ public final class HarvestSession {
             case APPROACH -> approachTick();
             case BREAK -> breakTick();
             case COLLECT -> collectTick();
+            case DEPOSIT -> depositTick();
         }
         return outcome;
     }
@@ -132,6 +142,9 @@ public final class HarvestSession {
         approach.cancel();
         if (collector != null) {
             collector.cancel();
+        }
+        if (deposit != null) {
+            deposit.cancel();
         }
     }
 
@@ -146,6 +159,9 @@ public final class HarvestSession {
         }
         if (collector != null) {
             collector.suspend();
+        }
+        if (deposit != null) {
+            deposit.suspend();
         }
     }
 
@@ -339,17 +355,67 @@ public final class HarvestSession {
                     incoming.add(mapper.of(drop));
                 }
             }
-            if (!incoming.isEmpty() && !InventorySpace.holds(inventory, incoming)) {
-                breaker.cancel();
-                approach.cancel();
-                currentTarget = null;
-                currentStand = null;
-                state = State.PICK;
-                fail("инвентарь полон: не помещается " + incoming.get(0).item());
+            boolean fits = incoming.isEmpty() || InventorySpace.holds(inventory, incoming);
+            boolean nearlyFull = occupiedSlots() >= CatalogLimits.UNLOAD_TRIGGER_SLOTS;
+            if (!fits || (nearlyFull && !depositTried)) {
+                if (!depositTried) {
+                    startDeposit(incoming, !fits);
+                    return;
+                }
+                fail(fullReason());
                 return;
             }
         }
         state = State.BREAK;
+    }
+
+    private void startDeposit(List<Stack> incoming, boolean mandatory) {
+        int toolSlot = breaker.toolSlot();
+        breaker.cancel();
+        approach.cancel();
+        depositMandatory = mandatory;
+        depositBlockedItem = incoming.isEmpty() ? null : incoming.get(0).item();
+        depositTried = true;
+        depositFreed = false;
+        deposit = UnloadScript.relief(spirit, toolSlot);
+        buffer.offer(List.of(currentTarget));
+        currentTarget = null;
+        currentStand = null;
+        state = State.DEPOSIT;
+    }
+
+    private void depositTick() {
+        ScriptStatus status = deposit.tick();
+        if (status == ScriptStatus.RUNNING) {
+            return;
+        }
+        boolean moved = deposit.movedTotal() > 0;
+        deposit = null;
+        if (status == ScriptStatus.SUCCEEDED && (moved || !depositMandatory)) {
+            depositFreed = moved;
+            state = State.PICK;
+            return;
+        }
+        if (!depositMandatory) {
+            state = State.PICK;
+            return;
+        }
+        fail(fullReason());
+    }
+
+    private String fullReason() {
+        return depositBlockedItem == null ? "инвентарь полон: не помещается добыча"
+                : "инвентарь полон: не помещается " + depositBlockedItem;
+    }
+
+    private int occupiedSlots() {
+        int occupied = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            if (!spirit.getInventory().getItem(slot).isEmpty()) {
+                occupied++;
+            }
+        }
+        return occupied;
     }
 
     private void breakTick() {
@@ -385,6 +451,10 @@ public final class HarvestSession {
         collector = null;
         currentTarget = null;
         currentStand = null;
+        if (depositFreed || occupiedSlots() < CatalogLimits.UNLOAD_TRIGGER_SLOTS) {
+            depositTried = false;
+            depositFreed = false;
+        }
         if (mined >= count) {
             outcome = Outcome.SUCCEEDED;
         } else {

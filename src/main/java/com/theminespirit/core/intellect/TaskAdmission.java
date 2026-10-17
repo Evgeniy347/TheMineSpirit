@@ -1,6 +1,7 @@
 package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.task.SpiritReading;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,7 +18,7 @@ public final class TaskAdmission {
     }
 
     public static Verdict decide(Optional<String> currentScript, RunStatus status, String issuedScript,
-            String requestedScript) {
+            long issuedGeneration, long currentGeneration, String requestedScript) {
         Objects.requireNonNull(currentScript,
                 "Текущий скрипт не может быть null: отсутствие — это Optional.empty()");
         Objects.requireNonNull(requestedScript, "Запрошенный скрипт не может быть null: что именно выдаём");
@@ -25,7 +26,7 @@ public final class TaskAdmission {
             if (currentScript.get().equals(requestedScript)) {
                 return Verdict.SKIP_SAME;
             }
-            if (currentScript.get().equals(issuedScript)) {
+            if (currentScript.get().equals(issuedScript) && generationIsOwn(issuedGeneration, currentGeneration)) {
                 return Verdict.CANCEL_AND_START;
             }
             return Verdict.SKIP_FOREIGN;
@@ -34,5 +35,10 @@ public final class TaskAdmission {
             return Verdict.SKIP_BUSY;
         }
         return Verdict.START;
+    }
+
+    private static boolean generationIsOwn(long issuedGeneration, long currentGeneration) {
+        return issuedGeneration != SpiritReading.UNKNOWN_GENERATION
+                && currentGeneration == issuedGeneration;
     }
 }

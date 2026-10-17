@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.inventory.InventoryFill;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,8 +43,12 @@ public final class SettlementViews {
     }
 
     public static SpiritSnapshot busySpirit(UUID id) {
+        return busySpirit(id, WorkKind.TREE);
+    }
+
+    public static SpiritSnapshot busySpirit(UUID id, WorkKind kind) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.of(new WorkTarget(WorkKind.TREE, new BlockCoord(1, 64, 1))), 0, 1.0);
+                Optional.of(new WorkTarget(kind, new BlockCoord(1, 64, 1))), 0, 1.0);
     }
 
     public static SettlementView empty() {
@@ -72,6 +78,13 @@ public final class SettlementViews {
         ordered.sort(Comparator.comparing(SpiritSnapshot::id));
         return new SettlementView(ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), Forage.NONE,
                 ordered, 100);
+    }
+
+    public static SettlementView withFills(List<SpiritSnapshot> spirits, Map<UUID, InventoryFill> fills) {
+        List<SpiritSnapshot> ordered = new ArrayList<>(spirits);
+        ordered.sort(Comparator.comparing(SpiritSnapshot::id));
+        return new SettlementView(ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), Forage.NONE,
+                ordered, 100, fills);
     }
 
     public static Arbitrary<SettlementView> views() {
