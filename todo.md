@@ -126,6 +126,12 @@
       каждым smelt, `canProvide` — цепочка предков и следующий кандидат при исключении. Часть 2: `ResourceResolver` уже
       подключён к production через скрипт `acquire` (`AcquireScript.buildSubplan` → `ResourceResolver.resolve`),
       GameTest `AcquireGameTests.acquireIronIngot_FromScratch_…` гоняет его в игре — правок не потребовалось.
+- [x] Флеки тактики крипера под полным GameTest и нагрузкой (deepseek-v4.1-flash, 17.10):
+      `creeper_nineblocksaway_spiritstaysinplace` — общая на уровень доска (`BoardService`) выдавала свободному
+      духу сцены чужой билет `first:*`, дух уходил с места; сцена гасит доску на пачку (e6a275f0).
+      `creeper_strikeandretreat_armoredengagesnakedholds` — ванильная цель мобов перекидывалась на держащего
+      без брони, оборона уводила бронированного в PROTECT, а крипер успевал взорваться на месте; цель крипера
+      фиксируется на бронированном, он замедлен, запал держится ниже детонации, в падении — таймлайн (c8713719).
 
 ## В работе и техдолг
 
