@@ -164,7 +164,7 @@ public final class IntellectGameTests {
         long openedAt = helper.getLevel().getGameTime();
         intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
         intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
-                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+                openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
 
         helper.assertTrue(intellect.expeditions().lastDispatch().isEmpty(),
                 "Без набора команда в шахту не идёт: спуск начинается с проверки кирки, факелов и еды");
@@ -197,7 +197,7 @@ public final class IntellectGameTests {
         long openedAt = helper.getLevel().getGameTime();
         intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
         intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
-                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+                openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
 
         helper.assertTrue(intellect.expeditions().lastDispatch()
                         .map(dispatch -> dispatch.script().equals("mine_vein")
