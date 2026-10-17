@@ -137,6 +137,21 @@ file_mtime() {
 # сервер переживает его, ест CPU, и следующий прогон идёт параллельно уже без замка (todo.md 17.10).
 # Поэтому сервер гасим сами — и до снятия замка. Чужие worktree не трогаем: у каждого свой каталог.
 
+# Жив ли процесс. Зомби (state Z в /proc/<pid>/stat) уже мёртв: его не считаем и не ждём — иначе
+# ожидание KILL тянется 10 с, пока родитель не соберёт статус. На не-Linux — обычный kill -0.
+pid_is_live() {
+    local pid="$1" rest
+    if [ -r "/proc/$pid/stat" ]; then
+        rest=$(cat "/proc/$pid/stat" 2>/dev/null)
+        rest="${rest##*) }"
+        case "$rest" in
+            Z*) return 1 ;;
+        esac
+        return 0
+    fi
+    kill -0 "$pid" 2>/dev/null
+}
+
 # PID java-процессов, чья рабочая папка — каталог GameTest этого worktree ($1).
 gametest_server_pids() {
     local dir="$1" d pid exe cwd
@@ -160,7 +175,8 @@ gametest_server_pids() {
                     *) continue ;;
                 esac
                 cwd=$(readlink "$d/cwd" 2>/dev/null) || continue
-                [ "$cwd" = "$dir" ] && printf '%s\n' "${d#/proc/}"
+                pid="${d#/proc/}"
+                [ "$cwd" = "$dir" ] && pid_is_live "$pid" && printf '%s\n' "$pid"
             done
             ;;
     esac
@@ -180,7 +196,7 @@ kill_gametest_server() {
     while [ "$waited" -lt 10 ]; do
         alive=""
         for pid in $pids; do
-            kill -0 "$pid" 2>/dev/null && alive="$alive $pid"
+            pid_is_live "$pid" && alive="$alive $pid"
         done
         [ -n "$alive" ] || return 0
         pids="$alive"
@@ -309,7 +325,7 @@ start_monitor() {
            MONITOR_MODE="$mode"
     # Монитор в ветке setsid — отдельный bash: функции и переменные для гашения сервера нужны в окружении.
     export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
-    export -f gametest_server_pids kill_gametest_server
+    export -f pid_is_live gametest_server_pids kill_gametest_server
     if command -v setsid >/dev/null 2>&1; then
         setsid bash -c '
             warned=0
