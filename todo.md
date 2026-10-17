@@ -116,6 +116,8 @@
 - [x] Техдолг: gather не крутится на недостижимой стоянке — исключение стоянок, ≤3 подхода на цель, Approach отказывает по пройденному тупику (muse, 13.10)
 - [x] Техдолг: clear_area/dig_area бросают недостижимую стоянку — общий ApproachFailureTracker с gather (muse, 13.10)
 - [x] `scripts/gametest.sh` в Git Bash на Windows: запасной замок на `mkdir` без `flock`, тест `check-gametest-lock.sh`, переменные `THEMINESPIRIT_GAMETEST_WAIT`/`NOFLOCK`/`GRADLEW` (4f925c8, 14.10)
+- [x] Гонка общего замка GameTest на Windows: протухание только по пульсу маркера (не по `kill -0`), release снимает
+      только свой замок по токену, сценарии гонки в `check-gametest-lock.sh` (17.10)
 - [x] Флек `feed_escapeeFiveBlocksAway` (Husbandry): возврат приманкой вёл овцу на кромку загона, откуда она выходила
       первым шагом RandomStroll, и тики духа плавали 21→396 при лимите 200. Возврат через PenBounds.nearestInside с отступом
       LURE_INSET=2 заводит овцу на два блока внутрь: замер lure до — медиана 21, максимум 104, разово 396 на подлоге; после —
