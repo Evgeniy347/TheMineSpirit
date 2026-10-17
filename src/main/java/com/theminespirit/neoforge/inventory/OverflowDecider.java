@@ -6,8 +6,11 @@ import com.theminespirit.core.inventory.OverflowPolicy;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.planner.ResourceKnowledge;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
 public final class OverflowDecider {
@@ -41,7 +44,8 @@ public final class OverflowDecider {
         StackMapper mapper = new StackMapper();
         List<Stack> inventory = mapper.map(spirit.getInventory());
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, mapper.of(heap),
-                InventoryTables.values(), needs, KitFor.kitFor(activity, child));
+                InventoryTables.values(), needs, KitFor.kitFor(activity, child), baseStock(),
+                InventoryTables.overflow());
         policyCalls++;
         cachedItem = item;
         cachedHeap = heap.copyWithCount(1);
@@ -65,6 +69,13 @@ public final class OverflowDecider {
                 && cachedCount == heap.getCount() && cachedItem.equals(item)
                 && ItemStack.isSameItemSameComponents(cachedHeap, heap) && cachedNeeds.equals(needs)
                 && Objects.equals(cachedActivity, activity) && cachedChild == child;
+    }
+
+    private Map<String, Integer> baseStock() {
+        if (spirit.level() instanceof ServerLevel level) {
+            return BoardRegistry.get(level).stock().available();
+        }
+        return Map.of();
     }
 
     private List<String> planNeeds() {

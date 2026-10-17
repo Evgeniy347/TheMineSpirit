@@ -47,6 +47,7 @@ public final class BoardRules {
         priorities.put(BoardCase.RELOCATE_BUILDING, 60);
         priorities.put(BoardCase.BREED_ANIMALS, 55);
         priorities.put(BoardCase.HERD_CULL, 50);
+        priorities.put(BoardCase.COLLECT_DROPS, 55);
         priorities.put(BoardCase.CLEAR_GROUNDS, 50);
         priorities.put(BoardCase.BUILD_FENCE, 50);
         priorities.put(BoardCase.LIGHTING, 50);

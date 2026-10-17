@@ -23,6 +23,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
@@ -940,6 +941,37 @@ public final class MineGameTests {
 
     private static ScriptCall gatherCall(String block, int count) {
         return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", RADIUS));
+    }
+
+
+    // [флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
+    @GameTest(template = "arena", batch = "mine_full_base", timeoutTicks = 600)
+    public static void mineVein_FullInventoryNearChest_DepositsAndContinues(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
+        for (int slot = 1; slot < spirit.getInventory().getContainerSize(); slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+        helper.setBlock(new BlockPos(7, 1, 7), Blocks.CHEST);
+        helper.setBlock(new BlockPos(4, 2, 4), Blocks.IRON_ORE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, mineCall("iron", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "при полном инвентаре дух обязан сдать лишнее на склад и продолжить добычу, статус "
+                            + spirit.taskStatus().orElse(null) + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.RAW_IRON) == 1,
+                    "после сдачи руда обязана оказаться в инвентаре: добыча продолжилась, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.RAW_IRON));
+            var chest = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(7, 1, 7)));
+            helper.assertTrue(chest instanceof Container container
+                            && GameTestFixtures.countInInventory(container, Items.DIRT) > 0,
+                    "лишняя земля обязана уехать в сундук: иначе дух не освободил место и бросил задачу");
+            GameTestFixtures.finish(helper);
+        });
     }
 
     private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, Item tool) {

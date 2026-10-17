@@ -246,7 +246,8 @@ final class TreeChop {
 
     private Outcome startCollect() {
         collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS,
-                PickupTuning.DEFAULT, OverflowMode.FAIL);
+                PickupTuning.DEFAULT,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         phase = Phase.COLLECT;
         return Outcome.running();
     }

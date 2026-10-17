@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class OverflowPolicy {
@@ -11,6 +12,11 @@ public final class OverflowPolicy {
 
     public static Decision decide(List<Stack> inventory, Stack incoming, ValueTable values, List<String> planNeeds,
             BaseKit kit) {
+        return decide(inventory, incoming, values, planNeeds, kit, Map.of(), OverflowTuning.defaults());
+    }
+
+    public static Decision decide(List<Stack> inventory, Stack incoming, ValueTable values, List<String> planNeeds,
+            BaseKit kit, Map<String, Integer> baseStock, OverflowTuning tuning) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: решение принимают по слотам инвентаря");
         Objects.requireNonNull(incoming, "Новая кучка не может быть null: без неё нечем пополнять инвентарь");
         Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
@@ -19,18 +25,22 @@ public final class OverflowPolicy {
                 + "пустой список нужного задаётся пустым списком");
         Objects.requireNonNull(kit, "Базовый набор не может быть null: "
                 + "без него дух считал бы излишком и последний хлеб");
+        Objects.requireNonNull(baseStock, "Запас базы не может быть null: пустой запас задают пустой картой");
+        Objects.requireNonNull(tuning, "Таблица переполнения не может быть null: без неё запас не влияет на цену");
         if (hasRoomFor(inventory, incoming)) {
             return new Decision(Action.TAKE_INTO_FREE_SLOT, -1, 0, null);
         }
         Protected protection = Protected.of(planNeeds, inventory, kit, values);
-        int cheapest = cheapestDroppable(inventory, values, protection);
+        int cheapest = cheapestDroppable(inventory, values, protection, baseStock, tuning);
         if (cheapest < 0) {
             return new Decision(Action.REFUSE, -1, 0, "инвентарь полон: выбрасывать нечего, всё лежащее "
                     + "защищено базовым набором или нужно плану");
         }
         Stack slot = inventory.get(cheapest);
-        int incomingValue = values.stackValue(incoming);
-        int slotValue = values.stackValue(slot);
+        int incomingValue = tuning.effectiveUnitValue(values.valueOf(incoming.item()),
+                stockOf(baseStock, incoming.item())) * incoming.count();
+        int slotValue = tuning.effectiveUnitValue(values.valueOf(slot.item()),
+                stockOf(baseStock, slot.item())) * slot.count();
         if (incomingValue <= slotValue) {
             return new Decision(Action.REFUSE, -1, 0, "инвентарь полон: новая кучка '" + incoming.item() + "' × "
                     + incoming.count() + " ценностью " + incomingValue + " не дороже самой дешёвой стопки в слоте "
@@ -53,14 +63,15 @@ public final class OverflowPolicy {
         return false;
     }
 
-    private static int cheapestDroppable(List<Stack> inventory, ValueTable values, Protected protection) {
+    private static int cheapestDroppable(List<Stack> inventory, ValueTable values, Protected protection,
+            Map<String, Integer> baseStock, OverflowTuning tuning) {
         int found = -1;
         for (int slot = 0; slot < inventory.size(); slot++) {
             Stack stack = inventory.get(slot);
             if (stack == null || protection.giveAway(slot) != stack.count()) {
                 continue;
             }
-            if (found < 0 || cheaperThan(values, stack, inventory.get(found), slot, found)) {
+            if (found < 0 || cheaperThan(values, stack, inventory.get(found), slot, found, baseStock, tuning)) {
                 found = slot;
             }
         }
@@ -68,8 +79,9 @@ public final class OverflowPolicy {
     }
 
     private static boolean cheaperThan(ValueTable values, Stack candidate, Stack kept, int candidateSlot,
-            int keptSlot) {
-        int byStack = Integer.compare(values.stackValue(candidate), values.stackValue(kept));
+            int keptSlot, Map<String, Integer> baseStock, OverflowTuning tuning) {
+        int byStack = Integer.compare(stackValue(values, candidate, baseStock, tuning),
+                stackValue(values, kept, baseStock, tuning));
         if (byStack != 0) {
             return byStack < 0;
         }
@@ -78,6 +90,21 @@ public final class OverflowPolicy {
             return byUnit < 0;
         }
         return candidateSlot > keptSlot;
+    }
+
+    private static int stackValue(ValueTable values, Stack stack, Map<String, Integer> baseStock,
+            OverflowTuning tuning) {
+        return tuning.effectiveUnitValue(values.valueOf(stack.item()), stockOf(baseStock, stack.item()))
+                * stack.count();
+    }
+
+    private static int stockOf(Map<String, Integer> baseStock, String item) {
+        Integer full = baseStock.get(item);
+        if (full != null) {
+            return full;
+        }
+        String prefix = "minecraft:";
+        return item.startsWith(prefix) ? baseStock.getOrDefault(item.substring(prefix.length()), 0) : 0;
     }
 
     public enum Action {

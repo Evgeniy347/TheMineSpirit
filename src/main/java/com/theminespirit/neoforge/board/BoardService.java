@@ -27,8 +27,10 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,8 +44,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 /**
@@ -146,6 +151,7 @@ public final class BoardService {
         ensureSupply(spirits, stock, now);
         Set<String> liveCauses = sources.tick(level, this, spirits, stock, now);
         liveCauses.addAll(liveHerdCauses(level));
+        liveCauses.addAll(liveDropCauses(level));
         board.retain(liveCauses, now);
         issue(level, spirits, now);
         rebuilds++;
@@ -191,6 +197,46 @@ public final class BoardService {
         return count;
     }
 
+    /**
+     * Живые причины выкинутых вещей: задание «забрать» держится, пока предмет лежит в клетке.
+     * Подобранный предмет снимает задание со следующей пересборкой, а не висит вечно.
+     */
+    private Set<String> liveDropCauses(ServerLevel level) {
+        Set<String> live = new HashSet<>();
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.boardCase() != BoardCase.COLLECT_DROPS || !ticket.cause().startsWith("drop:")) {
+                continue;
+            }
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES
+                    && status != BoardStatus.ASSIGNED) {
+                continue;
+            }
+            String[] parts = ticket.cause().split(":", 5);
+            if (parts.length != 5) {
+                continue;
+            }
+            int x;
+            int y;
+            int z;
+            try {
+                x = Integer.parseInt(parts[1]);
+                y = Integer.parseInt(parts[2]);
+                z = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException broken) {
+                continue;
+            }
+            String item = parts[4];
+            boolean found = level.getEntitiesOfClass(ItemEntity.class,
+                    new AABB(x - 4, y - 4, z - 4, x + 5, y + 5, z + 5),
+                    drop -> !drop.isRemoved() && item.equals(StackMapper.itemId(drop.getItem()))).isEmpty() == false;
+            if (found) {
+                live.add(ticket.cause());
+            }
+        }
+        return live;
+    }
+
     /** Живые причины стада: пойманное животное живо. Гибель снимает «приманить» и ставит разбор. */
     public Set<String> liveHerdCauses(ServerLevel level) {
         Set<String> live = new HashSet<>();
@@ -209,6 +255,36 @@ public final class BoardService {
     }
 
     private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {
+    }
+
+    /**
+     * Выкинутая духом вещь становится заданием «забрать выкинутые вещи»: координаты и предмет
+     * в билете, исполнитель — любой свободный дух. Задание ставится только поселению: у духа
+     * без дома доски нет.
+     */
+    public boolean reportDropped(SpiritEntity source, ItemEntity drop) {
+        Objects.requireNonNull(source, "Дух, выкинувший вещь, не может быть null: по нему ищется поселение");
+        Objects.requireNonNull(drop, "Выкинутая вещь не может быть null: без неё нечего забирать");
+        if (!SpiritConfig.boardEnabled() || source.home().isEmpty() || drop.isRemoved()
+                || !(drop.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        BlockPos pos = drop.blockPosition();
+        String item = StackMapper.itemId(drop.getItem());
+        String id = "drop:" + pos.getX() + "," + pos.getY() + "," + pos.getZ() + ":" + item;
+        if (board.statusOf(id).isPresent()) {
+            return false;
+        }
+        String cause = "drop:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ() + ":" + item;
+        BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        BoardOutcome outcome = submit(new BoardTicket(id, BoardCase.COLLECT_DROPS, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.COLLECT_DROPS), level.getGameTime(), 1, cause,
+                List.of(), Map.of()), TicketTarget.at(at).withDrops(List.of(item)));
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info("Журнал доски: постановка {} — забрать выкинутое в {}: {}", id, at, item);
+        }
+        journal.flush(JournalService.FLUSH_BUDGET);
+        return outcome == BoardOutcome.ACCEPTED;
     }
 
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {

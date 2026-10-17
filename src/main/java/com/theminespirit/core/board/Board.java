@@ -61,6 +61,7 @@ public final class Board {
                 tickets.put(ticket.id(), ticket);
                 statuses.put(ticket.id(), BoardStatus.PENDING);
                 claimAssignees.remove(ticket.id());
+                events.transition(BoardLog.Event.SUBMITTED, ticket, null, nowTicks.getAsLong());
                 return BoardOutcome.ACCEPTED;
             }
             return BoardOutcome.DUPLICATE;
@@ -71,6 +72,7 @@ public final class Board {
         }
         tickets.put(ticket.id(), ticket);
         statuses.put(ticket.id(), BoardStatus.PENDING);
+        events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
         return BoardOutcome.ACCEPTED;
     }
 

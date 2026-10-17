@@ -24,6 +24,7 @@ class BoardConfigTests {
                 Map.entry("DISMANTLE_SHELTER", 65),
                 Map.entry("RELOCATE_BUILDING", 60),
                 Map.entry("BREED_ANIMALS", 55),
+                Map.entry("COLLECT_DROPS", 55),
                 Map.entry("HERD_CULL", 50),
                 Map.entry("CLEAR_GROUNDS", 50),
                 Map.entry("BUILD_FENCE", 50),

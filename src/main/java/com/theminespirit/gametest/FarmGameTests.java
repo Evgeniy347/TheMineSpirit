@@ -44,6 +44,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -978,35 +979,34 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 20)
-    public static void harvestCrop_InventoryFull_FailsAndKeepsItems(GameTestHelper helper) {
+    // [флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
+    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 600)
+    public static void harvestCrop_InventoryFullNearChest_DepositsAndContinues(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
         setCrop(helper, new BlockPos(3, FLOOR_Y, 3), CropKind.WHEAT, 7);
         setCrop(helper, new BlockPos(5, FLOOR_Y, 5), CropKind.WHEAT, 7);
+        helper.setBlock(new BlockPos(7, 1, 7), Blocks.CHEST);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), START);
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             spirit.getInventory().setItem(slot, new ItemStack(Items.DIRT, 64));
         }
-        int dirtBefore = GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT);
         SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, true));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            assertFailedWith(helper, spirit, "инвентарь полон: не помещается");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == dirtBefore,
-                    "содержимое инвентаря не теряется");
-            int dirtInWorld = GameTestFixtures.countInWorld(helper, Items.DIRT);
-            helper.assertTrue(dirtInWorld == 0,
-                    "отказ обязан оставить всё при духе: выброшенного грунта в мире быть не должно, фактически "
-                            + dirtInWorld);
-            int wheatInWorld = GameTestFixtures.countInWorld(helper, Items.WHEAT);
-            helper.assertTrue(wheatInWorld == 1,
-                    "собранная клетка дала 1 пшеницу, и она обязана лежать в мире нетронутой: инвентарь плюс мир, "
-                            + "фактически в мире " + wheatInWorld);
-            int standing = countBlock(helper, Blocks.WHEAT);
-            helper.assertTrue(standing == 1,
-                    "вторая зрелая клетка до сбора не дошла: пшеницы на корню обязано остаться 1, осталось " + standing);
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "при полном инвентаре дух обязан сдать лишнее на склад и продолжить сбор, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            var chest = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(7, 1, 7)));
+            helper.assertTrue(chest instanceof Container container
+                            && GameTestFixtures.countInInventory(container, Items.DIRT) > 0,
+                    "лишняя земля обязана уехать в сундук: иначе дух не освободил место и бросил сбор");
+            int wheat = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT)
+                    + GameTestFixtures.countInWorld(helper, Items.WHEAT);
+            helper.assertTrue(wheat >= 2,
+                    "после сдачи урожай обеих клеток обязан собраться (в инвентаре или в мире), фактически " + wheat);
             GameTestFixtures.finish(helper);
         });
     }

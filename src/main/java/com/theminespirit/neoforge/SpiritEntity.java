@@ -457,6 +457,10 @@ public final class SpiritEntity extends PathfinderMob {
         return brain == null ? Optional.empty() : brain.currentScript();
     }
 
+    public boolean isFollowingPlayer() {
+        return currentTaskScript().filter(NightLeashGate.FOLLOW_SCRIPTS::contains).isPresent();
+    }
+
     public Optional<RunProgress> taskProgress() {
         return brain == null ? Optional.empty() : brain.progress();
     }
