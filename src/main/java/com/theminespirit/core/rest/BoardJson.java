@@ -1,5 +1,7 @@
 package com.theminespirit.core.rest;
 
+import com.theminespirit.core.board.BoardLog;
+import com.theminespirit.core.board.BoardLogEntry;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,6 +10,14 @@ import java.util.Map;
 /** JSON-представление заданий доски для GET/POST/DELETE /v1/board: имена полей — контракт v1. */
 public final class BoardJson {
     private BoardJson() {
+    }
+
+    public static String logJson(List<BoardLogEntry> entries) {
+        List<Object> lines = new ArrayList<>(entries.size());
+        for (BoardLogEntry entry : entries) {
+            lines.add(BoardLog.toMap(entry));
+        }
+        return RestJson.write(Map.of("entries", lines));
     }
 
     public static String toJson(BoardTask task) {
@@ -35,6 +45,9 @@ public final class BoardJson {
         map.put("createdAt", task.createdAt());
         map.put("level", task.level());
         map.put("cause", task.cause());
+        map.put("effectivePriority", task.effectivePriority());
+        map.put("modifiers", task.modifiers());
+        map.put("done", task.done());
         return map;
     }
 }

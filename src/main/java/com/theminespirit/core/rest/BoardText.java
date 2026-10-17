@@ -13,8 +13,15 @@ public final class BoardText {
     public static String line(BoardTask task) {
         StringBuilder text = new StringBuilder();
         text.append(task.id()).append(" — ").append(task.boardCase())
-                .append(", приоритет ").append(task.priority())
+                .append(", уровень ").append(task.level())
+                .append(", приоритет ").append(task.effectivePriority())
                 .append(", ").append(statusRu(task.status()));
+        if (!task.modifiers().isEmpty()) {
+            text.append(", модификаторы: ").append(String.join(", ", task.modifiers()));
+        }
+        if (task.done()) {
+            text.append(", выполнено");
+        }
         text.append(", владелец: ").append(task.assignee() == null ? "любой свободный" : task.assignee());
         if (!task.missing().isEmpty()) {
             text.append(", не хватает: ").append(missing(task.missing()));

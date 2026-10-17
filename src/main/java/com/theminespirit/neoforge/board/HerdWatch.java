@@ -1,11 +1,15 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.BoardPriorities;
+import com.theminespirit.core.board.BreedingRules;
+import com.theminespirit.core.board.HerdCap;
+import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -16,14 +20,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Источник доски «животное найдено»: раз в {@link BoardTuning#herdScanIntervalTicks()}
- * ищет дикое животное рядом с поселением и ставит {@code CAPTURE_ANIMAL}.
+ * Источник доски «стадо»: раз в {@link BoardTuning#herdScanIntervalTicks()} ищет диких
+ * животных рядом с поселением. Циклы идут по видам независимо: у каждого вида свой отлов,
+ * загон, приманка и лимит четырёх голов. Пойманное животное остаётся живой причиной цикла
+ * ({@code animal:capture:<вид>:<uuid>}), пока сущность жива.
  */
 public final class HerdWatch {
     private static final int HERD_RADIUS = 32;
@@ -35,49 +40,142 @@ public final class HerdWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        if (hasActiveCapture(service)) {
-            return;
-        }
         BlockCoord home = homeOf(spirits);
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
         List<Animal> animals = HerdSurvey.query(level, center, HERD_RADIUS);
+        for (Species species : Species.all()) {
+            if (service.capturedCount(species) >= HerdCap.maxPerSpecies()) {
+                continue;
+            }
+            if (hasActive(service, species)) {
+                continue;
+            }
+            Animal wild = wildOf(animals, species);
+            if (wild == null) {
+                continue;
+            }
+            capture(service, species, wild, now);
+        }
+        breed(service, home, now);
+    }
+
+    private static Animal wildOf(List<Animal> animals, Species species) {
         for (Animal animal : animals) {
-            if (animal.isRemoved() || !animal.isAlive()) {
+            if (animal.isRemoved() || !animal.isAlive() || animal.isInLove()) {
                 continue;
             }
-            if (animal.isInLove()) {
-                continue;
+            Optional<Species> found = HerdSpecies.of(animal);
+            if (found.isPresent() && found.orElseThrow() == species) {
+                return animal;
             }
-            Optional<Species> species = HerdSpecies.of(animal);
-            if (species.isEmpty()) {
-                continue;
+        }
+        return null;
+    }
+
+    private static void capture(BoardService service, Species species, Animal animal, long now) {
+        String id = captureId(species, animal);
+        BlockCoord target = new BlockCoord(animal.blockPosition().getX(),
+                animal.blockPosition().getY(), animal.blockPosition().getZ());
+        TicketTarget point = TicketTarget.at(target).withSpecies(species);
+        service.noteCapture(id, species, animal.getUUID(), point);
+        service.submit(new BoardTicket(id, BoardCase.CAPTURE_ANIMAL, Optional.empty(),
+                priority(BoardCase.CAPTURE_ANIMAL, service, species, false), now, 1,
+                "animal:" + id, List.of(), Map.of()), point);
+    }
+
+    private static void breed(BoardService service, BlockCoord home, long now) {
+        for (Species species : Species.all()) {
+            int housed = service.capturedCount(species);
+            boolean penBuilt = penBuilt(service, species);
+            BreedingRules.Action action = BreedingRules.action(species, housed, penBuilt);
+            if (action == BreedingRules.Action.BREED && !hasActiveCase(service, species, BoardCase.BREED_ANIMALS)) {
+                service.submit(new BoardTicket(species.name().toLowerCase(Locale.ROOT) + "_breed",
+                        BoardCase.BREED_ANIMALS, Optional.empty(),
+                        priority(BoardCase.BREED_ANIMALS, service, species, penBuilt), now, 1,
+                        causeOf(service, species), List.of(), BreedingRules.breedingGate(species)),
+                        TicketTarget.at(home).withSpecies(species));
+            } else if (action == BreedingRules.Action.CULL
+                    && !hasActiveCase(service, species, BoardCase.HERD_CULL)) {
+                service.submit(new BoardTicket(species.name().toLowerCase(Locale.ROOT) + "_cull",
+                        BoardCase.HERD_CULL, Optional.empty(),
+                        priority(BoardCase.HERD_CULL, service, species, penBuilt), now, 1,
+                        causeOf(service, species), List.of(), Map.of()),
+                        TicketTarget.at(home).withSpecies(species));
             }
-            String id = "capture:" + species.orElseThrow().name().toLowerCase(Locale.ROOT) + ":"
-                    + animal.blockPosition().getX() + "," + animal.blockPosition().getY() + ","
-                    + animal.blockPosition().getZ();
-            BlockCoord target = new BlockCoord(animal.blockPosition().getX(), animal.blockPosition().getY(),
-                    animal.blockPosition().getZ());
-            service.submit(new BoardTicket(id, BoardCase.CAPTURE_ANIMAL, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.CAPTURE_ANIMAL), now, 1,
-                    animalCause(species.orElseThrow(), animal.blockPosition()), List.of(), Map.of()),
-                    TicketTarget.at(target).withSpecies(species.orElseThrow()));
-            return;
         }
     }
 
-    private static boolean hasActiveCapture(BoardService service) {
-        return service.board().all().stream().anyMatch(ticket -> {
+    private static int priority(BoardCase boardCase, BoardService service, Species species, boolean penBuilt) {
+        PriorityContext context = new PriorityContext(
+                service.capturedCount(species) > 0, penBuilt, !baitReady(service, species), false, false);
+        return BoardPriorities.effective(boardCase, context);
+    }
+
+    private static boolean baitReady(BoardService service, Species species) {
+        String feed = FeedTable.feedFor(species).get(0);
+        String shortFeed = feed.startsWith("minecraft:") ? feed.substring("minecraft:".length()) : feed;
+        return service.stock().available().getOrDefault(shortFeed, 0) > 0;
+    }
+
+    private static boolean penBuilt(BoardService service, Species species) {
+        String prefix = species.name().toLowerCase(Locale.ROOT);
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() == BoardCase.BUILD_PEN && ticket.id().startsWith(prefix)
+                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String causeOf(BoardService service, Species species) {
+        String prefix = "animal:capture:" + species.name().toLowerCase(Locale.ROOT) + ":";
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.cause().startsWith(prefix)) {
+                return ticket.cause();
+            }
+        }
+        return BoardTicket.ALWAYS_CAUSE;
+    }
+
+    private static boolean hasActive(BoardService service, Species species) {
+        for (BoardTicket ticket : service.board().all()) {
             if (ticket.boardCase() != BoardCase.CAPTURE_ANIMAL
                     && ticket.boardCase() != BoardCase.BUILD_PEN
                     && ticket.boardCase() != BoardCase.LURE_ANIMAL
                     && ticket.boardCase() != BoardCase.DISMANTLE_SHELTER) {
-                return false;
+                continue;
             }
-            return service.board().statusOf(ticket.id())
-                    .map(s -> s == BoardStatus.PENDING || s == BoardStatus.WAITING_RESOURCES
-                            || s == BoardStatus.ASSIGNED)
-                    .orElse(false);
-        });
+            if (!ticket.id().startsWith(species.name().toLowerCase(Locale.ROOT))) {
+                continue;
+            }
+            if (active(service, ticket.id())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasActiveCase(BoardService service, Species species, BoardCase boardCase) {
+        String prefix = species.name().toLowerCase(Locale.ROOT);
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() == boardCase && ticket.id().startsWith(prefix)
+                    && active(service, ticket.id())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean active(BoardService service, String id) {
+        return service.board().statusOf(id)
+                .map(status -> status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+                        || status == BoardStatus.ASSIGNED)
+                .orElse(false);
+    }
+
+    private static String captureId(Species species, Animal animal) {
+        return "capture:" + species.name().toLowerCase(Locale.ROOT) + ":" + animal.getUUID();
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {
@@ -88,11 +186,5 @@ public final class HerdWatch {
             }
         }
         return new BlockCoord(0, 64, 0);
-    }
-
-    /** Причина задания отлова — вид и клетка животного: погибшее уходит из живых причин. */
-    static String animalCause(Species species, BlockPos pos) {
-        return "animal:" + species.name().toLowerCase(Locale.ROOT) + ":" + pos.getX() + ":"
-                + pos.getY() + ":" + pos.getZ();
     }
 }

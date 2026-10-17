@@ -75,6 +75,7 @@
 | GET | `/v1/tasks/{id}/events` | поток событий задачи (SSE) |
 | POST | `/v1/plan` | сухой прогон: проверить план без исполнения |
 | GET | `/v1/board` | очередь заданий доски поселения |
+| GET | `/v1/board/log` | последние записи журнала выполненных заданий |
 | POST | `/v1/board/tasks` | поставить задание поселения на доску (с гейтом по ресурсам) |
 | DELETE | `/v1/board/tasks/{id}` | отменить задание доски (зависимые тоже снимаются) |
 
@@ -454,7 +455,8 @@ data: {"state":"failed"}
   {"id":"board-6f1c2d3e-0000-4000-8000-000000000001","case":"SUPPLY_SITE","priority":20,
    "assignee":"11111111-2222-3333-4444-555555555555","status":"WAITING_RESOURCES",
    "requiredItems":{"oak_log":16},"missing":{"oak_log":10},"dependsOn":["board-root"],
-   "createdAt":1234,"level":1,"cause":"always"}
+   "createdAt":1234,"level":1,"cause":"always","effectivePriority":55,
+   "modifiers":["lure_bait_ready"],"done":false}
 ]}
 ```
 
@@ -465,7 +467,9 @@ data: {"state":"failed"}
   пустая нехватка — `{}`);
 - `dependsOn` — id заданий-предшественников; `createdAt` — тик постановки; `level` — уровень постройки (≥ 1);
   `cause` — причина задания (`always` у постоянных, иначе ключ вида `crater:x:y:z`): по ней пересборка проверяет
-  актуальность, срока жизни у заданий нет.
+  актуальность, срока жизни у заданий нет;
+- `effectivePriority` — база плюс сработавшие модификаторы (с зажимом в `[0, 100]`), `modifiers` — их ключи;
+- `done` — отметка «постройка стоит»: задание уровня выполнено или уровень подтверждён журналом прошлой сессии.
 
 ### POST /v1/board/tasks
 
@@ -486,10 +490,21 @@ data: {"state":"failed"}
 - `dependsOn` — необязателен: список id заданий-предшественников;
 - `level` — необязателен, по умолчанию 1; обязан быть ≥ 1;
 - `cause` — необязательна, по умолчанию `always`; обязана быть непустой строкой;
+- `building`, `from`, `to` — только для `case: RELOCATE_BUILDING`: `building` — кейс переносимой постройки,
+  `from`/`to` — две точки `"x,y,z"`; неподвижная постройка (данные `board.json → immovable`) — 422
+  `invalid_request` с перечнем `immovable`; `from = to` и отсутствие точек — 400;
 - лишнее поле — 400 `invalid_request` с именем поля.
 
 Ответ `202` — задание целиком (как элемент `GET /v1/board`) плюс `request_id` клиента. Идём через `IdempotencyCache`,
 как и задачи духа.
+
+### GET /v1/board/log
+
+Последние записи журнала заданий: `{"entries":[{...}]}` от свежих к старым. `limit` (query, необязателен) —
+сколько записей отдать, по умолчанию 5, границы 1..64; неизвестный параметр — 400 `invalid_request`.
+Запись журнала — та же, что строка JSONL на диске (`config/theminespirit/board-log.jsonl`): `event`
+(`ASSIGNED`/`DONE`/`FAILED`/`CANCELLED`/`DETACHED`), `tick`, `ticketId`, `case`, `level`, `cause`,
+`basePriority`, `effectivePriority`, `modifiers`, `spirit`, `configHash`, `worldTime`.
 
 ### DELETE /v1/board/tasks/{id}
 

@@ -11,7 +11,15 @@ import java.util.Objects;
  */
 public record BoardTask(String id, String boardCase, int priority, String assignee, String status,
         Map<String, Integer> requiredItems, Map<String, Integer> missing, List<String> dependsOn,
-        long createdAt, int level, String cause) {
+        long createdAt, int level, String cause, int effectivePriority, List<String> modifiers,
+        boolean done) {
+
+    public BoardTask(String id, String boardCase, int priority, String assignee, String status,
+            Map<String, Integer> requiredItems, Map<String, Integer> missing, List<String> dependsOn,
+            long createdAt, int level, String cause) {
+        this(id, boardCase, priority, assignee, status, requiredItems, missing, dependsOn, createdAt,
+                level, cause, priority, List.of(), false);
+    }
 
     public BoardTask {
         if (id == null || id.isBlank()) {
@@ -46,5 +54,11 @@ public record BoardTask(String id, String boardCase, int priority, String assign
                 "missing не может быть null: задание без нехватки задают пустой картой"));
         dependsOn = List.copyOf(Objects.requireNonNull(dependsOn,
                 "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
+        if (effectivePriority < 0) {
+            throw new IllegalArgumentException("Эффективный приоритет " + effectivePriority
+                    + " отрицателен: доска не выдаёт заданий с отрицательным приоритетом");
+        }
+        modifiers = List.copyOf(Objects.requireNonNull(modifiers,
+                "modifiers не может быть null: задание без модификаторов задают пустым списком"));
     }
 }

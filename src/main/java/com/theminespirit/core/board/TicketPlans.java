@@ -32,7 +32,7 @@ public final class TicketPlans {
     private static final int LIGHTING_OFFSET = 2;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
-    private static final String ENCHANT_ROOM_30_SCHEME = "enchant_room_30";
+    private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v1";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
     private static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_STEPS_SIZE = 3;
@@ -134,7 +134,7 @@ public final class TicketPlans {
     }
 
     private static TaskNode enchantRoomLevel(int level, TicketTarget target) {
-        String scheme = level == 1 ? ENCHANT_ROOM_SCHEME : ENCHANT_ROOM_30_SCHEME;
+        String scheme = level == 1 ? ENCHANT_ROOM_SCHEME : ENCHANT_ROOM_SHELVES_SCHEME;
         return sequence(gotoTarget(target), schematic(scheme, target));
     }
 

@@ -24,12 +24,18 @@ public final class BoardRoutes {
     public List<Route> routes() {
         return List.of(
                 new Route("GET", "/v1/board", this::list),
+                new Route("GET", "/v1/board/log", this::log),
                 new Route("POST", "/v1/board/tasks", this::create),
                 new Route("DELETE", "/v1/board/tasks/{id}", this::cancel));
     }
 
     private RestResponse list(RestRequest request, PathParams params) {
         return RestResponse.ok(BoardJson.listJson(gateway.tasks()));
+    }
+
+    private RestResponse log(RestRequest request, PathParams params) {
+        BoardLogQuery query = BoardLogQuery.parse(request.query());
+        return RestResponse.ok(BoardJson.logJson(gateway.log(query.limit())));
     }
 
     private RestResponse create(RestRequest request, PathParams params) {
@@ -76,6 +82,9 @@ public final class BoardRoutes {
         body.put("dependsOn", request.dependsOn());
         body.put("level", request.level());
         body.put("cause", request.cause());
+        body.put("building", request.building().map(Enum::name).orElse(null));
+        body.put("from", request.from().map(Object::toString).orElse(null));
+        body.put("to", request.to().map(Object::toString).orElse(null));
         return IdempotencyCache.fingerprintOf(body);
     }
 }

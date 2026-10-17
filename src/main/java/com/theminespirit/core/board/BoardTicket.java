@@ -15,9 +15,16 @@ import java.util.UUID;
  * сломала бы и сортировку, и гейт.
  */
 public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assignee, int priority,
-        long createdAt, int level, String cause, List<String> dependsOn, Map<String, Integer> requiredItems) {
+        long createdAt, int level, String cause, List<String> dependsOn, Map<String, Integer> requiredItems,
+        List<String> modifiers) {
 
     public static final String ALWAYS_CAUSE = "always";
+
+    public BoardTicket(String id, BoardCase boardCase, Optional<UUID> assignee, int priority,
+            long createdAt, int level, String cause, List<String> dependsOn,
+            Map<String, Integer> requiredItems) {
+        this(id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, List.of());
+    }
 
     public BoardTicket {
         if (id == null || id.isBlank()) {
@@ -54,5 +61,13 @@ public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assigne
         }
         requiredItems = Map.copyOf(Objects.requireNonNull(requiredItems,
                 "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
+        modifiers = List.copyOf(Objects.requireNonNull(modifiers,
+                "modifiers не может быть null: задание без модификаторов задают пустым списком"));
+        for (String modifier : modifiers) {
+            if (modifier == null || modifier.isBlank()) {
+                throw new IllegalArgumentException("Сработавший модификатор назван пустой строкой: "
+                        + "наблюдатель показывает ключи, а не пустоту");
+            }
+        }
     }
 }

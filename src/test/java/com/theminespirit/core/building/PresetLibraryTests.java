@@ -41,14 +41,15 @@ class PresetLibraryTests {
     }
 
     @Test
-    void parse_RealIndex_LoadsAllTenPresets() {
+    void parse_RealIndex_LoadsAllTwelvePresets() {
         PresetLibrary library = loadReal();
 
-        assertEquals(10, library.size(),
-                "Библиотека обязана прочитать все десять пресетов, включая два уровня чаровальни: без них "
-                        + "стратегу не из чего составлять планировку поселения");
+        assertEquals(12, library.size(),
+                "Библиотека обязана прочитать все двенадцать пресетов, включая два уровня чаровальни "
+                        + "и загоны трёх уровней: без них стратегу не из чего составлять планировку поселения");
         assertEquals(List.of("palisade_section", "torch_post", "storage_hut", "family_house", "stone_house",
-                "well", "pen_7x7", "mine_entrance_v1", "enchant_room_v1", "enchant_room_v2"), library.ids(),
+                "well", "pen_7x7", "pen_4x5", "pen_9x9", "mine_entrance_v1", "enchant_room_v1",
+                "enchant_room_v2"), library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
 
@@ -176,8 +177,8 @@ class PresetLibraryTests {
 
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
-        assertEquals(10, paths.size(),
-                "Индекс обязан назвать по телу на каждый из десяти пресетов: пропуск тела оставил бы пресет без схемы");
+        assertEquals(12, paths.size(),
+                "Индекс обязан назвать по телу на каждый из двенадцати пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(PresetLibrary.SCHEMATICS_ROOT + "storage_hut.json", paths.get(2),
                 "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой");
     }

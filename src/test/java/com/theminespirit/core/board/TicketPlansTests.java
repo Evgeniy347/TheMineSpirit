@@ -314,8 +314,8 @@ class TicketPlansTests {
 
         assertEquals("enchant_room", one.params().get("file"),
                 "Уровень 1 чаровальни — схема enchant_room: маленькое здание со столом по центру");
-        assertEquals("enchant_room_30", two.params().get("file"),
-                "Уровень 2 чаровальни — схема enchant_room_30: кольцо 15 полок для 30 уровня");
+        assertEquals("enchant_room_v1", two.params().get("file"),
+                "Уровень 2 чаровальни — готовый пресет enchant_room_v1: кольцо 15 полок для 30 уровня");
     }
 
     @Test
