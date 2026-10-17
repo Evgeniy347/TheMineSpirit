@@ -1,9 +1,19 @@
 package com.theminespirit.core.fishing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.reload.ContentSource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableRegistry;
+import com.theminespirit.core.reload.TableStatus;
+import java.time.Clock;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class FishingDataTests {
@@ -72,5 +82,37 @@ class FishingDataTests {
         assertEquals(FishingData.defaults(), FishingData.load(),
                 "Файл " + FishingData.RESOURCE + " обязан совпадать с кодовыми DEFAULTS: расхождение тихо "
                         + "изменит, какую воду дух считает пригодной для рыбалки");
+    }
+
+    @Test
+    void reload_ChangedJson_HolderReturnsNewWater() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<FishingData> holder = registry.registerLazy(registeredDefinition(), FishingData::defaults);
+        ContentSource source = ContentSource.of(Map.of(FishingData.RESOURCE,
+                new LoadedContent("""
+                        {"minWidth": 8, "minDepth": 4}""", "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(new FishingData(8, 4), holder.current(),
+                "После /reload с изменённым json держатель обязан нести новые размеры воды: иначе датапак мира "
+                        + "не поменяет требования к пруду без перезапуска, а таблица числится горячей ложно");
+    }
+
+    @Test
+    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
+        assertSame(DataTables.INSTANCE.fishing().current(), FishingData.loadDefault(),
+                "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
+                        + "не поменяет ему числа, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<FishingData> registeredDefinition() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if (definition.id().equals("fishing")) {
+                return (TableDefinition<FishingData>) definition;
+            }
+        }
+        throw new AssertionError("таблица fishing не зарегистрирована в DataTables: /reload её не перечитает");
     }
 }

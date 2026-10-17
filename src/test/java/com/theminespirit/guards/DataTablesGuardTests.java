@@ -42,14 +42,10 @@ class DataTablesGuardTests {
                     "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
             Map.entry("data/theminespirit/schematics/enchant_room.json",
                     "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
-            Map.entry("data/theminespirit/hunger/hunger.json",
-                    "HungerRules читается с classpath, не на /reload (todo: горячие таблицы)"),
             Map.entry("data/theminespirit/mining/descent.json",
                     "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)"),
             Map.entry("data/theminespirit/mining/descent_levels.json",
-                    "DescentLevels с classpath, не на /reload (todo: горячие таблицы)"),
-            Map.entry("data/theminespirit/fishing/fishing.json",
-                    "FishingData.load() с classpath, не на /reload (todo: горячие таблицы)"));
+                    "DescentLevels с classpath, не на /reload (todo: горячие таблицы)"));
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

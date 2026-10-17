@@ -5,8 +5,10 @@ import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
+import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
+import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
@@ -52,6 +54,8 @@ public final class DataTables {
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
     private final TableHolder<DoorRules> doors;
+    private final TableHolder<HungerRules> hunger;
+    private final TableHolder<FishingData> fishing;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -113,6 +117,12 @@ public final class DataTables {
         this.doors = registry.registerLazy(
                 TableDefinition.single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse),
                 DoorTuning::loadDefault);
+        this.hunger = registry.registerLazy(
+                TableDefinition.single("hunger", HungerRules.RESOURCE, HungerRules::parse),
+                HungerRules::load);
+        this.fishing = registry.registerLazy(
+                TableDefinition.single("fishing", FishingData.RESOURCE, FishingData::parse),
+                FishingData::load);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -192,6 +202,14 @@ public final class DataTables {
 
     public TableHolder<DoorRules> doors() {
         return doors;
+    }
+
+    public TableHolder<HungerRules> hunger() {
+        return hunger;
+    }
+
+    public TableHolder<FishingData> fishing() {
+        return fishing;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */

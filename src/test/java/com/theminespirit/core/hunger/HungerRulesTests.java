@@ -1,8 +1,18 @@
 package com.theminespirit.core.hunger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.reload.ContentSource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableRegistry;
+import com.theminespirit.core.reload.TableStatus;
+import java.time.Clock;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class HungerRulesTests {
@@ -24,6 +34,38 @@ class HungerRulesTests {
         assertEquals(HungerRules.defaults(), HungerRules.load(),
                 "Файл data/theminespirit/hunger/hunger.json обязан читаться и совпадать с умолчаниями: "
                         + "скорости истощения — данные, а не ветки в коде");
+    }
+
+    @Test
+    void reload_ChangedJson_HolderReturnsNewInterval() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<HungerRules> holder = registry.registerLazy(registeredDefinition(), HungerRules::defaults);
+        String changed = VALID.replace("\"regenIntervalTicks\": 80", "\"regenIntervalTicks\": 40");
+        ContentSource source = ContentSource.of(Map.of(HungerRules.RESOURCE,
+                new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(40, holder.current().regenIntervalTicks(),
+                "После /reload с изменённым json держатель обязан нести новое значение: иначе датапак мира "
+                        + "не поменяет интервал восстановления голода без перезапуска, а таблица числится горячей ложно");
+    }
+
+    @Test
+    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
+        assertSame(DataTables.INSTANCE.hunger().current(), HungerRules.loadDefault(),
+                "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
+                        + "не поменяет ему числа, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<HungerRules> registeredDefinition() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if (definition.id().equals("hunger")) {
+                return (TableDefinition<HungerRules>) definition;
+            }
+        }
+        throw new AssertionError("таблица hunger не зарегистрирована в DataTables: /reload её не перечитает");
     }
 
     @Test

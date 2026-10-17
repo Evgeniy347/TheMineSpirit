@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 
 public final class HungerState {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final HungerRules RULES = HungerRules.load();
     private static final NutritionTable FOOD_TABLE = StockCatalog.defaultTable();
     private static final double MAX_STEP_DISTANCE = 4.0;
 
@@ -42,7 +41,7 @@ public final class HungerState {
     }
 
     public HungerRules rules() {
-        return RULES;
+        return HungerRules.loadDefault();
     }
 
     public double satietyFraction() {
@@ -55,21 +54,21 @@ public final class HungerState {
 
     public void tick() {
         spendOnMovement();
-        HungerTick result = hunger.tick(RULES, spirit.getHealth(), spirit.getMaxHealth());
+        HungerTick result = hunger.tick(rules(), spirit.getHealth(), spirit.getMaxHealth());
         hunger = result.hunger();
         apply(result.effect());
     }
 
     public void onAttack() {
-        hunger = hunger.addExhaustion(RULES.combatExhaustionPerAttack());
+        hunger = hunger.addExhaustion(rules().combatExhaustionPerAttack());
     }
 
     public void onBlockBroken() {
-        hunger = hunger.addExhaustion(RULES.digExhaustionPerBlock());
+        hunger = hunger.addExhaustion(rules().digExhaustionPerBlock());
     }
 
     public void onHurt() {
-        hunger = hunger.addExhaustion(RULES.damageExhaustionPerHit());
+        hunger = hunger.addExhaustion(rules().damageExhaustionPerHit());
     }
 
     public boolean hasFood() {
@@ -137,7 +136,7 @@ public final class HungerState {
         }
         double step = Math.min(Math.sqrt(dx * dx + dz * dz), MAX_STEP_DISTANCE);
         if (step > 0) {
-            hunger = hunger.addExhaustion(RULES.sprintExhaustionPerMeter() * step);
+            hunger = hunger.addExhaustion(rules().sprintExhaustionPerMeter() * step);
         }
     }
 

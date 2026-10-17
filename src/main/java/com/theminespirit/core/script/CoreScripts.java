@@ -469,7 +469,7 @@ public final class CoreScripts {
     }
 
     private static String waterAreaText() {
-        FishingData data = FishingData.defaults();
+        FishingData data = FishingData.loadDefault();
         return data.minWidth() + "x" + data.minWidth() + " глубиной " + data.minDepth();
     }
 }

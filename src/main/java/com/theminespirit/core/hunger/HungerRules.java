@@ -2,6 +2,7 @@ package com.theminespirit.core.hunger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
 public record HungerRules(
@@ -52,6 +53,11 @@ public record HungerRules(
 
     public static HungerRules defaults() {
         return DEFAULTS;
+    }
+
+    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
+    public static HungerRules loadDefault() {
+        return DataTables.INSTANCE.hunger().current();
     }
 
     public static HungerRules load() {
