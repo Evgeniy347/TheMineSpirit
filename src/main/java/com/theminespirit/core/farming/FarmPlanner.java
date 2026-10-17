@@ -57,6 +57,22 @@ public final class FarmPlanner {
                 ineligible++;
                 continue;
             }
+            if (job == FarmJob.HARVEST && tile.crop().isPresent()
+                    && tile.crop().orElseThrow().kind().harvestMethod() == HarvestMethod.BREAK_FRUIT
+                    && view.fruitAt(target, tile.crop().orElseThrow().kind()).isEmpty()) {
+                ineligible++;
+                continue;
+            }
+            if (job == FarmJob.PLANT && filter.hasSupport()
+                    && (tile.crop().isPresent() || view.attachedSpot(target, filter).isEmpty())) {
+                ineligible++;
+                continue;
+            }
+            if (job == FarmJob.PLANT && filter != CropKind.ANY
+                    && filter.harvestMethod() == HarvestMethod.BREAK_FRUIT && !view.hasFruitSpace(target)) {
+                ineligible++;
+                continue;
+            }
             List<BlockCoord> stands = FarmStandSpots.of(target, from, cached, view);
             if (stands.isEmpty()) {
                 noStand++;

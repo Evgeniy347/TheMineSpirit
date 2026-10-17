@@ -16,7 +16,13 @@ public enum CropKind {
             HarvestMethod.PICK),
     SUGAR_CANE("minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane", HarvestMethod.BREAK_COLUMN),
     BAMBOO("minecraft:bamboo", 1, "bamboo", "bamboo", HarvestMethod.BREAK_COLUMN),
-    CACTUS("minecraft:cactus", 15, "cactus", "cactus", HarvestMethod.BREAK_COLUMN);
+    CACTUS("minecraft:cactus", 15, "cactus", "cactus", HarvestMethod.BREAK_COLUMN),
+    MELON("minecraft:melon_stem", 7, "melon_seeds", "melon_slice", HarvestMethod.BREAK_FRUIT,
+            "minecraft:melon"),
+    PUMPKIN("minecraft:pumpkin_stem", 7, "pumpkin_seeds", "pumpkin", HarvestMethod.BREAK_FRUIT,
+            "minecraft:pumpkin"),
+    COCOA("minecraft:cocoa", 2, "cocoa_beans", "cocoa_beans", HarvestMethod.BREAK, null,
+            "minecraft:jungle_log");
 
     private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())
@@ -32,21 +38,31 @@ public enum CropKind {
     private final String plantItem;
     private final String produceItem;
     private final HarvestMethod harvestMethod;
+    private final String fruitBlockId;
+    private final String supportBlockId;
 
     CropKind() {
-        this.blockId = null;
-        this.maxAge = -1;
-        this.plantItem = null;
-        this.produceItem = null;
-        this.harvestMethod = HarvestMethod.BREAK;
+        this(null, -1, null, null, HarvestMethod.BREAK, null, null);
     }
 
     CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod) {
+        this(blockId, maxAge, plantItem, produceItem, harvestMethod, null, null);
+    }
+
+    CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod,
+            String fruitBlockId) {
+        this(blockId, maxAge, plantItem, produceItem, harvestMethod, fruitBlockId, null);
+    }
+
+    CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod,
+            String fruitBlockId, String supportBlockId) {
         this.blockId = blockId;
         this.maxAge = maxAge;
         this.plantItem = plantItem;
         this.produceItem = produceItem;
         this.harvestMethod = harvestMethod;
+        this.fruitBlockId = fruitBlockId;
+        this.supportBlockId = supportBlockId;
     }
 
     public static List<String> names() {
@@ -95,6 +111,41 @@ public enum CropKind {
                     "У any нет способа сбора: any означает «любой вид», а собирают конкретный");
         }
         return harvestMethod;
+    }
+
+    public boolean hasFruit() {
+        return fruitBlockId != null;
+    }
+
+    public String fruitBlockId() {
+        if (fruitBlockId == null) {
+            throw new IllegalArgumentException("У вида " + this + " нет плода на соседней клетке: "
+                    + "плод есть только у культур метода BREAK_FRUIT, сверь harvestMethod в CropKind");
+        }
+        return fruitBlockId;
+    }
+
+    public boolean hasSupport() {
+        return supportBlockId != null;
+    }
+
+    public String supportBlockId() {
+        if (supportBlockId == null) {
+            throw new IllegalArgumentException("У вида " + this + " нет блока опоры: "
+                    + "на опоре растут только культуры вроде какао, сверь supportBlockId в CropKind");
+        }
+        return supportBlockId;
+    }
+
+    public static Optional<CropKind> ofSupportBlock(String blockId) {
+        Objects.requireNonNull(blockId, "id блока не может быть null: по нему ищется вид культуры на опоре");
+        String canonical = canonicalId(blockId);
+        for (CropKind kind : values()) {
+            if (kind.supportBlockId != null && kind.supportBlockId.equals(canonical)) {
+                return Optional.of(kind);
+            }
+        }
+        return Optional.empty();
     }
 
     public static CropKind parse(String kind) {

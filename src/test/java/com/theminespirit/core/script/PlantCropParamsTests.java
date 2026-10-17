@@ -33,8 +33,8 @@ class PlantCropParamsTests {
     @Test
     void from_UnknownCrop_IsRejectedWithAllowedList() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> PlantCropParams.from(Map.of("crop", "melon", "radius", 8, "count", 64)),
-                "plant_crop с crop=melon обязан отказывать: арбуз не входит в фермерство чеклиста");
+                () -> PlantCropParams.from(Map.of("crop", "rice", "radius", 8, "count", 64)),
+                "plant_crop с crop=rice обязан отказывать: риса нет в видах CropKind");
 
         assertEquals(true, error.getMessage().contains("wheat"),
                 "Отказ обязан перечислять допустимые виды культур. Фактическое: " + error.getMessage());
