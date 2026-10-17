@@ -3,15 +3,24 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.policy.ExplosionAvoidance;
+import com.theminespirit.core.policy.PolicyVerdict;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Creeper;
@@ -33,6 +42,22 @@ public final class PolicyDangerGameTests {
     private PolicyDangerGameTests() {
     }
 
+    /**
+     * Сцена про политику крипера — не про доску. Общая доска уровня переживает границы сцен:
+     * её билеты (FirstStepsRunner и др.) выдаются свободному духу сцены и уводят его с места
+     * в неурочный момент. Ровно так дух политики крипера уходил на несколько блоков, а проверка
+     * «стоит на месте» падала в полном прогоне. Гасим раздачу на пачку и возвращаем после.
+     */
+    @BeforeBatch(batch = "policy_creeper_far")
+    public static void quietBoard(ServerLevel level) {
+        SpiritConfig.setBoardEnabled(false);
+    }
+
+    @AfterBatch(batch = "policy_creeper_far")
+    public static void restoreBoard(ServerLevel level) {
+        SpiritConfig.setBoardEnabled(true);
+    }
+
     private static double cellDistance(GameTestHelper helper, SpiritEntity spirit, BlockPos other) {
         BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
         return Math.sqrt(cell.distSqr(other));
@@ -42,6 +67,19 @@ public final class PolicyDangerGameTests {
         Creeper creeper = helper.spawn(EntityType.CREEPER, at);
         creeper.setNoAi(true);
         return creeper;
+    }
+
+    private static String threatReport(GameTestHelper helper, SpiritEntity spirit) {
+        String threats = helper.getLevel().getEntitiesOfClass(Entity.class,
+                        spirit.getBoundingBox().inflate(ExplosionAvoidance.SCAN_RADIUS)).stream()
+                .filter(entity -> entity instanceof Creeper || entity instanceof PrimedTnt)
+                .sorted(Comparator.comparingDouble(entity -> entity.distanceTo(spirit)))
+                .map(entity -> entity.getType().toShortString() + "@" + entity.blockPosition().toShortString()
+                        + " d=" + String.format("%.2f", entity.distanceTo(spirit))
+                        + (entity instanceof Creeper creeper
+                                ? " swell=" + creeper.getSwelling(1.0F) + " target=" + creeper.getTarget() : ""))
+                .collect(Collectors.joining("; "));
+        return "вердикт " + spirit.policies().verdict() + "; угрозы [" + threats + "]";
     }
 
     @GameTest(template = "arena", batch = "policy_creeper_near", timeoutTicks = 200)
@@ -116,14 +154,22 @@ public final class PolicyDangerGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 0));
         idleCreeper(helper, new BlockPos(7, 1, 7));
         Vec3 start = spirit.position();
+        String[] reflexSeen = {null};
         PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
+        }, observed -> {
+            if (reflexSeen[0] == null && observed.policies().verdict() instanceof PolicyVerdict.Reflex) {
+                reflexSeen[0] = observed.policies().verdict() + " на " + observed.position();
+            }
+            return null;
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(scene.ticks() >= 40, "ещё не прошло 40 тиков наблюдения");
             helper.assertTrue(spirit.position().distanceTo(start) < 0.3,
-                    "крипер дальше 7 блоков: ложного срабатывания быть не должно, дух сместился на " + spirit.position().distanceTo(start));
+                    "крипер дальше 7 блоков: ложного срабатывания быть не должно, дух сместился на "
+                            + spirit.position().distanceTo(start) + "; рефлекс " + reflexSeen[0] + "; "
+                            + threatReport(helper, spirit));
             GameTestFixtures.finish(helper);
         });
     }

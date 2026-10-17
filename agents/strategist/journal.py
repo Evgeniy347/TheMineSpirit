@@ -23,7 +23,9 @@ class ReadResult:
 
 
 def is_recent_decision(event: dict) -> bool:
-    return event.get("event") in RECENT_EVENTS or (event.get("event") == "decision" and event.get("skip") is True)
+    if event.get("event") in RECENT_EVENTS or (event.get("event") == "decision" and event.get("skip") is True):
+        return True
+    return event.get("event") == "posted" and event.get("dry") is True
 
 
 def truncate_utf8(text: str, limit: int) -> tuple[str, bool]:
