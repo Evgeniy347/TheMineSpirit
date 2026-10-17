@@ -397,7 +397,10 @@ start_heartbeat() {
     touch "$HEARTBEAT_FILE"
     # stdout/stderr — в /dev/null: иначе фоновый sleep наследует пайп вызывающего
     # (out=$(scripts/test.sh …)) и держит его открытым до конца сна, задерживая проверки.
-    ( while kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; done ) >/dev/null 2>&1 &
+    # Пульс живёт не дольше самого долгого законного прогона (ожидание замка + предел + запас): на Windows
+    # осиротевший test.sh без gradle (17.10) держал пульс часами, и надзор не перезапускал зависшую сессию.
+    local beats=$(( (GAMETEST_WAIT + (UNIT_STOP > GAMETEST_STOP ? UNIT_STOP : GAMETEST_STOP) + 300) / 20 ))
+    ( n=0; while [ "$n" -lt "$beats" ] && kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; n=$((n + 1)); done ) >/dev/null 2>&1 &
     HEARTBEAT_PID=$!
 }
 
