@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
@@ -290,6 +291,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             targets.put(ticket.id(), target);
+            journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
         }
         return outcome;
     }
@@ -299,7 +301,11 @@ public final class BoardService {
      * берётся дом поселения, как для заявок без цели.
      */
     public BoardOutcome submit(BoardTicket ticket) {
-        return board.submit(ticket);
+        BoardOutcome outcome = board.submit(ticket);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
+        }
+        return outcome;
     }
 
     /**

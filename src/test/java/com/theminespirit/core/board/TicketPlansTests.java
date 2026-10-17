@@ -42,6 +42,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.LURE_ANIMAL, "withdraw"),
             Map.entry(BoardCase.BUILD_MINE, "dig_descent"),
             Map.entry(BoardCase.SUPPLY_SITE, "acquire"),
+            Map.entry(BoardCase.GATHER_MATERIALS, "acquire"),
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
             Map.entry(BoardCase.COLLECT_DROPS, "collect_drops"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),

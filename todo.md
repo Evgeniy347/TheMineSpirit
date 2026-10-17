@@ -250,8 +250,8 @@
 
 ### Движение и навигация
 - [x] `meet` (скрипт `meet`)
-- [ ] `escort`
-- [ ] `explore`
+- [x] `escort`
+- [x] `explore`
 - [x] `flee_from` (скрипт `flee`), `retreat` (скрипт `retreat`)
 - [ ] `disengage`
 - [ ] `bridge`, `pillar_up`, `descend`, `climb`
