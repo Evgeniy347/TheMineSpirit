@@ -41,6 +41,7 @@ final class GameTestFixtures {
     private static final int SWEEP_MIN_AGE_TICKS = 5;
     private static final int MAX_CHUNKS_EAST = 256;
     private static final Map<GameTestInfo, AABB> ACTIVE_SCENES = new ConcurrentHashMap<>();
+    private static final Map<GameTestInfo, TimeRestore> TIME_HOLDS = new ConcurrentHashMap<>();
 
     private GameTestFixtures() {
     }
@@ -122,11 +123,19 @@ final class GameTestFixtures {
         return true;
     }
 
+    // Сцена может просить время несколько раз (сон: ночь на старте, утро при засыпании). Слушатель у сцены
+    // один и помнит первое значение: вторая просьба только двигает часы, а не подменяет точку возврата.
+    // С отдельным слушателем на каждый вызов время утекало — GameTestInfo.testPassed зовёт слушателей в
+    // порядке добавления, и последний возвращал не исходное время, а сохранённое перед своим вызовом (ночь
+    // после сна падала на следующие пачки; порядок пачек в прогоне неупорядочен).
     static void holdDayTime(GameTestHelper helper, long dayTime) {
         ServerLevel level = helper.getLevel();
-        long saved = level.getDayTime();
+        if (TIME_HOLDS.get(helper.testInfo) == null) {
+            TimeRestore hold = new TimeRestore(level, level.getDayTime());
+            TIME_HOLDS.put(helper.testInfo, hold);
+            helper.testInfo.addListener(hold);
+        }
         level.setDayTime(dayTime);
-        helper.testInfo.addListener(new TimeRestore(level, saved));
     }
 
     static void buildFloor(GameTestHelper helper, Block block) {
@@ -253,11 +262,13 @@ final class GameTestFixtures {
         @Override
         public void testPassed(GameTestInfo test, GameTestRunner runner) {
             level.setDayTime(savedDayTime);
+            TIME_HOLDS.remove(test);
         }
 
         @Override
         public void testFailed(GameTestInfo test, GameTestRunner runner) {
             level.setDayTime(savedDayTime);
+            TIME_HOLDS.remove(test);
         }
 
         @Override
