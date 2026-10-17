@@ -16,6 +16,9 @@ public record CropState(CropKind kind, int age) {
     }
 
     public boolean isMature() {
+        if (kind.harvestMethod() == HarvestMethod.PICK) {
+            return age >= 2;
+        }
         return age == kind.maxAge();
     }
 }

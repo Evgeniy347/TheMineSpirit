@@ -1000,6 +1000,68 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "farm_harvest_sweetberry", timeoutTicks = 300)
+    public static void harvestCrop_MixedSweetBerry_PicksWithoutBreakingAndKeepsBush(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        CropKind kind = CropKind.parse("sweet_berry_bush");
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? 3 : 1);
+        }
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(kind, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "пять зрелых кустов обязаны собраться PICK без ломки, недозрелые не мешают");
+            for (int i = 0; i < cells.size(); i++) {
+                int expectedAge = i % 2 == 0 ? 1 : 1;
+                helper.assertTrue(cropAge(helper, cells.get(i)) == expectedAge,
+                        "клетка " + i + " обязана иметь возраст 1 (зрелая собрана в 1, недозрелая 1 осталась), фактически "
+                                + cropAge(helper, cells.get(i)));
+                helper.assertTrue(helper.getBlockState(cells.get(i).above()).is(Blocks.SWEET_BERRY_BUSH),
+                        "куст на клетке " + i + " обязан остаться: PICK не ломает блок");
+            }
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            int berries = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SWEET_BERRIES);
+            helper.assertTrue(berries >= 8,
+                    "с пяти зрелых кустов обязано быть не меньше 8 ягод (2-3 с куста), фактически " + berries);
+            int bushes = countBlock(helper, Blocks.SWEET_BERRY_BUSH);
+            helper.assertTrue(bushes == 9, "кустов обязано остаться 9, фактически " + bushes);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_session_sweetberry", timeoutTicks = 300)
+    public static void farmSession_HarvestSweetBerry_PicksAndCollectsWithoutBreaking(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        CropKind kind = CropKind.parse("sweet_berry_bush");
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? 3 : 1);
+        }
+        SpiritEntity spirit = spawnWith(helper, START);
+        AtomicReference<FarmSession> session = drive(helper, spirit,
+                ctx -> FarmSession.harvestCrop(ctx, kind, 8, true));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "сбор кустов PICK обязан завершиться успехом: " + run.outcome() + ", " + run.failureReason());
+            int berries = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SWEET_BERRIES);
+            helper.assertTrue(berries >= 8, "ягод не меньше 8, фактически " + berries);
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell.above()).is(Blocks.SWEET_BERRY_BUSH),
+                        "куст " + cell + " обязан остаться целым, а там " + helper.getBlockState(cell.above()).getBlock());
+                helper.assertTrue(cropAge(helper, cell) == 1, "возраст после PICK обязан стать 1");
+            }
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     private static void harvestMixed(GameTestHelper helper, CropKind kind) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1283,6 +1345,7 @@ public final class FarmGameTests {
         }
         for (int age = 0; age <= 3; age++) {
             table.add(crop(CropKind.BEETROOT, age));
+            table.add(crop(CropKind.parse("sweet_berry_bush"), age));
         }
         return table;
     }

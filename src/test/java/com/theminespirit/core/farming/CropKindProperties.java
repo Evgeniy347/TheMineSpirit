@@ -37,9 +37,10 @@ class CropKindProperties {
         }
 
         for (int age = 0; age <= kind.maxAge(); age++) {
-            assertEquals(age == kind.maxAge(), new CropState(kind, age).isMature(),
-                    "Зрелость обязана наступать ровно на максимальном возрасте вида " + kind
-                            + ": иначе harvest соберёт недозрелое или пропустит зрелое. Возраст: " + age);
+            boolean expected = kind.harvestMethod() == HarvestMethod.PICK ? age >= 2 : age == kind.maxAge();
+            assertEquals(expected, new CropState(kind, age).isMature(),
+                    "Зрелость вида " + kind + " метода " + kind.harvestMethod()
+                            + " обязана совпадать с правилом: PICK зреет с 2, BREAK на maxAge. Возраст: " + age);
         }
     }
 }

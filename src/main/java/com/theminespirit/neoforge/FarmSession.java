@@ -7,6 +7,7 @@ import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmTuning;
+import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.farming.SeedPolicy;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
@@ -305,7 +306,11 @@ public final class FarmSession {
             case PLANT -> plantNow(ground);
             case HARVEST -> {
                 currentKind = tile.crop().orElseThrow().kind();
-                beginBreak(ground.above());
+                if (currentKind.harvestMethod() == HarvestMethod.PICK) {
+                    pickNow(ground.above(), currentKind);
+                } else {
+                    beginBreak(ground.above());
+                }
             }
             case BONE_MEAL -> boneMealNow(ground.above());
         }
@@ -362,6 +367,17 @@ public final class FarmSession {
         }
     }
 
+    private void pickNow(BlockPos target, CropKind kind) {
+        recordAction();
+        if (actions.pick(target, kind)) {
+            done++;
+            startCollect();
+        } else {
+            rejected++;
+            finishTarget();
+        }
+    }
+
     private void breakTick() {
         recordAction();
         switch (breaker.tick()) {
@@ -408,7 +424,7 @@ public final class FarmSession {
             return;
         }
         collector = null;
-        if (replant) {
+        if (replant && currentKind.harvestMethod() == HarvestMethod.BREAK) {
             state = State.REPLANT;
         } else {
             finishTarget();
