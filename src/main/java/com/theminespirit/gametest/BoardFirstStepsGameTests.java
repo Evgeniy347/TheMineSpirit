@@ -334,6 +334,39 @@ public final class BoardFirstStepsGameTests {
     }
 
     /**
+     * Дух без дома — не поселение: первых шагов у него нет. Генератор без дома обязан молчать
+     * ({@code FirstStepsPlan.next} возвращает empty), а не подставлять точку (0,64,0) и не выдавать
+     * свободному духу {@code first:*} — иначе сцена REST получала чужое задание до своего POST и
+     * мост отвечал 409 conflict (флак 17.10: choptree_reloadedafterfirsttree_resultkeepscountersofboth).
+     * Доска — своя, отдельная: на общей чужие сцены ставят те же first:.
+     */
+    @GameTest(template = "arena", batch = "board_first_steps_nohome", timeoutTicks = 100)
+    public static void firstSteps_SpiritWithoutHome_NoTickets(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-nohome.jsonl");
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), level.getGameTime());
+
+        List<BoardTicket> active = board.board().all().stream()
+                .filter(ticket -> ticket.id().startsWith("first:"))
+                .filter(ticket -> {
+                    BoardStatus status = board.board().statusOf(ticket.id()).orElse(null);
+                    return status == BoardStatus.PENDING
+                            || status == BoardStatus.WAITING_RESOURCES
+                            || status == BoardStatus.ASSIGNED;
+                })
+                .toList();
+        helper.assertTrue(active.isEmpty(),
+                "Дух без дома не начинает первых шагов: цепочку задаёт дом, а не выдуманная точка. "
+                        + "Активных заданий: " + active.stream().map(BoardTicket::id).toList());
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    /**
      * Чужие деревья в обзоре поселения: мои клетки уже пусты, любой найденный ствол/листва —
      * соседняя сцена. Геометрия обязана повторять обзор генератора.
      */
