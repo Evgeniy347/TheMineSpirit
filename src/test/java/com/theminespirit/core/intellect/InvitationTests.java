@@ -62,6 +62,19 @@ class InvitationTests {
     }
 
     @Test
+    void answer_WaitMoreBeyondLimit_DoesNotExtend() {
+        Invitation fresh = new Invitation();
+        fresh.open(0);
+        for (int i = 0; i < IntellectTuning.INVITE_MAX_EXTENDS; i++) {
+            fresh.answer(InvitationAnswer.WAIT_MORE, 100 + i);
+        }
+        long cappedDeadline = fresh.answer(InvitationAnswer.WAIT_MORE, 200).deadline();
+        assertEquals(cappedDeadline, fresh.answer(InvitationAnswer.WAIT_MORE, 201).deadline(),
+                "Сверх лимита продление не растёт: иначе игрок может держать духов бесконечно");
+        assertTrue(cappedDeadline >= 0, "Срок не уходит в минус");
+    }
+
+    @Test
     void answer_AfterClose_StateUnchanged() {
         Invitation invitation = new Invitation();
         invitation.open(0);
