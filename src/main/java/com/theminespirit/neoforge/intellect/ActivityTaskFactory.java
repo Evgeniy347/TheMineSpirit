@@ -41,6 +41,8 @@ public final class ActivityTaskFactory {
             case MINE -> Optional.of("mine_vein");
             case REST -> Optional.of("wait");
             case DEFEND -> Optional.empty();
+            case SMELT -> Optional.of("smelt");
+            case CRAFT -> Optional.of("craft");
         };
     }
 }

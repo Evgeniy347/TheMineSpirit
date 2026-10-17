@@ -6,5 +6,7 @@ public enum ActivityId {
     FORAGE,
     MINE,
     REST,
-    DEFEND
+    DEFEND,
+    SMELT,
+    CRAFT
 }

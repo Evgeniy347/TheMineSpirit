@@ -2,11 +2,13 @@ package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.activity.ChopActivity;
+import com.theminespirit.core.intellect.activity.CraftActivity;
 import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
 import com.theminespirit.core.intellect.activity.ForageActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
+import com.theminespirit.core.intellect.activity.SmeltActivity;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -22,7 +24,7 @@ public final class ActivityAssigner {
     public ActivityAssigner() {
         this(ActivityCatalog.adultsOnly(
                 List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
-                        new RestActivity(), new DefendActivity())));
+                        new RestActivity(), new DefendActivity(), new SmeltActivity(), new CraftActivity())));
     }
 
     public ActivityAssigner(ActivityCatalog catalog) {

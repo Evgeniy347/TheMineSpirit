@@ -21,6 +21,9 @@ public final class IntellectTuning {
     public static final int ORE_TARGET = 64;
     public static final int IRON_TARGET = 32;
     public static final int WEAPON_TARGET = 2;
+    public static final int CHARCOAL_TARGET = 16;
+    public static final int PLANK_TARGET = 32;
+    public static final int STICK_TARGET = 32;
     public static final int TEAM_MIN = 2;
     public static final int TEAM_MAX = 3;
     public static final long INVITE_TTL_TICKS = 3600;

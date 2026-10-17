@@ -15,11 +15,13 @@ import com.theminespirit.core.intellect.StrengthVerdict;
 import com.theminespirit.core.intellect.TacticalDecision;
 import com.theminespirit.core.intellect.TacticalIntellect;
 import com.theminespirit.core.intellect.activity.ChopActivity;
+import com.theminespirit.core.intellect.activity.CraftActivity;
 import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
 import com.theminespirit.core.intellect.activity.ForageActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
+import com.theminespirit.core.intellect.activity.SmeltActivity;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.ArmorModel;
@@ -55,7 +57,7 @@ public final class SettlementIntellect {
     public SettlementIntellect() {
         this.catalog = ActivityCatalog.adultsOnly(
                 List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
-                        new RestActivity(), new DefendActivity()));
+                        new RestActivity(), new DefendActivity(), new SmeltActivity(), new CraftActivity()));
         ArmorModel armor = TacticsConfig.loadDefault().weights().scales().armor();
         this.intellect = new TacticalIntellect(catalog, profiles, armor);
     }

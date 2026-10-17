@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.crafting.FuelLoad;
 import com.theminespirit.core.crafting.RecipeSpec;
+import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.SmeltParams;
@@ -37,10 +38,17 @@ public final class SmeltScript implements ScriptInstance {
     private FurnaceSession.Job job;
     private StationAccess station;
     private FurnaceSession session;
+    private final List<StationType> candidateTypes;
+    private int stationIndex;
 
     public SmeltScript(SpiritEntity spirit, SmeltParams params) {
         this.spirit = spirit;
         this.params = params;
+        String product = ItemIds.normalize(params.item());
+        this.candidateTypes = Stations.isFoodProduct(product)
+                ? List.of(StationType.SMOKER, StationType.FURNACE)
+                : List.of(StationType.FURNACE);
+        this.stationIndex = 0;
     }
 
     @Override
@@ -130,7 +138,7 @@ public final class SmeltScript implements ScriptInstance {
         if (inside.isPresent()) {
             return startSession(resumeFurnace, true);
         }
-        station = new StationAccess(spirit, StationType.FURNACE, params.radius());
+        station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
         phase = Phase.STATION;
         return ScriptStatus.RUNNING;
     }
@@ -159,7 +167,15 @@ public final class SmeltScript implements ScriptInstance {
         return switch (station.tick()) {
             case WORKING -> ScriptStatus.RUNNING;
             case READY -> startSession(station.pos(), false);
-            case FAILED -> fail(station.failureReason());
+            case FAILED -> {
+                if (stationIndex + 1 < candidateTypes.size()) {
+                    stationIndex++;
+                    station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
+                    phase = Phase.STATION;
+                    yield ScriptStatus.RUNNING;
+                }
+                yield fail(station.failureReason());
+            }
         };
     }
 
