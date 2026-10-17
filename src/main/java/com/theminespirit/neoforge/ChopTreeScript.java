@@ -545,7 +545,7 @@ public final class ChopTreeScript implements ScriptInstance {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> highLogs.isEmpty()
                     ? (params.replant() ? startReplant() : finishTree())
-                    : startPillarBuild();
+                    : (cheapBlock() == null ? finishWithStanding() : startPillarBuild());
             case FAILED -> fail("подбор дропа после рубки: " + collector.failureReason());
         };
     }
@@ -568,6 +568,11 @@ public final class ChopTreeScript implements ScriptInstance {
         lackedSaplings |= replanter.lackedSaplings();
         replanter = null;
         return finishTree();
+    }
+
+    private ScriptStatus finishWithStanding() {
+        standingLogs += plan.leftStanding();
+        return params.replant() ? startReplant() : finishTree();
     }
 
     private ScriptStatus finishTree() {
