@@ -84,6 +84,15 @@ public final class RecipeKnowledgeGameTests {
                 "доски горят 300 тиков по данным игры, знания вернули " + knowledge.burnTicks("minecraft:oak_planks"));
         helper.assertTrue(knowledge.burnTicks("iron_ore") == 0,
                 "руда не топливо, знания вернули " + knowledge.burnTicks("iron_ore"));
+        helper.assertTrue(knowledge.burnTicks("blaze_rod") == 2400,
+                "стержень всполоха горит 2400 тиков по data map furnace_fuels, знания вернули "
+                        + knowledge.burnTicks("blaze_rod"));
+        helper.assertTrue(knowledge.burnTicks("coal_block") == 16000,
+                "блок угля горит 16000 тиков по data map furnace_fuels, знания вернули "
+                        + knowledge.burnTicks("coal_block"));
+        helper.assertTrue(knowledge.burnTicks("lava_bucket") == 20000,
+                "ведро лавы горит 20000 тиков по data map furnace_fuels, знания вернули "
+                        + knowledge.burnTicks("lava_bucket"));
         helper.succeed();
     }
 
