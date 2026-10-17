@@ -1,11 +1,14 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
@@ -13,7 +16,14 @@ import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.board.BoardSources;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
+import com.theminespirit.neoforge.board.JournalService;
+import com.theminespirit.neoforge.board.StockReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +38,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -144,6 +155,78 @@ public final class BoardFirstStepsGameTests {
         }
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    /**
+     * Пустой склад: до сундуков на доску встаёт добыча досок (рубка дерева), сам шаг ждёт;
+     * после пополнения запаса сундуки и верстак открываются по цепочке, а журнал доски
+     * содержит постановки. Доска — своя, отдельная от общей: на общей чужие сцены ставят
+     * те же first: и gather:, и «шаг не поставлен» ловило бы чужой билет.
+     */
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    public static void firstSteps_EmptyStock_GathersBeforeStations(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level);
+        long now = level.getGameTime();
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.of()), now);
+        helper.assertTrue(board.board().statusOf("first:stock_chests").isEmpty(),
+                "Без досок шаг сундуков не ставится: он ждёт добычу материала");
+        helper.assertTrue(board.board().statusOf("gather:oak_planks").isPresent(),
+                "Пустой склад: на доску встаёт добыча досок (рубка дерева), статус "
+                        + board.board().statusOf("gather:oak_planks"));
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
+        helper.assertTrue(board.board().statusOf("first:stock_chests").isPresent(),
+                "После добычи материал на складе — шаг сундуков открывается, статус "
+                        + board.board().statusOf("first:stock_chests"));
+
+        helper.setBlock(new BlockPos(6, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
+        board.board().claim("first:stock_chests", spirit.getUUID(), now);
+        board.board().complete("first:stock_chests");
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
+        helper.assertTrue(board.board().statusOf("first:crafting_station").isPresent(),
+                "После сундуков наступает верстак: цепочка не перескакивает шаги, статус "
+                        + board.board().statusOf("first:crafting_station"));
+
+        board.journal().flushAll();
+        List<BoardLogEntry> log = board.journal().last(64);
+        helper.assertTrue(hasPosted(log, "gather:oak_planks"),
+                "Журнал доски обязан содержать постановку добычи: по ней разбирают, кто что получил");
+        helper.assertTrue(hasPosted(log, "first:stock_chests") && hasPosted(log, "first:crafting_station"),
+                "Журнал доски обязан содержать постановки шагов — сундуки и верстак");
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    private static boolean hasPosted(List<BoardLogEntry> log, String ticketId) {
+        return log.stream().anyMatch(entry -> entry.event() == BoardLog.Event.POSTED
+                && entry.ticketId().equals(ticketId));
+    }
+
+    private static StockView stocked() {
+        return new StockView(Map.of("oak_planks", 64, "stick", 64, "oak_fence", 64, "torch", 64,
+                "cobblestone", 64));
+    }
+
+    /** Своя доска уровня для теста: общая живёт через границы сцен, и чужие билеты мешают проверке. */
+    private static BoardService isolatedBoard(ServerLevel level) {
+        Board board = new Board(level::getGameTime);
+        Path journalPath = FMLPaths.CONFIGDIR.get().resolve("theminespirit/gametest-first-steps-gate.jsonl");
+        try {
+            Files.deleteIfExists(journalPath);
+        } catch (IOException error) {
+            throw new UncheckedIOException(error);
+        }
+        JournalService journal = new JournalService(journalPath);
+        return new BoardService(board, new HerdCycles(board),
+                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                BoardSources.create(), journal);
     }
 
     /** Запас для цепочки: материалы из рецептов и схем плюс снимок доски (по нему виден инструмент). */

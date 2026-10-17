@@ -17,6 +17,7 @@ import java.util.Objects;
  */
 public final class BoardLog {
     public enum Event {
+        POSTED,
         ASSIGNED,
         DONE,
         FAILED,

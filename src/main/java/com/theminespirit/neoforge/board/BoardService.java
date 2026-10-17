@@ -215,6 +215,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             targets.put(ticket.id(), target);
+            journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
         }
         return outcome;
     }
@@ -224,7 +225,11 @@ public final class BoardService {
      * берётся дом поселения, как для заявок без цели.
      */
     public BoardOutcome submit(BoardTicket ticket) {
-        return board.submit(ticket);
+        BoardOutcome outcome = board.submit(ticket);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
+        }
+        return outcome;
     }
 
     /**
