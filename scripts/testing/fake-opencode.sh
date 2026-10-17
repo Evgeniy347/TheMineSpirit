@@ -10,6 +10,8 @@
 # FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
 #                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
 # FAKE_UNFINISHED=N — первые N запусков заканчивают ход оборванной фразой «Теперь посмотрю тесты:».
+# FAKE_HEARTBEAT=S — S секунд без вывода, но с пульсом scripts/test.sh (TestResults/test-running в --dir): не молчание.
+# FAKE_LOOP=N      — первые N запусков повторяют одну команду 30 раз и висят (зацикливание модели).
 # FAKE_COMPACTION=N — первые N запусков сжимают контекст (лог agent=compaction и синтетическое «Continue…») и работают дальше.
 state="${FAKE_STATE:?}"
 case "$*" in
@@ -35,6 +37,13 @@ fi
 if [ -n "${FAKE_INFO_LOG:-}" ]; then
     echo 'timestamp=2026-10-11T11:00:00Z level=INFO message=evaluated permission=bash pattern="grep -i \"rate limit\" docs"' >&2
 fi
+if [ -n "${FAKE_HEARTBEAT:-}" ]; then
+    dir=$(printf '%s
+' "$@" | grep -A1 -x -- '--dir' | tail -n 1)
+    mkdir -p "$dir/TestResults"
+    for _ in $(seq 1 "$FAKE_HEARTBEAT"); do touch "$dir/TestResults/test-running"; sleep 1; done
+    rm -f "$dir/TestResults/test-running"
+fi
 if [ -n "${FAKE_BUSY_TOOL:-}" ]; then
     sleep "$FAKE_BUSY_TOOL"
 fi
@@ -55,6 +64,12 @@ if [ "$count" -lt "${FAKE_NETWORK:-0}" ]; then
     else
         echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Cannot connect to API: fetch failed"}}}'
     fi
+    exec sleep 600
+fi
+if [ "$count" -lt "${FAKE_LOOP:-0}" ]; then
+    for i in $(seq 1 30); do
+        echo '{"type":"tool_use","sessionID":"ses_fake123","part":{"tool":"bash","state":{"status":"completed","input":{"command":"git diff -- a.java"},"output":""}}}'
+    done
     exec sleep 600
 fi
 if [ "$count" -lt "${FAKE_COMPACTION:-0}" ]; then

@@ -14,7 +14,7 @@ public record Expedition(List<UUID> team, Point target, long startedAt) {
             throw new IllegalArgumentException("Команда экспедиции = " + team.size()
                     + ": ходят командой 2–3 духа, иначе либо опасно, либо толпа");
         }
-        if (new HashSet<>(team).size() != team.size() || team.contains(null)) {
+        if (new HashSet<>(team).size() != team.size() || team.stream().anyMatch(member -> member == null)) {
             throw new IllegalArgumentException(
                     "Команда с повторами или null-духом не идёт: каждый дух — конкретный участник");
         }

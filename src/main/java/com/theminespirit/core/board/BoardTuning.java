@@ -39,6 +39,12 @@ public final class BoardTuning {
     /** Проваленное задание не переиздаётся раньше этого срока: 200 тиков (10 с). */
     public static final long FAIL_BACKOFF_TICKS = 200;
 
+    /** После провала пара дух+кейс отдыхает: 1200 тиков (1 мин), а не ходит по кругу каждую пересборку. */
+    public static final long CASE_FAIL_PAUSE_TICKS = 1200;
+
+    /** Столько провалов подряд снимают кейс с этого духа: дальше его берёт другой, а не тот же снова. */
+    public static final int CASE_FAIL_LIMIT = 3;
+
     /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
     public static final long FENCE_PATROL_INTERVAL = 1000;
 
@@ -61,6 +67,8 @@ public final class BoardTuning {
             "stockReadBudget",
             "stockBlockBudget",
             "failBackoffTicks",
+            "caseFailPauseTicks",
+            "caseFailLimit",
             "fencePatrolInterval",
             "enchantCheckInterval",
             "enchantShelvesMin");
@@ -95,6 +103,14 @@ public final class BoardTuning {
 
     public static long failBackoffTicks() {
         return interval("failBackoffTicks", FAIL_BACKOFF_TICKS);
+    }
+
+    public static long caseFailPauseTicks() {
+        return interval("caseFailPauseTicks", CASE_FAIL_PAUSE_TICKS);
+    }
+
+    public static int caseFailLimit() {
+        return (int) interval("caseFailLimit", CASE_FAIL_LIMIT);
     }
 
     public static long fencePatrolInterval() {

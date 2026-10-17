@@ -372,5 +372,20 @@ idea {
 tasks.named('runGameTestServer') {
     doFirst {
         new File(gameDirectory.getAsFile().get(), 'world').deleteDir()
+        // Прямой ./gradlew runGameTestServer запрещён: scripts/test.sh берёт замок
+        // «один сервер на машину» и передаёт путь и одноразовый токен системными свойствами.
+        // Токен пишется в маркер замка ($LOCK.d/token при mkdir, $LOCK.token при flock):
+        // чужой токен не подставить, свой переживает только этот прогон.
+        def lockPath = System.getProperty('theminespirit.gametest.lock')
+        def token = (System.getProperty('theminespirit.gametest.token') ?: '').trim()
+        if (!lockPath || !token) {
+            throw new GradleException("runGameTestServer: прямой запуск без замка запрещён. Используй scripts/test.sh gametest (docs/TESTING.md): скрипт берёт замок и передаёт -Dtheminespirit.gametest.lock/-Dtheminespirit.gametest.token.")
+        }
+        def dirToken = new File(lockPath + '.d/token')
+        def fileToken = new File(lockPath + '.token')
+        def markerToken = dirToken.exists() ? dirToken.getText('UTF-8').trim() : (fileToken.exists() ? fileToken.getText('UTF-8').trim() : '')
+        if (markerToken != token) {
+            throw new GradleException("runGameTestServer: токен замка не совпадает (${markerToken ? 'устаревший или чужой замок' : 'замок отсутствует'}). Прямой запуск запрещён: scripts/test.sh gametest (docs/TESTING.md).")
+        }
     }
 }

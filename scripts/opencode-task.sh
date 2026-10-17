@@ -28,7 +28,9 @@ PROBE_INTERVAL="${OPENCODE_PROBE_INTERVAL:-120}"
 PROBE_TIMEOUT="${OPENCODE_PROBE_TIMEOUT:-60}"
 WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
-SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"
+# Без pgrep (Git Bash на Windows) долгий хук или сборка не отличимы от молчания — предел по умолчанию больше.
+if command -v pgrep >/dev/null; then SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"; else SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-1200}"; fi
+HEARTBEAT_FRESH="${OPENCODE_HEARTBEAT_FRESH:-120}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
 NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
 FAILURE_PATTERN="$PROVIDER_PATTERN|$NETWORK_PATTERN"
@@ -48,12 +50,17 @@ UNFINISHED_PROMPT="Ты закончил ход на полуслове, не д
 UNFINISHED_LIMIT="${OPENCODE_UNFINISHED_LIMIT:-3}"
 # Ответ короче этого при грязном дереве — не итоговый отчёт (отчёт перечисляет коммиты, тесты, несделанное).
 DIRTY_SHORT_ANSWER="${OPENCODE_DIRTY_SHORT_ANSWER:-600}"
+# Зацикливание: одна и та же команда инструмента столько раз подряд (36Б на beam 17.10 — 1400 раз `git diff` пустого
+# файла). Надзор обрывает ход и продолжает сессию с LOOP_PROMPT, не больше LOOP_LIMIT раз, дальше — остановка.
+LOOP_REPEAT="${OPENCODE_LOOP_REPEAT:-15}"
+LOOP_LIMIT="${OPENCODE_LOOP_LIMIT:-3}"
+LOOP_PROMPT="Ты ${LOOP_REPEAT} раз подряд выполнил одну и ту же команду — это зацикливание. Остановись: посмотри git status (правки в индексе видны в git diff --cached), перечитай TestResults/task.md и TestResults/progress.md, реши, какой следующий шаг задания, и сделай его другой командой."
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): ты работаешь без собеседника — вопросов не задавай \
 и разрешения не спрашивай, решай сам по правилам проекта; тесты запускаешь ТОЛЬКО через scripts/test.sh \
 (unit/gametest): не перезапускай ради лога — полный лог уже в TestResults/logs/; красный JUnit или GameTest не коммитишь; \
 по ходу работы гоняешь только затронутое — scripts/test.sh unit --tests <свои классы> и GameTest только после правки \
 GameTest/адаптера, не больше одного прогона на пункт; полный scripts/test.sh unit перед коммитом запускает хук — сам его \
-не повторяй; полный GameTest — только в финале (3 прогона), машина общая с другими исполнителями; коммитишь сам, частями, по \
+не повторяй; полный GameTest — только в финале (3 прогона), машина общая с другими исполнителями; коммитишь сам, частями, хук не обходишь (--no-verify запрещён: долгий хук — жди, упал по пределу — напиши в отчёте), по \
 docs/GIT.md; к каждому fix:-коммиту с JUnit-тестом прикладываешь вывод scripts/prove-red.sh <коммит>; каждый новый тест \
 доказываешь подлогом по существу (ломаешь поведение так, что код компилируется, и видишь красный тест) — «на родителе \
 не компилируется» не доказательство; в проверке предела ожидание — число в самом тесте, а факт — из production (assertEquals(24, Limits.X)), \
@@ -75,6 +82,8 @@ EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
 ATTEMPT_SILENT=201
 ATTEMPT_COMPACTED=202
+ATTEMPT_LOOP=203
+EXIT_LOOP=76
 
 usage() {
     sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
@@ -143,10 +152,15 @@ sys.exit(1)
 }
 
 waiting_for_model() {
-    local pid="$1"
+    local pid="$1" hb="$REPO_DIR/TestResults/test-running"
+    # scripts/test.sh, пока ждёт замок GameTest или гоняет тесты, раз в 20 с трогает этот файл — это работа, не молчание
+    # (на ПК шесть исполнителей стоят в очереди за замком GameTest дольше предела молчания).
+    if [ -f "$hb" ] && [ $(( $(date +%s) - $(stat -c %Y "$hb" 2>/dev/null || echo 0) )) -lt "$HEARTBEAT_FRESH" ]; then
+        return 1
+    fi
     # Без pgrep (Git Bash на Windows) дочерние процессы не видны: молчание считается по одному таймеру —
-    # на ПК для долгих сборок ставь OPENCODE_IDLE_LIMIT побольше.
-    command -v pgrep >/dev/null || return 0
+    # поэтому без pgrep предел молчания по умолчанию 1200 с (SILENCE_LIMIT).
+    { [ -z "${OPENCODE_NO_PGREP:-}" ] && command -v pgrep >/dev/null; } || return 0
     ! pgrep -a -P "$pid" 2>/dev/null | grep -qvE 'lsp|language.?server|jdtls|mcp'
 }
 
@@ -197,6 +211,11 @@ run_attempt() {
             stop_attempt "$pid"
             return "$ATTEMPT_COMPACTED"
         fi
+        if loop_command="$(command_loop "$out")"; then
+            failure_text="одна команда ${LOOP_REPEAT} раз подряд: ${loop_command}"
+            stop_attempt "$pid"
+            return "$ATTEMPT_LOOP"
+        fi
         if [ $(( $(date +%s) - $(newest_mtime "$out" "$err") )) -ge "$SILENCE_LIMIT" ] && waiting_for_model "$pid"; then
             failure_text="модель молчит ${SILENCE_LIMIT} с, команд не выполняется; последнее событие: $(tail -n 1 "$out" | cut -c1-200)"
             stop_attempt "$pid"
@@ -211,6 +230,30 @@ run_attempt() {
         return "$ATTEMPT_PROVIDER"
     fi
     return "$code"
+}
+
+# Последние LOOP_REPEAT вызовов инструментов — одна и та же команда: печатает её и выходит с 0.
+command_loop() {
+    tail -n 300 "$1" 2>/dev/null | "$PYTHON" -I -c '
+import json, sys
+sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+need = int(sys.argv[1])
+calls = []
+for line in sys.stdin:
+    if "\"tool_use\"" not in line:
+        continue
+    try:
+        part = json.loads(line).get("part", {})
+    except ValueError:
+        continue
+    calls.append(part.get("tool", "") + " " + json.dumps(part.get("state", {}).get("input", {}), sort_keys=True, ensure_ascii=False))
+tail = calls[-need:]
+if len(tail) == need and len(set(tail)) == 1:
+    print(tail[0][:200])
+    sys.exit(0)
+sys.exit(1)
+' "$LOOP_REPEAT"
 }
 
 # Ответ оборван: кончается двоеточием или многоточием либо это короткое «Теперь …/Сейчас …/Let me …» без отчёта.
@@ -300,6 +343,7 @@ wait_for_provider() {
 attempt=0
 run_no=0
 unfinished=0
+loops=0
 message="$prompt"
 # Индекс codegraph для инструментов исполнителя: worktree новый на каждую задачу, индекс строится за ~1 мин.
 CODEGRAPH_BIN="${CODEGRAPH_BIN:-$(command -v codegraph || echo "$HOME/.npm-global/bin/codegraph")}"
@@ -344,6 +388,18 @@ while true; do
             sleep "$delay"
             lost_seconds=$((lost_seconds + delay))
             [ -n "$session" ] && message="$CONTINUE_PROMPT"
+            ;;
+        "$ATTEMPT_LOOP")
+            record_failure "зацикливание" "$failure_text"
+            loops=$((loops + 1))
+            if [ "$loops" -gt "$LOOP_LIMIT" ]; then
+                echo "opencode: зацикливание повторилось ${loops} раз: ${failure_text:0:200}" >&2
+                echo "Остановлено. Сообщи пользователю и сам не продолжай. Сессия: ${session:-не создана}, логи: $log_dir" >&2
+                exit "$EXIT_LOOP"
+            fi
+            echo "opencode: зацикливание (${loops}/${LOOP_LIMIT}), продолжаю сессию ${session:-новую}: ${failure_text:0:150}" >&2
+            attempt=0
+            message="$LOOP_PROMPT"
             ;;
         "$ATTEMPT_COMPACTED")
             record_failure "сжатие контекста" "продолжаю с напоминанием перечитать task.md и progress.md"

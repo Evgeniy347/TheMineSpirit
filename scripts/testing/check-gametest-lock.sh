@@ -112,4 +112,51 @@ fi
 leftovers=$(ls -d "$work"/tmp/lock.d.stale.* 2>/dev/null | wc -l)
 [ "$leftovers" = 0 ] && ok "stale-race: переименованных остатков .stale.* не осталось" || fail "stale-race: остались $leftovers каталогов .stale.*"
 
+# 7. Дефолтный путь замка — общий для всех сессий: на Windows под $ALLUSERSPROFILE (ProgramData),
+# не %TEMP% (у разных сессий opencode TEMP может указывать в разные каталоги, а /tmp в Git Bash
+# монтируется именно в %TEMP%). Проверка поведенческая: фейковый gradlew в момент запуска пишет,
+# существует ли маркер по дефолту и в %TEMP%; TMP/TEMP обнулены намеренно, а ALLUSERSPROFILE
+# подменён тестовым каталогом — проверка не трогает общий замок машины.
+cat >"$work/fake-check-lock" <<'FAKE'
+#!/usr/bin/env bash
+log="${FAKE_LOG:?}"
+echo "start $(date +%s%N)" >>"$log"
+echo "default_marker=$([ -d "${CHECK_DEFAULT_DIR:?}" ] && echo yes || echo no)" >>"$log"
+echo "tmp_marker=$([ -d "${CHECK_TMP_DIR:?}" ] && echo yes || echo no)" >>"$log"
+sleep "${FAKE_SLEEP:-2}"
+code="${FAKE_EXIT:-0}"
+echo "end $(date +%s%N)" >>"$log"
+exit "$code"
+FAKE
+chmod +x "$work/fake-check-lock"
+
+unset THEMINESPIRIT_GAMETEST_LOCK
+case "$OSTYPE" in
+    msys*|cygwin*|win*)
+        export CHECK_DEFAULT_DIR="$work/programdata/theminespirit/theminespirit-gametest.lock.d"
+        export CHECK_TMP_DIR="$(cygpath -w /tmp)/theminespirit-gametest.lock.d"
+        export ALLUSERSPROFILE="$work/programdata"
+        ;;
+    *)
+        export CHECK_DEFAULT_DIR="/tmp/theminespirit-gametest.lock.d"
+        export CHECK_TMP_DIR=""
+        ;;
+esac
+THEMINESPIRIT_GRADLEW="$work/fake-check-lock" THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    FAKE_LOG="$work/default.log" FAKE_SLEEP=1 TMP= TEMP= \
+    bash scripts/gametest.sh >"$work/default.out" 2>&1
+code=$?
+[ "$code" = 1 ] && ok "default-path: код=1 (FAIL)" || fail "default-path: код=$code (ожидал 1)"
+default_marker=$(grep -o 'default_marker=[a-z]*' "$work/default.log" | head -1 | cut -d= -f2)
+[ "$default_marker" = yes ] \
+    && ok "default-path: маркер создан по дефолту ($CHECK_DEFAULT_DIR)" \
+    || fail "default-path: маркер по дефолту не создан (default_marker=$default_marker)"
+if [ -n "$CHECK_TMP_DIR" ]; then
+    tmp_marker=$(grep -o 'tmp_marker=[a-z]*' "$work/default.log" | head -1 | cut -d= -f2)
+    [ "$tmp_marker" = no ] \
+        && ok "default-path: маркер не в %TEMP% (TMP обнулён, замок всё равно по общему пути)" \
+        || fail "default-path: маркер создался в %TEMP% (tmp_marker=$tmp_marker)"
+fi
+unset CHECK_DEFAULT_DIR CHECK_TMP_DIR
+
 exit $failed

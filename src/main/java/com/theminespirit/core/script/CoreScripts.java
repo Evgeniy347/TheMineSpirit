@@ -145,6 +145,16 @@ public final class CoreScripts {
                                 ParamSpec.bool("replant", false, false)),
                         List.of("в радиусе есть подходящие брёвна"),
                         List.of("брёвна срублены", "предметы подобраны в инвентарь")),
+                spec("chop_target", "срубить конкретное дерево по координате ствола",
+                        List.of(
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.bool("replant", false, false)),
+                        List.of("по координате есть ствол настоящего дерева"),
+                        List.of("дерево срублено целиком", "предметы подобраны в инвентарь")),
                 spec("mine_vein", "добыть жилу руды",
                         List.of(ParamSpec.enumeration("ore", false, OreKind.names(), "any"),
                                 ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
@@ -439,7 +449,11 @@ public final class CoreScripts {
                                         CatalogLimits.CAMP_RADIUS_MAX, CatalogLimits.CAMP_RADIUS_DEFAULT)),
                         List.of(), List.of("лагерь поставлен и переживёт перезапуск")),
                 spec("clear_camp", "снять лагерь похода",
-                        List.of(), List.of(), List.of("лагеря у духа нет"))));
+                        List.of(), List.of(), List.of("лагеря у духа нет")),
+                spec("repair", "починить инструмент или броню через точило (два одинаковых повреждённых предмета)",
+                        List.of(ParamSpec.text("item", true)),
+                        List.of("в инвентаре есть два одинаковых повреждённых предмета"),
+                        List.of("предмет починен: сумма прочности + 5% от максимальной", "зачарования потеряны"))));
     }
 
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,

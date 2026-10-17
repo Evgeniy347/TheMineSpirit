@@ -29,7 +29,7 @@ public final class ChatInvitation {
                         .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                                 "/spirit invite " + id + " join"))))
                 .append(Component.literal(" "))
-                .append(Component.literal("[Подождите +60с]")
+                .append(Component.literal("[Подождите, я собираюсь (+60 с)]")
                         .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                                 "/spirit invite " + id + " wait"))))
                 .append(Component.literal(" "))

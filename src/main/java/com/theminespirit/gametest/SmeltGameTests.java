@@ -60,6 +60,25 @@ public final class SmeltGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "smelt_planks", timeoutTicks = TIMEOUT)
+    public static void smelt_ThreeRawIronTwoOakPlanks_ThreeIngotsBothPlanksBurned(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
+        SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 3), stack(Items.OAK_PLANKS, 2));
+        speedUpFurnaces(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "iron_ingot", 3);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.IRON_INGOT, 3, "слитки железа при плавке досками");
+            assertCount(helper, spirit, Items.RAW_IRON, 0, "сырое железо после плавки досками");
+            assertCount(helper, spirit, Items.OAK_PLANKS, 0, "три плавки по 200 тиков требуют 600 тиков горения, "
+                    + "доска горит 300 — израсходованы обе, остаток досок");
+            assertFurnaceEmpty(helper);
+            cleanup(helper, spirit);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "smelt_furnace_in_inventory", timeoutTicks = TIMEOUT)
     public static void smelt_FurnaceOnlyInInventory_PlacedAndUsed(GameTestHelper helper) {
         field(helper);

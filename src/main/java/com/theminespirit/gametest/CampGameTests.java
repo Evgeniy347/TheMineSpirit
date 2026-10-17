@@ -14,6 +14,7 @@ import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritCampStore;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.core.coordinator.SettlementGroups;
@@ -21,9 +22,12 @@ import com.theminespirit.core.coordinator.SettlementKey;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -35,6 +39,60 @@ public final class CampGameTests {
     private static final double ARRIVE_DISTANCE = RetreatPlanner.HOME_ARRIVAL;
 
     private CampGameTests() {
+    }
+
+    // Отход camp_retreat_* проверяет выбор цели между домом и лагерем и не испытывает поселение.
+    // Лагерь без дома делает духа поселением координатора: тот ставит ему оборону GUARD_AREA и через
+    // интеллект выдаёт работу (рубка), а исходная задача «wait» терялась — отход оставался без приказа
+    // (флак 17.10: дух не доходил за 100 тиков). На время пачки выключаем координатора и доску.
+    private static final String RETREAT_CAMP_BATCH = "camp_retreat_camp";
+    private static final String RETREAT_HOME_BATCH = "camp_retreat_home";
+    private static final String RETREAT_SCRIPT_BATCH = "camp_retreat_script";
+    private static final String RETREAT_NONE_BATCH = "camp_retreat_none";
+
+    @BeforeBatch(batch = RETREAT_CAMP_BATCH)
+    public static void stopSettlementForRetreatCamp(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = RETREAT_CAMP_BATCH)
+    public static void restoreSettlementForRetreatCamp(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = RETREAT_HOME_BATCH)
+    public static void stopSettlementForRetreatHome(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = RETREAT_HOME_BATCH)
+    public static void restoreSettlementForRetreatHome(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = RETREAT_SCRIPT_BATCH)
+    public static void stopSettlementForRetreatScript(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = RETREAT_SCRIPT_BATCH)
+    public static void restoreSettlementForRetreatScript(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = RETREAT_NONE_BATCH)
+    public static void stopSettlementForRetreatNone(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = RETREAT_NONE_BATCH)
+    public static void restoreSettlementForRetreatNone(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    private static void settlementSystems(boolean enabled) {
+        SpiritConfig.setCoordinatorEnabled(enabled);
+        SpiritConfig.setBoardEnabled(enabled);
     }
 
     private static Camp campAt(GameTestHelper helper, BlockPos relative, double radius) {
@@ -82,7 +140,7 @@ public final class CampGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "camp_retreat_camp", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = RETREAT_CAMP_BATCH, timeoutTicks = 200)
     public static void retreat_CampNearerThanHome_RunsToCamp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -117,7 +175,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "camp_retreat_home", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = RETREAT_HOME_BATCH, timeoutTicks = 200)
     public static void retreat_HomeNearerThanCamp_RunsHome(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -156,7 +214,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "camp_retreat_script", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = RETREAT_SCRIPT_BATCH, timeoutTicks = 200)
     public static void retreatScript_CampNearerThanHome_RunsToCamp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -181,7 +239,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "camp_retreat_none", timeoutTicks = 100)
+    @GameTest(template = "arena", batch = RETREAT_NONE_BATCH, timeoutTicks = 100)
     public static void retreat_NoHomeNoCamp_FailsWithNoRetreatPoint(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 1));

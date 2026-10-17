@@ -82,6 +82,8 @@ class IntellectTuningTests {
                 "Повтор каждые 30 секунд: чаще — спам, реже — игрок забудет про вопрос");
         assertEquals(1200, IntellectTuning.INVITE_EXTEND_TICKS,
                 "Продление на 60 секунд: иначе собирающийся игрок не успеет");
+        assertEquals(3, IntellectTuning.INVITE_MAX_EXTENDS,
+                "Продлений не больше трёх: иначе вопрос висит бесконечно");
     }
 
     @Test
@@ -124,7 +126,8 @@ class IntellectTuningTests {
         assertTrue(IntellectTuning.TEAM_MIN > 0 && IntellectTuning.TEAM_MAX >= IntellectTuning.TEAM_MIN,
                 "Пределы команды положительны и упорядочены");
         assertTrue(IntellectTuning.INVITE_TTL_TICKS > 0 && IntellectTuning.INVITE_REPEAT_TICKS > 0
-                && IntellectTuning.INVITE_EXTEND_TICKS > 0, "Тайминги приглашения положительны");
+                && IntellectTuning.INVITE_EXTEND_TICKS > 0 && IntellectTuning.INVITE_MAX_EXTENDS > 0,
+                "Тайминги приглашения положительны");
         assertTrue(IntellectTuning.STRATEGIC_TTL_TICKS > 0, "Срок задания стратега положителен");
         assertTrue(Double.isFinite(IntellectTuning.HEAL_FRACTION) && IntellectTuning.HEAL_FRACTION > 0
                 && IntellectTuning.HEAL_FRACTION < 1, "Порог лечения — доля в 0..1");
