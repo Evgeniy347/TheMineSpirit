@@ -132,6 +132,23 @@ class CaseMaterialsTests {
     }
 
     @Test
+    void gate_FullStock_LeavesNothingMissing() {
+        Map<String, Integer> need = CaseMaterials.need(craft("chest", 2), FAKE);
+
+        assertEquals(Map.of(), ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 16))),
+                "Полный запас закрывает нужду кейса: добыча не ставится, шаг берётся в работу сразу");
+    }
+
+    @Test
+    void gate_PartialStock_ReportsShortage() {
+        Map<String, Integer> need = CaseMaterials.need(craft("chest", 2), FAKE);
+
+        assertEquals(Map.of("oak_planks", 6),
+                ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 10))),
+                "Недостача — разница нужды и запаса: нужно 16 досок, есть 10 — добыть 6");
+    }
+
+    @Test
     void need_CraftWithoutKnownRecipe_Ignored() {
         Map<String, Integer> need = CaseMaterials.need(craft("unknown_thing", 3), FAKE);
 
