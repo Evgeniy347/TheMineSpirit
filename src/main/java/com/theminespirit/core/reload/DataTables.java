@@ -9,10 +9,14 @@ import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.hunger.HungerRules;
+import com.theminespirit.core.intellect.defense.DefenseProfile;
+import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.ValueTable;
+import com.theminespirit.core.mining.DescentData;
+import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
@@ -56,6 +60,9 @@ public final class DataTables {
     private final TableHolder<DoorRules> doors;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<FishingData> fishing;
+    private final TableHolder<DescentData> descent;
+    private final TableHolder<DescentLevels> descentLevels;
+    private final TableHolder<DefenseProfile> priorities;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -123,6 +130,16 @@ public final class DataTables {
         this.fishing = registry.registerLazy(
                 TableDefinition.single("fishing", FishingData.RESOURCE, FishingData::parse),
                 FishingData::load);
+        this.descent = registry.registerLazy(
+                TableDefinition.single("descent", DescentData.RESOURCE, DescentData::parse),
+                DescentData::load);
+        this.descentLevels = registry.registerLazy(
+                TableDefinition.single("descent_levels", DescentLevels.RESOURCE, DescentLevels::parse),
+                DescentLevels::load);
+        this.priorities = registry.registerLazy(
+                TableDefinition.single("priorities", DefenseProfile.RESOURCE,
+                        (json, origin) -> DefenseProfileParser.fromJson(json)),
+                DefenseProfile::readFromClasspath);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -210,6 +227,18 @@ public final class DataTables {
 
     public TableHolder<FishingData> fishing() {
         return fishing;
+    }
+
+    public TableHolder<DescentData> descent() {
+        return descent;
+    }
+
+    public TableHolder<DescentLevels> descentLevels() {
+        return descentLevels;
+    }
+
+    public TableHolder<DefenseProfile> priorities() {
+        return priorities;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */

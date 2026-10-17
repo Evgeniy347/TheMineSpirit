@@ -142,7 +142,7 @@ public final class DescentWidenSession {
         direction = DescentDirection.parse(text(saved, "direction"));
         targetY = number(saved, "target_y");
         blocksDug = number(saved, "blocks_dug");
-        rebuild(DescentLevels.defaults());
+        rebuild(DescentLevels.loadDefault());
         stepIndex = Math.min(number(saved, "step"), plan.steps().size());
         cellCursor = 0;
         approachBegun = false;
@@ -151,7 +151,7 @@ public final class DescentWidenSession {
 
     private void rebuild(DescentLevels levels) {
         DescentPlan level1 = DescentPlan.from(safety, entry, direction, targetY,
-                DescentData.defaults().torchInterval());
+                DescentData.loadDefault().torchInterval());
         plan = DescentWidenPlan.from(safety, level1, levels.widenWidth(), levels.widenHeight());
         entryFloor = entry.y() - 1;
         List<List<BlockCoord>> perStep = new ArrayList<>();

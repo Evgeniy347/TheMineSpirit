@@ -26,7 +26,7 @@ final class PlaceDescentStairsScript implements ScriptInstance {
     private final DescentStairsPlan plan;
 
     PlaceDescentStairsScript(SpiritEntity spirit, DigDescentParams params) {
-        this(setup(spirit, params.direction(), params.y(), DescentLevels.defaults()));
+        this(setup(spirit, params.direction(), params.y(), DescentLevels.loadDefault()));
     }
 
     private PlaceDescentStairsScript(Setup setup) {
@@ -97,7 +97,7 @@ final class PlaceDescentStairsScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         BlockCoord entry = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         DescentPlan level1 = DescentPlan.from(safety, entry, direction, targetY,
-                DescentData.defaults().torchInterval());
+                DescentData.loadDefault().torchInterval());
         DescentStairsPlan plan = DescentStairsPlan.from(safety, level1, levels.widenWidth(), levels.stairWidth());
         List<BlockCoord> cells = new ArrayList<>();
         for (DescentStairStep step : plan.steps()) {

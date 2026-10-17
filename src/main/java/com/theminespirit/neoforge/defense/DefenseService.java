@@ -11,7 +11,6 @@ import com.theminespirit.core.intellect.defense.DefenseIssuedOrder;
 import com.theminespirit.core.intellect.defense.DefensePlan;
 import com.theminespirit.core.intellect.defense.DefensePlanner;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
-import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.intellect.defense.DefenseTuning;
 import com.theminespirit.core.intellect.defense.TargetClass;
 import com.theminespirit.core.tactics.EnemyFact;
@@ -20,10 +19,6 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.intellect.SettlementScanner;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +32,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Creeper;
 
 public final class DefenseService {
-    private static DefenseProfile cachedProfile;
-
     private final EnemyProfiles enemies = TacticsConfig.loadDefault().enemies();
     private final BlockerProbe probe = new BlockerProbe();
     private DefensePlan lastPlan = new DefensePlan(Optional.empty(), List.of(), List.of());
@@ -186,20 +179,6 @@ public final class DefenseService {
     }
 
     private static DefenseProfile profile() {
-        if (cachedProfile == null) {
-            try (InputStream stream =
-                    DefenseService.class.getResourceAsStream("/data/theminespirit/tactics/priorities.json")) {
-                if (stream == null) {
-                    throw new IllegalStateException("Ресурс /data/theminespirit/tactics/priorities.json не найден "
-                            + "в classpath: проверьте, что файл лежит в src/main/resources");
-                }
-                cachedProfile = DefenseProfileParser.fromJson(new String(stream.readAllBytes(),
-                        StandardCharsets.UTF_8));
-            } catch (IOException error) {
-                throw new UncheckedIOException("priorities.json не прочитан: проверьте права и кодировку UTF-8",
-                        error);
-            }
-        }
-        return cachedProfile;
+        return DefenseProfile.loadDefault();
     }
 }

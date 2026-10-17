@@ -12,7 +12,7 @@ final class DigDescentWidenScript implements ScriptInstance {
     private final DescentWidenSession session;
 
     DigDescentWidenScript(SpiritEntity spirit, DigDescentParams params) {
-        this.session = new DescentWidenSession(spirit, params.direction(), params.y(), DescentLevels.defaults());
+        this.session = new DescentWidenSession(spirit, params.direction(), params.y(), DescentLevels.loadDefault());
     }
 
     @Override

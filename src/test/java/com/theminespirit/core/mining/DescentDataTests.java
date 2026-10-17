@@ -1,9 +1,19 @@
 package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.reload.ContentSource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableRegistry;
+import com.theminespirit.core.reload.TableStatus;
+import java.time.Clock;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class DescentDataTests {
@@ -91,5 +101,38 @@ class DescentDataTests {
         assertEquals(DescentData.defaults(), DescentData.load(),
                 "Файл " + DescentData.RESOURCE + " обязан совпадать с кодовыми DEFAULTS: расхождение тихо "
                         + "изменит поведение спуска у игроков");
+    }
+
+    @Test
+    void reload_ChangedJson_HolderReturnsNewTargetY() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<DescentData> holder = registry.registerLazy(registeredDefinition(), DescentData::load);
+        String changed = """
+                {"targetY": -40, "torchInterval": 4}""";
+        ContentSource source = ContentSource.of(Map.of(DescentData.RESOURCE,
+                new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(-40, holder.current().targetY(),
+                "После /reload с изменённым json держатель обязан нести новый целевой этаж: иначе датапак мира "
+                        + "не поменяет спуск без перезапуска, а таблица числится горячей ложно");
+    }
+
+    @Test
+    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
+        assertSame(DataTables.INSTANCE.descent().current(), DescentData.loadDefault(),
+                "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
+                        + "не поменяет ему целевой этаж, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<DescentData> registeredDefinition() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if (definition.id().equals("descent")) {
+                return (TableDefinition<DescentData>) definition;
+            }
+        }
+        throw new AssertionError("таблица descent не зарегистрирована в DataTables: /reload её не перечитает");
     }
 }

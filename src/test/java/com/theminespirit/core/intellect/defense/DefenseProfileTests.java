@@ -1,9 +1,18 @@
 package com.theminespirit.core.intellect.defense;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.reload.ContentSource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableRegistry;
+import com.theminespirit.core.reload.TableStatus;
 import com.theminespirit.core.tactics.EnemyProfile;
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -128,5 +137,39 @@ class DefenseProfileTests {
                         Map.of(DefenderRole.ARCHER, List.of(), DefenderRole.MELEE, List.of(TargetClass.MELEE)),
                         Map.of(DefenderRole.MELEE, List.of(TargetClass.MELEE))),
                 "Пустой порядок целей обязан падать: отряд без порядка бьёт кого попало");
+    }
+
+    @Test
+    void reload_ChangedJson_HolderReturnsNewClassMapping() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<DefenseProfile> holder =
+                registry.registerLazy(registeredDefinition(), DefenseProfile::readFromClasspath);
+        String changed =
+                VALID_JSON.replace("\"minecraft:creeper\": \"CREEPER\"", "\"minecraft:creeper\": \"MELEE\"");
+        ContentSource source = ContentSource.of(Map.of(DefenseProfile.RESOURCE,
+                new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(TargetClass.MELEE, holder.current().classify("minecraft:creeper"),
+                "После /reload с изменённым json держатель обязан нести новую карту классов: иначе датапак мира "
+                        + "не поменяет классификацию целей без перезапуска, а таблица числится горячей ложно");
+    }
+
+    @Test
+    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
+        assertSame(DataTables.INSTANCE.priorities().current(), DefenseProfile.loadDefault(),
+                "Потребитель обязан брать версию из держателя, а не читать classpath/кэш: иначе /reload "
+                        + "не поменяет ему классификацию целей, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<DefenseProfile> registeredDefinition() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if (definition.id().equals("priorities")) {
+                return (TableDefinition<DefenseProfile>) definition;
+            }
+        }
+        throw new AssertionError("таблица priorities не зарегистрирована в DataTables: /reload её не перечитает");
     }
 }

@@ -32,8 +32,6 @@ class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
     /** Не таблицы /reload — путь и причина. Тела пресетов из индекса presets сторож берёт сам (presetBodies). */
     private static final Map<String, String> EXCLUDED = Map.ofEntries(
-            Map.entry("data/theminespirit/tactics/priorities.json",
-                    "DefenseService читает с classpath, не на /reload (todo: горячие таблицы)"),
             Map.entry("data/theminespirit/schematics/house.json",
                     "схема грузится по имени, не на /reload (todo: горячие схемы)"),
             Map.entry("data/theminespirit/schematics/fence.json",
@@ -41,11 +39,7 @@ class DataTablesGuardTests {
             Map.entry("data/theminespirit/schematics/pen.json",
                     "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
             Map.entry("data/theminespirit/schematics/enchant_room.json",
-                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
-            Map.entry("data/theminespirit/mining/descent.json",
-                    "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)"),
-            Map.entry("data/theminespirit/mining/descent_levels.json",
-                    "DescentLevels с classpath, не на /reload (todo: горячие таблицы)"));
+                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"));
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

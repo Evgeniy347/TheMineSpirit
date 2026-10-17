@@ -19,6 +19,6 @@ public record DigDescentParams(DescentDirection direction, int y) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new DigDescentParams(
                 DescentDirection.parse(ScriptArgs.requireString(params, "direction")),
-                ScriptArgs.optionalInt(params, "y").orElse(DescentData.defaults().targetY()));
+                ScriptArgs.optionalInt(params, "y").orElse(DescentData.loadDefault().targetY()));
     }
 }

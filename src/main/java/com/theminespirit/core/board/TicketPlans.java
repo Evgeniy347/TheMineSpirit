@@ -103,7 +103,7 @@ public final class TicketPlans {
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
         return switch (level) {
             case 1 -> new ScriptCall("dig_descent", Map.of("direction", "south",
-                    "y", DescentData.defaults().targetY()));
+                    "y", DescentData.loadDefault().targetY()));
             case 2 -> new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
                     "z", target.target().z(), "size", MINE_TUNNEL_SIZE));
             case 3 -> sequence(

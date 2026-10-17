@@ -80,7 +80,7 @@ public final class DescentSession {
         this.direction = Objects.requireNonNull(direction,
                 "Направление спуска не может быть null: без него неизвестно, куда копать");
         this.targetY = targetY;
-        this.torchInterval = DescentData.defaults().torchInterval();
+        this.torchInterval = DescentData.loadDefault().torchInterval();
         this.plan = DescentPlan.from(safety, entry, direction, targetY, torchInterval);
     }
 
@@ -160,7 +160,7 @@ public final class DescentSession {
         direction = DescentDirection.parse(text(saved, "direction"));
         targetY = number(saved, "target_y");
         blocksDug = number(saved, "blocks_dug");
-        torchInterval = DescentData.defaults().torchInterval();
+        torchInterval = DescentData.loadDefault().torchInterval();
         plan = DescentPlan.from(safety, entry, direction, targetY, torchInterval);
         stepIndex = Math.min(number(saved, "step"), plan.steps().size());
         cellCursor = 0;

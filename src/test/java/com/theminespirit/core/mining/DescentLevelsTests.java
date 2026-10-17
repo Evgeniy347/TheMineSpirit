@@ -1,9 +1,19 @@
 package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.reload.ContentSource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.TableRegistry;
+import com.theminespirit.core.reload.TableStatus;
+import java.time.Clock;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class DescentLevelsTests {
@@ -85,5 +95,38 @@ class DescentLevelsTests {
         assertEquals(DescentLevels.defaults(), DescentLevels.load(),
                 "Файл " + DescentLevels.RESOURCE + " обязан совпадать с кодовыми DEFAULTS: расхождение тихо "
                         + "изменит ширину и высоту шахты у игроков");
+    }
+
+    @Test
+    void reload_ChangedJson_HolderReturnsNewWidenWidth() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<DescentLevels> holder = registry.registerLazy(registeredDefinition(), DescentLevels::load);
+        String changed = """
+                {"widenWidth": 5, "widenHeight": 6, "stairWidth": 2}""";
+        ContentSource source = ContentSource.of(Map.of(DescentLevels.RESOURCE,
+                new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(5, holder.current().widenWidth(),
+                "После /reload с изменённым json держатель обязан нести новую ширину расширения: иначе датапак "
+                        + "мира не поменяет шахту без перезапуска, а таблица числится горячей ложно");
+    }
+
+    @Test
+    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
+        assertSame(DataTables.INSTANCE.descentLevels().current(), DescentLevels.loadDefault(),
+                "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
+                        + "не поменяет ему ширину шахты, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<DescentLevels> registeredDefinition() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if (definition.id().equals("descent_levels")) {
+                return (TableDefinition<DescentLevels>) definition;
+            }
+        }
+        throw new AssertionError("таблица descent_levels не зарегистрирована в DataTables: /reload её не перечитает");
     }
 }

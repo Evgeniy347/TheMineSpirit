@@ -1,5 +1,7 @@
 package com.theminespirit.core.intellect.defense;
 
+import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.InvalidFieldException;
 import java.util.EnumMap;
@@ -11,6 +13,7 @@ import java.util.Set;
 public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallback,
         Map<DefenderRole, List<TargetClass>> priority, Map<DefenderRole, List<TargetClass>> priorityWithoutArcher) {
     public static final String DEFAULT_KEY = "default";
+    public static final String RESOURCE = "data/theminespirit/tactics/priorities.json";
 
     public DefenseProfile {
         if (classes == null) {
@@ -36,6 +39,16 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
         classes = Map.copyOf(classes);
         priority = checkedOrders("DefenseProfile.priority", priority, true);
         priorityWithoutArcher = checkedOrders("DefenseProfile.priorityWithoutArcher", priorityWithoutArcher, false);
+    }
+
+    /** Начальная версия для держателя: читается с classpath один раз за процесс. */
+    public static DefenseProfile readFromClasspath() {
+        return DefenseProfileParser.fromJson(JsonResource.readClasspath(RESOURCE));
+    }
+
+    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет приоритеты на лету. */
+    public static DefenseProfile loadDefault() {
+        return DataTables.INSTANCE.priorities().current();
     }
 
     public TargetClass classify(String type) {

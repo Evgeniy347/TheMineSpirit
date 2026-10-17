@@ -2,6 +2,7 @@ package com.theminespirit.core.mining;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
 public record DescentData(int targetY, int torchInterval) {
@@ -26,6 +27,11 @@ public record DescentData(int targetY, int torchInterval) {
 
     public static DescentData defaults() {
         return DEFAULTS;
+    }
+
+    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
+    public static DescentData loadDefault() {
+        return DataTables.INSTANCE.descent().current();
     }
 
     public static DescentData load() {

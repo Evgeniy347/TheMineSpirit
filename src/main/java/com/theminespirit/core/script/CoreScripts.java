@@ -165,14 +165,14 @@ public final class CoreScripts {
                         List.of(
                                 ParamSpec.enumeration("direction", true, DescentDirection.names()),
                                 ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN,
-                                        CatalogLimits.WORLD_Y_MAX, DescentData.defaults().targetY())),
+                                        CatalogLimits.WORLD_Y_MAX, DescentData.loadDefault().targetY())),
                         List.of("под ногами духа есть пол шахты"),
                         List.of("спуск пройден до целевого этажа или остановлен опасностью", "тоннель освещен факелами")),
                 spec("dig_descent_widen", "расширить существующий спуск в шахту по всей длине",
                         List.of(
                                 ParamSpec.enumeration("direction", true, DescentDirection.names()),
                                 ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN,
-                                        CatalogLimits.WORLD_Y_MAX, DescentData.defaults().targetY())),
+                                        CatalogLimits.WORLD_Y_MAX, DescentData.loadDefault().targetY())),
                         List.of("существует спуск уровня 1 шириной 1 и высотой 3"),
                         List.of("тоннель расширен до трёх блоков в ширину и шести в высоту по всей длине",
                                 "факелы спуска сохранены")),
@@ -180,7 +180,7 @@ public final class CoreScripts {
                         List.of(
                                 ParamSpec.enumeration("direction", true, DescentDirection.names()),
                                 ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN,
-                                        CatalogLimits.WORLD_Y_MAX, DescentData.defaults().targetY())),
+                                        CatalogLimits.WORLD_Y_MAX, DescentData.loadDefault().targetY())),
                         List.of("спуск расширен до уровня 2", "в инвентаре есть ступеньки"),
                         List.of("на двух полосах спуска уложены ступеньки, третья свободна под рельсы")),
                 spec("gather", "собрать блоки заданного типа",
