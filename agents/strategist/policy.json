@@ -1,5 +1,5 @@
 {
-  "allowed_scripts": ["goto", "scan", "collect_drops", "chop_tree", "mine_vein", "gather", "till", "plant_crop", "harvest_crop", "bone_meal", "wait"],
+  "allowed_scripts": ["goto", "scan", "collect_drops", "chop_tree", "mine_vein", "gather", "till", "plant_crop", "harvest_crop", "bone_meal", "wait", "acquire", "craft", "equip", "withdraw"],
   "max_string_length": 200,
   "max_list_items": 32,
   "max_goto_distance": 256,

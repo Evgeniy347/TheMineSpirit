@@ -44,6 +44,13 @@ VALID = [
         {"type": "sequence", "steps": [script("goto", x=0, y=70, z=0), script("collect_drops", radius=16)]},
         script("wait", ticks=100)]}),
     ("scan с filter", script("scan", radius=16, filter=["*_log", "*_ore"])),
+    ("acquire с нуля", script("acquire", item="wooden_pickaxe", count=1)),
+    ("acquire с namespace", script("acquire", item="minecraft:oak_log", count=8)),
+    ("craft из имеющегося", script("craft", item="wooden_pickaxe", count=1)),
+    ("equip точного предмета", script("equip", item="iron_pickaxe")),
+    ("equip шаблона", script("equip", item="*_pickaxe")),
+    ("withdraw из ближайшего сундука", script("withdraw", item="iron_pickaxe", count=1)),
+    ("withdraw с координатами", script("withdraw", container="8,63,-5", item="minecraft:oak_log", count=8, radius=8)),
     ("глубина ровно 16", deep(15)),
     ("8 шагов в корне", {"type": "sequence", "steps": many(8, lambda i: script("scan"))}),
     ("32 узла ровно", {"type": "sequence", "steps": [
@@ -97,6 +104,20 @@ INVALID = [
     ("NaN вместо числа", script("wait", ticks=float("nan")), "ticks"),
     ("null в параметре", script("chop_tree", count=None), "count"),
     ("список слишком длинный", script("scan", filter=["a"] * 33), "filter"),
+    ("acquire без item", script("acquire", count=1), "item"),
+    ("acquire без count", script("acquire", item="wooden_pickaxe"), "count"),
+    ("acquire count 0", script("acquire", item="wooden_pickaxe", count=0), "count"),
+    ("craft count 257", script("craft", item="wooden_pickaxe", count=257), "count"),
+    ("withdraw без item", script("withdraw", count=1), "item"),
+    ("withdraw count 0", script("withdraw", item="iron_pickaxe", count=0), "count"),
+    ("equip без item", script("equip"), "item"),
+    ("acquire с пустым id", script("acquire", item="", count=1), "item"),
+    ("acquire с пробелом в id", script("acquire", item="wooden pickaxe", count=1), "item"),
+    ("craft с заглавными буквами", script("craft", item="Wooden_Pickaxe", count=1), "item"),
+    ("withdraw с шаблоном", script("withdraw", item="*_pickaxe", count=1), "item"),
+    ("acquire с пустым namespace", script("acquire", item=":oak_log", count=1), "item"),
+    ("acquire с пустым path", script("acquire", item="minecraft:", count=1), "item"),
+    ("acquire с двумя двоеточиями", script("acquire", item="a:b:c", count=1), "item"),
 ]
 
 
@@ -148,10 +169,11 @@ class PlanCheckTests(unittest.TestCase):
         with self.assertRaises(PlanError):
             check_plan(script("fill", block="stone", x=1, y=1, z=1), self.catalog, policy, self.limits)
 
-    def test_policy_StartingWhitelist_MatchesChecklist(self):
+    def test_policy_Whitelist_MatchesChecklists(self):
         expected = {"goto", "scan", "collect_drops", "chop_tree", "mine_vein", "gather", "till", "plant_crop",
-                    "harvest_crop", "bone_meal", "wait"}
-        self.assertEqual(expected, set(self.policy.allowed_scripts), "стартовый белый список из чеклиста 22")
+                    "harvest_crop", "bone_meal", "wait", "acquire", "craft", "equip", "withdraw"}
+        self.assertEqual(expected, set(self.policy.allowed_scripts),
+                         "белый список — чеклист 22 плюс инструментальные скрипты чеклиста 38Б")
 
     def test_limits_Configurable(self):
         plan = {"type": "sequence", "steps": many(3, lambda i: script("scan"))}
@@ -418,6 +440,57 @@ class WorldRulesTests(unittest.TestCase):
             except PlanError:
                 accepted = False
             self.assertEqual(not far, accepted, f"dx={dx}, dz={dz}: проверка расстояния расходится с расчётом")
+
+
+class ItemToolScriptRuleTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog.from_capabilities(default_capabilities())
+        cls.policy = load_policy(APP / "policy.json")
+        cls.limits = PlanLimits()
+
+    def check(self, plan, context=None):
+        return check_plan(plan, self.catalog, self.policy, self.limits, context)
+
+    def test_emptyInventory_AcquirePickaxeAccepted_MineVeinRejected(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "iron_ore"}), frozenset())
+        self.check(script("acquire", item="wooden_pickaxe", count=1), context)
+        with self.assertRaises(PlanError, msg="пустой инвентарь: mine_vein без кирки обязан отклониться") as ctx:
+            self.check(script("mine_vein", ore="iron"), context)
+        self.assertIn("кирк", str(ctx.exception).lower())
+
+    def test_pickaxeInInventory_MineVeinAccepted(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "iron_ore"}), frozenset({"stone_pickaxe"}))
+        self.check(script("mine_vein", ore="iron"), context)
+
+    def test_toolInInventoryNotInHand_EquipAccepted(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone"}), frozenset({"iron_pickaxe"}))
+        self.check(script("equip", item="iron_pickaxe"), context)
+        self.check(script("equip", item="*_pickaxe"), context)
+
+    def test_containerNearby_WithdrawAccepted(self):
+        self.check(script("withdraw", item="iron_pickaxe", count=1))
+        self.check(script("withdraw", container="nearest", item="iron_pickaxe", count=1))
+
+    def test_equipWildcard_OnlyEquipAllowsIt(self):
+        for name in ("acquire", "craft", "withdraw"):
+            with self.subTest(script=name):
+                with self.assertRaises(PlanError, msg=f"{name}.item не может быть шаблоном: нужен конкретный предмет") as ctx:
+                    self.check(script(name, item="*_pickaxe", count=1))
+                self.assertIn("plan.params.item", str(ctx.exception))
+
+    def test_itemIds_ValidAccepted(self):
+        for item in ("wooden_pickaxe", "minecraft:oak_log", "oak_log", "minecraft:iron_sword", "stone_pickaxe"):
+            with self.subTest(item=item):
+                self.check(script("acquire", item=item, count=1))
+
+    def test_itemIds_InvalidRejectedNamingNode(self):
+        for item in ("", " ", "Wooden_Pickaxe", "wooden pickaxe", ":oak_log", "minecraft:", "a:b:c", "кирка", "oak_log@"):
+            with self.subTest(item=item):
+                with self.assertRaises(PlanError, msg=f"id предмета {item!r} обязан отклониться") as ctx:
+                    self.check(script("acquire", item=item, count=1))
+                self.assertIn("plan.params.item", str(ctx.exception))
+                self.assertTrue(any("а" <= ch.lower() <= "я" for ch in str(ctx.exception)), "текст ошибки по-русски")
 
 
 def random_json(rng, depth=0):

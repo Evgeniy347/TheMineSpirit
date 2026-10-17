@@ -59,6 +59,28 @@ BLOCK_PICKAXE_LEVEL.update({
 })
 BLOCK_PICKAXE_LEVEL.update({name: 4 for name in ("obsidian", "ancient_debris")})
 
+ITEM_SCRIPTS = ("acquire", "craft", "equip", "withdraw")
+ITEM_PATTERN_SCRIPTS = frozenset({"equip"})
+ITEM_ID_SYMBOLS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789_:./-")
+
+
+def item_id_problem(value: str, allow_pattern: bool) -> str | None:
+    """Почему строка не похожа на id предмета (None — похожа). Шаблон '*' разрешён только equip, как IdFilter мода."""
+    if not value:
+        return "id пуст"
+    if value.count(":") > 1:
+        return "двоеточий больше одного"
+    namespace, separator, path = value.partition(":")
+    if separator and not namespace:
+        return "пустое пространство имён до ':'"
+    if separator and not path:
+        return "пустой id после ':'"
+    allowed = ITEM_ID_SYMBOLS | ({"*"} if allow_pattern else frozenset())
+    bad = sorted({symbol for symbol in value if symbol not in allowed})
+    if bad:
+        return "недопустимые символы " + ", ".join(repr(symbol) for symbol in bad)
+    return None
+
 
 def required_pickaxe(script: str, params: dict) -> int | None:
     if script == "mine_vein":
@@ -271,8 +293,23 @@ class _Checker:
             return
         before = len(self.errors)
         self._params(node.get("params"), schema, path, f"скрипта {name!r}")
-        if self.context is not None and len(self.errors) == before and isinstance(node.get("params"), dict):
-            self._world_rules(name, node["params"], path)
+        if len(self.errors) == before and isinstance(node.get("params"), dict):
+            self._item_rule(name, node["params"], path)
+            if self.context is not None:
+                self._world_rules(name, node["params"], path)
+
+    def _item_rule(self, name: str, params: dict, path: str) -> None:
+        if name not in ITEM_SCRIPTS:
+            return
+        value = params.get("item")
+        if not isinstance(value, str):
+            return
+        problem = item_id_problem(value, name in ITEM_PATTERN_SCRIPTS)
+        if problem is None:
+            return
+        hint = " (для equip допустим шаблон вида '*_pickaxe')" if name in ITEM_PATTERN_SCRIPTS else ""
+        self._error(f"{path}.params.item: {value!r} — не id предмета: {problem}; пишите id как в наблюдении, "
+                    f"например wooden_pickaxe или minecraft:oak_log{hint}")
 
     def _world_rules(self, name: str, params: dict, path: str) -> None:
         context = self.context
