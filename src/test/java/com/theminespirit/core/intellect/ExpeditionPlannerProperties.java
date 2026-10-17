@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import java.util.HashSet;
@@ -40,7 +41,8 @@ class ExpeditionPlannerProperties {
 
     @Provide
     Arbitrary<SettlementView> needyViews() {
-        return SettlementViews.views().filter(view -> view.needsOre(64, 32, 2));
+        return SettlementViews.views().filter(view -> view.needsOre(64, 32, 2)
+                && !NightLeash.withDefaultRules().isEvening(view.dayFraction()));
     }
 
     @Property
