@@ -122,6 +122,25 @@ class ScriptCatalogTests {
                 "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
     }
 
+    @Test
+    void defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional() {
+        ScriptSpec chopTarget = CoreScripts.defaultCatalog().find("chop_target").orElseThrow();
+
+        assertEquals(List.of("x", "y", "z"),
+                chopTarget.params().stream().filter(ParamSpec::required).map(ParamSpec::name).toList(),
+                "У chop_target координаты ствола обязательны, а replant — нет: без клетки дерево не определить, "
+                        + "а посадка саженца необязательна");
+
+        ParamSpec replant = param(chopTarget, "replant");
+        assertEquals(ParamType.BOOL, replant.type(),
+                "replant в chop_target — булев флаг: посадить саженец или нет, третьего не дано");
+        assertEquals(false, replant.defaultValue(),
+                "replant в chop_target по умолчанию false, как у chop_tree: посадка — явное желание, а не случайность");
+        assertEquals(4, chopTarget.params().size(),
+                "У chop_target ровно четыре параметра: x, y, z и replant. Лишний попал бы в capabilities, "
+                        + "а забытый не подставил бы умолчание");
+    }
+
     static Stream<Arguments> scriptSpecRows() {
         List<ScriptExpectation> rows = List.of(
                 spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
@@ -162,6 +181,9 @@ class ScriptCatalogTests {
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
                 spec("flee", List.of(), Map.of()),
                 spec("chop_tree", List.of(), Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
+                spec("chop_target", List.of("x", "y", "z"),
+                        Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
+                                "z", new long[]{WORLD_MIN, WORLD_MAX})),
                 spec("mine_vein", List.of(), Map.of("count", new long[]{1, 256})),
                 spec("dig_area", List.of("x", "y", "z", "size"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
