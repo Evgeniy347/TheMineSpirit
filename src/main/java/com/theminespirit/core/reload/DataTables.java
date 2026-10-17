@@ -13,6 +13,7 @@ import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
+import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
@@ -64,6 +65,7 @@ public final class DataTables {
     private final TableHolder<KitFor> kitFor;
     private final TableHolder<IntellectTuning> intellect;
     private final TableHolder<InventoryNormTable> inventoryNorm;
+    private final TableHolder<OutsideRules> outside;
     private final TableHolder<ArmorTable> armor;
     private final TableHolder<FeedTable> feed;
     private final TableHolder<Map<String, SwordTier>> swords;
@@ -117,6 +119,9 @@ public final class DataTables {
         this.intellect = registry.registerLazy(
                 TableDefinition.single("intellect", IntellectTuning.RESOURCE, IntellectTuning::parse),
                 IntellectTuning::defaults);
+        this.outside = registry.registerLazy(
+                TableDefinition.single("outside", OutsideRules.RESOURCE, OutsideRules::parse),
+                OutsideRules::load);
         this.armor = registry.registerLazy(
                 TableDefinition.single("armor", "data/theminespirit/armor/armor_table.json", ArmorTable::parse),
                 () -> {
@@ -237,6 +242,10 @@ public final class DataTables {
 
     public TableHolder<IntellectTuning> intellect() {
         return intellect;
+    }
+
+    public TableHolder<OutsideRules> outside() {
+        return outside;
     }
 
     public TableHolder<ArmorTable> armor() {
