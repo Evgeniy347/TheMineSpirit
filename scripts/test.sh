@@ -221,7 +221,23 @@ start_monitor() {
     MONITOR_PID=$!
 }
 
+# Пульс для надзора исполнителя (scripts/opencode-task.sh): пока скрипт жив — ждёт замок или гоняет тесты —
+# файл обновляется раз в 20 с, и надзор не путает долгий прогон с молчанием модели.
+HEARTBEAT_FILE="${THEMINESPIRIT_TEST_HEARTBEAT:-TestResults/test-running}"
+HEARTBEAT_PID=""
+start_heartbeat() {
+    mkdir -p "$(dirname "$HEARTBEAT_FILE")"
+    touch "$HEARTBEAT_FILE"
+    ( while kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; done ) &
+    HEARTBEAT_PID=$!
+}
+
 stop_monitor() {
+    if [ -n "$HEARTBEAT_PID" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+        HEARTBEAT_PID=""
+        rm -f "$HEARTBEAT_FILE"
+    fi
     if [ -n "$MONITOR_PID" ]; then
         kill -TERM "$MONITOR_PID" 2>/dev/null || kill -TERM -- "-$MONITOR_PID" 2>/dev/null || true
         MONITOR_PID=""
@@ -326,6 +342,7 @@ ELAPSED=0
 
 echo "Режим: $MODE" >&2
 echo "Лог: $LOG_FILE" >&2
+start_heartbeat
 
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml

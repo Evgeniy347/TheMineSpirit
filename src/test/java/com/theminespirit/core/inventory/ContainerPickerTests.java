@@ -127,6 +127,44 @@ class ContainerPickerTests {
                 "повреждённая кирка — другой вариант: её нельзя класть к целой, берётся ближайший свободный сундук");
     }
 
+    @Test
+    void choose_WarehouseLosingTwentyPercentReserve_Refuses() {
+        List<Stack> slots = new ArrayList<>();
+        for (int slot = 0; slot < 21; slot++) {
+            slots.add(new Stack("minecraft:dirt", 0, 64, 64));
+        }
+        for (int slot = 0; slot < 6; slot++) {
+            slots.add(null);
+        }
+        ContainerSnapshot nearlyFull = new ContainerSnapshot(ORIGIN, slots);
+
+        ContainerChoice choice = ContainerPicker.choose(List.of(nearlyFull), ORIGIN, COBBLE,
+                WarehouseSpace.MIN_FREE_PERCENT);
+
+        assertInstanceOf(ContainerChoice.Refused.class, choice,
+                "Сундук, где после новой стопки свободного места останется меньше 20%, считается полным: "
+                        + "склад не обязан забиваться под завязку, иначе его нечем расширять");
+    }
+
+    @Test
+    void choose_WarehouseKeepingTwentyPercentReserve_Chosen() {
+        List<Stack> slots = new ArrayList<>();
+        for (int slot = 0; slot < 20; slot++) {
+            slots.add(new Stack("minecraft:dirt", 0, 64, 64));
+        }
+        for (int slot = 0; slot < 7; slot++) {
+            slots.add(null);
+        }
+        ContainerSnapshot withReserve = new ContainerSnapshot(ORIGIN, slots);
+
+        ContainerChoice choice = ContainerPicker.choose(List.of(withReserve), ORIGIN, COBBLE,
+                WarehouseSpace.MIN_FREE_PERCENT);
+
+        assertInstanceOf(ContainerChoice.Chosen.class, choice,
+                "Сундук, где после новой стопки останется 22% свободного места, обязан принять сдачу: "
+                        + "иначе дух отказывался бы от работы при живом складе");
+    }
+
     private static ContainerSnapshot snapshot(int x, int y, int z, Stack... slots) {
         List<Stack> list = new ArrayList<>();
         for (Stack stack : slots) {
