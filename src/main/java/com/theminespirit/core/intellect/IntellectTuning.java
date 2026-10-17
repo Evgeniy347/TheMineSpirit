@@ -16,6 +16,7 @@ public record IntellectTuning(
         long failBackoffTicks,
         double hysteresisMargin,
         double crowdPenalty,
+        double workCrowdPenalty,
         double maxDemand,
         double fleeMargin,
         int maxFighters,
@@ -47,14 +48,15 @@ public record IntellectTuning(
     public static final String RESOURCE = "data/theminespirit/tactics/intellect.json";
 
     private static final Set<String> FIELDS = Set.of("demandIntervalTicks", "minSwitchTicks", "failBackoffTicks",
-            "hysteresisMargin", "crowdPenalty", "maxDemand", "fleeMargin", "maxFighters", "foodDays", "foodRation",
+            "hysteresisMargin", "crowdPenalty", "workCrowdPenalty", "maxDemand", "fleeMargin", "maxFighters",
+            "foodDays", "foodRation",
             "foodChildRation", "foodDemandMin", "foodDemandMax", "forageWithdrawCount", "forageWithdrawRadius",
             "forageHuntRadius", "forageHuntCount", "forageFishRadius", "forageFishCount", "forageFishDuration",
             "oreTarget", "ironTarget", "weaponTarget", "teamMin", "teamMax", "inviteTtlTicks", "inviteRepeatTicks",
             "inviteExtendTicks", "inviteMaxExtends", "strategicTtlTicks", "healFraction", "armedDps");
 
     private static final IntellectTuning DEFAULTS = new IntellectTuning(
-            100, 200, 200, 0.15, 0.2, 10.0, 1.0, 3, 1, 1.5, 0.75, 4.0, 9.0,
+            100, 200, 200, 0.15, 0.2, 8.0, 10.0, 1.0, 3, 1, 1.5, 0.75, 4.0, 9.0,
             1, 8, 16, 1, 16, 1, 1200, 64, 32, 2, 2, 3, 3600, 600, 1200, 3, 6000, 0.35, 6.0);
 
     public IntellectTuning {
@@ -67,6 +69,7 @@ public record IntellectTuning(
         requireTicks("strategicTtlTicks", strategicTtlTicks);
         requireNonNegative("hysteresisMargin", hysteresisMargin);
         requireNonNegative("crowdPenalty", crowdPenalty);
+        requireNonNegative("workCrowdPenalty", workCrowdPenalty);
         requirePositive("maxDemand", maxDemand);
         requireNonNegative("fleeMargin", fleeMargin);
         requirePositive("foodDays", foodDays);
@@ -136,6 +139,7 @@ public record IntellectTuning(
                     integer(root, origin, "failBackoffTicks"),
                     decimal(root, origin, "hysteresisMargin"),
                     decimal(root, origin, "crowdPenalty"),
+                    decimal(root, origin, "workCrowdPenalty"),
                     decimal(root, origin, "maxDemand"),
                     decimal(root, origin, "fleeMargin"),
                     JsonResource.integer(root.get("maxFighters"), origin, "maxFighters"),

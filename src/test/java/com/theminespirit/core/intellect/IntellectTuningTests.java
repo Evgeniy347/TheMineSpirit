@@ -25,6 +25,7 @@ class IntellectTuningTests {
               "failBackoffTicks": 200,
               "hysteresisMargin": 0.15,
               "crowdPenalty": 0.2,
+              "workCrowdPenalty": 8.0,
               "maxDemand": 10.0,
               "fleeMargin": 1.0,
               "maxFighters": 3,
@@ -82,6 +83,9 @@ class IntellectTuningTests {
                 "Порог переключения 0.15 спроса: меньше — задачи дёргаются, больше — дух игнорирует нужду");
         assertEquals(0.2, tuning.crowdPenalty(),
                 "Штраф за толпу 0.2 на духа: мягко разводит духов по деятельностям, не запрещая работу вместе");
+        assertEquals(8.0, tuning.workCrowdPenalty(),
+                "Штраф за толпу цели работы 8 блоков на духа: в шкале расстояний разводит духов по деревьям и жилам, "
+                        + "а не в шкале спроса деятельностей");
         assertEquals(10.0, tuning.maxDemand(),
                 "Шкала спроса 0..10: в ней считаются коэффициенты деятельностей и штраф за толпу");
         assertEquals(1.0, tuning.fleeMargin(),

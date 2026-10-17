@@ -1,5 +1,6 @@
 package com.theminespirit.core.coordinator;
 
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.Point;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public final class WorkAllocator {
             throw new IllegalArgumentException("now = " + now + ": время распределения не может быть отрицательным");
         }
         reservations.expire(now);
+        double crowdPenalty = IntellectTuning.loadDefault().workCrowdPenalty();
         List<WorkTarget> freeTargets = candidates.stream()
                 .filter(target -> reservations.owner(target).isEmpty())
                 .toList();
@@ -43,7 +45,7 @@ public final class WorkAllocator {
             double bestScore = Double.POSITIVE_INFINITY;
             for (WorkTarget target : freeTargets) {
                 double score = spirit.pos().distanceTo(anchorOf(target))
-                        + CoordinatorTuning.CROWD_PENALTY * assigned.getOrDefault(target, 0L);
+                        + crowdPenalty * assigned.getOrDefault(target, 0L);
                 if (score < bestScore || (score == bestScore && best != null
                         && target.anchor().compareTo(best.anchor()) < 0)) {
                     best = target;
