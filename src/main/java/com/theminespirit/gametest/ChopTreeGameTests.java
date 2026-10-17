@@ -531,9 +531,9 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] замер 208 тиков: 6 нижних брёвен, столб на 6 блоков, рубка верха и разбор столба;
-    // потолок 450 ≈ 2× замера
-    @GameTest(template = "mine_arena", batch = "chop_tree_tall", timeoutTicks = 450)
+    // [флак] замер 206/208 тиков в изоляции: 6 нижних брёвен, столб на 6 блоков, рубка верха и разбор
+    // столба; в полном прогоне соседние структуры держат чанки и удлиняют обход с подъёмом — потолок 900
+    @GameTest(template = "mine_arena", batch = "chop_tree_tall", timeoutTicks = 900)
     public static void chopTree_NineLogTrunkNeedsPillar_AllLogsChoppedAndPillarDismantled(GameTestHelper helper) {
         clearField(helper, TALL_FIELD_HEIGHT);
         for (int x = 0; x < PLATFORM; x++) {
