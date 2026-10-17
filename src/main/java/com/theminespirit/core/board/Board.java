@@ -27,6 +27,8 @@ public final class Board {
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
+    private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
+    private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final BoardLedger ledger = new BoardLedger();
     private final LongSupplier nowTicks;
 
@@ -119,6 +121,9 @@ public final class Board {
             }
             return BoardOutcome.TAKEN_BY_OTHER;
         }
+        if (!availableTo(spirit, ticket.boardCase(), now)) {
+            return BoardOutcome.SPIRIT_PAUSED;
+        }
         if (status == BoardStatus.WAITING_RESOURCES) {
             return BoardOutcome.GATE_BLOCKED;
         }
@@ -133,6 +138,10 @@ public final class Board {
         if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
             return false;
         }
+        UUID holder = holder(ticket);
+        if (holder != null) {
+            caseFailures.remove(new SpiritCase(holder, ticket.boardCase()));
+        }
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.note(ticket.boardCase(), ticket.level());
         return true;
@@ -140,12 +149,56 @@ public final class Board {
 
     public boolean fail(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
-        if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
             return false;
         }
+        long now = nowTicks.getAsLong();
         statuses.put(ticketId, BoardStatus.FAILED);
-        failTicks.put(ticketId, nowTicks.getAsLong());
+        failTicks.put(ticketId, now);
+        UUID holder = holder(ticket);
+        if (holder != null) {
+            noteCaseFailure(holder, ticket, now);
+        }
         return true;
+    }
+
+    /**
+     * Пара дух+кейс свободна для выдачи: после провала она отдыхает паузу, а после предела
+     * провалов подряд снята с духа до конца жизни доски.
+     */
+    public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
+        Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
+        requireNow(now);
+        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
+        return failures == null || (!failures.detached && now >= failures.pausedUntil);
+    }
+
+    public boolean caseDetached(UUID spirit, BoardCase boardCase) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: снятие считается на конкретного духа");
+        Objects.requireNonNull(boardCase, "boardCase не может быть null: снятие считается на конкретный кейс");
+        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
+        return failures != null && failures.detached;
+    }
+
+    public int consecutiveFailures(UUID spirit, BoardCase boardCase) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: счёт провалов идёт на конкретного духа");
+        Objects.requireNonNull(boardCase, "boardCase не может быть null: счёт провалов идёт на кейс");
+        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
+        return failures == null ? 0 : failures.consecutive;
+    }
+
+    /** Записи DETACHED: кейс снят с духа после предела провалов подряд. */
+    public List<BoardLogEntry> detachments() {
+        return List.copyOf(detachments);
+    }
+
+    /** Отдаёт записи DETACHED и очищает буфер: адаптер пишет их в журнал ровно один раз. */
+    public List<BoardLogEntry> drainDetachments() {
+        List<BoardLogEntry> drained = List.copyOf(detachments);
+        detachments.clear();
+        return drained;
     }
 
     public boolean cancel(String ticketId) {
@@ -395,6 +448,28 @@ public final class Board {
             evicted++;
         }
         return evicted;
+    }
+
+    private void noteCaseFailure(UUID spirit, BoardTicket ticket, long now) {
+        SpiritCase key = new SpiritCase(spirit, ticket.boardCase());
+        CaseFailures failures = caseFailures.computeIfAbsent(key, ignored -> new CaseFailures());
+        failures.consecutive++;
+        failures.pausedUntil = now + BoardTuning.caseFailPauseTicks();
+        if (!failures.detached && failures.consecutive >= BoardTuning.caseFailLimit()) {
+            failures.detached = true;
+            detachments.add(new BoardLogEntry(BoardLog.Event.DETACHED, now, ticket.id(), ticket.boardCase(),
+                    ticket.level(), ticket.cause(), ticket.priority(), ticket.priority(), List.of(),
+                    spirit.toString(), ConfigStamp.current(), now));
+        }
+    }
+
+    private record SpiritCase(UUID spirit, BoardCase boardCase) {
+    }
+
+    private static final class CaseFailures {
+        private int consecutive;
+        private long pausedUntil;
+        private boolean detached;
     }
 
     private void requireNow(long now) {

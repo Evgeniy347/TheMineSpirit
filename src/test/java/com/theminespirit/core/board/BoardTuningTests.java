@@ -104,6 +104,24 @@ class BoardTuningTests {
                 "Откат провала читается из живой таблицы: датапак правит срок без перезапуска");
     }
 
+    @Test
+    void caseFailPause_Is_OneMinute() {
+        assertEquals(1200, BoardTuning.CASE_FAIL_PAUSE_TICKS,
+                "После провала пара дух+кейс отдыхает 1200 тиков (1 мин): иначе дух 112 раз подряд "
+                        + "берёт first:stock_chests и стоит на месте");
+        assertEquals(1200, BoardTuning.caseFailPauseTicks(),
+                "Пауза пары дух+кейс читается из живой таблицы board: датапак меняет её без перезапуска");
+    }
+
+    @Test
+    void caseFailLimit_Is_Three() {
+        assertEquals(3, BoardTuning.CASE_FAIL_LIMIT,
+                "Три провала подряд снимают кейс с духа: предел 3 не даёт бесконечному циклу "
+                        + "одного и того же исполнителя");
+        assertEquals(3, BoardTuning.caseFailLimit(),
+                "Предел провалов читается из живой таблицы board: число настраивается датапаком");
+    }
+
     @Property
     void anyNumber_Is_PositiveAndFinite(@ForAll("boardNumbers") Number number) {
         double value = number.doubleValue();
@@ -125,6 +143,8 @@ class BoardTuningTests {
                 (long) BoardTuning.STOCK_READ_BUDGET,
                 (long) BoardTuning.STOCK_BLOCK_BUDGET,
                 BoardTuning.FAIL_BACKOFF_TICKS,
+                BoardTuning.CASE_FAIL_PAUSE_TICKS,
+                (long) BoardTuning.CASE_FAIL_LIMIT,
                 BoardTuning.FENCE_PATROL_INTERVAL,
                 (long) BoardTuning.FENCE_WATCH_RADIUS,
                 BoardTuning.ENCHANT_CHECK_INTERVAL,
