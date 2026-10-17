@@ -120,6 +120,12 @@
       первым шагом RandomStroll, и тики духа плавали 21→396 при лимите 200. Возврат через PenBounds.nearestInside с отступом
       LURE_INSET=2 заводит овцу на два блока внутрь: замер lure до — медиана 21, максимум 104, разово 396 на подлоге; после —
       23 тика стабильно в 6+ прогонах, batch husbandry_lure зелёный в 10/10 прогонов (8d6e4e8).
+- [x] Игровой `ResourceKnowledge`: время горения из data map NeoForge `furnace_fuels` — `RecipeKnowledge.burnTicks`
+      читает `Item.builtInRegistryHolder().getData(NeoForgeDataMaps.FURNACE_FUELS)`, `FuelTable` остался запасным для
+      заглушек и core-тестов (deepseek-v4.1-flash, 17.10). Свойство топлива: минимальность плана и шаг топлива перед
+      каждым smelt, `canProvide` — цепочка предков и следующий кандидат при исключении. Часть 2: `ResourceResolver` уже
+      подключён к production через скрипт `acquire` (`AcquireScript.buildSubplan` → `ResourceResolver.resolve`),
+      GameTest `AcquireGameTests.acquireIronIngot_FromScratch_…` гоняет его в игре — правок не потребовалось.
 
 ## В работе и техдолг
 
@@ -130,9 +136,6 @@
       (runGameTestServer.doFirst удаляет world, 23caeac3, 12.10; отмечено 17.10).
 - [ ] Флеки отхода в лагерь/домой под полным GameTest и нагрузкой (17.10: 3 из 4 полных прогонов на сервере —
       `retreat_homenearerthancamp_runshome` ×2, `retreat_campnearerthanhome_runstocamp`; пачки camp_retreat_* отдельно — зелёные).
-- [ ] Игровой `ResourceKnowledge`: время горения из data map NeoForge `furnace_fuels` (переопределить `burnTicks`), `FuelTable` —
-      запасной вариант для заглушек; сейчас у `ResourceResolver` нет вызовов в production. Свойство топлива: минимальность
-      и «перед каждым smelt есть шаг топлива»; `canProvide` — цепочка предков и перебор следующего кандидата при исключении.
 - [ ] `chop_tree`: валка высоких деревьев выше +5 ждёт `pillar_up` (тест разбора 60 брёвен — двусторонняя граница, mimo 16.10).
 - [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
