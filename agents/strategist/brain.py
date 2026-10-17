@@ -212,7 +212,7 @@ def _create_account_db(local: Path, source: sqlite3.Connection, account, state) 
                 con.execute(statement)
             if migrations:
                 con.executemany("insert or ignore into migration(id, time_completed) values (?, ?)", migrations)
-            _insert_account_rows(con, source, account, state)
+            _insert_account_rows(con, account, state)
         os.replace(temporary, local)
     except BaseException:
         if temporary.exists():
@@ -227,10 +227,10 @@ def _write_account_rows(local: Path, source: sqlite3.Connection, account, state)
                 row = source.execute("select sql from sqlite_master where type='table' and name=?", (name,)).fetchone()
                 if row and row[0]:
                     con.execute(row[0])
-        _insert_account_rows(con, source, account, state)
+        _insert_account_rows(con, account, state)
 
 
-def _insert_account_rows(con: sqlite3.Connection, source: sqlite3.Connection, account, state) -> None:
+def _insert_account_rows(con: sqlite3.Connection, account, state) -> None:
     for name, rows in (("account", account), ("account_state", state)):
         if rows:
             con.executemany(f"insert or replace into {name} values ({','.join('?' * len(rows[0]))})", rows)
