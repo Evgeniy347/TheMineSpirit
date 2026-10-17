@@ -10,7 +10,7 @@ class FreeInventoryDemandProperties {
     private static final String CURVES = """
             {"demand":{"occupied_curve":[{"at":0.0,"value":0.0},{"at":0.4,"value":2.0},{"at":1.0,"value":7.0}],
             "extra_curve":[{"at":0.0,"value":0.0},{"at":0.6,"value":3.0},{"at":1.0,"value":5.0}]},
-            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0,"UNLOAD":0}}
+            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0,"UNLOAD":0,"SMELT":2,"CRAFT":2}}
             """;
 
     private static final InventoryNormTable TABLE = InventoryNormTable.parse(CURVES, "тест");
