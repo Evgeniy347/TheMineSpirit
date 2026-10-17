@@ -19,41 +19,53 @@ class FingerprintTests(unittest.TestCase):
     def test_fingerprint_KeyOrderDoesNotMatter(self):
         a = {"type": "script", "script": "goto", "params": {"x": 1, "y": 2, "z": 3}}
         b = {"params": {"z": 3, "y": 2, "x": 1}, "script": "goto", "type": "script"}
-        self.assertEqual(fingerprint("цель", a), fingerprint("цель", b), "канонический JSON: порядок ключей не важен")
+        self.assertEqual(fingerprint(a), fingerprint(b), "канонический JSON: порядок ключей не важен")
 
-    def test_fingerprint_DifferentGoalOrPlan_Differs(self):
-        self.assertNotEqual(fingerprint("цель", PLAN_A), fingerprint("другая", PLAN_A))
-        self.assertNotEqual(fingerprint("цель", PLAN_A), fingerprint("цель", PLAN_B))
-        changed = {"type": "script", "script": "chop_tree", "params": {"count": 4}}
-        self.assertNotEqual(fingerprint("цель", PLAN_A), fingerprint("цель", changed), "параметры входят в отпечаток")
+    def test_fingerprint_OnlyCountOrRadiusChanged_SamePlan(self):
+        count_changed = {"type": "script", "script": "chop_tree", "params": {"count": 9}}
+        radius_changed = {"type": "script", "script": "mine_vein", "params": {"ore": "iron", "count": 4, "radius": 4}}
+        radius_base = {"type": "script", "script": "mine_vein", "params": {"ore": "iron", "count": 1, "radius": 16}}
+        self.assertEqual(fingerprint(PLAN_A), fingerprint(count_changed),
+                         "план с другим count — тот же план: иначе модель обходит кулдаун провала, меняя одно число")
+        self.assertEqual(fingerprint(radius_base), fingerprint(radius_changed),
+                         "план с другим радиусом — тот же план: числа не создают новую работу")
+
+    def test_fingerprint_DifferentScriptOrKeyParameter_Differs(self):
+        self.assertNotEqual(fingerprint(PLAN_A), fingerprint(PLAN_B))
+        self.assertNotEqual(fingerprint(PLAN_A),
+                            fingerprint({"type": "script", "script": "gather", "params": {"block": "oak_log", "count": 3}}),
+                            "скрипт входит в отпечаток")
+        self.assertNotEqual(fingerprint({"type": "script", "script": "mine_vein", "params": {"ore": "iron"}}),
+                            fingerprint({"type": "script", "script": "mine_vein", "params": {"ore": "coal"}}),
+                            "ключевой нечисловой параметр (ore) входит в отпечаток")
 
     def test_requestId_DeterministicUuidPerBotCycleFingerprint(self):
-        fp = fingerprint("цель", PLAN_A)
+        fp = fingerprint(PLAN_A)
         first = request_id("spirit_1", 7, fp)
         self.assertEqual(first, request_id("spirit_1", 7, fp), "повтор после обрыва обязан дать тот же request_id")
         self.assertEqual(5, len(first.split("-")), "request_id — UUID")
         self.assertNotEqual(first, request_id("spirit_2", 7, fp))
         self.assertNotEqual(first, request_id("spirit_1", 8, fp))
-        self.assertNotEqual(first, request_id("spirit_1", 7, fingerprint("цель", PLAN_B)))
+        self.assertNotEqual(first, request_id("spirit_1", 7, fingerprint(PLAN_B)))
 
 
 class TaskRateTests(unittest.TestCase):
-    def test_tasksPerHour_SeventhPostDenied_AndAllowedAfterHourBoundary(self):
+    def test_tasksPerHour_EleventhPostDenied_AndAllowedAfterHourBoundary(self):
         guard = make_guard()
-        fp = fingerprint("г", PLAN_A)
-        for i in range(6):
+        fp = fingerprint(PLAN_A)
+        for i in range(10):
             now = T0 + i * 60
-            self.assertTrue(guard.allow_post(now, "b", fp).ok, f"задача {i + 1} из 6 должна пройти")
+            self.assertTrue(guard.allow_post(now, "b", fp).ok, f"задача {i + 1} из 10 должна пройти")
             guard.record_post(now, "b", fp)
-        verdict = guard.allow_post(T0 + 360, "b", fp)
-        self.assertFalse(verdict.ok, "седьмая задача за час запрещена")
-        self.assertIn("6", verdict.reason)
+        verdict = guard.allow_post(T0 + 600, "b", fp)
+        self.assertFalse(verdict.ok, "одиннадцатая задача за час запрещена")
+        self.assertIn("10", verdict.reason)
         self.assertFalse(guard.allow_post(T0 + HOUR - 0.001, "b", fp).ok, "ровно до границы часа лимит действует")
         self.assertTrue(guard.allow_post(T0 + HOUR, "b", fp).ok, "на границе часа первая задача выходит из окна")
 
     def test_tasksPerHour_IsPerBot(self):
         guard = make_guard()
-        for i in range(6):
+        for i in range(10):
             guard.record_post(T0 + i * 60, "b1", "fp")
         self.assertFalse(guard.allow_post(T0 + 400, "b1", "fp").ok)
         self.assertTrue(guard.allow_post(T0 + 400, "b2", "fp").ok, "лимит считается на духа")
@@ -67,9 +79,9 @@ class TaskRateTests(unittest.TestCase):
     def test_allowNewTask_ChecksRateAndGapWithoutFingerprint(self):
         guard = make_guard()
         self.assertTrue(guard.allow_new_task(T0, "b").ok)
-        for i in range(6):
+        for i in range(10):
             guard.record_post(T0 + i * 60, "b", f"fp{i}")
-        verdict = guard.allow_new_task(T0 + 360, "b")
+        verdict = guard.allow_new_task(T0 + 600, "b")
         self.assertFalse(verdict.ok, "лимит часа проверяется до наблюдения и модели, без плана")
         self.assertEqual("tasks_hourly", verdict.code)
         self.assertTrue(guard.allow_new_task(T0 + HOUR, "b").ok, "на границе часа лимит снят")
@@ -165,7 +177,7 @@ class BrainCallTests(unittest.TestCase):
 class CooldownAndPauseTests(unittest.TestCase):
     def test_failedPlan_SameFingerprintInCooldownBoundaryThirtyMinutes(self):
         guard = make_guard()
-        fp = fingerprint("г", PLAN_A)
+        fp = fingerprint(PLAN_A)
         guard.record_outcome(T0, "b", fp, "failed")
         verdict = guard.allow_post(T0 + 1799, "b", fp)
         self.assertFalse(verdict.ok, "тот же план после провала — кулдаун 30 мин")
@@ -174,13 +186,16 @@ class CooldownAndPauseTests(unittest.TestCase):
 
     def test_failedPlan_OtherPlanAllowed(self):
         guard = make_guard()
-        guard.record_outcome(T0, "b", fingerprint("г", PLAN_A), "failed")
-        self.assertTrue(guard.allow_post(T0 + 100, "b", fingerprint("г", PLAN_B)).ok, "другой план разрешён")
+        guard.record_outcome(T0, "b", fingerprint(PLAN_A), "failed")
+        self.assertTrue(guard.allow_post(T0 + 100, "b", fingerprint(PLAN_B)).ok, "другой план разрешён")
 
-    def test_cancelledPlan_AlsoCooldown(self):
+    def test_cancelledPlan_NoCooldownAndNoPause(self):
         guard = make_guard()
-        guard.record_outcome(T0, "b", "fp", "cancelled")
-        self.assertFalse(guard.allow_post(T0 + 100, "b", "fp").ok)
+        for i in range(3):
+            result = guard.record_outcome(T0 + i, "b", f"fp{i}", "cancelled")
+            self.assertFalse(result.paused, "отмена человеком — не провал и не повод для паузы")
+        self.assertTrue(guard.allow_post(T0 + 100, "b", "fp0").ok,
+                        "отменённый человеком план можно повторить: кулдаун — только для провалов задачи")
 
     def test_succeededPlan_NoCooldown(self):
         guard = make_guard()
@@ -194,15 +209,15 @@ class CooldownAndPauseTests(unittest.TestCase):
         self.assertFalse(guard.allow_post(T0 + 100, "b", "fp1").ok)
         self.assertFalse(guard.allow_post(T0 + 100, "b", "fp2").ok)
 
-    def test_threeFailuresInRow_PauseThirtyMinutesAndAlert(self):
+    def test_threeFailuresInRow_PauseFiveMinutesAndAlert(self):
         guard = make_guard()
         results = [guard.record_outcome(T0 + i, "b", f"fp{i}", "failed") for i in range(3)]
         self.assertEqual([False, False, True], [r.paused for r in results], "пауза включается на третьем провале")
         verdict = guard.allow_post(T0 + 100, "b", "новый-план")
         self.assertFalse(verdict.ok, "на паузе новые задачи запрещены даже с другим планом")
         self.assertEqual("paused", verdict.code)
-        self.assertFalse(guard.allow_post(T0 + 2 + 1799, "b", "новый-план").ok)
-        self.assertTrue(guard.allow_post(T0 + 2 + 1800, "b", "новый-план").ok, "пауза снимается ровно через 30 мин")
+        self.assertFalse(guard.allow_post(T0 + 301, "b", "новый-план").ok)
+        self.assertTrue(guard.allow_post(T0 + 302, "b", "новый-план").ok, "пауза снимается ровно через 5 мин")
 
     def test_successInBetween_ResetsFailureStreak(self):
         guard = make_guard()
@@ -253,9 +268,9 @@ class ProviderHealthTests(unittest.TestCase):
 class PersistenceTests(unittest.TestCase):
     def test_toDictFromDict_RoundTripKeepsLimits(self):
         guard = make_guard()
-        for i in range(6):
+        for i in range(10):
             guard.record_post(T0 + i * 60, "b", "fp")
-        guard.record_outcome(T0 + 400, "c", "plan", "failed")
+        guard.record_outcome(T0 + 700, "c", "plan", "failed")
         guard.record_decision("b", "hash")
         dumped = json.loads(json.dumps(guard.to_dict()))
         restored = Guard(from_env({}), dumped)
@@ -275,7 +290,7 @@ class PersistenceTests(unittest.TestCase):
 
 
 class GuardPropertyTests(unittest.TestCase):
-    def test_property_NeverMoreThanSixPostsPerSlidingHourPerBot(self):
+    def test_property_NeverMoreThanTenPostsPerSlidingHourPerBot(self):
         for seed in range(25):
             rng = random.Random(seed)
             guard = make_guard()
@@ -298,7 +313,7 @@ class GuardPropertyTests(unittest.TestCase):
             for bot, times in posts.items():
                 for i, start in enumerate(times):
                     in_hour = [t for t in times if start - HOUR < t <= start]
-                    self.assertLessEqual(len(in_hour), 6, f"seed={seed}, дух {bot}: за скользящий час {len(in_hour)} задач (>6)")
+                    self.assertLessEqual(len(in_hour), 10, f"seed={seed}, дух {bot}: за скользящий час {len(in_hour)} задач (>10)")
                 for earlier, later in zip(times, times[1:]):
                     self.assertGreaterEqual(later - earlier, 60, f"seed={seed}, дух {bot}: пауза между задачами меньше 60 с")
 

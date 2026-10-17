@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from config import Config
 
 HOUR = 3600.0
-FAILED_OUTCOMES = ("failed", "cancelled", "lost", "timeout")
-OUTCOMES = ("succeeded",) + FAILED_OUTCOMES
+FAILED_OUTCOMES = ("failed", "lost", "timeout")
+OUTCOMES = ("succeeded", "cancelled") + FAILED_OUTCOMES
 REQUEST_NAMESPACE = uuid.UUID("5b0f6d52-3c1e-4a57-9d4e-7a6f1c2b9e10")
 
 
@@ -31,9 +31,33 @@ class OutcomeResult:
     failures_in_row: int
 
 
-def fingerprint(goal: str, plan: dict) -> str:
-    canonical = json.dumps({"goal": goal, "plan": plan}, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+_DROP = object()
+
+
+def _without_numbers(value):
+    """Структура плана без чисел: count, radius, координаты и прочие величины не создают новый план."""
+    if isinstance(value, dict):
+        result = {}
+        for key, item in value.items():
+            cleaned = _without_numbers(item)
+            if cleaned is not _DROP:
+                result[key] = cleaned
+        return result
+    if isinstance(value, list):
+        return [cleaned for item in value if (cleaned := _without_numbers(item)) is not _DROP]
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return _DROP
+    return value
+
+
+def fingerprint(plan: dict) -> str:
+    """Точный хэш нормализованного плана: скрипт и ключевые (нечисловые) параметры без чисел.
+
+    План, отличающийся от проваленного только count или радиусом, обязан попасть в тот же кулдаун:
+    иначе модель обходит запрет повтора, меняя одно число.
+    """
+    canonical = json.dumps(_without_numbers(plan), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def request_id(bot: str, cycle: int, plan_fingerprint: str) -> str:
@@ -150,6 +174,9 @@ class Guard:
         if outcome == "succeeded":
             self.failures[bot] = 0
             return OutcomeResult(False, 0)
+        if outcome == "cancelled":
+            self.last_hash.pop(bot, None)
+            return OutcomeResult(False, self.failures.get(bot, 0))
         return self.record_failure(now, bot, plan_fingerprint)
 
     def record_failure(self, now: float, bot: str, plan_fingerprint: str) -> OutcomeResult:

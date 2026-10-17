@@ -4,7 +4,7 @@ import string
 import unittest
 from pathlib import Path
 
-from parse import MAX_REASON, Decision, ReplyError, parse_reply
+from parse import MAX_REASON, REASON_TRUNCATION_MARK, Decision, ReplyError, parse_reply
 
 APP = Path(__file__).resolve().parent.parent
 PLAN = {"type": "script", "script": "chop_tree", "params": {"count": 3}}
@@ -49,7 +49,6 @@ REJECTED = [
     ("нет reason", reply(reason=...), "reason"),
     ("reason не строка", reply(reason=5), "reason"),
     ("reason пустой", reply(reason=""), "reason"),
-    ("reason на символ больше предела", reply(reason="р" * (MAX_REASON + 1)), str(MAX_REASON)),
     ("нет goal при plan", reply(goal=...), "goal"),
     ("goal 201 символ", reply(goal="ц" * 201), "200"),
     ("plan не объект", reply(plan=[1, 2]), "plan"),
@@ -63,6 +62,16 @@ REJECTED = [
 
 
 class ParseTests(unittest.TestCase):
+    def test_reasonLongerThanLimit_TruncatedWithMarkInsteadOfRejectingWholeAnswer(self):
+        long_reason = "р" * (MAX_REASON + 120)
+
+        decision = parse_reply(reply(reason=long_reason))
+
+        self.assertEqual(MAX_REASON, len(decision.reason), "reason усечён ровно до предела, а не отвергнут")
+        self.assertTrue(decision.reason.endswith(REASON_TRUNCATION_MARK), "усечение помечено многоточием")
+        self.assertEqual("р" * (MAX_REASON - len(REASON_TRUNCATION_MARK)), decision.reason[:-len(REASON_TRUNCATION_MARK)],
+                         "начало reason сохранено: модель и человек видят причину решения")
+
     def test_reasonLimit_RaisedTo500ForReasonableAnswers(self):
         self.assertEqual(500, MAX_REASON,
                          "лимит reason поднят до 500: прежние 300 символов рубили разумные ответы модели (журнал dry 17.10)")

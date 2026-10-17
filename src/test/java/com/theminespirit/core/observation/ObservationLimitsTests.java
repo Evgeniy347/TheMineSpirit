@@ -26,20 +26,21 @@ class ObservationLimitsTests {
     }
 
     @Test
-    void parse_NumbersInJson_ReadsAllThreeLimits() {
+    void parse_NumbersInJson_ReadsAllFourLimits() {
         ObservationLimits limits = ObservationLimits.parse(
-                "{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10}", "test");
+                "{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "test");
 
-        assertEquals(new ObservationLimits(4, 2, 10), limits,
+        assertEquals(new ObservationLimits(4, 2, 10, 6), limits,
                 "Парсер обязан читать все три предела из данных, иначе /reload не меняет размер ответа");
     }
 
     static Stream<Arguments> invalidNumbers() {
         return Stream.of(
-                Arguments.of("{\"maxGroundItems\":0,\"maxContainers\":2,\"maxContainerItems\":10}", "maxGroundItems"),
-                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":0,\"maxContainerItems\":10}", "maxContainers"),
-                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":0}", "maxContainerItems"),
-                Arguments.of("{\"maxGroundItems\":9999,\"maxContainers\":2,\"maxContainerItems\":10}", "maxGroundItems"));
+                Arguments.of("{\"maxGroundItems\":0,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxGroundItems"),
+                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":0,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxContainers"),
+                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":0,\"maxOpenBlocks\":6}", "maxContainerItems"),
+                Arguments.of("{\"maxGroundItems\":9999,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxGroundItems"),
+                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":0}", "maxOpenBlocks"));
     }
 
     @ParameterizedTest(name = "{1}")

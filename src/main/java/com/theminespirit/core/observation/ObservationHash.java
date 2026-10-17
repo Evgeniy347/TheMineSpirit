@@ -40,6 +40,10 @@ public final class ObservationHash {
         appendContainerItems(builder, obs.containerItems());
         builder.append(FIELD_SEPARATOR);
         appendTime(builder, obs.time());
+        if (!obs.openBlocks().isEmpty()) {
+            builder.append(FIELD_SEPARATOR);
+            appendOpenBlocks(builder, obs.openBlocks());
+        }
         return builder.toString();
     }
 
@@ -86,6 +90,14 @@ public final class ObservationHash {
     private static void appendInventory(StringBuilder builder, List<ItemCount> entries) {
         for (ItemCount entry : entries) {
             builder.append(entry.item()).append(':').append(entry.count()).append(RECORD_SEPARATOR);
+        }
+    }
+
+    private static void appendOpenBlocks(StringBuilder builder, List<OpenBlock> blocks) {
+        for (OpenBlock block : blocks) {
+            builder.append(block.item()).append(':');
+            appendCoord(builder, block.pos());
+            builder.append(RECORD_SEPARATOR);
         }
     }
 

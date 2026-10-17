@@ -1,0 +1,107 @@
+{
+ "name": "55-failed-plan-count-only-diff-is-caught",
+ "description": "план, отличающийся от проваленного только count, попадает в кулдаун: повтор с другим числом не обходит страж",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "fates": {
+  "*": {
+   "outcome": "failed",
+   "after_polls": 1,
+   "error": "не вышло"
+  }
+ },
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом лес.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Возьму больше.",
+     "goal": "срубить деревья",
+     "plan": {
+      "type": "script",
+      "script": "chop_tree",
+      "params": {
+       "count": 9
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Нужны брёвна.",
+     "goal": "набрать брёвна",
+     "plan": {
+      "type": "script",
+      "script": "gather",
+      "params": {
+       "block": "oak_log",
+       "count": 4
+      }
+     }
+    }
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "posts": 1
+    },
+    {
+     "journal_has": {
+      "event": "rejected",
+      "stage": "guard",
+      "reason_contains": "провал"
+     }
+    }
+   ]
+  },
+  {
+   "advance": 300
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 2
+  },
+  {
+   "brain_calls": 3
+  },
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "failed",
+    "error_contains": "не вышло"
+   }
+  }
+ ]
+}

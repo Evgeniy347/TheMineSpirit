@@ -14,8 +14,8 @@ MAX_OBSERVATION_BYTES = 24 * 1024
 PLAN_FORMAT_HEADING = "## Формат плана"
 STRING_LIMIT = 80
 START_CAPS = {"inventory": 64, "blocks": 60, "entities": 20, "containers": 20,
-              "ground_items": 20, "container_items": 8}
-OPTIONAL_LISTS = ("ground_items", "container_items")
+              "open_blocks": 16, "ground_items": 20, "container_items": 8}
+OPTIONAL_LISTS = ("open_blocks", "ground_items", "container_items")
 SCALAR_FIELDS = ("held", "board_task", "time")
 NUMBER_FIELDS = ("health", "max_health", "food")
 HISTORY_LINE_LIMIT = 200
@@ -116,6 +116,7 @@ def _sorted_sections(observation: dict) -> dict[str, list]:
     entries["inventory"].sort(key=lambda e: (-_count(e), str(e.get("item"))))
     entries["blocks"].sort(key=lambda e: (-_count(e), str(e.get("item"))))
     entries["entities"].sort(key=lambda e: e["distance"] if isinstance(e.get("distance"), (int, float)) else float("inf"))
+    entries["open_blocks"].sort(key=lambda e: e["distance"] if isinstance(e.get("distance"), (int, float)) else float("inf"))
     entries["containers"].sort(key=_distance_key(observation.get("pos")))
     return entries
 

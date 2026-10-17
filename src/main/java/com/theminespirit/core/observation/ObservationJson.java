@@ -46,7 +46,7 @@ public final class ObservationJson {
             Dto dto = MAPPER.readValue(json, Dto.class);
             return new WorldObservation(dto.bot, dto.tick, dto.pos, dto.inventory, dto.blocks, toEntities(dto.entities),
                     toContainers(dto.containers), dto.radius, toSpirit(dto), toGroundItems(dto.groundItems),
-                    toContainerItems(dto.containerItems), toTime(dto.time));
+                    toContainerItems(dto.containerItems), toTime(dto.time), toOpenBlocks(dto.openBlocks));
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException(
                     "Наблюдение не разобрано из JSON: проверьте набор и типы полей наблюдения", e);
@@ -69,6 +69,13 @@ public final class ObservationJson {
         return list.stream()
                 .map(d -> new ContainerRef(d.type, d.pos, d.id))
                 .toList();
+    }
+
+    private static List<OpenBlock> toOpenBlocks(List<OpenBlockDto> list) {
+        if (list == null) {
+            return List.of();
+        }
+        return list.stream().map(d -> new OpenBlock(d.item, d.pos, d.distance)).toList();
     }
 
     private static List<GroundItem> toGroundItems(List<GroundItemDto> list) {
@@ -109,6 +116,7 @@ public final class ObservationJson {
             List<ItemCount> blocks,
             List<EntityDto> entities,
             List<ContainerDto> containers,
+            @JsonProperty("open_blocks") List<OpenBlockDto> openBlocks,
             HeldItemDto held,
             Double health,
             @JsonProperty("max_health") Double maxHealth,
@@ -124,6 +132,7 @@ public final class ObservationJson {
                             .map(e -> new EntityDto(e.type(), e.pos(), e.id(), e.distance()))
                             .toList(),
                     obs.containers().stream().map(c -> new ContainerDto(c.type(), c.pos(), c.id())).toList(),
+                    openBlocks(obs.openBlocks()),
                     held(obs.spirit()),
                     obs.spirit() == null ? null : obs.spirit().health(),
                     obs.spirit() == null ? null : obs.spirit().maxHealth(),
@@ -138,6 +147,11 @@ public final class ObservationJson {
                     ObservationHash.compute(obs));
         }
 
+        private static List<OpenBlockDto> openBlocks(List<OpenBlock> openBlocks) {
+            return openBlocks.isEmpty() ? null : openBlocks.stream()
+                    .map(block -> new OpenBlockDto(block.item(), block.pos(), block.distance())).toList();
+        }
+
         private static HeldItemDto held(SpiritStatus spirit) {
             return spirit == null || spirit.held() == null ? null
                     : new HeldItemDto(spirit.held().item(), spirit.held().durability());
@@ -150,6 +164,9 @@ public final class ObservationJson {
     }
 
     public record EntityDto(String type, BlockCoord pos, String id, double distance) {
+    }
+
+    public record OpenBlockDto(String item, BlockCoord pos, double distance) {
     }
 
     public record ContainerDto(String type, BlockCoord pos, String id) {

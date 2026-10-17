@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass
 
 MAX_REASON = 500
+REASON_TRUNCATION_MARK = "…"
 MAX_GOAL = 200
 MAX_REPLY_CHARS = 65536
 MAX_OBJECT_ATTEMPTS = 64
@@ -99,7 +100,7 @@ def _decision(found: dict, prefix: str) -> Decision:
     if not isinstance(reason, str) or not reason.strip():
         fail("Поле reason обязательно и должно быть непустой строкой.")
     if len(reason) > MAX_REASON:
-        fail(f"Поле reason длиннее {MAX_REASON} символов: сократите.")
+        reason = reason[:MAX_REASON - len(REASON_TRUNCATION_MARK)] + REASON_TRUNCATION_MARK
     has_plan = "plan" in found
     skip = found.get("skip")
     if has_plan and "skip" in found and skip is not False:

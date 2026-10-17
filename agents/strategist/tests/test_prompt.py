@@ -144,6 +144,19 @@ class ObservationTests(unittest.TestCase):
         compact = compact_observation(obs)
         self.assertLessEqual(len(compact["entities"][0]["name"]), 90)
 
+    def test_compact_OpenBlocks_NearestFirstCappedAndNoted(self):
+        obs = copy.deepcopy(world("mine"))
+        obs["open_blocks"] = [{"item": "minecraft:iron_ore", "pos": [i, 12, 90], "distance": float(60 - i)}
+                              for i in range(60)]
+
+        compact = compact_observation(obs)
+        distances = [entry["distance"] for entry in compact["open_blocks"]]
+        self.assertEqual(16, len(distances), "в промпт идут 16 ближайших открытых блоков: позиции для goto, а не вся руда")
+        self.assertEqual(sorted(distances), distances, "ближайшие первыми")
+        self.assertEqual((1.0, 16.0), (distances[0], distances[-1]), "оставлены именно ближайшие из 60")
+        self.assertEqual([59, 12, 90], compact["open_blocks"][0]["pos"], "позиция ближайшего блока доходит до модели")
+        self.assertTrue(any("open_blocks" in note for note in compact["truncated"]), "усечение названо в пометках")
+
     def test_compact_NewResourceFields_ShownCompactly(self):
         obs = copy.deepcopy(world("empty"))
         obs["held"] = {"item": "minecraft:iron_pickaxe", "durability": 250}
@@ -165,7 +178,8 @@ class ObservationTests(unittest.TestCase):
 
     def test_compact_ObservationWithoutNewFields_OmitsThem(self):
         compact = compact_observation(world("empty"))
-        for key in ("held", "health", "max_health", "food", "board_task", "ground_items", "container_items", "time"):
+        for key in ("held", "health", "max_health", "food", "board_task", "open_blocks", "ground_items",
+                    "container_items", "time"):
             self.assertNotIn(key, compact, f"старое наблюдение без поля {key} не должно получать пустой ключ")
 
 

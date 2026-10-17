@@ -353,6 +353,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
   "blocks":    [ { "item": "grass_block", "count": 340 }, { "item": "oak_log", "count": 12 } ],
   "entities":  [ { "type": "minecraft:cow", "pos": [14, 64, -1], "distance": 5.0 } ],
   "containers":[ { "type": "minecraft:chest", "pos": [8, 63, -5] } ],
+  "open_blocks":[ { "item": "minecraft:iron_ore", "pos": [11, 45, -7], "distance": 19.5 } ],
   "held":        { "item": "minecraft:iron_pickaxe", "durability": 250 },
   "health": 18.0, "max_health": 20.0, "food": 0.7,
   "board_task":  { "case": "SUPPLY_SITE", "status": "ASSIGNED" },
@@ -370,7 +371,8 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 | `food` | сытость долей шкалы голода `[0; 1]` |
 | `board_task` | текущее задание доски духа: `case` и `status`; задания нет — поля нет |
 | `ground_items` | выпавшие рядом предметы: `id → количество` (сводятся по предмету) |
-| `container_items` | содержимое известных контейнеров: `pos` → `items` (`id → количество`); число контейнеров и записей ограничено данными `data/theminespirit/observation/observation.json` |
+| `container_items` | содержимое известных контейнеров: `pos` → `items` (`id → количество`); число контейнеров, записей и открытых блоков ограничено данными `data/theminespirit/observation/observation.json` (`maxContainers`, `maxContainerItems`, `maxOpenBlocks`) |
+| `open_blocks` | ближайшие открытые (рядом есть воздух) руды, камень и брёвна: `item`, `pos`, `distance` от духа; не больше `maxOpenBlocks` записей, по возрастанию расстояния |
 | `time` | время суток: `day` (день/ночь) и `day_time` (тик суток) |
 
 В `hash` входит только `day`, но не `day_time`: точный тик суток растёт каждую секунду игры и ломал бы сравнение

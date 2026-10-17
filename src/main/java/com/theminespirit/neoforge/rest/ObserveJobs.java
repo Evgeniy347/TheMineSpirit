@@ -1,11 +1,13 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ObserveRequest;
+import com.theminespirit.core.perception.ScanFocus;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.WorldScanner;
@@ -125,7 +127,8 @@ public final class ObserveJobs {
             BlockPos position = spirit.blockPosition();
             this.session = new WorldScanner.Session(spirit.level(), botId,
                     new BlockCoord(position.getX(), position.getY(), position.getZ()), request.radius(),
-                    request.blockFilter(), spirit.getInventory());
+                    request.blockFilter(), spirit.getInventory(), ScanFocus.ALL,
+                    ObservationLimits.loadDefault().maxOpenBlocks());
             this.includeEntities = request.includeEntities();
         }
 
@@ -143,6 +146,6 @@ public final class ObserveJobs {
         return new WorldObservation(observation.botId(), observation.tick(), observation.position(),
                 observation.inventory(), observation.blocks(), List.of(), observation.containers(),
                 observation.radius(), observation.spirit(), observation.groundItems(), observation.containerItems(),
-                observation.time());
+                observation.time(), observation.openBlocks());
     }
 }

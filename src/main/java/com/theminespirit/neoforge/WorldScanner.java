@@ -6,6 +6,8 @@ import com.theminespirit.core.observation.ContainerRef;
 import com.theminespirit.core.observation.EntityRef;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ItemCount;
+import com.theminespirit.core.observation.OpenBlock;
+import com.theminespirit.core.observation.OpenBlocks;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.SectionCursor;
 import com.theminespirit.core.observation.SectionSlice;
@@ -64,6 +66,8 @@ public final class WorldScanner {
         private final Set<Block> filteredBlocks;
         private final Map<Block, int[]> blockCounts = new IdentityHashMap<>();
         private final List<ContainerRef> containers = new ArrayList<>();
+        private final List<OpenBlock> openBlocks = new ArrayList<>();
+        private final int openBlockLimit;
         private final Set<Long> visitedChunks = new HashSet<>();
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
@@ -73,11 +77,16 @@ public final class WorldScanner {
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter blockFilter,
                 Container inventory) {
-            this(level, botId, center, radius, blockFilter, inventory, ScanFocus.ALL);
+            this(level, botId, center, radius, blockFilter, inventory, ScanFocus.ALL, 0);
         }
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
                 Container inventory, ScanFocus focus) {
+            this(level, botId, center, radius, filter, inventory, focus, 0);
+        }
+
+        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
+                Container inventory, ScanFocus focus, int openBlockLimit) {
             this.level = level;
             this.botId = botId;
             this.center = center;
@@ -88,6 +97,7 @@ public final class WorldScanner {
             this.focus = focus;
             this.entityFilter = focus.filtersEntities() ? filter : IdFilter.matchAll();
             this.filteredBlocks = focus.collectsBlocks() && !filter.matchesAll() ? BlockSets.resolve(filter) : null;
+            this.openBlockLimit = Math.max(0, openBlockLimit);
         }
 
         public void step(int maxSlices) {
@@ -149,9 +159,41 @@ public final class WorldScanner {
                         if (counts(state)) {
                             blockCounts.computeIfAbsent(state.getBlock(), block -> new int[1])[0]++;
                         }
+                        collectOpenBlock(state, x, y, z);
                     }
                 }
             }
+        }
+
+        private void collectOpenBlock(BlockState state, int x, int y, int z) {
+            if (openBlockLimit == 0 || state.isAir()) {
+                return;
+            }
+            String item = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+            if (filteredBlocks != null && !filteredBlocks.contains(state.getBlock())) {
+                return;
+            }
+            if (!OpenBlocks.isImportant(item)) {
+                return;
+            }
+            BlockPos pos = new BlockPos(x, y, z);
+            if (!hasAirNeighbor(pos)) {
+                return;
+            }
+            double dx = x - center.x();
+            double dy = y - center.y();
+            double dz = z - center.z();
+            double distance = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz) * 10.0) / 10.0;
+            OpenBlocks.keepNearest(openBlocks, new OpenBlock(item, toCore(pos), distance), openBlockLimit);
+        }
+
+        private boolean hasAirNeighbor(BlockPos pos) {
+            return level.getBlockState(pos.offset(1, 0, 0)).isAir()
+                    || level.getBlockState(pos.offset(-1, 0, 0)).isAir()
+                    || level.getBlockState(pos.offset(0, 1, 0)).isAir()
+                    || level.getBlockState(pos.offset(0, -1, 0)).isAir()
+                    || level.getBlockState(pos.offset(0, 0, 1)).isAir()
+                    || level.getBlockState(pos.offset(0, 0, -1)).isAir();
         }
 
         private boolean counts(BlockState state) {
@@ -179,7 +221,8 @@ public final class WorldScanner {
                     blocks.add(new ItemCount(BuiltInRegistries.BLOCK.getKey(block).toString(), count[0])));
             List<EntityRef> entities = focus.collectsEntities() ? findEntities() : List.of();
             WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
-                    inventoryEntries(inventory), blocks, entities, containers, radius);
+                    inventoryEntries(inventory), blocks, entities, containers, radius, null, List.of(), List.of(),
+                    null, openBlocks);
             return new Scan(observation, examinedPositions, skippedChunks.size());
         }
 

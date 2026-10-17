@@ -13,8 +13,9 @@ class ConfigTests(unittest.TestCase):
                          "интервал 300 с, режим dry по умолчанию")
         self.assertEqual("opencode/longcat-2.5-preview-free", cfg.model)
         self.assertEqual("opencode/nemotron-3-ultra-free", cfg.model_fallback)
-        self.assertEqual((6, 60, 30, 1800, 3, 1800), (cfg.tasks_per_hour, cfg.task_gap, cfg.brain_calls_per_hour,
-                                                        cfg.plan_cooldown, cfg.failures_to_pause, cfg.pause_duration))
+        self.assertEqual((10, 60, 30, 1800, 3, 300), (cfg.tasks_per_hour, cfg.task_gap, cfg.brain_calls_per_hour,
+                                                        cfg.plan_cooldown, cfg.failures_to_pause, cfg.pause_duration),
+                         "10 задач на духа в час и пауза 5 мин после 3 провалов — умолчания, смягчённые после этапа 2")
         self.assertEqual((10, 1800, 5, 32, 8), (cfg.task_poll, cfg.task_timeout, cfg.rest_per_second, cfg.max_nodes,
                                                  cfg.max_root_steps))
         self.assertEqual(240, cfg.brain_timeout, "STRATEGIST_BRAIN_TIMEOUT по умолчанию 240 с")

@@ -1,0 +1,81 @@
+{
+ "name": "54-cancelled-human-is-not-failure",
+ "description": "отмена человеком (cancelled) не провал: нет кулдауна плана, после трёх отмен нет паузы, тот же план ставится снова",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "fates": {
+  "*": {
+   "outcome": "cancelled",
+   "after_polls": 1
+  }
+ },
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, срублю деревья.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "repeat": 3,
+   "steps": [
+    {
+     "cycle": true
+    },
+    {
+     "advance": 300
+    }
+   ]
+  },
+  {
+   "cycle": true
+  },
+  {
+   "advance": 300
+  }
+ ],
+ "expect": [
+  {
+   "posts": 4
+  },
+  {
+   "brain_calls": 4
+  },
+  {
+   "journal": {
+    "task_done": 4
+   }
+  },
+  {
+   "journal_has": {
+    "event": "task_done",
+    "outcome": "cancelled"
+   }
+  },
+  {
+   "journal_lacks": [
+    {
+     "event": "alert",
+     "code": "bot_paused"
+    },
+    {
+     "event": "bot_skipped",
+     "code": "paused"
+    }
+   ]
+  }
+ ]
+}
