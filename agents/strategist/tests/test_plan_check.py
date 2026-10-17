@@ -349,6 +349,55 @@ class WorldRulesTests(unittest.TestCase):
     def test_otherScripts_BlockParamNotCheckedAgainstObservation(self):
         self.check(script("mine_vein", ore="diamond", count=1))
 
+    def test_mineVein_WithoutPickaxeInInventory_RejectedNamingRequiredTier(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "iron_ore"}), frozenset())
+        with self.assertRaises(PlanError) as ctx:
+            self.check(script("mine_vein", ore="iron"), context=context)
+        text = str(ctx.exception)
+        self.assertIn("plan", text)
+        self.assertIn("кирк", text.lower())
+        self.assertIn("каменн", text.lower(), "железная руда требует каменной кирки")
+
+    def test_mineVein_ToolBelowOreTier_Rejected(self):
+        context = PlanContext((0, 64, 0), frozenset({"diamond_ore"}), frozenset({"stone_pickaxe"}))
+        with self.assertRaises(PlanError) as ctx:
+            self.check(script("mine_vein", ore="diamond"), context=context)
+        text = str(ctx.exception)
+        self.assertIn("железн", text.lower(), "алмазная руда требует железной кирки")
+        self.assertIn("stone_pickaxe", text)
+
+    def test_mineVeinAndGatherStone_WithSufficientPickaxe_Accepted(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "iron_ore", "diamond_ore"}),
+                              frozenset({"stone_pickaxe"}))
+        for plan in (script("mine_vein", ore="iron"), script("mine_vein", ore="coal"),
+                     script("gather", block="stone", count=2)):
+            with self.subTest(plan=plan):
+                self.check(plan, context=context)
+
+    def test_gather_StoneWithoutPickaxe_Rejected(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone"}), frozenset())
+        with self.assertRaises(PlanError) as ctx:
+            self.check(script("gather", block="stone", count=4), context=context)
+        self.assertIn("кирк", str(ctx.exception).lower())
+
+    def test_gather_BlockNotMinedWithPickaxe_NoToolRequirement(self):
+        context = PlanContext((0, 64, 0), frozenset({"oak_log", "sand", "dirt"}), frozenset())
+        for block in ("oak_log", "sand", "dirt"):
+            with self.subTest(block=block):
+                self.check(script("gather", block=block, count=4), context=context)
+
+    def test_pickaxeCheck_InventoryUnknown_AcceptedWithWarningNotRejected(self):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "iron_ore"}), None)
+        warnings = self.check(script("mine_vein", ore="iron"), context=context)
+        self.assertEqual(1, len(warnings), "без списка предметов в наблюдении проверка кирки даёт предупреждение, а не отказ")
+        self.assertIn("предупрежд", warnings[0].lower())
+
+    def test_contextFromObservation_ReadsInventoryOrLeavesUnknown(self):
+        observation = {"pos": [1, 64, 2], "blocks": [], "inventory": [{"item": "minecraft:iron_pickaxe", "count": 1}, "мусор"]}
+        self.assertEqual(frozenset({"iron_pickaxe"}), context_from_observation(observation).inventory)
+        self.assertIsNone(context_from_observation({"pos": [1, 64, 2]}).inventory,
+                          "нет ключа inventory — наличие кирки непроверяемо (повод для предупреждения)")
+
     def test_contextFromObservation_ReadsPositionAndNormalisedBlocks(self):
         observation = {"pos": [10, 64, -3], "blocks": [{"item": "minecraft:stone", "count": 5}, {"item": "dirt", "count": 1}, "мусор"]}
         context = context_from_observation(observation)

@@ -183,6 +183,9 @@ def format_recent(events: list[dict], now: float) -> str:
             lines.append(f"- {age}: цель «{_line_text(event.get('goal', '?'))}» — {outcome}{tail}")
         elif kind == "rejected":
             lines.append(f"- {age}: план «{_line_text(event.get('goal', '?'))}» отклонён: {_line_text(event.get('reason', '?'))}")
+        elif kind == "posted":
+            how = "отправил бы (dry)" if event.get("dry") else "отправлено"
+            lines.append(f"- {age}: {how}: цель «{_line_text(event.get('goal', '?'))}»")
         else:
             lines.append(f"- {age}: пропуск: {_line_text(event.get('reason', '?'))}")
     return "\n".join(lines)
