@@ -1156,6 +1156,33 @@ public final class FarmGameTests {
         columnHarvest(helper, CropKind.parse("cactus"), Blocks.CACTUS, Blocks.SAND);
     }
 
+    @GameTest(template = "arena", batch = "farm_column_cactus", timeoutTicks = 400)
+    public static void harvestCrop_TallCactusColumn_KeepsAllDropsAboveBase(GameTestHelper helper) {
+        arenaFloor(helper);
+        BlockPos base = new BlockPos(4, FLOOR_Y, 4);
+        helper.setBlock(base, Blocks.SAND);
+        setColumn(helper, base, Blocks.CACTUS, 4);
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.parse("cactus"), false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "кактус высотой 4 обязан собраться сверху вниз");
+            helper.assertTrue(helper.getBlockState(base.above()).is(Blocks.CACTUS),
+                    "нижний кактус обязан остаться, а там " + helper.getBlockState(base.above()).getBlock());
+            for (int level = 2; level <= 4; level++) {
+                helper.assertTrue(helper.getBlockState(base.above(level)).isAir(),
+                        "блок " + level + " столба обязан быть убран, а там "
+                                + helper.getBlockState(base.above(level)).getBlock());
+            }
+            int count = GameTestFixtures.countInInventory(spirit.getInventory(), Items.CACTUS);
+            helper.assertTrue(count == 3,
+                    "с кактуса высотой 4 (нижний оставлен) обязано собраться ровно 3 кактуса: дроп не должен "
+                            + "сгорать на нижнем кактусе, фактически " + count);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "farm_column_single", timeoutTicks = 300)
     public static void harvestCrop_SingleCane_IsIgnoredAndBaseStays(GameTestHelper helper) {
         arenaFloor(helper);

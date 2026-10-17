@@ -23,6 +23,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -106,6 +107,15 @@ final class FarmActions {
             return true;
         }
         return false;
+    }
+
+    void rescueDrops(BlockPos broken) {
+        AABB area = new AABB(broken.getX(), broken.getY(), broken.getZ(),
+                broken.getX() + 1.0, broken.getY() + 1.0, broken.getZ() + 1.0).inflate(1.0);
+        for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, area)) {
+            drop.setPos(spirit.getX(), spirit.getY(), spirit.getZ());
+            drop.setDeltaMovement(Vec3.ZERO);
+        }
     }
 
     private int hoeSlot() {

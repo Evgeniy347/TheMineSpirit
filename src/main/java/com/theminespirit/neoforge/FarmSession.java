@@ -67,6 +67,7 @@ public final class FarmSession {
     private String failureReason;
     private BlockCoord currentGround;
     private CropKind currentKind;
+    private int columnHeight;
     private DropCollector collector;
 
     private int done;
@@ -317,7 +318,8 @@ public final class FarmSession {
                         ineligible++;
                         finishTarget();
                     } else {
-                        beginBreak(ground.above().above());
+                        columnHeight = height;
+                        beginBreak(ground.above(height));
                     }
                 } else {
                     beginBreak(ground.above());
@@ -410,6 +412,15 @@ public final class FarmSession {
             state = State.ACT;
             return;
         }
+        if (currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+            BlockPos broken = posOf(currentGround).above(columnHeight);
+            actions.rescueDrops(broken);
+            columnHeight--;
+            if (columnHeight >= 2) {
+                beginBreak(posOf(currentGround).above(columnHeight));
+                return;
+            }
+        }
         done++;
         startCollect();
     }
@@ -417,9 +428,11 @@ public final class FarmSession {
     private void startCollect() {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
-        PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK
+        boolean column = currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN;
+        PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK || column
                 ? PICK_PICKUP : PickupTuning.DEFAULT;
-        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
+        BlockCoord center = column ? coordOf(spirit.blockPosition()) : currentGround;
+        collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
         state = State.COLLECT;
     }
 
@@ -459,6 +472,7 @@ public final class FarmSession {
     private void finishTarget() {
         currentGround = null;
         currentKind = null;
+        columnHeight = 0;
         state = State.PICK;
     }
 
