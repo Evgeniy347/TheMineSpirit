@@ -30,6 +30,7 @@ WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
 # Без pgrep (Git Bash на Windows) долгий хук или сборка не отличимы от молчания — предел по умолчанию больше.
 if command -v pgrep >/dev/null; then SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"; else SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-1200}"; fi
+HEARTBEAT_FRESH="${OPENCODE_HEARTBEAT_FRESH:-120}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
 NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
 FAILURE_PATTERN="$PROVIDER_PATTERN|$NETWORK_PATTERN"
@@ -151,10 +152,15 @@ sys.exit(1)
 }
 
 waiting_for_model() {
-    local pid="$1"
+    local pid="$1" hb="$REPO_DIR/TestResults/test-running"
+    # scripts/test.sh, пока ждёт замок GameTest или гоняет тесты, раз в 20 с трогает этот файл — это работа, не молчание
+    # (на ПК шесть исполнителей стоят в очереди за замком GameTest дольше предела молчания).
+    if [ -f "$hb" ] && [ $(( $(date +%s) - $(stat -c %Y "$hb" 2>/dev/null || echo 0) )) -lt "$HEARTBEAT_FRESH" ]; then
+        return 1
+    fi
     # Без pgrep (Git Bash на Windows) дочерние процессы не видны: молчание считается по одному таймеру —
     # поэтому без pgrep предел молчания по умолчанию 1200 с (SILENCE_LIMIT).
-    command -v pgrep >/dev/null || return 0
+    { [ -z "${OPENCODE_NO_PGREP:-}" ] && command -v pgrep >/dev/null; } || return 0
     ! pgrep -a -P "$pid" 2>/dev/null | grep -qvE 'lsp|language.?server|jdtls|mcp'
 }
 

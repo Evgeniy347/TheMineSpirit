@@ -1,0 +1,28 @@
+{
+  "demand": {
+    "occupied_curve": [
+      { "at": 0.0, "value": 0.0 },
+      { "at": 0.5, "value": 0.0 },
+      { "at": 0.7, "value": 1.0 },
+      { "at": 0.85, "value": 3.0 },
+      { "at": 1.0, "value": 6.0 }
+    ],
+    "extra_curve": [
+      { "at": 0.0, "value": 0.0 },
+      { "at": 0.2, "value": 1.0 },
+      { "at": 0.5, "value": 3.0 },
+      { "at": 1.0, "value": 6.0 }
+    ]
+  },
+  "release_free_slots": {
+    "CHOP": 0,
+    "FARM": 2,
+    "FORAGE": 2,
+    "MINE": 0,
+    "REST": 0,
+    "DEFEND": 0,
+    "UNLOAD": 0,
+    "SMELT": 2,
+    "CRAFT": 2
+  }
+}

@@ -15,12 +15,21 @@ public record ContainerSnapshot(BlockCoord pos, List<Stack> slots) {
     }
 
     public boolean hasFreeSlot() {
+        return freeSlots() > 0;
+    }
+
+    public int freeSlots() {
+        int free = 0;
         for (Stack stack : slots) {
             if (stack == null) {
-                return true;
+                free++;
             }
         }
-        return false;
+        return free;
+    }
+
+    public int slotCount() {
+        return slots.size();
     }
 
     public boolean hasPartial(Stack kind) {

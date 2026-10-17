@@ -7,6 +7,7 @@ public enum ActivityId {
     MINE,
     REST,
     DEFEND,
+    UNLOAD,
     SMELT,
     CRAFT
 }

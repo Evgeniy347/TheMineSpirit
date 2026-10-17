@@ -41,6 +41,9 @@ for net_case in network_error_json network_error_stderr; do
 done
 check silent_model 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6
 check busy_tool_is_not_silence 0 1 FAKE_BUSY_TOOL=15 OPENCODE_IDLE_LIMIT=6
+# Как на ПК (без pgrep): долгий прогон тестов виден только по пульсу scripts/test.sh, без пульса — молчание.
+check heartbeat_is_not_silence 0 1 FAKE_HEARTBEAT=15 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
+check silent_without_pgrep 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
 check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
 check info_log_mentions_limit 0 1 FAKE_INFO_LOG=1
 check unfinished_answer_continues 0 3 FAKE_UNFINISHED=2

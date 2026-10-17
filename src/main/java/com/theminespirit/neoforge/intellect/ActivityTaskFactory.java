@@ -24,6 +24,7 @@ public final class ActivityTaskFactory {
             case "chop_tree" -> Map.of("species", "any", "count", 4, "radius", 16, "replant", true);
             case "harvest_crop" -> Map.of("crop", "any", "radius", 8, "replant", true);
             case "mine_vein" -> Map.of("ore", "any", "count", 8, "radius", 16);
+            case "unload" -> Map.of("container", "auto", "radius", 8, "force", false);
             case "wait" -> Map.of("ticks", 200);
             default -> intent.params();
         };
@@ -43,6 +44,7 @@ public final class ActivityTaskFactory {
             case DEFEND -> Optional.empty();
             case SMELT -> Optional.of("smelt");
             case CRAFT -> Optional.of("craft");
+            case UNLOAD -> Optional.of("unload");
         };
     }
 }

@@ -17,6 +17,7 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ClearCampParams;
 import com.theminespirit.core.script.SetCampParams;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.core.script.ChopTargetParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.CloseDoorParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
@@ -136,6 +137,7 @@ public final class SpiritScripts {
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
+        table.put("chop_target", spirit -> params -> new ChopTargetScript(spirit, ChopTargetParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("return_home", spirit -> params -> new ReturnHomeScript(spirit));
         table.put("set_camp", spirit -> params -> new SetCampScript(spirit, SetCampParams.from(params)));

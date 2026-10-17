@@ -2,13 +2,18 @@ package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.inventory.InventoryFill;
 import com.theminespirit.core.processing.ProcessingStock;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public record SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
         int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-        List<SpiritSnapshot> spirits, long tick, ProcessingStock processing) {
+        List<SpiritSnapshot> spirits, long tick, ProcessingStock processing,
+        Map<UUID, InventoryFill> inventoryFills) {
     public SettlementView {
         if (population < 0) {
             throw new IllegalArgumentException(
@@ -68,6 +73,17 @@ public record SettlementView(int population, int children, double foodPerSoul, d
             throw new IllegalArgumentException(
                     "Запас переработки не может быть null: его отсутствие задают ProcessingStock.NONE");
         }
+        if (inventoryFills == null) {
+            throw new IllegalArgumentException("Заполнения инвентарей не могут быть null: "
+                    + "пустое задают пустой картой");
+        }
+        for (Map.Entry<UUID, InventoryFill> entry : inventoryFills.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                throw new IllegalArgumentException("Заполнение с null-духом или null-значением не принимается: "
+                        + "заполнение привязано к конкретному духу");
+            }
+        }
+        inventoryFills = Map.copyOf(inventoryFills);
         spirits = List.copyOf(spirits);
     }
 
@@ -75,7 +91,26 @@ public record SettlementView(int population, int children, double foodPerSoul, d
             int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
             List<SpiritSnapshot> spirits, long tick) {
         this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
-                farmWork, forage, spirits, tick, ProcessingStock.NONE);
+                farmWork, forage, spirits, tick, ProcessingStock.NONE, Map.of());
+    }
+
+    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
+            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
+            List<SpiritSnapshot> spirits, long tick, ProcessingStock processing) {
+        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
+                farmWork, forage, spirits, tick, processing, Map.of());
+    }
+
+    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
+            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
+            List<SpiritSnapshot> spirits, long tick, Map<UUID, InventoryFill> inventoryFills) {
+        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
+                farmWork, forage, spirits, tick, ProcessingStock.NONE, inventoryFills);
+    }
+
+    public Optional<InventoryFill> inventoryFill(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: заполнение ищут по нему");
+        return Optional.ofNullable(inventoryFills.get(spirit));
     }
 
     public int adults() {

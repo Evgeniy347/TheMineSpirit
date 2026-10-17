@@ -37,6 +37,7 @@
 | `item_values` | `inventory/item_values.json` | ценность предметов и категории |
 | `base_kit` | `inventory/base_kit.json` | базовый набор духа |
 | `kit_activities` | `inventory/kit_activities.json` | наборы по деятельностям |
+| `inventory_norm` | `inventory/inventory_norm.json` | кривые спроса «освободить инвентарь» и пороги удержания задачи по деятельностям |
 | `armor` | `armor/armor_table.json` | порядок материалов брони, порог износа |
 | `feed` | `husbandry/feed.json` | чем кормить вид |
 | `sword` | `husbandry/sword.json` | тир мечей |
