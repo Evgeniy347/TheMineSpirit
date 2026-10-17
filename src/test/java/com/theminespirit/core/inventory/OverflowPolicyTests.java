@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -62,6 +63,49 @@ class OverflowPolicyTests {
                     "Ситуация '" + situation + "': выбранный слот выбрасывается целиком (" + expectedCount
                             + "), в нём лежало " + inventory.get(decision.slot()));
         }
+    }
+
+    @Test
+    void decide_ManyOfOneItemOnBase_DropsItBeforeRarerLogs() {
+        OverflowTuning tuning = new OverflowTuning("тест: склад забит железом", 32, 0.05);
+        List<Stack> inventory = inventory("iron_ingot:64*18;oak_log:64*18");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT, Map.of("iron_ingot", 10_000), tuning);
+
+        assertEquals(OverflowPolicy.Action.DROP, decision.action(),
+                "Алмаз дороже любой из стопок, поэтому обмен возможен: причина " + decision.reason());
+        assertEquals("iron_ingot", inventory.get(decision.slot()).item(),
+                "При огромном запасе железа на базе его ценность падает ниже брёвен, и выбрасывается "
+                        + "именно железо, а редкое дерево остаётся у духа. Решение: " + decision.reason());
+    }
+
+    @Test
+    void decide_StockOfProtectedItems_NeverDropsTheNorm() {
+        OverflowTuning tuning = new OverflowTuning("тест: склад забит едой", 8, 0.05);
+        List<Stack> inventory = inventory("bread:16;iron_ingot:64*35");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT, Map.of("bread", 10_000, "iron_ingot", 10_000), tuning);
+
+        assertEquals(OverflowPolicy.Action.DROP, decision.action(),
+                "Излишек железа вне квоты набора уходит: причина " + decision.reason());
+        assertTrue(!inventory.get(decision.slot()).item().equals("bread"),
+                "Норма еды не выбрасывается даже когда её на базе много: хлеб защищён базовым "
+                        + "набором, а складская цена не может отнять квоту");
+    }
+
+    @Test
+    void decide_ManyOfIncomingOnBase_RefusesToSwapForScarceItem() {
+        OverflowTuning tuning = new OverflowTuning("тест: склад забит алмазами", 32, 0.05);
+        List<Stack> inventory = inventory("oak_log:64*36");
+
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, new Stack("diamond", 0, 1, 64),
+                VALUES, List.of(), KIT, Map.of("diamond", 10_000), tuning);
+
+        assertEquals(OverflowPolicy.Action.REFUSE, decision.action(),
+                "Алмазов на базе много, дерева нет: дешёвый по складу алмаз не вытесняет редкое "
+                        + "бревно, причина " + decision.reason());
     }
 
     @Test
