@@ -420,6 +420,23 @@ class WorldRulesTests(unittest.TestCase):
         self.assertIsNone(context_from_observation({"pos": [1, 64, 2]}).inventory,
                           "нет ключа inventory — наличие кирки непроверяемо (повод для предупреждения)")
 
+    def test_contextFromObservation_ReadsHeldItemFromNewField(self):
+        observation = {"pos": [1, 64, 2], "blocks": [], "inventory": [],
+                       "held": {"item": "minecraft:stone_pickaxe", "durability": 120}}
+        self.assertEqual(frozenset({"stone_pickaxe"}), context_from_observation(observation).inventory,
+                         "предмет в руке (новое поле held) обязан попадать в инвентарь проверки кирки")
+
+    def test_contextFromObservation_HeldPickaxeWithoutInventoryKey_KnowsInventory(self):
+        observation = {"pos": [1, 64, 2], "held": {"item": "minecraft:iron_pickaxe"}}
+        self.assertEqual(frozenset({"iron_pickaxe"}), context_from_observation(observation).inventory,
+                         "held без inventory обязан снимать неизвестность: кирка в руке видна проверке")
+
+    def test_gather_StoneWithHeldPickaxeEmptyInventory_Accepted(self):
+        observation = {"pos": [0, 64, 0], "blocks": [{"item": "minecraft:stone", "count": 4}],
+                       "inventory": [], "held": {"item": "minecraft:iron_pickaxe"}}
+        self.check(script("gather", block="stone", count=1),
+                   context=context_from_observation(observation))
+
     def test_contextFromObservation_ReadsPositionAndNormalisedBlocks(self):
         observation = {"pos": [10, 64, -3], "blocks": [{"item": "minecraft:stone", "count": 5}, {"item": "dirt", "count": 1}, "мусор"]}
         context = context_from_observation(observation)

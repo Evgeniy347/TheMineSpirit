@@ -74,12 +74,20 @@ class ScenarioRun:
             if "count" in spec:
                 for index in range(spec["count"]):
                     bot_id = f"{spec.get('prefix', 'b')}{index:02d}"
-                    self.fake.add_bot(bot_id, observation=load_world(spec["world"], tweak=index), state=spec.get("state", "idle"))
+                    self.fake.add_bot(bot_id, observation=self._world(spec, tweak=index), state=spec.get("state", "idle"))
             else:
                 self.fake.add_bot(spec["id"], name=spec.get("name"), state=spec.get("state", "idle"),
-                                  observation=load_world(spec["world"], spec.get("tweak"), spec.get("entity_name")))
+                                  observation=self._world(spec, spec.get("tweak"), spec.get("entity_name")))
         for bot, fate in self.scenario.get("fates", {}).items():
             self.fake.set_fate(None if bot == "*" else bot, fate["outcome"], fate.get("after_polls", 2), fate.get("error"))
+
+    @staticmethod
+    def _world(spec: dict, tweak: int | None = None, entity_name: str | None = None) -> dict:
+        observation = load_world(spec["world"], tweak, entity_name)
+        extra = spec.get("extra")
+        if isinstance(extra, dict):
+            observation.update(extra)
+        return observation
 
     def run(self):
         self.run_steps(self.scenario["steps"])

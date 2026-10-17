@@ -52,7 +52,8 @@
   `dimension`, `current_task` (`task_id` активной REST-задачи или `null`; дух, занятый задачей вне REST, `busy` без `current_task`), `food` (доля шкалы голода, `[0; 1]` — `1.0` сыт, `0.0` голоден). Состояние `dead` — дух не жив, `busy` —
   у него идёт задача, иначе `idle`.
 - **Observation** — текстовая модель мира вокруг духа (не картинка): позиция, инвентарь, перечень блоков
-  в радиусе, сущности, контейнеры, `hash`.
+  в радиусе, сущности, контейнеры, предмет в руке, здоровье и сытость, задание доски, выпавшие предметы,
+  содержимое контейнеров, время суток, `hash`.
 - **Task** — поставленная цель и/или готовый план; статус, прогресс, результат.
 - **Capability** — описание скрипта: `id`, `summary`, `params` (JSON-Schema), предусловия, эффекты.
 - **Decision** — запись журнала решений тактики: тик, дух, «было → стало» по полю `decision` / `mode` / `target` /
@@ -334,7 +335,8 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 { "radius": 32, "filter": ["*_log", "*_ore"], "include_entities": true }
 ```
 
-Ответ (`bot` — `id` духа):
+Ответ (`bot` — `id` духа; поля `held`, `health`, `max_health`, `food`, `board_task`, `ground_items`,
+`container_items`, `time` — необязательные, в старом ответе их нет):
 
 ```json
 { "bot": "6f1c2d3e-0000-4000-8000-000000000001", "tick": 123456, "pos": [10, 64, -3], "radius": 32,
@@ -342,8 +344,28 @@ blocks_dug — сколько блоков выкопано, reason — пуст
   "blocks":    [ { "item": "grass_block", "count": 340 }, { "item": "oak_log", "count": 12 } ],
   "entities":  [ { "type": "minecraft:cow", "pos": [14, 64, -1], "distance": 5.0 } ],
   "containers":[ { "type": "minecraft:chest", "pos": [8, 63, -5] } ],
-  "hash": "<64 hex-символа SHA-256 от картины мира: без tick и distance>" }
+  "held":        { "item": "minecraft:iron_pickaxe", "durability": 250 },
+  "health": 18.0, "max_health": 20.0, "food": 0.7,
+  "board_task":  { "case": "SUPPLY_SITE", "status": "ASSIGNED" },
+  "ground_items":[ { "item": "minecraft:oak_log", "count": 3 } ],
+  "container_items": [ { "pos": [8, 63, -5], "items": [ { "item": "minecraft:iron_ingot", "count": 7 } ] } ],
+  "time": { "day": true, "day_time": 6000 },
+  "hash": "<64 hex-символа SHA-256 от картины мира: без tick, distance и точного тика суток>" }
 ```
+
+| Поле | Смысл |
+|---|---|
+| `inventory` | предметы в инвентаре духа: `id → количество` (сводятся по предмету) |
+| `held` | предмет в руке: `item` и остаток прочности `durability` (`null` не пишется); пустая рука — поля нет |
+| `health`, `max_health` | здоровье духа и его максимум |
+| `food` | сытость долей шкалы голода `[0; 1]` |
+| `board_task` | текущее задание доски духа: `case` и `status`; задания нет — поля нет |
+| `ground_items` | выпавшие рядом предметы: `id → количество` (сводятся по предмету) |
+| `container_items` | содержимое известных контейнеров: `pos` → `items` (`id → количество`); число контейнеров и записей ограничено данными `data/theminespirit/observation/observation.json` |
+| `time` | время суток: `day` (день/ночь) и `day_time` (тик суток) |
+
+В `hash` входит только `day`, но не `day_time`: точный тик суток растёт каждую секунду игры и ломал бы сравнение
+«мир не изменился». Хэш наблюдения служит ключом кэша решений ИИ.
 
 ### POST /v1/bots/{id}/tasks
 
