@@ -180,6 +180,15 @@ code=$?
     && ok "gametest-filter: несколько фильтров через запятую" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
+# Замок и токен уходят в gradle системными свойствами: build.gradle сверяет их с маркером
+# замка в runGameTestServer, поэтому прямой ./gradlew runGameTestServer падает (docs/TESTING.md).
+out=$(ARGS_FILE="$argsfile" THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.lock=$work/tmp/lock" "$argsfile" \
+    && grep -q -- "-Dtheminespirit.gametest.token=" "$argsfile" \
+    && ok "gametest-lock-props: замок и токен уходят в gradle системными свойствами" \
+    || fail "gametest-lock-props: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
 # Параллельный gametest ждёт замок: занимаем замок живым процессом
 rm -rf "$work/tmp/lock.d"
 mkdir -p "$work/tmp/lock.d"

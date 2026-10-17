@@ -35,10 +35,21 @@
   при этом не меняется. Сторожа — `GameTestIsolationGuardTests`, `GameTestTimeGuardTests`.
 - GameTest запускается через `scripts/test.sh gametest`: он держит замок «один сервер на машину», поэтому
   работает ровно один GameTest-сервер. Прямой `./gradlew runGameTestServer` в обход блокировки запрещён —
-  параллельные JVM игры душат машину и множат флаки. На Linux замок — `flock`; в Git Bash на Windows его нет,
-  поэтому запасной замок берётся атомарным `mkdir` каталога `${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}.d`
-  (файл `pid` внутри; протухший замок мёртвого процесса снимается атомарным переименованием каталога —
-  ровно один из ожидающих, проигравший ждёт дальше; `trap` снимает замок при выходе и Ctrl+C).
+  параллельные JVM игры душат машину и множат флаки; сама задача `runGameTestServer` в `build.gradle`
+  отказалась бы запускать игру без пропуска от `scripts/test.sh`.
+  На Linux замок — `flock` на `${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}`;
+  в Git Bash на Windows его нет, поэтому запасной замок берётся атомарным `mkdir` каталога
+  `${THEMINESPIRIT_GAMETEST_LOCK}.d` (файл `pid` внутри; протухший замок мёртвого процесса снимается
+  атомарным переименованием каталога — ровно один из ожидающих, проигравший ждёт дальше; `trap`
+  снимает замок при выходе и Ctrl+C).
+  Путь замка по умолчанию — общий для всех сессий машины: `C:\ProgramData\theminespirit\theminespirit-gametest.lock`
+  на Windows (`$ALLUSERSPROFILE`), `/tmp/theminespirit-gametest.lock` на Linux. `/tmp` в Git Bash
+  монтируется в `%TEMP%` текущего пользователя — у разных сессий opencode TMP/TEMP может различаться,
+  и замок перестаёт быть общим (причина, по которой замок «не держал»).
+  Взяв замок, скрипт кладёт одноразовый токен в маркер (`$LOCK.d/token` или `$LOCK.token` при flock)
+  и передаёт `runGameTestServer` системные свойства `-Dtheminespirit.gametest.lock` и
+  `-Dtheminespirit.gametest.token`; задача в `build.gradle` сверяет их с маркером и отказывается
+  запускаться, если пропуск не совпадает (прямой запуск, устаревший или чужой токен — отвал до старта игры).
   Ожидание — `THEMINESPIRIT_GAMETEST_WAIT` (по умолчанию 1800 с, опрос раз в 2 с); не дождались — те же две
   строки в stderr и код 75. Команду запуска задаёт `THEMINESPIRIT_GRADLEW` (по умолчанию `./gradlew`);
   принудительно включить запасной путь можно через `THEMINESPIRIT_GAMETEST_NOFLOCK=1`.
