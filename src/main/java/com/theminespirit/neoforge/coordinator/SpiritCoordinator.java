@@ -14,6 +14,7 @@ import com.theminespirit.core.coordinator.AssistOrder;
 import com.theminespirit.core.intellect.defense.DefenseIssuedOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
+import com.theminespirit.core.tactics.DirectiveOwner;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.TargetSelector;
@@ -145,7 +146,7 @@ public final class SpiritCoordinator {
             lastDirectives.remove(id);
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
             if (spirit != null) {
-                spirit.tactics().clearDirective();
+                spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
                 spirit.tactics().clearGuardZone();
                 spirit.tactics().setWard(null);
             }
@@ -219,7 +220,7 @@ public final class SpiritCoordinator {
                 if (ours != null && ours.mode() == CombatMode.AGGRESSIVE && ours.equals(current)) {
                     lastDirectives.remove(id);
                     lastForced.remove(id);
-                    spirit.tactics().clearDirective();
+                    spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
                     spirit.tactics().setWard(null);
                     Point post = posts.get(id);
                     if (post != null) {
@@ -259,7 +260,7 @@ public final class SpiritCoordinator {
                     .map(current -> !current.equals(last)).orElse(false)) {
                 continue;
             }
-            spirit.tactics().clearDirective();
+            spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
             spirit.tactics().clearGuardZone();
             spirit.tactics().setWard(null);
         }
@@ -268,7 +269,7 @@ public final class SpiritCoordinator {
     private void applyDirectiveToSpirit(SpiritEntity spirit, CombatDirective d, String forcedTargetId, Point post) {
         TacticsService tactics = spirit.tactics();
         // Для обороны/защиты задачи нет в текущем API - применяем напрямую
-        tactics.applyDirective(d);
+        tactics.applyDirective(d, DirectiveOwner.COORDINATOR);
         // guard zone при GUARD_AREA
         if (d.safePoint().isPresent()) {
             Point safe = d.safePoint().get();

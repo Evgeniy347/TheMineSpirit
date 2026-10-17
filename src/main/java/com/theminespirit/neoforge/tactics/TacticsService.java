@@ -6,6 +6,8 @@ import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
+import com.theminespirit.core.tactics.DirectiveOwner;
+import com.theminespirit.core.tactics.DirectiveOwnership;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
@@ -84,6 +86,7 @@ public final class TacticsService {
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
     private CombatDirective directive;
+    private final DirectiveOwnership ownership = new DirectiveOwnership();
     private Optional<StoredTactics> preDirective = Optional.empty();
     private LivingEntity forcedTarget;
     private RetreatMethod forcedMethod = RetreatMethod.NONE;
@@ -188,6 +191,10 @@ public final class TacticsService {
     }
 
     public void applyDirective(CombatDirective directive) {
+        applyDirective(directive, DirectiveOwner.SCRIPT);
+    }
+
+    public void applyDirective(CombatDirective directive, DirectiveOwner owner) {
         if (directive == null) {
             throw new IllegalArgumentException("Приказ = null: боевой скрипт обязан передать CombatDirective, "
                     + "иначе тактика не знает, какой режим и цель включить");
@@ -196,6 +203,7 @@ public final class TacticsService {
             preDirective = Optional.of(snapshot());
         }
         this.directive = directive;
+        ownership.appliedBy(owner);
         ordered = directive.mode();
         forcedTarget = null;
         setForcedRetreat(directive.retreat().orElse(RetreatMethod.NONE), directive.safePoint());
@@ -205,17 +213,23 @@ public final class TacticsService {
         forced = true;
     }
 
-    public void clearDirective() {
-        if (directive == null) {
-            return;
+    public boolean clearDirective() {
+        return clearDirective(DirectiveOwner.SCRIPT);
+    }
+
+    public boolean clearDirective(DirectiveOwner owner) {
+        if (directive == null || !ownership.mayClear(owner)) {
+            return false;
         }
         directive = null;
+        ownership.cleared();
         forcedTarget = null;
         setForcedRetreat(RetreatMethod.NONE, Optional.empty());
         restore(preDirective.orElse(new StoredTactics(DEFAULT_MODE, Optional.empty(), Optional.empty(),
                 Optional.empty(), RetreatTracker.IDLE)));
         preDirective = Optional.empty();
         spirit.setTarget(null);
+        return true;
     }
 
     public Optional<CombatDirective> activeDirective() {
