@@ -45,60 +45,60 @@ class SpiritHomeTests {
     void resolve_SavedHomeAndLegacyBase_KeepsSavedWithoutMigration() {
         MemoryPoint legacy = memory("home", NEAR, MemoryType.BASE, OVERWORLD);
 
-        SpiritHome.Restored restored = SpiritHome.resolve(Optional.of(FAR), List.of(legacy), OVERWORLD, SELF);
+        SpiritHome resolved = SpiritHome.resolve(Optional.of(SpiritHome.at(FAR)), List.of(legacy), OVERWORLD, SELF);
 
-        assertEquals(FAR, restored.home().point().orElseThrow(),
+        assertEquals(FAR, resolved.point().orElseThrow(),
                 "Сохранённый дом — источник правды: легаси-память BASE не имеет права его перебить");
-        assertEquals(Optional.empty(), restored.migratedMemory(),
-                "При сохранённом доме переносить из памяти нечего: забытая точка иначе вернулась бы после clear");
     }
 
     @Test
-    void resolve_NoSavedHomeAndLegacyBase_MigratesNearestBaseAndNamesItForForgetting() {
+    void resolve_ExplicitlyClearedHomeAndLegacyBase_StaysCleared() {
+        MemoryPoint legacy = memory("home", NEAR, MemoryType.BASE, OVERWORLD);
+
+        SpiritHome resolved = SpiritHome.resolve(Optional.of(SpiritHome.none()), List.of(legacy), OVERWORLD, SELF);
+
+        assertFalse(resolved.isSet(),
+                "Снятый дом не воскресает из легаси-памяти: иначе /spirit home clear отменялся бы при перезагрузке");
+    }
+
+    @Test
+    void resolve_NoSavedHomeAndLegacyBase_MigratesNearestBase() {
         MemoryPoint far = memory("far", FAR, MemoryType.BASE, OVERWORLD);
         MemoryPoint near = memory("camp", NEAR, MemoryType.BASE, OVERWORLD);
 
-        SpiritHome.Restored restored = SpiritHome.resolve(Optional.empty(), List.of(far, near), OVERWORLD, SELF);
+        SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(far, near), OVERWORLD, SELF);
 
-        assertEquals(NEAR, restored.home().point().orElseThrow(),
+        assertEquals(NEAR, resolved.point().orElseThrow(),
                 "Старое сохранение без SpiritHome читается: домом становится ближайшая база, как выбирал прежний "
                         + "WorldFactCollector");
-        assertEquals(Optional.of("camp"), restored.migratedMemory(),
-                "Перенесённая точка обязана называться, чтобы дух забыл её и не держал второй источник дома");
     }
 
     @Test
     void resolve_LegacyBaseInOtherDimension_NotMigrated() {
         MemoryPoint nether = memory("home", NEAR, MemoryType.BASE, NETHER);
 
-        SpiritHome.Restored restored = SpiritHome.resolve(Optional.empty(), List.of(nether), OVERWORLD, SELF);
+        SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(nether), OVERWORLD, SELF);
 
-        assertFalse(restored.home().isSet(),
+        assertFalse(resolved.isSet(),
                 "База чужого измерения домом не становится: иначе дух в Верхнем мире шёл бы к точке Нижнего");
-        assertEquals(Optional.empty(), restored.migratedMemory(),
-                "Базу чужого измерения переносить нечего: иначе дух забыл бы точку, которой в этом мире не пользовался");
     }
 
     @Test
     void resolve_LegacyResourceNamedHome_NotMigrated() {
         MemoryPoint resource = memory("home", NEAR, MemoryType.RESOURCE, OVERWORLD);
 
-        SpiritHome.Restored restored = SpiritHome.resolve(Optional.empty(), List.of(resource), OVERWORLD, SELF);
+        SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(resource), OVERWORLD, SELF);
 
-        assertFalse(restored.home().isSet(),
+        assertFalse(resolved.isSet(),
                 "Домом становится только легаси-база (BASE): ресурс с именем home домом не считается");
-        assertEquals(Optional.empty(), restored.migratedMemory(),
-                "Ресурс не переносится в дом: иначе память о руде исчезла бы при загрузке");
     }
 
     @Test
     void resolve_NoLegacyBase_GivesNoHome() {
-        SpiritHome.Restored restored = SpiritHome.resolve(Optional.empty(), List.of(), OVERWORLD, SELF);
+        SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(), OVERWORLD, SELF);
 
-        assertFalse(restored.home().isSet(), "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home "
+        assertFalse(resolved.isSet(), "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home "
                 + "нашёл бы точку из воздуха");
-        assertEquals(Optional.empty(), restored.migratedMemory(),
-                "Без BASE-памяти переносить нечего: пустой список перенесённых точек");
     }
 
     private static MemoryPoint memory(String name, BlockCoord pos, MemoryType type, String dimension) {

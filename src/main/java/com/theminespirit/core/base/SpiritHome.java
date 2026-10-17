@@ -26,31 +26,22 @@ public record SpiritHome(Optional<BlockCoord> point) {
         return point.isPresent();
     }
 
-    public record Restored(SpiritHome home, Optional<String> migratedMemory) {
-        public Restored {
-            Objects.requireNonNull(home, "Восстановленный дом не может быть null: нет дома — SpiritHome.none()");
-            Objects.requireNonNull(migratedMemory,
-                    "Список перенесённых записей памяти не может быть null: нечего переносить — Optional.empty()");
-        }
-    }
-
-    public static Restored resolve(Optional<BlockCoord> stored, List<MemoryPoint> memories, String dimension,
+    public static SpiritHome resolve(Optional<SpiritHome> stored, List<MemoryPoint> memories, String dimension,
             BlockCoord self) {
         Objects.requireNonNull(stored, "Сохранённый дом не может быть null: нет дома — Optional.empty()");
         Objects.requireNonNull(memories, "Память духа не может быть null: легаси-точки переносятся из неё");
         Objects.requireNonNull(dimension, "Измерение не может быть null: дом ищется только в текущем мире");
         Objects.requireNonNull(self, "Позиция духа не может быть null: ближайшая легаси-база меряется от неё");
         if (stored.isPresent()) {
-            return new Restored(new SpiritHome(stored), Optional.empty());
+            return stored.get();
         }
-        Optional<MemoryPoint> legacy = memories.stream()
+        return memories.stream()
                 .filter(memory -> memory.type() == MemoryType.BASE)
                 .filter(memory -> memory.dimension().equals(dimension))
                 .min(Comparator.comparingDouble((MemoryPoint memory) -> squaredDistance(self, memory.pos()))
-                        .thenComparing(MemoryPoint::name));
-        return legacy
-                .map(memory -> new Restored(new SpiritHome(Optional.of(memory.pos())), Optional.of(memory.name())))
-                .orElseGet(() -> new Restored(none(), Optional.empty()));
+                        .thenComparing(MemoryPoint::name))
+                .map(memory -> SpiritHome.at(memory.pos()))
+                .orElseGet(SpiritHome::none);
     }
 
     private static double squaredDistance(BlockCoord first, BlockCoord second) {

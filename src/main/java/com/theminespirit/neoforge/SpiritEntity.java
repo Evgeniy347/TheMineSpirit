@@ -286,7 +286,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
         SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);
-        SpiritHomeStore.write(compound, home.point().orElse(null));
+        SpiritHomeStore.write(compound, home);
         SpiritBedStore.write(compound, bed);
         SpiritCampStore.write(compound, camp);
         SpiritChildStore.write(compound, child);
@@ -343,11 +343,9 @@ public final class SpiritEntity extends PathfinderMob {
     private void restoreHome(CompoundTag compound) {
         try {
             BlockPos pos = blockPosition();
-            SpiritHome.Restored restored = SpiritHome.resolve(SpiritHomeStore.read(compound),
-                    memory.recallAll(MemoryType.BASE), level().dimension().location().toString(),
+            home = SpiritHome.resolve(SpiritHomeStore.read(compound), memory.recallAll(MemoryType.BASE),
+                    level().dimension().location().toString(),
                     new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-            home = restored.home();
-            restored.migratedMemory().ifPresent(name -> memory = memory.forget(name));
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил дом: {}", getUUID(), e.getMessage());
         }
