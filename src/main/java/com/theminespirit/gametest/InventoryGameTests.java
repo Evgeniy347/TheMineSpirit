@@ -338,6 +338,39 @@ public final class InventoryGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "inv_deposit_messy", timeoutTicks = 400)
+    public static void deposit_MessyChest_MergesPartialStacks(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(6, 1, 4, Blocks.CHEST);
+        Container chest = accessChest(helper);
+        chest.setItem(0, new ItemStack(Items.COBBLESTONE, 5));
+        chest.setItem(7, new ItemStack(Items.COBBLESTONE, 7));
+        chest.setItem(20, new ItemStack(Items.COBBLESTONE, 3));
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("deposit", Map.of("container", "nearest", "item", "minecraft:cobblestone",
+                        "count", 10, "radius", 8)),
+                1);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "deposit в сундук с разбросанными стопками обязан завершиться успехом, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(chestCount(helper, Items.COBBLESTONE) == 25,
+                    "сумма булыжника обязана сохраниться: было 5+7+3, дух положил 10, стало "
+                            + chestCount(helper, Items.COBBLESTONE) + " вместо 25");
+            helper.assertTrue(itemStacks(helper, Items.COBBLESTONE) == 1,
+                    "разрозненные неполные стопки обязаны слиться в одну: стопок булыжника "
+                            + itemStacks(helper, Items.COBBLESTONE) + " вместо 1");
+            helper.assertTrue(chest.getItem(0).is(Items.COBBLESTONE) && chest.getItem(0).getCount() == 25,
+                    "собранная стопка обязана лежать первой и содержать все 25, слот 0 — " + chest.getItem(0));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "inv_withdraw_messy", timeoutTicks = 400)
     public static void withdraw_FiveIngotsFromMessyChest_TakesAndSorts(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -906,10 +939,14 @@ public final class InventoryGameTests {
     }
 
     private static int pickaxeStacks(GameTestHelper helper) {
-        int stacks = 0;
+        return itemStacks(helper, Items.IRON_PICKAXE);
+    }
+
+    private static int itemStacks(GameTestHelper helper, Item item) {
         Container chest = accessChest(helper);
+        int stacks = 0;
         for (int slot = 0; slot < chest.getContainerSize(); slot++) {
-            if (chest.getItem(slot).is(Items.IRON_PICKAXE)) {
+            if (chest.getItem(slot).is(item)) {
                 stacks++;
             }
         }
