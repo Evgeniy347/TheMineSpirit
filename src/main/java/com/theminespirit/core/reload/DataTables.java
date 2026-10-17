@@ -3,6 +3,8 @@ package com.theminespirit.core.reload;
 import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicParser;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.fishing.FishingData;
@@ -26,8 +28,10 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -39,6 +43,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * работать в classpath-версии: отсутствие файла — не ошибка, ошибкой считается только нечитаемый/битый json.
  */
 public final class DataTables {
+    /** Схемы, читаемые по имени потребителем: тела перечитываются на /reload вместе с остальными таблицами. */
+    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room");
+
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
     public static final String TACTICS_ROOT = "data/theminespirit/tactics/";
@@ -67,6 +74,7 @@ public final class DataTables {
     private final TableHolder<DescentLevels> descentLevels;
     private final TableHolder<DefenseProfile> priorities;
     private final TableHolder<RepairData> repair;
+    private final Map<String, TableHolder<Schematic>> schematics;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -150,6 +158,14 @@ public final class DataTables {
         this.repair = registry.registerLazy(
                 TableDefinition.single("repair", RepairData.RESOURCE, RepairData::parse),
                 RepairData::load);
+        Map<String, TableHolder<Schematic>> liveSchematics = new LinkedHashMap<>();
+        for (String file : LIVE_SCHEMATIC_FILES) {
+            String path = PresetLibrary.SCHEMATICS_ROOT + file + ".json";
+            liveSchematics.put(file, registry.registerLazy(
+                    TableDefinition.single("schematic_" + file, path, SchematicParser::parse),
+                    () -> SchematicParser.parse(JsonResource.readClasspath(path), path)));
+        }
+        this.schematics = Map.copyOf(liveSchematics);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -257,6 +273,15 @@ public final class DataTables {
 
     public TableHolder<RepairData> repair() {
         return repair;
+    }
+
+    /**
+     * Держатель схемы по имени файла, если схема зарегистрирована как таблица. Потребитель берёт
+     * {@link TableHolder#current()}, поэтому /reload меняет тело схемы на лету. Схемы без регистрации
+     * (тела пресетов) держателя не имеют — вызывающий читает их из classpath сам.
+     */
+    public Optional<TableHolder<Schematic>> schematic(String file) {
+        return Optional.ofNullable(schematics.get(file));
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
