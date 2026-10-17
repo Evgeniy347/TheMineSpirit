@@ -14,7 +14,7 @@ finished() {
   for f in $(find /f/repos/minecraft/oc-results -maxdepth 1 -name "l-*.out" -mmin -2880); do e=$(grep -a "EXIT=" "$f" | tail -1 | grep -o "EXIT=[0-9]*"); [ -n "$e" ] && echo "ПК $(basename $f) $e #$(stat -c %Y $f)"; done
 }
 stale() {
-  ssh -o ConnectTimeout=10 domovoy@192.168.0.147 'cd /opt/minecraft/the-mine-spirit/TestResults/opencode && seen=; for d in $(ls -td */ | head -12); do w=$(grep -ho "/opt/minecraft/wt/[a-z0-9-]*" $d/attempt-*.jsonl 2>/dev/null | head -1); [ -z "$w" ] && continue; case " $seen " in *" $w "*) continue;; esac; seen="$seen $w"; pgrep -f -- "--dir $w" >/dev/null || continue; [ -z "$(find $d -mmin -'"$STALE_MIN"')" ] && echo "сервер ${w##*/}: логи не пишутся > '"$STALE_MIN"' мин"; done' 2>/dev/null | sort -u || true
+  ssh -o ConnectTimeout=10 domovoy@192.168.0.147 'cd /opt/minecraft/the-mine-spirit/TestResults/opencode && seen=; for d in $(ls -td */ | head -12); do w=$(grep -ho "/opt/minecraft/wt/[a-z0-9-]*" $d/attempt-*.jsonl 2>/dev/null | head -1); [ -z "$w" ] && continue; case " $seen " in *" $w "*) continue;; esac; seen="$seen $w"; pgrep -f -- "--dir $w( |$)" >/dev/null || continue; [ -z "$(find $d -mmin -'"$STALE_MIN"')" ] && echo "сервер ${w##*/}: логи не пишутся > '"$STALE_MIN"' мин"; done' 2>/dev/null | sort -u || true
   for w in /f/repos/minecraft/wt-*; do
     [ -d "$w/TestResults/opencode" ] || continue
     ps -ef | grep -v grep | grep -q -- "--dir F:/repos/minecraft/$(basename "$w")" || continue
