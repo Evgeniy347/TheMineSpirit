@@ -29,6 +29,7 @@ public final class SpiritCommands {
         SpiritPresetsCommand.register(spirit);
         CraterCommand.register(spirit);
         SpiritInviteCommand.register(spirit);
+        SpiritUnprotectCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }

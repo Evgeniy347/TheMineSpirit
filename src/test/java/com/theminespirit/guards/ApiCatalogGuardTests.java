@@ -3,6 +3,12 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.rest.IdempotencyCache;
+import com.theminespirit.core.rest.PolicyGateway;
+import com.theminespirit.core.rest.PolicyRoutes;
+import com.theminespirit.core.rest.Route;
+import com.theminespirit.core.rest.UnprotectRequest;
+import com.theminespirit.core.policy.UnprotectArea;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ScriptCatalog;
@@ -91,6 +97,60 @@ class ApiCatalogGuardTests {
                 "Сторож ослеп: раздел каталога обязан находиться по заголовку и содержать текст до следующего заголовка");
         assertTrue(!section.contains("/v1/bots"),
                 "Сторож слеп к границе: раздел каталога обязан кончаться на следующем заголовке `### `");
+    }
+
+    @Test
+    void policyRoutes_DeclaredInController_AreDocumentedInApiDoc() throws IOException {
+        List<String> missing = undocumentedRoutes(readApiDoc(), new PolicyRoutes(new NoPolicyGateway(),
+                new IdempotencyCache()).routes());
+
+        assertEquals(List.of(), missing,
+                "Маршрут /v1/policy/* объявлен в PolicyRoutes, но не описан в docs/API.md: клиент по документу "
+                        + "не узнает конечную точку снятия защиты построек игрока. Допишите строку таблицы "
+                        + "«Конечные точки» и раздел с телом запроса. Не описаны");
+    }
+
+    @Test
+    void undocumentedRoutes_MissingPath_IsReported() {
+        List<Route> routes = List.of(new Route("GET", "/v1/policy/unprotect", (request, params) -> null));
+
+        assertEquals(List.of("GET /v1/policy/unprotect"), undocumentedRoutes("тут нет ничего", routes),
+                "Сторож ослеп: маршрут, которого нет в тексте документа, обязан попасть в пропажу");
+    }
+
+    @Test
+    void undocumentedRoutes_MethodAndPathPresent_ReportsNothing() {
+        List<Route> routes = List.of(new Route("POST", "/v1/policy/unprotect", (request, params) -> null));
+
+        assertEquals(List.of(), undocumentedRoutes("POST /v1/policy/unprotect", routes),
+                "Сторож ложно срабатывает: метод и путь, найденные в тексте, — не пропажа");
+    }
+
+    private static List<String> undocumentedRoutes(String doc, List<Route> routes) {
+        List<String> missing = new ArrayList<>();
+        for (Route route : routes) {
+            if (!doc.contains(route.method() + " " + route.pattern()) && !doc.contains(route.pattern())) {
+                missing.add(route.method() + " " + route.pattern());
+            }
+        }
+        return missing;
+    }
+
+    private static final class NoPolicyGateway implements PolicyGateway {
+        @Override
+        public List<UnprotectArea> areas() {
+            return List.of();
+        }
+
+        @Override
+        public UnprotectArea grant(UnprotectRequest request) {
+            throw new UnsupportedOperationException("сторожу не нужна выдача");
+        }
+
+        @Override
+        public UnprotectArea revoke(String id) {
+            throw new UnsupportedOperationException("сторожу не нужно снятие");
+        }
     }
 
     private static String readApiDoc() throws IOException {
