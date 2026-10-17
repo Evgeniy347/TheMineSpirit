@@ -35,6 +35,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardFirstStepsGameTests {
     private static final String BATCH = "board_first_steps";
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,

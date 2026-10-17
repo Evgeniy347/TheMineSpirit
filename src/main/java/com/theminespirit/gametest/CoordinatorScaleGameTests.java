@@ -23,6 +23,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(coordinator = true)
 public final class CoordinatorScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int SCALE_TICKS = 100;

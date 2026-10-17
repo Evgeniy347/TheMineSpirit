@@ -45,6 +45,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardCraterGameTests {
     private static final String BATCH = "board_crater";
     private static final float BLAST_RADIUS = 5.0f;

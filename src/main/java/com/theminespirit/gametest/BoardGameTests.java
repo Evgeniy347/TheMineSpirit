@@ -28,6 +28,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardGameTests {
     private static final String BATCH = "board_supply";
     private static final String BUILD_ID = "build_house";

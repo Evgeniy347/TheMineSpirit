@@ -29,6 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int TICKETS = 6;
