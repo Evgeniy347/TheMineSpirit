@@ -108,7 +108,7 @@ public final class BlockBreaker {
         }
         List<ToolOption> options = toolOptions(targetState);
         choice = ToolChoice.best(options, reserve);
-        if (choice.slot() == ToolChoice.HAND && hasCorrectTool(options)) {
+        if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
             return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
         }
         tool = choice.slot() == ToolChoice.HAND ? ItemStack.EMPTY
@@ -206,10 +206,6 @@ public final class BlockBreaker {
         int remaining = max > 0 ? max - stack.getDamageValue() : ToolChoice.UNWEARING;
         return new ToolOption(slot, stack.getDestroySpeed(targetState),
                 !needsTool || stack.isCorrectToolForDrops(targetState), remaining, max, stack.isEnchanted());
-    }
-
-    private static boolean hasCorrectTool(List<ToolOption> options) {
-        return options.stream().anyMatch(ToolOption::correctForDrops);
     }
 
     private void replaceSpentHandTool(BlockState targetState, ToolReserve reserve) {

@@ -134,4 +134,39 @@ class ToolChoiceTests {
         assertFalse(unwearing.spent(RESERVE),
                 "Инструмент без прочности (maxUses=0) не изнашивается: его нельзя объявлять изношенным");
     }
+
+    @Test
+    void shouldRefuseForLackOfTool_SoftBlockWithSpentTool_IsFalse() {
+        List<ToolOption> options = List.of(
+                new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, true, ToolChoice.UNWEARING,
+                        ToolChoice.UNWEARING, false),
+                new ToolOption(0, ToolChoice.HAND_SPEED, true, 1, 100, false));
+
+        assertFalse(ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                "Изношенный инструмент на мягком блоке (не требует инструмента) — не повод для отказа: "
+                        + "рука даёт дроп, иначе дух бросал бы землю и брёвна из-за износа лопаты или топора");
+    }
+
+    @Test
+    void shouldRefuseForLackOfTool_HardBlockAllCorrectSpent_IsTrue() {
+        List<ToolOption> options = List.of(
+                new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, false, ToolChoice.UNWEARING,
+                        ToolChoice.UNWEARING, false),
+                new ToolOption(0, 6.0, true, 2, 251, false));
+
+        assertTrue(ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                "Правильный инструмент есть, но изношен, и рука без дропа: отказ с причиной, "
+                        + "а не ломка голыми руками и потеря блока");
+    }
+
+    @Test
+    void shouldRefuseForLackOfTool_HardBlockNoCorrectTool_IsFalse() {
+        List<ToolOption> options = List.of(
+                new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, false, ToolChoice.UNWEARING,
+                        ToolChoice.UNWEARING, false),
+                new ToolOption(0, 4.0, false, 251, 251, false));
+
+        assertFalse(ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                "Правильного инструмента нет вовсе: это забота проверки уровня руды, а не отказа «нужен инструмент»");
+    }
 }

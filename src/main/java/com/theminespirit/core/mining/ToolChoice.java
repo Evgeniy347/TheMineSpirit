@@ -30,6 +30,12 @@ public final class ToolChoice {
         return best(options, ToolReserve.defaults());
     }
 
+    public static boolean shouldRefuseForLackOfTool(Choice choice, List<ToolOption> options) {
+        Objects.requireNonNull(choice, "Выбор не может быть null: по нему решается, нужен ли отказ");
+        Objects.requireNonNull(options, "Набор инструментов не может быть null: по нему видно, есть ли правильный");
+        return !choice.dropsAllowed() && options.stream().anyMatch(ToolOption::correctForDrops);
+    }
+
     public static Choice best(List<ToolOption> options, ToolReserve reserve) {
         Objects.requireNonNull(options, "options не может быть null: пустой набор инструментов задаётся пустым списком");
         Objects.requireNonNull(reserve, "reserve не может быть null: по нему решается, износился ли инструмент");
