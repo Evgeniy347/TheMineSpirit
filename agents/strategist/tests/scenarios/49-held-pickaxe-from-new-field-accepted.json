@@ -1,5 +1,5 @@
 {
- "name": "45-held-pickaxe-from-new-field-accepted",
+ "name": "49-held-pickaxe-from-new-field-accepted",
  "description": "кирка только в поле held (новое поле наблюдения), инвентарь пуст: проверка кирки берёт предмет из нового поля, и план gather камня принимается",
  "bots": [
   {
