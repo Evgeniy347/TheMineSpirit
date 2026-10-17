@@ -48,7 +48,9 @@ public final class EnchantRoomWatch {
             }
             service.submit(new BoardTicket("enchant_room_1", BoardCase.ENCHANT_ROOM, Optional.empty(),
                     BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()), now, 1,
-                    BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), TicketTarget.at(home));
+                    BoardTicket.ALWAYS_CAUSE, List.of(),
+                    Map.of("lapis_lazuli", LEVEL_ONE_LAPIS, "book", LEVEL_ONE_BOOK)),
+                    TicketTarget.at(home));
             return;
         }
         service.submit(new BoardTicket("enchant_room_2", BoardCase.ENCHANT_ROOM, Optional.empty(),

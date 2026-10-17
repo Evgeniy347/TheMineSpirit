@@ -63,6 +63,16 @@ public final class JournalService {
         return journal.pending();
     }
 
+    /** Поставлено в журнал: каждый вызов {@link #record} — один переход статуса задания. */
+    public int enqueued() {
+        return journal.enqueued();
+    }
+
+    /** Уже на диске: тест масштаба сверяет строки с числом переходов. */
+    public int written() {
+        return journal.written();
+    }
+
     public List<BoardLogEntry> last(int limit) {
         return journal.last(limit);
     }

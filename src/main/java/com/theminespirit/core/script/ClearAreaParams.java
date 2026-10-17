@@ -4,7 +4,7 @@ import com.theminespirit.core.building.BuildBox;
 import java.util.Map;
 import java.util.Objects;
 
-public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2) {
+public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, boolean demolish) {
     public ClearAreaParams {
         BuildingCoords.checkX(x1);
         BuildingCoords.checkY(y1);
@@ -19,6 +19,10 @@ public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2) {
         }
     }
 
+    public ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2) {
+        this(x1, y1, z1, x2, y2, z2, false);
+    }
+
     public static ClearAreaParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new ClearAreaParams(
@@ -27,6 +31,7 @@ public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2) {
                 ScriptArgs.requireInt(params, "z1"),
                 ScriptArgs.requireInt(params, "x2"),
                 ScriptArgs.requireInt(params, "y2"),
-                ScriptArgs.requireInt(params, "z2"));
+                ScriptArgs.requireInt(params, "z2"),
+                ScriptArgs.optionalBoolean(params, "demolish", false));
     }
 }
