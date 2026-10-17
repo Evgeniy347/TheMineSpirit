@@ -207,7 +207,7 @@
 - [ ] `defend` (себя), `guard_area` (территория), `hunt` (животные), `hunt_hostile`
 
 ### Инвентарь и крафт
-- [ ] `equip`, `swap_tool`, `repair` (`craft`, `smelt` — сделаны)
+- [ ] `equip`, `swap_tool` (`craft`, `smelt`, `repair` через точило — сделаны, 17.10)
 - [ ] `acquire`, `pick_up`, `deposit`, `withdraw`, `sort_chest`, `drop_to_player`
 - [ ] `eat` (есть, 16.10), `drink_potion`
 
@@ -588,8 +588,9 @@
 - [x] Флак `supply_buildneedswood_waitsthenissuesaftergather`: чужие билеты first:* общей доски забирали духа — тест
       снимает их в начале сцены (deepseek-flash, 17.10). В игре то же возможно: first:* без гейта материалов отнимают духов
       у снабжения — см. пункт про гейты первых шагов.
-- [ ] Замок GameTest на ПК (Git Bash, mkdir-замок в /tmp) не держит: исполнители видели одновременно несколько серверов
-      GameTest из разных worktree (находка fish-script 17.10) — проверить общий путь замка и обход через прямой gradlew.
+- [x] Замок GameTest на ПК (Git Bash, mkdir-замок в /tmp) не держит: исполнители видели одновременно несколько серверов
+      GameTest из разных worktree (находка fish-script 17.10) — общий путь замка, runGameTestServer без токена замка
+      отклоняется (deepseek-flash, 17.10). Хук: unit всегда с --rerun (FROM-CACHE давал total=0).
 - [x] Сторож DataTables: исключения через `Map.ofEntries` (mimo, 17.10).
 - [ ] По мере развития: простой забор из палок → укреплённая каменная стена; строим дома для всех; первоначальный дом
       сносим и строим из него дом для игрока; простые факелы заменяем на красивые светильники.
