@@ -25,7 +25,9 @@ class BoardConfigTests {
                 Map.entry("RELOCATE_BUILDING", 60),
                 Map.entry("BREED_ANIMALS", 55),
                 Map.entry("COLLECT_DROPS", 55),
+                Map.entry("SHEAR_SHEEP", 55),
                 Map.entry("HERD_CULL", 50),
+                Map.entry("HUNT_WILD_SHEEP", 45),
                 Map.entry("CLEAR_GROUNDS", 50),
                 Map.entry("BUILD_FENCE", 50),
                 Map.entry("LIGHTING", 50),
@@ -42,6 +44,9 @@ class BoardConfigTests {
                 Map.entry("CRAFT_WOODEN_AXE", 40),
                 Map.entry("CRAFT_WOODEN_PICKAXE", 40),
                 Map.entry("CRAFT_WOODEN_SHOVEL", 40),
+                Map.entry("CRAFT_SHEARS", 40),
+                Map.entry("CRAFT_BED", 40),
+                Map.entry("WEAVE_WOOL", 40),
                 Map.entry("CRAFTING_STATION", 40),
                 Map.entry("STOCK_CHESTS", 40),
                 Map.entry("FILL_CRATER", 35),
@@ -116,6 +121,40 @@ class BoardConfigTests {
                 "Три духа поселения — три комплекта инструментов: число из горячей таблицы board");
         assertEquals(5, ToolSet.count(Map.of("perSpirit", 0, "minSets", 5), 3),
                 "Фиксированный набор: perSpirit 0 при minSets 5 даёт 5 комплектов на любое число духов");
+    }
+
+    @Test
+    void defaults_FromClasspath_WoolMatchesLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(Map.of(
+                        "min_pen_sheep", 4,
+                        "wild_sheep_radius", 48,
+                        "wild_sheep_per_day", 4,
+                        "string_threshold", 8,
+                        "string_reserve", 4,
+                        "shears_iron", 2,
+                        "bed_wool", 3,
+                        "bed_planks", 3,
+                        "shear_radius", 8),
+                config.wool(),
+                "Числа шерсти и кроватей обязаны совпадать с литералами слово в слово: гейт отары, "
+                        + "радиус и суточный лимит диких овец, порог и запас нитей, цена ножниц и "
+                        + "кровати. Лишний ключ в файле без теста и забытый ключ в тесте красят прогон");
+        assertEquals(48, config.wool().get("wild_sheep_radius"),
+                "Предел в тесте, факт из production: диких овец ищут в радиусе 48 от дома");
+    }
+
+    @Test
+    void fromJson_UnknownWoolKey_FailsNamingKey() {
+        String json = "{\"wool\":{\"min_pen_ships\":4}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в ключе шерсти обязана падать: молча потерянный ключ оставил бы гейт "
+                        + "отары без ведома настройщика");
+        assertTrue(failure.getMessage().contains("min_pen_ships"),
+                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
     }
 
     @Test

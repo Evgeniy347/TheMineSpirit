@@ -46,8 +46,10 @@ public final class BoardRules {
         priorities.put(BoardCase.DISMANTLE_SHELTER, 65);
         priorities.put(BoardCase.RELOCATE_BUILDING, 60);
         priorities.put(BoardCase.BREED_ANIMALS, 55);
+        priorities.put(BoardCase.SHEAR_SHEEP, 55);
         priorities.put(BoardCase.HERD_CULL, 50);
         priorities.put(BoardCase.COLLECT_DROPS, 55);
+        priorities.put(BoardCase.HUNT_WILD_SHEEP, 50);
         priorities.put(BoardCase.CLEAR_GROUNDS, 50);
         priorities.put(BoardCase.BUILD_FENCE, 50);
         priorities.put(BoardCase.LIGHTING, 50);
@@ -57,6 +59,9 @@ public final class BoardRules {
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);
         priorities.put(BoardCase.TRANSFER_ITEM, 45);
+        priorities.put(BoardCase.CRAFT_SHEARS, 40);
+        priorities.put(BoardCase.CRAFT_BED, 40);
+        priorities.put(BoardCase.WEAVE_WOOL, 40);
         priorities.put(BoardCase.CRAFTING_STATION, 40);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
         priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 40);
