@@ -213,6 +213,59 @@ class ResourceResolverTests {
     }
 
     @Test
+    void resolve_BlockWithRequiredTool_PlansToolBeforeGather() {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("stone", "oak_log"),
+                Map.of("wooden_pickaxe", List.of(new Ingredient("oak_log", 3))),
+                Map.of())
+                .withTool("stone", "wooden_pickaxe");
+
+        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge);
+
+        assertEquals(new SequenceNode(List.of(
+                new SequenceNode(List.of(
+                        gather("oak_log", 3),
+                        craft("wooden_pickaxe", 1))),
+                gather("stone", 1))), plan,
+                "Перед сбором камня план обязан скрафтить деревянную кирку: без неё камень не отдаёт дроп, "
+                        + "и gather простоит без прогресса, не добыв ни одного блока");
+    }
+
+    @Test
+    void resolve_RequiredToolAlreadyInInventory_SkipsToolCraft() {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("stone", "oak_log"),
+                Map.of("wooden_pickaxe", List.of(new Ingredient("oak_log", 3))),
+                Map.of())
+                .withTool("stone", "wooden_pickaxe");
+
+        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge, Map.of("wooden_pickaxe", 1));
+
+        assertEquals(gather("stone", 1), plan,
+                "Кирка уже в инвентаре: лишний крафт не планируется, иначе дух потратит дерево на второй инструмент");
+    }
+
+    @Test
+    void resolve_DropFromBlockWithRequiredTool_PlansToolAndNamesSourceBlock() {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("stone", "oak_log"),
+                Map.of("wooden_pickaxe", List.of(new Ingredient("oak_log", 3))),
+                Map.of())
+                .withGatherSource("cobblestone", "stone")
+                .withTool("stone", "wooden_pickaxe");
+
+        TaskNode plan = ResourceResolver.resolve("cobblestone", 1, knowledge);
+
+        assertEquals(new SequenceNode(List.of(
+                new SequenceNode(List.of(
+                        gather("oak_log", 3),
+                        craft("wooden_pickaxe", 1))),
+                gather("stone", 1))), plan,
+                "Дроп булыжника идёт сбором камня с киркой впереди: иначе acquire ищет блоки булыжника в мире "
+                        + "и проваливается на цели, ради которой достаточно сломать камень");
+    }
+
+    @Test
     void resolve_CountZero_ThrowsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> ResourceResolver.resolve("oak_log", 0, KNOWLEDGE),
                 "Количество 0 обязано отвергаться: скрипт gather со count=0 молча ничего не делает, "
