@@ -3,7 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
@@ -27,8 +26,10 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,8 +43,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import org.slf4j.Logger;
 
 /**
@@ -209,6 +212,36 @@ public final class BoardService {
     }
 
     private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {
+    }
+
+    /**
+     * Выкинутая духом вещь становится заданием «забрать выкинутые вещи»: координаты и предмет
+     * в билете, исполнитель — любой свободный дух. Задание ставится только поселению: у духа
+     * без дома доски нет.
+     */
+    public boolean reportDropped(SpiritEntity source, ItemEntity drop) {
+        Objects.requireNonNull(source, "Дух, выкинувший вещь, не может быть null: по нему ищется поселение");
+        Objects.requireNonNull(drop, "Выкинутая вещь не может быть null: без неё нечего забирать");
+        if (!SpiritConfig.boardEnabled() || source.home().isEmpty() || drop.isRemoved()
+                || !(drop.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        BlockPos pos = drop.blockPosition();
+        String item = StackMapper.itemId(drop.getItem());
+        String id = "drop:" + pos.getX() + "," + pos.getY() + "," + pos.getZ() + ":" + item;
+        if (board.statusOf(id).isPresent()) {
+            return false;
+        }
+        String cause = "drop:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ() + ":" + item;
+        BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        BoardOutcome outcome = submit(new BoardTicket(id, BoardCase.COLLECT_DROPS, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.COLLECT_DROPS), level.getGameTime(), 1, cause,
+                List.of(), Map.of()), TicketTarget.at(at).withDrops(List.of(item)));
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info("Журнал доски: постановка {} — забрать выкинутое в {}: {}", id, at, item);
+        }
+        journal.flush(JournalService.FLUSH_BUDGET);
+        return outcome == BoardOutcome.ACCEPTED;
     }
 
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {

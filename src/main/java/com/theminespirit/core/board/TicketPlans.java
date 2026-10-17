@@ -81,6 +81,7 @@ public final class TicketPlans {
             case LURE_ANIMAL -> lureAnimal(target);
             case SUPPLY_SITE -> supplySite(target);
             case CLEAR_GROUNDS -> clearGrounds(target);
+            case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
@@ -208,6 +209,13 @@ public final class TicketPlans {
                 new ScriptCall("acquire", Map.of("item", item, "count", batch)),
                 new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", batch,
                         "radius", SUPPLY_CONTAINER_RADIUS)));
+    }
+
+    private static TaskNode collectDrops(TicketTarget target) {
+        Map<String, Object> params = target.dropItems().isEmpty()
+                ? Map.of("radius", CatalogLimits.DROP_RADIUS_DEFAULT)
+                : Map.of("radius", CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
+        return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {

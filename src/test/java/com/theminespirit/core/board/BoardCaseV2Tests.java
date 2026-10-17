@@ -19,10 +19,9 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsTwentyThree() {
-        assertEquals(23, BoardCase.values().length,
-                "Кейсов доски — 23: 18 из v1 плюс BREED_ANIMALS, EAT_TO_FULL, HERD_CULL, "
-                        + "RELOCATE_BUILDING и RESTOCK_FOOD (второй пищевой кейс из ответов владельца 16.10). "
+    void cases_TotalCount_IsTwentyFour() {
+        assertEquals(24, BoardCase.values().length,
+                "Кейсов доски — 24: 23 из чеклиста 36 плюс COLLECT_DROPS (37Б, забрать выкинутые вещи). "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 

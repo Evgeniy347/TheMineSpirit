@@ -31,6 +31,7 @@ class BoardEventsTests {
     void claim_NewAssignment_WritesOneAssignedLine() {
         Board board = board();
         board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
+        seen.clear();
 
         board.claim("t", SPIRIT, 7);
         board.claim("t", SPIRIT, 7);
@@ -62,6 +63,7 @@ class BoardEventsTests {
         Board board = board();
         board.submit(ticket("crater", BoardCase.FILL_CRATER, "crater:1:2:3", List.of()));
         board.submit(ticket("eat", BoardCase.EAT_TO_FULL, BoardTicket.ALWAYS_CAUSE, List.of()));
+        seen.clear();
 
         board.retain(Set.of(), 7);
 
@@ -75,6 +77,7 @@ class BoardEventsTests {
         Board board = board();
         board.submit(ticket("lure", BoardCase.LURE_ANIMAL, "animal:cow-1", List.of()));
         board.submit(ticket("dismantle", BoardCase.DISMANTLE_SHELTER, "animal:cow-1", List.of("lure")));
+        seen.clear();
 
         board.retain(Set.of(), 7);
 
