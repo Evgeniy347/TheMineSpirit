@@ -58,6 +58,15 @@
   строки в stderr и код 75. Команду запуска задаёт `THEMINESPIRIT_GRADLEW` (по умолчанию `./gradlew`);
   принудительно включить запасной путь можно через `THEMINESPIRIT_GAMETEST_NOFLOCK=1`.
   `scripts/gametest.sh` — тонкая обёртка над `scripts/test.sh gametest` (совместимость).
+- Предел времени GameTest — `THEMINESPIRIT_GAMETEST_STOP_SECONDS` (по умолчанию 1500 с; предупреждение —
+  `THEMINESPIRIT_GAMETEST_WARN_SECONDS`, 300 с). 600 с мало под нагрузкой: полный прогон 620+ тестов идёт
+  250–1000 с, и стоп выключал бы зелёный прогон. Игра стартует не как дочерний процесс `test.sh`, а как
+  отдельный процесс демона Gradle, поэтому по пределу скрипт гасит не только клиент gradle, но и сервер
+  GameTest своего worktree: находит `java` по рабочей папке `<worktree>/build/gametest-run`
+  (`gameTestServer.gameDirectory` в `build.gradle`; Linux — `/proc/<pid>/cwd`, Git Bash на Windows —
+  `java.exe` по CommandLine с путём worktree), сначала TERM, через 10 с KILL. Чужой worktree не трогается.
+  Замок снимается только после смерти сервера: иначе следующий прогон пошёл бы параллельно уже без замка.
+  То же гашение — при выходе по сигналу (Ctrl+C/TERM). Проверка — `scripts/testing/check-test-runner.sh`.
 - Фильтр GameTest (`scripts/test.sh gametest <имя пачки/класса/теста…>`) уходит в игру системным свойством
   `theminespirit.gametest.filter`: `GameTestFilter` на `ServerAboutToStartEvent` выкидывает несовпавшие
   `TestFunction` из `GameTestServer` ещё до сборки пачек. Фильтр, не совпавший ни с чем, роняет прогон
