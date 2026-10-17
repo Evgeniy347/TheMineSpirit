@@ -122,6 +122,32 @@ class ScriptCatalogTests {
                 "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
     }
 
+    @Test
+    void defaultCatalog_PillarUp_DownIsOptionalFalse() {
+        ScriptSpec pillarUp = CoreScripts.defaultCatalog().find("pillar_up").orElseThrow();
+
+        ParamSpec down = param(pillarUp, "down");
+
+        assertEquals(ParamType.BOOL, down.type(),
+                "down в pillar_up — булев флаг: разобрать столб или оставить, третьего не дано");
+        assertEquals(false, down.required(),
+                "down в pillar_up необязателен: обычный подъём оставляет столб стоять");
+        assertEquals(false, down.defaultValue(),
+                "down по умолчанию false: разбор столба — явное намерение, а не побочный эффект подъёма");
+    }
+
+    @Test
+    void defaultCatalog_PillarDown_HasNoRequiredParams() {
+        ScriptSpec pillarDown = CoreScripts.defaultCatalog().find("pillar_down").orElseThrow();
+
+        List<String> required = pillarDown.params().stream().filter(ParamSpec::required)
+                .map(ParamSpec::name).toList();
+
+        assertEquals(List.of(), required,
+                "pillar_down не требует параметров: столб ищется по своим помеченным блокам под духом, "
+                        + "а лишний обязательный параметр отверг бы легитимный план");
+    }
+
     static Stream<Arguments> scriptSpecRows() {
         List<ScriptExpectation> rows = List.of(
                 spec("scan", List.of(), Map.of("radius", new long[]{1, 32})),
@@ -213,6 +239,7 @@ class ScriptCatalogTests {
                 spec("defend", List.of("target"), Map.of()),
                 spec("retreat", List.of(), Map.of()),
                 spec("pillar_up", List.of("height"), Map.of("height", new long[]{1, 256})),
+                spec("pillar_down", List.of(), Map.of()),
                 spec("place_block", List.of("block", "x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

@@ -182,6 +182,7 @@ public final class SpiritScripts {
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("pillar_up", spirit -> params -> new PillarUpScript(spirit, PillarUpParams.from(params)));
+        table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
         table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put("fill_crater", spirit -> params -> new FillCraterScript(spirit,
