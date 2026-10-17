@@ -1,9 +1,12 @@
 # Модели-исполнители opencode
 
-Какую модель ставить на задание. Бесплатные `opencode/*-free` и `opencode/big-pickle`, мост `deepseekbridge/*`
-и платный `deepseek/deepseek-flash` (разрешён владельцем 16.10, цены — ниже);
-`opencode-go/*` идут через платную подписку — не использовать. Модель задаётся
-`OPENCODE_MODEL=opencode/<модель> scripts/opencode-task.sh …`.
+Какую модель ставить на задание. Бесплатные `opencode/*-free` и `opencode/big-pickle`, мост `deepseekbridge/*`,
+платный `deepseek/deepseek-flash` (разрешён владельцем 16.10, цены — ниже) и подписка **OpenCode Go** (`opencode-go/*`,
+куплена владельцем 17.10, ключ только на ПК — на сервере «An active OpenCode Go subscription is required»).
+Порядок Go (владелец 17.10): сначала безлимитные `opencode-go/longcat-2.5-preview-free` и `opencode-go/beam-free`
+(проверить, упрёмся ли в лимит), платные модели Go — по согласованию. Лимиты Go — `opencode.ai/v2/docs/console/go`
+(у каждой модели свой $-лимит: 5 ч — 20 %, неделя — 50 % месячного; flash $80/мес);
+модель задаётся `OPENCODE_MODEL=<провайдер>/<модель> scripts/opencode-task.sh …`.
 
 
 
