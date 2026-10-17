@@ -20,6 +20,7 @@
     "ENCHANT_ROOM": 50,
     "GATHER_MATERIALS": 45,
     "SUPPLY_SITE": 40,
+    "TRANSFER_ITEM": 45,
     "CRAFT_STONE_AXE": 40,
     "CRAFT_STONE_PICKAXE": 40,
     "CRAFT_STONE_SHOVEL": 40,
@@ -52,7 +53,9 @@
     "caseFailLimit": 3,
     "fencePatrolInterval": 1000,
     "enchantCheckInterval": 500,
-    "enchantShelvesMin": 4
+    "enchantShelvesMin": 4,
+    "transferRadiusBlocks": 32,
+    "transferMaxCount": 64
   },
   "levels": {
     "BUILD_MINE": 4,

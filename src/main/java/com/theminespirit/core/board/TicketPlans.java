@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -47,6 +48,19 @@ public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
     private TicketPlans() {
+    }
+
+    public static Optional<String> craftItem(BoardCase boardCase) {
+        Objects.requireNonNull(boardCase, "Кейс крафта не может быть null: без него неизвестен предмет");
+        if (ToolSet.isTool(boardCase)) {
+            return Optional.of(ToolSet.itemId(boardCase));
+        }
+        return switch (boardCase) {
+            case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
+            case STOCK_CHESTS -> Optional.of("minecraft:chest");
+            case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
+            default -> Optional.empty();
+        };
     }
 
     public static TaskNode plan(BoardCase boardCase, TicketTarget target) {
@@ -96,6 +110,7 @@ public final class TicketPlans {
             case HERD_CULL -> herdCull(target);
             case RELOCATE_BUILDING -> relocateBuilding(target);
             case RESTOCK_FOOD -> restockFood(target);
+            case TRANSFER_ITEM -> transferItem(target);
             default -> throw new IllegalArgumentException("Кейс " + boardCase
                     + " не имеет плана на доске: выдача задания без плана оставила бы духа "
                     + "без задачи — новый кейс обязан прийти со своей строкой плана "
@@ -288,6 +303,24 @@ public final class TicketPlans {
                 gotoPoint(target.to()),
                 new ScriptCall("build_schematic", Map.of("file", target.schemeFile(),
                         "x", target.to().x(), "y", target.to().y(), "z", target.to().z()))));
+    }
+
+    private static TaskNode transferItem(TicketTarget target) {
+        if (target.transferTo() == null) {
+            throw new IllegalArgumentException("Передача без получателя: deliver не знает, кому нести груз, "
+                    + "а withdraw — чей инвентарь пополнять");
+        }
+        if (target.supplyItem() == null || target.supplyCount() <= 0) {
+            throw new IllegalArgumentException("Передача без предмета или количества: "
+                    + "нечего нести и нечем закрыть нехватку");
+        }
+        int count = Math.min(target.supplyCount(), CatalogLimits.COUNT_MAX);
+        if (target.transferFrom() != null) {
+            return new ScriptCall("deliver", Map.of("item", target.supplyItem(), "count", count,
+                    "to", "spirit:" + target.transferTo()));
+        }
+        return new ScriptCall("withdraw", Map.of("container", "nearest", "item", target.supplyItem(),
+                "count", count, "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
     private static TaskNode restockFood(TicketTarget target) {
