@@ -38,6 +38,9 @@ public final class FarmSession {
 
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 3;
+    private static final PickupTuning PICK_PICKUP =
+            new PickupTuning(PickupTuning.REFRESH_TICKS, FarmTuning.REACH, PickupTuning.TOTAL_TIMEOUT_TICKS,
+                    PickupTuning.MAX_DELAY_WAIT_TICKS);
     private static final int UNLIMITED = Integer.MAX_VALUE;
     private static final String DONE_KEY = "done";
     private static final String REPLANT_X_KEY = "replantX";
@@ -414,8 +417,9 @@ public final class FarmSession {
     private void startCollect() {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
-        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT,
-                OverflowMode.FAIL);
+        PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK
+                ? PICK_PICKUP : PickupTuning.DEFAULT;
+        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
         state = State.COLLECT;
     }
 
