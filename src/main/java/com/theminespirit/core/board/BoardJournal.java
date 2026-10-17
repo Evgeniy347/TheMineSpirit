@@ -21,6 +21,8 @@ import java.util.Objects;
 public final class BoardJournal {
     private final Path path;
     private final Deque<String> pending = new ArrayDeque<>();
+    private int enqueued;
+    private int written;
 
     public BoardJournal(Path path) {
         this.path = Objects.requireNonNull(path,
@@ -33,10 +35,21 @@ public final class BoardJournal {
 
     public void enqueue(BoardLogEntry entry) {
         pending.addLast(BoardLog.write(entry));
+        enqueued++;
     }
 
     public int pending() {
         return pending.size();
+    }
+
+    /** Сколько записей поставлено в журнал: каждая запись — один переход статуса задания. */
+    public int enqueued() {
+        return enqueued;
+    }
+
+    /** Сколько записей уже на диске: тест масштаба сверяет число строк с переходами. */
+    public int written() {
+        return written;
     }
 
     /** Сбрасывает не больше {@code maxLines} строк: остальное дочитается следующим тиком. */
@@ -49,12 +62,12 @@ public final class BoardJournal {
                     + "журнал не продвинется и память будет расти");
         }
         createParent();
-        int written = 0;
+        int flushed = 0;
         try {
             StringBuilder block = new StringBuilder();
-            while (written < maxLines && !pending.isEmpty()) {
+            while (flushed < maxLines && !pending.isEmpty()) {
                 block.append(pending.removeFirst()).append('\n');
-                written++;
+                flushed++;
             }
             Files.writeString(path, block, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);
@@ -62,7 +75,8 @@ public final class BoardJournal {
             throw new IllegalStateException("Журнал заданий не записан в '" + path + "': "
                     + error.getMessage(), error);
         }
-        return written;
+        written += flushed;
+        return flushed;
     }
 
     public int flushAll() {

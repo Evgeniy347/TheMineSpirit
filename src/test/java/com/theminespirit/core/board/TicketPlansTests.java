@@ -484,6 +484,10 @@ class TicketPlansTests {
         assertTrue(scripts.contains("clear_area") && scripts.contains("build_schematic"),
                 "Перенос сносит постройку в from и строит ту же схему в to: перенос без сноса "
                         + "удвоил бы постройку, а без стройки — снёс бы её");
+        ScriptCall clear = findCall(plan, "clear_area");
+        assertEquals(true, clear.params().get("demolish"),
+                "Снос при переносе идёт с demolish=true: свой забор и калитка стоят в списке "
+                        + "защищённых блоков, и обычный clear_area не убрал бы ни одного блока");
     }
 
     @Test

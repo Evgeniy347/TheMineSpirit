@@ -57,6 +57,20 @@ class BuildingParamsTests {
     }
 
     @Test
+    void clearArea_DemolishFlag_DefaultsFalseAndParsesTrue() {
+        ClearAreaParams regular = ClearAreaParams.from(
+                Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1));
+        ClearAreaParams demolish = ClearAreaParams.from(
+                Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1, "demolish", true));
+
+        assertEquals(false, regular.demolish(),
+                "Без флага разбор идёт обычной защитой: чужую постройку дух не ломает");
+        assertEquals(true, demolish.demolish(),
+                "С демолишем снос своей постройки проходит защиту: забор и калитка иначе "
+                        + "остаются стоять");
+    }
+
+    @Test
     void digArea_SizeZero_IsRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> DigAreaParams.from(Map.of("x", 0, "y", 64, "z", 0, "size", 0)),
