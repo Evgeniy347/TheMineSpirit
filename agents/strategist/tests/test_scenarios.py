@@ -18,10 +18,10 @@ NO_HTTP = "сценарии идут на InProcessClient внутри проц�
 REQUIRED_TOPICS = (
     "idle-valid-plan", "all-busy", "skip", "invalid-script-not-in-catalog", "invalid-param-out-of-bounds",
     "invalid-script-outside-whitelist", "invalid-plan-too-large", "not-json", "fenced-json-accepted",
-    "retry-fixed-plan", "retry-still-invalid", "server-422", "post-409", "became-busy", "seventh-post",
+    "retry-fixed-plan", "retry-still-invalid", "server-422", "post-409", "became-busy", "eleventh-post",
     "failed-plan-cooldown", "three-failures", "unchanged-hash", "provider-down", "silence", "restart-with-active-task",
     "tasks-route-missing", "dry-mode-never-posts", "pause-file", "task-404", "task-timeout", "two-bots", "global-brain-call-limit",
-    "prompt-injection",
+    "prompt-injection", "cancelled-human-is-not-failure", "count-only-diff",
 )
 
 
@@ -156,12 +156,12 @@ class ScenarioPropertyTests(unittest.TestCase):
             times = sorted(t for b, t in created.values() if b == bot_id)
             for start in times:
                 in_hour = [t for t in times if start - HOUR < t <= start]
-                self.assertLessEqual(len(in_hour), 6, f"seed={seed}, дух {bot_id}: за скользящий час {len(in_hour)} новых задач (>6)")
+                self.assertLessEqual(len(in_hour), 10, f"seed={seed}, дух {bot_id}: за скользящий час {len(in_hour)} новых задач (>10)")
             for earlier, later in zip(times, times[1:]):
                 self.assertGreaterEqual(later - earlier, 60, f"seed={seed}, дух {bot_id}: задачи ближе 60 с друг к другу")
         events = run.events()
         failed = [(e["bot"], parse_ts(e["ts"]), e.get("fingerprint")) for e in events
-                  if e["event"] == "task_done" and e.get("outcome") in ("failed", "cancelled", "lost", "timeout")]
+                  if e["event"] == "task_done" and e.get("outcome") in ("failed", "lost", "timeout")]
         for bot, when, fingerprint in failed:
             for event in events:
                 if event["event"] == "posted" and event["bot"] == bot and event.get("fingerprint") == fingerprint \

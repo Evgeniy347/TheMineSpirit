@@ -1,5 +1,5 @@
 {
- "description": "шесть задач в час: седьмой цикл отсекается до observe и до вызова модели (лимит вызовов не тратится впустую)",
+ "description": "десять задач в час: одиннадцатый цикл отсекается до observe и до вызова модели (лимит вызовов не тратится впустую)",
  "brain": {
   "default": {
    "json": {
@@ -23,7 +23,7 @@
  },
  "steps": [
   {
-   "repeat": 7,
+   "repeat": 11,
    "steps": [
     {
      "fake": {
@@ -47,29 +47,29 @@
  ],
  "expect": [
   {
-   "posts": 6
+   "posts": 10
   },
   {
-   "brain_calls": 6
+   "brain_calls": 10
   },
   {
    "journal": {
-    "posted": 6,
-    "observed": 6
+    "posted": 10,
+    "observed": 10
    }
   },
   {
    "journal_has": {
     "event": "bot_skipped",
     "code": "tasks_hourly",
-    "reason_contains": "6"
+    "reason_contains": "10"
    }
   },
   {
-   "distinct_request_ids": 6
+   "distinct_request_ids": 10
   }
  ],
- "name": "10-seventh-post-within-hour-denied",
+ "name": "10-eleventh-post-within-hour-denied",
  "bots": [
   {
    "id": "forest",

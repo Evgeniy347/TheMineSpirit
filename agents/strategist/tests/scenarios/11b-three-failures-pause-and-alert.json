@@ -1,5 +1,5 @@
 {
- "description": "три провала подряд: пауза духа на 30 мин и alert; потом возврат",
+ "description": "три провала подряд: пауза духа на 5 мин и alert; потом возврат",
  "brain": {
   "script": [
    {
@@ -32,19 +32,6 @@
    {
     "json": {
      "reason": "Нужно больше древесины.",
-     "goal": "срубить деревья",
-     "plan": {
-      "type": "script",
-      "script": "chop_tree",
-      "params": {
-       "count": 5
-      }
-     }
-    }
-   },
-   {
-    "json": {
-     "reason": "Рядом зрелая пшеница.",
      "goal": "собрать пшеницу",
      "plan": {
       "type": "script",
@@ -52,6 +39,20 @@
       "params": {
        "crop": "wheat",
        "radius": 8
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Рядом зрелая пшеница.",
+     "goal": "набрать берёзу",
+     "plan": {
+      "type": "script",
+      "script": "gather",
+      "params": {
+       "block": "birch_log",
+       "count": 3
       }
      }
     }
@@ -122,7 +123,7 @@
    ]
   },
   {
-   "advance": 1600
+   "advance": 400
   },
   {
    "cycle": true

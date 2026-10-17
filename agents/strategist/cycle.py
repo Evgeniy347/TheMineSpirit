@@ -290,7 +290,7 @@ class CycleRunner:
 
     def _send(self, bot_id: str, cycle: int, accepted: Accepted, summary: CycleSummary) -> None:
         rt = self.rt
-        plan_fingerprint = fingerprint(accepted.goal, accepted.plan)
+        plan_fingerprint = fingerprint(accepted.plan)
         verdict = rt.guard.allow_post(rt.clock.now(), bot_id, plan_fingerprint)
         if not verdict.ok:
             summary.rejected += 1
