@@ -41,9 +41,10 @@ class ProcessingActivityProperties {
                 Map.of("minecraft:beef", size), Map.of("minecraft:oak_log", size));
         SettlementView view = SettlementViews.processing(3, 0, stock);
 
-        assertTrue(SMELT.demand(view) >= 0 && SMELT.demand(view) <= IntellectTuning.MAX_DEMAND,
+        double maxDemand = IntellectTuning.loadDefault().maxDemand();
+        assertTrue(SMELT.demand(view) >= 0 && SMELT.demand(view) <= maxDemand,
                 "Спрос плавки лежит в 0..MAX_DEMAND: иначе сравнение деятельностей несравнимо");
-        assertTrue(CRAFT.demand(view) >= 0 && CRAFT.demand(view) <= IntellectTuning.MAX_DEMAND,
+        assertTrue(CRAFT.demand(view) >= 0 && CRAFT.demand(view) <= maxDemand,
                 "Спрос крафта лежит в 0..MAX_DEMAND: иначе сравнение деятельностей несравнимо");
     }
 }

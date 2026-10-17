@@ -33,10 +33,11 @@ public record ProcessingRules(
         requireCount("charcoalCount", charcoalCount);
         requireCount("cookCount", cookCount);
         requireCount("craftCount", craftCount);
+        double demandCeiling = IntellectTuning.loadDefault().maxDemand();
         if (Double.isNaN(baseDemand) || Double.isInfinite(baseDemand) || baseDemand < 0
-                || baseDemand > IntellectTuning.MAX_DEMAND) {
+                || baseDemand > demandCeiling) {
             throw new IllegalArgumentException("Базовый спрос переработки " + baseDemand
-                    + ": обязан быть конечным числом в 0.." + IntellectTuning.MAX_DEMAND
+                    + ": обязан быть конечным числом в 0.." + demandCeiling
                     + ", иначе распределение сравнивает несравнимое");
         }
         if (Double.isNaN(demandScale) || Double.isInfinite(demandScale) || demandScale < 0) {

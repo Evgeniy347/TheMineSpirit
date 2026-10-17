@@ -113,7 +113,13 @@ public record IntellectTuning(
 
     /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static IntellectTuning loadDefault() {
-        return DataTables.INSTANCE.intellect().current();
+        DataTables tables = DataTables.INSTANCE;
+        if (tables == null) {
+            // Bootstrap: DataTables ещё строится в этом же потоке, и один из его seed'ов уже спрашивает
+            // коэффициенты (BoardConfig → ProcessingRules). До первого /reload действуют значения по умолчанию.
+            return DEFAULTS;
+        }
+        return tables.intellect().current();
     }
 
     public static IntellectTuning load() {
