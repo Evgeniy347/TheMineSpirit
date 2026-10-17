@@ -10,6 +10,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.Item;
@@ -18,7 +19,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -82,6 +87,35 @@ final class FarmActions {
     boolean boneMeal(BlockPos crop) {
         ItemStack meal = firstStack(Items.BONE_MEAL);
         return !meal.isEmpty() && BoneMealItem.applyBonemeal(meal, level, crop, null);
+    }
+
+    boolean pick(BlockPos pos, CropKind kind) {
+        BlockState state = level.getBlockState(pos);
+        Block block = state.getBlock();
+        if (kind == CropKind.SWEET_BERRY_BUSH && block instanceof SweetBerryBushBlock) {
+            int age = state.getValue(SweetBerryBushBlock.AGE);
+            if (age < 2) {
+                return false;
+            }
+            int count = age == 3 ? 3 : 2;
+            ItemStack drop = new ItemStack(Items.SWEET_BERRIES, count);
+            BlockState aged = state.setValue(SweetBerryBushBlock.AGE, 1);
+            level.setBlock(pos, aged, Block.UPDATE_ALL);
+            ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
+            entity.setPickUpDelay(0);
+            level.addFreshEntity(entity);
+            return true;
+        }
+        return false;
+    }
+
+    void rescueDrops(BlockPos broken) {
+        AABB area = new AABB(broken.getX(), broken.getY(), broken.getZ(),
+                broken.getX() + 1.0, broken.getY() + 1.0, broken.getZ() + 1.0).inflate(1.0);
+        for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, area)) {
+            drop.setPos(spirit.getX(), spirit.getY(), spirit.getZ());
+            drop.setDeltaMovement(Vec3.ZERO);
+        }
     }
 
     private int hoeSlot() {

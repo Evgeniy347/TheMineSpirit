@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
 import com.theminespirit.neoforge.LevelFarmView;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,8 +37,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -68,6 +72,81 @@ public final class FarmGameTests {
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmGameTests() {
+    }
+
+    // Сцены сладких ягод и столбовых культур проверяют только сбор и подбор. Свободного духа без задачи
+    // забирают координатор и доска (как в camp_retreat_*), и тогда исходный сбор «висит» или затирается
+    // чужим заданием. На время пачки выключаем поселенческие подсистемы.
+    private static final String BERRY_HARVEST_BATCH = "farm_harvest_sweetberry";
+    private static final String BERRY_SESSION_BATCH = "farm_session_sweetberry";
+    private static final String CANE_BATCH = "farm_column_sugarcane";
+    private static final String BAMBOO_BATCH = "farm_column_bamboo";
+    private static final String CACTUS_BATCH = "farm_column_cactus";
+    private static final String SINGLE_COLUMN_BATCH = "farm_column_single";
+
+    @BeforeBatch(batch = BERRY_HARVEST_BATCH)
+    public static void stopSettlementForBerryHarvest(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BERRY_HARVEST_BATCH)
+    public static void restoreSettlementForBerryHarvest(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = BERRY_SESSION_BATCH)
+    public static void stopSettlementForBerrySession(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BERRY_SESSION_BATCH)
+    public static void restoreSettlementForBerrySession(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = CANE_BATCH)
+    public static void stopSettlementForCane(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = CANE_BATCH)
+    public static void restoreSettlementForCane(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = BAMBOO_BATCH)
+    public static void stopSettlementForBamboo(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BAMBOO_BATCH)
+    public static void restoreSettlementForBamboo(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = CACTUS_BATCH)
+    public static void stopSettlementForCactus(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = CACTUS_BATCH)
+    public static void restoreSettlementForCactus(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = SINGLE_COLUMN_BATCH)
+    public static void stopSettlementForSingleColumn(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = SINGLE_COLUMN_BATCH)
+    public static void restoreSettlementForSingleColumn(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    private static void settlementSystems(boolean enabled) {
+        SpiritConfig.setCoordinatorEnabled(enabled);
+        SpiritConfig.setBoardEnabled(enabled);
     }
 
     @GameTest(template = "empty", batch = "farm_reach_guard", timeoutTicks = 20)
@@ -1000,6 +1079,182 @@ public final class FarmGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "farm_harvest_sweetberry", timeoutTicks = 300)
+    public static void harvestCrop_MixedSweetBerry_PicksWithoutBreakingAndKeepsBush(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        CropKind kind = CropKind.parse("sweet_berry_bush");
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? 3 : 1);
+        }
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(kind, true));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "пять зрелых кустов обязаны собраться PICK без ломки, недозрелые не мешают");
+            for (int i = 0; i < cells.size(); i++) {
+                int expectedAge = i % 2 == 0 ? 1 : 1;
+                helper.assertTrue(cropAge(helper, cells.get(i)) == expectedAge,
+                        "клетка " + i + " обязана иметь возраст 1 (зрелая собрана в 1, недозрелая 1 осталась), фактически "
+                                + cropAge(helper, cells.get(i)));
+                helper.assertTrue(helper.getBlockState(cells.get(i).above()).is(Blocks.SWEET_BERRY_BUSH),
+                        "куст на клетке " + i + " обязан остаться: PICK не ломает блок");
+            }
+            helper.assertTrue(countBlock(helper, Blocks.FARMLAND) == 9,
+                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
+            int berries = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SWEET_BERRIES);
+            helper.assertTrue(berries >= 8,
+                    "с пяти зрелых кустов обязано быть не меньше 8 ягод (2-3 с куста), фактически " + berries);
+            int bushes = countBlock(helper, Blocks.SWEET_BERRY_BUSH);
+            helper.assertTrue(bushes == 9, "кустов обязано остаться 9, фактически " + bushes);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_session_sweetberry", timeoutTicks = 300)
+    public static void farmSession_HarvestSweetBerry_PicksAndCollectsWithoutBreaking(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        CropKind kind = CropKind.parse("sweet_berry_bush");
+        for (int i = 0; i < cells.size(); i++) {
+            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? 3 : 1);
+        }
+        SpiritEntity spirit = spawnWith(helper, START);
+        AtomicReference<FarmSession> session = drive(helper, spirit,
+                ctx -> FarmSession.harvestCrop(ctx, kind, 8, true));
+
+        helper.succeedWhen(() -> {
+            FarmSession run = finished(helper, session);
+            helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
+                    "сбор кустов PICK обязан завершиться успехом: " + run.outcome() + ", " + run.failureReason());
+            int berries = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SWEET_BERRIES);
+            helper.assertTrue(berries >= 8, "ягод не меньше 8, фактически " + berries);
+            for (BlockPos cell : cells) {
+                helper.assertTrue(helper.getBlockState(cell.above()).is(Blocks.SWEET_BERRY_BUSH),
+                        "куст " + cell + " обязан остаться целым, а там " + helper.getBlockState(cell.above()).getBlock());
+                helper.assertTrue(cropAge(helper, cell) == 1, "возраст после PICK обязан стать 1");
+            }
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_column_sugarcane", timeoutTicks = 400)
+    public static void harvestCrop_SugarCaneColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
+        columnHarvest(helper, CropKind.parse("sugar_cane"), Blocks.SUGAR_CANE, Blocks.SAND);
+    }
+
+    @GameTest(template = "arena", batch = "farm_column_bamboo", timeoutTicks = 400)
+    public static void harvestCrop_BambooColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
+        columnHarvest(helper, CropKind.parse("bamboo"), Blocks.BAMBOO, Blocks.DIRT);
+    }
+
+    @GameTest(template = "arena", batch = "farm_column_cactus", timeoutTicks = 400)
+    public static void harvestCrop_CactusColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
+        columnHarvest(helper, CropKind.parse("cactus"), Blocks.CACTUS, Blocks.SAND);
+    }
+
+    @GameTest(template = "arena", batch = "farm_column_cactus", timeoutTicks = 400)
+    public static void harvestCrop_TallCactusColumn_KeepsAllDropsAboveBase(GameTestHelper helper) {
+        arenaFloor(helper);
+        BlockPos base = new BlockPos(4, FLOOR_Y, 4);
+        helper.setBlock(base, Blocks.SAND);
+        setColumn(helper, base, Blocks.CACTUS, 4);
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.parse("cactus"), false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "кактус высотой 4 обязан собраться сверху вниз");
+            helper.assertTrue(helper.getBlockState(base.above()).is(Blocks.CACTUS),
+                    "нижний кактус обязан остаться, а там " + helper.getBlockState(base.above()).getBlock());
+            for (int level = 2; level <= 4; level++) {
+                helper.assertTrue(helper.getBlockState(base.above(level)).isAir(),
+                        "блок " + level + " столба обязан быть убран, а там "
+                                + helper.getBlockState(base.above(level)).getBlock());
+            }
+            int count = GameTestFixtures.countInInventory(spirit.getInventory(), Items.CACTUS);
+            helper.assertTrue(count == 3,
+                    "с кактуса высотой 4 (нижний оставлен) обязано собраться ровно 3 кактуса: дроп не должен "
+                            + "сгорать на нижнем кактусе, фактически " + count);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_column_single", timeoutTicks = 300)
+    public static void harvestCrop_SingleCane_IsIgnoredAndBaseStays(GameTestHelper helper) {
+        arenaFloor(helper);
+        BlockPos ground = new BlockPos(4, FLOOR_Y, 4);
+        helper.setBlock(ground, Blocks.SAND);
+        helper.setBlock(ground.above(), Blocks.SUGAR_CANE);
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.parse("sugar_cane"), false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "одиночный тростник высотой 1 не цель: задача обязана провалиться, а статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
+            helper.assertTrue(helper.getBlockState(ground.above()).is(Blocks.SUGAR_CANE),
+                    "одиночный тростник обязан остаться, а там " + helper.getBlockState(ground.above()).getBlock());
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.SUGAR_CANE) == 0,
+                    "урожая с одиночного столба быть не должно");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    private static void columnHarvest(GameTestHelper helper, CropKind kind, Block columnBlock, Block groundBlock) {
+        arenaFloor(helper);
+        List<BlockPos> bases = List.of(new BlockPos(3, FLOOR_Y, 3), new BlockPos(5, FLOOR_Y, 5));
+        for (BlockPos base : bases) {
+            helper.setBlock(base, groundBlock);
+            if (kind == CropKind.parse("cactus")) {
+                helper.setBlock(base.above(), columnBlock);
+                helper.setBlock(base.above().above(), columnBlock);
+                helper.setBlock(base.above().above().above(), columnBlock);
+            } else if (kind == CropKind.parse("sugar_cane")) {
+                helper.setBlock(base.below(), Blocks.STONE);
+                helper.setBlock(base, groundBlock);
+                helper.setBlock(new BlockPos(base.getX() + 1, FLOOR_Y, base.getZ()), Blocks.WATER);
+                setColumn(helper, base, columnBlock, 3);
+            } else {
+                setColumn(helper, base, columnBlock, 3);
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritRun run = launch(helper, spirit, harvestCall(kind, false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "столб " + kind + " обязан собраться, нижний блок остаётся");
+            for (BlockPos base : bases) {
+                helper.assertTrue(helper.getBlockState(base.above()).is(columnBlock),
+                        "нижний блок столба " + kind + " на " + base + " обязан остаться: BREAK_COLUMN не ломает основание, а там "
+                                + helper.getBlockState(base.above()).getBlock());
+                helper.assertTrue(helper.getBlockState(base.above().above()).isAir(),
+                        "верх столба обязан быть убран: второй блок и выше собираются, а там "
+                                + helper.getBlockState(base.above().above()).getBlock());
+                if (kind != CropKind.parse("cactus")) {
+                    helper.assertTrue(helper.getBlockState(base.above().above().above()).isAir(),
+                            "третий блок столба тоже убран");
+                }
+            }
+            int count = GameTestFixtures.countInInventory(spirit.getInventory(),
+                    kind == CropKind.parse("sugar_cane") ? Items.SUGAR_CANE
+                            : kind == CropKind.parse("bamboo") ? Items.BAMBOO : Items.CACTUS);
+            helper.assertTrue(count >= 4, "с двух столбов по 3 блока (оставлен 1) добыча не меньше 4, фактически " + count);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    private static void setColumn(GameTestHelper helper, BlockPos ground, Block block, int height) {
+        for (int i = 1; i <= height; i++) {
+            helper.setBlock(ground.above(i), block);
+        }
+    }
+
     private static void harvestMixed(GameTestHelper helper, CropKind kind) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1283,6 +1538,7 @@ public final class FarmGameTests {
         }
         for (int age = 0; age <= 3; age++) {
             table.add(crop(CropKind.BEETROOT, age));
+            table.add(crop(CropKind.parse("sweet_berry_bush"), age));
         }
         return table;
     }

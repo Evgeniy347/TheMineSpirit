@@ -51,6 +51,12 @@ public final class FarmPlanner {
                 }
                 continue;
             }
+            if (job == FarmJob.HARVEST && tile.crop().isPresent()
+                    && tile.crop().orElseThrow().kind().harvestMethod() == HarvestMethod.BREAK_COLUMN
+                    && view.columnHeight(target) < 2) {
+                ineligible++;
+                continue;
+            }
             List<BlockCoord> stands = FarmStandSpots.of(target, from, cached, view);
             if (stands.isEmpty()) {
                 noStand++;

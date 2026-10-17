@@ -7,6 +7,7 @@ import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmTuning;
+import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.farming.SeedPolicy;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
@@ -37,6 +38,9 @@ public final class FarmSession {
 
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 3;
+    private static final PickupTuning PICK_PICKUP =
+            new PickupTuning(PickupTuning.REFRESH_TICKS, FarmTuning.REACH, PickupTuning.TOTAL_TIMEOUT_TICKS,
+                    PickupTuning.MAX_DELAY_WAIT_TICKS);
     private static final int UNLIMITED = Integer.MAX_VALUE;
     private static final String DONE_KEY = "done";
     private static final String REPLANT_X_KEY = "replantX";
@@ -63,6 +67,7 @@ public final class FarmSession {
     private String failureReason;
     private BlockCoord currentGround;
     private CropKind currentKind;
+    private int columnHeight;
     private DropCollector collector;
 
     private int done;
@@ -305,7 +310,20 @@ public final class FarmSession {
             case PLANT -> plantNow(ground);
             case HARVEST -> {
                 currentKind = tile.crop().orElseThrow().kind();
-                beginBreak(ground.above());
+                if (currentKind.harvestMethod() == HarvestMethod.PICK) {
+                    pickNow(ground.above(), currentKind);
+                } else if (currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+                    int height = view.columnHeight(currentGround);
+                    if (height < 2) {
+                        ineligible++;
+                        finishTarget();
+                    } else {
+                        columnHeight = height;
+                        beginBreak(ground.above(height));
+                    }
+                } else {
+                    beginBreak(ground.above());
+                }
             }
             case BONE_MEAL -> boneMealNow(ground.above());
         }
@@ -362,6 +380,17 @@ public final class FarmSession {
         }
     }
 
+    private void pickNow(BlockPos target, CropKind kind) {
+        recordAction();
+        if (actions.pick(target, kind)) {
+            done++;
+            startCollect();
+        } else {
+            rejected++;
+            finishTarget();
+        }
+    }
+
     private void breakTick() {
         recordAction();
         switch (breaker.tick()) {
@@ -383,6 +412,15 @@ public final class FarmSession {
             state = State.ACT;
             return;
         }
+        if (currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+            BlockPos broken = posOf(currentGround).above(columnHeight);
+            actions.rescueDrops(broken);
+            columnHeight--;
+            if (columnHeight >= 2) {
+                beginBreak(posOf(currentGround).above(columnHeight));
+                return;
+            }
+        }
         done++;
         startCollect();
     }
@@ -390,8 +428,11 @@ public final class FarmSession {
     private void startCollect() {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
-        collector = new DropCollector(spirit, harvested, currentGround, COLLECT_RADIUS, PickupTuning.DEFAULT,
-                OverflowMode.FAIL);
+        boolean column = currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN;
+        PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK || column
+                ? PICK_PICKUP : PickupTuning.DEFAULT;
+        BlockCoord center = column ? coordOf(spirit.blockPosition()) : currentGround;
+        collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
         state = State.COLLECT;
     }
 
@@ -408,7 +449,7 @@ public final class FarmSession {
             return;
         }
         collector = null;
-        if (replant) {
+        if (replant && currentKind.harvestMethod() == HarvestMethod.BREAK) {
             state = State.REPLANT;
         } else {
             finishTarget();
@@ -431,6 +472,7 @@ public final class FarmSession {
     private void finishTarget() {
         currentGround = null;
         currentKind = null;
+        columnHeight = 0;
         state = State.PICK;
     }
 

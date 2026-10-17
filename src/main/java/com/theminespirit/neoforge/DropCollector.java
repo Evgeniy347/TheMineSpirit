@@ -1,12 +1,14 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.inventory.OverflowPolicy;
+import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.DropRef;
 import com.theminespirit.core.pickup.DropRoute;
 import com.theminespirit.core.pickup.OverflowMode;
+import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.neoforge.inventory.OverflowDecider;
 import java.util.ArrayList;
@@ -29,6 +31,8 @@ public final class DropCollector {
         DONE,
         FAILED
     }
+
+    private static final double STAND_ARRIVAL = 0.2;
 
     private final SpiritEntity spirit;
     private final IdFilter items;
@@ -163,23 +167,50 @@ public final class DropCollector {
     }
 
     private State pursue() {
-        if (spirit.getBoundingBox().distanceToSqr(target.position())
-                <= tuning.pickupReach() * tuning.pickupReach()) {
+        if (withinPickupReach()) {
             approach.cancel();
             return pickUp();
         }
         if (!approach.isActive()) {
-            approach.begin(target, tuning.pickupReach());
+            beginApproach();
         }
         Approach.State state = approach.tick();
+        if (withinPickupReach()) {
+            approach.cancel();
+            return pickUp();
+        }
         if (state == Approach.State.MOVING && spirit.getNavigation().isDone() && canStepOnItem()) {
             spirit.getMoveControl().setWantedPosition(target.getX(), spirit.getY(), target.getZ(), 1.0);
         }
         return switch (state) {
             case MOVING -> State.RUNNING;
-            case ARRIVED -> pickUp();
-            case STUCK, TIMEOUT -> giveUpOnTarget();
+            case ARRIVED, STUCK, TIMEOUT -> giveUpOnTarget();
         };
+    }
+
+    private void beginApproach() {
+        BlockCoord access = PickupSpot.accessCell(blockOf(target.blockPosition()), safety);
+        Optional<BlockCoord> stand = PickupSpot.forDrop(access, blockOf(spirit.blockPosition()), safety);
+        if (stand.isPresent() && !stand.get().equals(access)) {
+            BlockCoord spot = stand.get();
+            approach.begin(new Vec3(spot.x() + 0.5, spot.y(), spot.z() + 0.5), STAND_ARRIVAL);
+            return;
+        }
+        approach.begin(target, tuning.pickupReach());
+    }
+
+    private boolean withinPickupReach() {
+        double reach = tuning.pickupReach();
+        if (spirit.getBoundingBox().distanceToSqr(target.position()) <= reach * reach) {
+            return true;
+        }
+        BlockCoord access = PickupSpot.accessCell(blockOf(target.blockPosition()), safety);
+        if (safety.cellAt(access) != Cell.HAZARD) {
+            return false;
+        }
+        AABB cellBox = new AABB(access.x(), access.y(), access.z(),
+                access.x() + 1.0, access.y() + 1.0, access.z() + 1.0);
+        return spirit.getBoundingBox().inflate(reach).intersects(cellBox);
     }
 
     private boolean canStepOnItem() {
@@ -287,5 +318,9 @@ public final class DropCollector {
 
     private static String itemId(ItemStack stack) {
         return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+    }
+
+    private static BlockCoord blockOf(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 }

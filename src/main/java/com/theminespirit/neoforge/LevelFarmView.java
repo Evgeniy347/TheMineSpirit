@@ -6,6 +6,7 @@ import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmView;
 import com.theminespirit.core.farming.Ground;
+import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,6 +40,29 @@ public final class LevelFarmView implements FarmView {
             return new FarmTile(groundOf(groundState), Above.CROP, crop);
         }
         return new FarmTile(groundOf(groundState), aboveOf(aboveState, abovePos), Optional.empty());
+    }
+
+    @Override
+    public int columnHeight(BlockCoord ground) {
+        Objects.requireNonNull(ground, "Координата не может быть null: неизвестно, где считать высоту столба");
+        BlockPos base = new BlockPos(ground.x(), ground.y() + 1, ground.z());
+        BlockState baseState = read(base);
+        Optional<CropKind> kind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(baseState.getBlock()).toString());
+        if (kind.isEmpty() || kind.get().harvestMethod() != HarvestMethod.BREAK_COLUMN) {
+            return 1;
+        }
+        int height = 0;
+        BlockPos cursor = base;
+        while (height < 8) {
+            BlockState state = height == 0 ? baseState : read(cursor);
+            Optional<CropKind> curKind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+            if (curKind.isEmpty() || curKind.get() != kind.get()) {
+                break;
+            }
+            height++;
+            cursor = cursor.above();
+        }
+        return height;
     }
 
     public int reads() {

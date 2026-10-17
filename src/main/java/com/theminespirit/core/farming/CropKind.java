@@ -8,10 +8,15 @@ import java.util.Optional;
 
 public enum CropKind {
     ANY(),
-    WHEAT("minecraft:wheat", 7, "wheat_seeds", "wheat"),
-    CARROT("minecraft:carrots", 7, "carrot", "carrot"),
-    POTATO("minecraft:potatoes", 7, "potato", "potato"),
-    BEETROOT("minecraft:beetroots", 3, "beetroot_seeds", "beetroot");
+    WHEAT("minecraft:wheat", 7, "wheat_seeds", "wheat", HarvestMethod.BREAK),
+    CARROT("minecraft:carrots", 7, "carrot", "carrot", HarvestMethod.BREAK),
+    POTATO("minecraft:potatoes", 7, "potato", "potato", HarvestMethod.BREAK),
+    BEETROOT("minecraft:beetroots", 3, "beetroot_seeds", "beetroot", HarvestMethod.BREAK),
+    SWEET_BERRY_BUSH("minecraft:sweet_berry_bush", 3, "sweet_berries", "sweet_berries",
+            HarvestMethod.PICK),
+    SUGAR_CANE("minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane", HarvestMethod.BREAK_COLUMN),
+    BAMBOO("minecraft:bamboo", 1, "bamboo", "bamboo", HarvestMethod.BREAK_COLUMN),
+    CACTUS("minecraft:cactus", 15, "cactus", "cactus", HarvestMethod.BREAK_COLUMN);
 
     private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())
@@ -26,19 +31,22 @@ public enum CropKind {
     private final int maxAge;
     private final String plantItem;
     private final String produceItem;
+    private final HarvestMethod harvestMethod;
 
     CropKind() {
         this.blockId = null;
         this.maxAge = -1;
         this.plantItem = null;
         this.produceItem = null;
+        this.harvestMethod = HarvestMethod.BREAK;
     }
 
-    CropKind(String blockId, int maxAge, String plantItem, String produceItem) {
+    CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod) {
         this.blockId = blockId;
         this.maxAge = maxAge;
         this.plantItem = plantItem;
         this.produceItem = produceItem;
+        this.harvestMethod = harvestMethod;
     }
 
     public static List<String> names() {
@@ -79,6 +87,14 @@ public enum CropKind {
                     "У any нет урожая: any означает «любой вид», урожай даёт конкретный вид");
         }
         return produceItem;
+    }
+
+    public HarvestMethod harvestMethod() {
+        if (this == ANY) {
+            throw new IllegalArgumentException(
+                    "У any нет способа сбора: any означает «любой вид», а собирают конкретный");
+        }
+        return harvestMethod;
     }
 
     public static CropKind parse(String kind) {
