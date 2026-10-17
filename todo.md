@@ -164,7 +164,7 @@
       остаётся); снимается защита только по просьбе игрока стратегу «убери постройку в координатах …».
       Сделано (deepseek-v4.1-flash, 17.10): разрешённые области в SavedData, REST `/v1/policy/unprotect`
       (POST/GET/DELETE), команда `/spirit unprotect`, предел `protection.json → maxUnprotectVolume`,
-      JUnit и GameTest (14421b21, 709bae18, 047ddb35).
+      JUnit и GameTest (dbfa60e9, 270203d1, 13da9895).
 - [ ] `chop_tree`: дерево на камне без почвы — «не-дерево» (осталось из пункта о политике построек).
 - [ ] Флек `gather_dirtheapofeighteen_collectsallandkeepsfloor` (720 тиков не хватает под нагрузкой; 13.10 при параллельном
       GameTest, также в отчёте 20) — воспроизвести на ПК.
