@@ -26,6 +26,7 @@ public final class IntellectTuning {
     public static final long INVITE_TTL_TICKS = 3600;
     public static final long INVITE_REPEAT_TICKS = 600;
     public static final long INVITE_EXTEND_TICKS = 1200;
+    public static final int INVITE_MAX_EXTENDS = 3;
     public static final long STRATEGIC_TTL_TICKS = 6000;
     public static final double HEAL_FRACTION = 0.35;
     public static final double ARMED_DPS = 6.0;
