@@ -54,8 +54,8 @@ public final class ResultGameTests {
                     "Рубка одного дуба обязана завершить задачу успехом; последнее состояние " + poller.latest()
                             + ", тело " + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
-            helper.assertTrue(result.isTextual() && result.asText().equals("срублено 1 из 1"),
-                    "Итог chop_tree в GET задачи обязан быть строкой «срублено 1 из 1», получено " + result);
+            helper.assertTrue(result.isTextual() && result.asText().equals("срублено деревьев 1 из 1"),
+                    "Итог chop_tree в GET задачи обязан быть строкой «срублено деревьев 1 из 1», получено " + result);
         });
     }
 
@@ -110,8 +110,8 @@ public final class ResultGameTests {
                     && last.json().path("state").asText().equals("succeeded"),
                     "Завершающим кадром обязан быть state succeeded, получено " + last);
             JsonNode result = last.json().path("result");
-            helper.assertTrue(result.isTextual() && result.asText().equals("срублено 1 из 1"),
-                    "Финальный state обязан нести итог «срублено 1 из 1», получено " + result);
+            helper.assertTrue(result.isTextual() && result.asText().equals("срублено деревьев 1 из 1"),
+                    "Финальный state обязан нести итог «срублено деревьев 1 из 1», получено " + result);
         });
     }
 
@@ -306,8 +306,8 @@ public final class ResultGameTests {
                     "Рубка двух деревьев с перезагрузкой обязана завершиться успехом; последнее состояние "
                             + poller.latest() + ", тело " + poller.lastJson());
             String result = poller.lastJson().path("result").asText("");
-            helper.assertTrue(result.contains("срублено 2 из 2"),
-                    "Итог обязан называть оба дерева «срублено 2 из 2», получено " + result);
+            helper.assertTrue(result.contains("срублено деревьев 2 из 2"),
+                    "Итог обязан называть оба дерева «срублено деревьев 2 из 2», получено " + result);
             helper.assertTrue(result.contains("оставлено"),
                     "Итог обязан сохранить счётчик недостижимых брёвен первого дерева, получено " + result);
             helper.assertTrue(countLogs(helper) == 2,

@@ -134,7 +134,8 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     public String summary() {
-        StringBuilder text = new StringBuilder("срублено ").append(chopped).append(" из ").append(params.count());
+        StringBuilder text = new StringBuilder("срублено деревьев ").append(chopped).append(" из ")
+                .append(params.count());
         if (standingLogs > 0) {
             text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
         }
@@ -251,7 +252,7 @@ public final class ChopTreeScript implements ScriptInstance {
         tree = null;
         chopping = false;
         if (consecutiveUnreachable > ChopTuning.MAX_REJECTED_TREES) {
-            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " недоступных деревьев подряд: срублено "
+            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " недоступных деревьев подряд: срублено деревьев "
                     + chopped + " из " + params.count() + ", недоступных деревьев " + unreachable);
         }
         return ScriptStatus.RUNNING;
@@ -266,7 +267,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus outOfTrees() {
-        return fail("срублено " + chopped + " из " + params.count() + ": деревья породы " + speciesText()
+        return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы " + speciesText()
                 + " в радиусе " + params.radius() + " закончились (отвергнуто не-деревьев: " + rejected
                 + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")");
     }

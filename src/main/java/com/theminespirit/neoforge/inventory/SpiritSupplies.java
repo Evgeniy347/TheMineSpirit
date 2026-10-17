@@ -54,7 +54,7 @@ public final class SpiritSupplies implements AcquireSupplies {
     public int inInventory(String item) {
         Objects.requireNonNull(item, "Предмет не может быть null: по нему считается инвентарь духа");
         IdFilter filter = IdFilter.of(List.of(item));
-        return count(spirit.getInventory(), filter);
+        return count(spirit.getInventory(), filter) + mainHandCount(filter);
     }
 
     @Override
@@ -66,7 +66,16 @@ public final class SpiritSupplies implements AcquireSupplies {
                 totals.merge(ItemIds.of(stack.getItem()), stack.getCount(), Integer::sum);
             }
         }
+        ItemStack hand = spirit.getMainHandItem();
+        if (!hand.isEmpty()) {
+            totals.merge(ItemIds.of(hand.getItem()), hand.getCount(), Integer::sum);
+        }
         return totals;
+    }
+
+    private int mainHandCount(IdFilter filter) {
+        ItemStack hand = spirit.getMainHandItem();
+        return !hand.isEmpty() && filter.matches(ItemIds.of(hand.getItem())) ? hand.getCount() : 0;
     }
 
     @Override

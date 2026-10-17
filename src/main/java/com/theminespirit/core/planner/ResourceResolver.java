@@ -66,11 +66,15 @@ public final class ResourceResolver {
     }
 
     private static final class Resolution {
+        private static final List<String> PICKAXES = List.of(
+                "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
+
         private final ResourceKnowledge knowledge;
         private final Map<String, Integer> remaining;
         private final Set<String> presentStations;
         private final Set<String> path = new HashSet<>();
         private final Set<String> plannedStations = new HashSet<>();
+        private final Set<String> plannedTools = new HashSet<>();
 
         private Resolution(ResourceKnowledge knowledge, Map<String, Integer> remaining, Set<String> presentStations) {
             this.knowledge = knowledge;
@@ -92,13 +96,13 @@ public final class ResourceResolver {
                     return craftPlan(item, count, topLevel);
                 }
                 if (dropsFromAnotherBlock(item)) {
-                    return batched("gather", item, count, topLevel);
+                    return gatherPlan(item, count, topLevel);
                 }
                 if (knowledge.isSmeltable(item)) {
                     return smeltPlan(item, count, topLevel);
                 }
                 if (knowledge.isGatherable(item)) {
-                    return batched("gather", item, count, topLevel);
+                    return gatherPlan(item, count, topLevel);
                 }
                 throw new UnplannableGoalException(item, "Для предмета '" + item
                         + "' не найден способ добычи: добавьте его в знания как gatherable, smeltable или craftable");
@@ -109,6 +113,40 @@ public final class ResourceResolver {
 
         private boolean dropsFromAnotherBlock(String item) {
             return !knowledge.gatherBlockFor(item).equals(item);
+        }
+
+        private TaskNode gatherPlan(String item, int count, boolean topLevel) {
+            Optional<TaskNode> tool = toolStep(knowledge.gatherBlockFor(item));
+            TaskNode gather = batched("gather", item, count, topLevel);
+            return tool.map(step -> (TaskNode) new SequenceNode(List.of(step, gather))).orElse(gather);
+        }
+
+        private Optional<TaskNode> toolStep(String block) {
+            Optional<String> tool = knowledge.toolForBlock(block);
+            if (tool.isEmpty() || hasInInventory(tool.get()) || !plannedTools.add(normalize(tool.get()))) {
+                return Optional.empty();
+            }
+            return Optional.of(resolve(tool.get(), 1, false));
+        }
+
+        private boolean hasInInventory(String item) {
+            List<String> acceptable = acceptableTools(item);
+            for (Map.Entry<String, Integer> entry : remaining.entrySet()) {
+                if (entry.getValue() > 0 && acceptable.contains(normalize(entry.getKey()))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static List<String> acceptableTools(String item) {
+            String wanted = normalize(item);
+            int tier = PICKAXES.indexOf(wanted);
+            return tier < 0 ? List.of(wanted) : PICKAXES.subList(tier, PICKAXES.size());
+        }
+
+        private static String normalize(String id) {
+            return id.startsWith("minecraft:") ? id.substring("minecraft:".length()) : id;
         }
 
         private TaskNode batched(String script, String item, int count, boolean topLevel) {
