@@ -589,6 +589,7 @@ class PrepareDataHomeTests(unittest.TestCase):
             con.execute(ACCOUNT_STATE_DDL)
             con.execute(MIGRATION_DDL)
             con.execute(MESSAGE_DDL)
+            con.execute("create index message_text_idx on message(text)")
             con.execute("insert into account values (?,?,?,?,?,?,?,?)",
                         ("user_1", "u@example.com", "https://opencode.ai/", "st_access", "rt_refresh", 1790, 1, 1))
             con.execute("insert into account_state values (?,?,?)", (1, "user_1", "org_1"))
@@ -617,6 +618,9 @@ class PrepareDataHomeTests(unittest.TestCase):
         self.assertEqual(self.read_rows(source, "account_state"), self.read_rows(local, "account_state"))
         self.assertEqual(self.read_rows(source, "migration"), self.read_rows(local, "migration"),
                          "миграции переносятся, иначе opencode повторно накатит схему")
+        with sqlite3.connect(local) as con:
+            indexes = [row[0] for row in con.execute("select name from sqlite_master where type='index'")]
+        self.assertIn("message_text_idx", indexes, "индексы схемы переносятся вместе с таблицами")
         self.assertEqual([], self.read_rows(local, "message"),
                          "сессии и сообщения общего каталога не копируются в изолированный")
 
