@@ -1,6 +1,9 @@
 package com.theminespirit.core.crafting;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public final class Stations {
     public static final String CRAFTING_TABLE = "crafting_table";
@@ -30,9 +33,8 @@ public final class Stations {
                 || normalized.equals("cooked_salmon");
     }
 
-    public static Optional<String> preferredSmeltingStation(String product, java.util.Collection<String> available) {
-        java.util.Set<String> set = available == null ? java.util.Set.of()
-                : new java.util.HashSet<>(available);
+    public static Optional<String> preferredSmeltingStation(String product, Collection<String> available) {
+        Set<String> set = available == null ? Set.of() : new HashSet<>(available);
         boolean food = isFoodProduct(product);
         if (food) {
             if (set.contains(SMOKER)) {
