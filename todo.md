@@ -134,8 +134,12 @@
 - [x] GameTest: `prepareGameTestServerRun` удаляет `run/world` перед каждым прогоном (ревью 11Б): мир переживает прогоны,
       духи с восстановленными задачами пишут «провалил задачу», остаются блоки над и под площадками
       (runGameTestServer.doFirst удаляет world, 23caeac3, 12.10; отмечено 17.10).
-- [ ] Флеки отхода в лагерь/домой под полным GameTest и нагрузкой (17.10: 3 из 4 полных прогонов на сервере —
+- [x] Флеки отхода в лагерь/домой под полным GameTest и нагрузкой (17.10: 3 из 4 полных прогонов на сервере —
       `retreat_homenearerthancamp_runshome` ×2, `retreat_campnearerthanhome_runstocamp`; пачки camp_retreat_* отдельно — зелёные).
+      Причина: лагерь без поля дома делает духа поселением координатора — тот ставит `GUARD_AREA`, интеллект выдаёт
+      работу (`chop_tree`), а снятие приказа координатором стирает директиву теста. Пачки camp_retreat_* изолированы
+      от координатора и доски (`@BeforeBatch`/`@AfterBatch`); проверки отхода не тронуты. Прогоны: пачки 3×,
+      полный 2× — зелено (deepseek-v4.1-flash, 17.10).
 - [ ] `chop_tree`: валка высоких деревьев выше +5 ждёт `pillar_up` (тест разбора 60 брёвен — двусторонняя граница, mimo 16.10).
 - [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
