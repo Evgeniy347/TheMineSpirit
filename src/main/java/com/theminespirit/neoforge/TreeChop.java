@@ -122,11 +122,9 @@ final class TreeChop {
         breaking = false;
         movedCloser = false;
         BlockPos stand = standingCellBesideTrunk(target);
-        if (stand == null) {
-            approach.begin(Vec3.atCenterOf(toPos(target.base())), ChopTuning.STAND_DISTANCE);
-        } else {
-            approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CLOSE_DISTANCE);
-        }
+        Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base()))
+                : Vec3.atBottomCenterOf(stand);
+        approach.begin(approachPoint, ChopTuning.STAND_DISTANCE);
         phase = Phase.APPROACH;
     }
 

@@ -558,6 +558,9 @@ public final class ChopTreeGameTests {
             helper.assertTrue(logsInInventory + logsOnGround == 9,
                     "все 9 брёвен обязаны сохраниться в инвентаре или на земле: в инвентаре " + logsInInventory
                             + ", на земле " + logsOnGround);
+            helper.assertTrue(logsOnGround == 0,
+                    "дроп со столба и верха обязан быть подобран: на земле осталось " + logsOnGround
+                            + "; несобранные брёвна означают, что дух бросил верх дерева");
             int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
             helper.assertTrue(logsInWorld == 0,
                     "в мире не должно остаться ни одного бревна дерева, осталось " + logsInWorld);
