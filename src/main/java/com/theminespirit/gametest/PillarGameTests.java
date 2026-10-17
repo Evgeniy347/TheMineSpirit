@@ -135,7 +135,7 @@ public final class PillarGameTests {
     // Потолок в двух клетках над ногами проходит проверку клетки и головы, но не даёт духу
     // подпрыгнуть: раньше каждый тик на земле сбрасывал счётчик застоя, и pillar_up висел
     // в RUNNING вечно (флак chop_tree_tall 17.10). Счётчик обязан идти и на земле.
-    @GameTest(template = TEMPLATE, batch = "pillar_up_blocked_jump", timeoutTicks = 200)
+    @GameTest(template = TEMPLATE, batch = "pillar_up_blocked_jump", timeoutTicks = 400)
     public static void pillarUp_CeilingAboveHead_FailsInsteadOfRunningForever(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 2, SPIRIT_START.getZ(), Blocks.STONE);

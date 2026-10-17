@@ -19,7 +19,9 @@ final class PillarColumn {
     }
 
     private static final double PILLAR_CLEARANCE = 1.0;
-    private static final int MAX_STALL_TICKS = 60;
+    // Запас на настоящий застой, а не на цикл прыжка: дух может сорваться со столба и повторить
+    // подъём; 60 тиков обрывали нормальную стройку пятого блока (флак chop_tree_tall 17.10).
+    private static final int MAX_STALL_TICKS = 200;
 
     private final SpiritEntity spirit;
     private final Level level;
