@@ -11,11 +11,13 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
+import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.EvergreenRules;
 import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.ResourceGate;
+import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -27,6 +29,8 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -72,6 +76,7 @@ public final class BoardService {
     private long lastRebuild = -1;
     private int rebuilds;
     private int claims;
+    private int retains;
     private long stockBlockReads;
     private long stockContainers;
 
@@ -119,6 +124,16 @@ public final class BoardService {
         return claims;
     }
 
+    /** Сколько раз пересборка проверяла актуальность: один вызов retain на пересборку, не на тик. */
+    public int retains() {
+        return retains;
+    }
+
+    /** Сканов стада: тест масштаба держит число в периоде herdScanIntervalTicks. */
+    public int herdScans() {
+        return sources.herdScans();
+    }
+
     /** Блоков мира, прочитанных снимком запасов: тест масштаба держит число в бюджете. */
     public long stockBlockReads() {
         return stockBlockReads;
@@ -153,6 +168,7 @@ public final class BoardService {
         liveCauses.addAll(liveHerdCauses(level));
         liveCauses.addAll(liveDropCauses(level));
         board.retain(liveCauses, now);
+        retains++;
         issue(level, spirits, now);
         rebuilds++;
         lastRebuild = now;
@@ -497,7 +513,9 @@ public final class BoardService {
             }
             TaskNode plan;
             try {
-                plan = TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
+                plan = TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
+                        ? new ScriptCall("eat", Map.of())
+                        : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
             } catch (RuntimeException failure) {
                 LOGGER.error("Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(),
                         failure.getMessage());
@@ -570,7 +588,22 @@ public final class BoardService {
         // Занятость — только RUNNING (идиома проекта, SpiritBotGateway): SUCCEEDED/FAILED
         // после закрытия задания духа не держат, иначе доска выдала бы духу одно задание навсегда.
         return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit()
-                && board.availableTo(spirit.getUUID(), ticket.boardCase(), now);
+                && board.availableTo(spirit.getUUID(), ticket.boardCase(), now)
+                && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
+    }
+
+    /**
+     * Снимок нужды в еде: постоянное задание берёт только тот дух, которому не хватает
+     * сытости или здоровья. Мир читается в адаптере, решение остаётся в ядре.
+     */
+    private static EatNeed eatNeed(SpiritEntity spirit) {
+        return new EatNeed(spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()),
+                SpiritHunger.MAX_FOOD, (int) Math.ceil(spirit.getMaxHealth()));
+    }
+
+    private static SpiritView viewOf(SpiritEntity spirit) {
+        return new SpiritView(spirit.tactics().wantsControl(), false,
+                spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
     }
 
     private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held,

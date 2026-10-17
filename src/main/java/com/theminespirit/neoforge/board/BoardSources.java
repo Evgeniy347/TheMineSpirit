@@ -16,12 +16,17 @@ import net.minecraft.server.level.ServerLevel;
 public final class BoardSources {
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
+    private int herdScans;
 
     private BoardSources() {
     }
 
     public static BoardSources create() {
         return new BoardSources();
+    }
+
+    public int herdScans() {
+        return herdScans;
     }
 
     public Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
@@ -31,13 +36,16 @@ public final class BoardSources {
         }
         Set<String> live = new HashSet<>();
         FirstStepsRunner.tick(level, service, spirits, stock, now);
+        EvergreenWatch.tick(level, service, spirits, now);
         PenBuild.tick(level, service, spirits, now);
+        MineLevels.tick(level, service, spirits, now);
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
             lastEnchantCheck = now;
             EnchantRoomWatch.tick(level, service, spirits, stock, now);
         }
         if (now - lastHerdScan >= BoardTuning.herdScanIntervalTicks()) {
             lastHerdScan = now;
+            herdScans++;
             HerdWatch.tick(level, service, spirits, now);
         }
         live.addAll(TransferWatch.liveCauses(service));

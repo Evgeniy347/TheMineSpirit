@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.board.CraterWatch;
 import com.theminespirit.neoforge.board.FenceWatch;
 import com.theminespirit.neoforge.coordinator.CoordinatorLifecycle;
 import com.theminespirit.neoforge.crater.CraterEvents;
+import com.theminespirit.neoforge.demo.DemoLifecycle;
 import com.theminespirit.neoforge.rest.RestConfig;
 import com.theminespirit.neoforge.rest.RestLifecycle;
 import net.neoforged.bus.api.IEventBus;
@@ -42,6 +43,7 @@ public final class TheMineSpirit {
         RestLifecycle.register(NeoForge.EVENT_BUS);
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);
         BoardLifecycle.register(NeoForge.EVENT_BUS);
+        DemoLifecycle.register(NeoForge.EVENT_BUS);
         CraterWatch.register(NeoForge.EVENT_BUS);
         FenceWatch.register(NeoForge.EVENT_BUS);
         MobTargetEvents.register(NeoForge.EVENT_BUS);

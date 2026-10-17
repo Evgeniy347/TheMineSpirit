@@ -80,6 +80,25 @@ class BoardJournalTests {
     }
 
     @Test
+    void flush_Counters_MatchEnqueuedAndWritten() {
+        BoardJournal journal = new BoardJournal(log());
+        for (int index = 0; index < 5; index++) {
+            journal.enqueue(entry(BoardLog.Event.ASSIGNED, "t" + index, BoardCase.SUPPLY_SITE, 1));
+        }
+
+        assertEquals(5, journal.enqueued(),
+                "Счётчик поставленных записей обязан равняться числу переходов: тест масштаба "
+                        + "сверяет по нему строки журнала с переходами статусов");
+        assertEquals(0, journal.written(), "До сброса на диске ничего нет, а очередь держит записи");
+        journal.flush(2);
+        assertEquals(2, journal.written(),
+                "Счётчик записанных строк обязан расти на бюджет сброса: каждая строка — один переход");
+        journal.flushAll();
+        assertEquals(5, journal.written(),
+                "После полного сброса записаны все поставленные строки: журнал не теряет переходы");
+    }
+
+    @Test
     void last_Limit_ReturnsNewestFirst() {
         BoardJournal journal = new BoardJournal(log());
         journal.enqueue(entry(BoardLog.Event.ASSIGNED, "old", BoardCase.SUPPLY_SITE, 1));

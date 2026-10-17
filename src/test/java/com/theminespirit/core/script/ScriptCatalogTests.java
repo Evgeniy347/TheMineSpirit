@@ -345,6 +345,19 @@ class ScriptCatalogTests {
     }
 
     @Test
+    void defaultCatalog_ClearArea_DemolishOptionalFalse() {
+        ScriptSpec clearArea = CoreScripts.defaultCatalog().find("clear_area").orElseThrow();
+        ParamSpec demolish = param(clearArea, "demolish");
+
+        assertEquals(ParamType.BOOL, demolish.type(),
+                "demolish в clear_area — флаг: перенос сносит свою постройку, обычный разбор — нет");
+        assertEquals(false, demolish.required(),
+                "demolish необязателен: старые планы clear_area без флага остаются валидными");
+        assertEquals(false, demolish.defaultValue(),
+                "По умолчанию demolish=false: защита от сноса чужого не должна отключаться молча");
+    }
+
+    @Test
     void defaultCatalog_MineVein_OreEnumAndDefaults() {
         ScriptSpec mineVein = CoreScripts.defaultCatalog().find("mine_vein").orElseThrow();
 

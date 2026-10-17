@@ -299,7 +299,7 @@ public final class TicketPlans {
         }
         return new SequenceNode(List.of(
                 gotoPoint(target.from()),
-                clearBox(target.from(), RELOCATE_CLEAR_RADIUS),
+                demolishBox(target.from(), RELOCATE_CLEAR_RADIUS),
                 gotoPoint(target.to()),
                 new ScriptCall("build_schematic", Map.of("file", target.schemeFile(),
                         "x", target.to().x(), "y", target.to().y(), "z", target.to().z()))));
@@ -357,14 +357,16 @@ public final class TicketPlans {
                 "z", point.z()));
     }
 
-    private static ScriptCall clearBox(BlockCoord center, int radius) {
+
+    private static ScriptCall demolishBox(BlockCoord center, int radius) {
         return new ScriptCall("clear_area", Map.of(
                 "x1", center.x() - radius,
                 "y1", center.y(),
                 "z1", center.z() - radius,
                 "x2", center.x() + radius,
                 "y2", center.y() + 2,
-                "z2", center.z() + radius));
+                "z2", center.z() + radius,
+                "demolish", true));
     }
 
     private static TaskNode sequence(TaskNode... steps) {

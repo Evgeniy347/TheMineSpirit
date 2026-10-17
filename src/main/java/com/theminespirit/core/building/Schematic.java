@@ -22,10 +22,17 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
     }
 
     public List<PlacedEntry> entries(BlockCoord origin) {
+        return entries(origin, BuildRotation.NONE);
+    }
+
+    public List<PlacedEntry> entries(BlockCoord origin, BuildRotation rotation) {
         Objects.requireNonNull(origin, "Якорь схемы не может быть null: без него неизвестно, куда ставить");
+        Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него блок встанет не туда");
         List<PlacedEntry> placed = new ArrayList<>(blocks.size());
         for (Entry entry : blocks) {
-            placed.add(new PlacedEntry(new BlockCoord(origin.x() + entry.dx(), origin.y() + entry.dy(), origin.z() + entry.dz()),
+            BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
+            placed.add(new PlacedEntry(
+                    new BlockCoord(origin.x() + cell.x(), origin.y() + entry.dy(), origin.z() + cell.z()),
                     entry.block()));
         }
         placed.sort(Comparator.comparingInt((PlacedEntry e) -> e.pos().y()).thenComparingInt(e -> e.pos().x())
