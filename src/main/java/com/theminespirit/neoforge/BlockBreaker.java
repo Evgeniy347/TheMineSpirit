@@ -72,10 +72,14 @@ public final class BlockBreaker {
     }
 
     public Begin begin(BlockPos target) {
-        return begin(target, false);
+        return begin(target, false, false);
     }
 
     public Begin begin(BlockPos target, boolean tended) {
+        return begin(target, tended, false);
+    }
+
+    public Begin begin(BlockPos target, boolean tended, boolean demolish) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
@@ -96,6 +100,7 @@ public final class BlockBreaker {
                     + distance + "): сначала подойти");
         }
         BlockProtection.Decision decision = tended ? spirit.protectionGate().checkHarvest(target, targetState)
+                : demolish ? spirit.protectionGate().checkDemolish(target, targetState)
                 : spirit.protectionGate().checkBreak(target, targetState);
         if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());

@@ -65,8 +65,13 @@ public class ClearAreaSession {
     private int entityQueries;
     private int blockReads;
     private final BuildResult tally = new BuildResult();
+    private final boolean demolish;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
+        this(spirit, box, false);
+    }
+
+    public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.box = box;
@@ -75,6 +80,7 @@ public class ClearAreaSession {
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
+        this.demolish = demolish;
     }
 
     public Outcome tick() {
@@ -219,7 +225,7 @@ public class ClearAreaSession {
             state = State.PICK;
             return;
         }
-        BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget));
+        BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget), false, demolish);
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
             tally.skipped();
