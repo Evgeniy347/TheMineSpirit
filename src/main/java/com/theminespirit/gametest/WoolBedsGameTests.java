@@ -10,6 +10,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -128,16 +129,21 @@ public final class WoolBedsGameTests {
         helper.assertTrue(watch.live(), "четыре овцы — гейт шерсти открыт");
         helper.assertTrue(active(service, BoardCase.SHEAR_SHEEP),
                 "при четырёх овцах обязана появиться стрижка загона");
-        helper.assertTrue(active(service, BoardCase.HUNT_WILD_SHEEP),
-                "при четырёх овцах обязана появиться охота на диких овец");
         helper.assertTrue(active(service, BoardCase.WEAVE_WOOL),
                 "нитей восемь — обязана появиться шерсть из нитей");
         helper.assertTrue(active(service, BoardCase.CRAFT_BED),
                 "три шерсти и три доски — обязана появиться кровать");
         helper.assertTrue(!active(service, BoardCase.CRAFT_SHEARS),
                 "ножницы уже есть — второй раз их не куют");
+        helper.assertTrue(!active(service, BoardCase.HUNT_WILD_SHEEP),
+                "один дух наружу не выходит: охота на диких овец ждёт группы");
+
+        SpiritEntity partner = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 2));
+        watch.tick(level, service, List.of(spirit, partner), stock, now + 400);
+        helper.assertTrue(active(service, BoardCase.HUNT_WILD_SHEEP),
+                "два духа — охота на диких овец выходит группой");
         clearWoolTasks(service, level);
-        closePen(service, spirit, home, now + 400, level);
+        closePen(service, spirit, home, now + 600, level);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

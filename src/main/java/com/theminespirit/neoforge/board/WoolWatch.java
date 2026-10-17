@@ -9,6 +9,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.intellect.OutsideGate;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.phys.Vec3;
@@ -63,7 +65,7 @@ public final class WoolWatch {
         BlockCoord home = homeOf(spirits);
         ensureShears(service, stock, home, now);
         ensureShear(level, service, stock, home, now);
-        ensureHunt(level, service, home, now);
+        ensureHunt(level, service, spirits, home, now);
         ensureString(service, stock, home, now);
         ensureBed(service, stock, spirits.size(), home, now);
     }
@@ -94,9 +96,13 @@ public final class WoolWatch {
                 TicketTarget.at(home).withCount(sheep));
     }
 
-    private void ensureHunt(ServerLevel level, BoardService service, BlockCoord home, long now) {
+    private void ensureHunt(ServerLevel level, BoardService service, List<SpiritEntity> spirits, BlockCoord home,
+            long now) {
         long day = now / DAY_TICKS;
-        if (lastHuntDay == day || active(service, HUNT_ID)) {
+        if (active(service, HUNT_ID) || !outingAllowed(level, spirits, home)) {
+            return;
+        }
+        if (lastHuntDay == day) {
             return;
         }
         long wild = wildSheepNear(level, service, home);
@@ -167,6 +173,27 @@ public final class WoolWatch {
             }
         }
         return count;
+    }
+
+    private static boolean outingAllowed(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {
+        OutsideGate gate = OutsideGate.withDefaults();
+        int party = 0;
+        for (SpiritEntity spirit : spirits) {
+            if (!spirit.isRemoved() && spirit.isAlive()) {
+                party++;
+            }
+        }
+        boolean playerAccompanied = false;
+        for (ServerPlayer player : level.players()) {
+            double dx = player.getX() - home.x();
+            double dy = player.getY() - home.y();
+            double dz = player.getZ() - home.z();
+            if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= gate.escortRadius()) {
+                playerAccompanied = true;
+                break;
+            }
+        }
+        return gate.admitExternal(party, playerAccompanied) instanceof OutsideGate.Allowed;
     }
 
     private static long wildSheepNear(ServerLevel level, BoardService service, BlockCoord home) {
