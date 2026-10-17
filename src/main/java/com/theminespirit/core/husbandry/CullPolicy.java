@@ -23,6 +23,9 @@ public final class CullPolicy {
             throw new IllegalArgumentException("Держать меньше " + MIN_KEEP + " голов нельзя: пара нужна для "
                     + "разведения, стадо выродится до нуля");
         }
+        if (species == Species.SHEEP) {
+            return new Refused("овец загона не убиваем: шерсть — возобновляемый ресурс");
+        }
         if (!sword.atLeast(SwordTier.IRON)) {
             return new Refused("забивать можно железным мечом и выше, сейчас: " + sword);
         }
