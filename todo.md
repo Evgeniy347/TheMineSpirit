@@ -167,6 +167,8 @@
       гасить и сервер GameTest своего worktree (по рабочей папке build/gametest-run). Сделано (63e70f02 fix, 0f853cfb test,
       17.10): java своего worktree по cwd build/gametest-run, TERM→KILL, замок снимается после сервера, предел 600→1500 с;
       проверка check-test-runner.sh.
+- [ ] Флек `scale_twentyspiritssixtickets_workperthousandticksstayswithinlimits` (36В, 17.10): в полном прогоне «выдач 0»,
+      пачки board_v2_scale/board_scale отдельно — зелёные; проверить после слияния изоляции GameTest (@SettlementSystems).
 - [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
       причина посадки в тёмную клетку — гипотеза (свет пересчитывается отдельно), исправлено условием старта.
