@@ -36,6 +36,14 @@ esac
 GAMETEST_WAIT="${THEMINESPIRIT_GAMETEST_WAIT:-1800}"
 GAMETEST_LOCK_DIR="$GAMETEST_LOCK.d"
 GAMETEST_TOKEN=""
+# Протухание mkdir-замка — по возрасту пульса, а не по PID: в Git Bash PID чужого сеанса MSYS
+# может выглядеть мёртвым для kill -0, и живой замок снимался как протухший (токен перезаписывался,
+# а вышедший первым владелец удалял уже чужой маркер). Владелец обновляет heartbeat раз в
+# GAMETEST_BEAT_INTERVAL; маркер старого test.sh (pid без токена и пульса) стареет по mtime.
+GAMETEST_BEAT_INTERVAL="${THEMINESPIRIT_GAMETEST_BEAT_SECONDS:-10}"
+GAMETEST_STALE="${THEMINESPIRIT_GAMETEST_STALE_SECONDS:-120}"
+GAMETEST_LEGACY_STALE="${THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS:-900}"
+LOCK_BEAT_PID=""
 
 usage() {
     cat <<'EOF'
@@ -63,6 +71,9 @@ usage() {
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 600)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
+  THEMINESPIRIT_GAMETEST_STALE_SECONDS  возраст пульса, после которого mkdir-замок протух (120)
+  THEMINESPIRIT_GAMETEST_BEAT_SECONDS   период обновления пульса владельцем (10)
+  THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS  порог для маркера старого test.sh без пульса (900)
   THEMINESPIRIT_GAMETEST_NOFLOCK=1   принудительно использовать mkdir-замок (для Git Bash на Windows)
 EOF
     exit 2
@@ -111,29 +122,89 @@ noflock() {
     return 0
 }
 
+file_mtime() {
+    stat -c %Y "$1" 2>/dev/null || echo 0
+}
+
+stop_lock_beat() {
+    if [ -n "$LOCK_BEAT_PID" ]; then
+        kill "$LOCK_BEAT_PID" 2>/dev/null || true
+        LOCK_BEAT_PID=""
+    fi
+}
+
+# Пульс замка: пишется только пока в маркере наш токен (перехваченный чужой маркер не трогаем).
+start_lock_beat() {
+    (
+        while kill -0 "$$" 2>/dev/null \
+                && [ "$(cat "$GAMETEST_LOCK_DIR/token" 2>/dev/null)" = "$GAMETEST_TOKEN" ]; do
+            printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat.tmp" 2>/dev/null \
+                && mv -f "$GAMETEST_LOCK_DIR/heartbeat.tmp" "$GAMETEST_LOCK_DIR/heartbeat" 2>/dev/null
+            sleep "$GAMETEST_BEAT_INTERVAL"
+        done
+    ) >/dev/null 2>&1 &
+    LOCK_BEAT_PID=$!
+}
+
 release_dir_lock() {
-    rm -rf "$GAMETEST_LOCK_DIR"
+    stop_lock_beat
+    [ -n "${GAMETEST_TOKEN:-}" ] || return 0
+    local owner
+    owner=$(cat "$GAMETEST_LOCK_DIR/token" 2>/dev/null || echo "")
+    if [ "$owner" = "$GAMETEST_TOKEN" ]; then
+        rm -rf "$GAMETEST_LOCK_DIR"
+    elif [ -z "$owner" ] && [ "$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null)" = "$$" ]; then
+        # Наш pid без токена (запись токена сорвалась) — маркер всё равно наш.
+        rm -rf "$GAMETEST_LOCK_DIR"
+    elif [ -n "$owner" ]; then
+        echo "gametest: замок уже не наш (чужой токен), не снимаю $GAMETEST_LOCK_DIR." >&2
+    fi
 }
 
 acquire_dir_lock() {
-    local waited=0 holder stale
+    local waited=0 holder_pid holder_token stale beat age limit
     while true; do
         if mkdir "$GAMETEST_LOCK_DIR" 2>/dev/null; then
             echo $$ >"$GAMETEST_LOCK_DIR/pid"
             echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK_DIR/token"
+            printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat"
+            export GAMETEST_LOCK GAMETEST_TOKEN
+            start_lock_beat
             # Один trap на выход: снять замок И остановить монитор. Отдельный trap release_dir_lock
             # перезаписал бы stop_monitor, и фоновый монитор остался бы жив (на Windows без setsid).
             trap 'release_dir_lock; stop_monitor' EXIT INT TERM
-            export GAMETEST_LOCK GAMETEST_TOKEN
             return 0
         fi
-        holder=$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null || echo "")
-        if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+        holder_pid=$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null || echo "")
+        holder_token=$(cat "$GAMETEST_LOCK_DIR/token" 2>/dev/null || echo "")
+        if [ -f "$GAMETEST_LOCK_DIR/heartbeat" ]; then
+            beat=$(tr -dc '0-9' <"$GAMETEST_LOCK_DIR/heartbeat" 2>/dev/null)
+            [ -n "$beat" ] || beat=$(file_mtime "$GAMETEST_LOCK_DIR/heartbeat")
+            limit="$GAMETEST_STALE"
+        else
+            # Маркер старого test.sh: pid без токена и пульса — возраст по mtime pid/каталога.
+            beat=$(file_mtime "$GAMETEST_LOCK_DIR/pid")
+            [ "$beat" -gt 0 ] 2>/dev/null || beat=$(file_mtime "$GAMETEST_LOCK_DIR")
+            limit="$GAMETEST_LEGACY_STALE"
+        fi
+        age=$(( $(date +%s) - beat ))
+        [ "$age" -lt 0 ] && age=0
+        if [ "$age" -gt "$limit" ]; then
             stale="$GAMETEST_LOCK_DIR.stale.$$"
             if mv "$GAMETEST_LOCK_DIR" "$stale" 2>/dev/null; then
-                echo "gametest: снимаю протухший замок $GAMETEST_LOCK_DIR (процесс $holder мёртв)." >&2
-                rm -rf "$stale"
-                continue
+                # Снимаем, только если переименовали именно тот маркер, который судили:
+                # иначе пока читали, замок перехватил другой — возвращаем на место.
+                if [ "$(cat "$stale/token" 2>/dev/null || echo "")" = "$holder_token" ] \
+                        && [ "$(cat "$stale/pid" 2>/dev/null || echo "")" = "$holder_pid" ]; then
+                    echo "gametest: снимаю протухший замок $GAMETEST_LOCK_DIR (пульс не обновлялся ${age} с)." >&2
+                    rm -rf "$stale"
+                    continue
+                fi
+                if [ ! -e "$GAMETEST_LOCK_DIR" ]; then
+                    mv "$stale" "$GAMETEST_LOCK_DIR" 2>/dev/null || rm -rf "$stale"
+                else
+                    rm -rf "$stale"
+                fi
             fi
         fi
         [ "$waited" -ge "$GAMETEST_WAIT" ] && return 75
@@ -228,7 +299,9 @@ HEARTBEAT_PID=""
 start_heartbeat() {
     mkdir -p "$(dirname "$HEARTBEAT_FILE")"
     touch "$HEARTBEAT_FILE"
-    ( while kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; done ) &
+    # stdout/stderr — в /dev/null: иначе фоновый sleep наследует пайп вызывающего
+    # (out=$(scripts/test.sh …)) и держит его открытым до конца сна, задерживая проверки.
+    ( while kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; done ) >/dev/null 2>&1 &
     HEARTBEAT_PID=$!
 }
 
