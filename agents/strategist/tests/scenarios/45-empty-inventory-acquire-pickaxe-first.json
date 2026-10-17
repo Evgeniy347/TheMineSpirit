@@ -1,0 +1,83 @@
+{
+ "name": "45-empty-inventory-acquire-pickaxe-first",
+ "description": "пустой инвентарь: mine_vein без кирки отклонён, повтор с acquire деревянной кирки уходит; план начинается с инструмента, а не с добычи",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "script": [
+   {
+    "json": {
+     "reason": "Рядом руда, сразу начну добывать.",
+     "goal": "добыть железо",
+     "plan": {
+      "type": "script",
+      "script": "mine_vein",
+      "params": {
+       "ore": "iron",
+       "count": 3
+      }
+     }
+    }
+   },
+   {
+    "json": {
+     "reason": "Кирки нет: сначала добуду деревянную.",
+     "goal": "сделать деревянную кирку",
+     "plan": {
+      "type": "script",
+      "script": "acquire",
+      "params": {
+       "item": "wooden_pickaxe",
+       "count": 1
+      }
+     }
+    }
+   }
+  ]
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 1,
+    "posted": 1
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "reason_contains": "кирк"
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "acquire"
+    ]
+   ]
+  },
+  {
+   "prompt_contains": [
+    {
+     "call": 1,
+     "contains": "mine_vein"
+    }
+   ]
+  }
+ ]
+}
