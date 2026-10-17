@@ -1,7 +1,8 @@
 # Горячая перезагрузка таблиц данных
 
 Таблицы ценностей, коэффициентов и правил (ценность предметов, броня, корма, мечи, наборы, добыча, политики,
-тактика, голод, рыбалка) читаются не из classpath один раз, а из **ресурс-менеджера сервера**: их можно поменять
+постройки, доска задач, двери, тактика, голод, рыбалка, спуск и расширение шахты, приоритеты обороны) читаются
+не из classpath один раз, а из **ресурс-менеджера сервера**: их можно поменять
 на живом сервере командой `/reload`, без перезапуска и без установки нового мода.
 
 ## Как поменять коэффициент на лету
@@ -41,10 +42,16 @@
 | `sword` | `husbandry/sword.json` | тир мечей |
 | `drops` | `acquire/drops.json` | «предмет ← блоки-источники» |
 | `protection` | `policy/protection.json` | защищённые и природные блоки, порог «здания» |
+| `presets` | `schematics/presets.json` + тела схем | библиотека построек (индекс и тела схем — одна таблица) |
+| `board` | `board/board.json` | расписание доски задач |
+| `doors` | `doors/doors.json` | вечерний порог и параметры дверей |
 | `tactics` | `tactics/{enemies,weights,rules,modes}.json` | ядро тактики (четыре файла — одна таблица) |
 | `adapter` | `tactics/adapter.json` | интервал оценки тактики, радиус фактов и т. п. |
 | `hunger` | `hunger/hunger.json` | пороги, интервалы и расходы голода духа |
 | `fishing` | `fishing/fishing.json` | минимальные ширина и глубина открытой воды для рыбалки |
+| `descent` | `mining/descent.json` | целевой этаж спуска и интервал факелов |
+| `descent_levels` | `mining/descent_levels.json` | ширина и высота расширения шахты, ширина ступенек |
+| `priorities` | `tactics/priorities.json` | классы целей обороны и порядок их выбора по ролям |
 
 Каталог `structure/*.nbt` — бинарные шаблоны структур для GameTest, а не таблица коэффициентов; он не
 перезагружается.
@@ -66,7 +73,8 @@
   `failed(...)`: прежняя версия в силе, статус получает текст ошибки.
 - `com.theminespirit.core.reload.TableRegistry` / `DataTables` — единственное место регистрации. `DataTables`
   держит типизированные держатели всех таблиц; код ядра (`TacticsConfig.loadDefault()`, `InventoryTables.values()`,
-  `FeedTable.feedFor`, `DropTable.shared()` и т. д.) отдаёт `holder.current()`, а не читает classpath сам.
+  `FeedTable.feedFor`, `DropTable.shared()`, `DescentData.loadDefault()`, `DefenseProfile.loadDefault()` и т. д.)
+  отдаёт `holder.current()`, а не читает classpath сам.
 - `com.theminespirit.neoforge.DataReload` — единственная подписка на `AddReloadListenerEvent`. На каждый
   `/reload` он читает json из серверного `ResourceManager` (мод + датапаки мира), парсит и кладёт в держатели;
   ошибка одной таблицы не мешает остальным.
