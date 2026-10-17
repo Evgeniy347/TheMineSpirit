@@ -2,6 +2,7 @@ import dataclasses
 import json
 import os
 import re
+import sqlite3
 import subprocess
 import tempfile
 import time
@@ -12,7 +13,7 @@ from unittest import mock
 import brain as brain_module
 import config
 from brain import (BrainError, BrainUnavailable, CommandBrain, FallbackBrain, OpencodeBrain, SandboxBreach, agent_violations,
-                   ensure_sandbox, verify_sandbox)
+                   ensure_sandbox, prepare_data_home, verify_sandbox)
 
 APP = Path(__file__).resolve().parent.parent
 FAKE = APP / "tests" / "fake_opencode.sh"
@@ -539,6 +540,116 @@ class BrainGuardTests(unittest.TestCase):
             row = re.search(rf"^\| {re.escape(name)} \| (\S+) \|", table, re.MULTILINE)
             self.assertIsNotNone(row, f"модель {model} не найдена в таблице docs/EXECUTOR-MODELS.md")
             self.assertEqual("да", row.group(1), f"модель {model} в docs/EXECUTOR-MODELS.md не помечена рабочей")
+
+
+ACCOUNT_DDL = (
+    "CREATE TABLE `account` (id TEXT PRIMARY KEY, email TEXT NOT NULL, url TEXT NOT NULL, access_token TEXT NOT NULL, "
+    "refresh_token TEXT NOT NULL, token_expiry INTEGER, time_created INTEGER NOT NULL, time_updated INTEGER NOT NULL)")
+ACCOUNT_STATE_DDL = "CREATE TABLE `account_state` (id INTEGER PRIMARY KEY, active_account_id TEXT, active_org_id TEXT)"
+MIGRATION_DDL = "CREATE TABLE migration (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)"
+MESSAGE_DDL = "CREATE TABLE message (id TEXT PRIMARY KEY, text TEXT)"
+
+
+class PrepareDataHomeTests(unittest.TestCase):
+    """Изолированный каталог данных opencode: учётка (account/account_state) доступна, чужие данные не утекают."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+        self.global_dir = self.dir / "global-share" / "opencode"
+        self.global_dir.mkdir(parents=True)
+        (self.global_dir / "auth.json").write_text('{"opencode-go": {"type": "api", "key": "secret"}}', encoding="utf-8")
+        self.local = self.dir / "home" / "opencode-data"
+
+    def make_source_db(self):
+        path = self.global_dir / "opencode.db"
+        with sqlite3.connect(path) as con:
+            con.execute(ACCOUNT_DDL)
+            con.execute(ACCOUNT_STATE_DDL)
+            con.execute(MIGRATION_DDL)
+            con.execute(MESSAGE_DDL)
+            con.execute("insert into account values (?,?,?,?,?,?,?,?)",
+                        ("user_1", "u@example.com", "https://opencode.ai/", "st_access", "rt_refresh", 1790, 1, 1))
+            con.execute("insert into account_state values (?,?,?)", (1, "user_1", "org_1"))
+            con.execute("insert into migration values (?,?)", ("0001_init", 100))
+            con.execute("insert into message values (?,?)", ("msg_1", "полный промпт с секретом"))
+        return path
+
+    def local_db(self):
+        return self.local / "opencode" / "opencode.db"
+
+    def read_rows(self, path, table):
+        with sqlite3.connect(path) as con:
+            return con.execute(f"select * from {table}").fetchall()
+
+    def prepare(self):
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": str(self.global_dir.parent)}):
+            return prepare_data_home(self.local)
+
+    def test_prepareDataHome_CopiesAccountRowsButNoOtherData(self):
+        source = self.make_source_db()
+        self.prepare()
+        local = self.local_db()
+        self.assertTrue(local.is_file(), "изолированный opencode.db обязан появиться")
+        self.assertEqual(self.read_rows(source, "account"), self.read_rows(local, "account"),
+                         "строки account нужны opencode для подписки opencode-go")
+        self.assertEqual(self.read_rows(source, "account_state"), self.read_rows(local, "account_state"))
+        self.assertEqual(self.read_rows(source, "migration"), self.read_rows(local, "migration"),
+                         "миграции переносятся, иначе opencode повторно накатит схему")
+        self.assertEqual([], self.read_rows(local, "message"),
+                         "сессии и сообщения общего каталога не копируются в изолированный")
+
+    def test_prepareDataHome_SymlinksGlobalAuth(self):
+        self.make_source_db()
+        self.prepare()
+        auth = self.local / "opencode" / "auth.json"
+        self.assertTrue(auth.is_symlink())
+        self.assertEqual((self.global_dir / "auth.json").resolve(), auth.resolve())
+
+    def test_prepareDataHome_WithoutGlobalDb_NoLocalDb(self):
+        self.prepare()
+        self.assertFalse(self.local_db().exists(), "без глобального opencode.db копировать нечего")
+
+    def test_prepareDataHome_WithoutAccountRows_NoLocalDb(self):
+        path = self.global_dir / "opencode.db"
+        with sqlite3.connect(path) as con:
+            con.execute(ACCOUNT_DDL)
+            con.execute(ACCOUNT_STATE_DDL)
+        self.prepare()
+        self.assertFalse(self.local_db().exists(), "пустая учётка не создаёт изолированный opencode.db")
+
+    def test_prepareDataHome_SecondCall_KeepsRefreshedLocalAccount(self):
+        self.make_source_db()
+        self.prepare()
+        local = self.local_db()
+        with sqlite3.connect(local) as con:
+            con.execute("update account set access_token = 'refreshed' where id = 'user_1'")
+        self.prepare()
+        token = self.read_rows(local, "account")[0][3]
+        self.assertEqual("refreshed", token,
+                         "повторный вызов не затирает обновлённый изолированной копией токен")
+
+    def test_prepareDataHome_ExistingDbWithoutAccount_FillsRows(self):
+        self.make_source_db()
+        local = self.local_db()
+        local.parent.mkdir(parents=True)
+        with sqlite3.connect(local) as con:
+            con.execute(ACCOUNT_DDL)
+            con.execute(ACCOUNT_STATE_DDL)
+        self.prepare()
+        self.assertEqual(1, len(self.read_rows(local, "account")),
+                         "существующий изолированный db без учётки дозаполняется строками account")
+
+    def test_subprocessEnv_SeedsAccountDbFromGlobalShare(self):
+        self.make_source_db()
+        cfg = config.from_env({"STRATEGIST_HOME": str(self.dir / "home")})
+        brain = OpencodeBrain(cfg, "opencode-go/deepseek-v4.1-flash", env={})
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": str(self.global_dir.parent)}):
+            data_home = Path(brain.subprocess_env()["XDG_DATA_HOME"])
+        self.assertEqual(cfg.home / "opencode-data", data_home)
+        self.assertEqual(1, len(self.read_rows(data_home / "opencode" / "opencode.db", "account")),
+                         "подпроцесс opencode получает учётку Go из изолированного каталога")
 
 
 if __name__ == "__main__":
