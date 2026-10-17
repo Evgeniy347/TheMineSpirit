@@ -37,7 +37,7 @@ public final class NightLeash {
             throw new IllegalArgumentException(
                     "Радиус поселения " + radius + " меньше 1: с ним дух не удержал бы ни одной точки");
         }
-        return distance(position, home) <= radius;
+        return horizontalDistance(position, home) <= radius;
     }
 
     public boolean armedNext(boolean evening, boolean armed, boolean insideSettlement) {
@@ -68,10 +68,9 @@ public final class NightLeash {
         }
     }
 
-    private static double distance(BlockCoord first, BlockCoord second) {
+    private static double horizontalDistance(BlockCoord first, BlockCoord second) {
         double dx = first.x() - second.x();
-        double dy = first.y() - second.y();
         double dz = first.z() - second.z();
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return Math.sqrt(dx * dx + dz * dz);
     }
 }

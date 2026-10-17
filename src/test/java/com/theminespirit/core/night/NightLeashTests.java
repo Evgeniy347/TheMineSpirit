@@ -112,6 +112,19 @@ class NightLeashTests {
     }
 
     @Test
+    void insideSettlement_DeepBelowHomeWithinRadius_IsInside() {
+        assertTrue(leash.insideSettlement(new BlockCoord(0, HOME.y() - RADIUS - 40, 0), HOME, RADIUS),
+                "Шахта поселения — часть территории: ствол строго под домом остаётся своим, иначе ночной поводок "
+                        + "запер бы шахтёра на глубине");
+    }
+
+    @Test
+    void insideSettlement_BelowHomeBeyondHorizontalRadius_IsOutside() {
+        assertFalse(leash.insideSettlement(new BlockCoord(RADIUS + 1, HOME.y() - 100, 0), HOME, RADIUS),
+                "Глубина не расширяет границу вширь: штольня в стороне за радиусом — уже вне поселения");
+    }
+
+    @Test
     void armedNext_DayInside_Disarms() {
         assertFalse(leash.armedNext(false, true, true),
                 "Днём поводок снят: иначе дух, переживший ночь, не выйдет на работу утром");

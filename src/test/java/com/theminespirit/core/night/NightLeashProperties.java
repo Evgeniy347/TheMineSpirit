@@ -27,9 +27,8 @@ class NightLeashProperties {
         BlockCoord home = new BlockCoord(homeX, homeY, homeZ);
         BlockCoord target = new BlockCoord(targetX, targetY, targetZ);
         double dx = targetX - homeX;
-        double dy = targetY - homeY;
         double dz = targetZ - homeZ;
-        boolean within = Math.sqrt(dx * dx + dy * dy + dz * dz) <= radius;
+        boolean within = Math.sqrt(dx * dx + dz * dz) <= radius;
 
         NightLeash.Decision decision = leash.checkTarget(target, home, radius, true, true, false);
 
