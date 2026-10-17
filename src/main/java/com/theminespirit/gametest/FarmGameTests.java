@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
 import com.theminespirit.neoforge.LevelFarmView;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,8 +37,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -68,6 +72,81 @@ public final class FarmGameTests {
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmGameTests() {
+    }
+
+    // Сцены сладких ягод и столбовых культур проверяют только сбор и подбор. Свободного духа без задачи
+    // забирают координатор и доска (как в camp_retreat_*), и тогда исходный сбор «висит» или затирается
+    // чужим заданием. На время пачки выключаем поселенческие подсистемы.
+    private static final String BERRY_HARVEST_BATCH = "farm_harvest_sweetberry";
+    private static final String BERRY_SESSION_BATCH = "farm_session_sweetberry";
+    private static final String CANE_BATCH = "farm_column_sugarcane";
+    private static final String BAMBOO_BATCH = "farm_column_bamboo";
+    private static final String CACTUS_BATCH = "farm_column_cactus";
+    private static final String SINGLE_COLUMN_BATCH = "farm_column_single";
+
+    @BeforeBatch(batch = BERRY_HARVEST_BATCH)
+    public static void stopSettlementForBerryHarvest(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BERRY_HARVEST_BATCH)
+    public static void restoreSettlementForBerryHarvest(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = BERRY_SESSION_BATCH)
+    public static void stopSettlementForBerrySession(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BERRY_SESSION_BATCH)
+    public static void restoreSettlementForBerrySession(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = CANE_BATCH)
+    public static void stopSettlementForCane(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = CANE_BATCH)
+    public static void restoreSettlementForCane(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = BAMBOO_BATCH)
+    public static void stopSettlementForBamboo(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = BAMBOO_BATCH)
+    public static void restoreSettlementForBamboo(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = CACTUS_BATCH)
+    public static void stopSettlementForCactus(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = CACTUS_BATCH)
+    public static void restoreSettlementForCactus(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    @BeforeBatch(batch = SINGLE_COLUMN_BATCH)
+    public static void stopSettlementForSingleColumn(ServerLevel level) {
+        settlementSystems(false);
+    }
+
+    @AfterBatch(batch = SINGLE_COLUMN_BATCH)
+    public static void restoreSettlementForSingleColumn(ServerLevel level) {
+        settlementSystems(true);
+    }
+
+    private static void settlementSystems(boolean enabled) {
+        SpiritConfig.setCoordinatorEnabled(enabled);
+        SpiritConfig.setBoardEnabled(enabled);
     }
 
     @GameTest(template = "empty", batch = "farm_reach_guard", timeoutTicks = 20)
