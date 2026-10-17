@@ -142,6 +142,7 @@ public final class BoardCraterGameTests {
         spirit.getInventory().setItem(0, new ItemStack(Items.DIRT, 16));
         ServerLevel level = helper.getLevel();
         BoardService board = BoardRegistry.get(level);
+        drainForeignTickets(board);
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
         board.submit(new BoardTicket("board_test_crater_fill", BoardCase.FILL_CRATER,
                 Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
@@ -213,5 +214,16 @@ public final class BoardCraterGameTests {
     private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {
         BlockPos pos = helper.absolutePos(relative);
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    /**
+     * Общая доска уровня переживает границы сцен: билеты прошлых сцен (first:* без гейта) приоритетнее
+     * засыпки воронки (35) и забирают единственного духа — сцена видит незасыпанную яму. Снимаем их до
+     * своей постановки, как в BoardGameTests.supply_*.
+     */
+    private static void drainForeignTickets(BoardService board) {
+        for (BoardTicket ticket : board.board().all()) {
+            board.board().cancel(ticket.id());
+        }
     }
 }
