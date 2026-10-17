@@ -39,9 +39,13 @@
   отказалась бы запускать игру без пропуска от `scripts/test.sh`.
   На Linux замок — `flock` на `${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}`;
   в Git Bash на Windows его нет, поэтому запасной замок берётся атомарным `mkdir` каталога
-  `${THEMINESPIRIT_GAMETEST_LOCK}.d` (файл `pid` внутри; протухший замок мёртвого процесса снимается
-  атомарным переименованием каталога — ровно один из ожидающих, проигравший ждёт дальше; `trap`
-  снимает замок при выходе и Ctrl+C).
+  `${THEMINESPIRIT_GAMETEST_LOCK}.d` (`pid`, `token`, `heartbeat` внутри). Владелец обновляет пульс раз в
+  `THEMINESPIRIT_GAMETEST_BEAT_SECONDS`, а протухшим замок считается только по возрасту пульса
+  (`THEMINESPIRIT_GAMETEST_STALE_SECONDS`), не по `kill -0`: PID чужого сеанса MSYS на Windows выглядит
+  мёртвым, и живой замок раньше снимался как протухший. Маркер старого `test.sh` без пульса стареет по mtime
+  с порогом `THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS` (больше предела GameTest). Снятие протухшего —
+  атомарным переименованием каталога, ровно один из ожидающих, проигравший ждёт дальше; свой замок
+  освобождается только при совпадении токена (`trap` — при выходе и Ctrl+C).
   Путь замка по умолчанию — общий для всех сессий машины: `C:\ProgramData\theminespirit\theminespirit-gametest.lock`
   на Windows (`$ALLUSERSPROFILE`), `/tmp/theminespirit-gametest.lock` на Linux. `/tmp` в Git Bash
   монтируется в `%TEMP%` текущего пользователя — у разных сессий opencode TMP/TEMP может различаться,
