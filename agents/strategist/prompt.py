@@ -13,7 +13,11 @@ from plan_check import PlanLimits, Policy
 MAX_OBSERVATION_BYTES = 24 * 1024
 PLAN_FORMAT_HEADING = "## Формат плана"
 STRING_LIMIT = 80
-START_CAPS = {"inventory": 64, "blocks": 60, "entities": 20, "containers": 20}
+START_CAPS = {"inventory": 64, "blocks": 60, "entities": 20, "containers": 20,
+              "ground_items": 20, "container_items": 8}
+OPTIONAL_LISTS = ("ground_items", "container_items")
+SCALAR_FIELDS = ("held", "board_task", "time")
+NUMBER_FIELDS = ("health", "max_health", "food")
 HISTORY_LINE_LIMIT = 200
 OUTCOME_TEXT = {
     "succeeded": "выполнено",
@@ -119,9 +123,19 @@ def _sorted_sections(observation: dict) -> dict[str, list]:
 def _build_compact(observation: dict, name, sections: dict, caps: dict) -> dict:
     compact = {"name": _clip(name) if name is not None else None, "pos": _clip(observation.get("pos")),
                "radius": observation.get("radius"), "hash": observation.get("hash")}
+    for key in SCALAR_FIELDS:
+        value = observation.get(key)
+        if isinstance(value, dict):
+            compact[key] = _clip(value)
+    for key in NUMBER_FIELDS:
+        value = observation.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            compact[key] = value
     notes = []
     for key in START_CAPS:
         shown = sections[key][:caps[key]]
+        if key in OPTIONAL_LISTS and not shown:
+            continue
         compact[key] = [_clip(entry) for entry in shown]
         if len(shown) < len(sections[key]):
             notes.append(f"{key}: показано {len(shown)} из {len(sections[key])}")

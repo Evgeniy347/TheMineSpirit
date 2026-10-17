@@ -144,6 +144,30 @@ class ObservationTests(unittest.TestCase):
         compact = compact_observation(obs)
         self.assertLessEqual(len(compact["entities"][0]["name"]), 90)
 
+    def test_compact_NewResourceFields_ShownCompactly(self):
+        obs = copy.deepcopy(world("empty"))
+        obs["held"] = {"item": "minecraft:iron_pickaxe", "durability": 250}
+        obs["health"] = 18.0
+        obs["max_health"] = 20.0
+        obs["food"] = 0.6
+        obs["board_task"] = {"case": "MINE", "status": "ASSIGNED"}
+        obs["ground_items"] = [{"item": "minecraft:oak_log", "count": 3}]
+        obs["container_items"] = [{"pos": [8, 63, -5], "items": [{"item": "minecraft:iron_ingot", "count": 7}]}]
+        obs["time"] = {"day": True, "day_time": 6000}
+        compact = compact_observation(obs)
+        self.assertEqual(obs["held"], compact["held"], "предмет в руке виден модели")
+        self.assertEqual(18.0, compact["health"])
+        self.assertEqual(obs["board_task"], compact["board_task"])
+        self.assertEqual(obs["ground_items"], compact["ground_items"])
+        self.assertEqual(1, len(compact["container_items"]))
+        self.assertEqual([{"item": "minecraft:iron_ingot", "count": 7}], compact["container_items"][0]["items"])
+        self.assertEqual(obs["time"], compact["time"])
+
+    def test_compact_ObservationWithoutNewFields_OmitsThem(self):
+        compact = compact_observation(world("empty"))
+        for key in ("held", "health", "max_health", "food", "board_task", "ground_items", "container_items", "time"):
+            self.assertNotIn(key, compact, f"старое наблюдение без поля {key} не должно получать пустой ключ")
+
 
 class RecentDecisionsTests(unittest.TestCase):
     NOW = 1_800_000_000.0

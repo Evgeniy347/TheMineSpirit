@@ -1,0 +1,51 @@
+{
+ "name": "45-held-pickaxe-from-new-field-accepted",
+ "description": "кирка только в поле held (новое поле наблюдения), инвентарь пуст: проверка кирки берёт предмет из нового поля, и план gather камня принимается",
+ "bots": [
+  {
+   "id": "held",
+   "world": "forest",
+   "extra": {
+    "held": {
+     "item": "minecraft:iron_pickaxe",
+     "durability": 250
+    }
+   }
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Кирка в руке — можно набрать камень.",
+    "goal": "набрать камень",
+    "plan": {
+     "type": "script",
+     "script": "gather",
+     "params": {
+      "block": "stone",
+      "count": 4
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  }
+ ]
+}
