@@ -96,6 +96,7 @@ public final class WoolBedsGameTests {
     }
 
     @GameTest(template = "arena", batch = "woolbeds_gate", timeoutTicks = 200)
+    @SettlementSystems(board = true)
     public static void woolWatch_PenGate_OnlyAtFourSheep(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
