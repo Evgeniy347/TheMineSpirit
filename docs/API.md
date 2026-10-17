@@ -233,8 +233,8 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 - `follow` (`target`, `radius`) — следовать за целью на расстоянии
 - `flee` — убежать от угрозы
 - `collect_drops` (`radius`, `filter`, `overflow`) — подобрать выпавшие предметы вокруг духа.
-  `overflow`: `fail` — отказ при полном инвентаре, `by_value` — взять ценное, выбросив дешёвое,
-  `return_to_base` — сдать лишнее на склад и продолжить. По умолчанию `by_value`
+  `overflow`: fail — отказ при полном инвентаре, by_value — взять ценное, выбросив дешёвое,
+  return_to_base — сдать лишнее на склад и продолжить. По умолчанию by_value
 - `harvest_crop` (`crop`, `radius`, `replant`) — собрать урожай
 - `plant_crop` (`crop`, `radius`, `count`) — посадить культуру
 - `till` (`radius`, `count`) — вспахать землю под грядку
