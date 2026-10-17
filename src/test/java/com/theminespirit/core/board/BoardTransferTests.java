@@ -36,7 +36,8 @@ class BoardTransferTests {
                 "Задание передачи берёт дающий дух");
         assertTrue(board.complete(ticket.id()), "Завершённая передача закрывает задание доски");
 
-        assertEquals(List.of(BoardLog.Event.ASSIGNED, BoardLog.Event.DONE), events,
+        assertEquals(List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.DONE),
+                events,
                 "Журнал обязан назвать выдачу (кому) и итог: без них передачу не отличить от зависшей");
         assertTrue(modifiers.contains("to=" + TAKER) && modifiers.contains("item=stick"),
                 "Журнал передачи обязан назвать получателя и предмет, а не только исполнителя: "

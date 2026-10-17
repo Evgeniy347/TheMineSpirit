@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -47,6 +48,19 @@ public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
     private TicketPlans() {
+    }
+
+    public static Optional<String> craftItem(BoardCase boardCase) {
+        Objects.requireNonNull(boardCase, "Кейс крафта не может быть null: без него неизвестен предмет");
+        if (ToolSet.isTool(boardCase)) {
+            return Optional.of(ToolSet.itemId(boardCase));
+        }
+        return switch (boardCase) {
+            case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
+            case STOCK_CHESTS -> Optional.of("minecraft:chest");
+            case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
+            default -> Optional.empty();
+        };
     }
 
     public static TaskNode plan(BoardCase boardCase, TicketTarget target) {

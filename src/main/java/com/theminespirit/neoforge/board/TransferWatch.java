@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.KitFor;
@@ -33,19 +34,18 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 
 public final class TransferWatch {
-    private static final String CRAFT_TOOLS_ITEM = "minecraft:wooden_pickaxe";
-
     private TransferWatch() {
     }
 
     public static boolean ensureTransfers(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
             StockView stock, BoardTicket craftTicket, SpiritEntity crafter, long now) {
-        if (craftTicket.boardCase() != BoardCase.CRAFT_TOOLS) {
+        Optional<String> craftItem = TicketPlans.craftItem(craftTicket.boardCase());
+        if (craftItem.isEmpty()) {
             return false;
         }
         RecipeKnowledge recipes = RecipeKnowledge.of(level);
         List<Ingredient> ingredients = new ArrayList<>();
-        for (Ingredient ingredient : recipes.ingredientsFor(CRAFT_TOOLS_ITEM)) {
+        for (Ingredient ingredient : recipes.ingredientsFor(craftItem.orElseThrow())) {
             ingredients.add(new Ingredient(ItemIds.normalize(ingredient.item()), ingredient.count()));
         }
         if (ingredients.isEmpty()) {
@@ -54,7 +54,7 @@ public final class TransferWatch {
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = at(crafter);
         List<TransferSource> sources = sources(spirits, mapper, recipes, crafter.getUUID());
-        List<TransferOrder> orders = TransferPlanner.planForCraft(CRAFT_TOOLS_ITEM, crafter.getUUID(), crafterAt,
+        List<TransferOrder> orders = TransferPlanner.planForCraft(craftItem.orElseThrow(), crafter.getUUID(), crafterAt,
                 stacks(crafter.getInventory(), mapper), ingredients, sources, warehouse(stock, spirits, mapper),
                 InventoryTables.values(), BoardTuning.transferRadiusBlocks(), BoardTuning.transferMaxCount());
         boolean active = hasActiveTransfer(service, craftTicket.id());
@@ -91,7 +91,7 @@ public final class TransferWatch {
     public static Set<String> liveCauses(BoardService service) {
         Set<String> live = new HashSet<>();
         for (BoardTicket ticket : service.board().all()) {
-            if (ticket.boardCase() != BoardCase.CRAFT_TOOLS) {
+            if (TicketPlans.craftItem(ticket.boardCase()).isEmpty()) {
                 continue;
             }
             BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);

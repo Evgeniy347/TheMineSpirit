@@ -109,7 +109,7 @@ class BoardRulesTests {
         }
         if (boardCase == BoardCase.SUPPLY_SITE || boardCase == BoardCase.CRAFTING_STATION
                 || boardCase == BoardCase.STOCK_CHESTS || boardCase == BoardCase.TRANSFER_ITEM
-                || ToolSet.isTool(boardCase)) {
+                || boardCase == BoardCase.GATHER_MATERIALS || ToolSet.isTool(boardCase)) {
             return 4;
         }
         if (boardCase == BoardCase.FILL_CRATER) {

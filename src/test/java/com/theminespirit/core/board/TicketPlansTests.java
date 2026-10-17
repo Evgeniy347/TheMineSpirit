@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -406,6 +407,21 @@ class TicketPlansTests {
     @Provide
     Arbitrary<Integer> levels() {
         return Arbitraries.integers().between(1, 3);
+    }
+
+    @Test
+    void craftItem_ToolCases_ReturnToolSetItem() {
+        for (BoardCase boardCase : ToolSet.chain()) {
+            assertEquals(Optional.of(ToolSet.itemId(boardCase)), TicketPlans.craftItem(boardCase),
+                    "Кейс " + boardCase + " обязан назвать предмет своего инструмента: по нему "
+                            + "TransferWatch ищет ингредиенты и передачу");
+        }
+    }
+
+    @Test
+    void craftItem_BuildHouse_Empty() {
+        assertEquals(Optional.empty(), TicketPlans.craftItem(BoardCase.BUILD_HOUSE),
+                "Строительный кейс не крафт: передача ингредиентов ему не назначается");
     }
 
     @Test
