@@ -10,7 +10,7 @@ import java.util.Set;
 public final class ProtectionConfig {
     public static final String RESOURCE = "data/theminespirit/policy/protection.json";
 
-    private static final Set<String> FIELDS = Set.of("deny", "natural", "buildingThreshold");
+    private static final Set<String> FIELDS = Set.of("deny", "natural", "buildingThreshold", "maxUnprotectVolume");
 
     private ProtectionConfig() {
     }
@@ -30,11 +30,12 @@ public final class ProtectionConfig {
         List<String> deny = JsonResource.strings(root.get("deny"), origin, "deny");
         List<String> natural = JsonResource.strings(root.get("natural"), origin, "natural");
         int threshold = JsonResource.integer(root.get("buildingThreshold"), origin, "buildingThreshold");
+        int maxUnprotectVolume = JsonResource.integer(root.get("maxUnprotectVolume"), origin, "maxUnprotectVolume");
         IdFilter denyFilter = filter(deny, origin, "deny");
         IdFilter naturalFilter = filter(natural, origin, "natural");
         BlockProtection protection;
         try {
-            protection = new BlockProtection(denyFilter, naturalFilter, threshold);
+            protection = new BlockProtection(denyFilter, naturalFilter, threshold, maxUnprotectVolume);
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }

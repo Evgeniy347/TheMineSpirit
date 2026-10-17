@@ -44,6 +44,17 @@ public final class ProtectedZones {
         return false;
     }
 
+    public boolean intersects(String dimension, BlockBox box) {
+        Objects.requireNonNull(dimension, "Измерение не может быть null: зоны привязаны к миру");
+        Objects.requireNonNull(box, "Куб не может быть null: проверяется пересечение с зонами");
+        for (ProtectedZone zone : zones) {
+            if (zone.dimension().equals(dimension) && zone.box().intersects(box)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int size() {
         return zones.size();
     }

@@ -38,6 +38,13 @@ public record BlockBox(BlockCoord min, BlockCoord max) {
                 && point.z() >= min.z() && point.z() <= max.z();
     }
 
+    public boolean intersects(BlockBox other) {
+        Objects.requireNonNull(other, "Второй куб не может быть null: пересечение проверяется у двух кубов");
+        return min.x() <= other.max.x() && max.x() >= other.min.x()
+                && min.y() <= other.max.y() && max.y() >= other.min.y()
+                && min.z() <= other.max.z() && max.z() >= other.min.z();
+    }
+
     public long volume() {
         return (long) (max.x() - min.x() + 1) * (max.y() - min.y() + 1) * (max.z() - min.z() + 1);
     }

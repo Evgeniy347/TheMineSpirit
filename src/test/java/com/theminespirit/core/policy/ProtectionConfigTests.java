@@ -15,7 +15,8 @@ class ProtectionConfigTests {
     private static final String ORIGIN = "test-protection.json";
 
     private static String json(String deny, String natural, String threshold) {
-        return "{\"deny\": " + deny + ", \"natural\": " + natural + ", \"buildingThreshold\": " + threshold + "}";
+        return "{\"deny\": " + deny + ", \"natural\": " + natural + ", \"buildingThreshold\": " + threshold
+                + ", \"maxUnprotectVolume\": 4096}";
     }
 
     static Stream<Arguments> brokenFiles() {
@@ -24,10 +25,11 @@ class ProtectionConfigTests {
                 Arguments.of("литерал natural под шаблоном deny", json("[\"*_log\"]", "[\"oak_log\"]", "6"), "'minecraft:oak_log' попал и в deny, и в natural"),
                 Arguments.of("литерал deny под шаблоном natural", json("[\"diamond_ore\"]", "[\"*_ore\"]", "6"), "'minecraft:diamond_ore' попал и в deny, и в natural"),
                 Arguments.of("одинаковые шаблоны", json("[\"*_log\"]", "[\"*_log\"]", "6"), "'minecraft:*_log' попал и в deny, и в natural"),
-                Arguments.of("неизвестное поле", "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"buildingThreshold\": 6, \"extra\": 1}", "неизвестное поле 'extra'"),
+                Arguments.of("неизвестное поле", "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"buildingThreshold\": 6, \"maxUnprotectVolume\": 4096, \"extra\": 1}", "неизвестное поле 'extra'"),
                 Arguments.of("порог 0", json("[\"a\"]", "[\"b\"]", "0"), "buildingThreshold 0 вне диапазона 1..26"),
                 Arguments.of("порог 27", json("[\"a\"]", "[\"b\"]", "27"), "buildingThreshold 27 вне диапазона 1..26"),
                 Arguments.of("порог дробный", json("[\"a\"]", "[\"b\"]", "6.5"), "ожидается целое число"),
+                Arguments.of("предел объёма 0", "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"buildingThreshold\": 6, \"maxUnprotectVolume\": 0}", "maxUnprotectVolume 0 меньше 1"),
                 Arguments.of("пустой deny", json("[]", "[\"b\"]", "6"), "у deny ожидается непустой список"),
                 Arguments.of("шаблон с заглавной буквой", json("[\"Stone\"]", "[\"b\"]", "6"), "неверный шаблон"),
                 Arguments.of("звёздочка в natural признала бы всё природным", json("[\"a\"]", "[\"*\"]", "6"), "совпадает со всеми блоками"),
@@ -58,5 +60,6 @@ class ProtectionConfigTests {
         BlockProtection protection = ProtectionConfig.load();
 
         assertEquals(6, protection.buildingThreshold(), "Поставляемый protection.json читается без ошибок и несёт порог 6");
+        assertEquals(4096, protection.maxUnprotectVolume(), "Поставляемый protection.json несёт предел объёма разрешённой области 4096");
     }
 }

@@ -12,8 +12,9 @@ public final class BlockProtection {
     private final IdFilter deny;
     private final IdFilter natural;
     private final int buildingThreshold;
+    private final int maxUnprotectVolume;
 
-    public BlockProtection(IdFilter deny, IdFilter natural, int buildingThreshold) {
+    public BlockProtection(IdFilter deny, IdFilter natural, int buildingThreshold, int maxUnprotectVolume) {
         this.deny = Objects.requireNonNull(deny, "Чёрный список не может быть null: без него защита блоков не работает");
         this.natural = Objects.requireNonNull(natural, "Список природных блоков не может быть null: по нему отличают постройки");
         if (deny.matchesAll() || natural.matchesAll()) {
@@ -24,7 +25,12 @@ public final class BlockProtection {
             throw new IllegalArgumentException("buildingThreshold " + buildingThreshold + " вне диапазона 1.." + MAX_THRESHOLD
                     + ": среди " + NEIGHBOUR_COUNT + " соседей не может быть больше искусственных блоков");
         }
+        if (maxUnprotectVolume < 1) {
+            throw new IllegalArgumentException("maxUnprotectVolume " + maxUnprotectVolume + " меньше 1: "
+                    + "разрешённая область не может быть пустой");
+        }
         this.buildingThreshold = buildingThreshold;
+        this.maxUnprotectVolume = maxUnprotectVolume;
     }
 
     public sealed interface Decision {
@@ -63,7 +69,16 @@ public final class BlockProtection {
         return buildingThreshold;
     }
 
+    public int maxUnprotectVolume() {
+        return maxUnprotectVolume;
+    }
+
     public Decision check(String blockId, List<String> neighbours, boolean playerPlaced, boolean inProtectedZone) {
+        return check(blockId, neighbours, playerPlaced, inProtectedZone, false);
+    }
+
+    public Decision check(String blockId, List<String> neighbours, boolean playerPlaced, boolean inProtectedZone,
+            boolean unprotectArea) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
         Objects.requireNonNull(neighbours, "Список соседей не может быть null: по нему отличают постройку от природы");
         if (neighbours.size() != NEIGHBOUR_COUNT) {
@@ -79,6 +94,9 @@ public final class BlockProtection {
         }
         if (inProtectedZone) {
             return new Refused(PolicyId.PROTECTED_ZONE, "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
+        }
+        if (unprotectArea) {
+            return new Allowed();
         }
         if (playerPlaced) {
             return new Refused(PolicyId.PLAYER_BUILDINGS, "блок '" + blockId + "' поставил игрок: чужие постройки дух не разбирает");

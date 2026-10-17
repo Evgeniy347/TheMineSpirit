@@ -51,15 +51,19 @@ public final class ProtectionGate {
             return outside;
         }
         Level level = spirit.level();
-        boolean inProtectedZone = PolicyConfig.zones().contains(level.dimension().location().toString(), coord);
+        String dimension = level.dimension().location().toString();
+        boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
+        boolean unprotectArea = level instanceof ServerLevel server
+                && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         BlockProtection.Decision decision;
         if (tended) {
-            decision = PROTECTION.check(blockId(state), Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID), false, inProtectedZone);
+            decision = PROTECTION.check(blockId(state), Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID), false,
+                    inProtectedZone, unprotectArea);
         } else if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
             boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
-            decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone);
+            decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone, unprotectArea);
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
