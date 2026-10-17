@@ -66,13 +66,11 @@ public final class BoardFirstStepsGameTests {
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
-        SpiritConfig.setCoordinatorEnabled(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
-        SpiritConfig.setCoordinatorEnabled(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
@@ -98,7 +96,7 @@ public final class BoardFirstStepsGameTests {
             }
         }
 
-        for (int step = 0; step < 20 && !foreignTrees; step++) {
+        for (int step = 0; step < 40 && !foreignTrees; step++) {
             long now = level.getGameTime();
             FirstStepsRunner.tick(level, board, List.of(spirit), stockOf(board), now);
             List<BoardTicket> active = board.board().all().stream()

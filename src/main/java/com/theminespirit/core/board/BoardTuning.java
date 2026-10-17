@@ -57,6 +57,12 @@ public final class BoardTuning {
     /** Книг меньше — на доску задание «дополнить полки». */
     public static final int ENCHANT_SHELVES_MIN = 4;
 
+    /** Радиус передачи вещей между духами по умолчанию. */
+    public static final int TRANSFER_RADIUS_BLOCKS = 32;
+
+    /** Предел предметов в одной передаче по умолчанию. */
+    public static final int TRANSFER_MAX_COUNT = 64;
+
     /** Ключи интервалов таблицы board.json: неизвестный ключ — опечатка, падает с путём файла. */
     public static final Set<String> INTERVAL_KEYS = Set.of(
             "boardIntervalTicks",
@@ -71,7 +77,9 @@ public final class BoardTuning {
             "caseFailLimit",
             "fencePatrolInterval",
             "enchantCheckInterval",
-            "enchantShelvesMin");
+            "enchantShelvesMin",
+            "transferRadiusBlocks",
+            "transferMaxCount");
 
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
@@ -123,6 +131,16 @@ public final class BoardTuning {
 
     public static int enchantShelvesMin() {
         return (int) interval("enchantShelvesMin", ENCHANT_SHELVES_MIN);
+    }
+
+    /** Радиус поиска духов-источников передачи: дальше передача не планируется. */
+    public static int transferRadiusBlocks() {
+        return (int) interval("transferRadiusBlocks", TRANSFER_RADIUS_BLOCKS);
+    }
+
+    /** Предел предметов в одной передаче: столько же принимает deliver за один запуск. */
+    public static int transferMaxCount() {
+        return (int) interval("transferMaxCount", TRANSFER_MAX_COUNT);
     }
 
     private BoardTuning() {

@@ -24,9 +24,12 @@ import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.registries.datamaps.builtin.FurnaceFuel;
 import net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps;
 
@@ -65,24 +68,49 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public boolean isGatherable(String item) {
         String id = ItemIds.normalize(item);
-        Optional<ResourceLocation> block = ownBlock(id);
-        if (block.isPresent()) {
-            return GatherPolicy.check(block.get().toString()) instanceof GatherPolicy.Allowed;
-        }
-        return DropTable.shared().blocksFor(id)
+        if (DropTable.shared().blocksFor(id)
                 .map(blocks -> blocks.stream().anyMatch(RecipeKnowledge::gatherableBlock))
+                .orElse(false)) {
+            return true;
+        }
+        return ownBlock(id)
+                .map(block -> GatherPolicy.check(block.toString()) instanceof GatherPolicy.Allowed)
                 .orElse(false);
     }
 
     @Override
     public String gatherBlockFor(String item) {
         String id = ItemIds.normalize(item);
-        if (ownBlock(id).isPresent()) {
-            return id;
-        }
         return DropTable.shared().blocksFor(id)
-                .map(blocks -> blocks.stream().filter(RecipeKnowledge::gatherableBlock).findFirst().orElse(item))
-                .orElse(item);
+                .flatMap(blocks -> blocks.stream().filter(RecipeKnowledge::gatherableBlock).findFirst())
+                .orElse(id);
+    }
+
+    @Override
+    public Optional<String> toolForBlock(String block) {
+        String qualified = block.indexOf(':') < 0 ? "minecraft:" + block : block;
+        ResourceLocation location = ResourceLocation.tryParse(qualified);
+        if (location == null) {
+            return Optional.empty();
+        }
+        return BuiltInRegistries.BLOCK.getOptional(location).flatMap(RecipeKnowledge::requiredPickaxe);
+    }
+
+    private static Optional<String> requiredPickaxe(Block block) {
+        BlockState state = block.defaultBlockState();
+        if (!state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
+            return Optional.empty();
+        }
+        if (state.is(BlockTags.NEEDS_DIAMOND_TOOL)) {
+            return Optional.of("diamond_pickaxe");
+        }
+        if (state.is(BlockTags.NEEDS_IRON_TOOL)) {
+            return Optional.of("iron_pickaxe");
+        }
+        if (state.is(BlockTags.NEEDS_STONE_TOOL)) {
+            return Optional.of("stone_pickaxe");
+        }
+        return Optional.of("wooden_pickaxe");
     }
 
     private static Optional<ResourceLocation> ownBlock(String id) {

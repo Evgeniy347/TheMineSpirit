@@ -37,5 +37,6 @@ public enum BoardCase {
     REPAIR_FENCE,
     RESTOCK_FOOD,
     STOCK_CHESTS,
-    SUPPLY_SITE
+    SUPPLY_SITE,
+    TRANSFER_ITEM
 }

@@ -78,6 +78,11 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         building = building == null ? Optional.empty() : building;
         from = from == null ? Optional.empty() : from;
         to = to == null ? Optional.empty() : to;
+        if (boardCase == BoardCase.TRANSFER_ITEM) {
+            throw invalid("Кейс TRANSFER_ITEM ставит доска по нехватке ингредиентов у крафтера: "
+                    + "вручную он не принимается, иначе план не знает ни предмета, ни получателя",
+                    Map.of("field", CASE, "case", boardCase.name()));
+        }
         if (boardCase == BoardCase.RELOCATE_BUILDING) {
             requireRelocation(building, from, to);
         } else if (building.isPresent() || from.isPresent() || to.isPresent()) {

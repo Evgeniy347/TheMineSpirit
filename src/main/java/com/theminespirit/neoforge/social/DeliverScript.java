@@ -17,7 +17,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -128,6 +128,11 @@ public final class DeliverScript implements ScriptInstance {
             if (!leftover.isEmpty()) {
                 DropCollector.drop(spirit, leftover);
             }
+        } else if (target instanceof SpiritEntity addressee) {
+            ItemStack leftover = addToContainer(addressee.getInventory(), handoff);
+            if (!leftover.isEmpty()) {
+                DropCollector.drop(addressee, leftover);
+            }
         } else {
             DropCollector.drop(spirit, handoff);
         }
@@ -136,7 +141,10 @@ public final class DeliverScript implements ScriptInstance {
     }
 
     private static ItemStack addToInventory(ServerPlayer player, ItemStack stack) {
-        Inventory inventory = player.getInventory();
+        return addToContainer(player.getInventory(), stack);
+    }
+
+    private static ItemStack addToContainer(Container inventory, ItemStack stack) {
         ItemStack leftover = stack.copy();
         for (int slot = 0; slot < inventory.getContainerSize() && !leftover.isEmpty(); slot++) {
             ItemStack existing = inventory.getItem(slot);

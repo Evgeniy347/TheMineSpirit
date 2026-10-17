@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -64,7 +66,8 @@ class TicketPlansTests {
             Map.entry(BoardCase.BREED_ANIMALS, "breed"),
             Map.entry(BoardCase.HERD_CULL, "cull"),
             Map.entry(BoardCase.RELOCATE_BUILDING, "build_schematic"),
-            Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"));
+            Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"),
+            Map.entry(BoardCase.TRANSFER_ITEM, "deliver"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -108,7 +111,9 @@ class TicketPlansTests {
     private static TicketTarget fullTarget() {
         return target().withScheme("pen")
                 .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
-                .withSupply("bread", 1);
+                .withSupply("bread", 1)
+                .withTransfer(UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
+                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1);
     }
 
     @Test
@@ -405,6 +410,21 @@ class TicketPlansTests {
     }
 
     @Test
+    void craftItem_ToolCases_ReturnToolSetItem() {
+        for (BoardCase boardCase : ToolSet.chain()) {
+            assertEquals(Optional.of(ToolSet.itemId(boardCase)), TicketPlans.craftItem(boardCase),
+                    "Кейс " + boardCase + " обязан назвать предмет своего инструмента: по нему "
+                            + "TransferWatch ищет ингредиенты и передачу");
+        }
+    }
+
+    @Test
+    void craftItem_BuildHouse_Empty() {
+        assertEquals(Optional.empty(), TicketPlans.craftItem(BoardCase.BUILD_HOUSE),
+                "Строительный кейс не крафт: передача ингредиентов ему не назначается");
+    }
+
+    @Test
     void plan_CraftCases_CarryStationRadius() {
         List<BoardCase> craftCases = new ArrayList<>(ToolSet.chain());
         craftCases.add(BoardCase.STOCK_CHESTS);
@@ -436,6 +456,35 @@ class TicketPlansTests {
                 "deposit обязан нести радиус поиска контейнера в границах каталога: TransferParams.from "
                         + "читает radius обязательным, без него план падает на выдаче и добыча не кладёт "
                         + "предметы в склад (радиус " + radius + ")");
+    }
+
+    @Test
+    void plan_TransferItemFromSpirit_DeliversToRecipient() {
+        UUID giver = UUID.fromString("00000000-0000-0000-0000-0000000000c1");
+        UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
+        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM,
+                target().withTransfer(giver, taker, "stick", 2));
+        ScriptCall deliver = findCall(plan, "deliver");
+
+        assertEquals("stick", deliver.params().get("item"),
+                "Передача везёт тот предмет, которого не хватает крафтеру");
+        assertEquals(2, deliver.params().get("count"), "Передача везёт ровно нехватку");
+        assertEquals("spirit:" + taker, deliver.params().get("to"),
+                "Адресат deliver — дух-крафтер по UUID: имя духа неоднозначно");
+    }
+
+    @Test
+    void plan_TransferItemFromWarehouse_WithdrawsToRecipient() {
+        UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
+        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM,
+                target().withTransfer(null, taker, "cobblestone", 3));
+        ScriptCall withdraw = findCall(plan, "withdraw");
+
+        assertEquals("cobblestone", withdraw.params().get("item"),
+                "Со склада берут тот же предмет, которого не хватает крафтеру");
+        assertEquals(3, withdraw.params().get("count"), "Со склада берут ровно нехватку");
+        assertEquals("nearest", withdraw.params().get("container"),
+                "Склад ищется ближайшим контейнером к получателю");
     }
 
     @Test

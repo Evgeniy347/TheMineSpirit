@@ -9,6 +9,7 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.ProgressWatchdog;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
@@ -59,10 +60,12 @@ public final class HarvestSession {
     private final int count;
     private final int radius;
     private final boolean skipWithoutTool;
+    private final boolean vein;
     private final LevelSafetyView safety;
     private final BlockBreaker breaker;
     private final Approach approach;
     private final TargetBuffer buffer = new TargetBuffer();
+    private final ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
 
     private State state = State.FIND;
     private Outcome outcome = Outcome.RUNNING;
@@ -90,7 +93,7 @@ public final class HarvestSession {
     private int entityQueries;
 
     private HarvestSession(SpiritEntity spirit, HarvestTargets targets, String label, int count, int radius,
-            boolean skipWithoutTool) {
+            boolean skipWithoutTool, boolean vein) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.targets = targets;
@@ -98,6 +101,7 @@ public final class HarvestSession {
         this.count = count;
         this.radius = radius;
         this.skipWithoutTool = skipWithoutTool;
+        this.vein = vein;
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
@@ -106,12 +110,12 @@ public final class HarvestSession {
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
         return new HarvestSession(spirit, new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
-                ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY);
+                ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true);
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
         return new HarvestSession(spirit, new GatherTargets(spirit.level(), spirit.blockPosition(), radius,
-                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block));
+                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block), false);
     }
 
     public Outcome tick() {
@@ -126,6 +130,10 @@ public final class HarvestSession {
             return outcome;
         }
         ticks++;
+        watchdog.tick();
+        if (watchdog.stalled()) {
+            return fail(stallReason());
+        }
         switch (state) {
             case FIND -> find();
             case PICK -> pick();
@@ -424,6 +432,7 @@ public final class HarvestSession {
             }
             case BROKEN -> {
                 mined++;
+                watchdog.progress();
                 collectRuns++;
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
                         PickupTuning.DEFAULT,
@@ -471,7 +480,18 @@ public final class HarvestSession {
     }
 
     private String stopReason() {
-        return summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
+        String base = summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
+        if (vein && noStand > 0) {
+            return base + "; руда закрыта, нужен проход: блоки руды есть, но нет места для духа — прокопайте "
+                    + "проход к руде (dig_descent или dig_area) и повторите mine_vein";
+        }
+        return base;
+    }
+
+    private String stallReason() {
+        return "нет прогресса " + watchdog.limitTicks() + " тиков (" + (watchdog.limitTicks() / 20) + " с): "
+                + summary() + "; текущий шаг " + state
+                + " — проверьте доступность блоков и подходящий инструмент";
     }
 
     private String summary() {

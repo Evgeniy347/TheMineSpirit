@@ -60,13 +60,11 @@ public final class BoardCraterGameTests {
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
-        SpiritConfig.setCoordinatorEnabled(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
-        SpiritConfig.setCoordinatorEnabled(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
