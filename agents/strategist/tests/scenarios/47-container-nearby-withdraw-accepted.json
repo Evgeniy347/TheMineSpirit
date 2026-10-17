@@ -1,0 +1,53 @@
+{
+ "name": "47-container-nearby-withdraw-accepted",
+ "description": "рядом сундук и бочка из наблюдения: withdraw инструмента из контейнера проходит проверку и уходит задачей",
+ "bots": [
+  {
+   "id": "farm",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "В сундуке рядом лежит кирка, возьму её оттуда.",
+    "goal": "взять кирку из сундука",
+    "plan": {
+     "type": "script",
+     "script": "withdraw",
+     "params": {
+      "container": "nearest",
+      "item": "iron_pickaxe",
+      "count": 1
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "withdraw"
+    ]
+   ]
+  }
+ ]
+}

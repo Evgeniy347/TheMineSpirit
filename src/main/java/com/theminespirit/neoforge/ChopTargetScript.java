@@ -82,6 +82,9 @@ public final class ChopTargetScript implements ScriptInstance {
         if (standingLogs > 0) {
             text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
         }
+        if (chop.pillarFailure() != null) {
+            text.append("; столб: ").append(chop.pillarFailure());
+        }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());
         }

@@ -29,7 +29,11 @@ public final class AnimalLifecycle {
     }
 
     public AnimalLifecycle(Board board, Species species) {
-        this(board, species.name().toLowerCase(Locale.ROOT), FeedTable.feedFor(species).get(0));
+        this(board, species.name().toLowerCase(Locale.ROOT), shortId(FeedTable.feedFor(species).get(0)));
+    }
+
+    private static String shortId(String item) {
+        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     private AnimalLifecycle(Board board, String prefix, String lureItem) {

@@ -37,6 +37,29 @@ class BoardTextTests {
     }
 
     @Test
+    void line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers() {
+        BoardTask task = new BoardTask("board-2", "BUILD_PEN", 65, null, "PENDING",
+                Map.of(), Map.of(), List.of(), 7, 2, "always", 80, List.of("pen_caught_animal"), false);
+
+        String line = BoardText.line(task);
+
+        assertTrue(line.contains("уровень 2"), "Строка обязана называть уровень постройки: " + line);
+        assertTrue(line.contains("приоритет 80"),
+                "Строка обязана показывать эффективный приоритет, а не базу: " + line);
+        assertTrue(line.contains("pen_caught_animal"),
+                "Строка обязана называть сработавшие модификаторы: " + line);
+    }
+
+    @Test
+    void line_DoneBuilding_MarksDone() {
+        BoardTask task = new BoardTask("board-3", "BUILD_MINE", 50, null, "DONE",
+                Map.of(), Map.of(), List.of(), 7, 1, "always", 50, List.of(), true);
+
+        assertTrue(BoardText.line(task).contains("выполнено"),
+                "Отметка выполненной постройки обязана быть видна в чате: " + BoardText.line(task));
+    }
+
+    @Test
     void missing_MultipleItems_SortedByNameForStableChat() {
         assertEquals("dirt ×4, oak_log ×10", BoardText.missing(Map.of("oak_log", 10, "dirt", 4)),
                 "Нехватка в чате обязана идти по алфавиту: порядок карты непостоянен, а чат читает человек");

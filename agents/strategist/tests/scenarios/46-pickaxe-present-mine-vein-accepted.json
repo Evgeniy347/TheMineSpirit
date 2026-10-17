@@ -1,0 +1,52 @@
+{
+ "name": "46-pickaxe-present-mine-vein-accepted",
+ "description": "кирка есть в инвентаре духа: mine_vein допустим и уходит задачей",
+ "bots": [
+  {
+   "id": "mine",
+   "world": "mine"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Железная кирка в инвентаре, рядом железная жила.",
+    "goal": "добыть железо",
+    "plan": {
+     "type": "script",
+     "script": "mine_vein",
+     "params": {
+      "ore": "iron",
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "mine_vein"
+    ]
+   ]
+  }
+ ]
+}

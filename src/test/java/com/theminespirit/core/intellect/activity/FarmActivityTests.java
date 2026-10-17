@@ -44,11 +44,36 @@ class FarmActivityTests {
     }
 
     @Test
-    void demand_SatedWithRipeCrops_BaselineOne() {
+    void demand_SatedWithRipeCrops_Zero() {
         SettlementView sated = SettlementViews.settlementWithFarm(2, 2, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
 
-        assertEquals(1.0, FARM.demand(sated),
-                "Сытому поселению ферма не нужнее прочего запаса: базовый спрос 1, а не 9");
+        assertEquals(0.0, FARM.demand(sated),
+                "При запасе выше нормы ферма не востребована: иначе духи собирают урожай ради лишней еды");
+    }
+
+    @Test
+    void demand_MoreDeficit_Higher() {
+        SettlementView low = SettlementViews.settlementWithFarm(1, 1, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
+        SettlementView high = SettlementViews.settlementWithFarm(1, 0.5, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
+
+        assertTrue(FARM.demand(high) > FARM.demand(low),
+                "Чем больше дефицит еды, тем выше ферма: иначе спрос не отличает лёгкий голод от сильного");
+    }
+
+    @Test
+    void demand_SmallDeficit_AboveChop() {
+        SettlementView hungry = SettlementViews.settlementWithFarm(1, 1, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
+
+        assertTrue(FARM.demand(hungry) > new ChopActivity().demand(hungry),
+                "Даже небольшой дефицит еды важнее рубки: иначе поселение с одной буханкой рубит лес вместо урожая");
+    }
+
+    @Test
+    void demand_EmptyStock_MaxDemand() {
+        SettlementView empty = SettlementViews.settlementWithFarm(0, 0, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
+
+        assertEquals(9.0, FARM.demand(empty),
+                "Пустой склад при населении 3 даёт максимальный пищевой спрос 9: число — в таблице IntellectTuning");
     }
 
     @Test

@@ -20,6 +20,6 @@ public final class ErrorJson {
     }
 
     public static RestResponse response(ApiException exception) {
-        return response(exception.error());
+        return RestResponse.json(exception.status(), toJson(exception.error()));
     }
 }

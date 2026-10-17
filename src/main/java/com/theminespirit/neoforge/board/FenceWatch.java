@@ -8,9 +8,11 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -59,6 +61,31 @@ public final class FenceWatch {
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE), level.getGameTime(),
                 1, fenceCause(pos), List.of(), Map.of()),
                 TicketTarget.at(target).withFenceBlock(blockId));
+    }
+
+    /** Живые причины ремонта: клетка причины всё ещё не ограждение. Починенная уходит из набора. */
+    static Set<String> liveCauses(ServerLevel level, BoardService service) {
+        Set<String> live = new HashSet<>();
+        for (BoardTicket ticket : service.board().all()) {
+            String cause = ticket.cause();
+            if (!cause.startsWith("fence:")) {
+                continue;
+            }
+            String[] parts = cause.split(":", -1);
+            if (parts.length != 4) {
+                continue;
+            }
+            try {
+                BlockPos pos = new BlockPos(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
+                        Integer.parseInt(parts[3]));
+                if (!isFence(level.getBlockState(pos))) {
+                    live.add(cause);
+                }
+            } catch (NumberFormatException ignored) {
+                live.add(cause);
+            }
+        }
+        return live;
     }
 
     /** Причина задания ремонта — сломанная клетка: починенный забор уходит из живых причин. */

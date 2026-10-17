@@ -40,8 +40,10 @@ class CatalogRenderTests(unittest.TestCase):
         rendered = render_catalog(self.capabilities, self.policy.allowed_scripts)
         lines = [line for line in rendered.splitlines() if line.strip()]
         self.assertEqual(len(self.policy.allowed_scripts), len(lines), "по строке на разрешённый скрипт")
-        for hidden in ("fill", "say", "craft", "place_block", "follow"):
+        for hidden in ("fill", "say", "place_block", "follow"):
             self.assertNotIn(f"- {hidden} ", rendered, f"{hidden} вне белого списка: модель его не видит")
+        for shown in ("acquire", "craft", "equip", "withdraw"):
+            self.assertIn(f"- {shown} ", rendered, f"{shown} из белого списка: модель обязана его видеть")
 
     def test_renderCatalog_ShowsRequiredTypesBoundsDefaultsEnumsAndEffects(self):
         rendered = render_catalog(self.capabilities, self.policy.allowed_scripts)
@@ -171,6 +173,12 @@ class RecentDecisionsTests(unittest.TestCase):
         self.assertIn("пропуск", text)
         self.assertIn("инвентарь полон", text)
         self.assertRegex(text, r"\d+ мин назад|\d+ ч назад|\d+ с назад", "возраст решения")
+
+    def test_formatRecent_DryWouldPost_ShowsWhatWasAlreadyDecided(self):
+        events = [self.event(event="posted", dry=True, outcome="would_post", goal="добыть железо")]
+        text = format_recent(events, self.NOW)
+        self.assertIn("добыть железо", text)
+        self.assertIn("dry", text)
 
     def test_formatRecent_TaskDoneWithResult_ShowsOutcome(self):
         events = [

@@ -34,15 +34,15 @@ class DemandModelTests {
         SettlementView view = SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.2);
         List<ActivityDemand> demands = DemandModel.evaluate(view, CATALOG);
 
-        Map<ActivityId, Double> expected = Map.of(ActivityId.CHOP, 3.0, ActivityId.FARM, 1.0, ActivityId.MINE, 1.0,
+        Map<ActivityId, Double> expected = Map.of(ActivityId.CHOP, 3.0, ActivityId.FARM, 0.0, ActivityId.MINE, 1.0,
                 ActivityId.REST, 4.5, ActivityId.DEFEND, 0.5);
         for (ActivityDemand demand : demands) {
             assertEquals(expected.get(demand.id()), demand.demand(),
                     "Спрос " + demand.id() + " совпадает с деятельностью: иначе сортируется чужое число");
         }
-        assertEquals(List.of(ActivityId.REST, ActivityId.CHOP, ActivityId.FARM, ActivityId.MINE, ActivityId.DEFEND),
+        assertEquals(List.of(ActivityId.REST, ActivityId.CHOP, ActivityId.MINE, ActivityId.DEFEND, ActivityId.FARM),
                 demands.stream().map(ActivityDemand::id).toList(),
-                "Порядок спроса при сытости: отдых, рубка, равные ферма и добыча по id, защита последняя");
+                "Порядок спроса при запасе выше нормы: отдых, рубка, добыча, защита, затем нулевая ферма");
     }
 
     @Test

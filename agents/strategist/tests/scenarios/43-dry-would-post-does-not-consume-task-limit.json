@@ -1,0 +1,78 @@
+{
+ "name": "43-dry-would-post-does-not-consume-task-limit",
+ "description": "в dry «отправил бы» не тратит лимит задач в час: два разных наблюдения дают две записи posted, блокировки tasks_hourly нет",
+ "config": {
+  "STRATEGIST_MODE": "dry",
+  "STRATEGIST_TASKS_PER_HOUR": "1",
+  "STRATEGIST_TASK_GAP": "0"
+ },
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, инструментов хватает.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "mode": "dry"
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "plan_calls": 2
+  },
+  {
+   "journal": {
+    "posted": 2
+   }
+  },
+  {
+   "journal_has": {
+    "event": "posted",
+    "dry": true,
+    "outcome": "would_post"
+   }
+  },
+  {
+   "journal_lacks": {
+    "event": "bot_skipped",
+    "code": "tasks_hourly"
+   }
+  }
+ ]
+}

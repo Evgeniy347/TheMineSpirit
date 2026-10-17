@@ -141,6 +141,9 @@ public final class ChopTreeScript implements ScriptInstance {
         if (protectedLogs > 0) {
             text.append("; пропущено защищённых: ").append(protectedLogs);
         }
+        if (chop.pillarFailure() != null) {
+            text.append("; столб: ").append(chop.pillarFailure());
+        }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());
         }

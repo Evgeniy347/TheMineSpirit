@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -56,10 +57,21 @@ public final class CraterWatch {
         }
         BoardService service = BoardRegistry.get(level);
         BlockCoord target = new BlockCoord(center.getX(), center.getY(), center.getZ());
+        List<BlockCoord> profile = new ArrayList<>();
+        for (BlockPos pos : event.getAffectedBlocks()) {
+            profile.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+        }
+        service.craters().remember(craterCause(center), profile);
         service.submit(new BoardTicket(craterId(center), BoardCase.FILL_CRATER, Optional.empty(),
                 BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(),
                 1, craterCause(center), List.of(), need),
                 TicketTarget.at(target).withCraterBlocks(need.values().stream().mapToInt(Integer::intValue).sum()));
+    }
+
+    /** Живые причины воронок: профиль, в котором осталась хоть одна пустая клетка. */
+    static Set<String> liveCauses(ServerLevel level, BoardService service) {
+        return service.craters().retainLive(pos ->
+                level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).isAir());
     }
 
     /** Причина задания воронки — её клетка: засыпанная воронка уходит из живых причин. */

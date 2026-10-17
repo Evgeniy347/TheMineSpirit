@@ -25,6 +25,10 @@ public final class BoardRegistry {
         BY_LEVEL.remove(level);
     }
 
+    public static void closeAll() {
+        BY_LEVEL.values().forEach(BoardService::close);
+    }
+
     public static void clear() {
         BY_LEVEL.clear();
     }

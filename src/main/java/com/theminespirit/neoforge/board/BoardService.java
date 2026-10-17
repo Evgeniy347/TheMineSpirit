@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.AnimalLifecycle;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
@@ -11,12 +10,19 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.CraterProfiles;
+import com.theminespirit.core.board.EvergreenRules;
+import com.theminespirit.core.board.BoardPriorities;
+import com.theminespirit.core.board.HerdCycles;
+import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -26,7 +32,10 @@ import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,9 +56,12 @@ public final class BoardService {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final Board board;
-    private final AnimalLifecycle animals;
+    private final HerdCycles animals;
     private final StockReader stockReader;
     private final BoardSources sources;
+    private final JournalService journal;
+    private final CraterProfiles craters = new CraterProfiles(64);
+    private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
@@ -58,22 +70,28 @@ public final class BoardService {
     private long stockBlockReads;
     private long stockContainers;
 
-    public BoardService(Board board, AnimalLifecycle animals, StockReader stockReader, BoardSources sources) {
+    public BoardService(Board board, HerdCycles animals, StockReader stockReader, BoardSources sources,
+            JournalService journal) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
         this.animals = Objects.requireNonNull(animals,
-                "animals не может быть null: жизненный цикл животного — составная часть доски");
+                "animals не может быть null: циклы животных по видам — составная часть доски");
         this.stockReader = Objects.requireNonNull(stockReader,
                 "stockReader не может быть null: снимок запасов собирает адаптер");
         this.sources = Objects.requireNonNull(sources,
                 "sources не может быть null: источники событий доски");
+        this.journal = Objects.requireNonNull(journal,
+                "journal не может быть null: без него переходы не попадут в журнал");
+        journal.restore(board.ledger());
     }
 
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
-        Board board = new Board(now);
-        return new BoardService(board, new AnimalLifecycle(board, "wheat"),
+        JournalService journal = JournalService.inConfigDirectory();
+        Board board = new Board(now, (event, ticket, holder, tick) ->
+                journal.record(event, ticket, holder, tick));
+        return new BoardService(board, new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
-                BoardSources.create());
+                BoardSources.create(), journal);
     }
 
     public Board board() {
@@ -107,6 +125,7 @@ public final class BoardService {
     }
 
     public void tick(ServerLevel level, long now) {
+        journal.flush(JournalService.FLUSH_BUDGET);
         if (now - lastRebuild < BoardTuning.boardIntervalTicks()) {
             return;
         }
@@ -123,10 +142,73 @@ public final class BoardService {
         targets.keySet().retainAll(alive);
         List<SpiritEntity> spirits = census(level);
         settleOwners(spirits);
+        refreshStock(level, spirits);
+        ensureSupply(spirits, stock, now);
+        Set<String> liveCauses = sources.tick(level, this, spirits, stock, now);
+        liveCauses.addAll(liveHerdCauses(level));
+        board.retain(liveCauses, now);
         issue(level, spirits, now);
-        sources.tick(level, this, spirits, stock, now);
         rebuilds++;
         lastRebuild = now;
+        journal.flush(JournalService.FLUSH_BUDGET);
+    }
+
+    public void close() {
+        journal.flushAll();
+    }
+
+    public JournalService journal() {
+        return journal;
+    }
+
+    public CraterProfiles craters() {
+        return craters;
+    }
+
+    public HerdCycles herds() {
+        return animals;
+    }
+
+    /** Пойманное животное: помним вид и сущность, чтобы проверять «животное ещё живо?». */
+    public void noteCapture(String captureId, Species species, UUID animal, TicketTarget penTarget) {
+        Objects.requireNonNull(captureId, "captureId не может быть null: по нему идёт причина задания");
+        Objects.requireNonNull(species, "Вид пойманного животного не может быть null: цикл идёт по виду");
+        Objects.requireNonNull(animal, "UUID животного не может быть null: без него живость не проверить");
+        captures.put(captureId, new Capture(species, animal, "animal:" + captureId, penTarget));
+    }
+
+    public void captureFailed(String captureId) {
+        captures.remove(captureId);
+    }
+
+    public int capturedCount(Species species) {
+        int count = 0;
+        for (Capture capture : captures.values()) {
+            if (capture.species() == species) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** Живые причины стада: пойманное животное живо. Гибель снимает «приманить» и ставит разбор. */
+    public Set<String> liveHerdCauses(ServerLevel level) {
+        Set<String> live = new HashSet<>();
+        Iterator<Map.Entry<String, Capture>> iterator = captures.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Capture> entry = iterator.next();
+            Entity entity = level.getEntity(entry.getValue().animal());
+            if (entity != null && entity.isAlive() && !entity.isRemoved()) {
+                live.add(entry.getValue().cause());
+            } else {
+                iterator.remove();
+                animals.cycle(entry.getValue().species()).animalDied();
+            }
+        }
+        return live;
+    }
+
+    private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {
     }
 
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
@@ -189,7 +271,7 @@ public final class BoardService {
     }
 
     public void completeCapture(String captureId) {
-        animals.captured(captureId);
+        animals.cycle(speciesOfCapture(captureId)).captured(captureId);
     }
 
     /**
@@ -197,17 +279,57 @@ public final class BoardService {
      * {@link #completeCapture}: производство зовёт из учёта исполнителя, GameTest — напрямую.
      */
     public void completePen(String penId) {
-        animals.penBuilt(penId);
+        Species species = speciesOfId(penId);
+        animals.cycle(species).penBuilt(penId);
+        TicketTarget pen = targets.get(penId);
+        if (pen != null) {
+            targets.put(cycleId(species, "lure"), pen.withSpecies(species)
+                    .withLureItem(FeedTable.feedFor(species).get(0)));
+        }
     }
 
     /** Животное в загоне: ставится «разобрать укрытие». */
+    public void completeLure(Species species) {
+        animals.cycle(species).lured();
+    }
+
     public void completeLure() {
-        animals.lured();
+        animals.cycle(firstCaptureSpecies()).lured();
     }
 
     /** Животное погибло: «приманить» снимается, ставится «разобрать укрытие». */
+    public void notifyAnimalDied(Species species) {
+        animals.cycle(species).animalDied();
+    }
+
     public void notifyAnimalDied() {
-        animals.animalDied();
+        animals.cycle(firstCaptureSpecies()).animalDied();
+    }
+
+    private Species speciesOfCapture(String captureId) {
+        Capture capture = captures.get(captureId);
+        return capture == null ? speciesOfId(captureId) : capture.species();
+    }
+
+    private Species firstCaptureSpecies() {
+        return captures.values().stream().findFirst().map(Capture::species).orElse(Species.COW);
+    }
+
+    private static Species speciesOfId(String ticketId) {
+        String[] parts = ticketId.split(":", 3);
+        String prefix = parts.length > 1 && "capture".equals(parts[0]) ? parts[1]
+                : ticketId.split("[_:/]", 2)[0];
+        String name = prefix.toLowerCase(Locale.ROOT);
+        for (Species species : Species.all()) {
+            if (species.name().toLowerCase(Locale.ROOT).equals(name)) {
+                return species;
+            }
+        }
+        return Species.COW;
+    }
+
+    private static String cycleId(Species species, String suffix) {
+        return species.name().toLowerCase(Locale.ROOT) + "_" + suffix;
     }
 
     private void settleOwners(List<SpiritEntity> spirits) {
@@ -234,9 +356,9 @@ public final class BoardService {
         if (success) {
             board.complete(ticket.id());
             switch (ticket.boardCase()) {
-                case CAPTURE_ANIMAL -> animals.captured(ticket.id());
-                case BUILD_PEN -> animals.penBuilt(ticket.id());
-                case LURE_ANIMAL -> animals.lured();
+                case CAPTURE_ANIMAL -> animals.cycle(speciesFor(ticket)).captured(ticket.id());
+                case BUILD_PEN -> completePen(ticket.id());
+                case LURE_ANIMAL -> animals.cycle(speciesFor(ticket)).lured();
                 case DISMANTLE_SHELTER -> {
                 }
                 default -> {
@@ -245,12 +367,15 @@ public final class BoardService {
         } else {
             board.fail(ticket.id());
             for (BoardLogEntry entry : board.drainDetachments()) {
-                LOGGER.warn("Журнал доски: {}", BoardLog.write(entry));
+                journal.recordEntry(entry);
+            }
+            if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
+                captureFailed(ticket.id());
             }
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL
                     || ticket.boardCase() == BoardCase.BUILD_PEN
                     || ticket.boardCase() == BoardCase.LURE_ANIMAL) {
-                animals.animalDied();
+                animals.cycle(speciesFor(ticket)).animalDied();
             }
         }
         WorkReserveHub.releaseAll(spirit);
@@ -258,12 +383,23 @@ public final class BoardService {
                 success ? "завершил" : "провалил", ticket.id());
     }
 
-    private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
+    private Species speciesFor(BoardTicket ticket) {
+        TicketTarget target = targets.get(ticket.id());
+        if (target != null && target.species() != null) {
+            return target.species();
+        }
+        Capture capture = captures.get(ticket.id());
+        return capture == null ? speciesOfId(ticket.id()) : capture.species();
+    }
+
+    private void refreshStock(ServerLevel level, List<SpiritEntity> spirits) {
         StockReader.Snapshot snapshot = stockReader.collect(level, spirits, gateCenters(spirits));
         stockBlockReads += snapshot.blockReads();
         stockContainers += snapshot.containers();
         stock = snapshot.view();
-        ensureSupply(spirits, stock, now);
+    }
+
+    private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
         for (BoardTicket ticket : claimable) {
@@ -398,6 +534,29 @@ public final class BoardService {
                     BoardRules.priorityOf(BoardCase.SUPPLY_SITE), now, 1, BoardTicket.ALWAYS_CAUSE,
                     List.of(), Map.of()), target.withSupply(item, count));
         }
+        permanentSupplies(spirits, stock, now);
+    }
+
+    /**
+     * Постоянные запасы чаровальни (полки 32, книги 32, бумага 128): висят всегда и держат
+     * склад. Приоритет полок ниже воронки — иначе запасы вытесняли бы срочную работу.
+     */
+    private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {
+        EvergreenRules.supplyThresholds().forEach((item, threshold) -> {
+            String shortItem = shortId(item);
+            int have = stock.available().getOrDefault(shortItem, 0);
+            if (have >= threshold || hasActiveSupply(shortItem)) {
+                return;
+            }
+            String id = "supply:" + shortItem;
+            if (board.statusOf(id).isPresent() || board.recentlyFailed(id, now)) {
+                return;
+            }
+            submit(new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
+                    BoardPriorities.effective(BoardCase.ENCHANT_SHELVES, PriorityContext.none()),
+                    now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of(shortItem, threshold - have)),
+                    TicketTarget.at(homeOf(spirits)).withSupply(shortItem, threshold - have));
+        });
     }
 
     private boolean hasActiveSupply(String item) {
@@ -411,6 +570,10 @@ public final class BoardService {
             }
         }
         return false;
+    }
+
+    private static String shortId(String item) {
+        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {

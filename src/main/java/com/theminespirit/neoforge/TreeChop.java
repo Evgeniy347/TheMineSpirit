@@ -8,9 +8,14 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 final class TreeChop {
@@ -46,8 +51,17 @@ final class TreeChop {
         CHOP,
         APPROACH_LOG,
         COLLECT,
+        PILLAR_APPROACH,
+        PILLAR_BUILD,
+        CHOP_HIGH,
+        DESCEND_PILLAR,
+        DISMANTLE_PILLAR,
+        COLLECT_HIGH,
         REPLANT
     }
+
+    private static final PickupTuning HIGH_PICKUP = new PickupTuning(PickupTuning.REFRESH_TICKS,
+            PickupTuning.PICKUP_REACH, 200, PickupTuning.MAX_DELAY_WAIT_TICKS);
 
     private final SpiritEntity spirit;
     private final IdFilter logFilter;
@@ -60,6 +74,15 @@ final class TreeChop {
     private DropCollector collector;
     private Replanter replanter;
     private Phase phase;
+    private List<BlockCoord> highLogs = List.of();
+    private PillarColumn pillar;
+    private final List<BlockCoord> pillarRemaining = new ArrayList<>();
+    private PillarDismantler dismantler;
+    private DropCollector highCollector;
+    private boolean highBreaking;
+    private int highLogIndex;
+    private int descendStall;
+    private String pillarFailure;
     private int planIndex;
     private int standingLogs;
     private int plantedSaplings;
@@ -84,6 +107,13 @@ final class TreeChop {
         tree = target;
         species = speciesOf(target);
         plan = ChopPlan.of(target, ChopTuning.REACH_ABOVE_BASE);
+        highLogs = target.logs().stream()
+                .filter(coord -> coord.y() > target.base().y() + ChopTuning.REACH_ABOVE_BASE)
+                .sorted(Comparator.comparingInt(BlockCoord::y).reversed())
+                .toList();
+        pillar = null;
+        pillarRemaining.clear();
+        pillarFailure = null;
         planIndex = 0;
         standingLogs = 0;
         plantedSaplings = 0;
@@ -101,6 +131,12 @@ final class TreeChop {
             case CHOP -> chop();
             case APPROACH_LOG -> approachLog();
             case COLLECT -> collect();
+            case PILLAR_APPROACH -> pillarApproach();
+            case PILLAR_BUILD -> pillarBuild();
+            case CHOP_HIGH -> chopHigh();
+            case DESCEND_PILLAR -> descendPillar();
+            case DISMANTLE_PILLAR -> dismantlePillar();
+            case COLLECT_HIGH -> collectHigh();
             case REPLANT -> replant();
         };
     }
@@ -110,6 +146,9 @@ final class TreeChop {
         approach.cancel();
         if (collector != null) {
             collector.cancel();
+        }
+        if (highCollector != null) {
+            highCollector.cancel();
         }
         if (replanter != null) {
             replanter.cancel();
@@ -124,6 +163,9 @@ final class TreeChop {
         }
         if (collector != null) {
             collector.suspend();
+        }
+        if (highCollector != null) {
+            highCollector.suspend();
         }
         if (replanter != null) {
             replanter.suspend();
@@ -212,12 +254,23 @@ final class TreeChop {
     private Outcome collect() {
         return switch (collector.tick()) {
             case RUNNING -> Outcome.running();
-            case DONE -> replant ? startReplant() : finish();
+            case DONE -> afterLowCollect();
             case FAILED -> {
                 cancel();
                 yield Outcome.failed("подбор дропа после рубки: " + collector.failureReason());
             }
         };
+    }
+
+    private Outcome afterLowCollect() {
+        collector = null;
+        if (highLogs.isEmpty()) {
+            return replant ? startReplant() : finish();
+        }
+        if (cheapBlock() == null) {
+            return leaveHigh("нет материала для столба: нужны земля или булыжник");
+        }
+        return startPillarBuild();
     }
 
     private Outcome startReplant() {
@@ -242,8 +295,240 @@ final class TreeChop {
 
     private Outcome finish() {
         collector = null;
-        standingLogs += plan.leftStanding();
+        highCollector = null;
         return Outcome.done(standingLogs, plantedSaplings, skippedCells, lackedSaplings);
+    }
+
+    String pillarFailure() {
+        return pillarFailure;
+    }
+
+    private Outcome startPillarBuild() {
+        BlockPos stand = standingCellNearTrunk();
+        if (stand == null) {
+            return leaveHigh("рядом со стволом нет места для столба");
+        }
+        if (!stand.equals(spirit.blockPosition())) {
+            approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CLOSE_DISTANCE);
+            phase = Phase.PILLAR_APPROACH;
+            return Outcome.running();
+        }
+        return beginPillar();
+    }
+
+    private Outcome pillarApproach() {
+        return switch (approach.tick()) {
+            case MOVING -> Outcome.running();
+            case ARRIVED -> beginPillar();
+            case STUCK, TIMEOUT -> leaveHigh("не подошёл к месту столба рядом со стволом");
+        };
+    }
+
+    private Outcome beginPillar() {
+        int topY = highLogs.stream().mapToInt(BlockCoord::y).max().orElse(spirit.blockPosition().getY());
+        int height = topY - 2 - spirit.blockPosition().getY();
+        if (height < 1) {
+            highLogIndex = 0;
+            highBreaking = false;
+            phase = Phase.CHOP_HIGH;
+            return Outcome.running();
+        }
+        String blockId = cheapBlock();
+        if (blockId == null) {
+            return leaveHigh("нет материала для столба: нужны земля или булыжник");
+        }
+        int have = PillarColumn.count(spirit, blockId);
+        if (have < height) {
+            return leaveHigh("нет материала '" + blockId + "': нужно " + height + ", есть " + have);
+        }
+        pillar = new PillarColumn(spirit, blockId, height);
+        phase = Phase.PILLAR_BUILD;
+        return Outcome.running();
+    }
+
+    private Outcome pillarBuild() {
+        return switch (pillar.tick()) {
+            case RUNNING -> Outcome.running();
+            case BUILT -> {
+                pillarRemaining.clear();
+                pillarRemaining.addAll(topDown(pillar.cells()));
+                highLogIndex = 0;
+                highBreaking = false;
+                phase = Phase.CHOP_HIGH;
+                yield Outcome.running();
+            }
+            case FAILED -> leaveHigh("столб не построен: " + pillar.failureReason());
+        };
+    }
+
+    private Outcome chopHigh() {
+        if (highBreaking) {
+            if (breaker.tick() == BlockBreaker.Progress.BREAKING) {
+                return Outcome.running();
+            }
+            highBreaking = false;
+            highLogIndex++;
+        }
+        while (highLogIndex < highLogs.size()) {
+            BlockCoord log = highLogs.get(highLogIndex);
+            BlockBreaker.Begin begin = breaker.begin(toPos(log));
+            if (begin instanceof BlockBreaker.Started) {
+                highBreaking = true;
+                return Outcome.running();
+            }
+            if (begin instanceof BlockBreaker.Protected) {
+                pillar = null;
+                pillarRemaining.clear();
+                return Outcome.simple(State.PROTECTED);
+            }
+            BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
+            if (refused.reason() == BlockBreaker.RefuseReason.AIR) {
+                highLogIndex++;
+                continue;
+            }
+            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !pillarRemaining.isEmpty()) {
+                BlockCoord cell = pillarRemaining.remove(0);
+                dismantler = new PillarDismantler(spirit, List.of(cell));
+                descendStall = 0;
+                phase = Phase.DESCEND_PILLAR;
+                return Outcome.running();
+            }
+            standingLogs++;
+            highLogIndex++;
+        }
+        return startDismantle();
+    }
+
+    private Outcome descendPillar() {
+        if (dismantler == null) {
+            phase = Phase.CHOP_HIGH;
+            return Outcome.running();
+        }
+        PillarDismantler.Outcome result = dismantler.tick();
+        if (result == PillarDismantler.Outcome.RUNNING) {
+            return Outcome.running();
+        }
+        if (result == PillarDismantler.Outcome.FAILED) {
+            dismantler = null;
+            standingLogs++;
+            highLogIndex++;
+            phase = Phase.CHOP_HIGH;
+            return Outcome.running();
+        }
+        if (!spirit.onGround()) {
+            if (++descendStall > 40) {
+                descendStall = 0;
+                dismantler = null;
+                phase = Phase.CHOP_HIGH;
+            }
+            return Outcome.running();
+        }
+        descendStall = 0;
+        dismantler = null;
+        phase = Phase.CHOP_HIGH;
+        return Outcome.running();
+    }
+
+    private Outcome startDismantle() {
+        if (pillarRemaining.isEmpty()) {
+            pillar = null;
+            return startHighCollect();
+        }
+        dismantler = new PillarDismantler(spirit, new ArrayList<>(pillarRemaining));
+        phase = Phase.DISMANTLE_PILLAR;
+        return Outcome.running();
+    }
+
+    private Outcome dismantlePillar() {
+        if (dismantler == null) {
+            return startHighCollect();
+        }
+        PillarDismantler.Outcome result = dismantler.tick();
+        if (result == PillarDismantler.Outcome.RUNNING) {
+            return Outcome.running();
+        }
+        dismantler = null;
+        pillar = null;
+        pillarRemaining.clear();
+        return startHighCollect();
+    }
+
+    private Outcome startHighCollect() {
+        if (highLogs.isEmpty()) {
+            return replant ? startReplant() : finish();
+        }
+        highCollector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS, HIGH_PICKUP,
+                OverflowMode.FAIL);
+        phase = Phase.COLLECT_HIGH;
+        return Outcome.running();
+    }
+
+    private Outcome collectHigh() {
+        return switch (highCollector.tick()) {
+            case RUNNING -> Outcome.running();
+            case DONE -> replant ? startReplant() : finish();
+            case FAILED -> {
+                pillarFailure = "часть дропа после рубки верха не подобрана: " + highCollector.failureReason();
+                yield replant ? startReplant() : finish();
+            }
+        };
+    }
+
+    private Outcome leaveHigh(String reason) {
+        standingLogs += highLogs.size();
+        pillarFailure = reason;
+        pillar = null;
+        pillarRemaining.clear();
+        return replant ? startReplant() : finish();
+    }
+
+    private BlockPos standingCellNearTrunk() {
+        BlockPos base = toPos(tree.base());
+        int feetY = spirit.blockPosition().getY();
+        for (int radius = 1; radius <= 2; radius++) {
+            BlockPos best = null;
+            double bestDistance = Double.MAX_VALUE;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                        continue;
+                    }
+                    BlockPos pos = new BlockPos(base.getX() + dx, feetY, base.getZ() + dz);
+                    if (!isStandable(pos)) {
+                        continue;
+                    }
+                    double distance = spirit.position().distanceToSqr(Vec3.atCenterOf(pos));
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = pos;
+                    }
+                }
+            }
+            if (best != null) {
+                return best;
+            }
+        }
+        return null;
+    }
+
+    private boolean isStandable(BlockPos pos) {
+        Level level = spirit.level();
+        BlockPos below = pos.below();
+        return (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
+                && (level.getBlockState(pos.above()).isAir() || level.getBlockState(pos.above()).canBeReplaced())
+                && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)
+                && level.getFluidState(pos).isEmpty()
+                && level.getFluidState(pos.above()).isEmpty();
+    }
+
+    private static List<BlockCoord> topDown(List<BlockCoord> cells) {
+        List<BlockCoord> order = new ArrayList<>(cells);
+        Collections.reverse(order);
+        return order;
+    }
+
+    private String cheapBlock() {
+        return PillarColumn.cheapBlock(spirit);
     }
 
     private TreeSpecies speciesOf(Tree found) {

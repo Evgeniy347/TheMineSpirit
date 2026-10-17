@@ -84,8 +84,8 @@ public final class BoardAnimalGameTests {
         helper.assertTrue(activeCount(board, BoardCase.BUILD_PEN) == 1,
                 "Отлов завершён — на доске ровно один BUILD_PEN: цикл «отлов → загон» идёт по порядку");
 
-        closeTicket(board, "animal_pen", spirit.getUUID(), now);
-        board.completePen("animal_pen");
+        closeTicket(board, "sheep_pen", spirit.getUUID(), now);
+        board.completePen("sheep_pen");
         BoardTicket lure = findTicket(board, BoardCase.LURE_ANIMAL);
         helper.assertTrue(lure != null,
                 "Загон построен — на доске LURE_ANIMAL: третье звено цикла");
@@ -95,10 +95,10 @@ public final class BoardAnimalGameTests {
         helper.assertTrue(board.board().claimable(new StockView(Map.of()), now).stream()
                         .noneMatch(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL),
                 "Без приманки «приманить» не выдаётся: гейт держит задание в очереди");
-        helper.assertTrue(board.board().statusOf("animal_lure").orElse(null)
+        helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
                         == BoardStatus.WAITING_RESOURCES,
                 "Наблюдатель видит «приманить» как WAITING_RESOURCES, статус "
-                        + board.board().statusOf("animal_lure").orElse(null));
+                        + board.board().statusOf("sheep_lure").orElse(null));
         helper.assertTrue(board.board().claimable(new StockView(Map.of("wheat", 1)), now).stream()
                         .anyMatch(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL),
                 "С пшеницей в запасах «приманить» выдаётся: доска сама снимает гейт");
@@ -110,10 +110,10 @@ public final class BoardAnimalGameTests {
         helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
                 "«Разобрать укрытие» дважды не ставится: одно укрытие — одна разборка");
         board.notifyAnimalDied();
-        helper.assertTrue(board.board().statusOf("animal_lure").orElse(null)
+        helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
                         == BoardStatus.CANCELLED,
                 "Гибель снимает «приманить», статус "
-                        + board.board().statusOf("animal_lure").orElse(null));
+                        + board.board().statusOf("sheep_lure").orElse(null));
         helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
                 "После гибели укрытие всё равно разбирается ровно одним заданием");
         // Разбор снимаем с доски: иначе PENDING без гейта уйдёт свободному духу чужой сцены.

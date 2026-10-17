@@ -215,6 +215,19 @@ def _tail(text: str) -> str:
     return flat[-ERROR_TEXT_LIMIT:]
 
 
+def keep_failure_output(runs: Path, out_path: Path, err_path: Path, meta: str | None = None) -> None:
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    base = runs / f"failed-{stamp}-{os.getpid()}"
+    for source, suffix in ((out_path, "out"), (err_path, "err")):
+        if source.exists():
+            shutil.copyfile(source, base.with_name(base.name + f".{suffix}"))
+    if meta is not None:
+        base.with_name(base.name + ".meta").write_text(meta, encoding="utf-8")
+    old = sorted(runs.glob("failed-*"), key=lambda path: path.stat().st_mtime)
+    for path in old[:-2 * KEPT_FAILURES]:
+        path.unlink()
+
+
 class OpencodeBrain:
     def __init__(self, config: Config, model: str, env: dict | None = None):
         self.config = config
@@ -279,7 +292,7 @@ class OpencodeBrain:
                 raise
             except BaseException:
                 _kill_group(process)
-                self._keep_failure(runs, out_path, err_path)
+                keep_failure_output(runs, out_path, err_path)
                 raise
             finally:
                 self._process = None
@@ -288,18 +301,15 @@ class OpencodeBrain:
         try:
             return self._interpret(stdout, stderr, code, time.monotonic() - started)
         except BrainError:
-            self._keep_failure(runs, out_path, err_path)
+            keep_failure_output(runs, out_path, err_path)
             raise
 
-    @staticmethod
-    def _keep_failure(runs: Path, out_path: Path, err_path: Path) -> None:
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        for source, suffix in ((out_path, "out"), (err_path, "err")):
-            if source.exists():
-                shutil.copyfile(source, runs / f"failed-{stamp}-{os.getpid()}.{suffix}")
-        old = sorted(runs.glob("failed-*"), key=lambda path: path.stat().st_mtime)
-        for path in old[:-2 * KEPT_FAILURES]:
-            path.unlink()
+    def keep_reply_failure(self, reply: BrainReply) -> None:
+        runs = self.config.home / "runs"
+        runs.mkdir(parents=True, exist_ok=True)
+        meta = json.dumps({"model": reply.model, "seconds": reply.seconds, "tool_attempts": reply.tool_attempts},
+                          ensure_ascii=False)
+        keep_failure_output(runs, runs / "last.out", runs / "last.err", meta)
 
     def _wait(self, process, out_path: Path, err_path: Path, deadline: float, timeout: float):
         while True:
@@ -322,7 +332,7 @@ class OpencodeBrain:
             time.sleep(POLL_SECONDS)
 
     def _interpret(self, stdout: str, stderr: str, code: int, seconds: float) -> BrainReply:
-        text, attempted, executed = "", [], []
+        texts, attempted, executed = [], [], []
         for line in stdout.splitlines():
             try:
                 event = json.loads(line)
@@ -332,12 +342,13 @@ class OpencodeBrain:
                 continue
             part = event.get("part") if isinstance(event.get("part"), dict) else {}
             if event.get("type") == "text" and isinstance(part.get("text"), str) and part["text"].strip():
-                text = part["text"]
+                texts.append(part["text"])
             elif event.get("type") == "tool_use":
                 state = part.get("state") if isinstance(part.get("state"), dict) else {}
                 attempted.append(str(part.get("tool")))
                 if state.get("status") != "error":
                     executed.append(str(part.get("tool")))
+        text = "".join(texts)
         if executed:
             raise SandboxBreach(f"Нарушение песочницы: инструмент {', '.join(executed)} выполнился без отказа; "
                              "проверьте sandbox/opencode.json и запуск без флага автоодобрения")
@@ -371,6 +382,9 @@ class CommandBrain:
 
     def probe(self) -> BrainReply:
         return self._call("", PROBE_PROMPT, self.config.probe_timeout)
+
+    def keep_reply_failure(self, reply: BrainReply) -> None:
+        return None
 
     def _call(self, system: str, user: str, timeout: float) -> BrainReply:
         if self._stop:
@@ -411,6 +425,7 @@ class FallbackBrain:
         self.primary = primary
         self.fallback = fallback
         self.model = primary.model
+        self._answered = None
 
     def verify(self) -> None:
         self.primary.verify()
@@ -422,6 +437,10 @@ class FallbackBrain:
         if self.fallback is not None:
             self.fallback.request_stop()
 
+    def keep_reply_failure(self, reply: BrainReply) -> None:
+        brain = self._answered if self._answered is not None else self.primary
+        brain.keep_reply_failure(reply)
+
     def complete(self, system: str, user: str) -> BrainReply:
         return self._with_fallback(lambda brain: brain.complete(system, user))
 
@@ -430,12 +449,16 @@ class FallbackBrain:
 
     def _with_fallback(self, call) -> BrainReply:
         try:
-            return call(self.primary)
+            reply = call(self.primary)
+            self._answered = self.primary
+            return reply
         except BrainUnavailable as first:
             if self.fallback is None:
                 raise
             try:
-                return call(self.fallback)
+                reply = call(self.fallback)
+                self._answered = self.fallback
+                return reply
             except BrainUnavailable as second:
                 kind = "provider" if "provider" in (first.kind, second.kind) else "silence"
                 raise BrainUnavailable(kind, f"{first.text}; запасная: {second.text}") from None
