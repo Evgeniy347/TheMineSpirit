@@ -8,12 +8,14 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.UnprotectArea;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PolicyConfig;
+import com.theminespirit.neoforge.policy.UnprotectService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -405,5 +407,134 @@ public final class PolicyProtectionGameTests {
         helper.assertTrue(cleared == 1 && spirit.workZone().isEmpty(), "zone clear обязана снять зону: " + spirit.workZone());
         GameTestFixtures.reset(helper);
         helper.succeed();
+    }
+
+    private static void placeHeapByPlayer(GameTestHelper helper, ServerPlayer player, BlockPos base) {
+        for (int y = 0; y <= 1; y++) {
+            for (int x = 0; x <= 1; x++) {
+                for (int z = 0; z <= 1; z++) {
+                    placeByPlayer(helper, player, base.offset(x, y, z), Blocks.COBBLESTONE);
+                }
+            }
+        }
+    }
+
+    private static void markHeap(GameTestHelper helper, BlockPos base) {
+        PlacedBlocksData data = PlacedBlocksData.get(helper.getLevel());
+        for (int y = 0; y <= 1; y++) {
+            for (int x = 0; x <= 1; x++) {
+                for (int z = 0; z <= 1; z++) {
+                    BlockPos block = base.offset(x, y + 1, z);
+                    helper.setBlock(block, Blocks.COBBLESTONE);
+                    data.mark(helper.absolutePos(block));
+                }
+            }
+        }
+    }
+
+    private static int cobbleCount(GameTestHelper helper, BlockPos base) {
+        int count = 0;
+        for (int y = 0; y <= 1; y++) {
+            for (int x = 0; x <= 1; x++) {
+                for (int z = 0; z <= 1; z++) {
+                    if (helper.getBlockState(base.offset(x, y + 1, z)).is(Blocks.COBBLESTONE)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    private static ScriptCall gatherCall(int count) {
+        return new ScriptCall("gather", Map.of("block", "minecraft:cobblestone", "count", count, "radius", 8));
+    }
+
+    @GameTest(template = "arena", batch = "protect_unprotect", timeoutTicks = 400)
+    public static void gather_PlayerHeapThenUnprotectThenRemove_RefusesCollectsRefuses(GameTestHelper helper) {
+        prepare(helper);
+        BlockPos heap = new BlockPos(6, 0, 6);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 5), "gt_unprotect_heap");
+        placeHeapByPlayer(helper, player, heap);
+        helper.getLevel().getServer().getPlayerList().remove(player);
+        helper.assertTrue(cobbleCount(helper, heap) == 8,
+                "игрок обязан поставить куб 2×2×2 булыжника: без него проверка ничего не доказывает");
+
+        ScriptCall gather = gatherCall(8);
+        UnprotectService service = UnprotectService.of(helper.getLevel().getServer());
+        String dimension = helper.getLevel().dimension().location().toString();
+        BlockPos absoluteBase = helper.absolutePos(heap);
+        BlockCoord min = new BlockCoord(absoluteBase.getX(), absoluteBase.getY() + 1, absoluteBase.getZ());
+        BlockCoord max = new BlockCoord(absoluteBase.getX() + 1, absoluteBase.getY() + 2, absoluteBase.getZ() + 1);
+        int[] phase = {0};
+        String[] areaId = {""};
+
+        helper.onEachTick(() -> {
+            RunStatus status = spirit.taskStatus().orElse(null);
+            switch (phase[0]) {
+                case 0 -> {
+                    if (spirit.tickCount >= 2) {
+                        spirit.startTask(gather);
+                        phase[0] = 1;
+                    }
+                }
+                case 1 -> {
+                    if (status == RunStatus.SUCCEEDED) {
+                        helper.assertTrue(false, "gather не смеет собрать постройку игрока без снятия защиты");
+                    }
+                    if (status == RunStatus.FAILED) {
+                        helper.assertTrue(spirit.taskFailureReason().orElse("").contains("пропущено защищённых: 8"),
+                                "gather обязан пропустить все 8 блоков постройки: " + spirit.taskFailureReason().orElse(""));
+                        UnprotectArea area = service.grant(dimension, min, max, "игрок", "убери постройку", 0,
+                                System.currentTimeMillis());
+                        areaId[0] = area.id();
+                        phase[0] = 2;
+                    }
+                }
+                case 2 -> {
+                    spirit.startTask(gather);
+                    phase[0] = 3;
+                }
+                case 3 -> {
+                    if (status == RunStatus.FAILED) {
+                        helper.assertTrue(false, "после снятия защиты gather обязан собрать булыжник, а не упасть: "
+                                + spirit.taskFailureReason().orElse(""));
+                    }
+                    if (status == RunStatus.SUCCEEDED) {
+                        helper.assertTrue(cobbleCount(helper, heap) == 0,
+                                "после снятия защиты gather обязан собрать весь булыжник постройки");
+                        markHeap(helper, heap);
+                        helper.assertTrue(cobbleCount(helper, heap) == 8,
+                                "после сбора постройка обязана быть восстановлена для третьей проверки");
+                        helper.assertTrue(service.remove(areaId[0]), "снятие разрешения обязано найти область " + areaId[0]);
+                        phase[0] = 4;
+                    }
+                }
+                case 4 -> {
+                    spirit.startTask(gather);
+                    phase[0] = 5;
+                }
+                case 5 -> {
+                    if (status == RunStatus.SUCCEEDED) {
+                        helper.assertTrue(false, "после remove защита обязана вернуться и gather не смеет собрать постройку");
+                    }
+                    if (status == RunStatus.FAILED) {
+                        helper.assertTrue(spirit.taskFailureReason().orElse("").contains("пропущено защищённых: 8"),
+                                "после remove gather обязан снова пропустить все 8 блоков: " + spirit.taskFailureReason().orElse(""));
+                        helper.assertTrue(cobbleCount(helper, heap) == 8, "после remove постройка обязана остаться целой");
+                        phase[0] = 6;
+                    }
+                }
+                default -> {
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(phase[0] == 6, "gather со снятием защиты не дошёл до конца: фаза " + phase[0]);
+            GameTestFixtures.finish(helper);
+        });
     }
 }

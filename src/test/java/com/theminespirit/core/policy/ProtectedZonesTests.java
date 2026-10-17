@@ -88,6 +88,31 @@ class ProtectedZonesTests {
     }
 
     @Test
+    void intersects_SameDimensionBoxInsideAProtectedZone_IsReported() {
+        ProtectedZones zones = ProtectedZones.of(List.of(new ProtectedZone(OVERWORLD, BOX)));
+        BlockBox area = new BlockBox(new BlockCoord(0, 65, 15), new BlockCoord(5, 70, 20));
+
+        assertTrue(zones.intersects(OVERWORLD, area), "Куб внутри защищённой зоны пересекается с ней: снятие защиты там запрещено");
+    }
+
+    @Test
+    void intersects_OtherDimensionSameCoords_IsNotReported() {
+        ProtectedZones zones = ProtectedZones.of(List.of(new ProtectedZone(OVERWORLD, BOX)));
+
+        assertFalse(zones.intersects("minecraft:the_nether", BOX), "Зона принадлежит одному миру: те же координаты в Незере её не задевают");
+    }
+
+    @Test
+    void intersects_AdjacentBoxes_AreNotReportedButOverlapIs() {
+        ProtectedZones zones = ProtectedZones.of(List.of(new ProtectedZone(OVERWORLD, BOX)));
+        BlockBox overlap = new BlockBox(new BlockCoord(20, 60, 10), new BlockCoord(25, 65, 15));
+        BlockBox adjacent = new BlockBox(new BlockCoord(21, 60, 10), new BlockCoord(25, 65, 15));
+
+        assertTrue(zones.intersects(OVERWORLD, overlap), "Коробка, задевшая грань зоны по x=20, пересекается с ней");
+        assertFalse(zones.intersects(OVERWORLD, adjacent), "Коробка в соседнем блоке x=21 не задевает зону: пересечение — общие блоки, а не касание");
+    }
+
+    @Test
     void of_ZoneListIsCopied_LaterChangesDoNotLeakIn() {
         List<ProtectedZone> list = new ArrayList<>();
         ProtectedZones zones = ProtectedZones.of(list);

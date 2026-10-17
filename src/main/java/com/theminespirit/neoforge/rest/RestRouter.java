@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.rest;
 import com.theminespirit.core.rest.BoardRoutes;
 import com.theminespirit.core.rest.IdempotencyCache;
 import com.theminespirit.core.rest.PlanningService;
+import com.theminespirit.core.rest.PolicyRoutes;
 import com.theminespirit.core.rest.Router;
 import com.theminespirit.core.rest.Route;
 import com.theminespirit.core.rest.SseSlots;
@@ -30,6 +31,9 @@ public final class RestRouter {
         BoardRoutes boardRoutes = new BoardRoutes(new SpiritBoardGateway(gateway.server()),
                 new IdempotencyCache());
         routes.addAll(boardRoutes.routes());
+        PolicyRoutes policyRoutes = new PolicyRoutes(new SpiritPolicyGateway(gateway.server()),
+                new IdempotencyCache());
+        routes.addAll(policyRoutes.routes());
         return Router.of(routes);
     }
 }

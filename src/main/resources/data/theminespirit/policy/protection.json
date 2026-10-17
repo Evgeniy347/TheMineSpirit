@@ -18,5 +18,6 @@
     "bamboo", "cactus", "sugar_cane", "brown_mushroom", "red_mushroom", "dandelion", "poppy", "azure_bluet", "cornflower",
     "oxeye_daisy", "sweet_berry_bush", "cobweb"
   ],
-  "buildingThreshold": 6
+  "buildingThreshold": 6,
+  "maxUnprotectVolume": 4096
 }
