@@ -153,6 +153,9 @@
       подряд кейс снимается с духа с записью `DETACHED` в журнал доски; числа — в `board.json`. JUnit
       `BoardCaseFailureTests` (+ свойство паузы), `BoardTuningTests` (deepseek-v4.1-flash, 17.10).
 - [ ] `chop_tree`: валка высоких деревьев выше +5 ждёт `pillar_up` (тест разбора 60 брёвен — двусторонняя граница, mimo 16.10).
+- [ ] scripts/test.sh: стоп GameTest по пределу времени (`.stopped`) убивает клиент gradle, а сервер GameTest в демоне
+      Gradle продолжает работу (17.10, сервер: java GameTest живёт после стопа и ест CPU, замок уже снят) — при стопе
+      гасить и сервер GameTest своего worktree (по рабочей папке build/gametest-run).
 - [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
       причина посадки в тёмную клетку — гипотеза (свет пересчитывается отдельно), исправлено условием старта.
