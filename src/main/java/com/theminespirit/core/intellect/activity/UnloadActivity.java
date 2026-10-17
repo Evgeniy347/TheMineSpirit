@@ -62,6 +62,7 @@ public final class UnloadActivity implements Activity {
             case VEIN -> ActivityId.MINE;
             case TREE -> ActivityId.CHOP;
             case CELL -> ActivityId.FARM;
+            case GATHER, DROP -> ActivityId.FORAGE;
         };
     }
 

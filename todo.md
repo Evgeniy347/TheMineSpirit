@@ -361,15 +361,19 @@
       против крипера) — чеклист 33 (33А, 33Б; muse, deepseek-flash, 16.10); раздел «Оборона поселения» в docs/TACTICS.md.
 - [ ] Единый тактический координатор (отдельный чеклист): общее состояние всех духов, назначение заданий конкретным духам;
       тактика отдельного духа — исполнитель решений координатора (локальные рефлексы политик остаются у духа).
-- [ ] Распределение работ в свободном режиме — мягкое: духи стараются делать разное (один рубит, другой строит, третий
+- [x] Распределение работ в свободном режиме — мягкое: духи стараются делать разное (один рубит, другой строит, третий
       рыбачит), не толпятся у одного дерева/лута; не жёсткий запрет: при нехватке ресурсов и свободных руках — несколько
       духов на шахту или рубку. Сделано (чеклист 31, 15.10): `WorkAllocator` оценивает цель как расстояние + штраф за толпу
       (`CoordinatorTuning.CROWD_PENALTY`), `WorkReserveHub.choose`/`reserve` поверх общего реестра; коэффициент
       интеллекта `crowdPenalty` — в горячей таблице `data/theminespirit/tactics/intellect.json` (`ActivityAssigner`).
       Тесты: `WorkAllocatorTests.allocate_CrowdPenalty_SplitsSpiritsToDifferentTargets`, свойства `WorkAllocatorProperties`,
       GameTest `CoordinatorGameTests.workPull_ThreeSpiritsThreeTrees_EachReservesOwnTree` (3 духа — 3 дерева).
-      ОСТАТОК (ревью 18.10): в production WorkAllocator не получает кандидатов — SpiritSnapshotReader всегда кладёт
-      workTarget = empty; живой развод идёт только через ActivityAssigner.crowdPenalty и брони. Подключить цель работы.
+      Остаток закрыт (deepseek-v4.1-flash, 18.10): снимок духа несёт цель работы из броней (`WorkReservations.ownedBy`,
+      `WorkTargets.current`), поэтому WorkAllocator снова видит кандидатов; `chop_tree`/`mine_vein`/`gather`/`collect_drops`
+      в свободном режиме закрепляют цель через `WorkReserveHub` (дерево — по основанию, жила/блок — по клетке, лут — по кучке)
+      и пропускают занятую; штраф за толпу переехал в горячую таблицу — `workCrowdPenalty` (`IntellectTuning`).
+      Тесты: JUnit `WorkTargetsTests`, GameTest `CoordinatorGameTests.workFree_TwoSpiritsTwoTrees_EachReservesOwnTree`,
+      `workFree_TwoSpiritsTwoDrops_EachReservesOwnDrop`.
 - [ ] Защита — приоритет у всех, но оборона распределённая и умная, без ухода далеко от защищаемого места.
 - [x] Стройка без конфликтов: координатор раздаёт конкретные клетки конкретному духу (бронь клеток), два духа не ставят
       блок в одно место; связано с чеклистом 29 (fill/build_schematic) и быстрыми укреплениями. Сделано (deepseek-v4.1-flash,

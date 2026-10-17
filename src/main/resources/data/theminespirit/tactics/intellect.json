@@ -4,6 +4,7 @@
   "failBackoffTicks": 200,
   "hysteresisMargin": 0.15,
   "crowdPenalty": 0.2,
+  "workCrowdPenalty": 8.0,
   "maxDemand": 10.0,
   "fleeMargin": 1.0,
   "maxFighters": 3,

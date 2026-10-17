@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -92,6 +93,38 @@ class WorkReservationsTests {
     void releaseAll_NoReservations_ReturnsZero() {
         assertEquals(0, new WorkReservations().releaseAll(GAMMA),
                 "Дух без броней ничего не снимает: выгрузка духа без работ не ошибка");
+    }
+
+    @Test
+    void ownedBy_TwoReservations_ListsBoth() {
+        WorkReservations reservations = new WorkReservations();
+        reservations.reserve(CELL, ALPHA, 100, 50);
+        reservations.reserve(TREE, ALPHA, 100, 50);
+
+        assertEquals(Set.of(CELL, TREE), reservations.ownedBy(ALPHA),
+                "Реестр перечисляет все брони духа: снимок берёт из них текущую цель работы");
+    }
+
+    @Test
+    void ownedBy_NoReservations_IsEmpty() {
+        assertEquals(Set.of(), new WorkReservations().ownedBy(ALPHA),
+                "Свободный дух не владеет ничем: снимок несёт пустую цель, и координатор даёт ему работу");
+    }
+
+    @Test
+    void ownedBy_AfterRelease_IsEmpty() {
+        WorkReservations reservations = new WorkReservations();
+        reservations.reserve(CELL, ALPHA, 100, 50);
+        reservations.release(CELL, ALPHA);
+
+        assertEquals(Set.of(), reservations.ownedBy(ALPHA),
+                "Снятая бронь не числится за духом: иначе снимок держал бы цель, которую дух уже отпустил");
+    }
+
+    @Test
+    void ownedBy_NullSpirit_Throws() {
+        assertThrows(IllegalArgumentException.class, () -> new WorkReservations().ownedBy(null),
+                "Владельца без духа не бывает: бронь привязана к конкретному духу");
     }
 
     @Test

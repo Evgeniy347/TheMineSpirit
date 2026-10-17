@@ -6,8 +6,11 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkReservations;
 import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
@@ -18,12 +21,14 @@ import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.coordinator.SpiritSnapshotReader;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -34,6 +39,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -369,6 +375,94 @@ public final class CoordinatorGameTests {
         spirits.forEach(SpiritEntity::discard);
         TacticsScene.finish(helper, other);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_work_free_tree", timeoutTicks = 400)
+    public static void workFree_TwoSpiritsTwoTrees_EachReservesOwnTree(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        helper.setBlock(2, 0, 3, Blocks.DIRT);
+        helper.setBlock(8, 0, 7, Blocks.DIRT);
+        ChopTreeGameTests.buildBirchTree(helper, 2, 3, 5);
+        ChopTreeGameTests.buildBirchTree(helper, 8, 7, 5);
+        SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(2, 1, 1));
+        SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(8, 1, 9));
+        first.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
+        second.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
+        SpiritRun firstRun = SpiritRun.launch(helper, first, chopTree(), 1);
+        SpiritRun secondRun = SpiritRun.launch(helper, second, chopTree(), 1);
+        Set<WorkTarget> firstEver = new HashSet<>();
+        Set<WorkTarget> secondEver = new HashSet<>();
+        helper.onEachTick(() -> {
+            WorkReservations leases = WorkReserveHub.leasesFor(helper.getLevel());
+            firstEver.addAll(treesOf(leases.ownedBy(first.getUUID())));
+            secondEver.addAll(treesOf(leases.ownedBy(second.getUUID())));
+        });
+
+        helper.succeedWhen(() -> {
+            firstRun.assertStarted();
+            secondRun.assertStarted();
+            helper.assertTrue(firstEver.size() == 1 && secondEver.size() == 1,
+                    "Каждый дух в свободном режиме закрепил бронью ровно своё дерево: фактически "
+                            + firstEver + " и " + secondEver + " — без броней WorkAllocator не видит, кто куда идёт");
+            helper.assertTrue(Collections.disjoint(firstEver, secondEver),
+                    "Двое не брали одно дерево: брони разные, фактически " + firstEver + " и " + secondEver);
+            helper.assertTrue(first.taskStatus().orElse(null) == RunStatus.SUCCEEDED
+                            && second.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "Оба духа доводят свою рубку до успеха: статусы "
+                            + first.taskStatus().map(RunStatus::name).orElse("нет") + " и "
+                            + second.taskStatus().map(RunStatus::name).orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(first.getInventory(), Items.BIRCH_LOG) == 5
+                            && GameTestFixtures.countInInventory(second.getInventory(), Items.BIRCH_LOG) == 5,
+                    "Каждый срубил своё дерево (по 5 брёвен): иначе двое делили одно, а второе осталось стоять");
+            TacticsScene.finish(helper, first);
+            second.discard();
+        });
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_work_free_drop", timeoutTicks = 300)
+    public static void workFree_TwoSpiritsTwoDrops_EachReservesOwnDrop(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
+        SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(6, 1, 5));
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 5, 1.0, 3).setPickUpDelay(32767);
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 5, 1.0, 9).setPickUpDelay(32767);
+        SpiritRun firstRun = SpiritRun.launch(helper, first, collectDrops(), 10);
+        SpiritRun secondRun = SpiritRun.launch(helper, second, collectDrops(), 10);
+        Set<WorkTarget> firstEver = new HashSet<>();
+        Set<WorkTarget> secondEver = new HashSet<>();
+        helper.onEachTick(() -> {
+            WorkReservations leases = WorkReserveHub.leasesFor(helper.getLevel());
+            firstEver.addAll(dropsOf(leases.ownedBy(first.getUUID())));
+            secondEver.addAll(dropsOf(leases.ownedBy(second.getUUID())));
+        });
+
+        helper.succeedWhen(() -> {
+            firstRun.assertStarted();
+            secondRun.assertStarted();
+            helper.assertTrue(!firstEver.isEmpty() && !secondEver.isEmpty(),
+                    "Оба духа закрепили бронью по кучке лута: фактически " + firstEver + " и " + secondEver
+                            + " — без броней двое идут к одной кучке");
+            helper.assertTrue(Collections.disjoint(firstEver, secondEver),
+                    "Один лут не делят: брони разные, фактически " + firstEver + " и " + secondEver);
+            TacticsScene.finish(helper, first);
+            second.discard();
+        });
+    }
+
+    private static Set<WorkTarget> treesOf(Set<WorkTarget> owned) {
+        return owned.stream().filter(target -> target.kind() == WorkKind.TREE).collect(Collectors.toSet());
+    }
+
+    private static Set<WorkTarget> dropsOf(Set<WorkTarget> owned) {
+        return owned.stream().filter(target -> target.kind() == WorkKind.DROP).collect(Collectors.toSet());
+    }
+
+    private static ScriptCall chopTree() {
+        return new ScriptCall("chop_tree", Map.of("species", "any", "count", 1, "radius", 16, "replant", false));
+    }
+
+    private static ScriptCall collectDrops() {
+        return new ScriptCall("collect_drops", Map.of("radius", 8));
     }
 
     private static List<Point> postsOf(List<SpiritEntity> spirits) {
