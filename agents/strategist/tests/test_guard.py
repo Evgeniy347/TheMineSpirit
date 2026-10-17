@@ -137,6 +137,21 @@ class BrainCallTests(unittest.TestCase):
         guard.begin_cycle()
         self.assertTrue(guard.allow_brain_call(T0 + 300, "b", "abc").ok, "после провала мир мог остаться тем же — спрашиваем снова")
 
+    def test_dryDecision_SamePlanNotedAsDuplicate_UntilRealPost(self):
+        guard = make_guard()
+        self.assertFalse(guard.record_dry_decision("b", "fp"), "первое dry-решение — не повтор")
+        self.assertTrue(guard.record_dry_decision("b", "fp"), "тот же план dry — повтор, его надо пометить")
+        self.assertFalse(guard.record_dry_decision("b", "other"), "другой план — новое решение")
+        self.assertTrue(guard.record_dry_decision("b", "other"))
+        guard.record_post(T0, "b", "other")
+        self.assertFalse(guard.record_dry_decision("b", "other"), "после настоящей задачи тот же план снова нов")
+
+    def test_dryDecision_RoundTripKeepsRememberedPlan(self):
+        guard = make_guard()
+        guard.record_dry_decision("b", "fp")
+        restored = Guard(from_env({}), json.loads(json.dumps(guard.to_dict())))
+        self.assertTrue(restored.record_dry_decision("b", "fp"), "память о dry-плане переживает рестарт")
+
     def test_pausedBot_NoBrainCall(self):
         guard = make_guard()
         for i in range(3):

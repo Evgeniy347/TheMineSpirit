@@ -234,6 +234,21 @@ class PrompterTests(unittest.TestCase):
             self.assertIn(needle, system, f"system.md должен упоминать «{needle}»")
         self.assertNotIn("\n\n\n\n", system)
 
+    def test_systemPrompt_ExplainsFoodScaleHealthAndNight(self):
+        system = self.build().system
+        for needle in ("food", "1.0", "сыт", "health", "ночь"):
+            self.assertIn(needle, system, f"system.md должен объяснять «{needle}»: шкалу сытости, здоровье и ночь")
+
+    def test_userPrompt_LowHealthFoodAndNight_VisibleToModel(self):
+        obs = copy.deepcopy(world("empty"))
+        obs["health"] = 4.0
+        obs["max_health"] = 20.0
+        obs["food"] = 0.1
+        obs["time"] = {"day": False, "day_time": 15000}
+        user = self.build(obs).user
+        for needle in ('"food":0.1', '"health":4.0', '"day":false'):
+            self.assertIn(needle, user, f"наблюдение с {needle} обязано доходить до модели")
+
     def test_userPrompt_ContainsEveryNodeTypeCatalogLimitsAndObservation(self):
         user = self.build().user
         for node_type in plan_format_types():

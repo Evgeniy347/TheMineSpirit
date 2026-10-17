@@ -80,6 +80,7 @@ public final class TicketPlans {
             case CAPTURE_ANIMAL -> captureAnimal(target);
             case LURE_ANIMAL -> lureAnimal(target);
             case SUPPLY_SITE -> supplySite(target);
+            case GATHER_MATERIALS -> gatherMaterials(target);
             case CLEAR_GROUNDS -> clearGrounds(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
@@ -208,6 +209,14 @@ public final class TicketPlans {
                 new ScriptCall("acquire", Map.of("item", item, "count", batch)),
                 new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", batch,
                         "radius", SUPPLY_CONTAINER_RADIUS)));
+    }
+
+    private static TaskNode gatherMaterials(TicketTarget target) {
+        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
+        int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
+        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        return sequence(gotoTarget(target),
+                new ScriptCall("acquire", Map.of("item", item, "count", batch)));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {

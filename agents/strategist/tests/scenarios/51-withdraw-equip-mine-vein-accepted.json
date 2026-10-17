@@ -1,0 +1,76 @@
+{
+ "name": "51-withdraw-equip-mine-vein-accepted",
+ "description": "кирка лежит в сундуке рядом: sequence withdraw -> equip -> mine_vein проходит локальную проверку (кирка накоплена с шага withdraw, а не из исходного инвентаря)",
+ "bots": [
+  {
+   "id": "farm",
+   "world": "farm"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом сундук с киркой: возьму её, надену и накопаю железо.",
+    "goal": "взять кирку из сундука и добыть железо",
+    "plan": {
+     "type": "sequence",
+     "steps": [
+      {
+       "type": "script",
+       "script": "withdraw",
+       "params": {
+        "container": "nearest",
+        "item": "iron_pickaxe",
+        "count": 1
+       }
+      },
+      {
+       "type": "script",
+       "script": "equip",
+       "params": {
+        "item": "iron_pickaxe"
+       }
+      },
+      {
+       "type": "script",
+       "script": "mine_vein",
+       "params": {
+        "ore": "iron",
+        "count": 4,
+        "radius": 16
+       }
+      }
+     ]
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "equip",
+     "mine_vein",
+     "withdraw"
+    ]
+   ]
+  }
+ ]
+}

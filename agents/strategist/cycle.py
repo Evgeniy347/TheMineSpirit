@@ -312,11 +312,15 @@ class CycleRunner:
                 "obs_hash": accepted.obs_hash, "created_at": rt.clock.now(),
                 "plan_warnings": list(accepted.warnings) or None}
         if self.effective_mode == "dry":
+            duplicate = rt.guard.record_dry_decision(bot_id, plan_fingerprint)
             rt.guard.record_decision(bot_id, accepted.obs_hash)
-            summary.dry += 1
+            if duplicate:
+                summary.skipped += 1
+            else:
+                summary.dry += 1
             rt.log("posted", cycle=cycle, bot=bot_id, dry=True, outcome="would_post", request_id=rid, goal=accepted.goal,
                    plan=accepted.plan, fingerprint=plan_fingerprint, model=accepted.model, prompt_sha=accepted.prompt_sha,
-                   plan_warnings=list(accepted.warnings) or None)
+                   duplicate=duplicate or None, plan_warnings=list(accepted.warnings) or None)
             return
         rt.state["pending"][bot_id] = base
         rt.save()

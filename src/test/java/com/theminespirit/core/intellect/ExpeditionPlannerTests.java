@@ -41,6 +41,15 @@ class ExpeditionPlannerTests {
     }
 
     @Test
+    void plan_EveningNeedAndTeam_Empty() {
+        SettlementView evening = SettlementViews.settlement(2, 2, 0, 0, 0, 0, 0.5);
+
+        assertEquals(Optional.empty(),
+                PLANNER.plan(evening, List.of(workerAt(uuid(1), 0), workerAt(uuid(2), 1)), MINE),
+                "Вечером в поход не выходят: ночью наружу ходят только за игроком, команда ночует в лагере");
+    }
+
+    @Test
     void plan_OneSuitable_Empty() {
         assertEquals(Optional.empty(), PLANNER.plan(needy(), List.of(workerAt(uuid(1), 0)), MINE),
                 "В одиночку в шахту не ходят: команда меньше двух не собирается");

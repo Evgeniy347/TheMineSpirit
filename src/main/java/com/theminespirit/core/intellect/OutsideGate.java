@@ -5,8 +5,11 @@ import com.theminespirit.core.tactics.Point;
 import java.util.Objects;
 
 public final class OutsideGate {
+    public static final String NIGHT_REASON = "ночь: внешняя работа не назначается";
+
     private final OutsideRules rules;
     private final int settlementRadius;
+    private final NightLeash leash;
 
     public OutsideGate(OutsideRules rules, int settlementRadius) {
         this.rules = Objects.requireNonNull(rules,
@@ -16,6 +19,7 @@ public final class OutsideGate {
                     + " меньше 1: с ним ни одна точка не считалась бы своей");
         }
         this.settlementRadius = settlementRadius;
+        this.leash = NightLeash.withDefaultRules();
     }
 
     public static OutsideGate withDefaults() {
@@ -49,8 +53,19 @@ public final class OutsideGate {
         return admitExternal(party, playerAccompanied);
     }
 
+    public boolean isEvening(double dayFraction) {
+        return leash.isEvening(dayFraction);
+    }
+
     public Decision admitExternal(int party, boolean playerAccompanied) {
+        return admitExternal(party, playerAccompanied, false);
+    }
+
+    public Decision admitExternal(int party, boolean playerAccompanied, boolean evening) {
         requireParty(party);
+        if (evening) {
+            return new Refused(NIGHT_REASON);
+        }
         if (playerAccompanied || party >= rules.partyMin()) {
             return new Allowed();
         }

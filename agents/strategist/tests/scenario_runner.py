@@ -274,6 +274,14 @@ class ScenarioRun:
             if item["contains"] not in user:
                 self.fail(when, f"в промпте вызова {item['call']} нет текста {item['contains']!r}")
 
+    def check_system_contains(self, expected, when):
+        systems = [call[0] for brain in self.brains.values() for call in brain.calls]
+        if not systems:
+            self.fail(when, "модель не вызывалась, проверять системное сообщение нечего")
+        for needle in expected if isinstance(expected, list) else [expected]:
+            if not all(needle in system for system in systems):
+                self.fail(when, f"в системном сообщении нет текста {needle!r}")
+
     def check_distinct_request_ids(self, expected, when):
         actual = len({r["body"]["request_id"] for r in self.task_posts()})
         if actual != expected:
