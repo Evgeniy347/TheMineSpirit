@@ -243,7 +243,8 @@ class ScriptCatalogTests {
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX},
                                 "radius", new long[]{CatalogLimits.CAMP_RADIUS_MIN, CatalogLimits.CAMP_RADIUS_MAX})),
-                spec("clear_camp", List.of(), Map.of()));
+                spec("clear_camp", List.of(), Map.of()),
+                spec("repair", List.of("item"), Map.of()));
 
         return rows.stream().map(row -> Arguments.of(row));
     }

@@ -439,7 +439,11 @@ public final class CoreScripts {
                                         CatalogLimits.CAMP_RADIUS_MAX, CatalogLimits.CAMP_RADIUS_DEFAULT)),
                         List.of(), List.of("лагерь поставлен и переживёт перезапуск")),
                 spec("clear_camp", "снять лагерь похода",
-                        List.of(), List.of(), List.of("лагеря у духа нет"))));
+                        List.of(), List.of(), List.of("лагеря у духа нет")),
+                spec("repair", "починить инструмент или броню через точило (два одинаковых повреждённых предмета)",
+                        List.of(ParamSpec.text("item", true)),
+                        List.of("в инвентаре есть два одинаковых повреждённых предмета"),
+                        List.of("предмет починен: сумма прочности + 5% от максимальной", "зачарования потеряны"))));
     }
 
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
