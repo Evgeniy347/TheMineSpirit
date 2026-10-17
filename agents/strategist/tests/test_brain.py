@@ -21,6 +21,26 @@ SKIP_REPLY = '{"reason":"нечего делать","skip":true}'
 FORBIDDEN_FLAGS = ("--auto", "--yolo", "--dangerously-skip-permissions")
 TOOLS_FROM_CHECKLIST = ("read", "edit", "bash", "webfetch", "websearch", "task", "skill", "external_directory", "question")
 
+_XDG_ORIGINAL = os.environ.get("XDG_DATA_HOME")
+_XDG_TMP = None
+
+
+def setUpModule():
+    """Изоляция: prepare_data_home не должен читать общий ~/.local/share/opencode в тестах."""
+    global _XDG_ORIGINAL, _XDG_TMP
+    _XDG_ORIGINAL = os.environ.get("XDG_DATA_HOME")
+    _XDG_TMP = tempfile.TemporaryDirectory()
+    os.environ["XDG_DATA_HOME"] = _XDG_TMP.name
+
+
+def tearDownModule():
+    if _XDG_TMP is not None:
+        _XDG_TMP.cleanup()
+    if _XDG_ORIGINAL is None:
+        os.environ.pop("XDG_DATA_HOME", None)
+    else:
+        os.environ["XDG_DATA_HOME"] = _XDG_ORIGINAL
+
 
 def make_config(tmp: Path, **overrides) -> config.Config:
     base = config.from_env({"STRATEGIST_HOME": str(tmp / "home")})

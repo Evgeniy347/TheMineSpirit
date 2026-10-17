@@ -20,6 +20,26 @@ FIXTURES = APP / "tests" / "fixtures"
 PLAN_REPLY = {"reason": "Рядом лес.", "goal": "срубить деревья",
               "plan": {"type": "script", "script": "chop_tree", "params": {"count": 3}}}
 
+_XDG_ORIGINAL = os.environ.get("XDG_DATA_HOME")
+_XDG_TMP = None
+
+
+def setUpModule():
+    """Изоляция: prepare_data_home не должен читать общий ~/.local/share/opencode в тестах."""
+    global _XDG_ORIGINAL, _XDG_TMP
+    _XDG_ORIGINAL = os.environ.get("XDG_DATA_HOME")
+    _XDG_TMP = tempfile.TemporaryDirectory()
+    os.environ["XDG_DATA_HOME"] = _XDG_TMP.name
+
+
+def tearDownModule():
+    if _XDG_TMP is not None:
+        _XDG_TMP.cleanup()
+    if _XDG_ORIGINAL is None:
+        os.environ.pop("XDG_DATA_HOME", None)
+    else:
+        os.environ["XDG_DATA_HOME"] = _XDG_ORIGINAL
+
 
 def dead(pid: int, timeout: float = 3.0) -> bool:
     deadline = time.monotonic() + timeout
