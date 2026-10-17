@@ -30,7 +30,7 @@ public final class BoardSources {
             return Set.of();
         }
         Set<String> live = new HashSet<>();
-        FirstStepsRunner.tick(level, service, spirits, now);
+        FirstStepsRunner.tick(level, service, spirits, stock, now);
         PenBuild.tick(level, service, spirits, now);
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
             lastEnchantCheck = now;

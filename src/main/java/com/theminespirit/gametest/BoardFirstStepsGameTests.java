@@ -2,8 +2,11 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
+import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -11,8 +14,10 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
@@ -78,7 +83,7 @@ public final class BoardFirstStepsGameTests {
 
         for (int step = 0; step < 20 && !foreignTrees; step++) {
             long now = level.getGameTime();
-            FirstStepsRunner.tick(level, board, List.of(spirit), now);
+            FirstStepsRunner.tick(level, board, List.of(spirit), stockOf(board), now);
             List<BoardTicket> active = board.board().all().stream()
                     .filter(ticket -> ticket.id().startsWith("first:"))
                     .filter(ticket -> {
@@ -139,6 +144,17 @@ public final class BoardFirstStepsGameTests {
         }
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    /** Запас для цепочки: материалы из рецептов и схем плюс снимок доски (по нему виден инструмент). */
+    private static StockView stockOf(BoardService board) {
+        Map<String, Integer> items = new HashMap<>(board.stock().available());
+        items.putIfAbsent("oak_planks", 256);
+        items.putIfAbsent("stick", 256);
+        items.putIfAbsent("oak_fence", 256);
+        items.putIfAbsent("torch", 256);
+        items.putIfAbsent("cobblestone", 256);
+        return new StockView(items);
     }
 
     /**

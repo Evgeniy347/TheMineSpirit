@@ -21,6 +21,7 @@ public enum BoardCase {
     ENCHANT_ROOM,
     ENCHANT_SHELVES,
     FILL_CRATER,
+    GATHER_MATERIALS,
     HERD_CULL,
     LIGHTING,
     LURE_ANIMAL,
