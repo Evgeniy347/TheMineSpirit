@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
+import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.Schematic;
@@ -26,6 +27,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -49,6 +51,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private final Level level;
     private final String file;
     private final BlockCoord origin;
+    private final BuildRotation rotation;
     private final List<Schematic.PlacedEntry> entries;
     private final LevelSafetyView safety;
     private final BlockPlacer placer;
@@ -76,11 +79,26 @@ final class BuildSchematicScript implements ScriptInstance {
         this.level = spirit.level();
         this.file = params.file();
         this.origin = new BlockCoord(params.x(), params.y(), params.z());
-        this.entries = SchematicResources.load(params.file()).entries(origin);
+        this.rotation = params.rotation();
+        this.entries = SchematicResources.load(params.file()).entries(origin, rotation);
         this.safety = new LevelSafetyView(level);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
+    }
+
+    private BlockState wantedState(Schematic.PlacedEntry entry) {
+        BlockState state = BlockStates.stateFor(entry.block());
+        return rotation == BuildRotation.NONE ? state : state.rotate(level, toPos(entry.pos()), mcRotation());
+    }
+
+    private Rotation mcRotation() {
+        return switch (rotation) {
+            case NONE -> Rotation.NONE;
+            case CLOCKWISE_90 -> Rotation.CLOCKWISE_90;
+            case CLOCKWISE_180 -> Rotation.CLOCKWISE_180;
+            case COUNTERCLOCKWISE_90 -> Rotation.COUNTERCLOCKWISE_90;
+        };
     }
 
     @Override
@@ -94,7 +112,7 @@ final class BuildSchematicScript implements ScriptInstance {
         while (cursor < entries.size()) {
             Schematic.PlacedEntry entry = entries.get(cursor);
             BlockState current = level.getBlockState(toPos(entry.pos()));
-            BlockState wanted = BlockStates.stateFor(entry.block());
+            BlockState wanted = wantedState(entry);
             if (current.is(wanted.getBlock())) {
                 resetEntry();
                 cursor++;

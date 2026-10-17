@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.BuildRotation;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -88,7 +89,16 @@ class BuildingParamsTests {
     void buildSchematic_ValidFile_ReturnsParams() {
         BuildSchematicParams params = BuildSchematicParams.from(Map.of("file", "house", "x", 0, "y", 64, "z", 0));
 
-        assertEquals(new BuildSchematicParams("house", 0, 64, 0), params,
+        assertEquals(new BuildSchematicParams("house", 0, 64, 0, BuildRotation.NONE), params,
                 "Схема обязана сохранить файл и якорь: по ним адаптер грузит и ставит схему");
+    }
+
+    @Test
+    void buildSchematic_RotationName_ParsesQuarterTurns() {
+        BuildSchematicParams params = BuildSchematicParams.from(Map.of("file", "house", "x", 0, "y", 64, "z", 0,
+                "rotation", "clockwise_90"));
+
+        assertEquals(BuildRotation.CLOCKWISE_90, params.rotation(),
+                "Поворот схемы обязан читаться из параметра: без него постройка встанет не той стороной");
     }
 }
