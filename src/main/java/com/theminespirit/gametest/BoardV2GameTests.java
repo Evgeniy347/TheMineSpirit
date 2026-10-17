@@ -89,6 +89,7 @@ import org.slf4j.Logger;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardV2GameTests {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String BATCH = "board_v2";
@@ -104,29 +105,21 @@ public final class BoardV2GameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void prepareBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(false);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(true);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = EVERGREEN_BATCH)
     public static void prepareEvergreenBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(false);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = EVERGREEN_BATCH)
     public static void restoreEvergreenBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(true);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
