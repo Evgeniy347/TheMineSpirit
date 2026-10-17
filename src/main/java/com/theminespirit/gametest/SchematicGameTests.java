@@ -78,6 +78,37 @@ public final class SchematicGameTests {
         return found;
     }
 
+    @GameTest(template = "arena", batch = "build_schematic_shared", timeoutTicks = 400)
+    public static void schematic_TwoSpiritsOneHouse_EachBlockPlacedOnce(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity firstSpirit = spawnWith(helper, new BlockPos(1, 1, 1), 17);
+        SpiritEntity secondSpirit = spawnWith(helper, new BlockPos(7, 1, 7), 17);
+        SpiritRun firstRun = SpiritRun.launch(helper, firstSpirit, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+        SpiritRun secondRun = SpiritRun.launch(helper, secondSpirit, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            firstRun.assertStarted();
+            secondRun.assertStarted();
+            helper.assertTrue(finished(firstSpirit) && finished(secondSpirit),
+                    "обе стройки обязаны завершиться успехом: первая "
+                            + firstSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", вторая "
+                            + secondSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+                    "домик по схеме обязан встать целиком: двое строителей делят клетки, вместе 17, фактически "
+                            + countHouse(helper, ANCHOR));
+            int remaining = GameTestFixtures.countInInventory(firstSpirit.getInventory(), Items.COBBLESTONE)
+                    + GameTestFixtures.countInInventory(secondSpirit.getInventory(), Items.COBBLESTONE);
+            helper.assertTrue(34 - remaining == 17,
+                    "потрачено обязано быть ровно 17 блоков: двойной постановки и двойного расхода нет, потрачено "
+                            + (34 - remaining));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    private static boolean finished(SpiritEntity spirit) {
+        return spirit.taskStatus().isPresent() && spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED;
+    }
+
     @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
     public static void schematic_HouseFromFile_StandsWithCountedMaterials(GameTestHelper helper) {
         prepare(helper);
