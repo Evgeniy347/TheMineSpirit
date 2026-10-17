@@ -12,10 +12,11 @@ public interface Activity {
     ActivityIntent order(SpiritSnapshot spirit, SettlementView view);
 
     static double checkedDemand(ActivityId id, double demand) {
+        double maxDemand = IntellectTuning.loadDefault().maxDemand();
         if (Double.isNaN(demand) || Double.isInfinite(demand) || demand < 0
-                || demand > IntellectTuning.MAX_DEMAND) {
+                || demand > maxDemand) {
             throw new IllegalArgumentException("Спрос " + id + " = " + demand + ": обязан быть конечным числом в 0.."
-                    + IntellectTuning.MAX_DEMAND + ", иначе распределение сравнивает несравнимое");
+                    + maxDemand + ", иначе распределение сравнивает несравнимое");
         }
         return demand;
     }

@@ -34,7 +34,7 @@ class FreeInventoryDemandTests {
     void demand_FullInventory_ClampsToMax() {
         InventoryFill full = new InventoryFill(36, 36, 200, 200);
 
-        assertEquals(IntellectTuning.MAX_DEMAND, FreeInventoryDemand.demand(full, TABLE), 1e-9,
+        assertEquals(IntellectTuning.loadDefault().maxDemand(), FreeInventoryDemand.demand(full, TABLE), 1e-9,
                 "Полный забитый лишним инвентарь упирается в потолок шкалы: иначе распределение сравнивает "
                         + "значения выше MAX_DEMAND");
     }

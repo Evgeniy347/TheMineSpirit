@@ -17,7 +17,7 @@ public final class Invitation {
         }
         opened = true;
         openedAt = now;
-        deadline = now + IntellectTuning.INVITE_TTL_TICKS;
+        deadline = now + IntellectTuning.loadDefault().inviteTtlTicks();
         stage = InvitationStage.OPEN;
         goWithout = false;
         extendsUsed = 0;
@@ -50,9 +50,10 @@ public final class Invitation {
             return state(now);
         }
         if (answer == InvitationAnswer.WAIT_MORE) {
-            if (extendsUsed < IntellectTuning.INVITE_MAX_EXTENDS) {
+            IntellectTuning tuning = IntellectTuning.loadDefault();
+            if (extendsUsed < tuning.inviteMaxExtends()) {
                 stage = InvitationStage.EXTENDED;
-                deadline += IntellectTuning.INVITE_EXTEND_TICKS;
+                deadline += tuning.inviteExtendTicks();
                 extendsUsed++;
             }
         } else {
@@ -63,7 +64,9 @@ public final class Invitation {
     }
 
     private InvitationState state(long now) {
-        int repeats = opened ? (int) ((now - openedAt) / IntellectTuning.INVITE_REPEAT_TICKS) : 0;
+        int repeats = opened
+                ? (int) ((now - openedAt) / IntellectTuning.loadDefault().inviteRepeatTicks())
+                : 0;
         return new InvitationState(stage == null ? InvitationStage.GO_WITHOUT : stage, deadline,
                 Math.max(0, repeats), goWithout);
     }

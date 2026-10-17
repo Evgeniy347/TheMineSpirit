@@ -65,7 +65,7 @@ class InvitationTests {
     void answer_WaitMoreBeyondLimit_DoesNotExtend() {
         Invitation fresh = new Invitation();
         fresh.open(0);
-        for (int i = 0; i < IntellectTuning.INVITE_MAX_EXTENDS; i++) {
+        for (int i = 0; i < IntellectTuning.loadDefault().inviteMaxExtends(); i++) {
             fresh.answer(InvitationAnswer.WAIT_MORE, 100 + i);
         }
         long cappedDeadline = fresh.answer(InvitationAnswer.WAIT_MORE, 200).deadline();

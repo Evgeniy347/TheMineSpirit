@@ -9,8 +9,8 @@ public final class FoodDemand {
             throw new IllegalArgumentException(
                     "Спрос еды без обстановки не считается: зависит от запаса и числа душ");
         }
-        return view.foodDeficit(IntellectTuning.FOOD_DAYS, IntellectTuning.FOOD_RATION,
-                IntellectTuning.FOOD_CHILD_RATION).share();
+        IntellectTuning tuning = IntellectTuning.loadDefault();
+        return view.foodDeficit(tuning.foodDays(), tuning.foodRation(), tuning.foodChildRation()).share();
     }
 
     public static double demand(ActivityId id, SettlementView view) {
@@ -21,8 +21,9 @@ public final class FoodDemand {
         if (share <= 0) {
             return Activity.checkedDemand(id, 0);
         }
-        double demand = IntellectTuning.FOOD_DEMAND_MIN
-                + (IntellectTuning.FOOD_DEMAND_MAX - IntellectTuning.FOOD_DEMAND_MIN) * share;
+        IntellectTuning tuning = IntellectTuning.loadDefault();
+        double demand = tuning.foodDemandMin()
+                + (tuning.foodDemandMax() - tuning.foodDemandMin()) * share;
         return Activity.checkedDemand(id, demand);
     }
 }

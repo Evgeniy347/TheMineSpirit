@@ -30,7 +30,7 @@ class DefenseTuningTests {
 
     @Test
     void lowHpFraction_HealThreshold_MatchesIntellect() {
-        assertEquals(IntellectTuning.HEAL_FRACTION, DefenseTuning.LOW_HP_FRACTION,
+        assertEquals(IntellectTuning.loadDefault().healFraction(), DefenseTuning.LOW_HP_FRACTION,
                 "Порог отхода обороны совпадает с порогом лечения интеллекта: иначе один слой лечит, а второй "
                         + "дерётся тем же духом");
     }

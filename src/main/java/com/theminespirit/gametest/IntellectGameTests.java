@@ -120,7 +120,7 @@ public final class IntellectGameTests {
             helper.assertTrue(spirits.get(0).currentTaskScript().map(script -> script.equals("wait"))
                             .orElse(false),
                     "Чужую задачу wait интеллект не отбирает: иначе сцены соседних тестов ломаются");
-            helper.assertTrue(IntellectTuning.DEMAND_INTERVAL_TICKS == 100,
+            helper.assertTrue(IntellectTuning.loadDefault().demandIntervalTicks() == 100,
                     "Пересчёт спроса раз в 100 тиков: чаще — лишние чтения запасов, реже — поздно видит нужду");
             spirits.forEach(SpiritEntity::discard);
             TacticsScene.finish(helper, spirits.get(0));
@@ -155,7 +155,7 @@ public final class IntellectGameTests {
                     "Четыре необожжённых железных — железо 4: иначе переплавка не видит сырьё");
             helper.assertTrue(view.weapons() == 1,
                     "Железный меч — одно оружие: иначе оценка сил шлёт безоружных за оружием, которого нет");
-            helper.assertTrue(IntellectTuning.DEMAND_INTERVAL_TICKS == 100,
+            helper.assertTrue(IntellectTuning.loadDefault().demandIntervalTicks() == 100,
                     "Пересчёт спроса раз в 100 тиков: бюджет чтений считается от этого числа");
             helper.assertTrue(StockReader.STOCK_READ_BUDGET == 4096,
                     "Бюджет чтений запасов 4096 на пересборку: шире — тик читает полмира, уже — не видит сундуки");
@@ -199,7 +199,7 @@ public final class IntellectGameTests {
                 List<StrengthVerdict> verdicts = intellect.decision().orElseThrow().strengths();
                 helper.assertTrue(verdicts.size() == 3,
                         "Каждый из трёх духов при угрозе получил вердикт: иначе угроза не вытесняет работу");
-                helper.assertTrue(IntellectTuning.MAX_FIGHTERS == 3,
+                helper.assertTrue(IntellectTuning.loadDefault().maxFighters() == 3,
                         "Предел бойцов 3: больше — поселение бросает работу ради одного зомби");
                 helper.assertTrue(verdicts.stream()
                                 .filter(verdict -> verdict.action() == StrengthAction.FIGHT).count() <= 2,
@@ -343,11 +343,12 @@ public final class IntellectGameTests {
         helper.assertTrue(intellect.expeditions().onAnswer(id, InvitationAnswer.WAIT_MORE, openedAt),
                 "Ответ «подождите» принимает поход: иначе кнопка ведёт в никуда");
         intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
-                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+                openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
         helper.assertTrue(intellect.expeditions().active().isPresent(),
                 "После «подождите» поход ждёт сверх старого срока: иначе продление ничего не даёт");
         intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
-                openedAt + IntellectTuning.INVITE_TTL_TICKS + IntellectTuning.INVITE_EXTEND_TICKS + 100);
+                openedAt + IntellectTuning.loadDefault().inviteTtlTicks()
+                        + IntellectTuning.loadDefault().inviteExtendTicks() + 100);
         helper.assertTrue(intellect.expeditions().active().isEmpty(),
                 "После продления команда уходит сама: иначе вопрос висит после срока");
         helper.assertTrue(intellect.expeditions().lastDispatch()
@@ -383,7 +384,7 @@ public final class IntellectGameTests {
         helper.assertTrue(intellect.expeditions().active().isPresent(),
                 "Приглашение создано: иначе молчанию нечего истекать");
         intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
-                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+                openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
         helper.assertTrue(intellect.expeditions().active().isEmpty(),
                 "Молчание три минуты — духи идут сами: иначе экспедиция встанет без ответа");
         helper.assertTrue(intellect.expeditions().lastDispatch()

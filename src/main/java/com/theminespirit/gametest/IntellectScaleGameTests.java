@@ -67,7 +67,7 @@ public final class IntellectScaleGameTests {
                     failTick.put(id, now);
                 }
                 if (restarted && failTick.containsKey(id) && startedScript(spirit)) {
-                    helper.assertTrue(now - failTick.get(id) >= IntellectTuning.FAIL_BACKOFF_TICKS,
+                    helper.assertTrue(now - failTick.get(id) >= IntellectTuning.loadDefault().failBackoffTicks(),
                             "Дух " + id + " получил работу через " + (now - failTick.get(id))
                                     + " тиков после провала вместо 200: откат не держит");
                     failTick.remove(id);
@@ -77,8 +77,8 @@ public final class IntellectScaleGameTests {
             if (elapsed >= OBSERVED_TICKS) {
                 helper.assertTrue(intellect.decideCalls() >= 2,
                         "Интеллект пересчитал спрос дважды: иначе бюджеты делить не на что");
-                helper.assertTrue(intellect.decideCalls() * IntellectTuning.DEMAND_INTERVAL_TICKS
-                                <= elapsed + IntellectTuning.DEMAND_INTERVAL_TICKS,
+                helper.assertTrue(intellect.decideCalls() * IntellectTuning.loadDefault().demandIntervalTicks()
+                                <= elapsed + IntellectTuning.loadDefault().demandIntervalTicks(),
                         "Пересчётов не больше одного на 100 тиков: иначе снимок собирается каждый тик");
                 helper.assertTrue(intellect.entityQueries() <= intellect.decideCalls(),
                         "Запросов сущностей не больше числа пересчётов: один сбор врагов на решение");
@@ -87,15 +87,15 @@ public final class IntellectScaleGameTests {
                 helper.assertTrue(intellect.stockReads() <= StockReader.STOCK_READ_BUDGET
                                 * intellect.decideCalls(),
                         "Чтений запасов не больше бюджета на число пересборок: иначе тик читает полмира");
-                helper.assertTrue(IntellectTuning.FAIL_BACKOFF_TICKS == 200,
+                helper.assertTrue(IntellectTuning.loadDefault().failBackoffTicks() == 200,
                         "Откат провала 200 тиков: число в тесте, факт — из production");
                 helper.assertTrue(intellect.taskFailures() >= SPIRITS,
                         "Провалов не меньше числа духов: иначе механизм отката вообще не включался");
                 helper.assertTrue(intellect.taskFailures() <= SPIRITS * (OBSERVED_TICKS
-                                / IntellectTuning.FAIL_BACKOFF_TICKS),
+                                / IntellectTuning.loadDefault().failBackoffTicks()),
                         "Провалов не больше пяти окон отката на духа: иначе задачи перезапускаются без отката");
                 helper.assertTrue(intellect.taskStarts() <= SPIRITS
-                                * (1 + OBSERVED_TICKS / IntellectTuning.DEMAND_INTERVAL_TICKS),
+                                * (1 + OBSERVED_TICKS / IntellectTuning.loadDefault().demandIntervalTicks()),
                         "Назначений не больше одного на духа за период спроса: иначе дёргаем задачи каждый тик");
                 helper.assertTrue(intellect.view().orElseThrow().population() == SPIRITS,
                         "В снимке все " + SPIRITS + " духов: иначе решение делят без части поселения");
@@ -140,7 +140,7 @@ public final class IntellectScaleGameTests {
                     failTick[0] = now;
                 }
             } else if (restarted && startedScript(spirit)) {
-                helper.assertTrue(now - failTick[0] >= IntellectTuning.FAIL_BACKOFF_TICKS,
+                helper.assertTrue(now - failTick[0] >= IntellectTuning.loadDefault().failBackoffTicks(),
                         "Работа после провала перезапущена через " + (now - failTick[0])
                                 + " тиков вместо 200: откат не держит");
                 spirit.discard();

@@ -50,9 +50,9 @@ class InvitationProperties {
     void answer_WaitMore_NeverExceedsMaxExtends(@ForAll @IntRange(min = 0, max = 20) int extra) {
         Invitation invitation = new Invitation();
         invitation.open(0);
-        long maxDeadline = IntellectTuning.INVITE_TTL_TICKS
-                + (long) IntellectTuning.INVITE_MAX_EXTENDS * IntellectTuning.INVITE_EXTEND_TICKS;
-        for (int i = 0; i < IntellectTuning.INVITE_MAX_EXTENDS + extra; i++) {
+        long maxDeadline = IntellectTuning.loadDefault().inviteTtlTicks()
+                + (long) IntellectTuning.loadDefault().inviteMaxExtends() * IntellectTuning.loadDefault().inviteExtendTicks();
+        for (int i = 0; i < IntellectTuning.loadDefault().inviteMaxExtends() + extra; i++) {
             invitation.answer(InvitationAnswer.WAIT_MORE, 10 + i);
         }
         assertTrue(invitation.answer(InvitationAnswer.WAIT_MORE, 1000).deadline() <= maxDeadline,

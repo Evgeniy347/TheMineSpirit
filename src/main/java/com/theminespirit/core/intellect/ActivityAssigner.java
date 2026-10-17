@@ -60,7 +60,7 @@ public final class ActivityAssigner {
         List<ActivityAssignment> assignments = new ArrayList<>();
         Map<ActivityId, Integer> taken = new EnumMap<>(ActivityId.class);
         int defenders = 0;
-        int defendersNeeded = Math.min(view.threats(), IntellectTuning.MAX_FIGHTERS);
+        int defendersNeeded = Math.min(view.threats(), IntellectTuning.loadDefault().maxFighters());
         for (SpiritSnapshot spirit : view.spirits()) {
             Optional<ActivityAssignment> current = ledger.of(spirit.id());
             if (current.isEmpty() && spirit.workTarget().isPresent()) {
@@ -84,6 +84,7 @@ public final class ActivityAssigner {
     private ActivityId choose(SpiritSnapshot spirit, SettlementView view, List<ActivityDemand> demands,
             Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken, Optional<ActivityAssignment> current,
             long now, int defenders, int defendersNeeded) {
+        IntellectTuning tuning = IntellectTuning.loadDefault();
         boolean threatened = spirit.threatsNear() > 0 || spirit.attacked();
         boolean defendOffered = demandById.containsKey(ActivityId.DEFEND);
         if (view.threats() > 0 && threatened && defendOffered && eligible(ActivityId.DEFEND, spirit, view)) {
@@ -106,9 +107,9 @@ public final class ActivityAssigner {
         if (current.isPresent() && current.get().activity() != ActivityId.DEFEND
                 && demandById.containsKey(current.get().activity())
                 && eligible(current.get().activity(), spirit, view)
-                && now - current.get().since() < IntellectTuning.MIN_SWITCH_TICKS
+                && now - current.get().since() < tuning.minSwitchTicks()
                 && scored(best, demandById, taken) < demandById.get(current.get().activity())
-                        + IntellectTuning.HYSTERESIS_MARGIN) {
+                        + tuning.hysteresisMargin()) {
             return current.get().activity();
         }
         return best;
@@ -116,13 +117,14 @@ public final class ActivityAssigner {
 
     private ActivityId bestScored(SpiritSnapshot spirit, SettlementView view, List<ActivityDemand> demands,
             Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken, ActivityId excluded) {
+        IntellectTuning tuning = IntellectTuning.loadDefault();
         ActivityId best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
         for (ActivityDemand demand : demands) {
             if (demand.id() == excluded || !eligible(demand.id(), spirit, view)) {
                 continue;
             }
-            double score = demand.demand() - IntellectTuning.CROWD_PENALTY * taken.getOrDefault(demand.id(), 0);
+            double score = demand.demand() - tuning.crowdPenalty() * taken.getOrDefault(demand.id(), 0);
             if (best == null || score > bestScore || (score == bestScore && demand.id().compareTo(best) < 0)) {
                 best = demand.id();
                 bestScore = score;
@@ -132,7 +134,7 @@ public final class ActivityAssigner {
     }
 
     private double scored(ActivityId id, Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken) {
-        return demandById.get(id) - IntellectTuning.CROWD_PENALTY * taken.getOrDefault(id, 0);
+        return demandById.get(id) - IntellectTuning.loadDefault().crowdPenalty() * taken.getOrDefault(id, 0);
     }
 
     private boolean eligible(ActivityId id, SpiritSnapshot spirit, SettlementView view) {
