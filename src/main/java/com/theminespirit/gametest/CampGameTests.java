@@ -5,8 +5,6 @@ import com.theminespirit.core.base.Camp;
 import com.theminespirit.core.base.CampTuning;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.perception.MemoryPoint;
-import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
@@ -54,10 +52,7 @@ public final class CampGameTests {
     }
 
     private static void giveHome(GameTestHelper helper, SpiritEntity spirit, BlockPos relative) {
-        BlockPos absolute = helper.absolutePos(relative);
-        spirit.updateMemory(spirit.memory().remember(new MemoryPoint("home", MemoryType.BASE,
-                helper.getLevel().dimension().location().toString(),
-                new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()))));
+        spirit.setHome(MovementScene.coord(helper, relative));
     }
 
     @GameTest(template = "arena", batch = "camp_persist")
@@ -149,8 +144,8 @@ public final class CampGameTests {
                 helper.fail("дух не дошёл до ближнего дома за " + ARRIVE_LIMIT_TICKS + " тиков духа, расстояние "
                         + MovementScene.distanceTo(helper, spirit, home) + ", решение "
                         + spirit.tactics().explain().orElse("нет") + ", директива "
-                        + spirit.tactics().activeDirective().map(Object::toString).orElse("нет") + ", память BASE "
-                        + spirit.memory().recallAll(MemoryType.BASE) + ", лагерь " + spirit.camp()
+                        + spirit.tactics().activeDirective().map(Object::toString).orElse("нет") + ", дом "
+                        + spirit.home().map(Object::toString).orElse("нет") + ", лагерь " + spirit.camp()
                         + ", сбоев тактики " + spirit.tactics().failures() + " "
                         + spirit.tactics().lastFailure().orElse("нет"));
             }

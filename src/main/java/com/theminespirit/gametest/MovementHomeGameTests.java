@@ -3,6 +3,8 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.perception.MemoryPoint;
+import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritHomeStore;
@@ -87,8 +89,10 @@ public final class MovementHomeGameTests {
         BlockCoord home = new BlockCoord(-12, 64, 345);
         CompoundTag clean = new CompoundTag();
         saved.addAdditionalSaveData(clean);
-        helper.assertTrue(!clean.contains(SpiritHomeStore.KEY),
-                "у духа без дома в NBT нет ключа " + SpiritHomeStore.KEY + ": иначе он помнит дом, которого нет");
+        SpiritEntity noHome = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 1));
+        noHome.readAdditionalSaveData(clean);
+        helper.assertTrue(noHome.home().isEmpty(),
+                "у духа без дома загрузка не выдумывает дом: прочитан " + noHome.home());
 
         saved.setHome(home);
         CompoundTag tag = new CompoundTag();
@@ -98,6 +102,14 @@ public final class MovementHomeGameTests {
         helper.assertTrue(home.equals(loaded.home().orElse(null)),
                 "дом обязан пережить сохранение и загрузку: записан " + home + ", прочитан " + loaded.home());
 
+        CompoundTag legacyFormat = tag.copy();
+        legacyFormat.getCompound(SpiritHomeStore.KEY).remove(SpiritHomeStore.SET_KEY);
+        SpiritEntity legacyFormatLoad = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 1));
+        legacyFormatLoad.readAdditionalSaveData(legacyFormat);
+        helper.assertTrue(home.equals(legacyFormatLoad.home().orElse(null)),
+                "старое сохранение без флага " + SpiritHomeStore.SET_KEY + " читается как дом: записан " + home
+                        + ", прочитан " + legacyFormatLoad.home());
+
         tag.getCompound(SpiritHomeStore.KEY).putInt("Version", FUTURE_VERSION);
         SpiritEntity future = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 1));
         future.readAdditionalSaveData(tag);
@@ -105,9 +117,51 @@ public final class MovementHomeGameTests {
                 "дом чужой версии не читается молча: дух остаётся без дома, а получил " + future.home());
 
         saved.clearHome();
+        BlockPos legacyPos = helper.absolutePos(new BlockPos(5, 1, 1));
+        saved.updateMemory(saved.memory().remember(new MemoryPoint("old-home", MemoryType.BASE,
+                helper.getLevel().dimension().location().toString(),
+                new BlockCoord(legacyPos.getX(), legacyPos.getY(), legacyPos.getZ()))));
         CompoundTag cleared = new CompoundTag();
         saved.addAdditionalSaveData(cleared);
-        helper.assertTrue(!cleared.contains(SpiritHomeStore.KEY), "снятый дом обязан пропасть из NBT");
+        SpiritEntity clearedLoad = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        clearedLoad.readAdditionalSaveData(cleared);
+        helper.assertTrue(clearedLoad.home().isEmpty(),
+                "снятый дом не воскресает из легаси-памяти BASE: прочитан " + clearedLoad.home());
+        helper.assertTrue(clearedLoad.memory().recallAll(MemoryType.BASE).size() == 1,
+                "BASE в памяти — это отдельное место, а не дом: снятие дома не стирает память, осталось "
+                        + clearedLoad.memory().recallAll(MemoryType.BASE));
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "move_home_legacy")
+    public static void home_LegacyBaseMemoryWithoutHomeKey_MigratesOnLoadAndKeepsMemory(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
+        SpiritEntity legacy = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        BlockPos absolute = helper.absolutePos(new BlockPos(5, 1, 1));
+        BlockCoord legacyHome = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+        legacy.updateMemory(legacy.memory().remember(new MemoryPoint("old-home", MemoryType.BASE,
+                helper.getLevel().dimension().location().toString(), legacyHome)));
+        CompoundTag tag = new CompoundTag();
+        legacy.addAdditionalSaveData(tag);
+        tag.remove(SpiritHomeStore.KEY);
+        helper.assertTrue(!tag.contains(SpiritHomeStore.KEY),
+                "старое сохранение дома живёт только в памяти BASE: ключа " + SpiritHomeStore.KEY + " в нём нет");
+
+        SpiritEntity loaded = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        loaded.readAdditionalSaveData(tag);
+        helper.assertTrue(legacyHome.equals(loaded.home().orElse(null)),
+                "старое сохранение читается: BASE-память обязана стать домом, записан " + legacyHome
+                        + ", прочитан " + loaded.home());
+        helper.assertTrue(loaded.memory().recallAll(MemoryType.BASE).size() == 1,
+                "перенос дома не стирает память BASE: точка остаётся местом, осталось "
+                        + loaded.memory().recallAll(MemoryType.BASE));
+
+        CompoundTag migrated = new CompoundTag();
+        loaded.addAdditionalSaveData(migrated);
+        helper.assertTrue(migrated.contains(SpiritHomeStore.KEY),
+                "перенесённый дом обязан сохраниться уже как " + SpiritHomeStore.KEY + ": иначе миграция повторяется "
+                        + "каждую загрузку");
         GameTestFixtures.reset(helper);
         helper.succeed();
     }

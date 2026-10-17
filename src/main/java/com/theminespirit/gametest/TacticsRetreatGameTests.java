@@ -1,9 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.perception.MemoryPoint;
-import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
@@ -46,10 +43,7 @@ public final class TacticsRetreatGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(9, 1, 1));
         BlockPos home = new BlockPos(1, 1, 1);
-        BlockPos homeAbsolute = helper.absolutePos(home);
-        spirit.updateMemory(spirit.memory().remember(new MemoryPoint("home", MemoryType.BASE,
-                helper.getLevel().dimension().location().toString(),
-                new BlockCoord(homeAbsolute.getX(), homeAbsolute.getY(), homeAbsolute.getZ()))));
+        spirit.setHome(MovementScene.coord(helper, home));
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(9, 1, 9));
         PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, new BlockPos(9, 1, 5), true, TacticsScene.LOW_HP);
         int[] arrivedAt = {-1};

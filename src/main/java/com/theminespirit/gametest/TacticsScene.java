@@ -1,8 +1,5 @@
 package com.theminespirit.gametest;
 
-import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.perception.MemoryPoint;
-import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
@@ -84,10 +81,7 @@ final class TacticsScene {
     }
 
     static void giveHome(GameTestHelper helper, SpiritEntity spirit, BlockPos home) {
-        BlockPos absolute = helper.absolutePos(home);
-        spirit.updateMemory(spirit.memory().remember(new MemoryPoint("home", MemoryType.BASE,
-                helper.getLevel().dimension().location().toString(),
-                new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()))));
+        spirit.setHome(MovementScene.coord(helper, home));
     }
 
     static void wearIronArmor(SpiritEntity spirit) {

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.base.Camp;
+import com.theminespirit.core.base.SpiritHome;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
@@ -16,6 +17,7 @@ import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.MemoryCodec;
 import com.theminespirit.core.perception.MemoryFormatException;
 import com.theminespirit.core.perception.MemoryStore;
+import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.perception.PerceptionResult;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.DropPolicy;
@@ -40,6 +42,7 @@ import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.damagesource.DamageSource;
@@ -72,7 +75,7 @@ public final class SpiritEntity extends PathfinderMob {
     private PerceptionResult perceptionResult;
     private Finding finding;
     private MemoryStore memory = MemoryStore.empty();
-    private BlockCoord home;
+    private SpiritHome home = SpiritHome.none();
     private BlockCoord bed;
     private Camp camp;
     private DropCollector activeCollector;
@@ -206,15 +209,15 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<BlockCoord> home() {
-        return Optional.ofNullable(home);
+        return home.point();
     }
 
     public void setHome(BlockCoord home) {
-        this.home = home;
+        this.home = SpiritHome.at(home);
     }
 
     public void clearHome() {
-        this.home = null;
+        this.home = SpiritHome.none();
     }
 
     public Optional<BlockCoord> bed() {
@@ -339,7 +342,10 @@ public final class SpiritEntity extends PathfinderMob {
 
     private void restoreHome(CompoundTag compound) {
         try {
-            home = SpiritHomeStore.read(compound).orElse(null);
+            BlockPos pos = blockPosition();
+            home = SpiritHome.resolve(SpiritHomeStore.read(compound), memory.recallAll(MemoryType.BASE),
+                    level().dimension().location().toString(),
+                    new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         } catch (RuntimeException e) {
             LOGGER.warn("Дух {} не восстановил дом: {}", getUUID(), e.getMessage());
         }
