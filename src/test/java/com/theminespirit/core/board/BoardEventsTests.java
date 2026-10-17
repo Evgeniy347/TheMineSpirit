@@ -47,9 +47,10 @@ class BoardEventsTests {
         board.claim("t", SPIRIT, 7);
         board.claim("t", SPIRIT, 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.ASSIGNED, "t", SPIRIT)), seen,
-                "Выдача пишет ровно одну строку ASSIGNED с держателем: повторный claim того же духа "
-                        + "не второй переход");
+        assertEquals(List.of(new Seen(BoardLog.Event.SUBMITTED, "t", null),
+                        new Seen(BoardLog.Event.ASSIGNED, "t", SPIRIT)), seen,
+                "Постановка и выдача пишут по строке: SUBMITTED без держателя, ASSIGNED с держателем; "
+                        + "повторный claim того же духа не второй переход");
     }
 
     @Test
@@ -78,9 +79,11 @@ class BoardEventsTests {
 
         board.retain(Set.of(), 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.DETACHED, "crater", null)), seen,
-                "Снятие по актуальности пишет DETACHED, а постоянное задание с причиной always "
-                        + "не снимается вовсе");
+        assertEquals(List.of(new Seen(BoardLog.Event.SUBMITTED, "crater", null),
+                        new Seen(BoardLog.Event.SUBMITTED, "eat", null),
+                        new Seen(BoardLog.Event.DETACHED, "crater", null)), seen,
+                "Обе постановки пишут SUBMITTED, снятие по актуальности — DETACHED, а постоянное задание "
+                        + "с причиной always не снимается вовсе");
     }
 
     @Test
@@ -92,9 +95,11 @@ class BoardEventsTests {
 
         board.retain(Set.of(), 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.DETACHED, "lure", null),
+        assertEquals(List.of(new Seen(BoardLog.Event.SUBMITTED, "lure", null),
+                        new Seen(BoardLog.Event.SUBMITTED, "dismantle", null),
+                        new Seen(BoardLog.Event.DETACHED, "lure", null),
                         new Seen(BoardLog.Event.CANCELLED, "dismantle", null)), seen,
-                "Каскад снимает зависимое задание отдельной строкой CANCELLED: журнал различает "
-                        + "потерянную причину и снятого зависимого");
+                "Постановки пишут SUBMITTED, каскад снимает зависимое задание отдельной строкой CANCELLED: "
+                        + "журнал различает потерянную причину и снятого зависимого");
     }
 }
