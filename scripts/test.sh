@@ -6,10 +6,15 @@
 #   scripts/test.sh gametest [имя пачки или теста…]
 # Пределы времени (переменные окружения, секунды):
 #   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 180), THEMINESPIRIT_UNIT_STOP_SECONDS (360)
-#   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (600)
+#   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (1500)
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+
+# Реальный путь worktree (pwd -P): /proc/<pid>/cwd отдаёт разыменованный путь, и по логическому
+# (с символической ссылкой) каталог сервера не нашёлся бы.
+GAMETEST_WORKTREE="$(pwd -P)"
+GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/build/gametest-run"
 
 GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"
@@ -19,7 +24,7 @@ mkdir -p "$LOG_DIR"
 UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-180}"
 UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-360}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-300}"
-GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-600}"
+GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-1500}"
 
 # Замок GameTest (переиспользуем логику из scripts/gametest.sh).
 # Дефолт: на Windows — C:\ProgramData\theminespirit (общий для всех сессий и пользователей машины;
@@ -68,7 +73,7 @@ usage() {
   THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 180)
   THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 360)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение gametest (по умолчанию 300)
-  THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 600)
+  THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 1500)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
   THEMINESPIRIT_GAMETEST_STALE_SECONDS  возраст пульса, после которого mkdir-замок протух (120)
@@ -126,6 +131,68 @@ file_mtime() {
     stat -c %Y "$1" 2>/dev/null || echo 0
 }
 
+# ── Гашение сервера GameTest своего worktree ─────────────────────────────────
+# Игру запускает демон Gradle отдельным процессом, чья рабочая папка — <worktree>/build/gametest-run
+# (build.gradle → gameTestServer.gameDirectory). Стоп по пределу убивает только клиент gradle, а игровой
+# сервер переживает его, ест CPU, и следующий прогон идёт параллельно уже без замка (todo.md 17.10).
+# Поэтому сервер гасим сами — и до снятия замка. Чужие worktree не трогаем: у каждого свой каталог.
+
+# PID java-процессов, чья рабочая папка — каталог GameTest этого worktree ($1).
+gametest_server_pids() {
+    local dir="$1" d pid exe cwd
+    case "$OSTYPE" in
+        msys*|cygwin*|win*)
+            # Git Bash на Windows: /proc/<pid>/cwd нет. Ищем java.exe по CommandLine — путь worktree
+            # (в fml.modFolders и classpath) или gameDir; чужой worktree даёт другой путь.
+            local win_worktree win_dir
+            win_worktree=$(cygpath -w "$GAMETEST_WORKTREE" 2>/dev/null || printf '%s' "$GAMETEST_WORKTREE")
+            win_dir=$(cygpath -w "$dir" 2>/dev/null || printf '%s' "$dir")
+            powershell -NoProfile -Command \
+                "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -like '*$win_worktree*' -or \$_.CommandLine -like '*$win_dir*' } | ForEach-Object { \$_.ProcessId }" \
+                2>/dev/null | tr -d '\r'
+            ;;
+        *)
+            for d in /proc/[0-9]*; do
+                [ -r "$d/cmdline" ] || continue
+                exe=$(readlink "$d/exe" 2>/dev/null) || continue
+                case "$exe" in
+                    */java|*/java.exe) ;;
+                    *) continue ;;
+                esac
+                cwd=$(readlink "$d/cwd" 2>/dev/null) || continue
+                [ "$cwd" = "$dir" ] && printf '%s\n' "${d#/proc/}"
+            done
+            ;;
+    esac
+    return 0
+}
+
+# Сначала TERM, через 10 с — KILL. Пустой список — тихо выходим (обычный успешный прогон: сервер уже мёртв).
+kill_gametest_server() {
+    [ "${MODE:-}" = "gametest" ] || return 0
+    local pids pid alive waited
+    pids=$(gametest_server_pids "$GAMETEST_RUN_DIR")
+    [ -n "$pids" ] || return 0
+    for pid in $pids; do
+        kill -TERM "$pid" 2>/dev/null || true
+    done
+    waited=0
+    while [ "$waited" -lt 10 ]; do
+        alive=""
+        for pid in $pids; do
+            kill -0 "$pid" 2>/dev/null && alive="$alive $pid"
+        done
+        [ -n "$alive" ] || return 0
+        pids="$alive"
+        sleep 1
+        waited=$((waited + 1))
+    done
+    for pid in $pids; do
+        kill -KILL "$pid" 2>/dev/null || true
+    done
+    return 0
+}
+
 stop_lock_beat() {
     if [ -n "$LOCK_BEAT_PID" ]; then
         kill "$LOCK_BEAT_PID" 2>/dev/null || true
@@ -170,9 +237,11 @@ acquire_dir_lock() {
             printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat"
             export GAMETEST_LOCK GAMETEST_TOKEN
             start_lock_beat
-            # Один trap на выход: снять замок И остановить монитор. Отдельный trap release_dir_lock
-            # перезаписал бы stop_monitor, и фоновый монитор остался бы жив (на Windows без setsid).
-            trap 'release_dir_lock; stop_monitor' EXIT INT TERM
+            # Один trap на выход: остановить монитор (он гасит сервер GameTest) И снять замок.
+            # Порядок важен — замок снимается только после смерти сервера, иначе следующий прогон
+            # стартует параллельно. Отдельный trap release_dir_lock перезаписал бы stop_monitor,
+            # и фоновый монитор остался бы жив (на Windows без setsid).
+            trap 'stop_monitor; release_dir_lock' EXIT INT TERM
             return 0
         fi
         holder_pid=$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null || echo "")
@@ -238,6 +307,9 @@ start_monitor() {
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
            MONITOR_MODE="$mode"
+    # Монитор в ветке setsid — отдельный bash: функции и переменные для гашения сервера нужны в окружении.
+    export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
+    export -f gametest_server_pids kill_gametest_server
     if command -v setsid >/dev/null 2>&1; then
         setsid bash -c '
             warned=0
@@ -255,6 +327,10 @@ start_monitor() {
                 if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
                     echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
                     touch "$MONITOR_LOG_FILE.stopped"
+                    # Сначала гасим сервер GameTest своего worktree, потом клиент gradle: иначе
+                    # снятие замка (flock/$LOCK.d) обгонит смерть сервера, и следующий прогон
+                    # пойдёт параллельно уже без замка (todo.md 17.10).
+                    kill_gametest_server
                     if [ -f "$MONITOR_LOG_FILE.gradlepid" ]; then
                         GRADLE_PID_FROM_FILE=$(cat "$MONITOR_LOG_FILE.gradlepid")
                         kill -TERM -- "-$GRADLE_PID_FROM_FILE" 2>/dev/null || kill -TERM "$GRADLE_PID_FROM_FILE" 2>/dev/null || true
@@ -280,6 +356,10 @@ start_monitor() {
                 if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
                     echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
                     touch "$MONITOR_LOG_FILE.stopped"
+                    # Сначала гасим сервер GameTest своего worktree, потом клиент gradle: иначе
+                    # снятие замка (flock/$LOCK.d) обгонит смерть сервера, и следующий прогон
+                    # пойдёт параллельно уже без замка (todo.md 17.10).
+                    kill_gametest_server
                     if [ -f "$MONITOR_LOG_FILE.gradlepid" ]; then
                         GRADLE_PID_FROM_FILE=$(cat "$MONITOR_LOG_FILE.gradlepid")
                         kill -TERM -- "-$GRADLE_PID_FROM_FILE" 2>/dev/null || kill -TERM "$GRADLE_PID_FROM_FILE" 2>/dev/null || true
@@ -306,6 +386,9 @@ start_heartbeat() {
 }
 
 stop_monitor() {
+    # Сервер GameTest гасим до снятия замка (release_dir_lock в trap идёт после stop_monitor):
+    # иначе замок освободится, пока старый сервер ещё работает, и следующий прогон пойдёт параллельно.
+    kill_gametest_server
     if [ -n "$HEARTBEAT_PID" ]; then
         kill "$HEARTBEAT_PID" 2>/dev/null || true
         HEARTBEAT_PID=""
