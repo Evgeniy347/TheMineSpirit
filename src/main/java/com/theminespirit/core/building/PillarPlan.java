@@ -2,15 +2,11 @@ package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public final class PillarPlan {
     private PillarPlan() {
-    }
-
-    public static List<BlockCoord> of(int height) {
-        return plan(height);
     }
 
     public static List<BlockCoord> plan(int height) {
@@ -24,15 +20,9 @@ public final class PillarPlan {
         return List.copyOf(cells);
     }
 
-    public static List<BlockCoord> steps(int height) {
-        return plan(height);
-    }
-
-    public static List<BlockCoord> cells(int height) {
-        return plan(height);
-    }
-
-    public static List<BlockCoord> blocks(int height) {
-        return plan(height);
+    public static List<BlockCoord> dismantle(int height) {
+        List<BlockCoord> topDown = new ArrayList<>(plan(height));
+        Collections.reverse(topDown);
+        return List.copyOf(topDown);
     }
 }
