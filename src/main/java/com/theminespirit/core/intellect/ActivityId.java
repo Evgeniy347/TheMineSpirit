@@ -6,5 +6,6 @@ public enum ActivityId {
     FORAGE,
     MINE,
     REST,
-    DEFEND
+    DEFEND,
+    UNLOAD
 }
