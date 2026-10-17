@@ -1,9 +1,12 @@
 package com.theminespirit.gametest;
 
 import com.mojang.authlib.GameProfile;
+import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +99,7 @@ final class GameTestFixtures {
             entity.discard();
         }
         sweepSpiritLeftovers(helper);
+        clearSettlementBoardTickets(helper);
     }
 
     /**
@@ -118,6 +122,23 @@ final class GameTestFixtures {
         }
         for (Entity entity : leftovers) {
             entity.discard();
+        }
+    }
+
+    /**
+     * Задания поселения ({@code first:*}, {@code gather:*}) — работа своей сцены, и жить они должны
+     * ровно на время сцены: доска уровня билеты не забывает, а свободного духа чужой сцены он забирает
+     * раньше, чем та поставит свой (флак 17.10: духу combat/portal/REST доставался чужой
+     * {@code first:stock_chests} или {@code gather:oak_planks}, и он уходил его проваливать). Сцена
+     * свою цепочку ставит уже после зачистки, поэтому снятие чужих first:/gather: её не трогает;
+     * тест цепочки чужие шаги и так закрывает, а сцены первых шагов работают на своей доске.
+     */
+    private static void clearSettlementBoardTickets(GameTestHelper helper) {
+        Board board = BoardRegistry.get(helper.getLevel()).board();
+        for (BoardTicket ticket : new ArrayList<>(board.all())) {
+            if (ticket.id().startsWith("first:") || ticket.id().startsWith("gather:")) {
+                board.cancel(ticket.id());
+            }
         }
     }
 
