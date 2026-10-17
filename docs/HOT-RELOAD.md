@@ -53,6 +53,7 @@
 | `descent` | `mining/descent.json` | целевой этаж спуска и интервал факелов |
 | `descent_levels` | `mining/descent_levels.json` | ширина и высота расширения шахты, ширина ступенек |
 | `priorities` | `tactics/priorities.json` | классы целей обороны и порядок их выбора по ролям |
+| `processing` | `processing/processing.json` | цели запасов и коэффициенты переработки (уголь, доски, палки, готовка) |
 | `schematic_house` | `schematics/house.json` | схема дома поселения |
 | `schematic_fence` | `schematics/fence.json` | схема забора |
 | `schematic_pen` | `schematics/pen.json` | схема загона для животных |

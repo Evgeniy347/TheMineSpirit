@@ -237,6 +237,38 @@ public final class SmeltGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "smelt_smoker_beef", timeoutTicks = TIMEOUT)
+    public static void smelt_BeefInSmoker_CookedBeefInChest(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(FURNACE_CELL, Blocks.SMOKER);
+        SpiritEntity spirit = prepare(helper, stack(Items.BEEF, 2), stack(Items.COAL, 1));
+        speedUpFurnaces(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "cooked_beef", 2);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.COOKED_BEEF, 2, "стейки из коптильни");
+            assertCount(helper, spirit, Items.BEEF, 0, "сырая говядина после копчения");
+            cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "smelt_charcoal", timeoutTicks = TIMEOUT)
+    public static void smelt_LogsInFurnace_Charcoal(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
+        SpiritEntity spirit = prepare(helper, stack(Items.OAK_LOG, 2), stack(Items.COAL, 1));
+        speedUpFurnaces(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "charcoal", 2);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.CHARCOAL, 2, "древесный уголь из брёвен");
+            assertCount(helper, spirit, Items.OAK_LOG, 0, "брёвна после плавки");
+            cleanup(helper, spirit);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "smelt_furnace_destroyed", timeoutTicks = TIMEOUT)
     public static void smelt_FurnaceDestroyedInTheMiddle_FailsAndNothingIsLost(GameTestHelper helper) {
         field(helper);

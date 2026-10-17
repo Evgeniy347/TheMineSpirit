@@ -67,6 +67,30 @@ class StockCatalogTests {
     }
 
     @Test
+    void tally_ProcessingItems_CountedSeparately() {
+        StockLots lots = new StockCatalog(TABLE).tally(Map.of("minecraft:charcoal", 5, "minecraft:oak_planks", 8,
+                "minecraft:stick", 4, "minecraft:beef", 3, "minecraft:oak_log", 9));
+
+        assertEquals(5, lots.processing().charcoal(),
+                "Уголь считается отдельно от руды: иначе спрос плавки смотрит на железо вместо топлива");
+        assertEquals(8, lots.processing().planks(), "Доски считаются по суффиксу _planks: иначе крафт не видит запас");
+        assertEquals(4, lots.processing().sticks(), "Палки считаются отдельно: по ним спрос на палки");
+        assertEquals(3, lots.processing().rawFoods().get("minecraft:beef"),
+                "Сырая говядина попадает в опись сырья: иначе готовка не знает, что жарить");
+        assertEquals(9, lots.processing().logs().get("minecraft:oak_log"),
+                "Брёвна попадают в опись пород: иначе доски не сделать из имеющегося дерева");
+    }
+
+    @Test
+    void tally_CookedFood_AddsCookedNutrition() {
+        NutritionTable cooked = new NutritionTable(Map.of("minecraft:cooked_beef", 8.0));
+        StockLots lots = new StockCatalog(cooked).tally(Map.of("minecraft:cooked_beef", 2));
+
+        assertEquals(16.0, lots.processing().cookedNutrition(),
+                "Сытность готовой еды считается отдельно от всей еды: по ней видно, хватает ли приготовленного");
+    }
+
+    @Test
     void tally_NullAndNegative_Throw() {
         StockCatalog catalog = new StockCatalog(TABLE);
 

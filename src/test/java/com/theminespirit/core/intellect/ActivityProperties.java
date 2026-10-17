@@ -31,7 +31,7 @@ class ActivityProperties {
 
         @Override
         public double demand(SettlementView view) {
-            return Activity.checkedDemand(activityId, (activityId.ordinal() + 1) * 1.4);
+            return Activity.checkedDemand(activityId, (activityId.ordinal() + 1) * 1.0);
         }
 
         @Override

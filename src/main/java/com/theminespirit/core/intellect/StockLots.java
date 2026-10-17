@@ -1,6 +1,9 @@
 package com.theminespirit.core.intellect;
 
-public record StockLots(int foodItems, double foodNutrition, int ore, int iron, int weapons, int seeds) {
+import com.theminespirit.core.processing.ProcessingStock;
+
+public record StockLots(int foodItems, double foodNutrition, int ore, int iron, int weapons, int seeds,
+        ProcessingStock processing) {
     public StockLots {
         if (foodItems < 0) {
             throw new IllegalArgumentException(
@@ -22,5 +25,13 @@ public record StockLots(int foodItems, double foodNutrition, int ore, int iron, 
         if (seeds < 0) {
             throw new IllegalArgumentException("Семян = " + seeds + ": запас не может быть отрицательным");
         }
+        if (processing == null) {
+            throw new IllegalArgumentException(
+                    "Запас переработки не может быть null: её отсутствие задают ProcessingStock.NONE");
+        }
+    }
+
+    public StockLots(int foodItems, double foodNutrition, int ore, int iron, int weapons, int seeds) {
+        this(foodItems, foodNutrition, ore, iron, weapons, seeds, ProcessingStock.NONE);
     }
 }

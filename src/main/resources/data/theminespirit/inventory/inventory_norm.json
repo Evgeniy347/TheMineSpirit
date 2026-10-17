@@ -21,6 +21,8 @@
     "MINE": 0,
     "REST": 0,
     "DEFEND": 0,
-    "UNLOAD": 0
+    "UNLOAD": 0,
+    "SMELT": 2,
+    "CRAFT": 2
   }
 }

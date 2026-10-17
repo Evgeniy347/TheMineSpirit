@@ -222,7 +222,8 @@ public final class FurnaceSession {
 
     public static Optional<Contents> contentsAt(Level level, BlockPos pos) {
         BlockEntity entity = level.getBlockEntity(pos);
-        if (level.getBlockState(pos).is(Blocks.FURNACE) && entity instanceof AbstractFurnaceBlockEntity furnace) {
+        if (entity instanceof AbstractFurnaceBlockEntity furnace
+                && (level.getBlockState(pos).is(Blocks.FURNACE) || level.getBlockState(pos).is(Blocks.SMOKER))) {
             return Optional.of(new Contents(furnace.getItem(SLOT_INPUT).getCount(), furnace.getItem(SLOT_FUEL).getCount(),
                     furnace.getItem(SLOT_RESULT).getCount()));
         }
@@ -231,7 +232,8 @@ public final class FurnaceSession {
 
     private Optional<AbstractFurnaceBlockEntity> furnaceAt() {
         BlockEntity entity = level.getBlockEntity(pos);
-        if (level.getBlockState(pos).is(Blocks.FURNACE) && entity instanceof AbstractFurnaceBlockEntity furnace) {
+        if (entity instanceof AbstractFurnaceBlockEntity furnace
+                && (level.getBlockState(pos).is(Blocks.FURNACE) || level.getBlockState(pos).is(Blocks.SMOKER))) {
             return Optional.of(furnace);
         }
         return Optional.empty();

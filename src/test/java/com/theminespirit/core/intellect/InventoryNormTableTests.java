@@ -23,7 +23,7 @@ class InventoryNormTableTests {
     private static final String VALID = """
             {"demand":{"occupied_curve":[{"at":0.0,"value":0.0},{"at":1.0,"value":2.0}],
             "extra_curve":[{"at":0.0,"value":0.0},{"at":1.0,"value":4.0}]},
-            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0,"UNLOAD":0}}
+            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0,"UNLOAD":0,"SMELT":2,"CRAFT":2}}
             """;
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-17T12:00:00Z"), ZoneOffset.UTC);

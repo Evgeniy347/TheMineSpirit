@@ -1,0 +1,11 @@
+{
+  "charcoalTarget": 16,
+  "plankTarget": 32,
+  "stickTarget": 32,
+  "charcoalCount": 8,
+  "cookCount": 4,
+  "craftCount": 8,
+  "baseDemand": 1.0,
+  "demandScale": 8.0,
+  "stationRadius": 16
+}
