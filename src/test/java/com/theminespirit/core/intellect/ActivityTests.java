@@ -119,7 +119,7 @@ class ActivityTests {
     @Test
     void demand_AboveMax_Throws() {
         assertThrows(IllegalArgumentException.class,
-                () -> new FixedActivity(ActivityId.CHOP, IntellectTuning.MAX_DEMAND + 1)
+                () -> new FixedActivity(ActivityId.CHOP, IntellectTuning.loadDefault().maxDemand() + 1)
                         .demand(SettlementViews.empty()),
                 "Спрос выше максимума ломает шкалу: одна деятельность навсегда забьёт остальные");
     }

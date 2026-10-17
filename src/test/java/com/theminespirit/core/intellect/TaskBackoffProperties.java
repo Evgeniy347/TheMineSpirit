@@ -16,7 +16,7 @@ class TaskBackoffProperties {
         UUID spirit = UUID.randomUUID();
         backoff.noteFailure(spirit, "harvest_crop", fail);
 
-        assertEquals(delta < IntellectTuning.FAIL_BACKOFF_TICKS,
+        assertEquals(delta < IntellectTuning.loadDefault().failBackoffTicks(),
                 backoff.blocked(spirit, "harvest_crop", fail + delta),
                 "Блокировка держится ровно окно отката: короче — перезапуск провала, дольше — простой духа");
     }

@@ -41,7 +41,7 @@ public final class TaskBackoff {
             throw new IllegalArgumentException("Откат в тике " + now + ": время не может быть отрицательным");
         }
         Mark mark = marks.get(new BackoffKey(spirit, script));
-        return mark != null && now - mark.failTick() < IntellectTuning.FAIL_BACKOFF_TICKS;
+        return mark != null && now - mark.failTick() < IntellectTuning.loadDefault().failBackoffTicks();
     }
 
     public int size() {
@@ -49,9 +49,10 @@ public final class TaskBackoff {
     }
 
     private void prune(long now) {
+        long backoff = IntellectTuning.loadDefault().failBackoffTicks();
         Iterator<Map.Entry<BackoffKey, Mark>> entries = marks.entrySet().iterator();
         while (entries.hasNext()) {
-            if (now - entries.next().getValue().failTick() >= IntellectTuning.FAIL_BACKOFF_TICKS) {
+            if (now - entries.next().getValue().failTick() >= backoff) {
                 entries.remove();
             }
         }

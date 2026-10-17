@@ -97,7 +97,7 @@ class ForageActivityTests {
                 "Еда в сундуке — берём её скриптом withdraw: иначе сундук стоит полный, а дух голодает");
         assertEquals("minecraft:cooked_beef", intent.params().get("item"),
                 "Забираем самый сытный найденный предмет, а не первый попавшийся");
-        assertEquals(IntellectTuning.FORAGE_WITHDRAW_COUNT, intent.params().get("count"),
+        assertEquals(IntellectTuning.loadDefault().forageWithdrawCount(), intent.params().get("count"),
                 "Число забираемых предметов — из IntellectTuning: иначе нехватка в сундуке валит withdraw");
     }
 
@@ -134,7 +134,7 @@ class ForageActivityTests {
                 "Еды нет, рядом дичь и есть меч — охота: иначе поселение не добудет мяса");
         assertEquals("cow", intent.params().get("species"),
                 "Охотимся на тот вид, который видел снимок: иначе hunt ищет не ту дичь и падает");
-        assertEquals(IntellectTuning.FORAGE_HUNT_COUNT, intent.params().get("count"),
+        assertEquals(IntellectTuning.loadDefault().forageHuntCount(), intent.params().get("count"),
                 "Число голов — из IntellectTuning: иначе охота уходит за лишней дичью");
     }
 
@@ -175,11 +175,11 @@ class ForageActivityTests {
 
         assertEquals(Optional.of("fish"), intent.script(),
                 "Рядом вода и есть удочка — дух рыбачит: иначе способ добыть еду без охоты и склада не используется");
-        assertEquals(IntellectTuning.FORAGE_FISH_COUNT, intent.params().get("count"),
+        assertEquals(IntellectTuning.loadDefault().forageFishCount(), intent.params().get("count"),
                 "Число рыбы — из IntellectTuning: иначе цель рыбалки разъехалась бы с настройками");
-        assertEquals(IntellectTuning.FORAGE_FISH_RADIUS, intent.params().get("radius"),
+        assertEquals(IntellectTuning.loadDefault().forageFishRadius(), intent.params().get("radius"),
                 "Радиус поиска воды — из IntellectTuning: иначе рыбалка ищет воду в чужом радиусе");
-        assertEquals(IntellectTuning.FORAGE_FISH_DURATION, intent.params().get("duration_ticks"),
+        assertEquals(IntellectTuning.loadDefault().forageFishDuration(), intent.params().get("duration_ticks"),
                 "Время ловли — из IntellectTuning: иначе дух рыбачит то мгновение, то вечность");
     }
 

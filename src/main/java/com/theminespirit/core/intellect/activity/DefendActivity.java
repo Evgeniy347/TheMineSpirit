@@ -20,7 +20,8 @@ public final class DefendActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос защиты без обстановки не считается: зависит от угроз");
         }
-        return Activity.checkedDemand(id(), view.threats() > 0 ? IntellectTuning.MAX_DEMAND : 0.5);
+        return Activity.checkedDemand(id(),
+                view.threats() > 0 ? IntellectTuning.loadDefault().maxDemand() : 0.5);
     }
 
     @Override

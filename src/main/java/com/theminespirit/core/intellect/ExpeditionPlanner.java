@@ -20,8 +20,8 @@ public final class ExpeditionPlanner {
         if (target == null) {
             throw new IllegalArgumentException("Экспедиция без цели не планируется: шахта обязана быть известна");
         }
-        if (!view.needsOre(IntellectTuning.ORE_TARGET, IntellectTuning.IRON_TARGET,
-                IntellectTuning.WEAPON_TARGET)) {
+        IntellectTuning tuning = IntellectTuning.loadDefault();
+        if (!view.needsOre(tuning.oreTarget(), tuning.ironTarget(), tuning.weaponTarget())) {
             return Optional.empty();
         }
         List<SpiritSnapshot> suitable = new ArrayList<>();
@@ -35,10 +35,10 @@ public final class ExpeditionPlanner {
         }
         suitable.sort(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(target))
                 .thenComparing(SpiritSnapshot::id));
-        if (suitable.size() < IntellectTuning.TEAM_MIN) {
+        if (suitable.size() < tuning.teamMin()) {
             return Optional.empty();
         }
-        List<UUID> team = suitable.stream().limit(IntellectTuning.TEAM_MAX).map(SpiritSnapshot::id).toList();
+        List<UUID> team = suitable.stream().limit(tuning.teamMax()).map(SpiritSnapshot::id).toList();
         return Optional.of(new Expedition(team, target, view.tick()));
     }
 }

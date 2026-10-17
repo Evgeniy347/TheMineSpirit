@@ -19,7 +19,7 @@ public final class FreeInventoryDemand {
         checkFraction(extraFraction, "Доля лишнего");
         double value = interpolate(table.occupiedCurve(), occupiedFraction)
                 + interpolate(table.extraCurve(), extraFraction);
-        return Math.min(IntellectTuning.MAX_DEMAND, value);
+        return Math.min(IntellectTuning.loadDefault().maxDemand(), value);
     }
 
     static double interpolate(List<InventoryNormTable.CurvePoint> curve, double at) {

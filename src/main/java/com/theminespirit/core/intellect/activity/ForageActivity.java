@@ -44,11 +44,12 @@ public final class ForageActivity implements Activity {
             throw new IllegalArgumentException("Намерение добычи еды без духа или обстановки не строится");
         }
         Forage forage = view.forage();
+        IntellectTuning tuning = IntellectTuning.loadDefault();
         if (forage.hasContainerFood()) {
             return new ActivityIntent(id(), Optional.of("withdraw"),
                     Map.of("container", "nearest", "item", forage.containerFood(),
-                            "count", IntellectTuning.FORAGE_WITHDRAW_COUNT,
-                            "radius", IntellectTuning.FORAGE_WITHDRAW_RADIUS),
+                            "count", tuning.forageWithdrawCount(),
+                            "radius", tuning.forageWithdrawRadius()),
                     Optional.empty());
         }
         if (view.farmWork().hasHarvest()) {
@@ -56,15 +57,15 @@ public final class ForageActivity implements Activity {
         }
         if (forage.canFish()) {
             return new ActivityIntent(id(), Optional.of("fish"),
-                    Map.of("count", IntellectTuning.FORAGE_FISH_COUNT,
-                            "radius", IntellectTuning.FORAGE_FISH_RADIUS,
-                            "duration_ticks", IntellectTuning.FORAGE_FISH_DURATION),
+                    Map.of("count", tuning.forageFishCount(),
+                            "radius", tuning.forageFishRadius(),
+                            "duration_ticks", tuning.forageFishDuration()),
                     Optional.empty());
         }
         if (forage.hasPrey() && view.weapons() > 0) {
             return new ActivityIntent(id(), Optional.of("hunt"),
-                    Map.of("species", forage.preySpecies(), "radius", IntellectTuning.FORAGE_HUNT_RADIUS,
-                            "count", IntellectTuning.FORAGE_HUNT_COUNT),
+                    Map.of("species", forage.preySpecies(), "radius", tuning.forageHuntRadius(),
+                            "count", tuning.forageHuntCount()),
                     Optional.empty());
         }
         return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());

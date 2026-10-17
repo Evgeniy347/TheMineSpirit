@@ -74,7 +74,8 @@ public final class ExpeditionController {
                     "Поход без уровня, плана или духов не ведётся: команда идёт конкретным составом");
         }
         if (active == null && planned.isPresent() && !dispatched
-                && (closedAt == Long.MIN_VALUE || now - closedAt >= IntellectTuning.INVITE_TTL_TICKS)) {
+                && (closedAt == Long.MIN_VALUE
+                        || now - closedAt >= IntellectTuning.loadDefault().inviteTtlTicks())) {
             active = planned.get();
             expeditionId = UUID.randomUUID();
             dispatched = false;
@@ -97,7 +98,7 @@ public final class ExpeditionController {
             }
             return;
         }
-        if (inviter != null && now - lastRepeatTick >= IntellectTuning.INVITE_REPEAT_TICKS
+        if (inviter != null && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
                 && !state.goWithout()) {
             ChatInvitation.send(level, inviter, expeditionId, active.team().size());
             lastRepeatTick = now;

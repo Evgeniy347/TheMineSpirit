@@ -73,7 +73,8 @@ public final class SettlementIntellect {
         if (tick < 0) {
             throw new IllegalArgumentException("Тик интеллекта " + tick + ": время не может быть отрицательным");
         }
-        if (lastTick != Long.MIN_VALUE && tick - lastTick < IntellectTuning.DEMAND_INTERVAL_TICKS) {
+        if (lastTick != Long.MIN_VALUE
+                && tick - lastTick < IntellectTuning.loadDefault().demandIntervalTicks()) {
             return;
         }
         lastTick = tick;
@@ -138,8 +139,8 @@ public final class SettlementIntellect {
     }
 
     private Point veinBelow(Optional<Point> home, SettlementView view) {
-        if (home.isEmpty() || !view.needsOre(IntellectTuning.ORE_TARGET, IntellectTuning.IRON_TARGET,
-                IntellectTuning.WEAPON_TARGET)) {
+        IntellectTuning tuning = IntellectTuning.loadDefault();
+        if (home.isEmpty() || !view.needsOre(tuning.oreTarget(), tuning.ironTarget(), tuning.weaponTarget())) {
             return null;
         }
         Point point = home.get();

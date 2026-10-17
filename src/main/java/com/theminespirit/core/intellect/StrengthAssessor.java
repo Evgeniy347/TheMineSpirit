@@ -43,6 +43,7 @@ public final class StrengthAssessor {
             return List.of();
         }
         FactorScales scales = scalesWith(armor);
+        IntellectTuning tuning = IntellectTuning.loadDefault();
         List<SpiritSnapshot> ordered = spirits.stream().sorted(Comparator.comparing(SpiritSnapshot::id)).toList();
         List<StrengthVerdict> verdicts = new ArrayList<>();
         List<Fighter> fighters = new ArrayList<>();
@@ -51,7 +52,7 @@ public final class StrengthAssessor {
             SelfFacts self = selfFacts(spirit);
             double margin = marginOf(self, nearest, profiles, armor, scales);
             Optional<UUID> enemy = enemyId(nearest);
-            if (spirit.hpFraction() < IntellectTuning.HEAL_FRACTION) {
+            if (spirit.hpFraction() < tuning.healFraction()) {
                 verdicts.add(new StrengthVerdict(spirit.id(), StrengthAction.HEAL, margin, enemy));
             } else if (self.dps() <= 1 && weaponAvailable) {
                 verdicts.add(new StrengthVerdict(spirit.id(), StrengthAction.ARM, margin, enemy));
@@ -61,9 +62,8 @@ public final class StrengthAssessor {
         }
         fighters.sort(Comparator.comparingDouble(Fighter::margin).reversed().thenComparing(Fighter::spirit));
         int target = fighterTarget(enemies, profiles);
-        for (int index = 0; index < fighters.size(); index++) {
-            Fighter fighter = fighters.get(index);
-            if (index < target && fighter.margin() >= 1 - IntellectTuning.FLEE_MARGIN) {
+        for (int index = 0; index < fighters.size(); index++) {            Fighter fighter = fighters.get(index);
+            if (index < target && fighter.margin() >= 1 - tuning.fleeMargin()) {
                 verdicts.add(new StrengthVerdict(fighter.spirit(), StrengthAction.FIGHT, fighter.margin(),
                         fighter.enemy()));
             } else {
@@ -86,12 +86,12 @@ public final class StrengthAssessor {
         for (EnemyFact enemy : enemies) {
             totalHp += profiles.profile(enemy.type()).hp() * enemy.count();
         }
-        return Math.min(IntellectTuning.MAX_FIGHTERS, Math.max(1, (int) Math.ceil(totalHp / 30)));
+        return Math.min(IntellectTuning.loadDefault().maxFighters(), Math.max(1, (int) Math.ceil(totalHp / 30)));
     }
 
     private static SelfFacts selfFacts(SpiritSnapshot spirit) {
         return new SelfFacts(spirit.pos(), spirit.hpFraction() * 20, 20, 0,
-                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.ARMED_DPS : 1, 0.25, spirit.food(), 0, 0,
+                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.loadDefault().armedDps() : 1, 0.25, spirit.food(), 0, 0,
                 false, 0, 0);
     }
 
