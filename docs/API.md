@@ -532,6 +532,9 @@ data: {"state":"failed"}
   `from`/`to` — две точки `"x,y,z"`; неподвижная постройка (данные `board.json → immovable`) — 422
   `invalid_request` с перечнем `immovable`; `from = to` и отсутствие точек — 400;
 - лишнее поле — 400 `invalid_request` с именем поля.
+- `TRANSFER_ITEM` через REST не ставится: это внутренний кейс доски, его создаёт источник поселения по нехватке
+  ингредиентов у крафтера (`TransferWatch` → `TransferPlanner`, передача одного предмета от духа к духу или со
+  склада через `withdraw`). Запрос с этим кейсом — 422 `invalid_request`.
 
 Ответ `202` — задание целиком (как элемент `GET /v1/board`) плюс `request_id` клиента. Идём через `IdempotencyCache`,
 как и задачи духа.
