@@ -799,6 +799,10 @@ public final class ChopTreeGameTests {
             helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
                     "рубка успешна и при нехватке саженцев, статус " + status[0] + ", причина: "
                             + script.failureReason());
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.DARK_OAK_LOG) == 0,
+                    "ствол 2×2 обязан срубиться целиком, иначе нехватка саженцев на четыре клетки "
+                            + "не считается нехваткой: осталось брёвен "
+                            + countBlocksInWorld(helper, Blocks.DARK_OAK_LOG));
             helper.assertTrue(script.summary().contains("replant: нет саженцев"),
                     "три саженца на четыре клетки: нехватка названа в итоге, а он: " + script.summary());
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DARK_OAK_SAPLING) == 3,

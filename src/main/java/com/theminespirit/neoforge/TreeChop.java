@@ -220,7 +220,7 @@ final class TreeChop {
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
             if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloser) {
                 movedCloser = true;
-                approach.begin(standingPointUnder(log), ChopTuning.CLOSE_DISTANCE);
+                approach.begin(closerPoint(log), ChopTuning.CLOSE_DISTANCE);
                 phase = Phase.APPROACH_LOG;
                 return Outcome.running();
             }
@@ -243,8 +243,37 @@ final class TreeChop {
         movedCloser = false;
     }
 
+    private Vec3 closerPoint(BlockCoord log) {
+        BlockPos stand = standingCellBeside(log);
+        return stand == null ? standingPointUnder(log) : Vec3.atBottomCenterOf(stand);
+    }
+
     private Vec3 standingPointUnder(BlockCoord log) {
         return Vec3.atBottomCenterOf(new BlockPos(log.x(), tree.base().y(), log.z()));
+    }
+
+    private BlockPos standingCellBeside(BlockCoord log) {
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                for (int dy = 0; dy <= 1; dy++) {
+                    BlockPos pos = new BlockPos(log.x() + dx, log.y() + dy, log.z() + dz);
+                    if (!isStandable(pos)) {
+                        continue;
+                    }
+                    double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos));
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = pos;
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private Outcome startCollect() {
