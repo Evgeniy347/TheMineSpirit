@@ -60,6 +60,7 @@ public final class HarvestSession {
     private final int count;
     private final int radius;
     private final boolean skipWithoutTool;
+    private final boolean vein;
     private final LevelSafetyView safety;
     private final BlockBreaker breaker;
     private final Approach approach;
@@ -92,7 +93,7 @@ public final class HarvestSession {
     private int entityQueries;
 
     private HarvestSession(SpiritEntity spirit, HarvestTargets targets, String label, int count, int radius,
-            boolean skipWithoutTool) {
+            boolean skipWithoutTool, boolean vein) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.targets = targets;
@@ -100,6 +101,7 @@ public final class HarvestSession {
         this.count = count;
         this.radius = radius;
         this.skipWithoutTool = skipWithoutTool;
+        this.vein = vein;
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
@@ -108,12 +110,12 @@ public final class HarvestSession {
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
         return new HarvestSession(spirit, new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
-                ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY);
+                ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true);
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
         return new HarvestSession(spirit, new GatherTargets(spirit.level(), spirit.blockPosition(), radius,
-                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block));
+                IdFilter.of(List.of(block))), block, count, radius, IdFilter.isPattern(block), false);
     }
 
     public Outcome tick() {
@@ -478,7 +480,12 @@ public final class HarvestSession {
     }
 
     private String stopReason() {
-        return summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
+        String base = summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
+        if (vein && noStand > 0) {
+            return base + "; руда закрыта, нужен проход: блоки руды есть, но нет места для духа — прокопайте "
+                    + "проход к руде (dig_descent или dig_area) и повторите mine_vein";
+        }
+        return base;
     }
 
     private String stallReason() {

@@ -255,6 +255,9 @@ public final class MineGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("подходящих блоков") && reason.contains("не осталось"),
                     "причина обязана сказать, что подходящих блоков не осталось, фактически: " + reason);
+            helper.assertTrue(reason.contains("руда закрыта, нужен проход"),
+                    "к закрытой руде причина обязана называть выход — прокопать проход (dig_descent/dig_area), "
+                            + "а не только общий отказ, фактически: " + reason);
             helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
                     "замурованную руду нельзя пробивать через соседей: она обязана остаться");
             helper.assertTrue(run.spiritTicks() <= 40,
