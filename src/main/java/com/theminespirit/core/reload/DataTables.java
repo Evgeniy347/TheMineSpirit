@@ -11,6 +11,7 @@ import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.hunger.HungerRules;
+import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
@@ -59,6 +60,7 @@ public final class DataTables {
     private final TableHolder<ValueTable> values;
     private final TableHolder<BaseKit> kit;
     private final TableHolder<KitFor> kitFor;
+    private final TableHolder<InventoryNormTable> inventoryNorm;
     private final TableHolder<ArmorTable> armor;
     private final TableHolder<FeedTable> feed;
     private final TableHolder<Map<String, SwordTier>> swords;
@@ -105,6 +107,9 @@ public final class DataTables {
                 TableDefinition.single("kit_activities", "data/theminespirit/inventory/kit_activities.json",
                         KitFor::parse),
                 KitFor::readClasspath);
+        this.inventoryNorm = registry.registerLazy(
+                TableDefinition.single("inventory_norm", InventoryNormTable.RESOURCE, InventoryNormTable::parse),
+                InventoryNormTable::readClasspath);
         this.armor = registry.registerLazy(
                 TableDefinition.single("armor", "data/theminespirit/armor/armor_table.json", ArmorTable::parse),
                 () -> {
@@ -213,6 +218,10 @@ public final class DataTables {
 
     public TableHolder<KitFor> kitFor() {
         return kitFor;
+    }
+
+    public TableHolder<InventoryNormTable> inventoryNorm() {
+        return inventoryNorm;
     }
 
     public TableHolder<ArmorTable> armor() {
