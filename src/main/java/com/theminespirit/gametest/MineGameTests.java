@@ -255,6 +255,9 @@ public final class MineGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("подходящих блоков") && reason.contains("не осталось"),
                     "причина обязана сказать, что подходящих блоков не осталось, фактически: " + reason);
+            helper.assertTrue(reason.contains("руда закрыта, нужен проход"),
+                    "к закрытой руде причина обязана называть выход — прокопать проход (dig_descent/dig_area), "
+                            + "а не только общий отказ, фактически: " + reason);
             helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
                     "замурованную руду нельзя пробивать через соседей: она обязана остаться");
             helper.assertTrue(run.spiritTicks() <= 40,
@@ -787,6 +790,35 @@ public final class MineGameTests {
                             + "ослепляет политику");
         }
         helper.succeed();
+    }
+
+    // [флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
+    @GameTest(template = "arena", batch = "gather_stone_wooden", timeoutTicks = 1400)
+    public static void gather_StoneHeapWithWoodenPickaxe_MinesAll(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
+        for (int x = 1; x <= 3; x++) {
+            for (int y = 1; y <= 2; y++) {
+                for (int z = 1; z <= 3; z++) {
+                    helper.setBlock(x + CAVE_SHIFT_INSIDE_ARENA, y, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+                }
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper,
+                SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.WOODEN_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("stone", 18), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "куча камня под деревянной киркой обязана добыться целиком, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 18,
+                    "в инвентаре обязано быть 18 булыжника, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
     }
 
     @GameTest(template = "empty", batch = "mine_registry", timeoutTicks = 100)

@@ -294,9 +294,9 @@ public final class ChopTreeGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.startsWith("срублено 1 из 3: деревья породы oak в радиусе " + SEARCH_RADIUS
-                            + " закончились"),
-                    "причина FAILED: 'срублено 1 из 3: деревья породы oak в радиусе " + SEARCH_RADIUS
+            helper.assertTrue(reason.startsWith("срублено деревьев 1 из 3: деревья породы oak в радиусе "
+                            + SEARCH_RADIUS + " закончились"),
+                    "причина FAILED: 'срублено деревьев 1 из 3: деревья породы oak в радиусе " + SEARCH_RADIUS
                             + " закончились': " + reason);
 
             clearField(helper);
@@ -558,6 +558,9 @@ public final class ChopTreeGameTests {
             helper.assertTrue(logsInInventory + logsOnGround == 9,
                     "все 9 брёвен обязаны сохраниться в инвентаре или на земле: в инвентаре " + logsInInventory
                             + ", на земле " + logsOnGround);
+            helper.assertTrue(logsOnGround == 0,
+                    "дроп со столба и верха обязан быть подобран: на земле осталось " + logsOnGround
+                            + "; несобранные брёвна означают, что дух бросил верх дерева");
             int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
             helper.assertTrue(logsInWorld == 0,
                     "в мире не должно остаться ни одного бревна дерева, осталось " + logsInWorld);
@@ -807,6 +810,32 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_dark_oak_2x2", timeoutTicks = 400)
+    public static void chopTree_DarkOakTwoByTwoFromNeighbourCell_ChoppedWhole(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
+        prepareField(helper);
+        buildDarkOakTree(helper, 4, 4, 4);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 9));
+        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("dark_oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "тёмный дуб 2×2 обязан рубиться с соседней клетки, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(ChopTreeGameTests.countBlocksInWorld(helper, Blocks.DARK_OAK_LOG) == 0,
+                    "все брёвна тёмного дуба обязаны быть срублены, осталось "
+                            + ChopTreeGameTests.countBlocksInWorld(helper, Blocks.DARK_OAK_LOG));
+            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.DARK_OAK_LOG);
+            helper.assertTrue(logsInInventory >= 16,
+                    "в инвентарь обязаны попасть брёвна всего 2×2 ствола (≥16), фактически " + logsInInventory);
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 170)
     public static void chopTree_SecondOakVanishesDuringFirst_FailsWithTreesRanOut(GameTestHelper helper) {
         prepareField(helper);
@@ -833,9 +862,9 @@ public final class ChopTreeGameTests {
                     "второго дуба больше нет: FAILED «деревья закончились», статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.startsWith("срублено 1 из 2") && reason.contains("закончились"),
+            helper.assertTrue(reason.startsWith("срублено деревьев 1 из 2") && reason.contains("закончились"),
                     "исчезнувшее бревно кандидата не должно ронять скрипт («скрипт упал»), а причина должна быть "
-                            + "«срублено 1 из 2 … закончились»: " + reason);
+                            + "«срублено деревьев 1 из 2 … закончились»: " + reason);
 
             clearField(helper);
         });
