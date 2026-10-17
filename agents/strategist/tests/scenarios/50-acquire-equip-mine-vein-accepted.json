@@ -1,0 +1,75 @@
+{
+ "name": "50-acquire-equip-mine-vein-accepted",
+ "description": "пустой инвентарь: mine_vein не первым шагом, а после acquire и equip в одной sequence, проходит локальную проверку и уходит задачей (накопление кирки по шагам)",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Кирки нет: сначала добуду её с нуля, надену и только потом копаю уголь.",
+    "goal": "добыть кирку и накопать угля",
+    "plan": {
+     "type": "sequence",
+     "steps": [
+      {
+       "type": "script",
+       "script": "acquire",
+       "params": {
+        "item": "wooden_pickaxe",
+        "count": 1
+       }
+      },
+      {
+       "type": "script",
+       "script": "equip",
+       "params": {
+        "item": "wooden_pickaxe"
+       }
+      },
+      {
+       "type": "script",
+       "script": "mine_vein",
+       "params": {
+        "ore": "coal",
+        "count": 4,
+        "radius": 16
+       }
+      }
+     ]
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "acquire",
+     "equip",
+     "mine_vein"
+    ]
+   ]
+  }
+ ]
+}

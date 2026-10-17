@@ -255,8 +255,9 @@ class _Checker:
         self.nodes = 0
 
     def run(self, plan) -> None:
+        inventory = self.context.inventory if self.context is not None else None
         try:
-            self._node(plan, "plan", 1)
+            self._node(plan, "plan", 1, inventory)
         except _TooManyNodes:
             self.errors.append(f"В плане больше {self.limits.hard_max_nodes} узлов: жёсткий предел валидатора мода")
             return
@@ -266,48 +267,60 @@ class _Checker:
     def _error(self, message: str) -> None:
         self.errors.append(message)
 
-    def _node(self, node, path: str, depth: int) -> None:
+    def _node(self, node, path: str, depth: int, inventory) -> frozenset | None:
+        """Проверить узел, вернув инвентарь духа, доступный после его шагов (кирку накапливают sequence/fallback)."""
         self.nodes += 1
         if self.nodes > self.limits.hard_max_nodes:
             raise _TooManyNodes()
         if depth > self.limits.max_depth:
             self._error(f"{path}: глубина плана больше {self.limits.max_depth}: вложите меньше уровней")
-            return
+            return inventory
         if not isinstance(node, dict):
             self._error(f"Узел плана {path} должен быть JSON-объектом, получено {_describe(node)}")
-            return
+            return inventory
         node_type = node.get("type")
         if not isinstance(node_type, str):
             self._error(f"{path}: у узла нет строкового поля 'type' (допустимы {', '.join(NODE_TYPES)})")
-            return
+            return inventory
         if node_type not in NODE_TYPES:
             self._error(f"{path}: неизвестный тип узла {node_type!r}, допустимы {', '.join(NODE_TYPES)}")
-            return
+            return inventory
         allowed_fields = NODE_FIELDS[node_type]
         for key in node:
             if key not in allowed_fields:
                 self._error(f"{path}: лишнее поле {key!r} у узла {node_type} (допустимы {', '.join(allowed_fields)})")
-        getattr(self, f"_{node_type}")(node, path, depth)
+        return getattr(self, f"_{node_type}")(node, path, depth, inventory)
 
-    def _script(self, node: dict, path: str, depth: int) -> None:
+    def _script(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
         name = node.get("script")
         if not isinstance(name, str):
             self._error(f"{path}: у узла script нет строкового поля 'script'")
-            return
+            return inventory
         schema = self.catalog.scripts.get(name)
         if schema is None:
             self._error(f"{path}: скрипта {name!r} нет в каталоге /v1/capabilities (есть: {', '.join(sorted(self.catalog.scripts))})")
-            return
+            return inventory
         if name not in self.policy.allowed_scripts:
             self._error(f"{path}: скрипт {name!r} есть в каталоге, но вне белого списка policy.json "
                         f"(разрешены: {', '.join(sorted(self.policy.allowed_scripts))})")
-            return
+            return inventory
         before = len(self.errors)
         self._params(node.get("params"), schema, path, f"скрипта {name!r}")
         if len(self.errors) == before and isinstance(node.get("params"), dict):
             self._item_rule(name, node["params"], path)
             if self.context is not None:
-                self._world_rules(name, node["params"], path)
+                self._world_rules(name, node["params"], path, inventory)
+            return self._after_item_script(name, node["params"], inventory)
+        return inventory
+
+    def _after_item_script(self, name: str, params: dict, inventory) -> frozenset | None:
+        """Инвентарь после шага: acquire/craft/withdraw кладут предмет в инвентарь, equip — в руку."""
+        if name not in ITEM_SCRIPTS or inventory is None:
+            return inventory
+        item = params.get("item")
+        if not isinstance(item, str) or "*" in item:
+            return inventory
+        return inventory | {normalize_block(item)}
 
     def _item_rule(self, name: str, params: dict, path: str) -> None:
         if name not in ITEM_SCRIPTS:
@@ -322,7 +335,7 @@ class _Checker:
         self._error(f"{path}.params.item: {value!r} — не id предмета: {problem}; пишите id как в наблюдении, "
                     f"например wooden_pickaxe или minecraft:oak_log{hint}")
 
-    def _world_rules(self, name: str, params: dict, path: str) -> None:
+    def _world_rules(self, name: str, params: dict, path: str, inventory) -> None:
         context = self.context
         if name == "goto":
             if context.position is None:
@@ -344,20 +357,20 @@ class _Checker:
                             f"(природные блоки перечислены в natural_blocks файла policy.json): собирайте только "
                             f"руду, камень, землю, песок, гравий, глину, брёвна, листву и растения — доски, стекло, "
                             f"кирпич и прочие постройки игрока не разбираются")
-        self._pickaxe_rule(name, params, path)
+        self._pickaxe_rule(name, params, path, inventory)
 
-    def _pickaxe_rule(self, name: str, params: dict, path: str) -> None:
+    def _pickaxe_rule(self, name: str, params: dict, path: str, inventory) -> None:
         level = required_pickaxe(name, params)
         if level is None:
             return
-        if self.context.inventory is None:
+        if inventory is None:
             self.warnings.append(f"{path}: в наблюдении нет списка предметов духа — наличие кирки нужного уровня "
                                  f"для {name} не проверить (предупреждение)")
             return
-        best = max((PICKAXE_LEVELS.get(item, 0) for item in self.context.inventory), default=0)
+        best = max((PICKAXE_LEVELS.get(item, 0) for item in inventory), default=0)
         if best >= level:
             return
-        have = sorted(item for item in self.context.inventory if item.endswith("_pickaxe"))
+        have = sorted(item for item in inventory if item.endswith("_pickaxe"))
         if have:
             self._error(f"{path}: шаг {name} требует {PICKAXE_REQUIREMENT[level]}, а в инвентаре духа только "
                         f"{', '.join(have)} (наблюдение): возьмите кирку выше уровнем или смените план")
@@ -446,28 +459,44 @@ class _Checker:
             elif len(item) > self.policy.max_string_length:
                 self._error(f"{path}[{index}]: строка длиннее {self.policy.max_string_length} символов")
 
-    def _steps(self, node: dict, path: str, depth: int) -> None:
+    def _steps(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
+        steps = self._steps_list(node, path, depth)
+        if steps is None:
+            return inventory
+        current = inventory
+        for index, child in enumerate(steps):
+            current = self._node(child, f"{path}.steps[{index}]", depth + 1, current)
+        return current
+
+    def _steps_list(self, node: dict, path: str, depth: int) -> list | None:
         steps = node.get("steps")
         if not isinstance(steps, list) or not steps:
             self._error(f"{path}.steps: должен быть непустым списком узлов, получено {_describe(steps)}")
-            return
+            return None
         if depth == 1 and len(steps) > self.limits.max_root_steps:
             self._error(f"{path}.steps: в корне {len(steps)} шагов, допустимо не больше {self.limits.max_root_steps}")
-        for index, child in enumerate(steps):
-            self._node(child, f"{path}.steps[{index}]", depth + 1)
+        return steps
 
-    def _sequence(self, node: dict, path: str, depth: int) -> None:
-        self._steps(node, path, depth)
+    def _sequence(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
+        return self._steps(node, path, depth, inventory)
 
-    def _fallback(self, node: dict, path: str, depth: int) -> None:
-        self._steps(node, path, depth)
+    def _fallback(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
+        return self._steps(node, path, depth, inventory)
 
-    def _parallel(self, node: dict, path: str, depth: int) -> None:
+    def _parallel(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
         if node.get("mode") not in PARALLEL_MODES:
             self._error(f"{path}.mode: допустимы {', '.join(PARALLEL_MODES)}, получено {_describe(node.get('mode'))}")
-        self._steps(node, path, depth)
+        steps = self._steps_list(node, path, depth)
+        if steps is None:
+            return inventory
+        result = inventory
+        for index, child in enumerate(steps):
+            outcome = self._node(child, f"{path}.steps[{index}]", depth + 1, inventory)
+            if result is not None and outcome is not None:
+                result = result | outcome
+        return result
 
-    def _repeat(self, node: dict, path: str, depth: int) -> None:
+    def _repeat(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
         times = node.get("times")
         if isinstance(times, bool) or not isinstance(times, int):
             self._error(f"{path}.times: ожидалось целое число, получено {_describe(times)}")
@@ -475,10 +504,10 @@ class _Checker:
             self._error(f"{path}.times: значение {times} вне диапазона {self.limits.repeat_min}..{self.limits.repeat_max}")
         if "step" not in node:
             self._error(f"{path}.step: у узла repeat нет шага, нечего повторять")
-            return
-        self._node(node["step"], f"{path}.step", depth + 1)
+            return inventory
+        return self._node(node["step"], f"{path}.step", depth + 1, inventory)
 
-    def _condition(self, node: dict, path: str, depth: int) -> None:
+    def _condition(self, node: dict, path: str, depth: int, inventory) -> frozenset | None:
         check = node.get("check")
         schema = self.catalog.conditions.get(check) if isinstance(check, str) else None
         if schema is None:
@@ -487,9 +516,14 @@ class _Checker:
                         f"(поле conditions в /v1/capabilities: {known})")
         else:
             self._params(node.get("params"), schema, path, f"проверки {check!r}")
+        then_out = inventory
         if "then" not in node:
             self._error(f"{path}.then: у узла condition нет ветки then")
         else:
-            self._node(node["then"], f"{path}.then", depth + 1)
+            then_out = self._node(node["then"], f"{path}.then", depth + 1, inventory)
+        else_out = inventory
         if node.get("else") is not None:
-            self._node(node["else"], f"{path}.else", depth + 1)
+            else_out = self._node(node["else"], f"{path}.else", depth + 1, inventory)
+        if then_out is None or else_out is None:
+            return inventory
+        return then_out | else_out

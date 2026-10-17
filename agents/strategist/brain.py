@@ -15,9 +15,11 @@ import re
 import shlex
 import shutil
 import signal
+import sqlite3
 import subprocess
 import threading
 import time
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,6 +33,9 @@ PROBE_PROMPT = "ответь OK"
 AGENT_NAME = "strategist"
 POLL_SECONDS = 0.1
 KILL_GRACE_SECONDS = 2.0
+OPCODE_DB = "opencode.db"
+ACCOUNT_TABLES = ("account", "account_state")
+DB_TIMEOUT_SECONDS = 5.0
 PROVIDER_EXIT_CODE = 75
 ERROR_TEXT_LIMIT = 300
 KEPT_FAILURES = 20
@@ -124,19 +129,111 @@ def brain_env(extra: dict | None = None, data_home: Path | None = None) -> dict:
 def prepare_data_home(data: Path) -> Path:
     """Каталог данных подпроцесса opencode: сессии с полным промптом копятся в нём, а не в общем ~/.local/share.
 
-    Без auth.json изоляция данных ломает вход в аккаунт бесплатных моделей, поэтому глобальный файл
-    подвязывается симлинком: обновление токена opencode пишет через него в общий каталог.
+    Без auth.json и строк account/account_state из opencode.db изоляция данных ломает вход: бесплатные модели
+    отвечают 403, а модели opencode-go — «An active OpenCode Go subscription is required». Поэтому глобальный
+    auth.json подвязывается симлинком, а в свой opencode.db копируется только схема, миграции и строки учётки —
+    без сессий, сообщений и прочих данных общего каталога.
     """
-    data.mkdir(parents=True, exist_ok=True)
-    auth = data / "opencode" / "auth.json"
-    if auth.exists() or auth.is_symlink():
-        return data
-    raw = os.environ.get("XDG_DATA_HOME")
-    source = (Path(raw) if raw else Path.home() / ".local" / "share") / "opencode" / "auth.json"
-    if source.is_file():
-        auth.parent.mkdir(parents=True, exist_ok=True)
-        auth.symlink_to(source)
+    data = Path(data)
+    opencode_dir = data / "opencode"
+    opencode_dir.mkdir(parents=True, exist_ok=True)
+    source_dir = _source_data_dir()
+    _link_auth(opencode_dir / "auth.json", source_dir / "auth.json")
+    _seed_account_db(opencode_dir / OPCODE_DB, source_dir / OPCODE_DB)
     return data
+
+
+def _source_data_dir() -> Path:
+    raw = os.environ.get("XDG_DATA_HOME")
+    return (Path(raw) if raw else Path.home() / ".local" / "share") / "opencode"
+
+
+def _link_auth(auth: Path, source: Path) -> None:
+    if auth.exists() or auth.is_symlink() or not source.is_file():
+        return
+    auth.symlink_to(source)
+
+
+def _seed_account_db(local: Path, source: Path) -> None:
+    """Перенести строки account/account_state в свой opencode.db, не копируя остальные таблицы."""
+    if not source.is_file():
+        return
+    if local.exists() and _has_account_row(local):
+        return
+    try:
+        with closing(_connect_ro(source)) as source_con:
+            account, state = _read_account(source_con)
+            if not account and not state:
+                return
+            if local.exists():
+                _write_account_rows(local, source_con, account, state)
+            else:
+                _create_account_db(local, source_con, account, state)
+    except sqlite3.Error as error:
+        raise BrainError(f"Не удалось перенести учётную запись opencode в изолированный каталог ({local}): "
+                         f"{error}; без неё модели opencode-go откажут. Проверьте {source}") from error
+
+
+def _connect_ro(path: Path) -> sqlite3.Connection:
+    return sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=DB_TIMEOUT_SECONDS)
+
+
+def _table_exists(con: sqlite3.Connection, name: str) -> bool:
+    return con.execute("select 1 from sqlite_master where type='table' and name=?", (name,)).fetchone() is not None
+
+
+def _has_account_row(local: Path) -> bool:
+    try:
+        with closing(sqlite3.connect(f"file:{local}?mode=ro", uri=True, timeout=DB_TIMEOUT_SECONDS)) as con:
+            return _table_exists(con, "account") and con.execute("select 1 from account limit 1").fetchone() is not None
+    except sqlite3.Error:
+        return False
+
+
+def _read_account(source: sqlite3.Connection):
+    account = source.execute("select * from account").fetchall() if _table_exists(source, "account") else []
+    state = source.execute("select * from account_state").fetchall() if _table_exists(source, "account_state") else []
+    return account, state
+
+
+def _create_account_db(local: Path, source: sqlite3.Connection, account, state) -> None:
+    schema = [row[0] for row in source.execute(
+        "select sql from sqlite_master where sql is not null and name not like 'sqlite_%' "
+        "and type in ('table','index','trigger','view')").fetchall()]
+    migrations = source.execute("select id, time_completed from migration").fetchall() \
+        if _table_exists(source, "migration") else []
+    local.parent.mkdir(parents=True, exist_ok=True)
+    temporary = local.with_name(local.name + ".tmp")
+    if temporary.exists():
+        temporary.unlink()
+    try:
+        with closing(sqlite3.connect(str(temporary), timeout=DB_TIMEOUT_SECONDS, isolation_level=None)) as con:
+            for statement in schema:
+                con.execute(statement)
+            if migrations:
+                con.executemany("insert or ignore into migration(id, time_completed) values (?, ?)", migrations)
+            _insert_account_rows(con, account, state)
+        os.replace(temporary, local)
+    except BaseException:
+        if temporary.exists():
+            temporary.unlink()
+        raise
+
+
+def _write_account_rows(local: Path, source: sqlite3.Connection, account, state) -> None:
+    with closing(sqlite3.connect(str(local), timeout=DB_TIMEOUT_SECONDS, isolation_level=None)) as con:
+        for name in ACCOUNT_TABLES:
+            if not _table_exists(con, name):
+                row = source.execute("select sql from sqlite_master where type='table' and name=?", (name,)).fetchone()
+                if row and row[0]:
+                    con.execute(row[0])
+        _insert_account_rows(con, account, state)
+
+
+def _insert_account_rows(con: sqlite3.Connection, account, state) -> None:
+    for name, rows in (("account", account), ("account_state", state)):
+        if rows:
+            con.executemany(f"insert or replace into {name} values ({','.join('?' * len(rows[0]))})", rows)
 
 
 def agent_violations(agent: dict) -> list[str]:
