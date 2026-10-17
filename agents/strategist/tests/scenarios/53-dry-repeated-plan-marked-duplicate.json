@@ -1,0 +1,71 @@
+{
+ "name": "53-dry-repeated-plan-marked-duplicate",
+ "description": "dry: наблюдение изменилось, но модель снова предложила тот же план — повтор записан в журнал с пометкой duplicate, а не как новое решение",
+ "config": {
+  "STRATEGIST_MODE": "dry",
+  "STRATEGIST_TASK_GAP": "0"
+ },
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом лес, срублю деревья.",
+    "goal": "срубить деревья",
+    "plan": {
+     "type": "script",
+     "script": "chop_tree",
+     "params": {
+      "count": 3
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  },
+  {
+   "fake": {
+    "set_world": {
+     "bot": "forest",
+     "world": "farm",
+     "tweak": 1
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "mode": "dry"
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "posted": 2
+   }
+  },
+  {
+   "journal_has": [
+    {
+     "event": "posted",
+     "dry": true,
+     "duplicate": true
+    }
+   ]
+  }
+ ]
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
-MAX_REASON = 300
+MAX_REASON = 500
 MAX_GOAL = 200
 MAX_REPLY_CHARS = 65536
 MAX_OBJECT_ATTEMPTS = 64

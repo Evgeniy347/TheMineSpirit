@@ -50,11 +50,13 @@ class Guard:
         self.failures: dict[str, int] = dict(data.get("failures", {}))
         self.paused_until: dict[str, float] = dict(data.get("paused_until", {}))
         self.last_hash: dict[str, str] = dict(data.get("last_hash", {}))
+        self.dry_plans: dict[str, str] = dict(data.get("dry_plans", {}))
         self._cycle_calls: dict[str, int] = {}
 
     def to_dict(self) -> dict:
         return {"posts": self.posts, "brain_calls": self.brain_calls, "cooldowns": self.cooldowns,
-                "failures": self.failures, "paused_until": self.paused_until, "last_hash": self.last_hash}
+                "failures": self.failures, "paused_until": self.paused_until, "last_hash": self.last_hash,
+                "dry_plans": self.dry_plans}
 
     def begin_cycle(self) -> None:
         self._cycle_calls = {}
@@ -105,6 +107,15 @@ class Guard:
         else:
             self.last_hash[bot] = obs_hash
 
+    def record_dry_decision(self, bot: str, plan_fingerprint: str) -> bool:
+        """Запомнить dry-решение; True — такой же план уже записан, это повтор, а не новое решение."""
+        duplicate = self.dry_plans.get(bot) == plan_fingerprint
+        self.dry_plans[bot] = plan_fingerprint
+        return duplicate
+
+    def forget_dry_decision(self, bot: str) -> None:
+        self.dry_plans.pop(bot, None)
+
     def allow_new_task(self, now: float, bot: str) -> Verdict:
         paused = self._paused(now, bot)
         if paused:
@@ -131,6 +142,7 @@ class Guard:
         posts = [t for t in self.posts.get(bot, []) if t > now - HOUR]
         posts.append(now)
         self.posts[bot] = posts
+        self.forget_dry_decision(bot)
 
     def record_outcome(self, now: float, bot: str, plan_fingerprint: str, outcome: str) -> OutcomeResult:
         if outcome not in OUTCOMES:
