@@ -10,6 +10,7 @@ import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.launch;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
 import static com.theminespirit.gametest.CraftTestSupport.reload;
+import static com.theminespirit.gametest.CraftTestSupport.speedUpCampfires;
 import static com.theminespirit.gametest.CraftTestSupport.speedUpFurnaces;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
@@ -28,6 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -237,6 +239,44 @@ public final class SmeltGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "smelt_campfire", timeoutTicks = TIMEOUT)
+    public static void smelt_BeefOnCampfire_CookedWithoutFuel(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(FURNACE_CELL, Blocks.CAMPFIRE);
+        SpiritEntity spirit = prepare(helper, stack(Items.BEEF, 2));
+        speedUpCampfires(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "cooked_beef", 2);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.COOKED_BEEF, 2, "стейки с костра без топлива");
+            assertCount(helper, spirit, Items.BEEF, 0, "сырая говядина после готовки на костре");
+            assertCampfireEmpty(helper);
+            cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "smelt_campfire_materials", timeoutTicks = TIMEOUT)
+    public static void smelt_NoCampfireWithMaterials_BuildsItAndCooks(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.BEEF, 2), stack(Items.STICK, 3), stack(Items.COAL, 1),
+                stack(Items.OAK_LOG, 3));
+        speedUpCampfires(helper);
+        SpiritRun run = launch(helper, spirit, "smelt", "cooked_beef", 2);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.COOKED_BEEF, 2, "стейки на поставленном костре");
+            assertCount(helper, spirit, Items.BEEF, 0, "сырая говядина после готовки на поставленном костре");
+            assertCount(helper, spirit, Items.STICK, 0, "палки, ушедшие на костёр");
+            assertCount(helper, spirit, Items.COAL, 0, "уголь, ушедший на костёр");
+            assertCount(helper, spirit, Items.OAK_LOG, 0, "брёвна, ушедшие на костёр");
+            helper.assertTrue(campfireCount(helper) == 1,
+                    "дух обязан поставить ровно один костёр из материалов, на поле их " + campfireCount(helper));
+            cleanup(helper, spirit);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "smelt_smoker_beef", timeoutTicks = TIMEOUT)
     public static void smelt_BeefInSmoker_CookedBeefInChest(GameTestHelper helper) {
         field(helper);
@@ -356,6 +396,29 @@ public final class SmeltGameTests {
             }
         }
         return furnaces;
+    }
+
+    private static int campfireCount(GameTestHelper helper) {
+        int campfires = 0;
+        for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
+            for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
+                if (helper.getBlockState(new BlockPos(x, 1, z)).is(Blocks.CAMPFIRE)) {
+                    campfires++;
+                }
+            }
+        }
+        return campfires;
+    }
+
+    private static void assertCampfireEmpty(GameTestHelper helper) {
+        BlockEntity entity = helper.getBlockEntity(FURNACE_CELL);
+        helper.assertTrue(entity instanceof CampfireBlockEntity, "в клетке костра нет костра");
+        CampfireBlockEntity campfire = (CampfireBlockEntity) entity;
+        for (int slot = 0; slot < campfire.getItems().size(); slot++) {
+            ItemStack stack = campfire.getItems().get(slot);
+            helper.assertTrue(stack.isEmpty(),
+                    "костёр обязан быть пуст после готовки, в слоте " + slot + " лежит " + stack);
+        }
     }
 
     private static void assertFurnaceEmpty(GameTestHelper helper) {
