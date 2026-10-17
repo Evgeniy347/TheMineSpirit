@@ -65,6 +65,10 @@ public final class CatalogLimits {
     public static final int HARVEST_RADIUS_MAX = 32;
     public static final int HARVEST_RADIUS_DEFAULT = 16;
 
+    // Добыча без единого добытого блока столько тиков падает с причиной, а не висит:
+    // пять минут с запасом перекрывают самый долгий подход (радиус 32 ≈ 2400 тиков).
+    public static final int HARVEST_NO_PROGRESS_TICKS = 6000;
+
     public static final int FARM_RADIUS_MIN = 1;
     public static final int FARM_RADIUS_MAX = 16;
     public static final int FARM_RADIUS_DEFAULT = 8;

@@ -9,6 +9,7 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.ProgressWatchdog;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
@@ -63,6 +64,7 @@ public final class HarvestSession {
     private final BlockBreaker breaker;
     private final Approach approach;
     private final TargetBuffer buffer = new TargetBuffer();
+    private final ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
 
     private State state = State.FIND;
     private Outcome outcome = Outcome.RUNNING;
@@ -126,6 +128,10 @@ public final class HarvestSession {
             return outcome;
         }
         ticks++;
+        watchdog.tick();
+        if (watchdog.stalled()) {
+            return fail(stallReason());
+        }
         switch (state) {
             case FIND -> find();
             case PICK -> pick();
@@ -424,6 +430,7 @@ public final class HarvestSession {
             }
             case BROKEN -> {
                 mined++;
+                watchdog.progress();
                 collectRuns++;
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
                         PickupTuning.DEFAULT,
@@ -472,6 +479,12 @@ public final class HarvestSession {
 
     private String stopReason() {
         return summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
+    }
+
+    private String stallReason() {
+        return "нет прогресса " + watchdog.limitTicks() + " тиков (" + (watchdog.limitTicks() / 20) + " с): "
+                + summary() + "; текущий шаг " + state
+                + " — проверьте доступность блоков и подходящий инструмент";
     }
 
     private String summary() {

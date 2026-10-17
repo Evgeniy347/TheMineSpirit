@@ -789,6 +789,35 @@ public final class MineGameTests {
         helper.succeed();
     }
 
+    // [флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
+    @GameTest(template = "arena", batch = "gather_stone_wooden", timeoutTicks = 1400)
+    public static void gather_StoneHeapWithWoodenPickaxe_MinesAll(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
+        for (int x = 1; x <= 3; x++) {
+            for (int y = 1; y <= 2; y++) {
+                for (int z = 1; z <= 3; z++) {
+                    helper.setBlock(x + CAVE_SHIFT_INSIDE_ARENA, y, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+                }
+            }
+        }
+        SpiritEntity spirit = spawnWith(helper,
+                SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.WOODEN_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("stone", 18), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "куча камня под деревянной киркой обязана добыться целиком, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 18,
+                    "в инвентаре обязано быть 18 булыжника, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "empty", batch = "mine_registry", timeoutTicks = 100)
     public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
