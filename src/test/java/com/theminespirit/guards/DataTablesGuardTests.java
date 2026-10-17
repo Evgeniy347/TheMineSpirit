@@ -31,19 +31,24 @@ import org.junit.jupiter.api.Test;
 class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
     /** Не таблицы /reload — путь и причина. Тела пресетов из индекса presets сторож берёт сам (presetBodies). */
-    private static final Map<String, String> EXCLUDED = Map.of(
-            "data/theminespirit/tactics/priorities.json", "не читается кодом: удалить или подключить",
-            "data/theminespirit/schematics/house.json", "схема грузится по имени, не на /reload (todo: горячие схемы)",
-            "data/theminespirit/schematics/fence.json", "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
-            "data/theminespirit/schematics/pen.json", "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
-            "data/theminespirit/schematics/enchant_room.json",
-            "схема доски грузится по имени, не на /reload (todo: горячие схемы)",
-            "data/theminespirit/hunger/hunger.json", "HungerRules читается с classpath, не на /reload (todo: горячие таблицы)",
-            "data/theminespirit/mining/descent.json", "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)",
-            "data/theminespirit/mining/descent_levels.json",
-            "DescentLevels с classpath, не на /reload (todo: горячие таблицы)",
-            "data/theminespirit/fishing/fishing.json",
-            "FishingData.load() с classpath, не на /reload (todo: горячие таблицы)");
+    private static final Map<String, String> EXCLUDED = Map.ofEntries(
+            Map.entry("data/theminespirit/tactics/priorities.json", "не читается кодом: удалить или подключить"),
+            Map.entry("data/theminespirit/schematics/house.json",
+                    "схема грузится по имени, не на /reload (todo: горячие схемы)"),
+            Map.entry("data/theminespirit/schematics/fence.json",
+                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
+            Map.entry("data/theminespirit/schematics/pen.json",
+                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
+            Map.entry("data/theminespirit/schematics/enchant_room.json",
+                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
+            Map.entry("data/theminespirit/hunger/hunger.json",
+                    "HungerRules читается с classpath, не на /reload (todo: горячие таблицы)"),
+            Map.entry("data/theminespirit/mining/descent.json",
+                    "DescentData.defaults() с classpath, не на /reload (todo: горячие таблицы)"),
+            Map.entry("data/theminespirit/mining/descent_levels.json",
+                    "DescentLevels с classpath, не на /reload (todo: горячие таблицы)"),
+            Map.entry("data/theminespirit/fishing/fishing.json",
+                    "FishingData.load() с classpath, не на /reload (todo: горячие таблицы)"));
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
