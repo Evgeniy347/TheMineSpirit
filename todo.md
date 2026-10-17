@@ -197,9 +197,11 @@
 Действие конкретно: одна цель, без «углубления» (цепочки/ресурсы — дело ядра и ИИ). Политики — всегда включённые правила, не задачи.
 
 ### Движение и навигация
-- [ ] `escort`, `meet`
+- [x] `meet` (скрипт `meet`)
+- [ ] `escort`
 - [ ] `explore`
-- [ ] `flee_from` (опасность: лава, враг, крипер), `retreat`, `disengage`
+- [x] `flee_from` (скрипт `flee`), `retreat` (скрипт `retreat`)
+- [ ] `disengage`
 - [ ] `bridge`, `pillar_up`, `descend`, `climb`
 - [ ] `swim`, `cross_water`
 
@@ -207,36 +209,37 @@
 
 ### Добыча
 - [ ] `chop_target` (конкретное дерево/координата; `chop_tree` по виду — сделан)
-- [ ] `mine_block` (`mine_vein`, `gather`, `collect_drops`, `dig_area` — сделаны)
-- [ ] `harvest_crop`, `plant_crop`, `till`, `bone_meal`, `shear`, `milk`, `fish`
+- [x] `mine_block` (`mine_vein`, `gather`, `collect_drops`, `dig_area`)
+- [x] `harvest_crop` (`harvest_crop`), `plant_crop` (`plant_crop`), `till` (`till`), `bone_meal` (`bone_meal`),
+      `shear` (`shear`), `milk` (`milk`), `fish` (`fish`)
 
 ### Бой и охота
-- [ ] `attack` (цель), `shoot`
-- [ ] `set_combat_mode` (aggressive / defensive / protect / passive)
-- [ ] `defend` (себя), `guard_area` (территория), `hunt` (животные), `hunt_hostile`
+- [x] `attack` (цель, скрипт `attack`); `shoot` — нет
+- [ ] `set_combat_mode` (aggressive / defensive / protect / passive; режимы тактики есть, скрипта нет)
+- [x] `defend` (себя, скрипт `defend`), `hunt` (животные, скрипт `hunt`); `guard_area`, `hunt_hostile` — нет
 
 ### Инвентарь и крафт
-- [ ] `equip`, `swap_tool` (`craft`, `smelt`, `repair` через точило — сделаны, 17.10)
-- [ ] `acquire`, `pick_up`, `deposit`, `withdraw`, `sort_chest`, `drop_to_player`
-- [ ] `eat` (есть, 16.10), `drink_potion`
+- [x] `equip` (`equip`), `swap_tool` — нет; `craft` (`craft`), `smelt` (`smelt`), `repair` (`repair`, 17.10)
+- [x] `acquire` (`acquire`), `pick_up` (`collect_drops`), `deposit` (`deposit`), `withdraw` (`withdraw`),
+      `sort_chest` (`sort_chest`); `drop_to_player` — нет
+- [x] `eat` (`eat`, 16.10); `drink_potion` — нет
 
 ### Стройка, ферма, база
-- [ ] `build_farm`, `build_shelter`, `build_fence`
-- [ ] `light_area`, `secure_area` (факелы против спавна)
-- [ ] `use_block` (рычаг, кнопка, дверь), `open` / `close`
+- [ ] `build_farm`, `build_shelter`, `build_fence` (есть `build_schematic`, `fill`, `place_block` — не то)
+- [x] `light_area` (`light_area`); `secure_area` — нет
+- [ ] `use_block` (рычаг, кнопка, дверь), `open` — нет; `close` (`close_door` — только дверь)
 
 ### Социум и мета
-- [ ] `say`, `report`, `deliver`, `give`, `take`
-- [ ] `wait`, `stop`, `cancel`, `set_priority`
-- [ ] композиция: `sequence`, `repeat`, `retry`, `fallback`, `parallel`, `condition`
+- [x] `say` (`say`), `deliver` (`deliver`); `report`, `give`, `take` — нет
+- [x] `wait` (`wait`); `stop`, `cancel` — команды (`/spirit cancel`, `DELETE /v1/tasks/{id}`), `set_priority` — нет
+- [x] композиция: `sequence`, `repeat`, `retry`, `fallback`, `parallel`, `condition` (движок дерева задач, P0)
 
 ### Политики (включены всегда)
-- [ ] есть при голоде (есть, 16.10); менять сломанный инструмент (есть: порог прочности, запасной, отказ с причиной —
-      deepseek-v4.1-flash 17.10); не выкидывать предметы (есть: полный инвентарь — не ломает/не подбирает, отказ
-      «инвентарь полон»; автосдача лишнего на склад — нет; go/beam 17.10); держать инвентарь в порядке
-      (сортировка сундука при обращении — ChestSorter, GameTest 17.10)
+- [x] есть при голоде (`eat`, 16.10); менять сломанный инструмент (порог прочности, запасной, отказ с причиной,
+      17.10); не выкидывать предметы (полный инвентарь — не ломает/не подбирает, отказ «инвентарь полон»; автосдача
+      лишнего на склад — нет); держать инвентарь в порядке (`sort_chest`, ChestSorter)
 - [ ] ночной режим (домой / факелы); приоритет и защита игрока
-- [ ] не выходить за границы зоны
+- [x] не выходить за границы зоны (рабочая зона `/spirit zone`)
 
 ## Тактическое и стратегическое поведение (карта решений, без деталей)
 
