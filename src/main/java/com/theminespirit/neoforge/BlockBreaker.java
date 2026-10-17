@@ -150,6 +150,10 @@ public final class BlockBreaker {
         return tool.copy();
     }
 
+    public int toolSlot() {
+        return choice == null || choice.slot() < 0 ? -1 : choice.slot();
+    }
+
     public boolean dropsAllowed() {
         return choice != null && choice.dropsAllowed();
     }
