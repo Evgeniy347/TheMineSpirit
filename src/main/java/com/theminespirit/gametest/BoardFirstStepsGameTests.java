@@ -65,11 +65,13 @@ public final class BoardFirstStepsGameTests {
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
+        SpiritConfig.setCoordinatorEnabled(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
+        SpiritConfig.setCoordinatorEnabled(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
@@ -86,11 +88,12 @@ public final class BoardFirstStepsGameTests {
         int streak = 0;
         boolean foreignTrees = false;
 
-        // Чужие шаги из общей доски (поставлены глобальным тиком для других сцен) закрываем
-        // помечая выполненными: иначе активных больше одного и тест видит чужую работу.
+        // Общая доска переживает сцены: чужие активные билеты (first:*, supply:* из соседних
+        // сцен) снимаем, иначе снабжение забирает духа и цепочка первых шагов стоит.
         for (BoardTicket ticket : board.board().all()) {
-            if (ticket.id().startsWith("first:")) {
-                closeTicket(board, ticket.id(), spirit);
+            BoardStatus status = board.board().statusOf(ticket.id()).orElse(null);
+            if (status != BoardStatus.DONE && status != BoardStatus.CANCELLED) {
+                board.board().cancel(ticket.id());
             }
         }
 
