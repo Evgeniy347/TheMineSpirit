@@ -19,7 +19,8 @@ public record WorldObservation(
         SpiritStatus spirit,
         List<GroundItem> groundItems,
         List<ContainerContents> containerItems,
-        WorldTime time) {
+        WorldTime time,
+        List<OpenBlock> openBlocks) {
 
     public WorldObservation {
         Objects.requireNonNull(botId, "botId не может быть null: наблюдение принадлежит конкретному духу");
@@ -30,13 +31,23 @@ public record WorldObservation(
         containers = sortContainers(containers);
         groundItems = aggregateGroundItems(groundItems);
         containerItems = sortContainerItems(containerItems);
+        openBlocks = sortOpenBlocks(openBlocks);
     }
 
-    /** Наблюдение без данных о самом духе, выпавших предметах, содержимом контейнеров и времени суток. */
+    /** Наблюдение без открытых блоков, данных о самом духе, выпавших предметах, контейнерах и времени суток. */
     public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
             List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius) {
         this(botId, tick, position, inventory, blocks, entities, containers, radius,
-                null, List.of(), List.of(), null);
+                null, List.of(), List.of(), null, List.of());
+    }
+
+    /** Наблюдение без открытых блоков: путям, которым позиции важных блоков не нужны. */
+    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
+            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius,
+            SpiritStatus spirit, List<GroundItem> groundItems, List<ContainerContents> containerItems,
+            WorldTime time) {
+        this(botId, tick, position, inventory, blocks, entities, containers, radius, spirit, groundItems,
+                containerItems, time, List.of());
     }
 
     public String hash() {
@@ -77,6 +88,12 @@ public record WorldObservation(
         merged.forEach((item, count) -> result.add(new GroundItem(item, count)));
         result.sort(Comparator.comparing(GroundItem::item));
         return List.copyOf(result);
+    }
+
+    private static List<OpenBlock> sortOpenBlocks(List<OpenBlock> entries) {
+        List<OpenBlock> copy = new ArrayList<>(requireList(entries, "openBlocks"));
+        copy.sort(OpenBlocks.ORDER);
+        return List.copyOf(copy);
     }
 
     private static List<ContainerContents> sortContainerItems(List<ContainerContents> entries) {

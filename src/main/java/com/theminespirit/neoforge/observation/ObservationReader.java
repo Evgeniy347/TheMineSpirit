@@ -48,7 +48,7 @@ public final class ObservationReader {
                 base.entities(), base.containers(), base.radius(), status(spirit),
                 groundItems(level, base.position(), base.radius(), limits.maxGroundItems()),
                 containerContents(level, base.containers(), limits),
-                new WorldTime(level.getDayTime(), level.isDay()));
+                new WorldTime(level.getDayTime(), level.isDay()), base.openBlocks());
     }
 
     private static SpiritStatus status(SpiritEntity spirit) {

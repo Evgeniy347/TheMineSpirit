@@ -183,6 +183,38 @@ class WorldObservationTests {
     }
 
     @Test
+    void json_OpenBlocks_RoundTripsSortedByDistance() {
+        String json = "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[0,64,0],\"radius\":8,"
+                + "\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],"
+                + "\"open_blocks\":[{\"item\":\"minecraft:stone\",\"pos\":[3,64,0],\"distance\":3.0},"
+                + "{\"item\":\"minecraft:iron_ore\",\"pos\":[1,64,0],\"distance\":1.0}],\"hash\":\"any\"}";
+
+        String rendered = WorldObservation.fromJson(json).toJson();
+
+        assertTrue(rendered.contains("\"open_blocks\":[{\"item\":\"minecraft:iron_ore\",\"pos\":[1,64,0],"
+                        + "\"distance\":1.0},{\"item\":\"minecraft:stone\",\"pos\":[3,64,0],\"distance\":3.0}]"),
+                "Поле open_blocks обязано доживать от REST-запроса до промпта и идти по возрастанию расстояния: "
+                        + "без позиций стратег не может поставить goto к ближайшей открытой руде, " + rendered);
+    }
+
+    @Test
+    void hash_OpenBlockMoved_HashDiffers() {
+        WorldObservation near = WorldObservation.fromJson(openBlocksJson("[1,64,0]"));
+        WorldObservation far = WorldObservation.fromJson(openBlocksJson("[7,64,0]"));
+
+        assertNotEquals(near.hash(), far.hash(),
+                "Перенос открытой руды на другую позицию меняет картину мира: иначе стратег считает изменённый мир "
+                        + "прежним и не перепланирует путь к новой жиле");
+    }
+
+    private static String openBlocksJson(String pos) {
+        return "{\"bot\":\"spirit_1\",\"tick\":1,\"pos\":[0,64,0],\"radius\":8,"
+                + "\"inventory\":[],\"blocks\":[],\"entities\":[],\"containers\":[],"
+                + "\"open_blocks\":[{\"item\":\"minecraft:iron_ore\",\"pos\":" + pos
+                + ",\"distance\":1.0}],\"hash\":\"any\"}";
+    }
+
+    @Test
     void toJson_RichObservation_NewFieldsMatchContract() {
         String json = richObservation().toJson();
         assertTrue(json.contains("\"held\":{\"item\":\"minecraft:iron_pickaxe\",\"durability\":250}"),

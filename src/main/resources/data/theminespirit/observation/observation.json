@@ -1,5 +1,6 @@
 {
   "maxGroundItems": 16,
   "maxContainers": 8,
-  "maxContainerItems": 27
+  "maxContainerItems": 27,
+  "maxOpenBlocks": 24
 }
