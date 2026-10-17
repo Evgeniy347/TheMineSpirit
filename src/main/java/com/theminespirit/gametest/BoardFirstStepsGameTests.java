@@ -10,6 +10,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -56,6 +57,7 @@ public final class BoardFirstStepsGameTests {
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
+    private static final int FIRST_TOOL_INDEX = 3;
 
     private BoardFirstStepsGameTests() {
     }
@@ -204,6 +206,77 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
+    /**
+     * Пустой склад: деревянный набор ждёт досок, каменный — булыжника. Каждый предмет — отдельное
+     * задание, следующее открывается после выполнения предыдущего; каменная ступень не открывается,
+     * пока гейт не увидит булыжник из рецепта каменной кирки.
+     */
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    public static void firstSteps_EmptyStock_WoodenToolsThenStone(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        helper.setBlock(new BlockPos(6, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-tools.jsonl");
+        Map<String, Integer> stock = new HashMap<>();
+
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("first:craft_wooden_pickaxe").isEmpty(),
+                "Пустой склад: деревянная кирка ждёт досок, а не выдаётся вхолостую");
+        helper.assertTrue(board.board().statusOf("gather:oak_planks").isPresent(),
+                "Пустой склад: на доску встаёт добыча досок под деревянный набор, статус "
+                        + board.board().statusOf("gather:oak_planks"));
+
+        stock.put("oak_planks", 64);
+        stock.put("stick", 64);
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
+                "С досками и палками открывается деревянная кирка, статус "
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
+
+        craftTool(board, spirit, stock, "first:craft_wooden_pickaxe", "wooden_pickaxe");
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("first:craft_wooden_axe").isPresent(),
+                "После деревянной кирки наступает деревянный топор: ступень идёт по одному предмету");
+        craftTool(board, spirit, stock, "first:craft_wooden_axe", "wooden_axe");
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("first:craft_wooden_shovel").isPresent(),
+                "После топора — деревянная лопата: деревянный набор закрывается перед каменным");
+        craftTool(board, spirit, stock, "first:craft_wooden_shovel", "wooden_shovel");
+
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("gather:cobblestone").isPresent(),
+                "Каменная ступень ждёт булыжник: при недостаче встаёт добыча булыжника, статус "
+                        + board.board().statusOf("gather:cobblestone"));
+        helper.assertTrue(board.board().statusOf("first:craft_stone_pickaxe").isEmpty(),
+                "Без булыжника каменная кирка не открывается: гейт из рецепта держит задание");
+
+        stock.put("cobblestone", 64);
+        tick(level, board, spirit, stock);
+        helper.assertTrue(board.board().statusOf("first:craft_stone_pickaxe").isPresent(),
+                "С булыжником открывается каменная кирка — вторая ступень набора, статус "
+                        + board.board().statusOf("first:craft_stone_pickaxe"));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    private static void tick(ServerLevel level, BoardService board, SpiritEntity spirit,
+            Map<String, Integer> stock) {
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.copyOf(stock)),
+                level.getGameTime());
+    }
+
+    private static void craftTool(BoardService board, SpiritEntity spirit, Map<String, Integer> stock,
+            String ticketId, String item) {
+        board.board().claim(ticketId, spirit.getUUID(), board.board().now());
+        board.board().complete(ticketId);
+        stock.merge(item, 1, Integer::sum);
+    }
+
     private static boolean hasPosted(List<BoardLogEntry> log, String ticketId) {
         return log.stream().anyMatch(entry -> entry.event() == BoardLog.Event.POSTED
                 && entry.ticketId().equals(ticketId));
@@ -216,8 +289,12 @@ public final class BoardFirstStepsGameTests {
 
     /** Своя доска уровня для теста: общая живёт через границы сцен, и чужие билеты мешают проверке. */
     private static BoardService isolatedBoard(ServerLevel level) {
+        return isolatedBoard(level, "gametest-first-steps-gate.jsonl");
+    }
+
+    private static BoardService isolatedBoard(ServerLevel level, String journalFile) {
         Board board = new Board(level::getGameTime);
-        Path journalPath = FMLPaths.CONFIGDIR.get().resolve("theminespirit/gametest-first-steps-gate.jsonl");
+        Path journalPath = FMLPaths.CONFIGDIR.get().resolve("theminespirit/" + journalFile);
         try {
             Files.deleteIfExists(journalPath);
         } catch (IOException error) {
@@ -268,21 +345,31 @@ public final class BoardFirstStepsGameTests {
     }
 
     private static int chainIndex(BoardCase boardCase) {
+        int tool = ToolSet.chain().indexOf(boardCase);
+        if (tool >= 0) {
+            return FIRST_TOOL_INDEX + tool;
+        }
         return switch (boardCase) {
             case CLEAR_GROUNDS -> 0;
             case STOCK_CHESTS -> 1;
             case CRAFTING_STATION -> 2;
-            case CRAFT_TOOLS -> 3;
-            case BUILD_MINE -> 4;
-            case BUILD_FENCE -> 5;
-            case LIGHTING -> 6;
-            case BUILD_HOUSE -> 7;
+            case BUILD_MINE -> 10;
+            case BUILD_FENCE -> 11;
+            case LIGHTING -> 12;
+            case BUILD_HOUSE -> 13;
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + boardCase);
         };
     }
 
     private static void satisfy(GameTestHelper helper, BoardService board, SpiritEntity spirit,
             BoardCase head) {
+        if (ToolSet.isTool(head)) {
+            int slot = ToolSet.chain().indexOf(head);
+            spirit.getInventory().setItem(slot, toolStack(head));
+            ServerLevel level = helper.getLevel();
+            board.rebuild(level, level.getGameTime());
+            return;
+        }
         switch (head) {
             case CLEAR_GROUNDS -> placeLogs(helper, true);
             case STOCK_CHESTS -> {
@@ -290,11 +377,6 @@ public final class BoardFirstStepsGameTests {
                 helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
             }
             case CRAFTING_STATION -> helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
-            case CRAFT_TOOLS -> {
-                spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE, 1));
-                ServerLevel level = helper.getLevel();
-                board.rebuild(level, level.getGameTime());
-            }
             case BUILD_MINE -> {
                 helper.setBlock(new BlockPos(6, 1, 6), Blocks.COBBLESTONE);
                 helper.setBlock(new BlockPos(6, 2, 6), Blocks.COBBLESTONE);
@@ -310,6 +392,20 @@ public final class BoardFirstStepsGameTests {
             case BUILD_HOUSE -> helper.setBlock(new BlockPos(4, 1, 7), Blocks.OAK_STAIRS);
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + head);
         }
+    }
+
+    /** Предмет инструмента набора: проверяющему нужен стек, чтобы запас увидел собранное. */
+    private static ItemStack toolStack(BoardCase boardCase) {
+        return switch (boardCase) {
+            case CRAFT_WOODEN_PICKAXE -> new ItemStack(Items.WOODEN_PICKAXE, 1);
+            case CRAFT_WOODEN_AXE -> new ItemStack(Items.WOODEN_AXE, 1);
+            case CRAFT_WOODEN_SHOVEL -> new ItemStack(Items.WOODEN_SHOVEL, 1);
+            case CRAFT_STONE_PICKAXE -> new ItemStack(Items.STONE_PICKAXE, 1);
+            case CRAFT_STONE_AXE -> new ItemStack(Items.STONE_AXE, 1);
+            case CRAFT_STONE_SHOVEL -> new ItemStack(Items.STONE_SHOVEL, 1);
+            case CRAFT_STONE_SWORD -> new ItemStack(Items.STONE_SWORD, 1);
+            default -> throw new IllegalArgumentException("Не инструмент набора: " + boardCase);
+        };
     }
 
     private static void placeLogs(GameTestHelper helper, boolean clear) {

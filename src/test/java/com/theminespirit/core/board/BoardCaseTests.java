@@ -15,17 +15,19 @@ class BoardCaseTests {
         Set<String> actual = Arrays.stream(BoardCase.values()).map(Enum::name).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(
-                "CLEAR_GROUNDS", "COLLECT_DROPS", "STOCK_CHESTS", "CRAFTING_STATION", "CRAFT_TOOLS", "BUILD_MINE",
+                "CLEAR_GROUNDS", "COLLECT_DROPS", "STOCK_CHESTS", "CRAFTING_STATION", "BUILD_MINE",
+                "CRAFT_WOODEN_PICKAXE", "CRAFT_WOODEN_AXE", "CRAFT_WOODEN_SHOVEL",
+                "CRAFT_STONE_PICKAXE", "CRAFT_STONE_AXE", "CRAFT_STONE_SHOVEL", "CRAFT_STONE_SWORD",
                 "BUILD_FENCE", "LIGHTING", "BUILD_HOUSE", "REPAIR_FENCE", "REPAIR_BUILDING",
                 "FILL_CRATER", "CAPTURE_ANIMAL", "BUILD_PEN", "LURE_ANIMAL", "DISMANTLE_SHELTER",
                 "SUPPLY_SITE", "GATHER_MATERIALS", "ENCHANT_ROOM", "ENCHANT_SHELVES",
                 "BREED_ANIMALS", "EAT_TO_FULL", "HERD_CULL", "RELOCATE_BUILDING", "RESTOCK_FOOD");
 
         assertEquals(expected, actual,
-                "Набор кейсов доски обязан совпадать с чеклистами 36 и 37Б (25: 24 из чеклиста 36 "
-                        + "с GATHER_MATERIALS плюс COLLECT_DROPS): каждый вид задания получает "
-                        + "приоритет, гейт и план по своему имени; лишний кейс — сирота в "
-                        + "таблице BoardRules, потерянный — задание без источника");
+                "Набор кейсов доски обязан совпадать с чеклистами 36 и 37Б (31: 24 из v2, CRAFT_TOOLS заменён "
+                        + "семью кейсами набора инструментов, плюс COLLECT_DROPS): каждый вид задания получает "
+                        + "приоритет, гейт и план по своему имени; лишний кейс — сирота в таблице BoardRules, "
+                        + "потерянный — задание без источника");
     }
 
     @Test

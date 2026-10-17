@@ -49,7 +49,13 @@ class TicketPlansTests {
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
-            Map.entry(BoardCase.CRAFT_TOOLS, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_PICKAXE, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_AXE, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_SHOVEL, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_PICKAXE, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_AXE, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_SHOVEL, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_SWORD, "craft"),
             Map.entry(BoardCase.BUILD_FENCE, "build_schematic"),
             Map.entry(BoardCase.LIGHTING, "place_block"),
             Map.entry(BoardCase.ENCHANT_ROOM, "build_schematic"),
@@ -400,8 +406,11 @@ class TicketPlansTests {
 
     @Test
     void plan_CraftCases_CarryStationRadius() {
-        for (BoardCase craftCase : List.of(BoardCase.STOCK_CHESTS, BoardCase.CRAFTING_STATION,
-                BoardCase.CRAFT_TOOLS, BoardCase.ENCHANT_SHELVES)) {
+        List<BoardCase> craftCases = new ArrayList<>(ToolSet.chain());
+        craftCases.add(BoardCase.STOCK_CHESTS);
+        craftCases.add(BoardCase.CRAFTING_STATION);
+        craftCases.add(BoardCase.ENCHANT_SHELVES);
+        for (BoardCase craftCase : craftCases) {
             TaskNode plan = TicketPlans.plan(craftCase, target());
             ScriptCall craft = findCall(plan, "craft");
             Object radius = craft.params().get("radius");

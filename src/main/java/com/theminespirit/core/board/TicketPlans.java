@@ -86,7 +86,8 @@ public final class TicketPlans {
             case REPAIR_BUILDING -> repairBuilding(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
-            case CRAFT_TOOLS -> craft("minecraft:wooden_pickaxe", 1, target);
+            case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
+                    CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
             case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
             case LIGHTING -> lighting(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
@@ -175,6 +176,12 @@ public final class TicketPlans {
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(gotoTarget(target), new ScriptCall("craft",
                 Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
+    }
+
+    /** Инструмент набора: крафтится по числу комплектов поселения, но не больше партии каталога. */
+    private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
+        int count = target.toolCount() > 0 ? target.toolCount() : 1;
+        return craft(ToolSet.itemId(boardCase), Math.min(count, CatalogLimits.COUNT_MAX), target);
     }
 
     private static TaskNode lighting(TicketTarget target) {
