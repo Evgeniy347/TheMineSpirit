@@ -14,19 +14,32 @@ final class StationAccess {
         FAILED
     }
 
+    @FunctionalInterface
+    interface Supply {
+        boolean provide(SpiritEntity spirit);
+    }
+
+    private static final Supply NO_SUPPLY = spirit -> false;
+
     private final SpiritEntity spirit;
     private final StationType type;
     private final int radius;
     private final StationFinder finder;
     private final Approach approach;
+    private final Supply supply;
     private State state = State.WORKING;
     private BlockPos pos;
     private String failureReason;
 
     StationAccess(SpiritEntity spirit, StationType type, int radius) {
+        this(spirit, type, radius, NO_SUPPLY);
+    }
+
+    StationAccess(SpiritEntity spirit, StationType type, int radius, Supply supply) {
         this.spirit = spirit;
         this.type = type;
         this.radius = radius;
+        this.supply = supply;
         this.finder = new StationFinder(spirit.level(), spirit.blockPosition(), radius, type);
         this.approach = new Approach(spirit);
     }
@@ -68,7 +81,7 @@ final class StationAccess {
             headTo(existing.get());
             return;
         }
-        if (spirit.getInventory().countItem(type.item()) < 1) {
+        if (spirit.getInventory().countItem(type.item()) < 1 && !supply.provide(spirit)) {
             fail(type.needed() + ": рядом (" + radius + ") нет, в инвентаре нет");
             return;
         }

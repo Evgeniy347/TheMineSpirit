@@ -61,6 +61,43 @@ class StationsTests {
     }
 
     @Test
+    void preferredSmeltingStation_NonFoodOnlyCampfire_NothingFound() {
+        assertEquals(Optional.empty(), Stations.preferredSmeltingStation("charcoal", Set.of("campfire")),
+                "Костёр готовит только еду: непищевой продукт на нём не получится, поэтому станции нет");
+    }
+
+    @Test
+    void preferredSmeltingStation_NonFoodOnlySmoker_NothingFound() {
+        assertEquals(Optional.empty(), Stations.preferredSmeltingStation("glass", Set.of("smoker")),
+                "Коптильня готовит только еду: плавить стекло в ней нельзя, подменять печь нельзя");
+    }
+
+    @Test
+    void preferredSmeltingStation_FoodWithQualifiedId_StillUsesFoodOrder() {
+        assertEquals(Optional.of("campfire"),
+                Stations.preferredSmeltingStation("minecraft:cooked_beef", Set.of("campfire")),
+                "Полное имя продукта с namespace не должно прятать еду: иначе дух не выберет костёр");
+    }
+
+    @Test
+    void smeltingCandidates_Food_SmokerThenFurnaceThenCampfire() {
+        assertEquals(List.of("smoker", "furnace", "campfire"), Stations.smeltingCandidates("cooked_beef"),
+                "Порядок станций еды задан правилом: коптильня быстрее, печь обычная, костёр — последний");
+    }
+
+    @Test
+    void smeltingCandidates_NonFood_FurnaceOnly() {
+        assertEquals(List.of("furnace"), Stations.smeltingCandidates("charcoal"),
+                "Непищевой продукт плавит только печь: коптильня и костёр еду не заменяют");
+    }
+
+    @Test
+    void campfireSlots_StationRule_Four() {
+        assertEquals(4, Stations.CAMPFIRE_SLOTS,
+                "На костре готовится не больше четырёх предметов за раз: больше слотов в ванильном костре нет");
+    }
+
+    @Test
     void stationFor_KnowledgeWithoutStations_DefaultsToEmpty() {
         ResourceKnowledge knowledge = new FuelKnowledge();
 
