@@ -60,6 +60,15 @@ class ForageActivityTests {
     }
 
     @Test
+    void demand_SmallDeficit_AboveChop() {
+        SettlementView hungry = SettlementViews.settlementWithForage(1, 1, 64, 32, 2, 0, FarmWork.NONE,
+                new Forage("minecraft:bread", 0, ""));
+
+        assertTrue(FORAGE.demand(hungry) > new ChopActivity().demand(hungry),
+                "Даже небольшой дефицит еды важнее рубки: иначе поселение с одной буханкой рубит лес вместо еды");
+    }
+
+    @Test
     void demand_EmptyStock_MaxDemand() {
         SettlementView empty = SettlementViews.settlementWithForage(0, 0, 64, 32, 2, 0, FarmWork.NONE,
                 new Forage("minecraft:bread", 0, ""));

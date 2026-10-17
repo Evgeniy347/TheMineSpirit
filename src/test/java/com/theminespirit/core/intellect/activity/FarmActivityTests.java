@@ -61,6 +61,14 @@ class FarmActivityTests {
     }
 
     @Test
+    void demand_SmallDeficit_AboveChop() {
+        SettlementView hungry = SettlementViews.settlementWithFarm(1, 1, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
+
+        assertTrue(FARM.demand(hungry) > new ChopActivity().demand(hungry),
+                "Даже небольшой дефицит еды важнее рубки: иначе поселение с одной буханкой рубит лес вместо урожая");
+    }
+
+    @Test
     void demand_EmptyStock_MaxDemand() {
         SettlementView empty = SettlementViews.settlementWithFarm(0, 0, 64, 32, 2, 0, 0.2, new FarmWork(4, 0, 0));
 

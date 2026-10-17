@@ -17,6 +17,12 @@ public final class FoodDemand {
         if (id == null) {
             throw new IllegalArgumentException("Спрос еды без деятельности не считается: id входит в план духа");
         }
-        return Activity.checkedDemand(id, IntellectTuning.FOOD_DEMAND_MAX * share(view));
+        double share = share(view);
+        if (share <= 0) {
+            return Activity.checkedDemand(id, 0);
+        }
+        double demand = IntellectTuning.FOOD_DEMAND_MIN
+                + (IntellectTuning.FOOD_DEMAND_MAX - IntellectTuning.FOOD_DEMAND_MIN) * share;
+        return Activity.checkedDemand(id, demand);
     }
 }
