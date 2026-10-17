@@ -128,6 +128,7 @@ public final class TacticalIntellect {
     private List<ActivityDemand> admitOutside(SettlementView workers, List<ActivityDemand> demands,
             List<String> refusals) {
         List<ActivityDemand> allowed = new ArrayList<>();
+        boolean evening = outsideGate.isEvening(workers.dayFraction());
         for (ActivityDemand demand : demands) {
             Activity activity = catalog.byId(demand.id());
             if (!activity.external()) {
@@ -140,7 +141,7 @@ public final class TacticalIntellect {
                     party++;
                 }
             }
-            OutsideGate.Decision decision = outsideGate.admitExternal(party, playerEscort);
+            OutsideGate.Decision decision = outsideGate.admitExternal(party, playerEscort, evening);
             if (decision instanceof OutsideGate.Refused refused) {
                 refusals.add(demand.id() + ": " + refused.reason());
             } else {
