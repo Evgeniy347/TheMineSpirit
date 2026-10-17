@@ -17,14 +17,14 @@
    },
    {
     "json": {
-     "reason": "В радиусе есть железная жила.",
-     "goal": "добыть железо",
+     "reason": "Рядом дубовые брёвна.",
+     "goal": "набрать брёвна",
      "plan": {
       "type": "script",
-      "script": "mine_vein",
+      "script": "gather",
       "params": {
-       "ore": "iron",
-       "count": 2
+       "block": "oak_log",
+       "count": 4
       }
      }
     }

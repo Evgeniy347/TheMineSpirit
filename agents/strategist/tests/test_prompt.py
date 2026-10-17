@@ -172,6 +172,12 @@ class RecentDecisionsTests(unittest.TestCase):
         self.assertIn("инвентарь полон", text)
         self.assertRegex(text, r"\d+ мин назад|\d+ ч назад|\d+ с назад", "возраст решения")
 
+    def test_formatRecent_DryWouldPost_ShowsWhatWasAlreadyDecided(self):
+        events = [self.event(event="posted", dry=True, outcome="would_post", goal="добыть железо")]
+        text = format_recent(events, self.NOW)
+        self.assertIn("добыть железо", text)
+        self.assertIn("dry", text)
+
     def test_formatRecent_TaskDoneWithResult_ShowsOutcome(self):
         events = [
             self.event(event="task_done", goal="срубить деревья", outcome="succeeded", result="срублено 1 из 1"),

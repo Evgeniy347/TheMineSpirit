@@ -51,6 +51,18 @@ class MainTests(unittest.TestCase):
         self.assertTrue(all(e["dry"] and e["outcome"] == "would_post" for e in posted))
         self.assertIn("Фейковый REST", out)
 
+    def test_once_UnparsableOpencodeReply_SavesRawOutputAndSecondsForEachBot(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake),
+               "FAKE_STATE": str(self.dir / "fake.state"), "FAKE_REPLY": "проза без JSON"}
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], **env)
+        self.assertEqual(0, code, f"отказ разбора ответа не валит процесс; stderr: {err}")
+        runs = self.home / "runs"
+        self.assertTrue(list(runs.glob("failed-*.out")), "при отказе разбора сырой вывод opencode сохранён в runs/failed-*")
+        self.assertTrue(list(runs.glob("failed-*.meta")), "время ответа сохранено рядом с сырым выводом")
+        rejected = [e for e in self.events() if e["event"] == "rejected" and e.get("stage") == "parse"]
+        self.assertEqual(10, len(rejected), "пять духов по две попытки: ответ не JSON — каждая записана в журнал")
+
     def test_once_BadConfig_ExitsTwoNamingVariable(self):
         code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], STRATEGIST_INTERVAL="1")
         self.assertEqual(2, code)
@@ -105,6 +117,14 @@ class MainTests(unittest.TestCase):
         for needle in ("агент: не запущен", "режим: dry", "последний цикл:", "решений 5", "в dry 5", "активных задач: 0",
                        "последний сбой: нет", "PAUSE"):
             self.assertIn(needle, out, f"status должен показывать «{needle}»")
+
+    def test_status_ShowsModelFromJournalNotCurrentEnvironment(self):
+        code, _, err = self.run_main(["once", "--fixtures", str(FIXTURES)], STRATEGIST_MODEL="opencode/model-a-free")
+        self.assertEqual(0, code, f"once должен пройти; stderr: {err}")
+        code, out, _ = self.run_main(["status"], STRATEGIST_MODEL="opencode/model-b-free")
+        self.assertEqual(0, code)
+        self.assertIn("модель opencode/model-a-free", out, "status показывает модель запущенного процесса из журнала")
+        self.assertNotIn("модель opencode/model-b-free", out, "модель из текущего окружения не подменяет запущенную")
 
     def test_status_WithoutHome_DoesNotCrash(self):
         code, out, _ = self.run_main(["status"], STRATEGIST_HOME=str(self.dir / "nowhere"))

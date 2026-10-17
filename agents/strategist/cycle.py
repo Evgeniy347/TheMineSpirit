@@ -35,6 +35,7 @@ class Accepted:
     model: str
     prompt_sha: str
     obs_hash: str | None
+    warnings: tuple = ()
 
 
 @dataclass
@@ -241,6 +242,7 @@ class CycleRunner:
             decision = parse_reply(reply.text)
         except ReplyError as error:
             summary.rejected += 1
+            self.brain.keep_reply_failure(reply)
             rt.log("rejected", cycle=cycle, bot=bot_id, stage="parse", reason=str(error), reply=reply.text, model=reply.model,
                    prompt_sha=prompt_sha)
             return Evaluation("retry", str(error))
@@ -250,7 +252,7 @@ class CycleRunner:
         if decision.skip:
             return Evaluation("skip")
         try:
-            check_plan(decision.plan, catalog, self.policy, self.limits, context)
+            warnings = check_plan(decision.plan, catalog, self.policy, self.limits, context)
         except PlanError as error:
             summary.rejected += 1
             rt.log("rejected", cycle=cycle, bot=bot_id, stage="plan_check", reason=str(error), goal=decision.goal,
@@ -259,7 +261,8 @@ class CycleRunner:
         server = self._server_check(cycle, bot_id, decision, reply.model, prompt_sha, summary)
         if server is not None:
             return server
-        return Evaluation("accepted", accepted=Accepted(decision.reason, decision.goal, decision.plan, reply.model, prompt_sha, None))
+        return Evaluation("accepted", accepted=Accepted(decision.reason, decision.goal, decision.plan, reply.model,
+                                                        prompt_sha, None, tuple(warnings)))
 
     def _server_check(self, cycle: int, bot_id: str, decision, model: str, prompt_sha: str, summary: CycleSummary):
         rt = self.rt
@@ -306,13 +309,14 @@ class CycleRunner:
         rid = request_id(bot_id, cycle, plan_fingerprint)
         base = {"request_id": rid, "goal": accepted.goal, "plan": accepted.plan, "fingerprint": plan_fingerprint,
                 "reason": accepted.reason, "model": accepted.model, "prompt_sha": accepted.prompt_sha, "cycle": cycle,
-                "obs_hash": accepted.obs_hash, "created_at": rt.clock.now()}
+                "obs_hash": accepted.obs_hash, "created_at": rt.clock.now(),
+                "plan_warnings": list(accepted.warnings) or None}
         if self.effective_mode == "dry":
-            rt.guard.record_post(rt.clock.now(), bot_id, plan_fingerprint)
             rt.guard.record_decision(bot_id, accepted.obs_hash)
             summary.dry += 1
             rt.log("posted", cycle=cycle, bot=bot_id, dry=True, outcome="would_post", request_id=rid, goal=accepted.goal,
-                   plan=accepted.plan, fingerprint=plan_fingerprint, model=accepted.model, prompt_sha=accepted.prompt_sha)
+                   plan=accepted.plan, fingerprint=plan_fingerprint, model=accepted.model, prompt_sha=accepted.prompt_sha,
+                   plan_warnings=list(accepted.warnings) or None)
             return
         rt.state["pending"][bot_id] = base
         rt.save()
@@ -395,7 +399,8 @@ class CycleRunner:
         rt.guard.record_decision(bot_id, pending["obs_hash"])
         rt.log("posted", cycle=cycle, bot=bot_id, dry=False, request_id=pending["request_id"], task_id=task_id,
                goal=pending["goal"], plan=pending["plan"], fingerprint=pending["fingerprint"], model=pending["model"],
-               prompt_sha=pending["prompt_sha"], recovered=True if recovered else None)
+               prompt_sha=pending["prompt_sha"], recovered=True if recovered else None,
+               plan_warnings=pending.get("plan_warnings"))
         rt.save()
         return True
 

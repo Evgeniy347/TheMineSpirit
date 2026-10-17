@@ -1,0 +1,52 @@
+{
+ "name": "44-plan-without-pickaxe-rejected-with-reason",
+ "description": "gather камня без кирки в инвентаре духа отклоняется локальной проверкой с понятной причиной",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Рядом камень, кирка не нужна.",
+    "goal": "набрать камень",
+    "plan": {
+     "type": "script",
+     "script": "gather",
+     "params": {
+      "block": "stone",
+      "count": 4
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 2
+  },
+  {
+   "journal": {
+    "rejected": 2,
+    "posted": 0
+   }
+  },
+  {
+   "journal_has": {
+    "event": "rejected",
+    "stage": "plan_check",
+    "reason_contains": "кирк"
+   }
+  }
+ ]
+}

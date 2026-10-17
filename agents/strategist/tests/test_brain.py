@@ -73,9 +73,12 @@ class OpencodeBrainTests(BrainTestCase):
             self.assertNotIn(f" {flag} ", built, f"{flag} в build_args отключает отказ на ask")
             self.assertNotIn(f" {flag}", " " + " ".join(self.brain().build_args("п", agent=False)))
 
-    def test_complete_LastTextEventWins(self):
-        reply = self.brain(FAKE_REPLY='{"reason":"второй","skip":true}').complete("с", "п")
-        self.assertIn("второй", reply.text)
+    def test_complete_MultipleTextParts_ConcatenatedInOrder(self):
+        parts = json.dumps(['{"reason":"две ', 'части","skip":true}'], ensure_ascii=False)
+        reply = self.brain(FAKE_REPLY_PARTS=parts).complete("с", "п")
+        self.assertEqual('{"reason":"две части","skip":true}', reply.text,
+                         "ответ модели приходит несколькими text-частями: они склеиваются по порядку, а не теряется "
+                         "начало (обрыв «\"steps\": [»); порядок частей — как в потоке opencode")
 
     def test_complete_ProviderErrorInJson_RaisesProviderQuicklyAndKillsProcess(self):
         for text in ("Free usage exceeded", "Rate limit exceeded", "HTTP 429 Too Many Requests", "upstream error 502 bad gateway"):
@@ -122,6 +125,20 @@ class OpencodeBrainTests(BrainTestCase):
         self.assertIn("Rate limit exceeded", kept[0].read_text(encoding="utf-8"))
         self.brain().complete("с", "п")
         self.assertEqual(1, len(list((self.cfg.home / "runs").glob("failed-*.err"))), "успешный вызов ничего не сохраняет")
+
+    def test_keepReplyFailure_SavesRawOutputWithSecondsForUnparsableReply(self):
+        brain = self.brain()
+        reply = brain.complete("с", "п")
+        brain.keep_reply_failure(reply)
+        runs = self.cfg.home / "runs"
+        metas = list(runs.glob("failed-*.meta"))
+        self.assertEqual(1, len(metas), "отказ разбора ответа сохраняет время ответа рядом с сырым выводом")
+        meta = json.loads(metas[0].read_text(encoding="utf-8"))
+        self.assertEqual(reply.model, meta["model"])
+        self.assertGreaterEqual(meta["seconds"], 0)
+        outs = list(runs.glob("failed-*.out"))
+        self.assertEqual(1, len(outs), "сырой stdout opencode сохранён для разбора обрыва")
+        self.assertIn('"type": "text"', outs[0].read_text(encoding="utf-8"))
 
     def test_subprocessEnv_DataHomeIsStrategyOwnDirectoryNotGlobalShare(self):
         hostile = str(self.dir / "чужие-данные")

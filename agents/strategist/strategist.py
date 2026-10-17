@@ -175,10 +175,15 @@ def status_lines(config: Config) -> list[str]:
             running = True
         lock.close()
     state = StateStore(config.state_path, clock).load().state
+    running_model = next((e["model"] for e in reversed(events) if e.get("model")), config.model)
+    brain_line = f"мозг: {config.brain}, модель {running_model}"
+    if running_model != config.model:
+        brain_line += f" (в текущем окружении {config.model})"
+    brain_line += f", запасная {config.model_fallback}"
     lines = [
         f"агент: {'работает' if running else 'не запущен'}",
         f"режим: {last_cycle.get('mode', config.mode) if last_cycle else config.mode} (настроен {config.mode})",
-        f"мозг: {config.brain}, модель {config.model} (запасная {config.model_fallback})",
+        brain_line,
         f"последний цикл: {last_cycle['ts'] + ' №' + str(last_cycle.get('cycle')) if last_cycle else 'нет'}",
         f"за час: решений {count('decision')}, отказов {count('rejected')}, задач отправлено "
         f"{sum(1 for e in hour if e['event'] == 'posted' and not e.get('dry'))}, в dry {sum(1 for e in hour if e['event'] == 'posted' and e.get('dry'))}, "
