@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.theminespirit.neoforge.SpiritConfig;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -10,9 +11,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestBatch;
+import net.minecraft.gametest.framework.GameTestRegistry;
 import net.minecraft.gametest.framework.GameTestServer;
 import net.minecraft.gametest.framework.TestFunction;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -36,6 +41,12 @@ public final class GameTestFilter {
         if (!(event.getServer() instanceof GameTestServer server)) {
             return;
         }
+        // Доска и координатор тикают глобально и раздают задачи/приказы любому свободному духу,
+        // включая духов чужих сцен: пачка chop_tree_* стояла в RUNNING с чужой задачей (флак 17.10).
+        // По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
+        SpiritConfig.setBoardEnabled(false);
+        SpiritConfig.setCoordinatorEnabled(false);
+        installSettlementBatches();
         List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         if (filters.isEmpty()) {
             return;
@@ -44,6 +55,87 @@ public final class GameTestFilter {
             applyFilter(server, filters);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Не удалось применить фильтр GameTest " + filters, e);
+        }
+    }
+
+    /**
+     * Вешает на размеченные пачки включение доски/координатора и выключение после.
+     * Хуки пачек лежат в приватных картах реестра (их читает {@link GameTestBatch});
+     * добавляем в карты сами, потому что одна пара методов на пачку — это тот же бойлерплейт,
+     * от которого уходим. Существующий хук пачки (например, выключение мобов-целей) сохраняется.
+     */
+    private static void installSettlementBatches() {
+        Map<String, Settlement> batches = settlementBatches();
+        if (batches.isEmpty()) {
+            return;
+        }
+        Map<String, Consumer<ServerLevel>> before = batchFunctions("BEFORE_BATCH_FUNCTIONS");
+        Map<String, Consumer<ServerLevel>> after = batchFunctions("AFTER_BATCH_FUNCTIONS");
+        for (Map.Entry<String, Settlement> entry : batches.entrySet()) {
+            Settlement settlement = entry.getValue();
+            before.merge(entry.getKey(), level -> enableSettlement(settlement), Consumer::andThen);
+            after.merge(entry.getKey(), level -> disableSettlement(), (existing, added) -> added.andThen(existing));
+        }
+        LOGGER.info("GameTest: доска и координатор выключены по умолчанию, включены для пачек {}", batches.keySet());
+    }
+
+    private static Map<String, Settlement> settlementBatches() {
+        Map<String, Settlement> batches = new HashMap<>();
+        for (ModFileScanData scanData : ModList.get().getAllScanData()) {
+            scanData.getAnnotatedBy(GameTestHolder.class, ElementType.TYPE)
+                    .forEach(annotation -> collectSettlement(annotation.clazz().getClassName(), batches));
+        }
+        return batches;
+    }
+
+    private static void collectSettlement(String className, Map<String, Settlement> batches) {
+        try {
+            Class<?> testClass = Class.forName(className, false, GameTestFilter.class.getClassLoader());
+            SettlementSystems classWide = testClass.getAnnotation(SettlementSystems.class);
+            for (Method method : testClass.getDeclaredMethods()) {
+                GameTest test = method.getAnnotation(GameTest.class);
+                if (test == null) {
+                    continue;
+                }
+                SettlementSystems own = method.getAnnotation(SettlementSystems.class);
+                SettlementSystems selected = own == null ? classWide : own;
+                if (selected == null) {
+                    continue;
+                }
+                String batch = test.batch().isEmpty() ? GameTestBatch.DEFAULT_BATCH_NAME : test.batch();
+                batches.merge(batch, new Settlement(selected.board(), selected.coordinator()), Settlement::combined);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("GameTest-класс " + className + " из сканирования не загрузился: "
+                    + "размеченная пачка осталась бы без доски/координатора", e);
+        }
+    }
+
+    private static void enableSettlement(Settlement settlement) {
+        SpiritConfig.setBoardEnabled(settlement.board());
+        SpiritConfig.setCoordinatorEnabled(settlement.coordinator());
+    }
+
+    private static void disableSettlement() {
+        SpiritConfig.setBoardEnabled(false);
+        SpiritConfig.setCoordinatorEnabled(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Consumer<ServerLevel>> batchFunctions(String fieldName) {
+        try {
+            Field field = GameTestRegistry.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (Map<String, Consumer<ServerLevel>>) field.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Не удалось получить хуки пачек GameTest (" + fieldName
+                    + "): размеченные пачки остались бы без доски/координатора", e);
+        }
+    }
+
+    private record Settlement(boolean board, boolean coordinator) {
+        private Settlement combined(Settlement other) {
+            return new Settlement(board || other.board, coordinator || other.coordinator);
         }
     }
 

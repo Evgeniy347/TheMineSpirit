@@ -23,6 +23,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(coordinator = true)
 public final class FortifyGameTests {
     private static final int WAIT_TICKS = 6000;
     private static final int OBSERVED_TICKS = 120;

@@ -49,6 +49,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(coordinator = true)
 public final class IntellectGameTests {
     private IntellectGameTests() {
     }

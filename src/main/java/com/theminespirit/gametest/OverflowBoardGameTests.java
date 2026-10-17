@@ -25,6 +25,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class OverflowBoardGameTests {
     private static final int SETTLE_TICKS = 20;
     private static final int WAIT_TICKS = 6000;
