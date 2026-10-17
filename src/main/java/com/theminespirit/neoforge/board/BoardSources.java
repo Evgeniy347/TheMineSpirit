@@ -40,6 +40,7 @@ public final class BoardSources {
             lastHerdScan = now;
             HerdWatch.tick(level, service, spirits, now);
         }
+        live.addAll(TransferWatch.liveCauses(service));
         live.addAll(CraterWatch.liveCauses(level, service));
         live.addAll(FenceWatch.liveCauses(level, service));
         return live;

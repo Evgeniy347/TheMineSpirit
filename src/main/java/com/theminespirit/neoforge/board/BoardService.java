@@ -490,6 +490,11 @@ public final class BoardService {
                 return;
             }
             TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
+            if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
+                LOGGER.info("Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
+                        ticket.id(), spirit.displayName());
+                continue;
+            }
             TaskNode plan;
             try {
                 plan = TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
