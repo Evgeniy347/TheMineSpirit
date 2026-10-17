@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public record TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict> strengths,
-        ActivityPlan activities, Optional<Expedition> expedition) {
+        ActivityPlan activities, Optional<Expedition> expedition, List<String> refusals) {
     public TacticalDecision {
         if (orders == null) {
             throw new IllegalArgumentException("Решение без приказов не применяется: пустой список — нет приказов");
@@ -19,7 +19,17 @@ public record TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict
             throw new IllegalArgumentException(
                     "Решение без контейнера экспедиции не применяется: отсутствие похода — Optional.empty()");
         }
+        if (refusals == null) {
+            throw new IllegalArgumentException(
+                    "Решение без списка отказов не применяется: нет отказов — пустой список");
+        }
         orders = List.copyOf(orders);
         strengths = List.copyOf(strengths);
+        refusals = List.copyOf(refusals);
+    }
+
+    public TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict> strengths,
+            ActivityPlan activities, Optional<Expedition> expedition) {
+        this(orders, strengths, activities, expedition, List.of());
     }
 }

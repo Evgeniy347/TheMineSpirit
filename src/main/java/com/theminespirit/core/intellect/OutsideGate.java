@@ -30,6 +30,10 @@ public final class OutsideGate {
         return settlementRadius;
     }
 
+    public double escortRadius() {
+        return rules.escortRadius();
+    }
+
     public boolean outside(Point target, Point home) {
         Objects.requireNonNull(target, "Цель не может быть null: проверяется, лежит ли она за границей");
         Objects.requireNonNull(home, "Дом не может быть null: граница считается от дома поселения");
