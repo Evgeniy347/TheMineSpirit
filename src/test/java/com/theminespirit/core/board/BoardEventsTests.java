@@ -28,6 +28,17 @@ class BoardEventsTests {
     }
 
     @Test
+    void submit_NewTicket_WritesOneSubmittedWithoutHolder() {
+        Board board = board();
+        board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
+        board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
+
+        assertEquals(List.of(new Seen(BoardLog.Event.SUBMITTED, "t", null)), seen,
+                "Постановка задания пишет ровно одну строку SUBMITTED без духа: по ней журнал помнит, "
+                        + "откуда взялось задание, а повторная заявка того же id не плодит строк");
+    }
+
+    @Test
     void claim_NewAssignment_WritesOneAssignedLine() {
         Board board = board();
         board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
