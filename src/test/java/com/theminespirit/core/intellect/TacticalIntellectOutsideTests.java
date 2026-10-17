@@ -26,8 +26,12 @@ class TacticalIntellectOutsideTests {
     }
 
     private static SettlementView needy(List<UUID> ids) {
+        return needyAt(ids, 0.2);
+    }
+
+    private static SettlementView needyAt(List<UUID> ids, double dayFraction) {
         List<SpiritSnapshot> spirits = ids.stream().map(SettlementViews::spirit).toList();
-        return new SettlementView(ids.size(), 0, 2, 2, 0, 0, 0, 0, 0.2, SettlementViews.farmWork(),
+        return new SettlementView(ids.size(), 0, 2, 2, 0, 0, 0, 0, dayFraction, SettlementViews.farmWork(),
                 Forage.NONE, spirits, 100);
     }
 
@@ -56,6 +60,19 @@ class TacticalIntellectOutsideTests {
                 "Двое духов внешнюю работу получают: группа от порога — уже организация");
         assertTrue(decision.refusals().isEmpty(),
                 "При организованном выходе отказов нет, фактически: " + decision.refusals());
+    }
+
+    @Test
+    void decide_EveningTwoWorkersOutsideNeed_MineNotAssigned() {
+        TacticalDecision decision =
+                intellect().decide(needyAt(List.of(FIRST, SECOND), 0.5), new ActivityLedger(),
+                        new WorkReservations(), new StrategicQueue(), 100);
+
+        assertFalse(has(decision, ActivityId.MINE),
+                "Вечером внешняя работа не назначается даже группе: ночью наружу ходят только за игроком");
+        assertTrue(decision.refusals().stream().anyMatch(reason -> reason.contains("MINE")
+                        && reason.contains("ночь")),
+                "Отказ обязан попасть в журнал решений с причиной «ночь», фактически: " + decision.refusals());
     }
 
     @Test
