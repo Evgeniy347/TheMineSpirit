@@ -33,7 +33,13 @@ class BoardConfigTests {
                 Map.entry("ENCHANT_ROOM", 50),
                 Map.entry("GATHER_MATERIALS", 45),
                 Map.entry("SUPPLY_SITE", 40),
-                Map.entry("CRAFT_TOOLS", 40),
+                Map.entry("CRAFT_STONE_AXE", 40),
+                Map.entry("CRAFT_STONE_PICKAXE", 40),
+                Map.entry("CRAFT_STONE_SHOVEL", 40),
+                Map.entry("CRAFT_STONE_SWORD", 40),
+                Map.entry("CRAFT_WOODEN_AXE", 40),
+                Map.entry("CRAFT_WOODEN_PICKAXE", 40),
+                Map.entry("CRAFT_WOODEN_SHOVEL", 40),
                 Map.entry("CRAFTING_STATION", 40),
                 Map.entry("STOCK_CHESTS", 40),
                 Map.entry("FILL_CRATER", 35),
@@ -95,6 +101,22 @@ class BoardConfigTests {
     }
 
     @Test
+    void defaults_FromClasspath_ToolsMatchLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(Map.of("perSpirit", 1, "minSets", 1), config.tools(),
+                "Таблица комплектов инструментов обязана совпадать с литералами: комплект на духа, "
+                        + "но не меньше одного. Лишний ключ в файле без теста и забытый ключ в тесте "
+                        + "красят прогон");
+        assertEquals(1, config.tools().get("perSpirit"),
+                "Предел в тесте, факт из production: по умолчанию по одному комплекту на духа");
+        assertEquals(3, ToolSet.count(3),
+                "Три духа поселения — три комплекта инструментов: число из горячей таблицы board");
+        assertEquals(5, ToolSet.count(Map.of("perSpirit", 0, "minSets", 5), 3),
+                "Фиксированный набор: perSpirit 0 при minSets 5 даёт 5 комплектов на любое число духов");
+    }
+
+    @Test
     void fromJson_UnknownHerdKey_FailsNamingKey() {
         String json = "{\"herd\":{\"maxPerSpecie\":4}}";
 
@@ -103,6 +125,18 @@ class BoardConfigTests {
                 "Опечатка в ключе стада обязана падать: молча потерянный ключ оставил бы лимит "
                         + "по умолчанию без ведома настройщика");
         assertTrue(failure.getMessage().contains("maxPerSpecie"),
+                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+    }
+
+    @Test
+    void fromJson_UnknownToolKey_FailsNamingKey() {
+        String json = "{\"tools\":{\"perSpirits\":1}}";
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> BoardConfig.fromJson(json, "board.json"),
+                "Опечатка в ключе таблицы инструментов обязана падать: молча потерянный ключ "
+                        + "оставил бы число комплектов по умолчанию без ведома настройщика");
+        assertTrue(failure.getMessage().contains("perSpirits"),
                 "Сообщение обязано называть неверный ключ: " + failure.getMessage());
     }
 

@@ -107,8 +107,8 @@ class BoardRulesTests {
                 || boardCase == BoardCase.RESTOCK_FOOD) {
             return 2;
         }
-        if (boardCase == BoardCase.SUPPLY_SITE || boardCase == BoardCase.CRAFT_TOOLS
-                || boardCase == BoardCase.CRAFTING_STATION || boardCase == BoardCase.STOCK_CHESTS) {
+        if (boardCase == BoardCase.SUPPLY_SITE || boardCase == BoardCase.CRAFTING_STATION
+                || boardCase == BoardCase.STOCK_CHESTS || ToolSet.isTool(boardCase)) {
             return 4;
         }
         if (boardCase == BoardCase.FILL_CRATER) {
