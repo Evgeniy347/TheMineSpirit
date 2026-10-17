@@ -38,9 +38,20 @@ public final class CatalogLimits {
     // Сколько слотов инвентаря занимает дух, прежде чем разгружаться на базе
     public static final int UNLOAD_TRIGGER_SLOTS = 24;
 
-    // AGENTS.md: follow.radius 0..16
+    // AGENTS.md: follow.radius 0..16; escort держится рядом в тех же пределах
     public static final int FOLLOW_RADIUS_MIN = 0;
     public static final int FOLLOW_RADIUS_MAX = 16;
+    public static final int FOLLOW_RADIUS_DEFAULT = 3;
+
+    // escort.until: 0 — до команды стоп, больше нуля — предел в тиках (как wait.ticks)
+    public static final int ESCORT_UNTIL_MIN = 0;
+    public static final int ESCORT_UNTIL_MAX = 6000;
+    public static final int ESCORT_UNTIL_DEFAULT = 0;
+
+    // explore.budget: сколько точек обхода разрешено за запуск
+    public static final int EXPLORE_BUDGET_MIN = 1;
+    public static final int EXPLORE_BUDGET_MAX = 64;
+    public static final int EXPLORE_BUDGET_DEFAULT = 16;
 
     public static final int CHOP_RADIUS_MIN = 1;
     public static final int CHOP_RADIUS_MAX = 32;
