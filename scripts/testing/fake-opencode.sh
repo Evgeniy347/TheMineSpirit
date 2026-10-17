@@ -10,6 +10,7 @@
 # FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
 #                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
 # FAKE_UNFINISHED=N — первые N запусков заканчивают ход оборванной фразой «Теперь посмотрю тесты:».
+# FAKE_LOOP=N      — первые N запусков повторяют одну команду 30 раз и висят (зацикливание модели).
 # FAKE_COMPACTION=N — первые N запусков сжимают контекст (лог agent=compaction и синтетическое «Continue…») и работают дальше.
 state="${FAKE_STATE:?}"
 case "$*" in
@@ -55,6 +56,12 @@ if [ "$count" -lt "${FAKE_NETWORK:-0}" ]; then
     else
         echo '{"type":"error","sessionID":"ses_fake123","error":{"name":"APIError","data":{"message":"Cannot connect to API: fetch failed"}}}'
     fi
+    exec sleep 600
+fi
+if [ "$count" -lt "${FAKE_LOOP:-0}" ]; then
+    for i in $(seq 1 30); do
+        echo '{"type":"tool_use","sessionID":"ses_fake123","part":{"tool":"bash","state":{"status":"completed","input":{"command":"git diff -- a.java"},"output":""}}}'
+    done
     exec sleep 600
 fi
 if [ "$count" -lt "${FAKE_COMPACTION:-0}" ]; then
