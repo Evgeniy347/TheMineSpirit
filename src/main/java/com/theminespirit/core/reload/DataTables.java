@@ -21,6 +21,7 @@ import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import java.time.Clock;
@@ -65,6 +66,7 @@ public final class DataTables {
     private final TableHolder<DescentData> descent;
     private final TableHolder<DescentLevels> descentLevels;
     private final TableHolder<DefenseProfile> priorities;
+    private final TableHolder<RepairData> repair;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -145,6 +147,9 @@ public final class DataTables {
                 TableDefinition.single("priorities", DefenseProfile.RESOURCE,
                         (json, origin) -> DefenseProfileParser.fromJson(json)),
                 DefenseProfile::readFromClasspath);
+        this.repair = registry.registerLazy(
+                TableDefinition.single("repair", RepairData.RESOURCE, RepairData::parse),
+                RepairData::load);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -248,6 +253,10 @@ public final class DataTables {
 
     public TableHolder<DefenseProfile> priorities() {
         return priorities;
+    }
+
+    public TableHolder<RepairData> repair() {
+        return repair;
     }
 
     /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
