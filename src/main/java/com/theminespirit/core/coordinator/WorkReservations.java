@@ -77,6 +77,14 @@ public final class WorkReservations {
         return owned.size();
     }
 
+    public Set<WorkTarget> ownedBy(UUID spirit) {
+        if (spirit == null) {
+            throw new IllegalArgumentException("spirit не может быть null: у брони всегда есть владелец");
+        }
+        Set<WorkTarget> owned = byOwner.get(spirit);
+        return owned == null ? Set.of() : Set.copyOf(owned);
+    }
+
     public Optional<UUID> owner(WorkTarget target) {
         if (target == null) {
             throw new IllegalArgumentException("target не может быть null: владельца без цели не бывает");

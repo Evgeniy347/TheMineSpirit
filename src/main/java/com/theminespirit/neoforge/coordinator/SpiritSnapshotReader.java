@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritRoles;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.coordinator.WorkTargets;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -56,7 +57,11 @@ public final class SpiritSnapshotReader {
         boolean attacked = !attackers.isEmpty();
         threatsNear = Math.max(threatsNear, attackers.size());
         return new SpiritSnapshot(id, pos, hpFraction, role, mode, threatsNear, attacked,
-                Optional.<WorkTarget>empty(), tick, spirit.hunger().satietyFraction());
+                currentWorkTarget(spirit), tick, spirit.hunger().satietyFraction());
+    }
+
+    private static Optional<WorkTarget> currentWorkTarget(SpiritEntity spirit) {
+        return WorkTargets.current(WorkReserveHub.leasesFor(spirit.level()).ownedBy(spirit.getUUID()));
     }
 
     private static SpiritRole roleOf(SpiritEntity spirit) {
