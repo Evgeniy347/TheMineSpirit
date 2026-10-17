@@ -2,8 +2,6 @@ package com.theminespirit.neoforge.tactics;
 
 import com.theminespirit.core.base.Camp;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.perception.MemoryPoint;
-import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnvFacts;
 import com.theminespirit.core.tactics.Orders;
@@ -189,15 +187,7 @@ public final class WorldFactCollector {
     }
 
     private static Optional<Point> home(SpiritEntity spirit) {
-        String dimension = spirit.level().dimension().location().toString();
-        Point self = point(spirit.position());
-        return spirit.memory().recallAll(MemoryType.BASE).stream().filter(p -> p.dimension().equals(dimension))
-                .map(WorldFactCollector::center)
-                .min(Comparator.comparingDouble(self::distanceTo));
-    }
-
-    private static Point center(MemoryPoint memoryPoint) {
-        return new Point(memoryPoint.pos().x() + 0.5, memoryPoint.pos().y(), memoryPoint.pos().z() + 0.5);
+        return spirit.home().map(home -> new Point(home.x() + 0.5, home.y(), home.z() + 0.5));
     }
 
     private static int lightAt(SpiritEntity spirit) {
