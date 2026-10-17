@@ -174,6 +174,12 @@ code=$?
     && ok "gametest-filter: имя пачки уходит в gradle системным свойством" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
+# unit всегда с --rerun: стёртые XML не вернутся из UP-TO-DATE/FROM-CACHE
+out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.example.SomeTests' 2>&1)
+grep -qx "test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
+    && ok "unit-rerun: gradle test идёт с --rerun" \
+    || fail "unit-rerun: args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_a combat_b 2>&1)
 code=$?
 [ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=combat_a,combat_b" "$argsfile" \

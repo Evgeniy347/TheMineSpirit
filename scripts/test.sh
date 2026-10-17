@@ -330,12 +330,13 @@ echo "Лог: $LOG_FILE" >&2
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml
     start_monitor "unit"
+    # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
     set +e
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
