@@ -51,3 +51,6 @@ class ScriptedBrain:
 
     def request_stop(self) -> None:
         """Подпроцессов нет: останавливать нечего, но интерфейс мозга обязан быть полным."""
+
+    def keep_reply_failure(self, reply) -> None:
+        """Сырой вывод подпроцесса сохраняет только OpencodeBrain; сценарному мозгу сохранять нечего."""

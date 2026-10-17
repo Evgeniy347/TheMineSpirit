@@ -2,6 +2,7 @@
 # Подделка opencode для тестов brain.py (образец: scripts/testing/fake-opencode.sh).
 # FAKE_STATE=путь       — счётчик запусков в $FAKE_STATE, аргументы и каталог в $FAKE_STATE.args (обязательна)
 # FAKE_REPLY=текст      — текст ответа модели (по умолчанию валидный skip-JSON)
+# FAKE_REPLY_PARTS=JSON — массив текстовых кусков: по одному событию text на элемент (проверка склейки)
 # FAKE_ERROR=json|stderr — сбой провайдера: событие error в stdout или строка level=ERROR в stderr, затем зависание
 # FAKE_ERROR_TEXT=текст — текст сбоя (по умолчанию «Free usage exceeded»)
 # FAKE_SILENT=1         — молчит и висит (дочерний процесс sleep, чтобы проверить убийство группы)
@@ -74,16 +75,24 @@ echo '{"type":"step_start","sessionID":"ses_fake","part":{"type":"step-start"}}'
 case "${FAKE_TOOL:-}" in
     reject)
         echo '{"type":"tool_use","sessionID":"ses_fake","part":{"type":"tool","tool":"bash","state":{"status":"error","input":{"command":"ls"},"error":"The user rejected permission to use this specific tool call."}}}'
-        [ -z "${FAKE_REPLY+x}" ] && exit 0
+        [ -z "${FAKE_REPLY+x}" ] && [ -z "${FAKE_REPLY_PARTS+x}" ] && exit 0
         ;;
     executed)
         echo '{"type":"tool_use","sessionID":"ses_fake","part":{"type":"tool","tool":"bash","state":{"status":"completed","input":{"command":"ls"},"output":"файлы"}}}'
         ;;
 esac
-default_reply='{"reason":"нечего делать","skip":true}'
-reply="${FAKE_REPLY-$default_reply}"
-python3 -I -c '
+if [ -n "${FAKE_REPLY_PARTS:-}" ]; then
+    python3 -I -c '
+import json, sys
+for piece in json.loads(sys.argv[1]):
+    print(json.dumps({"type": "text", "sessionID": "ses_fake", "part": {"type": "text", "text": piece}}, ensure_ascii=False))
+' "$FAKE_REPLY_PARTS"
+else
+    default_reply='{"reason":"нечего делать","skip":true}'
+    reply="${FAKE_REPLY-$default_reply}"
+    python3 -I -c '
 import json, sys
 print(json.dumps({"type": "text", "sessionID": "ses_fake", "part": {"type": "text", "text": sys.argv[1]}}, ensure_ascii=False))
 ' "$reply"
+fi
 echo '{"type":"step_finish","sessionID":"ses_fake","part":{"type":"step-finish","reason":"stop"}}'

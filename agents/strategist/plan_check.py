@@ -23,6 +23,54 @@ PARALLEL_MODES = ("all", "any")
 PARAM_TYPES = ("integer", "number", "string", "boolean", "array")
 MAX_ERRORS = 12
 
+PICKAXE_LEVELS = {
+    "wooden_pickaxe": 1, "golden_pickaxe": 1,
+    "stone_pickaxe": 2,
+    "iron_pickaxe": 3,
+    "diamond_pickaxe": 4,
+    "netherite_pickaxe": 5,
+}
+PICKAXE_REQUIREMENT = {
+    1: "кирка (любая, даже деревянная)",
+    2: "каменная кирка или лучше",
+    3: "железная кирка или лучше",
+    4: "алмазная кирка или лучше",
+}
+ORE_PICKAXE_LEVEL = {
+    "coal": 1, "quartz": 1,
+    "copper": 2, "iron": 2, "lapis": 2,
+    "gold": 3, "redstone": 3, "diamond": 3, "emerald": 3,
+    "netherite": 4,
+}
+BLOCK_PICKAXE_LEVEL = {
+    name: 1 for name in (
+        "stone", "deepslate", "granite", "diorite", "andesite", "tuff", "calcite", "dripstone_block", "basalt",
+        "smooth_basalt", "blackstone", "netherrack", "end_stone", "sandstone", "red_sandstone", "crimson_nylium",
+        "warped_nylium", "glowstone", "magma_block", "amethyst_block", "prismarine", "prismarine_bricks",
+        "dark_prismarine", "sea_lantern", "coal_ore", "deepslate_coal_ore", "nether_quartz_ore")
+}
+BLOCK_PICKAXE_LEVEL.update({
+    name: 2 for name in ("iron_ore", "deepslate_iron_ore", "copper_ore", "deepslate_copper_ore", "lapis_ore",
+                         "deepslate_lapis_ore", "raw_iron_block", "raw_copper_block")
+})
+BLOCK_PICKAXE_LEVEL.update({
+    name: 3 for name in ("gold_ore", "deepslate_gold_ore", "nether_gold_ore", "redstone_ore", "deepslate_redstone_ore",
+                         "diamond_ore", "deepslate_diamond_ore", "emerald_ore", "deepslate_emerald_ore", "raw_gold_block")
+})
+BLOCK_PICKAXE_LEVEL.update({name: 4 for name in ("obsidian", "ancient_debris")})
+
+
+def required_pickaxe(script: str, params: dict) -> int | None:
+    if script == "mine_vein":
+        ore = params.get("ore", "any")
+        if ore == "any":
+            return 1
+        return ORE_PICKAXE_LEVEL.get(ore) if isinstance(ore, str) else None
+    if script == "gather":
+        block = params.get("block")
+        return BLOCK_PICKAXE_LEVEL.get(normalize_block(block)) if isinstance(block, str) else None
+    return None
+
 
 class PlanError(Exception):
     def __init__(self, errors: list[str]):
@@ -58,6 +106,7 @@ class Policy:
 class PlanContext:
     position: tuple | None
     observed_blocks: frozenset | None
+    inventory: frozenset | None = None
 
 
 def normalize_block(name: str) -> str:
@@ -71,7 +120,10 @@ def context_from_observation(observation: dict) -> PlanContext:
     blocks = observation.get("blocks")
     observed = frozenset(normalize_block(entry["item"]) for entry in blocks if isinstance(entry, dict)
                          and isinstance(entry.get("item"), str)) if isinstance(blocks, list) else frozenset()
-    return PlanContext(position, observed)
+    items = observation.get("inventory")
+    inventory = frozenset(normalize_block(entry["item"]) for entry in items if isinstance(entry, dict)
+                          and isinstance(entry.get("item"), str)) if isinstance(items, list) else None
+    return PlanContext(position, observed, inventory)
 
 
 def load_policy(path: Path) -> Policy:
@@ -134,12 +186,13 @@ class _TooManyNodes(Exception):
 
 
 def check_plan(plan, catalog: Catalog, policy: Policy, limits: PlanLimits | None = None,
-               context: PlanContext | None = None) -> None:
+               context: PlanContext | None = None) -> list[str]:
     limits = limits or PlanLimits()
     checker = _Checker(catalog, policy, limits, context)
     checker.run(plan)
     if checker.errors:
         raise PlanError(checker.errors[:MAX_ERRORS])
+    return checker.warnings[:MAX_ERRORS]
 
 
 def _describe(value) -> str:
@@ -165,6 +218,7 @@ class _Checker:
         self.policy = policy
         self.limits = limits
         self.errors: list[str] = []
+        self.warnings: list[str] = []
         self.nodes = 0
 
     def run(self, plan) -> None:
@@ -242,6 +296,26 @@ class _Checker:
                             f"(природные блоки перечислены в natural_blocks файла policy.json): собирайте только "
                             f"руду, камень, землю, песок, гравий, глину, брёвна, листву и растения — доски, стекло, "
                             f"кирпич и прочие постройки игрока не разбираются")
+        self._pickaxe_rule(name, params, path)
+
+    def _pickaxe_rule(self, name: str, params: dict, path: str) -> None:
+        level = required_pickaxe(name, params)
+        if level is None:
+            return
+        if self.context.inventory is None:
+            self.warnings.append(f"{path}: в наблюдении нет списка предметов духа — наличие кирки нужного уровня "
+                                 f"для {name} не проверить (предупреждение)")
+            return
+        best = max((PICKAXE_LEVELS.get(item, 0) for item in self.context.inventory), default=0)
+        if best >= level:
+            return
+        have = sorted(item for item in self.context.inventory if item.endswith("_pickaxe"))
+        if have:
+            self._error(f"{path}: шаг {name} требует {PICKAXE_REQUIREMENT[level]}, а в инвентаре духа только "
+                        f"{', '.join(have)} (наблюдение): возьмите кирку выше уровнем или смените план")
+        else:
+            self._error(f"{path}: шаг {name} требует {PICKAXE_REQUIREMENT[level]}, но в инвентаре духа нет ни одной "
+                        f"кирки (наблюдение): сначала добудьте или скрафтите кирку, потом этот шаг")
 
     def _params(self, params, schema: dict, path: str, owner: str) -> None:
         if params is None:
