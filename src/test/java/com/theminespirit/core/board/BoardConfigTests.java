@@ -34,6 +34,7 @@ class BoardConfigTests {
                 Map.entry("ENCHANT_ROOM", 50),
                 Map.entry("GATHER_MATERIALS", 45),
                 Map.entry("SUPPLY_SITE", 40),
+                Map.entry("TRANSFER_ITEM", 45),
                 Map.entry("CRAFT_STONE_AXE", 40),
                 Map.entry("CRAFT_STONE_PICKAXE", 40),
                 Map.entry("CRAFT_STONE_SHOVEL", 40),

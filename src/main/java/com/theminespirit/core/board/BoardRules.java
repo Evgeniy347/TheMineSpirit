@@ -56,6 +56,7 @@ public final class BoardRules {
         priorities.put(BoardCase.ENCHANT_ROOM, 50);
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);
+        priorities.put(BoardCase.TRANSFER_ITEM, 45);
         priorities.put(BoardCase.CRAFTING_STATION, 40);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
         priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 40);

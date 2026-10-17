@@ -21,13 +21,14 @@ class BoardCaseTests {
                 "BUILD_FENCE", "LIGHTING", "BUILD_HOUSE", "REPAIR_FENCE", "REPAIR_BUILDING",
                 "FILL_CRATER", "CAPTURE_ANIMAL", "BUILD_PEN", "LURE_ANIMAL", "DISMANTLE_SHELTER",
                 "SUPPLY_SITE", "GATHER_MATERIALS", "ENCHANT_ROOM", "ENCHANT_SHELVES",
-                "BREED_ANIMALS", "EAT_TO_FULL", "HERD_CULL", "RELOCATE_BUILDING", "RESTOCK_FOOD");
+                "BREED_ANIMALS", "EAT_TO_FULL", "HERD_CULL", "RELOCATE_BUILDING", "RESTOCK_FOOD",
+                "TRANSFER_ITEM");
 
         assertEquals(expected, actual,
-                "Набор кейсов доски обязан совпадать с чеклистами 36 и 37Б (31: 24 из v2, CRAFT_TOOLS заменён "
-                        + "семью кейсами набора инструментов, плюс COLLECT_DROPS): каждый вид задания получает "
-                        + "приоритет, гейт и план по своему имени; лишний кейс — сирота в таблице BoardRules, "
-                        + "потерянный — задание без источника");
+                "Набор кейсов доски обязан совпадать с чеклистами 36 и 37Б (32: 24 из v2, CRAFT_TOOLS заменён "
+                        + "семью кейсами набора инструментов, плюс COLLECT_DROPS и TRANSFER_ITEM): каждый вид "
+                        + "задания получает приоритет, гейт и план по своему имени; лишний кейс — сирота в "
+                        + "таблице BoardRules, потерянный — задание без источника");
     }
 
     @Test

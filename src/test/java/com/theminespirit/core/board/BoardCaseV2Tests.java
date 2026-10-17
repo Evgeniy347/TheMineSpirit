@@ -9,6 +9,8 @@ import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -19,12 +21,12 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsThirtyOne() {
-        assertEquals(31, BoardCase.values().length,
-                "Кейсов доски — 31: 24 из v2, где CRAFT_TOOLS заменён семью кейсами набора "
+    void cases_TotalCount_IsThirtyTwo() {
+        assertEquals(32, BoardCase.values().length,
+                "Кейсов доски — 32: 24 из v2, где CRAFT_TOOLS заменён семью кейсами набора "
                         + "инструментов (деревянные кирка, топор, лопата и каменные кирка, топор, "
-                        + "лопата, меч), плюс COLLECT_DROPS (37Б). Новый кейс без приоритета, гейта и плана "
-                        + "роняет сортировку выдачи");
+                        + "лопата, меч), плюс COLLECT_DROPS (37Б) и TRANSFER_ITEM (передача вещей). "
+                        + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 
     @Test
@@ -106,6 +108,8 @@ class BoardCaseV2Tests {
         return TicketTarget.at(new BlockCoord(10, 60, -5)).withSpecies(Species.SHEEP)
                 .withScheme("pen")
                 .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
-                .withSupply("bread", 1);
+                .withSupply("bread", 1)
+                .withTransfer(UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
+                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1);
     }
 }
