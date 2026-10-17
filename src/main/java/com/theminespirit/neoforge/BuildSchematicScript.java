@@ -1,10 +1,13 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.BuildSquad;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
+import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
@@ -57,8 +60,12 @@ final class BuildSchematicScript implements ScriptInstance {
     private final BlockPlacer placer;
     private final Approach approach;
     private final BuildReservations reservations;
+    private final BuildKey buildKey;
+    private final BuildSquad squad;
     private final Set<BlockCoord> scaffolds = new LinkedHashSet<>();
 
+    private List<Schematic.PlacedEntry> work = List.of();
+    private long squadVersion = -1;
     private int cursor;
     private int placed;
     private int skipped;
@@ -85,6 +92,8 @@ final class BuildSchematicScript implements ScriptInstance {
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
+        this.buildKey = new BuildKey(params.file(), this.origin, rotation);
+        this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
     }
 
     private BlockState wantedState(Schematic.PlacedEntry entry) {
@@ -109,8 +118,9 @@ final class BuildSchematicScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез во время стройки по схеме");
         }
-        while (cursor < entries.size()) {
-            Schematic.PlacedEntry entry = entries.get(cursor);
+        refreshWork();
+        while (cursor < work.size()) {
+            Schematic.PlacedEntry entry = work.get(cursor);
             BlockState current = level.getBlockState(toPos(entry.pos()));
             BlockState wanted = wantedState(entry);
             if (current.is(wanted.getBlock())) {
@@ -133,18 +143,44 @@ final class BuildSchematicScript implements ScriptInstance {
             }
             return ScriptStatus.RUNNING;
         }
+        leaveSquad();
         reservations.releaseAll(spirit.getUUID());
         removeScaffolds();
         if (failed > 0) {
             return outcome;
         }
-        if (placed == 0 && skipped == entries.size() && entries.size() > 0) {
+        if (placed == 0 && skipped >= entries.size() && entries.size() > 0) {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
         tally.supplies(placed, 0);
         outcome = ScriptStatus.SUCCEEDED;
         return outcome;
+    }
+
+    private void refreshWork() {
+        if (squad.slotOf(spirit.getUUID()) < 0) {
+            squad.join(spirit.getUUID());
+        }
+        if (squad.version() == squadVersion) {
+            return;
+        }
+        squadVersion = squad.version();
+        List<Schematic.PlacedEntry> own = CellPartition.split(entries, squad.size()).get(squad.slotOf(spirit.getUUID()));
+        Set<Schematic.PlacedEntry> ownSet = new LinkedHashSet<>(own);
+        List<Schematic.PlacedEntry> all = new ArrayList<>(own);
+        for (Schematic.PlacedEntry entry : entries) {
+            if (!ownSet.contains(entry)) {
+                all.add(entry);
+            }
+        }
+        work = List.copyOf(all);
+        cursor = 0;
+        resetEntry();
+    }
+
+    private void leaveSquad() {
+        BuildSquadRegistry.leave(level, buildKey, spirit.getUUID());
     }
 
     private void targetTick(Schematic.PlacedEntry entry, BlockState wanted) {
@@ -427,6 +463,7 @@ final class BuildSchematicScript implements ScriptInstance {
     public void cancel() {
         approach.cancel();
         reservations.releaseAll(spirit.getUUID());
+        leaveSquad();
         removeScaffolds();
     }
 
