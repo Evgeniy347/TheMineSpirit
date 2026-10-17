@@ -4,7 +4,7 @@ import string
 import unittest
 from pathlib import Path
 
-from parse import Decision, ReplyError, parse_reply
+from parse import MAX_REASON, Decision, ReplyError, parse_reply
 
 APP = Path(__file__).resolve().parent.parent
 PLAN = {"type": "script", "script": "chop_tree", "params": {"count": 3}}
@@ -32,7 +32,7 @@ ACCEPTED = [
     ("скобки внутри строки", reply(reason="закрывающая } и открывающая { внутри"),
      ("закрывающая } и открывающая { внутри", "цель", PLAN, False)),
     ("не-JSON фигурные скобки до ответа", "Заметка {это не json}. " + GOOD, ("Рядом лес.", "срубить деревья", PLAN, False)),
-    ("reason ровно 300", reply(reason="р" * 300), ("р" * 300, "цель", PLAN, False)),
+    ("reason ровно предел", reply(reason="р" * MAX_REASON), ("р" * MAX_REASON, "цель", PLAN, False)),
     ("goal ровно 200", reply(goal="ц" * 200), ("причина", "ц" * 200, PLAN, False)),
     ("лишнее поле игнорируется", reply(confidence=0.9), ("причина", "цель", PLAN, False)),
     ("skip с goal — goal отбрасывается", json.dumps({"reason": "р", "skip": True, "goal": "x"}), ("р", None, None, True)),
@@ -49,7 +49,7 @@ REJECTED = [
     ("нет reason", reply(reason=...), "reason"),
     ("reason не строка", reply(reason=5), "reason"),
     ("reason пустой", reply(reason=""), "reason"),
-    ("reason 301 символ", reply(reason="р" * 301), "300"),
+    ("reason на символ больше предела", reply(reason="р" * (MAX_REASON + 1)), str(MAX_REASON)),
     ("нет goal при plan", reply(goal=...), "goal"),
     ("goal 201 символ", reply(goal="ц" * 201), "200"),
     ("plan не объект", reply(plan=[1, 2]), "plan"),
@@ -63,6 +63,10 @@ REJECTED = [
 
 
 class ParseTests(unittest.TestCase):
+    def test_reasonLimit_RaisedTo500ForReasonableAnswers(self):
+        self.assertEqual(500, MAX_REASON,
+                         "лимит reason поднят до 500: прежние 300 символов рубили разумные ответы модели (журнал dry 17.10)")
+
     def test_accepted_Table(self):
         self.assertGreaterEqual(len(ACCEPTED) + len(REJECTED), 20, "в таблице не меньше 20 ответов")
         for name, text, (reason, goal, plan, skip) in ACCEPTED:

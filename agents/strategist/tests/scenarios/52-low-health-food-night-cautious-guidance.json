@@ -1,0 +1,68 @@
+{
+ "name": "52-low-health-food-night-cautious-guidance",
+ "description": "низкое здоровье, голод и ночь: наблюдение с полями health/food/time доходит до модели, а системное сообщение несёт шкалу сытости и правило осторожности ночью",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "extra": {
+    "health": 4.0,
+    "max_health": 20.0,
+    "food": 0.1,
+    "time": {
+     "day": false,
+     "day_time": 15000
+    }
+   }
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Низкое здоровье и голод, ночь: осторожно подожду до утра.",
+    "skip": true
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 0
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "decision": 1,
+    "posted": 0
+   }
+  },
+  {
+   "system_contains": [
+    "сыт",
+    "ночь"
+   ]
+  },
+  {
+   "prompt_contains": [
+    {
+     "call": 0,
+     "contains": "\"food\":0.1"
+    },
+    {
+     "call": 0,
+     "contains": "\"health\":4.0"
+    },
+    {
+     "call": 0,
+     "contains": "\"day\":false"
+    }
+   ]
+  }
+ ]
+}

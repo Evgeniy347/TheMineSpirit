@@ -2,6 +2,7 @@ package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.tactics.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +23,9 @@ public final class ExpeditionPlanner {
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();
         if (!view.needsOre(tuning.oreTarget(), tuning.ironTarget(), tuning.weaponTarget())) {
+            return Optional.empty();
+        }
+        if (NightLeash.withDefaultRules().isEvening(view.dayFraction())) {
             return Optional.empty();
         }
         List<SpiritSnapshot> suitable = new ArrayList<>();
