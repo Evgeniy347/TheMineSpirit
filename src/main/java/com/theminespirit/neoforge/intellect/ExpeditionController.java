@@ -1,13 +1,20 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.Invitation;
 import com.theminespirit.core.intellect.InvitationAnswer;
 import com.theminespirit.core.intellect.InvitationState;
+import com.theminespirit.core.intellect.OutsideRules;
+import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.inventory.InventoryTables;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +33,12 @@ public final class ExpeditionController {
     private long lastRepeatTick = Long.MIN_VALUE;
     private long closedAt = Long.MIN_VALUE;
     private boolean dispatched;
+    private List<UUID> missionTeam = List.of();
+    private UUID missionLeader;
+    private String refusal;
+
+    private static final int PARTNER_RADIUS = 3;
+    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
     public ExpeditionController(TaskStarter starter) {
         if (starter == null) {
@@ -48,6 +61,10 @@ public final class ExpeditionController {
 
     public Optional<Dispatch> lastDispatch() {
         return Optional.ofNullable(lastDispatch);
+    }
+
+    public Optional<String> refusal() {
+        return Optional.ofNullable(refusal);
     }
 
     public boolean onAnswer(String expedition, InvitationAnswer answer, long now) {
@@ -73,6 +90,7 @@ public final class ExpeditionController {
             throw new IllegalArgumentException(
                     "Поход без уровня, плана или духов не ведётся: команда идёт конкретным составом");
         }
+        monitorMission(members, now);
         if (active == null && planned.isPresent() && !dispatched
                 && (closedAt == Long.MIN_VALUE
                         || now - closedAt >= IntellectTuning.loadDefault().inviteTtlTicks())) {
@@ -135,15 +153,78 @@ public final class ExpeditionController {
     }
 
     private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
+        List<SpiritEntity> team = team(members, expedition);
+        List<String> missing = missingKit(team);
+        if (!missing.isEmpty()) {
+            refusal = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
+            return false;
+        }
+        UUID leaderId = expedition.team().get(0);
+        SpiritEntity leader = team.stream().filter(spirit -> spirit.getUUID().equals(leaderId))
+                .findFirst().orElse(team.get(0));
         boolean launched = false;
-        for (SpiritEntity spirit : team(members, expedition)) {
-            launched |= starter.start(spirit, "mine_vein",
-                    new ScriptCall("mine_vein", Map.of("ore", "any", "count", 8, "radius", 16)), now);
+        for (SpiritEntity spirit : team) {
+            if (spirit.getUUID().equals(leader.getUUID())) {
+                launched |= starter.start(spirit, "mine_vein", new SequenceNode(List.of(
+                        new ScriptCall("mine_vein", MINE_PARAMS),
+                        new ScriptCall("return_home", Map.of()))), now);
+            } else {
+                launched |= starter.start(spirit, "follow", new ScriptCall("follow",
+                        Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)), now);
+            }
         }
         if (launched) {
+            refusal = null;
             lastDispatch = new Dispatch("mine_vein", List.copyOf(expedition.team()), now);
+            missionTeam = List.copyOf(expedition.team());
+            missionLeader = leader.getUUID();
         }
         return launched;
+    }
+
+    private List<String> missingKit(List<SpiritEntity> team) {
+        StackMapper mapper = new StackMapper();
+        List<Stack> inventory = new ArrayList<>();
+        for (SpiritEntity spirit : team) {
+            inventory.addAll(mapper.map(spirit.getInventory()));
+        }
+        return DescentKit.missing(OutsideRules.loadDefault().mineKit(), inventory, InventoryTables.values());
+    }
+
+    private void monitorMission(List<SpiritEntity> members, long now) {
+        if (missionLeader == null) {
+            return;
+        }
+        Map<UUID, SpiritEntity> alive = new HashMap<>();
+        for (SpiritEntity spirit : members) {
+            if (!spirit.isRemoved()) {
+                alive.put(spirit.getUUID(), spirit);
+            }
+        }
+        int present = 0;
+        for (UUID id : missionTeam) {
+            if (alive.containsKey(id)) {
+                present++;
+            }
+        }
+        if (present == missionTeam.size()) {
+            return;
+        }
+        boolean allReturning = present > 0;
+        for (UUID id : missionTeam) {
+            SpiritEntity spirit = alive.get(id);
+            if (spirit == null) {
+                continue;
+            }
+            if (spirit.currentTaskScript().map("return_home"::equals).orElse(false)) {
+                continue;
+            }
+            allReturning &= starter.start(spirit, "return_home", new ScriptCall("return_home", Map.of()), now);
+        }
+        if (allReturning) {
+            missionTeam = List.of();
+            missionLeader = null;
+        }
     }
 
     private List<SpiritEntity> team(List<SpiritEntity> members, Expedition expedition) {

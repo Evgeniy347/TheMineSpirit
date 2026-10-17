@@ -11,6 +11,10 @@ public interface Activity {
 
     ActivityIntent order(SpiritSnapshot spirit, SettlementView view);
 
+    default boolean external() {
+        return false;
+    }
+
     static double checkedDemand(ActivityId id, double demand) {
         double maxDemand = IntellectTuning.loadDefault().maxDemand();
         if (Double.isNaN(demand) || Double.isInfinite(demand) || demand < 0
