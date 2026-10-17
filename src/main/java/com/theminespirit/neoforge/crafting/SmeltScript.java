@@ -13,17 +13,26 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 
 public final class SmeltScript implements ScriptInstance {
     private static final String COLLECTED_KEY = "collected";
-    private static final String FURNACE_X_KEY = "furnaceX";
-    private static final String FURNACE_Y_KEY = "furnaceY";
-    private static final String FURNACE_Z_KEY = "furnaceZ";
+    private static final String STATION_X_KEY = "furnaceX";
+    private static final String STATION_Y_KEY = "furnaceY";
+    private static final String STATION_Z_KEY = "furnaceZ";
 
     private enum Phase {
         PREPARE,
         STATION,
-        SMELT
+        SMELT,
+        CAMPFIRE
     }
 
     private record Choice(String input, RecipeSpec recipe, int inputCount, int have) {
@@ -31,35 +40,45 @@ public final class SmeltScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final SmeltParams params;
+    private final List<StationType> candidateTypes;
     private Phase phase = Phase.PREPARE;
     private String failureReason;
+    private String product;
     private int collected;
-    private BlockPos resumeFurnace;
-    private FurnaceSession.Job job;
+    private BlockPos resumeStation;
+    private RecipeKnowledge knowledge;
+    private Choice choice;
+    private Item inputItem;
+    private FurnaceSession.Contents resident = new FurnaceSession.Contents(0, 0, 0);
+    private int inPlay;
     private StationAccess station;
-    private FurnaceSession session;
-    private final List<StationType> candidateTypes;
     private int stationIndex;
+    private FurnaceSession furnace;
+    private CampfireSession campfire;
 
     public SmeltScript(SpiritEntity spirit, SmeltParams params) {
         this.spirit = spirit;
         this.params = params;
-        String product = ItemIds.normalize(params.item());
-        this.candidateTypes = Stations.isFoodProduct(product)
-                ? List.of(StationType.SMOKER, StationType.FURNACE)
-                : List.of(StationType.FURNACE);
-        this.stationIndex = 0;
+        this.product = ItemIds.normalize(params.item());
+        this.candidateTypes = Stations.smeltingCandidates(product).stream()
+                .map(StationType::byId)
+                .flatMap(Optional::stream)
+                .toList();
     }
 
     @Override
     public ScriptStatus tick() {
         if (spirit.isRemoved()) {
-            return session != null ? sessionStatus() : fail("дух исчез во время плавки");
+            if (campfire != null) {
+                return campfireStatus();
+            }
+            return furnace != null ? furnaceStatus() : fail("дух исчез во время плавки");
         }
         return switch (phase) {
             case PREPARE -> prepare();
             case STATION -> useStation();
-            case SMELT -> sessionStatus();
+            case SMELT -> furnaceStatus();
+            case CAMPFIRE -> campfireStatus();
         };
     }
 
@@ -68,8 +87,11 @@ public final class SmeltScript implements ScriptInstance {
         if (station != null) {
             station.cancel();
         }
-        if (session != null) {
-            session.cancel();
+        if (furnace != null) {
+            furnace.cancel();
+        }
+        if (campfire != null) {
+            campfire.cancel();
         }
     }
 
@@ -81,12 +103,13 @@ public final class SmeltScript implements ScriptInstance {
     @Override
     public Map<String, Object> saveState() {
         Map<String, Object> state = new LinkedHashMap<>();
-        state.put(COLLECTED_KEY, session == null ? collected : session.collected());
-        BlockPos furnace = session == null ? resumeFurnace : session.pos();
-        if (furnace != null) {
-            state.put(FURNACE_X_KEY, furnace.getX());
-            state.put(FURNACE_Y_KEY, furnace.getY());
-            state.put(FURNACE_Z_KEY, furnace.getZ());
+        state.put(COLLECTED_KEY, campfire != null ? campfire.collected()
+                : furnace == null ? collected : furnace.collected());
+        BlockPos pos = campfire != null ? campfire.pos() : furnace == null ? resumeStation : furnace.pos();
+        if (pos != null) {
+            state.put(STATION_X_KEY, pos.getX());
+            state.put(STATION_Y_KEY, pos.getY());
+            state.put(STATION_Z_KEY, pos.getZ());
         }
         return state;
     }
@@ -96,9 +119,9 @@ public final class SmeltScript implements ScriptInstance {
         if (state.get(COLLECTED_KEY) instanceof Number number) {
             collected = Math.max(collected, number.intValue());
         }
-        if (state.get(FURNACE_X_KEY) instanceof Number x && state.get(FURNACE_Y_KEY) instanceof Number y
-                && state.get(FURNACE_Z_KEY) instanceof Number z) {
-            resumeFurnace = new BlockPos(x.intValue(), y.intValue(), z.intValue());
+        if (state.get(STATION_X_KEY) instanceof Number x && state.get(STATION_Y_KEY) instanceof Number y
+                && state.get(STATION_Z_KEY) instanceof Number z) {
+            resumeStation = new BlockPos(x.intValue(), y.intValue(), z.intValue());
         }
     }
 
@@ -107,40 +130,52 @@ public final class SmeltScript implements ScriptInstance {
         if (remaining <= 0) {
             return ScriptStatus.SUCCEEDED;
         }
-        String product = ItemIds.normalize(params.item());
-        RecipeKnowledge knowledge = RecipeKnowledge.of(spirit.level());
+        knowledge = RecipeKnowledge.of(spirit.level());
         List<RecipeSpec> recipes = knowledge.smeltRecipes(product);
         if (recipes.isEmpty()) {
             return fail("нет рецепта плавки для '" + product + "'");
         }
         Map<String, Integer> available = CraftInventory.counts(spirit.getInventory());
-        Optional<FurnaceSession.Contents> inside = resumeFurnace == null ? Optional.empty()
-                : FurnaceSession.contentsAt(spirit.level(), resumeFurnace);
-        FurnaceSession.Contents resident = inside.orElse(new FurnaceSession.Contents(0, 0, 0));
-        Choice choice = choose(recipes, remaining, resident, available);
+        Optional<FurnaceSession.Contents> inside = resumeStation == null ? Optional.empty()
+                : stationContentsAt(spirit.level(), resumeStation, product);
+        resident = inside.orElse(new FurnaceSession.Contents(0, 0, 0));
+        choice = choose(recipes, remaining, resident, available);
         if (choice.have() < choice.inputCount()) {
             return fail("не хватает: " + choice.input() + " " + (choice.inputCount() - choice.have()) + " из "
                     + choice.inputCount());
         }
-        Optional<Item> inputItem = ItemIds.item(choice.input());
-        if (inputItem.isEmpty()) {
+        Optional<Item> found = ItemIds.item(choice.input());
+        if (found.isEmpty()) {
             return fail("предмет '" + choice.input() + "' отсутствует в реестре");
         }
-        int cookTicks = choice.recipe().cookTicks();
-        int inPlay = choice.inputCount() + resident.input();
-        List<FuelLoad.Portion> fuel = inPlay > 0 ? FuelLoad.choose(inPlay, cookTicks, available, knowledge)
-                : List.of();
-        if (fuel.isEmpty() && inPlay > 0 && resident.fuel() == 0) {
-            return fail("нет топлива: в инвентаре нет ни одного топлива для плавки '" + product + "'");
-        }
-        job = new FurnaceSession.Job(inputItem.get(), choice.inputCount(), choice.recipe().outputCount(), fuel,
-                cookTicks, inPlay, collected, params.count());
+        inputItem = found.get();
+        inPlay = choice.inputCount() + resident.input();
         if (inside.isPresent()) {
-            return startSession(resumeFurnace, true);
+            BlockEntity entity = spirit.level().getBlockEntity(resumeStation);
+            if (entity instanceof CampfireBlockEntity) {
+                return startCampfire(resumeStation, true);
+            }
+            return startFurnace(resumeStation, true);
         }
-        station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
+        resumeStation = null;
+        station = newStation(candidateTypes.get(stationIndex));
         phase = Phase.STATION;
         return ScriptStatus.RUNNING;
+    }
+
+    private static Optional<FurnaceSession.Contents> stationContentsAt(Level level, BlockPos pos, String product) {
+        BlockEntity entity = level.getBlockEntity(pos);
+        if (entity instanceof CampfireBlockEntity campfire) {
+            if (!Stations.isFoodProduct(product)) {
+                return Optional.empty();
+            }
+            int onFire = 0;
+            for (ItemStack stack : campfire.getItems()) {
+                onFire += stack.getCount();
+            }
+            return Optional.of(new FurnaceSession.Contents(onFire, 0, 0));
+        }
+        return FurnaceSession.contentsAt(level, pos);
     }
 
     private static Choice choose(List<RecipeSpec> recipes, int remaining, FurnaceSession.Contents resident,
@@ -163,14 +198,23 @@ public final class SmeltScript implements ScriptInstance {
         return best;
     }
 
+    private StationAccess newStation(StationType type) {
+        if (type == StationType.CAMPFIRE) {
+            return new StationAccess(spirit, type, params.radius(), CampfireKit::ensure);
+        }
+        return new StationAccess(spirit, type, params.radius());
+    }
+
     private ScriptStatus useStation() {
         return switch (station.tick()) {
             case WORKING -> ScriptStatus.RUNNING;
-            case READY -> startSession(station.pos(), false);
+            case READY -> candidateTypes.get(stationIndex) == StationType.CAMPFIRE
+                    ? startCampfire(station.pos(), false)
+                    : startFurnace(station.pos(), false);
             case FAILED -> {
                 if (stationIndex + 1 < candidateTypes.size()) {
                     stationIndex++;
-                    station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
+                    station = newStation(candidateTypes.get(stationIndex));
                     phase = Phase.STATION;
                     yield ScriptStatus.RUNNING;
                 }
@@ -179,20 +223,66 @@ public final class SmeltScript implements ScriptInstance {
         };
     }
 
-    private ScriptStatus startSession(BlockPos furnace, boolean adopted) {
-        session = new FurnaceSession(spirit, furnace, job);
-        if (!adopted && FurnaceSession.contentsAt(spirit.level(), furnace).map(c -> !c.isEmpty()).orElse(false)) {
-            return fail("печь в " + furnace.toShortString() + " занята: в ней лежат чужие предметы");
+    private ScriptStatus startFurnace(BlockPos pos, boolean adopted) {
+        Map<String, Integer> available = CraftInventory.counts(spirit.getInventory());
+        List<FuelLoad.Portion> fuel = inPlay > 0
+                ? FuelLoad.choose(inPlay, choice.recipe().cookTicks(), available, knowledge)
+                : List.of();
+        if (fuel.isEmpty() && inPlay > 0 && resident.fuel() == 0) {
+            return fail("нет топлива: в инвентаре нет ни одного топлива для плавки '" + product + "'");
         }
+        if (!adopted && FurnaceSession.contentsAt(spirit.level(), pos).map(c -> !c.isEmpty()).orElse(false)) {
+            return fail("печь в " + pos.toShortString() + " занята: в ней лежат чужие предметы");
+        }
+        FurnaceSession.Job job = new FurnaceSession.Job(inputItem, choice.inputCount(), choice.recipe().outputCount(),
+                fuel, choice.recipe().cookTicks(), inPlay, collected, params.count());
+        furnace = new FurnaceSession(spirit, pos, job);
         phase = Phase.SMELT;
-        return sessionStatus();
+        return furnaceStatus();
     }
 
-    private ScriptStatus sessionStatus() {
-        return switch (session.tick()) {
+    private ScriptStatus startCampfire(BlockPos pos, boolean adopted) {
+        if (!adopted && occupiedCampfire(pos)) {
+            return fail("костёр в " + pos.toShortString() + " занят: на нём лежит чужая еда");
+        }
+        SingleRecipeInput sample = new SingleRecipeInput(new ItemStack(inputItem));
+        Optional<RecipeHolder<CampfireCookingRecipe>> found = spirit.level().getRecipeManager()
+                .getRecipeFor(RecipeType.CAMPFIRE_COOKING, sample, spirit.level());
+        if (found.isEmpty()) {
+            return fail("нет рецепта готовки на костре для '" + product + "'");
+        }
+        ItemStack result = found.get().value().assemble(sample, spirit.level().registryAccess());
+        if (result.isEmpty()) {
+            return fail("рецепт готовки на костре для '" + product + "' не даёт предмета");
+        }
+        int cookTicks = found.get().value().getCookingTime();
+        campfire = new CampfireSession(spirit, pos, new CampfireSession.Job(inputItem, choice.inputCount(),
+                result.getItem(), cookTicks, collected, params.count()));
+        phase = Phase.CAMPFIRE;
+        return campfireStatus();
+    }
+
+    private boolean occupiedCampfire(BlockPos pos) {
+        BlockEntity entity = spirit.level().getBlockEntity(pos);
+        if (entity instanceof CampfireBlockEntity campfire) {
+            return campfire.getItems().stream().anyMatch(stack -> !stack.isEmpty());
+        }
+        return false;
+    }
+
+    private ScriptStatus furnaceStatus() {
+        return switch (furnace.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case SUCCEEDED -> ScriptStatus.SUCCEEDED;
-            case FAILED -> fail(session.failureReason());
+            case FAILED -> fail(furnace.failureReason());
+        };
+    }
+
+    private ScriptStatus campfireStatus() {
+        return switch (campfire.tick()) {
+            case RUNNING -> ScriptStatus.RUNNING;
+            case SUCCEEDED -> ScriptStatus.SUCCEEDED;
+            case FAILED -> fail(campfire.failureReason());
         };
     }
 

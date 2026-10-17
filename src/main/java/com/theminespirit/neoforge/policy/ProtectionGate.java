@@ -20,6 +20,7 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -41,6 +42,17 @@ public final class ProtectionGate {
 
     public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {
         return decideBreak(pos, state, true);
+    }
+
+    /**
+     * Снос своей постройки: блок, поставленный духом, убирается даже из защищённого списка
+     * (калитки, двери, заборы). Чужое и природное по-прежнему проходит обычную защиту.
+     */
+    public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
+        if (spirit.level() instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+            return new BlockProtection.Allowed();
+        }
+        return checkBreak(pos, state);
     }
 
     private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended) {

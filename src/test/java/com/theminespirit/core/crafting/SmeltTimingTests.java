@@ -36,4 +36,28 @@ class SmeltTimingTests {
         assertThrows(IllegalArgumentException.class, () -> SmeltTiming.expectedTicks(3, 0),
                 "Нулевое время плавки обязано отвергаться: ожидание нулевой длины сорвёт плавку тайм-аутом");
     }
+
+    @Test
+    void campfireExpectedTicks_FourItems_CookInParallel() {
+        assertEquals(600, SmeltTiming.campfireExpectedTicks(4, 600),
+                "Четыре предмета на костре готовятся одновременно за одно время рецепта, а не за четыре");
+    }
+
+    @Test
+    void campfireExpectedTicks_FiveItems_NeedTwoBatches() {
+        assertEquals(1200, SmeltTiming.campfireExpectedTicks(5, 600),
+                "Пятый предмет ждёт освобождения слота: пять предметов — две партии по четыре слота");
+    }
+
+    @Test
+    void campfireTimeoutTicks_FiveItems_AddsFourHundredReserve() {
+        assertEquals(1600, SmeltTiming.campfireTimeoutTicks(5, 600),
+                "Тайм-аут костра = ожидаемое время (1200) + запас 400 тиков на опрос и подбор выпавших предметов");
+    }
+
+    @Test
+    void campfireExpectedTicks_ZeroCount_IsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> SmeltTiming.campfireExpectedTicks(0, 600),
+                "Ноль предметов на костре обязан отвергаться: ждать нечего");
+    }
 }

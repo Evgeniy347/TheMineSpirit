@@ -30,6 +30,7 @@ public final class SpiritCommands {
         CraterCommand.register(spirit);
         SpiritInviteCommand.register(spirit);
         SpiritUnprotectCommand.register(spirit);
+        SpiritDemoCommand.register(spirit);
         dispatcher.register(spirit);
     }
 }

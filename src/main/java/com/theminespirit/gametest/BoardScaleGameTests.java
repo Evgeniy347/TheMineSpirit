@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
@@ -39,6 +42,16 @@ public final class BoardScaleGameTests {
     private static final int TIMEOUT_TICKS = 2000;
 
     private BoardScaleGameTests() {
+    }
+
+    @BeforeBatch(batch = "board_scale")
+    public static void stopCoordinator(ServerLevel level) {
+        SpiritConfig.setCoordinatorEnabled(false);
+    }
+
+    @AfterBatch(batch = "board_scale")
+    public static void restoreCoordinator(ServerLevel level) {
+        SpiritConfig.setCoordinatorEnabled(true);
     }
 
     @GameTest(template = "arena", batch = "board_scale", timeoutTicks = TIMEOUT_TICKS)

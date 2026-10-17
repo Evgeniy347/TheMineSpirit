@@ -21,4 +21,13 @@ public final class SmeltTiming {
     public static int timeoutTicks(int count, int cookTicks) {
         return Math.addExact(expectedTicks(count, cookTicks), RESERVE_TICKS);
     }
+
+    public static int campfireExpectedTicks(int count, int cookTicks) {
+        int batches = (count + Stations.CAMPFIRE_SLOTS - 1) / Stations.CAMPFIRE_SLOTS;
+        return expectedTicks(batches, cookTicks);
+    }
+
+    public static int campfireTimeoutTicks(int count, int cookTicks) {
+        return Math.addExact(campfireExpectedTicks(count, cookTicks), RESERVE_TICKS);
+    }
 }

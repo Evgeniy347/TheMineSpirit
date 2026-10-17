@@ -53,12 +53,8 @@ final class ScriptArgs {
         return text;
     }
 
-    static boolean optionalBoolean(Map<String, Object> params, String name, boolean defaultValue) {
-        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        Object value = params.get(name);
-        if (value == null) {
-            return defaultValue;
-        }
+    static boolean requireBoolean(Map<String, Object> params, String name) {
+        Object value = require(params, name);
         if (!(value instanceof Boolean flag)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть true или false, а получено "
                     + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");
@@ -66,8 +62,12 @@ final class ScriptArgs {
         return flag;
     }
 
-    static boolean requireBoolean(Map<String, Object> params, String name) {
-        Object value = require(params, name);
+    static boolean optionalBoolean(Map<String, Object> params, String name, boolean defaultValue) {
+        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
+        Object value = params.get(name);
+        if (value == null) {
+            return defaultValue;
+        }
         if (!(value instanceof Boolean flag)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть true или false, а получено "
                     + describe(value) + ": тип параметра обеспечивает валидатор плана до запуска");

@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -49,11 +50,13 @@ public final class BoardAnimalGameTests {
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
+        SpiritConfig.setCoordinatorEnabled(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
+        SpiritConfig.setCoordinatorEnabled(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
@@ -104,13 +107,13 @@ public final class BoardAnimalGameTests {
                         .anyMatch(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL),
                 "С пшеницей в запасах «приманить» выдаётся: доска сама снимает гейт");
 
-        board.completeLure();
+        board.completeLure(Species.SHEEP);
         helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
                 "Животное в загоне — на доске ровно один DISMANTLE_SHELTER");
-        board.completeLure();
+        board.completeLure(Species.SHEEP);
         helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
                 "«Разобрать укрытие» дважды не ставится: одно укрытие — одна разборка");
-        board.notifyAnimalDied();
+        board.notifyAnimalDied(Species.SHEEP);
         helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
                         == BoardStatus.CANCELLED,
                 "Гибель снимает «приманить», статус "

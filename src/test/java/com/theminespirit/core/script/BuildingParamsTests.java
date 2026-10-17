@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.BuildRotation;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -56,6 +57,20 @@ class BuildingParamsTests {
     }
 
     @Test
+    void clearArea_DemolishFlag_DefaultsFalseAndParsesTrue() {
+        ClearAreaParams regular = ClearAreaParams.from(
+                Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1));
+        ClearAreaParams demolish = ClearAreaParams.from(
+                Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1, "demolish", true));
+
+        assertEquals(false, regular.demolish(),
+                "Без флага разбор идёт обычной защитой: чужую постройку дух не ломает");
+        assertEquals(true, demolish.demolish(),
+                "С демолишем снос своей постройки проходит защиту: забор и калитка иначе "
+                        + "остаются стоять");
+    }
+
+    @Test
     void digArea_SizeZero_IsRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> DigAreaParams.from(Map.of("x", 0, "y", 64, "z", 0, "size", 0)),
@@ -88,7 +103,16 @@ class BuildingParamsTests {
     void buildSchematic_ValidFile_ReturnsParams() {
         BuildSchematicParams params = BuildSchematicParams.from(Map.of("file", "house", "x", 0, "y", 64, "z", 0));
 
-        assertEquals(new BuildSchematicParams("house", 0, 64, 0), params,
+        assertEquals(new BuildSchematicParams("house", 0, 64, 0, BuildRotation.NONE), params,
                 "Схема обязана сохранить файл и якорь: по ним адаптер грузит и ставит схему");
+    }
+
+    @Test
+    void buildSchematic_RotationName_ParsesQuarterTurns() {
+        BuildSchematicParams params = BuildSchematicParams.from(Map.of("file", "house", "x", 0, "y", 64, "z", 0,
+                "rotation", "clockwise_90"));
+
+        assertEquals(BuildRotation.CLOCKWISE_90, params.rotation(),
+                "Поворот схемы обязан читаться из параметра: без него постройка встанет не той стороной");
     }
 }
