@@ -13,6 +13,7 @@ final class StubKnowledge implements ResourceKnowledge {
     private final Map<String, Integer> outputs;
     private final Map<String, String> stations;
     private final Map<String, String> gatherSources;
+    private final Map<String, String> tools;
 
     StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts) {
         this(gatherable, crafts, smelts, Map.of());
@@ -25,23 +26,36 @@ final class StubKnowledge implements ResourceKnowledge {
 
     StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
             Map<String, Integer> outputs, Map<String, String> stations) {
-        this(gatherable, crafts, smelts, outputs, stations, Map.of());
+        this(gatherable, crafts, smelts, outputs, stations, Map.of(), Map.of());
     }
 
     private StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
-            Map<String, Integer> outputs, Map<String, String> stations, Map<String, String> gatherSources) {
+            Map<String, Integer> outputs, Map<String, String> stations, Map<String, String> gatherSources,
+            Map<String, String> tools) {
         this.gatherable = Set.copyOf(gatherable);
         this.crafts = Map.copyOf(crafts);
         this.smelts = Map.copyOf(smelts);
         this.outputs = Map.copyOf(outputs);
         this.stations = Map.copyOf(stations);
         this.gatherSources = Map.copyOf(gatherSources);
+        this.tools = Map.copyOf(tools);
     }
 
     StubKnowledge withGatherSource(String item, String block) {
         Map<String, String> sources = new HashMap<>(gatherSources);
         sources.put(item, block);
-        return new StubKnowledge(gatherable, crafts, smelts, outputs, stations, sources);
+        return new StubKnowledge(gatherable, crafts, smelts, outputs, stations, sources, tools);
+    }
+
+    StubKnowledge withTool(String block, String tool) {
+        Map<String, String> required = new HashMap<>(tools);
+        required.put(block, tool);
+        return new StubKnowledge(gatherable, crafts, smelts, outputs, stations, gatherSources, required);
+    }
+
+    @Override
+    public Optional<String> toolForBlock(String block) {
+        return Optional.ofNullable(tools.get(block));
     }
 
     @Override

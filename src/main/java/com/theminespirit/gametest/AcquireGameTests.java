@@ -74,7 +74,9 @@ public final class AcquireGameTests {
     public static void acquireStonePickaxe_FromScratch_PickaxeInInventory(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
-        FullCycleScene.placeCobblestoneRow(helper, COBBLESTONE_FOR_FURNACE);
+        for (int x = 0; x < COBBLESTONE_FOR_FURNACE; x++) {
+            helper.setBlock(FullCycleScene.COBBLESTONE_ROW.offset(x, 0, 0), Blocks.STONE);
+        }
         helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
         SpiritEntity spirit = prepare(helper, stack(Items.WOODEN_PICKAXE, 1));
         TaskNode plan = PlanParser.parse("""
@@ -85,9 +87,9 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.STONE_PICKAXE, 1, "каменная кирка");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.COBBLESTONE) == 0,
-                    "булыжник обязан быть израсходован: осталось "
-                            + FullCycleScene.countBlocks(helper, Blocks.COBBLESTONE));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "булыжник обязан быть израсходован на кирку, осталось "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             cleanup(helper, spirit);
         });
     }

@@ -142,9 +142,12 @@ public final class RecipeKnowledgeGameTests {
         TaskNode plan = ResourceResolver.resolve("raw_iron", 2, knowledge);
         List<String> steps = FullCycleScene.scriptsOf(plan);
 
-        helper.assertTrue(steps.equals(List.of("gather:iron_ore")),
-                "план для сырого железа — сбор железной руды (один блок руды даёт один дроп), резолвер "
-                        + "и PlanValidator не должны его отклонить, шаги: " + steps);
+        helper.assertTrue(steps.get(steps.size() - 1).equals("gather:iron_ore"),
+                "план для сырого железа обязан закончиться сбором железной руды (один блок руды даёт один дроп), "
+                        + "резолвер и PlanValidator не должны его отклонить, шаги: " + steps);
+        helper.assertTrue(steps.contains("craft:wooden_pickaxe") && steps.contains("craft:stone_pickaxe"),
+                "перед рудой план обязан изготовить кирки по уровню инструмента: деревянную для камня и каменную "
+                        + "для железной руды; без них gather простоит без прогресса, шаги: " + steps);
         helper.succeed();
     }
 }
