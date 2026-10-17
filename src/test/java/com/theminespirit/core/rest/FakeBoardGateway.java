@@ -1,5 +1,6 @@
 package com.theminespirit.core.rest;
 
+import com.theminespirit.core.board.BoardLogEntry;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,6 +14,8 @@ final class FakeBoardGateway implements BoardGateway {
     private final Map<String, BoardTask> tasks = new LinkedHashMap<>();
     private final List<String> submits = new ArrayList<>();
     private final List<String> cancels = new ArrayList<>();
+    private final List<BoardLogEntry> log = new ArrayList<>();
+    private BoardTaskRequest lastRequest;
 
     List<String> submits() {
         return submits;
@@ -24,6 +27,15 @@ final class FakeBoardGateway implements BoardGateway {
 
     int size() {
         return tasks.size();
+    }
+
+    BoardTaskRequest lastRequest() {
+        return lastRequest;
+    }
+
+    FakeBoardGateway withLog(BoardLogEntry entry) {
+        log.add(entry);
+        return this;
     }
 
     FakeBoardGateway with(BoardTask task) {
@@ -39,6 +51,7 @@ final class FakeBoardGateway implements BoardGateway {
     @Override
     public BoardTask submit(BoardTaskRequest request) {
         String id = ID_PREFIX + request.requestId();
+        lastRequest = request;
         submits.add(id);
         BoardTask task = new BoardTask(id, request.boardCase().name(), 50,
                 request.assignee().map(UUID::toString).orElse(null), "PENDING", request.requiredItems(),
@@ -61,5 +74,11 @@ final class FakeBoardGateway implements BoardGateway {
                 task.level(), task.cause());
         tasks.put(ticketId, cancelled);
         return cancelled;
+    }
+
+    @Override
+    public List<BoardLogEntry> log(int limit) {
+        int from = Math.max(0, log.size() - limit);
+        return List.copyOf(log.subList(from, log.size()));
     }
 }

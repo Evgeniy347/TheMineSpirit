@@ -1,5 +1,6 @@
 package com.theminespirit.core.rest;
 
+import com.theminespirit.core.board.BoardLogEntry;
 import java.util.List;
 
 /**
@@ -14,4 +15,6 @@ public interface BoardGateway {
     BoardTask submit(BoardTaskRequest request);
 
     BoardTask cancel(String ticketId);
+
+    List<BoardLogEntry> log(int limit);
 }

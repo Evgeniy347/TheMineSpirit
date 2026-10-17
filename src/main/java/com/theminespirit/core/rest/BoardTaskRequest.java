@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.RelocatePlan;
+import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +27,8 @@ import java.util.UUID;
  * не должна тихо ставить задание-сироту.
  */
 public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUID> assignee,
-        Map<String, Integer> requiredItems, List<String> dependsOn, int level, String cause) {
+        Map<String, Integer> requiredItems, List<String> dependsOn, int level, String cause,
+        Optional<BoardCase> building, Optional<BlockCoord> from, Optional<BlockCoord> to) {
 
     private static final String REQUEST_ID = "request_id";
     private static final String CASE = "case";
@@ -34,12 +37,21 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
     private static final String DEPENDS_ON = "dependsOn";
     private static final String LEVEL = "level";
     private static final String CAUSE = "cause";
+    private static final String BUILDING = "building";
+    private static final String FROM = "from";
+    private static final String TO = "to";
     private static final List<String> FIELDS = List.of(REQUEST_ID, CASE, ASSIGNEE, REQUIRED_ITEMS,
-            DEPENDS_ON, LEVEL, CAUSE);
+            DEPENDS_ON, LEVEL, CAUSE, BUILDING, FROM, TO);
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
             .build();
+
+    public BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUID> assignee,
+            Map<String, Integer> requiredItems, List<String> dependsOn, int level, String cause) {
+        this(requestId, boardCase, assignee, requiredItems, dependsOn, level, cause,
+                Optional.empty(), Optional.empty(), Optional.empty());
+    }
 
     public BoardTaskRequest {
         if (requestId == null) {
@@ -63,6 +75,36 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         assignee = assignee == null ? Optional.empty() : assignee;
         requiredItems = Map.copyOf(requiredItems == null ? Map.of() : requiredItems);
         dependsOn = List.copyOf(dependsOn == null ? List.of() : dependsOn);
+        building = building == null ? Optional.empty() : building;
+        from = from == null ? Optional.empty() : from;
+        to = to == null ? Optional.empty() : to;
+        if (boardCase == BoardCase.RELOCATE_BUILDING) {
+            requireRelocation(building, from, to);
+        } else if (building.isPresent() || from.isPresent() || to.isPresent()) {
+            throw invalid("Поля 'building', 'from' и 'to' относятся только к RELOCATE_BUILDING: "
+                    + "у кейса " + boardCase + " их быть не должно",
+                    Map.of("field", boardCase == BoardCase.RELOCATE_BUILDING ? FROM : BUILDING));
+        }
+    }
+
+    private static void requireRelocation(Optional<BoardCase> building, Optional<BlockCoord> from,
+            Optional<BlockCoord> to) {
+        if (building.isEmpty() || from.isEmpty() || to.isEmpty()) {
+            throw invalid("Перенос требует полей 'building' (что переносим), 'from' и 'to' (точки): "
+                    + "без них неизвестно, какую постройку сносить и где ставить",
+                    Map.of("allowed", List.of(BUILDING, FROM, TO)));
+        }
+        if (from.orElseThrow().equals(to.orElseThrow())) {
+            throw invalid("Перенос из точки " + from.orElseThrow() + " в ту же точку: "
+                    + "сносить и строить на одном месте нечего", Map.of("field", TO));
+        }
+        try {
+            RelocatePlan.assertMovable(building.orElseThrow());
+        } catch (IllegalArgumentException rejected) {
+            throw new ApiException(ErrorCode.INVALID_REQUEST, 422, rejected.getMessage(),
+                    Map.of("building", building.orElseThrow().name(),
+                            "immovable", RelocatePlan.immovableNames()));
+        }
     }
 
     public static List<String> caseNames() {
@@ -86,7 +128,11 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
         List<String> dependsOn = dependsOn(root.get(DEPENDS_ON));
         int level = level(root.get(LEVEL));
         String cause = cause(root.get(CAUSE));
-        return new BoardTaskRequest(requestId, boardCase, assignee, requiredItems, dependsOn, level, cause);
+        Optional<BoardCase> building = building(root.get(BUILDING));
+        Optional<BlockCoord> from = point(root.get(FROM), FROM);
+        Optional<BlockCoord> to = point(root.get(TO), TO);
+        return new BoardTaskRequest(requestId, boardCase, assignee, requiredItems, dependsOn, level, cause,
+                building, from, to);
     }
 
     private static UUID requestId(JsonNode node) {
@@ -191,6 +237,44 @@ public record BoardTaskRequest(UUID requestId, BoardCase boardCase, Optional<UUI
                     + "уровнем 1", Map.of("field", LEVEL));
         }
         return level;
+    }
+
+    private static Optional<BoardCase> building(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        if (!node.isTextual()) {
+            throw invalid("Поле 'building' должно быть строкой-кейсом постройки, получено: "
+                    + node.getNodeType(), Map.of("field", BUILDING, "allowed", caseNames()));
+        }
+        try {
+            return Optional.of(BoardCase.valueOf(node.textValue().toUpperCase(Locale.ROOT)));
+        } catch (IllegalArgumentException unknown) {
+            throw invalid("Кейс постройки '" + node.textValue() + "' неизвестен: допустимы "
+                    + caseNames(), Map.of("field", BUILDING, "allowed", caseNames()));
+        }
+    }
+
+    private static Optional<BlockCoord> point(JsonNode node, String field) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        if (!node.isTextual()) {
+            throw invalid("Поле '" + field + "' должно быть строкой координат \"x,y,z\", получено: "
+                    + node.getNodeType(), Map.of("field", field));
+        }
+        String[] parts = node.textValue().split(",");
+        if (parts.length != 3) {
+            throw invalid("Поле '" + field + "' = '" + node.textValue() + "' не тройка координат: "
+                    + "пример \"10,64,-3\"", Map.of("field", field));
+        }
+        try {
+            return Optional.of(new BlockCoord(Integer.parseInt(parts[0].trim()),
+                    Integer.parseInt(parts[1].trim()), Integer.parseInt(parts[2].trim())));
+        } catch (NumberFormatException notNumber) {
+            throw invalid("Поле '" + field + "' = '" + node.textValue() + "' содержит не целое число: "
+                    + "пример \"10,64,-3\"", Map.of("field", field));
+        }
     }
 
     private static String cause(JsonNode node) {

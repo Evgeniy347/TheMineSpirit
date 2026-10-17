@@ -26,8 +26,11 @@ public final class BoardTasks {
     public static BoardTask of(Board board, BoardTicket ticket, BoardStatus status, StockView stock) {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         Optional<UUID> holder = board.holderOf(ticket.id());
+        boolean done = status == BoardStatus.DONE
+                || board.ledger().has(ticket.boardCase(), ticket.level());
         return new BoardTask(ticket.id(), ticket.boardCase().name(), ticket.priority(),
                 holder.map(UUID::toString).orElse(null), status.name(), ticket.requiredItems(), missing,
-                ticket.dependsOn(), ticket.createdAt(), ticket.level(), ticket.cause());
+                ticket.dependsOn(), ticket.createdAt(), ticket.level(), ticket.cause(),
+                ticket.priority(), ticket.modifiers(), done);
     }
 }

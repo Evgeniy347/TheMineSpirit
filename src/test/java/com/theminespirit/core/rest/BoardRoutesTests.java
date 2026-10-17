@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
+import com.theminespirit.core.board.BoardLogEntry;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +38,11 @@ class BoardRoutesTests {
 
     private static byte[] utf8(String text) {
         return text.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static BoardLogEntry entry(String id) {
+        return new BoardLogEntry(BoardLog.Event.DONE, 10, id, BoardCase.BUILD_PEN, 1, "always",
+                65, 65, List.of(), null, "hash-1", 10);
     }
 
     private RestResponse send(String method, String path, String body) {
@@ -174,6 +182,70 @@ class BoardRoutesTests {
     }
 
     @Test
+    void get_LogLimit_ReturnsNewestEntriesWithinLimit() throws Exception {
+        gateway.withLog(entry("old")).withLog(entry("new"));
+
+        RestResponse response = router.handle(new RestRequest("GET", "/v1/board/log",
+                Map.of("limit", "1"), Map.of(), new byte[0]));
+
+        assertEquals(200, response.status(), "Журнал обязан отдаваться 200: " + response.body());
+        JsonNode entries = MAPPER.readTree(response.body()).get("entries");
+        assertEquals(1, entries.size(), "limit обязан ограничивать журнал: " + response.body());
+        assertEquals("new", entries.get(0).get("ticketId").asText(),
+                "Журнал отдаёт свежие записи: " + response.body());
+    }
+
+    @Test
+    void get_LogUnknownQuery_Returns400NamingField() {
+        RestResponse response = router.handle(new RestRequest("GET", "/v1/board/log",
+                Map.of("filter", "crater"), Map.of(), new byte[0]));
+
+        assertEquals(400, response.status(), "Неизвестный фильтр журнала обязан давать 400: " + response.body());
+        assertTrue(response.body().contains("filter"), "400 обязан называть параметр: " + response.body());
+    }
+
+    @Test
+    void post_RelocateMovable_AcceptsWithFromAndTo() {
+        String requestId = uuid();
+        String body = "{\"request_id\":\"" + requestId + "\",\"case\":\"RELOCATE_BUILDING\","
+                + "\"building\":\"BUILD_PEN\",\"from\":\"10,64,-3\",\"to\":\"30,64,10\"}";
+
+        RestResponse response = send("POST", "/v1/board/tasks", body);
+
+        assertEquals(202, response.status(), "Перенос подвижной постройки обязан приниматься: " + response.body());
+        assertEquals("BUILD_PEN", gateway.lastRequest().building().orElseThrow().name(),
+                "До доски обязан дойти кейс переносимой постройки");
+        var to = gateway.lastRequest().to().orElseThrow();
+        assertEquals(30, to.x(), "До доски обязана дойти X-координата точки назначения");
+        assertEquals(64, to.y(), "До доски обязана дойти Y-координата точки назначения");
+        assertEquals(10, to.z(), "До доски обязана дойти Z-координата точки назначения");
+    }
+
+    @Test
+    void post_RelocateImmovable_Returns422WithList() {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"case\":\"RELOCATE_BUILDING\","
+                + "\"building\":\"BUILD_MINE\",\"from\":\"10,64,-3\",\"to\":\"30,64,10\"}";
+
+        RestResponse response = send("POST", "/v1/board/tasks", body);
+
+        assertEquals(422, response.status(), "Неподвижная постройка обязана давать 422: " + response.body());
+        assertTrue(response.body().contains("BUILD_MINE"),
+                "422 обязан называть неподвижные постройки: " + response.body());
+        assertEquals(0, gateway.size(), "Отклонённый перенос не должен ставить задание");
+    }
+
+    @Test
+    void post_RelocateWithoutPoints_Returns400() {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"case\":\"RELOCATE_BUILDING\","
+                + "\"building\":\"BUILD_PEN\"}";
+
+        RestResponse response = send("POST", "/v1/board/tasks", body);
+
+        assertEquals(400, response.status(), "Перенос без from/to обязан давать 400: " + response.body());
+        assertTrue(response.body().contains("from"), "400 обязан называть точку: " + response.body());
+    }
+
+    @Test
     void delete_KnownTask_CancelsAndReturnsCancelled() throws Exception {
         String requestId = uuid();
         send("POST", "/v1/board/tasks", body(requestId, ""));
@@ -199,7 +271,8 @@ class BoardRoutesTests {
         Set<String> keys = new HashSet<>();
         new BoardRoutes(gateway, idempotency).routes().forEach(route -> keys.add(route.method() + " " + route.pattern()));
 
-        assertEquals(Set.of("GET /v1/board", "POST /v1/board/tasks", "DELETE /v1/board/tasks/{id}"), keys,
-                "Чеклист п.18 обязывает три маршрута доски");
+        assertEquals(Set.of("GET /v1/board", "GET /v1/board/log", "POST /v1/board/tasks",
+                        "DELETE /v1/board/tasks/{id}"), keys,
+                "Чеклист п.21 добавляет к трём маршрутам доски наблюдение журнала");
     }
 }
