@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -15,44 +18,84 @@ import org.junit.jupiter.api.Test;
 
 class FirstStepsPlanTests {
 
-    private static final BoardCase[] CHAIN = {
-            BoardCase.CLEAR_GROUNDS,
-            BoardCase.STOCK_CHESTS,
-            BoardCase.CRAFTING_STATION,
-            BoardCase.CRAFT_TOOLS,
-            BoardCase.BUILD_MINE,
-            BoardCase.BUILD_FENCE,
-            BoardCase.LIGHTING,
-            BoardCase.BUILD_HOUSE
-    };
+    private static final int FIRST_TOOL_STEP = 3;
+
+    private static List<BoardCase> chain() {
+        List<BoardCase> chain = new ArrayList<>();
+        chain.add(BoardCase.CLEAR_GROUNDS);
+        chain.add(BoardCase.STOCK_CHESTS);
+        chain.add(BoardCase.CRAFTING_STATION);
+        chain.addAll(ToolSet.chain());
+        chain.add(BoardCase.BUILD_MINE);
+        chain.add(BoardCase.BUILD_FENCE);
+        chain.add(BoardCase.LIGHTING);
+        chain.add(BoardCase.BUILD_HOUSE);
+        return chain;
+    }
+
+    private static Set<String> toolsDone(int step) {
+        Set<String> tools = new HashSet<>();
+        List<BoardCase> toolsChain = ToolSet.chain();
+        for (int i = 0; i < toolsChain.size(); i++) {
+            if (step > FIRST_TOOL_STEP + i) {
+                tools.add(ToolSet.stockKey(toolsChain.get(i)));
+            }
+        }
+        return tools;
+    }
 
     private static SettlementFacts factsAt(int step) {
-        return new SettlementFacts(true, step > 0, step > 1 ? 2 : 0, step > 2, step > 3, step > 4,
-                step > 5, step > 6, step > 7);
+        return new SettlementFacts(true, step > 0, step > 1 ? 2 : 0, step > 2, toolsDone(step),
+                step > 10, step > 11, step > 12, step > 13);
+    }
+
+    private static SettlementFacts emptySite() {
+        return new SettlementFacts(true, false, 0, false, Set.of(), false, false, false, false);
     }
 
     @Test
     void next_EmptySettlement_ClearGrounds() {
-        SettlementFacts fresh = new SettlementFacts(true, false, 0, false, false, false, false, false,
-                false);
-
-        assertEquals(Optional.of(BoardCase.CLEAR_GROUNDS), FirstStepsPlan.next(fresh),
+        assertEquals(Optional.of(BoardCase.CLEAR_GROUNDS), FirstStepsPlan.next(emptySite()),
                 "Пустое поселение с домом начинается с зачистки территории: первый шаг "
                         + "цепочки из источника, без него сундуки ставятся в лесу");
     }
 
     @Test
     void next_Chain_StrictOrder() {
-        for (int step = 0; step < CHAIN.length; step++) {
-            assertEquals(Optional.of(CHAIN[step]), FirstStepsPlan.next(factsAt(step)),
-                    "Шаг " + step + " цепочки обязан давать " + CHAIN[step]
+        List<BoardCase> chain = chain();
+        for (int step = 0; step < chain.size(); step++) {
+            assertEquals(Optional.of(chain.get(step)), FirstStepsPlan.next(factsAt(step)),
+                    "Шаг " + step + " цепочки обязан давать " + chain.get(step)
                             + ": пропуск шага невозможен, иначе забор встанет до входа в шахту");
         }
     }
 
     @Test
+    void next_Tools_WoodenBeforeStone() {
+        List<BoardCase> chain = chain();
+        for (BoardCase wooden : ToolSet.wooden()) {
+            for (BoardCase stone : ToolSet.stone()) {
+                assertTrue(chain.indexOf(wooden) < chain.indexOf(stone),
+                        "Деревянный " + wooden + " обязан идти до каменного " + stone
+                                + ": каменная ступень открывается по выполнению деревянной");
+            }
+        }
+    }
+
+    @Test
+    void next_WoodenMissing_ReturnedEvenWithStoneTool() {
+        SettlementFacts facts = new SettlementFacts(true, true, 2, true,
+                Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)), true, true, true, true);
+
+        assertEquals(Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE), FirstStepsPlan.next(facts),
+                "Наличие каменной кирки без деревянной не продвигает цепочку: деревянный набор "
+                        + "обязан быть собран первым");
+    }
+
+    @Test
     void next_AllDone_Empty() {
-        SettlementFacts complete = new SettlementFacts(true, true, 2, true, true, true, true, true, true);
+        SettlementFacts complete = new SettlementFacts(true, true, 2, true, toolsDone(Integer.MAX_VALUE),
+                true, true, true, true);
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(complete),
                 "Всё сделано — генератор молчит: новые задания не плодятся, иначе доска "
@@ -61,7 +104,7 @@ class FirstStepsPlanTests {
 
     @Test
     void next_NoHome_Empty() {
-        SettlementFacts noHome = new SettlementFacts(false, false, 0, false, false, false, false,
+        SettlementFacts noHome = new SettlementFacts(false, false, 0, false, Set.of(), false, false,
                 false, false);
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(noHome),
@@ -71,7 +114,7 @@ class FirstStepsPlanTests {
 
     @Test
     void next_Is_Deterministic() {
-        SettlementFacts facts = factsAt(3);
+        SettlementFacts facts = factsAt(FIRST_TOOL_STEP);
 
         assertEquals(FirstStepsPlan.next(facts), FirstStepsPlan.next(facts),
                 "Генератор обязан быть детерминирован: по нему доска ставит задание, "
@@ -88,16 +131,25 @@ class FirstStepsPlanTests {
     @Test
     void next_NegativeChests_Rejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new SettlementFacts(true, true, -1, true, true, true, true, true, true),
+                () -> new SettlementFacts(true, true, -1, true, Set.of(), true, true, true, true),
                 "Отрицательное число сундуков обязано отвергаться: оно прошло бы как "
                         + "«сундуков нет» и сломало бы шаг цепочки");
+    }
+
+    @Test
+    void next_NullTools_Rejected() {
+        assertThrows(NullPointerException.class,
+                () -> new SettlementFacts(true, true, 2, true, null, true, true, true, true),
+                "Набор инструментов не может быть null: пустой набор задают пустым множеством, "
+                        + "а null спрятал бы «инструментов нет» за отказом");
     }
 
     @Property
     void next_OnlyChainSteps_Returned(@ForAll("settlementFacts") SettlementFacts facts) {
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
+        List<BoardCase> chain = chain();
 
-        assertTrue(next.isEmpty() || Arrays.stream(CHAIN).anyMatch(step -> step == next.get()),
+        assertTrue(next.isEmpty() || chain.contains(next.get()),
                 "Результат генератора обязан быть шагом цепочки или пустым: иной кейс "
                         + "означал бы задание вне порядка первых шагов");
     }
@@ -110,9 +162,10 @@ class FirstStepsPlanTests {
         }
         Optional<BoardCase> before = FirstStepsPlan.next(facts);
         Optional<BoardCase> after = FirstStepsPlan.next(grown);
+        List<BoardCase> chain = chain();
 
-        int beforeStep = before.map(Arrays.asList(CHAIN)::indexOf).orElse(CHAIN.length);
-        int afterStep = after.map(Arrays.asList(CHAIN)::indexOf).orElse(CHAIN.length);
+        int beforeStep = before.map(chain::indexOf).orElse(chain.size());
+        int afterStep = after.map(chain::indexOf).orElse(chain.size());
 
         assertTrue(afterStep >= beforeStep,
                 "Рост фактов не обязан откатывать генератор назад: факты монотонно растут, "
@@ -122,7 +175,7 @@ class FirstStepsPlanTests {
     private static boolean growsFrom(SettlementFacts from, SettlementFacts to) {
         return to.hasHome() && (!from.groundsCleared() || to.groundsCleared())
                 && to.chests() >= from.chests() && (!from.craftingStation() || to.craftingStation())
-                && (!from.tools() || to.tools()) && (!from.mineEntrance() || to.mineEntrance())
+                && to.tools().containsAll(from.tools()) && (!from.mineEntrance() || to.mineEntrance())
                 && (!from.fence() || to.fence()) && (!from.lighting() || to.lighting())
                 && (!from.houses() || to.houses());
     }
@@ -139,7 +192,13 @@ class FirstStepsPlanTests {
                 factsAt(6),
                 factsAt(7),
                 factsAt(8),
-                new SettlementFacts(false, false, 0, false, false, false, false, false, false),
-                new SettlementFacts(true, true, 1, true, false, true, false, true, false));
+                factsAt(9),
+                factsAt(10),
+                factsAt(11),
+                factsAt(12),
+                factsAt(13),
+                factsAt(14),
+                new SettlementFacts(false, false, 0, false, Set.of(), false, false, false, false),
+                new SettlementFacts(true, true, 1, true, Set.of(), true, false, true, false));
     }
 }

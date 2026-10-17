@@ -408,7 +408,8 @@ public final class HerdSession {
 
     void startCollect(IdFilter filter, BlockPos at, int radius) {
         collector = new DropCollector(spirit, filter, new BlockCoord(at.getX(), at.getY(), at.getZ()), radius,
-                PickupTuning.DEFAULT, OverflowMode.FAIL);
+                PickupTuning.DEFAULT,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         state = State.COLLECT;
     }
 

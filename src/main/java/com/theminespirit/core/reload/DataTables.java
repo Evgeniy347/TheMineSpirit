@@ -19,6 +19,7 @@ import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
+import com.theminespirit.core.inventory.OverflowTuning;
 import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
@@ -66,6 +67,7 @@ public final class DataTables {
     private final TableHolder<KitFor> kitFor;
     private final TableHolder<IntellectTuning> intellect;
     private final TableHolder<InventoryNormTable> inventoryNorm;
+    private final TableHolder<OverflowTuning> overflow;
     private final TableHolder<OutsideRules> outside;
     private final TableHolder<ArmorTable> armor;
     private final TableHolder<FeedTable> feed;
@@ -121,6 +123,9 @@ public final class DataTables {
         this.intellect = registry.registerLazy(
                 TableDefinition.single("intellect", IntellectTuning.RESOURCE, IntellectTuning::parse),
                 IntellectTuning::defaults);
+        this.overflow = registry.registerLazy(
+                TableDefinition.single("overflow", OverflowTuning.RESOURCE, OverflowTuning::parse),
+                OverflowTuning::load);
         this.outside = registry.registerLazy(
                 TableDefinition.single("outside", OutsideRules.RESOURCE, OutsideRules::parse),
                 OutsideRules::load);
@@ -247,6 +252,10 @@ public final class DataTables {
 
     public TableHolder<IntellectTuning> intellect() {
         return intellect;
+    }
+
+    public TableHolder<OverflowTuning> overflow() {
+        return overflow;
     }
 
     public TableHolder<OutsideRules> outside() {

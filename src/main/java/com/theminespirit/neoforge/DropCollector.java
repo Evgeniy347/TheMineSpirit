@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.OverflowPolicy;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
@@ -10,7 +11,9 @@ import com.theminespirit.core.pickup.DropRoute;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.inventory.OverflowDecider;
+import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -45,6 +49,8 @@ public final class DropCollector {
     private final Set<String> skipped = new HashSet<>();
     private List<ItemEntity> nearby = List.of();
     private ItemEntity target;
+    private UnloadScript relief;
+    private boolean reliefTried;
     private String failureReason;
     private int elapsed;
     private int ticksSinceQuery;
@@ -70,6 +76,9 @@ public final class DropCollector {
     public State tick() {
         if (spirit.isRemoved()) {
             return fail("дух исчез во время подбора");
+        }
+        if (relief != null) {
+            return reliefTick();
         }
         if (elapsed++ >= tuning.totalTimeoutTicks()) {
             return fail("не успел подобрать предметы за " + tuning.totalTimeoutTicks() + " тиков");
@@ -99,10 +108,16 @@ public final class DropCollector {
 
     public void suspend() {
         approach.suspend();
+        if (relief != null) {
+            relief.suspend();
+        }
     }
 
     public void cancel() {
         approach.cancel();
+        if (relief != null) {
+            relief.cancel();
+        }
     }
 
     public String failureReason() {
@@ -241,9 +256,13 @@ public final class DropCollector {
         if (taken == 0 && overflow == OverflowMode.BY_VALUE) {
             return overflowPickUp(stack);
         }
+        if (taken == 0 && overflow == OverflowMode.RETURN_TO_BASE) {
+            return startRelief(stack);
+        }
         if (taken == 0) {
             return fail("инвентарь полон: не помещается " + itemId(stack));
         }
+        reliefTried = false;
         spirit.take(target, taken);
         collected += taken;
         if (rest.isEmpty()) {
@@ -265,8 +284,37 @@ public final class DropCollector {
         if (spirit.getInventory().canAddItem(stack)) {
             return true;
         }
+        if (overflow == OverflowMode.RETURN_TO_BASE) {
+            return true;
+        }
         return overflow == OverflowMode.BY_VALUE
                 && decider.decide(stack).action() != OverflowPolicy.Action.REFUSE;
+    }
+
+    private State startRelief(ItemStack stack) {
+        if (reliefTried) {
+            return fail("инвентарь полон: не помещается " + itemId(stack));
+        }
+        reliefTried = true;
+        relief = UnloadScript.relief(spirit, -1);
+        return State.RUNNING;
+    }
+
+    private State reliefTick() {
+        ScriptStatus status = relief.tick();
+        if (status == ScriptStatus.RUNNING) {
+            return State.RUNNING;
+        }
+        int moved = relief.movedTotal();
+        String reason = relief.failureReason();
+        relief = null;
+        if (moved > 0) {
+            reliefTried = false;
+            return State.RUNNING;
+        }
+        reliefTried = false;
+        return fail("инвентарь полон: на базе нечего сдать"
+                + (reason == null || reason.isBlank() ? "" : " (" + reason + ")"));
     }
 
     private State overflowPickUp(ItemStack stack) {
@@ -280,7 +328,11 @@ public final class DropCollector {
 
     private State dropAndTake(ItemStack stack, int slot) {
         ItemStack exile = spirit.getInventory().removeItemNoUpdate(slot);
-        drop(spirit, exile);
+        ItemEntity dropped = drop(spirit, exile);
+        if (spirit.level() instanceof ServerLevel level) {
+            BoardRegistry.get(level).reportDropped(spirit, dropped);
+        }
+        reliefTried = false;
         spirit.getInventory().setItem(slot, stack.copy());
         spirit.take(target, stack.getCount());
         collected += stack.getCount();

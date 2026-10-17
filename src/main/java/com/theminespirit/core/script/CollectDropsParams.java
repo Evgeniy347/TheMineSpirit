@@ -29,8 +29,8 @@ public record CollectDropsParams(int radius, IdFilter items, OverflowMode overfl
             return OverflowMode.BY_VALUE;
         }
         if (!(value instanceof String text)) {
-            throw new IllegalArgumentException("Параметр 'overflow' скрипта должен быть строкой 'fail' или "
-                    + "'by_value', а получено " + value.getClass().getSimpleName()
+            throw new IllegalArgumentException("Параметр 'overflow' скрипта должен быть строкой 'fail', "
+                    + "'by_value' или 'return_to_base', а получено " + value.getClass().getSimpleName()
                     + ": тип параметра обеспечивает валидатор плана до запуска");
         }
         return OverflowMode.parse(text);

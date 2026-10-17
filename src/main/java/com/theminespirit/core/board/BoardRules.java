@@ -47,6 +47,7 @@ public final class BoardRules {
         priorities.put(BoardCase.RELOCATE_BUILDING, 60);
         priorities.put(BoardCase.BREED_ANIMALS, 55);
         priorities.put(BoardCase.HERD_CULL, 50);
+        priorities.put(BoardCase.COLLECT_DROPS, 55);
         priorities.put(BoardCase.CLEAR_GROUNDS, 50);
         priorities.put(BoardCase.BUILD_FENCE, 50);
         priorities.put(BoardCase.LIGHTING, 50);
@@ -55,9 +56,15 @@ public final class BoardRules {
         priorities.put(BoardCase.ENCHANT_ROOM, 50);
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);
-        priorities.put(BoardCase.CRAFT_TOOLS, 40);
         priorities.put(BoardCase.CRAFTING_STATION, 40);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
+        priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 40);
+        priorities.put(BoardCase.CRAFT_WOODEN_AXE, 40);
+        priorities.put(BoardCase.CRAFT_WOODEN_SHOVEL, 40);
+        priorities.put(BoardCase.CRAFT_STONE_PICKAXE, 40);
+        priorities.put(BoardCase.CRAFT_STONE_AXE, 40);
+        priorities.put(BoardCase.CRAFT_STONE_SHOVEL, 40);
+        priorities.put(BoardCase.CRAFT_STONE_SWORD, 40);
         priorities.put(BoardCase.FILL_CRATER, 35);
         priorities.put(BoardCase.ENCHANT_SHELVES, 30);
         return Map.copyOf(priorities);

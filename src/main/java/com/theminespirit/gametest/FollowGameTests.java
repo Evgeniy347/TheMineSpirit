@@ -1,6 +1,7 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -9,7 +10,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import java.util.List;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -47,6 +52,39 @@ public final class FollowGameTests {
             helper.assertTrue(distance <= 3.0,
                     "догнав игрока, дух обязан оказаться в радиусе удержания: расстояние " + distance
                             + " больше радиуса 3. Иначе follow не выполняет свою задачу");
+        });
+    }
+
+    @GameTest(template = "arena", batch = "follow_drop", timeoutTicks = 400)
+    public static void followScript_FullInventoryNearPlayer_DropsCheapestAndPicksDiamond(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        buildFloor(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+        GameTestFixtures.mockPlayer(helper, new BlockPos(PLAYER_X, 1, 1), PLAYER_NAME);
+        GameTestFixtures.dropAt(helper, Items.DIAMOND, 1, 1.5, 1, 1.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("follow", Map.of("target", PLAYER_NAME, "radius", 3)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND) == 1,
+                    "дух у игрока обязан подобрать алмаз, выбросив дешёвый булыжник: алмазов в инвентаре "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE)
+                            == 35 * 64,
+                    "в инвентаре обязано остаться 35 стопок булыжника: выброшена ровно одна, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            List<ItemEntity> dropped = GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE);
+            helper.assertTrue(dropped.size() == 1 && dropped.get(0).getItem().getCount() == 64,
+                    "выброшенная стопка булыжника обязана лежать в мире целой: иначе дух потерял бы "
+                            + "предметы, а не обменял дешёвое на ценное");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                    "сопровождение обязано продолжаться после обмена, статус "
+                            + spirit.taskStatus().orElse(null));
+            GameTestFixtures.finish(helper);
         });
     }
 

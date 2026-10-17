@@ -426,7 +426,8 @@ public final class HarvestSession {
                 mined++;
                 collectRuns++;
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.FAIL);
+                        PickupTuning.DEFAULT,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
                 state = State.COLLECT;
             }
             case GONE -> {

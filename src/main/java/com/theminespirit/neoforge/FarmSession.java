@@ -471,7 +471,8 @@ public final class FarmSession {
         PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK || column
                 ? PICK_PICKUP : PickupTuning.DEFAULT;
         BlockCoord center = column ? coordOf(spirit.blockPosition()) : cropPos != null ? cropPos : currentGround;
-        collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
+        collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         state = State.COLLECT;
     }
 

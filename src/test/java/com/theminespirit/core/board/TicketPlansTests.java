@@ -44,11 +44,18 @@ class TicketPlansTests {
             Map.entry(BoardCase.SUPPLY_SITE, "acquire"),
             Map.entry(BoardCase.GATHER_MATERIALS, "acquire"),
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
+            Map.entry(BoardCase.COLLECT_DROPS, "collect_drops"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
-            Map.entry(BoardCase.CRAFT_TOOLS, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_PICKAXE, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_AXE, "craft"),
+            Map.entry(BoardCase.CRAFT_WOODEN_SHOVEL, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_PICKAXE, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_AXE, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_SHOVEL, "craft"),
+            Map.entry(BoardCase.CRAFT_STONE_SWORD, "craft"),
             Map.entry(BoardCase.BUILD_FENCE, "build_schematic"),
             Map.entry(BoardCase.LIGHTING, "place_block"),
             Map.entry(BoardCase.ENCHANT_ROOM, "build_schematic"),
@@ -139,6 +146,26 @@ class TicketPlansTests {
         assertTrue(TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
                 "Внешний список обязан называть EAT_TO_FULL: дух ест сам скриптом eat, "
                         + "план доски ему не нужен, а пустой список спрятал бы кейс без плана");
+    }
+
+    @Test
+    void plan_CollectDrops_DropsFilterAndTargetPoint() {
+        BlockCoord point = new BlockCoord(7, 64, -3);
+        TaskNode plan = TicketPlans.plan(BoardCase.COLLECT_DROPS,
+                TicketTarget.at(point).withDrops(List.of("minecraft:cobblestone")));
+
+        assertTrue(plan instanceof SequenceNode sequence && sequence.steps().size() == 2,
+                "План сбора выкинутого — переход в точку и подбор: без перехода дух ищет вещи "
+                        + "вокруг себя, а не там, где их выкинули");
+        ScriptCall collect = (ScriptCall) ((SequenceNode) plan).steps().get(1);
+        assertEquals("collect_drops", collect.script(),
+                "Второй шаг плана — collect_drops: без него задание не подбирает вещи");
+        assertEquals(List.of("minecraft:cobblestone"), collect.params().get("filter"),
+                "Фильтр плана называет именно выкинутый предмет: иначе дух соберёт чужой мусор");
+        assertEquals(point.x(), ((ScriptCall) ((SequenceNode) plan).steps().get(0)).params().get("x"),
+                "Переход идёт в координаты выкидывания по X");
+        assertEquals(point.z(), ((ScriptCall) ((SequenceNode) plan).steps().get(0)).params().get("z"),
+                "Переход идёт в координаты выкидывания по Z");
     }
 
     @Test
@@ -379,8 +406,11 @@ class TicketPlansTests {
 
     @Test
     void plan_CraftCases_CarryStationRadius() {
-        for (BoardCase craftCase : List.of(BoardCase.STOCK_CHESTS, BoardCase.CRAFTING_STATION,
-                BoardCase.CRAFT_TOOLS, BoardCase.ENCHANT_SHELVES)) {
+        List<BoardCase> craftCases = new ArrayList<>(ToolSet.chain());
+        craftCases.add(BoardCase.STOCK_CHESTS);
+        craftCases.add(BoardCase.CRAFTING_STATION);
+        craftCases.add(BoardCase.ENCHANT_SHELVES);
+        for (BoardCase craftCase : craftCases) {
             TaskNode plan = TicketPlans.plan(craftCase, target());
             ScriptCall craft = findCall(plan, "craft");
             Object radius = craft.params().get("radius");

@@ -25,8 +25,9 @@ public final class FirstStepsPlan {
         if (!facts.craftingStation()) {
             return Optional.of(BoardCase.CRAFTING_STATION);
         }
-        if (!facts.tools()) {
-            return Optional.of(BoardCase.CRAFT_TOOLS);
+        Optional<BoardCase> tool = ToolSet.nextMissing(facts.tools());
+        if (tool.isPresent()) {
+            return tool;
         }
         if (!facts.mineEntrance()) {
             return Optional.of(BoardCase.BUILD_MINE);
