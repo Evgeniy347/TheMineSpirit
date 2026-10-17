@@ -20,6 +20,7 @@
     "FORAGE": 2,
     "MINE": 0,
     "REST": 0,
-    "DEFEND": 0
+    "DEFEND": 0,
+    "UNLOAD": 0
   }
 }

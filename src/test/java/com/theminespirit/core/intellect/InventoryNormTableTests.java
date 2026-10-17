@@ -23,7 +23,7 @@ class InventoryNormTableTests {
     private static final String VALID = """
             {"demand":{"occupied_curve":[{"at":0.0,"value":0.0},{"at":1.0,"value":2.0}],
             "extra_curve":[{"at":0.0,"value":0.0},{"at":1.0,"value":4.0}]},
-            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0}}
+            "release_free_slots":{"CHOP":0,"FARM":2,"FORAGE":2,"MINE":0,"REST":0,"DEFEND":0,"UNLOAD":0}}
             """;
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-17T12:00:00Z"), ZoneOffset.UTC);
@@ -35,7 +35,7 @@ class InventoryNormTableTests {
         assertEquals(List.of(new InventoryNormTable.CurvePoint(0.0, 0.0),
                         new InventoryNormTable.CurvePoint(1.0, 2.0)), table.occupiedCurve(),
                 "Кривые занятости обязаны разобраться из файла: иначе данные не управляют спросом");
-        assertEquals(0, table.releaseFreeSlots(ActivityId.REST),
+        assertEquals(0, table.releaseFreeSlots(ActivityId.UNLOAD),
                 "Порог освобождения читается по деятельностям: иначе дух не знает, когда бросить задачу");
         assertEquals(2, table.releaseFreeSlots(ActivityId.FARM),
                 "Ферма из файла бросает задачу при двух свободных ячейках: порог — данные, а не константа");
