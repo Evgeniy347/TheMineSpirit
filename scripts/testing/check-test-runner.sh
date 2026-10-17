@@ -283,4 +283,99 @@ ends2=$(grep -c '^end ' "$log2")
     && ok "stop-owner: второй сервер не стартовал (замок занят)" \
     || fail "stop-owner: стартов1=$starts1 концов1=$ends1 стартов2=$starts2 концов2=$ends2"
 
+# ── Стоп по пределу гасит и сервер GameTest своего worktree (todo.md 17.10) ──────────────────
+# Демон Gradle запускает сервер игры отдельным процессом с рабочей папкой <worktree>/build/gametest-run.
+# Фейковый gradlew повторяет это: отдельной сессией (setsid) поднимает «сервер» — долгий процесс с
+# именем java и cwd build/gametest-run, — а сам остаётся «клиентом». Стоп по пределу обязан погасить
+# оба, а замок снять только после смерти сервера (иначе следующий прогон идёт параллельно).
+# Сценарий только для Linux: поиск сервера идёт по /proc/<pid>/cwd, в Git Bash его нет.
+case "$OSTYPE" in
+    linux*)
+        cp "$(command -v sleep)" "$work/bin/java"
+        chmod +x "$work/bin/java"
+        cat >"$work/bin/stop-server" <<'FAKE'
+#!/usr/bin/env bash
+echo $$ >"${FAKE_CLIENT_PID:?}"
+run_dir="${FAKE_RUN_DIR:?}"
+mkdir -p "$run_dir"
+( cd "$run_dir" && exec setsid "${FAKE_JAVA:?}" 300 ) >"${FAKE_SERVER_LOG:?}" 2>&1 &
+echo "$!" >"${FAKE_SERVER_PID:?}"
+sleep 300
+exit 0
+FAKE
+        chmod +x "$work/bin/stop-server"
+
+        run_dir="$(cd "$root" && pwd -P)/build/gametest-run"
+        mkdir -p "$run_dir"
+        server_pid_file="$work/server.pid"; : >"$server_pid_file"
+        client_pid_file="$work/client.pid"; : >"$client_pid_file"
+        order_file="$work/order.txt"; : >"$order_file"
+        stopwatch="$work/stopwatch.stop"; rm -f "$stopwatch"
+
+        # Наблюдатель: замок не должен исчезнуть, пока сервер жив. Если снять замок раньше гашения —
+        # следующий прогон пошёл бы параллельно (ровно дефект из todo.md).
+        (
+            # Сначала ждём, пока test.sh возьмёт замок (до этого его нет — это не нарушение).
+            i=0
+            while [ "$i" -lt 300 ] && [ ! -d "$work/tmp/lock.d" ] && [ ! -f "$stopwatch" ]; do
+                sleep 0.05; i=$((i + 1))
+            done
+            while [ ! -f "$stopwatch" ]; do
+                if [ ! -d "$work/tmp/lock.d" ]; then
+                    pid=$(cat "$server_pid_file" 2>/dev/null || echo "")
+                    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                        echo "lock-free-while-server-alive" >>"$order_file"
+                    fi
+                    break
+                fi
+                sleep 0.1
+            done
+        ) &
+        watcher=$!
+
+        export THEMINESPIRIT_GRADLEW="$work/bin/stop-server"
+        export THEMINESPIRIT_GAMETEST_NOFLOCK=1
+        export THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock"
+        export THEMINESPIRIT_GAMETEST_WARN_SECONDS=1
+        export THEMINESPIRIT_GAMETEST_STOP_SECONDS=2
+        export FAKE_RUN_DIR="$run_dir" FAKE_JAVA="$work/bin/java" \
+               FAKE_CLIENT_PID="$client_pid_file" FAKE_SERVER_PID="$server_pid_file" \
+               FAKE_SERVER_LOG="$work/server.log"
+        out=$(bash scripts/test.sh gametest 2>&1)
+        code=$?
+        # Пауза до остановки наблюдателя: дать ему увидеть состояние «замка нет» и проверить, жив ли сервер.
+        sleep 2
+        touch "$stopwatch"; wait "$watcher" 2>/dev/null
+
+        server_pid=$(cat "$server_pid_file" 2>/dev/null || echo "")
+        client_pid=$(cat "$client_pid_file" 2>/dev/null || echo "")
+        sleep 1
+        server_alive=no; kill -0 "$server_pid" 2>/dev/null && server_alive=yes
+        client_alive=no; kill -0 "$client_pid" 2>/dev/null && client_alive=yes
+
+        [ "$code" = 124 ] && echo "$out" | grep -q "стоп по пределу 2 с" \
+            && ok "stop-server: код=124, стоп по пределу" \
+            || fail "stop-server: код=$code, вывод: $out"
+        [ "$server_alive" = no ] && [ -n "$server_pid" ] \
+            && ok "stop-server: сервер GameTest погашен (pid $server_pid)" \
+            || fail "stop-server: сервер GameTest жив (pid $server_pid)"
+        [ "$client_alive" = no ] && [ -n "$client_pid" ] \
+            && ok "stop-server: клиент gradle погашен (pid $client_pid)" \
+            || fail "stop-server: клиент gradle жив (pid $client_pid)"
+        [ ! -d "$work/tmp/lock.d" ] \
+            && ok "stop-server: замок снят" || fail "stop-server: каталог замка остался"
+        [ ! -s "$order_file" ] \
+            && ok "stop-server: замок снят только после смерти сервера" \
+            || fail "stop-server: замок освобождён раньше смерти сервера"
+
+        # Уборка, если тест красный: чужой worktree не трогаем — только свои pid.
+        [ "$server_alive" = yes ] && kill -KILL "$server_pid" 2>/dev/null
+        [ "$client_alive" = yes ] && kill -KILL "$client_pid" 2>/dev/null
+        rm -rf "$work/tmp/lock.d"
+        ;;
+    *)
+        ok "stop-server: пропущено (не Linux: поиск сервера по /proc/<pid>/cwd недоступен)"
+        ;;
+esac
+
 exit $failed
