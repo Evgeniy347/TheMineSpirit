@@ -146,6 +146,14 @@ public final class BlockBreaker {
         }
     }
 
+    public ItemStack tool() {
+        return tool.copy();
+    }
+
+    public boolean dropsAllowed() {
+        return choice != null && choice.dropsAllowed();
+    }
+
     public int crackStage() {
         return crackStage;
     }

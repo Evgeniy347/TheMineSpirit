@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.inventory.InventorySpace;
+import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MiningPlanner;
@@ -11,14 +13,20 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.neoforge.inventory.StackMapper;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -317,6 +325,30 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
+        if (breaker.dropsAllowed()) {
+            BlockPos pos = toPos(currentTarget);
+            BlockState stateToBreak = level.getBlockState(pos);
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            ItemStack tool = breaker.tool();
+            List<ItemStack> drops = Block.getDrops(stateToBreak, (ServerLevel) level, pos, blockEntity, spirit, tool);
+            StackMapper mapper = new StackMapper();
+            List<Stack> inventory = mapper.map(spirit.getInventory());
+            List<Stack> incoming = new ArrayList<>();
+            for (ItemStack drop : drops) {
+                if (!drop.isEmpty()) {
+                    incoming.add(mapper.of(drop));
+                }
+            }
+            if (!incoming.isEmpty() && !InventorySpace.holds(inventory, incoming)) {
+                breaker.cancel();
+                approach.cancel();
+                currentTarget = null;
+                currentStand = null;
+                state = State.PICK;
+                fail("инвентарь полон: не помещается " + incoming.get(0).item());
+                return;
+            }
+        }
         state = State.BREAK;
     }
 
@@ -328,7 +360,7 @@ public final class HarvestSession {
                 mined++;
                 collectRuns++;
                 collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                        PickupTuning.DEFAULT, OverflowMode.FAIL);
                 state = State.COLLECT;
             }
             case GONE -> {

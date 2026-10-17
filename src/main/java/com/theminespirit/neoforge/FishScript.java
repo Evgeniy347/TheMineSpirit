@@ -1,6 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.inventory.InventorySpace;
+import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.fishing.FishingData;
@@ -191,13 +194,27 @@ public final class FishScript implements ScriptInstance {
     private ScriptStatus catchStep() {
         ItemStack rod = spirit.getInventory().getItem(rodSlot);
         List<ItemStack> drops = rollLoot(rod);
+        StackMapper mapper = new StackMapper();
+        List<Stack> inventory = mapper.map(spirit.getInventory());
+        List<Stack> incoming = new ArrayList<>();
+        for (ItemStack drop : drops) {
+            if (!drop.isEmpty()) {
+                incoming.add(mapper.of(drop));
+            }
+        }
+        if (!incoming.isEmpty() && !InventorySpace.holds(inventory, incoming)) {
+            return fail("инвентарь полон: не помещается " + incoming.get(0).item());
+        }
         for (ItemStack drop : drops) {
             catchByItem.merge(BuiltInRegistries.ITEM.getKey(drop.getItem()).toString(), drop.getCount(), Integer::sum);
             totalCaught += drop.getCount();
             if (drop.is(ItemTags.FISHES)) {
                 fishCaught += drop.getCount();
             }
-            store(drop);
+            ItemStack remainder = spirit.getInventory().addItem(drop.copy());
+            if (!remainder.isEmpty()) {
+                return fail("инвентарь полон: не помещается " + BuiltInRegistries.ITEM.getKey(remainder.getItem()));
+            }
         }
         rod.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         if (rod.isEmpty()) {
@@ -222,13 +239,6 @@ public final class FishScript implements ScriptInstance {
                 .create(LootContextParamSets.FISHING);
         LootTable table = level.getServer().reloadableRegistries().getLootTable(BuiltInLootTables.FISHING);
         return table.getRandomItems(lootParams);
-    }
-
-    private void store(ItemStack stack) {
-        ItemStack remainder = spirit.getInventory().addItem(stack.copy());
-        if (!remainder.isEmpty()) {
-            spirit.spawnAtLocation(remainder);
-        }
     }
 
     private boolean ensureRod() {
