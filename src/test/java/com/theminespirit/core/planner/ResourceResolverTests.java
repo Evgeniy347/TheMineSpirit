@@ -246,6 +246,21 @@ class ResourceResolverTests {
     }
 
     @Test
+    void resolve_BetterPickaxeInInventory_DoesNotPlanWeakerTool() {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("stone", "oak_log"),
+                Map.of("wooden_pickaxe", List.of(new Ingredient("oak_log", 3))),
+                Map.of())
+                .withTool("stone", "wooden_pickaxe");
+
+        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge, Map.of("stone_pickaxe", 1));
+
+        assertEquals(gather("stone", 1), plan,
+                "Каменная кирка покрывает требование деревянной: план не крафтит слабый инструмент заново, "
+                        + "иначе дух тратит дерево и время на кирку, которая у него уже есть в лучшем виде");
+    }
+
+    @Test
     void resolve_DropFromBlockWithRequiredTool_PlansToolAndNamesSourceBlock() {
         ResourceKnowledge knowledge = new StubKnowledge(
                 Set.of("stone", "oak_log"),

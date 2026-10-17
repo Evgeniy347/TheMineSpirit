@@ -121,7 +121,12 @@ final class TreeChop {
         lackedSaplings = false;
         breaking = false;
         movedCloser = false;
-        approach.begin(approachTarget(target), ChopTuning.STAND_DISTANCE);
+        BlockPos stand = standingCellBesideTrunk(target);
+        if (stand == null) {
+            approach.begin(Vec3.atCenterOf(toPos(target.base())), ChopTuning.STAND_DISTANCE);
+        } else {
+            approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CLOSE_DISTANCE);
+        }
         phase = Phase.APPROACH;
     }
 
@@ -481,11 +486,6 @@ final class TreeChop {
         pillar = null;
         pillarRemaining.clear();
         return replant ? startReplant() : finish();
-    }
-
-    private Vec3 approachTarget(Tree target) {
-        BlockPos stand = standingCellBesideTrunk(target);
-        return stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
     }
 
     private BlockPos standingCellBesideTrunk(Tree target) {

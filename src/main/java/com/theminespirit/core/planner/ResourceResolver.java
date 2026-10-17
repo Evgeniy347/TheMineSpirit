@@ -66,6 +66,9 @@ public final class ResourceResolver {
     }
 
     private static final class Resolution {
+        private static final List<String> PICKAXES = List.of(
+                "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
+
         private final ResourceKnowledge knowledge;
         private final Map<String, Integer> remaining;
         private final Set<String> presentStations;
@@ -127,13 +130,19 @@ public final class ResourceResolver {
         }
 
         private boolean hasInInventory(String item) {
-            String wanted = normalize(item);
+            List<String> acceptable = acceptableTools(item);
             for (Map.Entry<String, Integer> entry : remaining.entrySet()) {
-                if (entry.getValue() > 0 && normalize(entry.getKey()).equals(wanted)) {
+                if (entry.getValue() > 0 && acceptable.contains(normalize(entry.getKey()))) {
                     return true;
                 }
             }
             return false;
+        }
+
+        private static List<String> acceptableTools(String item) {
+            String wanted = normalize(item);
+            int tier = PICKAXES.indexOf(wanted);
+            return tier < 0 ? List.of(wanted) : PICKAXES.subList(tier, PICKAXES.size());
         }
 
         private static String normalize(String id) {
