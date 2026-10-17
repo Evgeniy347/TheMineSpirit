@@ -94,21 +94,25 @@ public final class BlockBreakerGameTests {
     }
 
     @GameTest(template = "arena", batch = "breaker_wear", timeoutTicks = 40)
-    public static void blockBreaker_ToolOnLastDurability_VanishesFromSlot(GameTestHelper helper) {
+    public static void blockBreaker_ToolOnLastDurability_RefusedAsNeedTool(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         ItemStack pickaxe = new ItemStack(Items.WOODEN_PICKAXE);
-        pickaxe.setDamageValue(pickaxe.getMaxDamage() - 1);
+        int lastUseDamage = pickaxe.getMaxDamage() - 1;
+        pickaxe.setDamageValue(lastUseDamage);
         spirit.getInventory().setItem(TOOL_SLOT, pickaxe);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        breaker.begin(helper.absolutePos(TARGET));
-        runToEnd(breaker);
+        BlockBreaker.Begin begin = breaker.begin(helper.absolutePos(TARGET));
 
-        helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT).isEmpty(),
-                "кирка с последней единицей прочности обязана сломаться и исчезнуть из слота, а в слоте "
+        helper.assertTrue(refusedWith(begin, BlockBreaker.RefuseReason.NEED_TOOL),
+                "кирка с последним ударом не тратится на камень: ожидается отказ " + BlockBreaker.RefuseReason.NEED_TOOL
+                        + ", получено " + begin);
+        helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT).getCount() == 1
+                && spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == lastUseDamage,
+                "изношенная кирка обязана остаться в слоте нетронутой, а в слоте "
                         + spirit.getInventory().getItem(TOOL_SLOT));
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 1,
-                "блок, сломанный последним ударом кирки, обязан дать дроп: инструмент для дропа выбран до поломки");
+        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 0,
+                "камень не сломан: булыжника быть не должно");
         GameTestFixtures.reset(helper);
         helper.succeed();
     }

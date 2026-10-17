@@ -227,6 +227,11 @@ public class ClearAreaSession {
             state = State.PICK;
             return;
         }
+        if (begin instanceof BlockBreaker.Refused refused
+                && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+            fail(refused.message());
+            return;
+        }
         if (begin instanceof BlockBreaker.Refused) {
             unbreakable++;
             tally.skipped();

@@ -1,6 +1,8 @@
 package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
@@ -8,11 +10,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ToolChoiceTests {
+    private static final ToolReserve RESERVE = ToolReserve.defaults();
+
     @Test
     void best_PickaxeAndAxeOnStone_ChoosesPickaxe() {
         Choice choice = ToolChoice.best(List.of(
-                new ToolOption(3, 4.0, false),
-                new ToolOption(5, 6.0, true)));
+                ToolOption.of(3, 4.0, false),
+                ToolOption.of(5, 6.0, true)));
 
         assertEquals(new Choice(5, 6.0, true), choice,
                 "Для камня выбирается кирка (правильный инструмент), даже если топор в слоте раньше: "
@@ -22,9 +26,9 @@ class ToolChoiceTests {
     @Test
     void best_MainHandTool_CompetesAsOption() {
         Choice choice = ToolChoice.best(List.of(
-                new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, true),
-                new ToolOption(ToolChoice.MAIN_HAND, 6.0, true),
-                new ToolOption(3, 4.0, true)));
+                ToolOption.of(ToolChoice.HAND, ToolChoice.HAND_SPEED, true),
+                ToolOption.of(ToolChoice.MAIN_HAND, 6.0, true),
+                ToolOption.of(3, 4.0, true)));
 
         assertEquals(new Choice(ToolChoice.MAIN_HAND, 6.0, true), choice,
                 "Кирка в основной руке обязана участвовать в выборе инструмента наравне с инвентарём: "
@@ -34,9 +38,9 @@ class ToolChoiceTests {
     @Test
     void best_TwoCorrectTools_ChoosesFasterOne() {
         Choice choice = ToolChoice.best(List.of(
-                new ToolOption(0, 2.0, true),
-                new ToolOption(1, 6.0, true),
-                new ToolOption(2, 4.0, true)));
+                ToolOption.of(0, 2.0, true),
+                ToolOption.of(1, 6.0, true),
+                ToolOption.of(2, 4.0, true)));
 
         assertEquals(new Choice(1, 6.0, true), choice,
                 "Из правильных инструментов берётся самый быстрый: деревянная кирка не должна обгонять железную");
@@ -45,9 +49,9 @@ class ToolChoiceTests {
     @Test
     void best_EqualSpeed_ChoosesLowerSlot() {
         Choice choice = ToolChoice.best(List.of(
-                new ToolOption(7, 6.0, true),
-                new ToolOption(2, 6.0, true),
-                new ToolOption(9, 6.0, true)));
+                ToolOption.of(7, 6.0, true),
+                ToolOption.of(2, 6.0, true),
+                ToolOption.of(9, 6.0, true)));
 
         assertEquals(2, choice.slot(),
                 "При равной скорости выбирается меньший слот: выбор обязан быть детерминированным при любом порядке списка");
@@ -55,7 +59,7 @@ class ToolChoiceTests {
 
     @Test
     void best_ToolSlowerThanHand_FallsBackToHand() {
-        Choice choice = ToolChoice.best(List.of(new ToolOption(4, 1.0, true), new ToolOption(6, 0.5, true)));
+        Choice choice = ToolChoice.best(List.of(ToolOption.of(4, 1.0, true), ToolOption.of(6, 0.5, true)));
 
         assertEquals(new Choice(ToolChoice.HAND, 1.0, true), choice,
                 "Инструмент не быстрее руки не выбирается: износ предмета ради нулевого выигрыша бессмыслен");
@@ -63,7 +67,7 @@ class ToolChoiceTests {
 
     @Test
     void best_NoCorrectToolForHardBlock_ReturnsHandWithoutDrops() {
-        Choice choice = ToolChoice.best(List.of(new ToolOption(0, 1.0, false), new ToolOption(1, 4.0, false)));
+        Choice choice = ToolChoice.best(List.of(ToolOption.of(0, 1.0, false), ToolOption.of(1, 4.0, false)));
 
         assertEquals(new Choice(ToolChoice.HAND, 1.0, false), choice,
                 "Нет правильного инструмента для блока, требующего его: ломка рукой без дропа, как у игрока");
@@ -77,10 +81,57 @@ class ToolChoiceTests {
 
     @Test
     void best_HandIsCorrectForSoftBlock_ReturnsHandWithDrops() {
-        Choice choice = ToolChoice.best(List.of(new ToolOption(ToolChoice.HAND, 1.0, true),
-                new ToolOption(3, 1.0, true)));
+        Choice choice = ToolChoice.best(List.of(ToolOption.of(ToolChoice.HAND, 1.0, true),
+                ToolOption.of(3, 1.0, true)));
 
         assertEquals(new Choice(ToolChoice.HAND, 1.0, true), choice,
                 "Блок, не требующий инструмента, ломается рукой с дропом: земля и дерево не должны терять предметы");
+    }
+
+    @Test
+    void best_SpentToolWithHealthySpare_ChoosesSpare() {
+        Choice choice = ToolChoice.best(List.of(
+                new ToolOption(0, 6.0, true, 1, 251, false),
+                new ToolOption(1, 6.0, true, 251, 251, false)), RESERVE);
+
+        assertEquals(1, choice.slot(),
+                "Изношенная кирка (1 удар, порог 13) уступает целой такой же из инвентаря: иначе дух тратил бы "
+                        + "последние удары и работал голыми руками");
+    }
+
+    @Test
+    void best_OnlySpentCorrectTool_ReturnsHandWithoutDrops() {
+        Choice choice = ToolChoice.best(List.of(new ToolOption(0, 6.0, true, 2, 251, false)), RESERVE);
+
+        assertEquals(new Choice(ToolChoice.HAND, ToolChoice.HAND_SPEED, false), choice,
+                "Единственный подходящий инструмент износился: замена нужна, но её нет — рука без дропа, "
+                        + "а не трата последних ударов");
+    }
+
+    @Test
+    void best_HealthySlowerTool_BeatsSpentFasterTool() {
+        Choice choice = ToolChoice.best(List.of(
+                new ToolOption(0, 8.0, true, 1, 251, false),
+                new ToolOption(1, 4.0, true, 251, 251, false)), RESERVE);
+
+        assertEquals(1, choice.slot(),
+                "Изношенная быстрая кирка не выбирается, даже если целая медленнее: износ важнее скорости");
+    }
+
+    @Test
+    void best_EnchantedToolOnLastUse_IsTreatedAsSpent() {
+        ToolOption enchanted = new ToolOption(0, 6.0, true, 1, 100, true);
+
+        assertTrue(enchanted.spent(RESERVE),
+                "Зачарованный инструмент с последним ударом считается изношенным: последний удар тратить нельзя, "
+                        + "иначе зачарование потеряется вместе с предметом");
+    }
+
+    @Test
+    void best_UnwearingTool_NeverSpent() {
+        ToolOption unwearing = ToolOption.of(0, 6.0, true);
+
+        assertFalse(unwearing.spent(RESERVE),
+                "Инструмент без прочности (maxUses=0) не изнашивается: его нельзя объявлять изношенным");
     }
 }

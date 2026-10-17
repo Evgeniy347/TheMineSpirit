@@ -4,6 +4,7 @@ import com.theminespirit.core.mining.BreakTiming;
 import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
+import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import java.util.ArrayList;
@@ -36,7 +37,8 @@ public final class BlockBreaker {
         CHUNK_NOT_LOADED,
         AIR,
         UNBREAKABLE,
-        OUT_OF_REACH
+        OUT_OF_REACH,
+        NEED_TOOL
     }
 
     public sealed interface Begin permits Started, Refused, Protected {
@@ -100,7 +102,15 @@ public final class BlockBreaker {
         }
         pos = target.immutable();
         state = targetState;
-        choice = ToolChoice.best(toolOptions(targetState));
+        ToolReserve reserve = MiningTables.toolReserve();
+        if (targetState.requiresCorrectToolForDrops()) {
+            replaceSpentHandTool(targetState, reserve);
+        }
+        List<ToolOption> options = toolOptions(targetState);
+        choice = ToolChoice.best(options, reserve);
+        if (choice.slot() == ToolChoice.HAND && hasCorrectTool(options)) {
+            return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
+        }
         tool = choice.slot() == ToolChoice.HAND ? ItemStack.EMPTY
                 : choice.slot() == ToolChoice.MAIN_HAND ? spirit.getMainHandItem()
                         : spirit.getInventory().getItem(choice.slot());
@@ -150,7 +160,7 @@ public final class BlockBreaker {
 
     public boolean dropsAllowedFor(BlockState targetState) {
         Objects.requireNonNull(targetState, "Состояние блока не может быть null: по нему выбирается инструмент");
-        return ToolChoice.best(toolOptions(targetState)).dropsAllowed();
+        return ToolChoice.best(toolOptions(targetState), MiningTables.toolReserve()).dropsAllowed();
     }
 
     public boolean toolBroke() {
@@ -175,21 +185,72 @@ public final class BlockBreaker {
     private List<ToolOption> toolOptions(BlockState targetState) {
         boolean needsTool = targetState.requiresCorrectToolForDrops();
         List<ToolOption> options = new ArrayList<>();
-        options.add(new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool));
+        options.add(new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool, ToolChoice.UNWEARING,
+                ToolChoice.UNWEARING, false));
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty()) {
-            options.add(new ToolOption(ToolChoice.MAIN_HAND, hand.getDestroySpeed(targetState),
-                    !needsTool || hand.isCorrectToolForDrops(targetState)));
+            options.add(optionFor(ToolChoice.MAIN_HAND, hand, targetState, needsTool));
         }
         Container inventory = spirit.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (!stack.isEmpty()) {
-                options.add(new ToolOption(slot, stack.getDestroySpeed(targetState),
-                        !needsTool || stack.isCorrectToolForDrops(targetState)));
+                options.add(optionFor(slot, stack, targetState, needsTool));
             }
         }
         return options;
+    }
+
+    private static ToolOption optionFor(int slot, ItemStack stack, BlockState targetState, boolean needsTool) {
+        int max = stack.isDamageableItem() ? stack.getMaxDamage() : ToolChoice.UNWEARING;
+        int remaining = max > 0 ? max - stack.getDamageValue() : ToolChoice.UNWEARING;
+        return new ToolOption(slot, stack.getDestroySpeed(targetState),
+                !needsTool || stack.isCorrectToolForDrops(targetState), remaining, max, stack.isEnchanted());
+    }
+
+    private static boolean hasCorrectTool(List<ToolOption> options) {
+        return options.stream().anyMatch(ToolOption::correctForDrops);
+    }
+
+    private void replaceSpentHandTool(BlockState targetState, ToolReserve reserve) {
+        ItemStack hand = spirit.getMainHandItem();
+        if (hand.isEmpty() || !optionFor(ToolChoice.MAIN_HAND, hand, targetState, true).spent(reserve)) {
+            return;
+        }
+        int source = bestSpareSlot(targetState, reserve);
+        if (source < 0) {
+            return;
+        }
+        ItemStack spare = spirit.getInventory().getItem(source).copy();
+        spirit.setItemSlot(EquipmentSlot.MAINHAND, spare);
+        spirit.getInventory().setItem(source, hand.copy());
+    }
+
+    private int bestSpareSlot(BlockState targetState, ToolReserve reserve) {
+        Container inventory = spirit.getInventory();
+        int bestSlot = -1;
+        double bestSpeed = ToolChoice.HAND_SPEED;
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.isEmpty() || !stack.isCorrectToolForDrops(targetState)) {
+                continue;
+            }
+            ToolOption option = optionFor(slot, stack, targetState, true);
+            if (option.spent(reserve)) {
+                continue;
+            }
+            if (option.speed() > bestSpeed || (option.speed() == bestSpeed && bestSlot < 0)) {
+                bestSpeed = option.speed();
+                bestSlot = slot;
+            }
+        }
+        return bestSlot;
+    }
+
+    private static String needToolReason(BlockState targetState) {
+        String kind = RequiredTier.kindOf(targetState);
+        String what = kind.isEmpty() ? "нужен инструмент" : "нужен инструмент (" + kind + ")";
+        return what + " для " + blockId(targetState) + ": подходящий есть, но изношен, запасного в инвентаре нет";
     }
 
     private void showCrack(Level level, int stage) {
@@ -214,8 +275,9 @@ public final class BlockBreaker {
             Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);
         }
         if (!usedTool.isEmpty() && wearsTool) {
+            int breaksBefore = spirit.toolBreaks();
             usedTool.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
-            toolBroke = usedTool.isEmpty();
+            toolBroke = usedTool.isEmpty() || spirit.toolBreaks() > breaksBefore;
         } else {
             toolBroke = false;
         }

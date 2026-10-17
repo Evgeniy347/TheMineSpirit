@@ -48,6 +48,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
@@ -84,6 +86,8 @@ public final class SpiritEntity extends PathfinderMob {
     private boolean child;
     private boolean nightLeashArmed;
     private boolean defenceAssigned;
+    private int toolBreaks;
+    private ItemStack lastBrokenTool = ItemStack.EMPTY;
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
@@ -164,6 +168,21 @@ public final class SpiritEntity extends PathfinderMob {
             hunger.onAttack();
         }
         return hit;
+    }
+
+    @Override
+    public void onEquippedItemBroken(Item item, EquipmentSlot slot) {
+        super.onEquippedItemBroken(item, slot);
+        toolBreaks++;
+        lastBrokenTool = new ItemStack(item);
+    }
+
+    public int toolBreaks() {
+        return toolBreaks;
+    }
+
+    public ItemStack lastBrokenTool() {
+        return lastBrokenTool;
     }
 
     public SpiritPolicies policies() {

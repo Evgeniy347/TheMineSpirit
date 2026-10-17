@@ -18,6 +18,7 @@ import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
+import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.tactics.TacticsConfig;
@@ -54,6 +55,7 @@ public final class DataTables {
     private final TableHolder<FeedTable> feed;
     private final TableHolder<Map<String, SwordTier>> swords;
     private final TableHolder<DropTable> drops;
+    private final TableHolder<ToolReserve> toolReplace;
     private final TableHolder<BlockProtection> protection;
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
@@ -108,6 +110,9 @@ public final class DataTables {
         this.drops = registry.registerLazy(
                 TableDefinition.single("drops", "data/theminespirit/acquire/drops.json", DropTable::parse),
                 DropTable::load);
+        this.toolReplace = registry.registerLazy(
+                TableDefinition.single("tool_replace", ToolReserve.RESOURCE, ToolReserve::parse),
+                ToolReserve::load);
         this.protection = registry.registerLazy(
                 TableDefinition.single("protection", "data/theminespirit/policy/protection.json",
                         ProtectionConfig::parse),
@@ -203,6 +208,10 @@ public final class DataTables {
 
     public TableHolder<DropTable> drops() {
         return drops;
+    }
+
+    public TableHolder<ToolReserve> toolReplace() {
+        return toolReplace;
     }
 
     public TableHolder<BlockProtection> protection() {

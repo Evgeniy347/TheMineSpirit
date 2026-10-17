@@ -21,4 +21,21 @@ public final class RequiredTier {
         }
         return "";
     }
+
+    public static String kindOf(BlockState state) {
+        Objects.requireNonNull(state, "Состояние блока не может быть null: по его тегам определяется вид инструмента");
+        if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
+            return "кирка";
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_AXE)) {
+            return "топор";
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) {
+            return "лопата";
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_HOE)) {
+            return "мотыга";
+        }
+        return "";
+    }
 }

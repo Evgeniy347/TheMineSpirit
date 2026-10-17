@@ -305,6 +305,11 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
+        if (begin instanceof BlockBreaker.Refused refused
+                && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+            fail(refused.message());
+            return;
+        }
         if (!(begin instanceof BlockBreaker.Started)) {
             noStand++;
             currentTarget = null;
@@ -379,11 +384,13 @@ public final class HarvestSession {
     }
 
     private String tierReason(BlockState state) {
+        String kind = RequiredTier.kindOf(state);
         String tier = RequiredTier.of(state);
+        String need = kind.isEmpty() ? "нужен инструмент" : "нужен инструмент (" + kind + ")";
         if (tier.isEmpty()) {
-            return "для " + label + " нет подходящего инструмента в инвентаре";
+            return need + " для " + label + ": подходящего в инвентаре нет или он изношен";
         }
-        return "для " + label + " нужна " + tier + " или лучше; в инвентаре подходящего инструмента нет";
+        return need + " для " + label + ": " + tier + " или лучше в инвентаре нет или он изношен";
     }
 
     private static BlockPos toPos(BlockCoord coord) {
