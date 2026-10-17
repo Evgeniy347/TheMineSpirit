@@ -14,7 +14,6 @@ import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -49,8 +48,6 @@ public final class OverflowBoardGameTests {
         SpiritRun run = SpiritRun.launch(helper, dropper, new SequenceNode(List.of(
                 new ScriptCall("collect_drops", Map.of("radius", 6)),
                 new ScriptCall("wait", Map.of("ticks", WAIT_TICKS)))), SETTLE_TICKS);
-        AtomicBoolean rebuilt = new AtomicBoolean();
-
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(GameTestFixtures.countInInventory(dropper.getInventory(), Items.DIAMOND) == 1,
@@ -59,10 +56,12 @@ public final class OverflowBoardGameTests {
             BoardTicket ticket = dropTicket(board);
             helper.assertTrue(ticket != null,
                     "после выкидывания на доске обязано появиться задание «забрать выкинутые вещи»");
-            if (!rebuilt.get()) {
-                board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
-                rebuilt.set(true);
-            }
+            board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
+            board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
+            ticket = dropTicket(board);
+            helper.assertTrue(ticket != null,
+                    "задание на выкинутую вещь обязано пережить пересборку, пока предмет лежит в мире: "
+                            + "иначе доска снимает его раньше, чем дух успел забрать");
             helper.assertTrue(board.board().statusOf(ticket.id()).orElse(null) == BoardStatus.ASSIGNED,
                     "задание на выкинутую вещь обязано быть выдано свободному духу, статус "
                             + board.board().statusOf(ticket.id()).orElse(null));

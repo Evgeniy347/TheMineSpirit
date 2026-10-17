@@ -47,6 +47,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 /**
@@ -149,6 +150,7 @@ public final class BoardService {
         ensureSupply(spirits, stock, now);
         Set<String> liveCauses = sources.tick(level, this, spirits, stock, now);
         liveCauses.addAll(liveHerdCauses(level));
+        liveCauses.addAll(liveDropCauses(level));
         board.retain(liveCauses, now);
         issue(level, spirits, now);
         rebuilds++;
@@ -192,6 +194,46 @@ public final class BoardService {
             }
         }
         return count;
+    }
+
+    /**
+     * Живые причины выкинутых вещей: задание «забрать» держится, пока предмет лежит в клетке.
+     * Подобранный предмет снимает задание со следующей пересборкой, а не висит вечно.
+     */
+    private Set<String> liveDropCauses(ServerLevel level) {
+        Set<String> live = new HashSet<>();
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.boardCase() != BoardCase.COLLECT_DROPS || !ticket.cause().startsWith("drop:")) {
+                continue;
+            }
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES
+                    && status != BoardStatus.ASSIGNED) {
+                continue;
+            }
+            String[] parts = ticket.cause().split(":", 5);
+            if (parts.length != 5) {
+                continue;
+            }
+            int x;
+            int y;
+            int z;
+            try {
+                x = Integer.parseInt(parts[1]);
+                y = Integer.parseInt(parts[2]);
+                z = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException broken) {
+                continue;
+            }
+            String item = parts[4];
+            boolean found = level.getEntitiesOfClass(ItemEntity.class,
+                    new AABB(x - 4, y - 4, z - 4, x + 5, y + 5, z + 5),
+                    drop -> !drop.isRemoved() && item.equals(StackMapper.itemId(drop.getItem()))).isEmpty() == false;
+            if (found) {
+                live.add(ticket.cause());
+            }
+        }
+        return live;
     }
 
     /** Живые причины стада: пойманное животное живо. Гибель снимает «приманить» и ставит разбор. */
