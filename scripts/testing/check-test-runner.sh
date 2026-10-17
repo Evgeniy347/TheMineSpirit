@@ -372,6 +372,34 @@ FAKE
         [ "$server_alive" = yes ] && kill -KILL "$server_pid" 2>/dev/null
         [ "$client_alive" = yes ] && kill -KILL "$client_pid" 2>/dev/null
         rm -rf "$work/tmp/lock.d"
+
+        # Выход по сигналу гасит сервер так же, как стоп по пределу (trap → stop_monitor).
+        # Сигнал — TERM: фоновый процесс неинтерактивного скрипта игнорирует INT (SIG_IGN при `&`),
+        # ровно как градл-клиент в отдельной сессии не получил бы Ctrl+C; в бою Ctrl+C приходит в
+        # группу переднего плана, и trap ловит его тем же обработчиком INT/TERM.
+        : >"$server_pid_file"; : >"$client_pid_file"; rm -f "$work/tmp/lock.d"
+        export THEMINESPIRIT_GAMETEST_WARN_SECONDS=600
+        export THEMINESPIRIT_GAMETEST_STOP_SECONDS=600
+        bash scripts/test.sh gametest >"$work/signal.out" 2>&1 &
+        sig_test=$!
+        i=0
+        while [ "$i" -lt 100 ]; do
+            [ -n "$(cat "$server_pid_file" 2>/dev/null)" ] && break
+            sleep 0.1; i=$((i + 1))
+        done
+        kill -TERM "$sig_test" 2>/dev/null
+        wait "$sig_test" 2>/dev/null
+        sleep 1
+        sig_server=$(cat "$server_pid_file" 2>/dev/null || echo "")
+        sig_client=$(cat "$client_pid_file" 2>/dev/null || echo "")
+        sig_alive=no; kill -0 "$sig_server" 2>/dev/null && sig_alive=yes
+        [ "$sig_alive" = no ] && [ -n "$sig_server" ] \
+            && ok "signal-server: сервер GameTest погашен по TERM (pid $sig_server)" \
+            || fail "signal-server: сервер GameTest жив после TERM (pid $sig_server)"
+        [ "$sig_alive" = yes ] && kill -KILL "$sig_server" 2>/dev/null
+        # Клиент gradle на сигнале скрипт не гасит (это вне дефекта) — в тесте убираем свой по PID.
+        kill -KILL "$sig_client" 2>/dev/null
+        rm -rf "$work/tmp/lock.d"
         ;;
     *)
         ok "stop-server: пропущено (не Linux: поиск сервера по /proc/<pid>/cwd недоступен)"
