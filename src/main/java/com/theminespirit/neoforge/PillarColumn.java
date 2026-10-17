@@ -19,7 +19,9 @@ final class PillarColumn {
     }
 
     private static final double PILLAR_CLEARANCE = 1.0;
-    private static final int MAX_STALL_TICKS = 60;
+    // Запас на настоящий застой, а не на цикл прыжка: дух может сорваться со столба и повторить
+    // подъём; 60 тиков обрывали нормальную стройку пятого блока (флак chop_tree_tall 17.10).
+    private static final int MAX_STALL_TICKS = 200;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -84,16 +86,18 @@ final class PillarColumn {
             return fail(danger);
         }
         if (spirit.getY() >= target.getY() + PILLAR_CLEARANCE) {
+            stallTicks = 0;
             return place(target);
         }
-        if (spirit.onGround()) {
-            stallTicks = 0;
-            spirit.getJumpControl().jump();
-            return Outcome.RUNNING;
-        }
+        // Счётчик идёт и на земле: прыжок может быть заблокирован потолком в двух клетках над
+        // ногами, и тогда onGround остаётся истинным каждый тик. Раньше сброс на земле держал
+        // pillar_up в RUNNING вечно (флак chop_tree_tall 17.10).
         if (++stallTicks > MAX_STALL_TICKS) {
             return fail("дух не поднялся на " + (target.getY() - baseY + 1) + "-й блок за " + MAX_STALL_TICKS
                     + " тиков: вероятно, потолок над столбом");
+        }
+        if (spirit.onGround()) {
+            spirit.getJumpControl().jump();
         }
         return Outcome.RUNNING;
     }

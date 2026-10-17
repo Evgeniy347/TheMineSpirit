@@ -39,6 +39,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardFenceGameTests {
     private static final String BATCH = "board_fence";
 

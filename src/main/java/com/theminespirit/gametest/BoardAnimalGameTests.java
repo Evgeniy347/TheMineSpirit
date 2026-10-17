@@ -38,6 +38,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardAnimalGameTests {
     private static final String BATCH = "board_animal";
     private static final Set<BoardCase> LIFECYCLE = EnumSet.of(BoardCase.CAPTURE_ANIMAL,

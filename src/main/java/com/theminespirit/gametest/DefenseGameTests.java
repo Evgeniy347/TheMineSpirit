@@ -15,7 +15,6 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.defense.BlockerProbe;
@@ -26,8 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
@@ -50,6 +47,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(coordinator = true)
 public final class DefenseGameTests {
     /**
      * Потолок набухания крипера в сцене «ударь и беги»: взрыв — не предмет проверки, а источник
@@ -59,21 +57,6 @@ public final class DefenseGameTests {
     private static final float SWELL_CAP = 0.5F;
 
     private DefenseGameTests() {
-    }
-
-    /**
-     * Сцена обороны — не про доску. Общая доска уровня выдаёт чужие билеты свободному духу
-     * сцены (FirstStepsRunner и др.): занятый дух перестаёт получать приказ обороны
-     * ({@code DefenseService.busy}), и «ударь и беги» разваливается. Гасим раздачу на пачку.
-     */
-    @BeforeBatch(batch = "defense_creeper")
-    public static void quietBoard(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(false);
-    }
-
-    @AfterBatch(batch = "defense_creeper")
-    public static void restoreBoard(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(true);
     }
 
     private static BlockCoord homeOf(GameTestHelper helper, BlockPos at) {

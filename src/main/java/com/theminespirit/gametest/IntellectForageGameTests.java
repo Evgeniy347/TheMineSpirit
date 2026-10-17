@@ -24,6 +24,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(coordinator = true)
 public final class IntellectForageGameTests {
     private static final BlockPos START = new BlockPos(1, 1, 1);
 

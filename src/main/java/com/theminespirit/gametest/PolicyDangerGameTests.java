@@ -6,19 +6,15 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.policy.ExplosionAvoidance;
 import com.theminespirit.core.policy.PolicyVerdict;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -40,22 +36,6 @@ public final class PolicyDangerGameTests {
     private static final double CHARGED_MOVED_AWAY = 11.0;
 
     private PolicyDangerGameTests() {
-    }
-
-    /**
-     * Сцена про политику крипера — не про доску. Общая доска уровня переживает границы сцен:
-     * её билеты (FirstStepsRunner и др.) выдаются свободному духу сцены и уводят его с места
-     * в неурочный момент. Ровно так дух политики крипера уходил на несколько блоков, а проверка
-     * «стоит на месте» падала в полном прогоне. Гасим раздачу на пачку и возвращаем после.
-     */
-    @BeforeBatch(batch = "policy_creeper_far")
-    public static void quietBoard(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(false);
-    }
-
-    @AfterBatch(batch = "policy_creeper_far")
-    public static void restoreBoard(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(true);
     }
 
     private static double cellDistance(GameTestHelper helper, SpiritEntity spirit, BlockPos other) {
