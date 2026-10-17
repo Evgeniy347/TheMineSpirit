@@ -7,6 +7,10 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.processing.CookableFoods;
+import com.theminespirit.core.processing.ProcessingRules;
+import com.theminespirit.core.processing.ProcessingStock;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,11 +25,13 @@ public final class SmeltActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос плавки без обстановки не считается: зависит от запасов");
         }
-        double charcoalDeficit = deficit(view.ore(), IntellectTuning.CHARCOAL_TARGET);
-        double foodNorm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_SAFETY;
-        double foodDeficit = Math.max(0, Math.min(1, (foodNorm - view.foodNutritionPerSoul()) / foodNorm));
-        double deficit = Math.max(charcoalDeficit, foodDeficit);
-        return Activity.checkedDemand(id(), 1 + 8 * deficit);
+        ProcessingRules rules = ProcessingRules.loadDefault();
+        ProcessingStock stock = view.processing();
+        double deficit = Math.max(charcoalDeficit(stock, rules), cookDeficit(view, stock));
+        if (deficit <= 0) {
+            return Activity.checkedDemand(id(), 0);
+        }
+        return Activity.checkedDemand(id(), rules.baseDemand() + rules.demandScale() * deficit);
     }
 
     @Override
@@ -41,10 +47,43 @@ public final class SmeltActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение плавки без духа или обстановки не строится");
         }
-        String product = view.ore() < IntellectTuning.CHARCOAL_TARGET ? "charcoal" : "cooked_beef";
-        int count = product.equals("charcoal") ? 8 : 4;
-        return new ActivityIntent(id(), Optional.of("smelt"),
-                Map.of("item", product, "count", count, "radius", 16), Optional.empty());
+        ProcessingRules rules = ProcessingRules.loadDefault();
+        ProcessingStock stock = view.processing();
+        double charcoalDeficit = charcoalDeficit(stock, rules);
+        double cookDeficit = cookDeficit(view, stock);
+        if (charcoalDeficit <= 0 && cookDeficit <= 0) {
+            return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
+        }
+        if (charcoalDeficit >= cookDeficit) {
+            return smelt("charcoal", rules.charcoalCount(), rules);
+        }
+        Optional<String> cooked = CookableFoods.best(stock.rawFoods(), StockCatalog.defaultTable());
+        if (cooked.isEmpty()) {
+            return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
+        }
+        return smelt(shortName(cooked.get()), rules.cookCount(), rules);
+    }
+
+    private static String shortName(String itemId) {
+        return itemId.startsWith("minecraft:") ? itemId.substring("minecraft:".length()) : itemId;
+    }
+
+    private static ActivityIntent smelt(String product, int count, ProcessingRules rules) {
+        return new ActivityIntent(ActivityId.SMELT, Optional.of("smelt"),
+                Map.of("item", product, "count", count, "radius", rules.stationRadius()), Optional.empty());
+    }
+
+    private static double charcoalDeficit(ProcessingStock stock, ProcessingRules rules) {
+        return stock.hasLogs() ? deficit(stock.charcoal(), rules.charcoalTarget()) : 0;
+    }
+
+    private static double cookDeficit(SettlementView view, ProcessingStock stock) {
+        if (!stock.hasRawFood()) {
+            return 0;
+        }
+        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_SAFETY;
+        double perSoul = view.population() == 0 ? 0 : stock.cookedNutrition() / view.population();
+        return Math.max(0, Math.min(1, (norm - perSoul) / norm));
     }
 
     private static double deficit(int have, int target) {

@@ -98,7 +98,7 @@ public final class TacticalIntellect {
                 view.foodNutritionPerSoul(), view.ore(), view.iron(), view.weapons(), view.threats(),
                 view.dayFraction(), view.farmWork(), view.forage(),
                 view.spirits().stream().filter(spirit -> !displaced.contains(spirit.id())).toList(),
-                view.tick());
+                view.tick(), view.processing());
         List<ActivityDemand> demands = DemandModel.evaluate(view, catalog);
         ActivityPlan plan = assigner.assign(workers, demands, ledger, now);
         for (ActivityAssignment assignment : plan.assignments()) {

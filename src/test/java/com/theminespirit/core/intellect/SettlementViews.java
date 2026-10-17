@@ -5,6 +5,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.processing.ProcessingStock;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import java.util.ArrayList;
@@ -65,6 +66,11 @@ public final class SettlementViews {
             int threats, FarmWork farmWork, Forage forage) {
         return new SettlementView(3, 0, food, nutrition, ore, iron, weapons, threats, 0.2, farmWork, forage,
                 List.of(), 100);
+    }
+
+    public static SettlementView processing(int population, double nutrition, ProcessingStock processing) {
+        return new SettlementView(population, 0, 0, nutrition, 0, 0, 0, 0, 0.5, FarmWork.NONE, Forage.NONE,
+                List.of(), 100, processing);
     }
 
     public static SettlementView withSpirits(List<SpiritSnapshot> spirits) {

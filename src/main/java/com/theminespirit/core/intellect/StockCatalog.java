@@ -1,5 +1,8 @@
 package com.theminespirit.core.intellect;
 
+import com.theminespirit.core.processing.CookableFoods;
+import com.theminespirit.core.processing.ProcessingStock;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,6 +18,9 @@ public final class StockCatalog {
             "minecraft:crossbow", "minecraft:trident", "minecraft:shield", "minecraft:iron_axe");
     public static final Set<String> SEED_IDS = Set.of("minecraft:wheat_seeds", "minecraft:carrot",
             "minecraft:potato", "minecraft:beetroot_seeds");
+    public static final String CHARCOAL_ID = "minecraft:charcoal";
+    public static final String STICK_ID = "minecraft:stick";
+    public static final String PLANKS_SUFFIX = "_planks";
 
     private final NutritionTable table;
 
@@ -48,6 +54,12 @@ public final class StockCatalog {
         int iron = 0;
         int weapons = 0;
         int seeds = 0;
+        int charcoal = 0;
+        int planks = 0;
+        int sticks = 0;
+        double cookedNutrition = 0;
+        Map<String, Integer> rawFoods = new HashMap<>();
+        Map<String, Integer> logs = new HashMap<>();
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             String id = entry.getKey();
             Integer count = entry.getValue();
@@ -75,7 +87,31 @@ public final class StockCatalog {
             if (SEED_IDS.contains(id)) {
                 seeds += count;
             }
+            if (id.equals(CHARCOAL_ID)) {
+                charcoal += count;
+            }
+            if (id.endsWith(PLANKS_SUFFIX)) {
+                planks += count;
+            }
+            if (id.equals(STICK_ID)) {
+                sticks += count;
+            }
+            if (CookableFoods.isRaw(id)) {
+                rawFoods.merge(id, count, Integer::sum);
+            }
+            if (isLog(id)) {
+                logs.merge(id, count, Integer::sum);
+            }
+            if (CookableFoods.isCooked(id)) {
+                Double cookedSatiety = table.nutrition().get(id);
+                cookedNutrition += (cookedSatiety == null ? 0 : cookedSatiety) * count;
+            }
         }
-        return new StockLots(foodItems, foodNutrition, ore, iron, weapons, seeds);
+        ProcessingStock processing = new ProcessingStock(charcoal, planks, sticks, cookedNutrition, rawFoods, logs);
+        return new StockLots(foodItems, foodNutrition, ore, iron, weapons, seeds, processing);
+    }
+
+    private static boolean isLog(String id) {
+        return id.endsWith("_log") || id.endsWith("_wood") || id.endsWith("_stem") || id.endsWith("_hyphae");
     }
 }

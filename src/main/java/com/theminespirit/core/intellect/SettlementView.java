@@ -2,12 +2,13 @@ package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.processing.ProcessingStock;
 import java.util.List;
 import java.util.UUID;
 
 public record SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
         int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-        List<SpiritSnapshot> spirits, long tick) {
+        List<SpiritSnapshot> spirits, long tick, ProcessingStock processing) {
     public SettlementView {
         if (population < 0) {
             throw new IllegalArgumentException(
@@ -63,7 +64,18 @@ public record SettlementView(int population, int children, double foodPerSoul, d
         if (tick < 0) {
             throw new IllegalArgumentException("Тик = " + tick + ": время снимка не может быть отрицательным");
         }
+        if (processing == null) {
+            throw new IllegalArgumentException(
+                    "Запас переработки не может быть null: его отсутствие задают ProcessingStock.NONE");
+        }
         spirits = List.copyOf(spirits);
+    }
+
+    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
+            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
+            List<SpiritSnapshot> spirits, long tick) {
+        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
+                farmWork, forage, spirits, tick, ProcessingStock.NONE);
     }
 
     public int adults() {

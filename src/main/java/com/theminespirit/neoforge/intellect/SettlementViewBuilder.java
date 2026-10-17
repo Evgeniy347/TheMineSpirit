@@ -45,6 +45,6 @@ public final class SettlementViewBuilder {
         double dayFraction = (level.getDayTime() % 24000L) / 24000.0;
         FarmWork farmWork = FarmWorkScanner.read(level, home, members, lots.seeds());
         return new SettlementView(population, children, foodPerSoul, nutritionPerSoul, lots.ore(), lots.iron(),
-                lots.weapons(), enemies.size(), dayFraction, farmWork, forage, ordered, tick);
+                lots.weapons(), enemies.size(), dayFraction, farmWork, forage, ordered, tick, lots.processing());
     }
 }

@@ -23,6 +23,7 @@ import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
@@ -75,6 +76,7 @@ public final class DataTables {
     private final TableHolder<DefenseProfile> priorities;
     private final TableHolder<RepairData> repair;
     private final Map<String, TableHolder<Schematic>> schematics;
+    private final TableHolder<ProcessingRules> processing;
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
@@ -166,6 +168,10 @@ public final class DataTables {
                     () -> SchematicParser.parse(JsonResource.readClasspath(path), path)));
         }
         this.schematics = Map.copyOf(liveSchematics);
+        this.processing = registry.registerLazy(
+                TableDefinition.single("processing", ProcessingRules.RESOURCE,
+                        (json, origin) -> ProcessingRules.parse(json, origin)),
+                ProcessingRules::load);
     }
 
     private static List<LoadedContent> loadPresetBodies() {
@@ -273,6 +279,10 @@ public final class DataTables {
 
     public TableHolder<RepairData> repair() {
         return repair;
+    }
+
+    public TableHolder<ProcessingRules> processing() {
+        return processing;
     }
 
     /**
