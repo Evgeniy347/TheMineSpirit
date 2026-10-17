@@ -43,8 +43,12 @@ public final class SettlementViews {
     }
 
     public static SpiritSnapshot busySpirit(UUID id) {
+        return busySpirit(id, WorkKind.TREE);
+    }
+
+    public static SpiritSnapshot busySpirit(UUID id, WorkKind kind) {
         return new SpiritSnapshot(id, new Point(0, 64, 0), 1.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.of(new WorkTarget(WorkKind.TREE, new BlockCoord(1, 64, 1))), 0, 1.0);
+                Optional.of(new WorkTarget(kind, new BlockCoord(1, 64, 1))), 0, 1.0);
     }
 
     public static SettlementView empty() {

@@ -2,12 +2,14 @@ package com.theminespirit.core.intellect.activity;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.FreeInventoryDemand;
 import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.TaskRetention;
 import com.theminespirit.core.inventory.InventoryFill;
 import java.util.Map;
 import java.util.Optional;
@@ -42,9 +44,25 @@ public final class UnloadActivity implements Activity {
             return false;
         }
         InventoryNormTable table = InventoryNormTable.loadDefault();
-        return view.inventoryFill(spirit.id())
-                .map(fill -> FreeInventoryDemand.demand(fill, table) > 0)
-                .orElse(false);
+        InventoryFill fill = view.inventoryFill(spirit.id()).orElse(null);
+        if (fill == null) {
+            return false;
+        }
+        if (spirit.workTarget().isPresent()) {
+            ActivityId held = heldActivity(spirit.workTarget().get().kind());
+            if (TaskRetention.holds(held, fill, table)) {
+                return false;
+            }
+        }
+        return FreeInventoryDemand.demand(fill, table) > 0;
+    }
+
+    private static ActivityId heldActivity(WorkKind kind) {
+        return switch (kind) {
+            case VEIN -> ActivityId.MINE;
+            case TREE -> ActivityId.CHOP;
+            case CELL -> ActivityId.FARM;
+        };
     }
 
     @Override

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.coordinator.SpiritRole;
+import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.SettlementViews;
 import com.theminespirit.core.inventory.InventoryFill;
@@ -64,6 +65,36 @@ class UnloadActivityTests {
     void eligible_NoFill_IsFalse() {
         assertFalse(new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), SettlementViews.empty()),
                 "Без данных о заполнении дух разгрузку не берёт: неизвестное давление не гоняет его на базу");
+    }
+
+    @Test
+    void eligible_BusyMinerWithFreeSlots_KeepsTask() {
+        InventoryFill pressured = new InventoryFill(26, 36, 0, 26);
+        SettlementView view = SettlementViews.withFills(
+                List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN)), Map.of(SPIRIT, pressured));
+
+        assertFalse(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
+                "Шахтёр держит задачу до последней свободной ячейки: разгрузку он не берёт, пока есть куда складывать");
+    }
+
+    @Test
+    void eligible_BusyMinerAtLastSlot_TakesUnload() {
+        InventoryFill full = new InventoryFill(36, 36, 0, 36);
+        SettlementView view = SettlementViews.withFills(
+                List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN)), Map.of(SPIRIT, full));
+
+        assertTrue(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
+                "На последней ячейке шахтёр бросает задачу ради разгрузки: дальше добыча некуда ляжет");
+    }
+
+    @Test
+    void eligible_BusyFarmerFewFreeSlots_TakesUnload() {
+        InventoryFill tight = new InventoryFill(34, 36, 0, 34);
+        SettlementView view = SettlementViews.withFills(
+                List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.CELL)), Map.of(SPIRIT, tight));
+
+        assertTrue(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.CELL), view),
+                "Ферма бросает задачу раньше шахтёра (порог 2): при двух свободных ячейках она идёт разгружаться");
     }
 
     @Test
