@@ -20,7 +20,10 @@ class CropKindTests {
                 Arguments.of(CropKind.POTATO, "minecraft:potatoes", 7, "potato", "potato"),
                 Arguments.of(CropKind.BEETROOT, "minecraft:beetroots", 3, "beetroot_seeds", "beetroot"),
                 Arguments.of(CropKind.parse("sweet_berry_bush"), "minecraft:sweet_berry_bush", 3, "sweet_berries",
-                        "sweet_berries"));
+                        "sweet_berries"),
+                Arguments.of(CropKind.parse("sugar_cane"), "minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane"),
+                Arguments.of(CropKind.parse("bamboo"), "minecraft:bamboo", 1, "bamboo", "bamboo"),
+                Arguments.of(CropKind.parse("cactus"), "minecraft:cactus", 15, "cactus", "cactus"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -40,7 +43,9 @@ class CropKindTests {
 
     @Test
     void names_AllKinds_AreLowercaseInDeclarationOrder() {
-        assertEquals(List.of("any", "wheat", "carrot", "potato", "beetroot", "sweet_berry_bush"),
+        assertEquals(
+                List.of("any", "wheat", "carrot", "potato", "beetroot", "sweet_berry_bush", "sugar_cane", "bamboo",
+                        "cactus"),
                 CropKind.names(),
                 "Список значений для каталога обязан идти в порядке объявления и нижним регистром: "
                         + "по нему валидатор плана показывает допустимые виды культур ИИ");
@@ -48,7 +53,9 @@ class CropKindTests {
 
     @Test
     void plantableNames_AnyKind_IsExcluded() {
-        assertEquals(List.of("wheat", "carrot", "potato", "beetroot", "sweet_berry_bush"),
+        assertEquals(
+                List.of("wheat", "carrot", "potato", "beetroot", "sweet_berry_bush", "sugar_cane", "bamboo",
+                        "cactus"),
                 CropKind.plantableNames(),
                 "plant_crop требует конкретный вид: any в списке позволил бы план «посади что-нибудь», "
                         + "а дух не знает, какие семена тратить");

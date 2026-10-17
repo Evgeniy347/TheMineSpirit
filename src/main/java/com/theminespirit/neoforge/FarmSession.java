@@ -308,6 +308,14 @@ public final class FarmSession {
                 currentKind = tile.crop().orElseThrow().kind();
                 if (currentKind.harvestMethod() == HarvestMethod.PICK) {
                     pickNow(ground.above(), currentKind);
+                } else if (currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+                    int height = view.columnHeight(currentGround);
+                    if (height < 2) {
+                        ineligible++;
+                        finishTarget();
+                    } else {
+                        beginBreak(ground.above().above());
+                    }
                 } else {
                     beginBreak(ground.above());
                 }

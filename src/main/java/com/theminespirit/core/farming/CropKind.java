@@ -13,7 +13,10 @@ public enum CropKind {
     POTATO("minecraft:potatoes", 7, "potato", "potato", HarvestMethod.BREAK),
     BEETROOT("minecraft:beetroots", 3, "beetroot_seeds", "beetroot", HarvestMethod.BREAK),
     SWEET_BERRY_BUSH("minecraft:sweet_berry_bush", 3, "sweet_berries", "sweet_berries",
-            HarvestMethod.PICK);
+            HarvestMethod.PICK),
+    SUGAR_CANE("minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane", HarvestMethod.BREAK_COLUMN),
+    BAMBOO("minecraft:bamboo", 1, "bamboo", "bamboo", HarvestMethod.BREAK_COLUMN),
+    CACTUS("minecraft:cactus", 15, "cactus", "cactus", HarvestMethod.BREAK_COLUMN);
 
     private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())

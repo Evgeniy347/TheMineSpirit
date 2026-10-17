@@ -9,6 +9,7 @@ final class MapFarmView implements FarmView {
     private static final FarmTile DEFAULT = new FarmTile(Ground.OTHER, Above.BLOCKED, Optional.empty());
 
     private final Map<BlockCoord, FarmTile> tiles = new HashMap<>();
+    private final Map<BlockCoord, Integer> heights = new HashMap<>();
     private int reads;
 
     MapFarmView set(int x, int y, int z, FarmTile tile) {
@@ -33,9 +34,20 @@ final class MapFarmView implements FarmView {
         return reads;
     }
 
+    MapFarmView height(int x, int y, int z, int value) {
+        heights.put(new BlockCoord(x, y, z), value);
+        return this;
+    }
+
     @Override
     public FarmTile tileAt(BlockCoord coord) {
         reads++;
         return tiles.getOrDefault(coord, DEFAULT);
+    }
+
+    @Override
+    public int columnHeight(BlockCoord ground) {
+        reads++;
+        return heights.getOrDefault(ground, 1);
     }
 }

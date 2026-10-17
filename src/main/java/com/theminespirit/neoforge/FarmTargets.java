@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
+import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.farming.Hydration;
 import com.theminespirit.core.farming.WaterCells;
 import com.theminespirit.core.observation.BlockCoord;
@@ -16,6 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 public final class FarmTargets implements HarvestTargets {
     private static final Set<Block> TILLABLE = Set.of(Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.DIRT_PATH);
 
+    private final Level level;
     private final BlockLocator.Search search;
     private final WaterScan water;
     private final int groundShift;
@@ -23,6 +25,7 @@ public final class FarmTargets implements HarvestTargets {
     private int slices;
 
     public FarmTargets(Level level, BlockPos center, int radius, FarmJob job, CropKind crop) {
+        this.level = level;
         this.search = BlockLocator.search(level, center, radius, blocksFor(job, crop));
         this.water = job == FarmJob.TILL ? WaterScan.around(level, center, radius) : WaterScan.skipped();
         this.groundShift = job == FarmJob.HARVEST || job == FarmJob.BONE_MEAL ? 1 : 0;
@@ -74,9 +77,28 @@ public final class FarmTargets implements HarvestTargets {
     private List<BlockCoord> groundsOf(List<BlockPos> found) {
         List<BlockCoord> grounds = new ArrayList<>(found.size());
         for (BlockPos pos : found) {
-            grounds.add(new BlockCoord(pos.getX(), pos.getY() - groundShift, pos.getZ()));
+            BlockPos base = pos;
+            if (groundShift == 1) {
+                var state = level.getBlockState(pos);
+                var kind = CropKind.ofBlock(
+                        net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+                if (kind.isPresent() && kind.get().harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+                    while (true) {
+                        BlockPos below = base.below();
+                        var belowState = level.getBlockState(below);
+                        var belowKind = CropKind.ofBlock(net.minecraft.core.registries.BuiltInRegistries.BLOCK
+                                .getKey(belowState.getBlock()).toString());
+                        if (belowKind.isPresent() && belowKind.get() == kind.get()) {
+                            base = below;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            grounds.add(new BlockCoord(base.getX(), base.getY() - groundShift, base.getZ()));
         }
-        return grounds;
+        return grounds.stream().distinct().toList();
     }
 
     private static Set<Block> blocksFor(FarmJob job, CropKind crop) {
