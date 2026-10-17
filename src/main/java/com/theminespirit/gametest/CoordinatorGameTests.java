@@ -8,6 +8,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
@@ -376,6 +377,37 @@ public final class CoordinatorGameTests {
             zone.map(OrdersBuilder.Zone::center).ifPresent(posts::add);
         }
         return posts;
+    }
+
+    @GameTest(template = "arena", batch = "coordinator_directive_owner", timeoutTicks = 100)
+    public static void directive_TestDirective_CoordinatorClearsOnlyItsOwn(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
+        BlockCoord home = new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ());
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 4));
+        spirit.setHome(home);
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 5));
+        husk.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, TacticsScene.FOREVER, 4, false, false));
+        SpiritCoordinator coordinator = CoordinatorRegistry.get(helper.getLevel(),
+                SettlementGroups.keyOf(spirit.home(), spirit.getUUID()));
+        long now = helper.getLevel().getGameTime();
+        coordinator.tick(List.of(spirit), now);
+        helper.assertTrue(spirit.tactics().activeDirective().isPresent(),
+                "Координатор активен и выдал духу приказ обороны: иначе проверять снятие нечего; "
+                        + "постов " + coordinator.defense().lastPlan().posts().size());
+        spirit.tactics().applyDirective(new CombatDirective(CombatMode.PASSIVE, Optional.empty(),
+                Optional.empty(), Optional.empty()));
+        coordinator.tick(List.of(), now + 1);
+        husk.discard();
+
+        helper.assertTrue(spirit.tactics().activeDirective()
+                        .map(directive -> directive.mode() == CombatMode.PASSIVE).orElse(false),
+                "Директива теста остаётся после уборки приказа координатора: иначе повторяется флак 17.10, "
+                        + "где терялись PASSIVE и forced HOME; сейчас "
+                        + spirit.tactics().activeDirective().map(Object::toString).orElse("нет"));
+
+        TacticsScene.finish(helper, spirit);
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)

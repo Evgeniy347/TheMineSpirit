@@ -40,6 +40,8 @@
     "stockReadBudget": 8,
     "stockBlockBudget": 4096,
     "failBackoffTicks": 200,
+    "caseFailPauseTicks": 1200,
+    "caseFailLimit": 3,
     "fencePatrolInterval": 1000,
     "enchantCheckInterval": 500,
     "enchantShelvesMin": 4

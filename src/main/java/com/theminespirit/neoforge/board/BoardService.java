@@ -4,6 +4,8 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AnimalLifecycle;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
+import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
@@ -242,6 +244,9 @@ public final class BoardService {
             }
         } else {
             board.fail(ticket.id());
+            for (BoardLogEntry entry : board.drainDetachments()) {
+                LOGGER.warn("Журнал доски: {}", BoardLog.write(entry));
+            }
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL
                     || ticket.boardCase() == BoardCase.BUILD_PEN
                     || ticket.boardCase() == BoardCase.LURE_ANIMAL) {
@@ -262,7 +267,7 @@ public final class BoardService {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
         for (BoardTicket ticket : claimable) {
-            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held);
+            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now);
             if (spirit == null) {
                 LOGGER.debug("Задание {} ждёт свободного духа: все духи уровня заняты", ticket.id());
                 return;
@@ -324,32 +329,34 @@ public final class BoardService {
     }
 
     private SpiritEntity chooseSpirit(BoardTicket ticket, List<SpiritEntity> spirits, ServerLevel level,
-            Map<UUID, Integer> held) {
+            Map<UUID, Integer> held, long now) {
         if (ticket.assignee().isPresent()) {
             Entity entity = level.getEntity(ticket.assignee().orElseThrow());
-            if (entity instanceof SpiritEntity spirit && free(spirit, held)) {
+            if (entity instanceof SpiritEntity spirit && free(spirit, held, ticket, now)) {
                 return spirit;
             }
             return null;
         }
-        return nearestFree(spirits, targets.get(ticket.id()), held);
+        return nearestFree(spirits, targets.get(ticket.id()), held, ticket, now);
     }
 
-    private boolean free(SpiritEntity spirit, Map<UUID, Integer> held) {
+    private boolean free(SpiritEntity spirit, Map<UUID, Integer> held, BoardTicket ticket, long now) {
         RunStatus status = spirit.taskStatus().orElse(null);
         if (status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent()) {
             return false;
         }
         // Занятость — только RUNNING (идиома проекта, SpiritBotGateway): SUCCEEDED/FAILED
         // после закрытия задания духа не держат, иначе доска выдала бы духу одно задание навсегда.
-        return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit();
+        return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit()
+                && board.availableTo(spirit.getUUID(), ticket.boardCase(), now);
     }
 
-    private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held) {
+    private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held,
+            BoardTicket ticket, long now) {
         SpiritEntity best = null;
         double bestDistance = Double.MAX_VALUE;
         for (SpiritEntity spirit : spirits) {
-            if (!free(spirit, held)) {
+            if (!free(spirit, held, ticket, now)) {
                 continue;
             }
             double distance = target == null ? 0

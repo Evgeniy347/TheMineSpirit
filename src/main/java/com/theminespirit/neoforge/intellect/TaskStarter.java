@@ -4,14 +4,18 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.intellect.TaskAdmission;
 import com.theminespirit.core.intellect.TaskBackoff;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public final class TaskStarter {
+    private record Issued(String script, long generation) {
+    }
+
     private final TaskBackoff backoff = new TaskBackoff();
-    private final Map<UUID, String> issued = new HashMap<>();
+    private final Map<UUID, Issued> issued = new HashMap<>();
     private final Map<UUID, RunStatus> observed = new HashMap<>();
     private int starts;
     private int failures;
@@ -40,11 +44,21 @@ public final class TaskStarter {
         }
         var status = spirit.taskStatus();
         var current = spirit.currentTaskScript();
+        long generation = spirit.taskGeneration();
+        Issued own = issued.get(id);
         // Запущенная задача (в т.ч. чужая, ещё не назвавшая скрипт) не перебивается: иначе занятие,
         // выданное в том же серверном тике, затирает задачу и её итог (флак GameTest 16.10).
-        var admission = TaskAdmission.decide(current, status.orElse(null), issued.get(id), script);
+        var admission = TaskAdmission.decide(current, status.orElse(null),
+                own == null ? null : own.script(),
+                own == null ? SpiritReading.UNKNOWN_GENERATION : own.generation(), generation, script);
         switch (admission) {
-            case SKIP_SAME, SKIP_FOREIGN, SKIP_BUSY -> {
+            case SKIP_SAME, SKIP_BUSY -> {
+                return false;
+            }
+            case SKIP_FOREIGN -> {
+                if (own != null && own.generation() != generation) {
+                    issued.remove(id);
+                }
                 return false;
             }
             case CANCEL_AND_START -> spirit.cancelTask();
@@ -56,11 +70,11 @@ public final class TaskStarter {
                     // серверном тике. Следующий тик — обычный откат.
                     return false;
                 }
-                String last = issued.remove(id);
+                Issued last = issued.remove(id);
                 if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
-                    backoff.noteFailure(id, last, tick);
+                    backoff.noteFailure(id, last.script(), tick);
                     failures++;
-                    if (last.equals(script)) {
+                    if (last.script().equals(script)) {
                         return false;
                     }
                 }
@@ -68,7 +82,7 @@ public final class TaskStarter {
             default -> throw new IllegalStateException("Неизвестный вердикт допуска задачи: " + admission);
         }
         spirit.startTask(task);
-        issued.put(id, script);
+        issued.put(id, new Issued(script, spirit.taskGeneration()));
         starts++;
         return true;
     }
