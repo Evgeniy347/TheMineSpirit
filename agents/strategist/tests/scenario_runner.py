@@ -207,6 +207,11 @@ class ScenarioRun:
             if any(self._matches(e, pattern) for e in self.events()):
                 self.fail(when, f"в журнале есть событие {pattern}, которого быть не должно")
 
+    def check_posted_scripts(self, expected, when):
+        actual = [sorted(scripts_in(request["body"].get("plan"))) for request in self.task_posts()]
+        if actual != expected:
+            self.fail(when, f"скрипты отправленных задач {actual}, ожидались {expected}")
+
     def check_plan_calls(self, expected, when):
         actual = len(self.fake.requests_to("POST", "/v1/plan"))
         if actual != expected:

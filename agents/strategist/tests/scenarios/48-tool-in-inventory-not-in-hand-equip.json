@@ -1,0 +1,51 @@
+{
+ "name": "48-tool-in-inventory-not-in-hand-equip",
+ "description": "кирка лежит в инвентаре, но не в руке: equip проходит проверку и уходит задачей",
+ "bots": [
+  {
+   "id": "mine",
+   "world": "mine"
+  }
+ ],
+ "brain": {
+  "default": {
+   "json": {
+    "reason": "Кирка в инвентаре, но не в руке: сначала надену её.",
+    "goal": "взять кирку в руку",
+    "plan": {
+     "type": "script",
+     "script": "equip",
+     "params": {
+      "item": "iron_pickaxe"
+     }
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "posts": 1
+  },
+  {
+   "brain_calls": 1
+  },
+  {
+   "journal": {
+    "rejected": 0,
+    "posted": 1
+   }
+  },
+  {
+   "posted_scripts": [
+    [
+     "equip"
+    ]
+   ]
+  }
+ ]
+}

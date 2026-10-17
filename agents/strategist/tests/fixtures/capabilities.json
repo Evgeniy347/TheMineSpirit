@@ -381,6 +381,12 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 256
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32,
+            "default": 16
           }
         },
         "required": [
@@ -393,6 +399,90 @@
       ],
       "effects": [
         "предмет скрафчен"
+      ]
+    },
+    {
+      "id": "equip",
+      "summary": "надеть предмет",
+      "params": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item"
+        ]
+      },
+      "preconditions": [
+        "предмет есть в инвентаре"
+      ],
+      "effects": [
+        "предмет надет"
+      ]
+    },
+    {
+      "id": "withdraw",
+      "summary": "взять предметы из контейнера",
+      "params": {
+        "type": "object",
+        "properties": {
+          "container": {
+            "type": "string",
+            "default": "nearest"
+          },
+          "item": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "radius": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          }
+        },
+        "required": [
+          "item",
+          "count"
+        ]
+      },
+      "preconditions": [
+        "контейнер доступен"
+      ],
+      "effects": [
+        "предметы в инвентаре",
+        "контейнер отсортирован"
+      ]
+    },
+    {
+      "id": "acquire",
+      "summary": "добыть предмет любым способом",
+      "params": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          }
+        },
+        "required": [
+          "item",
+          "count"
+        ]
+      },
+      "preconditions": [],
+      "effects": [
+        "предмет есть в инвентаре"
       ]
     },
     {
