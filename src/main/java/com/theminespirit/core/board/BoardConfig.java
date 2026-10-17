@@ -24,7 +24,7 @@ import java.util.function.Function;
 public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
         Map<String, Long> intervals, Map<String, Integer> levels, Map<String, Integer> herd,
         List<String> immovable, Map<String, Integer> supplies,
-        Map<String, Map<String, Integer>> products) {
+        Map<String, Map<String, Integer>> products, Map<String, Integer> tools) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -61,11 +61,14 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
                                     + "таблицу задают пустой картой")));
         }
         products = Map.copyOf(checkedProducts);
+        Objects.requireNonNull(tools,
+                "Число комплектов инструментов не может быть null: пустую таблицу задают пустой картой, а не null");
+        tools = Map.copyOf(tools);
     }
 
     public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
             Map<String, Long> intervals) {
-        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of(), Map.of());
+        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -87,7 +90,9 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
-        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies, products);
+        Map<String, Integer> tools = integers(root.get("tools"), origin, "tools", ToolSet::toolKey, false);
+        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies, products,
+                tools);
     }
 
     public static BoardConfig readFromClasspath() {

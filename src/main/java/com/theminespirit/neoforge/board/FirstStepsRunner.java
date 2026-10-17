@@ -15,6 +15,7 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
@@ -24,10 +25,12 @@ import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
@@ -65,8 +68,9 @@ public final class FirstStepsRunner {
         if (hasActive(service, caseValue)) {
             return;
         }
+        TicketTarget target = targetFor(caseValue, home, spirits.size());
         MaterialSource source = materialSource(level);
-        Map<String, Integer> need = materials(source, caseValue, home);
+        Map<String, Integer> need = materials(source, caseValue, target);
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
@@ -78,7 +82,13 @@ public final class FirstStepsRunner {
         String id = "first:" + caseValue.name().toLowerCase(Locale.ROOT);
         LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
         service.submit(new BoardTicket(id, caseValue, Optional.empty(), BoardRules.priorityOf(caseValue), now,
-                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), TicketTarget.at(home));
+                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), target);
+    }
+
+    /** Цель задания: точка поселения, а для инструментов — ещё и число комплектов из таблицы board. */
+    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, int spirits) {
+        TicketTarget target = TicketTarget.at(home);
+        return ToolSet.isTool(caseValue) ? target.withToolCount(ToolSet.count(spirits)) : target;
     }
 
     /** Мелочь на доску: добыть недостающий материал в запас, тогда ждущий шаг откроется. */
@@ -97,9 +107,10 @@ public final class FirstStepsRunner {
                 List.of(), Map.of()), TicketTarget.at(home).withSupply(item, batch));
     }
 
-    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, BlockCoord home) {
+    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue,
+            TicketTarget target) {
         try {
-            TaskNode plan = TicketPlans.plan(caseValue, 1, TicketTarget.at(home));
+            TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             return CaseMaterials.need(plan, source);
         } catch (RuntimeException failure) {
             LOGGER.error("Материалы шага первых шагов {} не посчитаны: {}", caseValue, failure.getMessage());
@@ -155,7 +166,6 @@ public final class FirstStepsRunner {
         boolean groundsCleared = true;
         int chests = 0;
         boolean craftingStation = false;
-        boolean tools = false;
         boolean mineEntrance = false;
         boolean fence = false;
         boolean lighting = false;
@@ -197,10 +207,21 @@ public final class FirstStepsRunner {
                 }
             }
         }
-        tools = stock.available().containsKey("minecraft:wooden_pickaxe")
-                || stock.available().containsKey("wooden_pickaxe");
+        Set<String> tools = toolStock(stock);
         return new SettlementFacts(hasHome, groundsCleared, chests, craftingStation, tools, mineEntrance, fence,
                 lighting, houses);
+    }
+
+    /** Собранные инструменты набора: короткие ключи снимка запасов (wooden_pickaxe и т. п.). */
+    private static Set<String> toolStock(StockView stock) {
+        Set<String> tools = new HashSet<>();
+        for (BoardCase toolCase : ToolSet.chain()) {
+            String key = ToolSet.stockKey(toolCase);
+            if (stock.available().containsKey(key)) {
+                tools.add(key);
+            }
+        }
+        return tools;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {

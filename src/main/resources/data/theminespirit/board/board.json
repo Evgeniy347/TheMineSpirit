@@ -19,7 +19,13 @@
     "ENCHANT_ROOM": 50,
     "GATHER_MATERIALS": 45,
     "SUPPLY_SITE": 40,
-    "CRAFT_TOOLS": 40,
+    "CRAFT_STONE_AXE": 40,
+    "CRAFT_STONE_PICKAXE": 40,
+    "CRAFT_STONE_SHOVEL": 40,
+    "CRAFT_STONE_SWORD": 40,
+    "CRAFT_WOODEN_AXE": 40,
+    "CRAFT_WOODEN_PICKAXE": 40,
+    "CRAFT_WOODEN_SHOVEL": 40,
     "CRAFTING_STATION": 40,
     "STOCK_CHESTS": 40,
     "FILL_CRATER": 35,
@@ -61,6 +67,10 @@
   "herd": {
     "maxPerSpecies": 4,
     "minBreed": 2
+  },
+  "tools": {
+    "perSpirit": 1,
+    "minSets": 1
   },
   "immovable": [
     "BUILD_MINE"
