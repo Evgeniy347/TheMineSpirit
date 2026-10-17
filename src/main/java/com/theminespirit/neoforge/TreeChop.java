@@ -121,7 +121,7 @@ final class TreeChop {
         lackedSaplings = false;
         breaking = false;
         movedCloser = false;
-        approach.begin(Vec3.atCenterOf(toPos(target.base())), ChopTuning.STAND_DISTANCE);
+        approach.begin(approachTarget(target), ChopTuning.STAND_DISTANCE);
         phase = Phase.APPROACH;
     }
 
@@ -481,6 +481,41 @@ final class TreeChop {
         pillar = null;
         pillarRemaining.clear();
         return replant ? startReplant() : finish();
+    }
+
+    private Vec3 approachTarget(Tree target) {
+        BlockPos stand = standingCellBesideTrunk(target);
+        return stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
+    }
+
+    private BlockPos standingCellBesideTrunk(Tree target) {
+        int baseY = target.base().y();
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (BlockCoord log : target.logs()) {
+            if (log.y() != baseY) {
+                continue;
+            }
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (dx == 0 && dz == 0) {
+                        continue;
+                    }
+                    for (int dy = 0; dy <= 1; dy++) {
+                        BlockPos pos = new BlockPos(log.x() + dx, baseY + dy, log.z() + dz);
+                        if (!isStandable(pos)) {
+                            continue;
+                        }
+                        double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos));
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            best = pos;
+                        }
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private BlockPos standingCellNearTrunk() {
