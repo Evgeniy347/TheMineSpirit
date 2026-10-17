@@ -3,7 +3,9 @@ package com.theminespirit.gametest;
 import com.mojang.authlib.GameProfile;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.neoforge.SpiritEntity;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -91,6 +93,30 @@ final class GameTestFixtures {
         registerScene(helper);
         for (Entity entity : helper.getLevel().getEntities((Entity) null, sweepArea(helper),
                 e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS && clearable(helper, e))) {
+            entity.discard();
+        }
+        sweepSpiritLeftovers(helper);
+    }
+
+    /**
+     * Духи-остатки прошлых пачек живут в чужих структурах, куда локальная зачистка (запас 48)
+     * не достаёт, но службы поселения видят их целиком: {@code BoardService.census},
+     * {@code CoordinatorLifecycle.census} и {@code FirstStepsRunner} обходят всех духов уровня.
+     * Чужой дух с домом уводит общий билет или плодит задания первых шагов — сцена получает чужую
+     * работу (флак 17.10: forage, firststeps, supply). Здесь доводим зачистку духов до всего уровня:
+     * дух вне активной сцены и старше сетапа пачки — остаток. Мобы остаются локальной зачистке: их
+     * радиус восприятия той же сцены не превышает запаса. Живая сцена пачки не тронута — реестр
+     * границ и возраст берегут её.
+     */
+    private static void sweepSpiritLeftovers(GameTestHelper helper) {
+        List<Entity> leftovers = new ArrayList<>();
+        for (Entity entity : helper.getLevel().getAllEntities()) {
+            if (entity instanceof SpiritEntity && entity.tickCount > SWEEP_MIN_AGE_TICKS
+                    && clearable(helper, entity)) {
+                leftovers.add(entity);
+            }
+        }
+        for (Entity entity : leftovers) {
             entity.discard();
         }
     }
