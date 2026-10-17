@@ -80,15 +80,9 @@ public record SettlementView(int population, int children, double foodPerSoul, d
                 .toList();
     }
 
-    public boolean needsFood(double days, double safety) {
-        if (Double.isNaN(days) || Double.isInfinite(days) || days <= 0) {
-            throw new IllegalArgumentException("Запас еды считается на " + days + " суток: срок обязан быть конечным и > 0");
-        }
-        if (Double.isNaN(safety) || Double.isInfinite(safety) || safety <= 0) {
-            throw new IllegalArgumentException(
-                    "Запас еды считается с коэффициентом " + safety + ": запас обязан быть конечным и > 0");
-        }
-        return foodNutritionPerSoul < days * safety;
+    public FoodDeficit foodDeficit(double days, double adultRation, double childRation) {
+        return FoodNorm.deficit(adults(), children, days, adultRation, childRation,
+                foodNutritionPerSoul * population);
     }
 
     public boolean needsOre(int oreTarget, int ironTarget, int weaponTarget) {

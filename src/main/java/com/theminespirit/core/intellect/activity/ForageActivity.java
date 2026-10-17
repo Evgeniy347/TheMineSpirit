@@ -26,7 +26,7 @@ public final class ForageActivity implements Activity {
         if (!hasMethod(view)) {
             return Activity.checkedDemand(id(), 0);
         }
-        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_SAFETY;
+        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_RATION;
         double need = Math.max(0, Math.min(1, (norm - view.foodNutritionPerSoul()) / norm));
         return Activity.checkedDemand(id(), 1 + 8 * need);
     }

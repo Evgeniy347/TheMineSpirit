@@ -10,7 +10,8 @@ public final class IntellectTuning {
     public static final double FLEE_MARGIN = 1.0;
     public static final int MAX_FIGHTERS = 3;
     public static final double FOOD_DAYS = 1;
-    public static final double FOOD_SAFETY = 1.5;
+    public static final double FOOD_RATION = 1.5;
+    public static final double FOOD_CHILD_RATION = 0.75;
     public static final int FORAGE_WITHDRAW_COUNT = 1;
     public static final int FORAGE_WITHDRAW_RADIUS = 8;
     public static final int FORAGE_HUNT_RADIUS = 16;

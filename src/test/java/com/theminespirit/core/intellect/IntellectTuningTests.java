@@ -46,8 +46,10 @@ class IntellectTuningTests {
     void foodNorm_DeclaredValues_MatchTuningLiterals() {
         assertEquals(1, IntellectTuning.FOOD_DAYS,
                 "Норма еды считается на сутки: иначе ферма копит или голодает не в срок");
-        assertEquals(1.5, IntellectTuning.FOOD_SAFETY,
-                "Запас еды с коэффициентом 1.5: иначе неурожай застанет поселение без еды");
+        assertEquals(1.5, IntellectTuning.FOOD_RATION,
+                "Взрослому 1.5 сытности в сутки: иначе паёк разъедется с ванильной шкалой голода");
+        assertEquals(0.75, IntellectTuning.FOOD_CHILD_RATION,
+                "Ребёнок ест половину пайка взрослого: иначе норма поселения завышена и ферма копит лишнее");
     }
 
     @Test
