@@ -73,9 +73,12 @@ class OpencodeBrainTests(BrainTestCase):
             self.assertNotIn(f" {flag} ", built, f"{flag} в build_args отключает отказ на ask")
             self.assertNotIn(f" {flag}", " " + " ".join(self.brain().build_args("п", agent=False)))
 
-    def test_complete_LastTextEventWins(self):
-        reply = self.brain(FAKE_REPLY='{"reason":"второй","skip":true}').complete("с", "п")
-        self.assertIn("второй", reply.text)
+    def test_complete_MultipleTextParts_ConcatenatedInOrder(self):
+        parts = json.dumps(['{"reason":"две ', 'части","skip":true}'], ensure_ascii=False)
+        reply = self.brain(FAKE_REPLY_PARTS=parts).complete("с", "п")
+        self.assertEqual('{"reason":"две части","skip":true}', reply.text,
+                         "ответ модели приходит несколькими text-частями: они склеиваются по порядку, а не теряется "
+                         "начало (обрыв «\"steps\": [»); порядок частей — как в потоке opencode")
 
     def test_complete_ProviderErrorInJson_RaisesProviderQuicklyAndKillsProcess(self):
         for text in ("Free usage exceeded", "Rate limit exceeded", "HTTP 429 Too Many Requests", "upstream error 502 bad gateway"):

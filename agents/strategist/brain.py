@@ -322,7 +322,7 @@ class OpencodeBrain:
             time.sleep(POLL_SECONDS)
 
     def _interpret(self, stdout: str, stderr: str, code: int, seconds: float) -> BrainReply:
-        text, attempted, executed = "", [], []
+        texts, attempted, executed = [], [], []
         for line in stdout.splitlines():
             try:
                 event = json.loads(line)
@@ -332,12 +332,13 @@ class OpencodeBrain:
                 continue
             part = event.get("part") if isinstance(event.get("part"), dict) else {}
             if event.get("type") == "text" and isinstance(part.get("text"), str) and part["text"].strip():
-                text = part["text"]
+                texts.append(part["text"])
             elif event.get("type") == "tool_use":
                 state = part.get("state") if isinstance(part.get("state"), dict) else {}
                 attempted.append(str(part.get("tool")))
                 if state.get("status") != "error":
                     executed.append(str(part.get("tool")))
+        text = "".join(texts)
         if executed:
             raise SandboxBreach(f"Нарушение песочницы: инструмент {', '.join(executed)} выполнился без отказа; "
                              "проверьте sandbox/opencode.json и запуск без флага автоодобрения")
