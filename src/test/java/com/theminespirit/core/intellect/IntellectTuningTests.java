@@ -50,6 +50,8 @@ class IntellectTuningTests {
                 "Взрослому 1.5 сытности в сутки: иначе паёк разъедется с ванильной шкалой голода");
         assertEquals(0.75, IntellectTuning.FOOD_CHILD_RATION,
                 "Ребёнок ест половину пайка взрослого: иначе норма поселения завышена и ферма копит лишнее");
+        assertEquals(9.0, IntellectTuning.FOOD_DEMAND_MAX,
+                "Пустой склад поднимает добычу еды до 9: выше рубки, но ниже обороны 10");
     }
 
     @Test

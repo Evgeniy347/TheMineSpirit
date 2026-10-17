@@ -40,12 +40,32 @@ class ForageActivityTests {
     }
 
     @Test
-    void demand_SatedWithChestFood_BaselineOne() {
+    void demand_SatedWithChestFood_Zero() {
         SettlementView sated = SettlementViews.settlementWithForage(2, 2, 64, 32, 2, 0, FarmWork.NONE,
                 new Forage("minecraft:bread", 0, ""));
 
-        assertEquals(1.0, FORAGE.demand(sated),
-                "Сытому поселению добыча не нужнее прочего запаса: базовый спрос 1, а не 9");
+        assertEquals(0.0, FORAGE.demand(sated),
+                "При запасе выше нормы добыча еды не востребована: иначе духи бросают другие работы ради лишней еды");
+    }
+
+    @Test
+    void demand_MoreDeficit_Higher() {
+        SettlementView low = SettlementViews.settlementWithForage(1, 1, 64, 32, 2, 0, FarmWork.NONE,
+                new Forage("minecraft:bread", 0, ""));
+        SettlementView high = SettlementViews.settlementWithForage(1, 0.5, 64, 32, 2, 0, FarmWork.NONE,
+                new Forage("minecraft:bread", 0, ""));
+
+        assertTrue(FORAGE.demand(high) > FORAGE.demand(low),
+                "Чем больше дефицит еды, тем выше добыча: иначе спрос не отличает лёгкий голод от сильного");
+    }
+
+    @Test
+    void demand_EmptyStock_MaxDemand() {
+        SettlementView empty = SettlementViews.settlementWithForage(0, 0, 64, 32, 2, 0, FarmWork.NONE,
+                new Forage("minecraft:bread", 0, ""));
+
+        assertEquals(9.0, FORAGE.demand(empty),
+                "Пустой склад при населении 3 даёт максимальный пищевой спрос 9: число — в таблице IntellectTuning");
     }
 
     @Test
