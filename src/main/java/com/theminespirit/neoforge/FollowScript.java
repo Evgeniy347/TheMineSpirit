@@ -6,17 +6,21 @@ import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.FollowParams;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 final class FollowScript implements ScriptInstance {
     private static final double MOVE_SPEED = 1.0;
+    private static final double COMPANION_SEARCH_RADIUS = 64.0;
 
     private final SpiritEntity spirit;
     private final FollowParams params;
     private final PathRefreshPolicy pathRefresh = new PathRefreshPolicy();
+    private SpiritEntity companion;
     private String failureReason;
 
     FollowScript(SpiritEntity spirit, FollowParams params) {
@@ -31,7 +35,7 @@ final class FollowScript implements ScriptInstance {
             failureReason = "дух исчез во время сопровождения";
             return ScriptStatus.FAILED;
         }
-        ServerPlayer target = findTarget();
+        Entity target = findTarget();
         if (target == null) {
             stopNavigation();
             failureReason = "цель '" + params.target() + "' не найдена";
@@ -81,7 +85,25 @@ final class FollowScript implements ScriptInstance {
         spirit.getNavigation().stop();
     }
 
-    private ServerPlayer findTarget() {
+    private Entity findTarget() {
+        ServerPlayer player = findPlayer();
+        if (player != null) {
+            return player;
+        }
+        if (companion == null || companion.isRemoved()) {
+            if (!(spirit.level() instanceof ServerLevel serverLevel)) {
+                return null;
+            }
+            List<SpiritEntity> nearby = serverLevel.getEntitiesOfClass(SpiritEntity.class,
+                    spirit.getBoundingBox().inflate(COMPANION_SEARCH_RADIUS));
+            companion = nearby.stream()
+                    .filter(other -> other != spirit && other.getStringUUID().equals(params.target()))
+                    .findFirst().orElse(null);
+        }
+        return companion;
+    }
+
+    private ServerPlayer findPlayer() {
         if (!(spirit.level() instanceof ServerLevel serverLevel)) {
             return null;
         }

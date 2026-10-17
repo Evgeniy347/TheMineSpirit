@@ -3,10 +3,17 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
+import com.theminespirit.core.coordinator.SpiritRole;
+import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.coordinator.WorkReservations;
 import com.theminespirit.core.intellect.ActivityAssignment;
+import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.InvitationAnswer;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrengthAction;
@@ -71,6 +78,157 @@ public final class IntellectGameTests {
 
     private static ScriptCall mineVein() {
         return new ScriptCall("mine_vein", Map.of("ore", "any", "count", 8, "radius", 16));
+    }
+
+    private static void giveMineKit(SpiritEntity spirit) {
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        spirit.getInventory().setItem(1, new ItemStack(Items.TORCH, 8));
+        spirit.getInventory().setItem(2, new ItemStack(Items.BREAD, 3));
+    }
+
+    private static SpiritSnapshot snapshotOf(SpiritEntity spirit) {
+        Vec3 pos = spirit.position();
+        return new SpiritSnapshot(spirit.getUUID(), new Point(pos.x, pos.y, pos.z), 1.0, SpiritRole.WORKER,
+                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 0, 1.0);
+    }
+
+    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    public static void outside_OneMinerAtHomeWithMineNeed_NoMineTask(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        BlockCoord home = homeOf(helper, spirit);
+        SettlementIntellect intellect = new SettlementIntellect();
+        Point homePoint = new Point(home.x(), home.y(), home.z());
+        intellect.tick(helper.getLevel(), List.of(spirit), List.of(snapshotOf(spirit)),
+                Optional.of(homePoint), new WorkReservations(), 100);
+
+        helper.assertTrue(intellect.decision().orElseThrow().activities().assignments().stream()
+                        .noneMatch(assignment -> assignment.activity() == ActivityId.MINE),
+                "Один дух за границу не выходит: внешняя работа не назначается");
+        helper.assertTrue(intellect.decision().orElseThrow().refusals().stream()
+                        .anyMatch(reason -> reason.contains("MINE")),
+                "Причина отказа видна в журнале решений, фактически: "
+                        + intellect.decision().orElseThrow().refusals());
+        helper.assertTrue(spirit.currentTaskScript().map(script -> !script.equals("mine_vein")).orElse(true),
+                "Задача mine_vein одинокому шахтёру не выдаётся");
+        spirit.discard();
+        TacticsScene.finish(helper, spirit);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    public static void outside_TwoMinersAtHomeWithMineNeed_MineTaskStarted(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(6, 1, 5));
+        BlockCoord home = homeOf(helper, first);
+        homeOf(helper, second);
+        SettlementIntellect intellect = new SettlementIntellect();
+        Point homePoint = new Point(home.x(), home.y(), home.z());
+        intellect.tick(helper.getLevel(), List.of(first, second),
+                List.of(snapshotOf(first), snapshotOf(second)), Optional.of(homePoint), new WorkReservations(), 100);
+
+        helper.assertTrue(intellect.decision().orElseThrow().activities().assignments().stream()
+                        .anyMatch(assignment -> assignment.activity() == ActivityId.MINE),
+                "Двое духов внешнюю работу получают: группа от порога — организация");
+        helper.assertTrue(List.of(first, second).stream()
+                        .anyMatch(spirit -> spirit.currentPlan()
+                                .map(plan -> plan instanceof ScriptCall call && call.script().equals("mine_vein"))
+                                .orElse(false)),
+                "Хотя бы один шахтёр получает задачу mine_vein");
+        first.discard();
+        second.discard();
+        TacticsScene.finish(helper, first);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    public static void outside_MineExpeditionWithoutKit_NotDispatched(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "NoKit");
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4))) {
+            SpiritEntity spirit = TacticsScene.spirit(helper, at);
+            spirits.add(spirit);
+        }
+        homeOf(helper, spirits.get(0));
+        homeOf(helper, spirits.get(1));
+        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
+        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
+        Expedition planned = new Expedition(
+                List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID()),
+                new Point(vein.getX(), vein.getY(), vein.getZ()), helper.getLevel().getGameTime());
+        long openedAt = helper.getLevel().getGameTime();
+        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+
+        helper.assertTrue(intellect.expeditions().lastDispatch().isEmpty(),
+                "Без набора команда в шахту не идёт: спуск начинается с проверки кирки, факелов и еды");
+        helper.assertTrue(intellect.expeditions().refusal().map(reason -> reason.contains("набор")).orElse(false),
+                "Причина отказа — нехватка набора, фактически: " + intellect.expeditions().refusal().orElse("нет"));
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, spirits.get(0));
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    public static void outside_MineExpeditionWithKit_LeaderMinesPartnerFollows(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "KitMiner");
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4))) {
+            SpiritEntity spirit = TacticsScene.spirit(helper, at);
+            spirits.add(spirit);
+        }
+        homeOf(helper, spirits.get(0));
+        homeOf(helper, spirits.get(1));
+        giveMineKit(spirits.get(0));
+        giveMineKit(spirits.get(1));
+        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
+        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
+        List<UUID> team = List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID());
+        Expedition planned = new Expedition(team, new Point(vein.getX(), vein.getY(), vein.getZ()),
+                helper.getLevel().getGameTime());
+        long openedAt = helper.getLevel().getGameTime();
+        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+
+        helper.assertTrue(intellect.expeditions().lastDispatch()
+                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                                && new HashSet<>(dispatch.team()).equals(new HashSet<>(team)))
+                        .orElse(false),
+                "С набором команда идёт в шахту: диспетч mine_vein на ту же команду");
+        SpiritEntity leader = spirits.stream().filter(spirit -> spirit.getUUID().equals(team.get(0)))
+                .findFirst().orElseThrow();
+        SpiritEntity partner = spirits.stream().filter(spirit -> spirit.getUUID().equals(team.get(1)))
+                .findFirst().orElseThrow();
+        helper.assertTrue(leader.currentPlan()
+                        .map(plan -> plan instanceof SequenceNode sequence && sequence.steps().stream()
+                                .anyMatch(step -> step instanceof ScriptCall call
+                                        && call.script().equals("mine_vein")))
+                        .orElse(false),
+                "Ведущий копает: у него в плане mine_vein, фактически "
+                        + leader.currentPlan().map(Object::toString).orElse("нет"));
+        helper.assertTrue(partner.currentPlan()
+                        .map(plan -> plan instanceof ScriptCall call && call.script().equals("follow"))
+                        .orElse(false),
+                "Напарник идёт рядом: он следует за ведущим, фактически "
+                        + partner.currentPlan().map(Object::toString).orElse("нет"));
+        helper.assertTrue(leader.currentPlan()
+                        .map(plan -> plan instanceof SequenceNode sequence && sequence.steps().stream()
+                                .anyMatch(step -> step instanceof ScriptCall call
+                                        && call.script().equals("return_home")))
+                        .orElse(false),
+                "После шахты ведущий возвращается на базу: план — шахта, затем возврат домой");
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, spirits.get(0));
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = "intellect_activities", timeoutTicks = 400)
@@ -242,6 +400,8 @@ public final class IntellectGameTests {
         homeOf(helper, spirits.get(0));
         homeOf(helper, spirits.get(1));
         homeOf(helper, spirits.get(2));
+        giveMineKit(spirits.get(0));
+        giveMineKit(spirits.get(1));
         SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
         BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
         Expedition planned = new Expedition(
@@ -330,6 +490,8 @@ public final class IntellectGameTests {
         homeOf(helper, spirits.get(0));
         homeOf(helper, spirits.get(1));
         homeOf(helper, spirits.get(2));
+        giveMineKit(spirits.get(0));
+        giveMineKit(spirits.get(1));
         SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
         BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
         Expedition planned = new Expedition(
@@ -374,6 +536,8 @@ public final class IntellectGameTests {
         homeOf(helper, spirits.get(0));
         homeOf(helper, spirits.get(1));
         homeOf(helper, spirits.get(2));
+        giveMineKit(spirits.get(0));
+        giveMineKit(spirits.get(1));
         SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
         BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
         Expedition planned = new Expedition(
