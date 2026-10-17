@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.OverflowPolicy;
 import com.theminespirit.core.mining.Cell;
@@ -12,13 +14,12 @@ import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.OverflowDecider;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
@@ -49,6 +50,7 @@ public final class DropCollector {
     private final Set<String> skipped = new HashSet<>();
     private List<ItemEntity> nearby = List.of();
     private ItemEntity target;
+    private WorkTarget held;
     private UnloadScript relief;
     private boolean reliefTried;
     private String failureReason;
@@ -90,6 +92,7 @@ public final class DropCollector {
         ticksSinceQuery++;
         if (target != null && (target.isRemoved() || skipped.contains(target.getStringUUID()))) {
             approach.cancel();
+            releaseHeld();
             target = null;
         }
         if (target == null) {
@@ -114,6 +117,7 @@ public final class DropCollector {
     }
 
     public void cancel() {
+        releaseHeld();
         approach.cancel();
         if (relief != null) {
             relief.cancel();
@@ -146,19 +150,37 @@ public final class DropCollector {
     }
 
     private ItemEntity chooseTarget() {
-        Map<String, ItemEntity> byId = new HashMap<>();
-        List<DropRef> refs = new ArrayList<>();
+        List<ItemEntity> candidates = new ArrayList<>();
+        List<WorkTarget> targets = new ArrayList<>();
         for (ItemEntity drop : nearby) {
-            if (!drop.isRemoved()) {
-                byId.put(drop.getStringUUID(), drop);
-                refs.add(toRef(drop));
+            if (!drop.isRemoved() && !skipped.contains(drop.getStringUUID())) {
+                candidates.add(drop);
+                targets.add(dropTarget(drop));
             }
         }
-        Optional<DropRef> next = DropRoute.next(spirit.getX(), spirit.getY(), spirit.getZ(), refs, skipped);
-        return next.map(ref -> byId.get(ref.id())).orElse(null);
+        Optional<WorkTarget> pick = WorkReserveHub.choose(spirit, targets);
+        if (pick.isEmpty() || !WorkReserveHub.reserve(spirit, pick.get())) {
+            releaseHeld();
+            return null;
+        }
+        held = pick.get();
+        return candidates.stream().filter(drop -> dropTarget(drop).equals(held)).findFirst().orElse(null);
+    }
+
+    private static WorkTarget dropTarget(ItemEntity drop) {
+        BlockPos pos = drop.blockPosition();
+        return new WorkTarget(WorkKind.DROP, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+    }
+
+    private void releaseHeld() {
+        if (held != null) {
+            WorkReserveHub.release(spirit, held);
+            held = null;
+        }
     }
 
     private State conclude() {
+        releaseHeld();
         DropRef unfit = null;
         int unreachable = 0;
         for (ItemEntity drop : nearby) {
@@ -242,6 +264,7 @@ public final class DropCollector {
 
     private State giveUpOnTarget() {
         skipped.add(target.getStringUUID());
+        releaseHeld();
         target = null;
         return State.RUNNING;
     }
@@ -270,6 +293,7 @@ public final class DropCollector {
         } else {
             target.setItem(rest);
         }
+        releaseHeld();
         target = null;
         return State.RUNNING;
     }
@@ -337,6 +361,7 @@ public final class DropCollector {
         spirit.take(target, stack.getCount());
         collected += stack.getCount();
         target.discard();
+        releaseHeld();
         target = null;
         return State.RUNNING;
     }
