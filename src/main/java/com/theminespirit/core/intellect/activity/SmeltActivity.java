@@ -81,7 +81,7 @@ public final class SmeltActivity implements Activity {
         if (!stock.hasRawFood()) {
             return 0;
         }
-        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_SAFETY;
+        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_RATION;
         double perSoul = view.population() == 0 ? 0 : stock.cookedNutrition() / view.population();
         return Math.max(0, Math.min(1, (norm - perSoul) / norm));
     }
