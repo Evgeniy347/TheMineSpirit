@@ -84,16 +84,18 @@ final class PillarColumn {
             return fail(danger);
         }
         if (spirit.getY() >= target.getY() + PILLAR_CLEARANCE) {
+            stallTicks = 0;
             return place(target);
         }
-        if (spirit.onGround()) {
-            stallTicks = 0;
-            spirit.getJumpControl().jump();
-            return Outcome.RUNNING;
-        }
+        // Счётчик идёт и на земле: прыжок может быть заблокирован потолком в двух клетках над
+        // ногами, и тогда onGround остаётся истинным каждый тик. Раньше сброс на земле держал
+        // pillar_up в RUNNING вечно (флак chop_tree_tall 17.10).
         if (++stallTicks > MAX_STALL_TICKS) {
             return fail("дух не поднялся на " + (target.getY() - baseY + 1) + "-й блок за " + MAX_STALL_TICKS
                     + " тиков: вероятно, потолок над столбом");
+        }
+        if (spirit.onGround()) {
+            spirit.getJumpControl().jump();
         }
         return Outcome.RUNNING;
     }

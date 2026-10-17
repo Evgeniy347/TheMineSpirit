@@ -140,6 +140,10 @@
       (класс или метод), `GameTestFilter` включает их перед пачкой и гасит после. Чужой билет доски больше не
       уводит духа `chop_tree_*` в `RUNNING`; бойлерплейт `@BeforeBatch/@AfterBatch` из Camp/Defense/Policy убран.
       `chop_tree_tall` + `chop_tree_left_standing` — 3/3 прогона зелёные (deepseek-flash, 17.10).
+- [x] `pillar_up` больше не висит в RUNNING, если прыжок заблокирован потолком в двух клетках над ногами:
+      счётчик застоя идёт и на земле, после 60 тиков — FAILED с причиной «потолок». GameTest
+      `pillar_up_blocked_jump` (на старом коде красный, 195 тиков RUNNING). Причина флака
+      `chop_tree_tall` (deepseek-flash, 17.10).
 
 ## В работе и техдолг
 

@@ -132,6 +132,38 @@ public final class PillarGameTests {
         helper.succeed();
     }
 
+    // Потолок в двух клетках над ногами проходит проверку клетки и головы, но не даёт духу
+    // подпрыгнуть: раньше каждый тик на земле сбрасывал счётчик застоя, и pillar_up висел
+    // в RUNNING вечно (флак chop_tree_tall 17.10). Счётчик обязан идти и на земле.
+    @GameTest(template = TEMPLATE, batch = "pillar_up_blocked_jump", timeoutTicks = 200)
+    public static void pillarUp_CeilingAboveHead_FailsInsteadOfRunningForever(GameTestHelper helper) {
+        prepare(helper);
+        helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 2, SPIRIT_START.getZ(), Blocks.STONE);
+        SpiritEntity spirit = spawnWithDirt(helper, 8);
+        PillarUpScript script = new PillarUpScript(spirit, PillarUpParams.from(Map.of("height", 3)));
+        ScriptStatus[] status = {ScriptStatus.RUNNING};
+        int[] ticks = {0};
+
+        helper.onEachTick(() -> {
+            if (status[0] != ScriptStatus.RUNNING || spirit.tickCount < SETTLE_TICKS) {
+                return;
+            }
+            ticks[0]++;
+            status[0] = script.tick();
+        });
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(status[0] == ScriptStatus.FAILED,
+                    "потолок над головой обязан остановить pillar_up, а не держать его в RUNNING вечно: статус "
+                            + status[0] + ", тиков " + ticks[0] + ", причина "
+                            + script.failureReason());
+            String reason = script.failureReason() == null ? "" : script.failureReason();
+            helper.assertTrue(reason.contains("не поднялся") || reason.contains("потолок"),
+                    "причина обязана называть неподнятие или потолок, фактически: " + reason);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = TEMPLATE, batch = "pillar_up_water", timeoutTicks = 100)
     public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {
         prepare(helper);
