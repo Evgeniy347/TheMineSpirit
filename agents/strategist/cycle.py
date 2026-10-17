@@ -309,7 +309,6 @@ class CycleRunner:
                 "reason": accepted.reason, "model": accepted.model, "prompt_sha": accepted.prompt_sha, "cycle": cycle,
                 "obs_hash": accepted.obs_hash, "created_at": rt.clock.now()}
         if self.effective_mode == "dry":
-            rt.guard.record_post(rt.clock.now(), bot_id, plan_fingerprint)
             rt.guard.record_decision(bot_id, accepted.obs_hash)
             summary.dry += 1
             rt.log("posted", cycle=cycle, bot=bot_id, dry=True, outcome="would_post", request_id=rid, goal=accepted.goal,

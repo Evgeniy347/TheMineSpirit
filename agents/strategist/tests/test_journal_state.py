@@ -96,6 +96,15 @@ class JournalTests(unittest.TestCase):
     def test_read_MissingFile_Empty(self):
         self.assertEqual(([], []), (self.journal.read().events, self.journal.read().bad))
 
+    def test_recentDecisions_DryWouldPostIncludedRealPostNot(self):
+        self.journal.log("posted", cycle=1, bot="b1", dry=True, outcome="would_post", goal="добыть уголь")
+        self.journal.log("posted", cycle=2, bot="b1", dry=False, goal="настоящая задача", request_id="r", task_id="t")
+        recent = self.journal.recent_decisions("b1", 5)
+        self.assertEqual(["would_post"], [e.get("outcome") for e in recent],
+                         "в недавние решения попадает только dry «отправил бы»: модель видит, что уже решила; "
+                         "настоящая задача видна по task_done, а не по posted")
+        self.assertEqual("добыть уголь", recent[0]["goal"])
+
     def test_recentDecisions_LastFiveOfBotWithOutcomeAndAge(self):
         for i in range(8):
             self.clock.advance(60)
