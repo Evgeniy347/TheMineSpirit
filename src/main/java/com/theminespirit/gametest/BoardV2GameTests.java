@@ -329,12 +329,14 @@ public final class BoardV2GameTests {
                         + breed.requiredItems());
 
         int activeCaptures = activeCaptures(board, "cow");
-        board.noteCapture("capture:cow:" + UUID.randomUUID(), Species.COW, UUID.randomUUID(),
-                TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))).withSpecies(Species.COW));
-        board.noteCapture("capture:cow:" + UUID.randomUUID(), Species.COW, UUID.randomUUID(),
-                TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))).withSpecies(Species.COW));
+        cowOne.discard();
+        cowTwo.discard();
         Cow fifth = helper.spawn(EntityType.COW, new BlockPos(8, 1, 8));
         fifth.setNoAi(true);
+        board.noteCapture("capture:cow:" + UUID.randomUUID(), Species.COW, UUID.randomUUID(),
+                TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))).withSpecies(Species.COW));
+        board.noteCapture("capture:cow:" + UUID.randomUUID(), Species.COW, UUID.randomUUID(),
+                TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))).withSpecies(Species.COW));
         HerdWatch.tick(level, board, List.of(spirit), now + 2);
         helper.assertTrue(HerdCap.maxPerSpecies() == 4,
                 "Предел в тесте, факт из production: не больше 4 животных каждого вида");
