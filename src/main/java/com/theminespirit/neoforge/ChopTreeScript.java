@@ -12,7 +12,6 @@ import com.theminespirit.core.forestry.TreeCandidates;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
-import com.theminespirit.neoforge.fortify.DismantleExecutor;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
@@ -21,21 +20,25 @@ import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.ChopTreeParams;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 public final class ChopTreeScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final PickupTuning HIGH_PICKUP = new PickupTuning(PickupTuning.REFRESH_TICKS,
+            PickupTuning.PICKUP_REACH, 200, PickupTuning.MAX_DELAY_WAIT_TICKS);
     private static final String CHOPPED_KEY = "chopped";
     private static final String STANDING_KEY = "standingLogs";
     private static final String PROTECTED_KEY = "protectedLogs";
@@ -50,8 +53,10 @@ public final class ChopTreeScript implements ScriptInstance {
         APPROACH_LOG,
         COLLECT,
         REPLANT,
+        PILLAR_APPROACH,
         PILLAR_BUILD,
         CHOP_HIGH,
+        DESCEND_PILLAR,
         COLLECT_HIGH,
         DISMANTLE_PILLAR
     }
@@ -71,15 +76,14 @@ public final class ChopTreeScript implements ScriptInstance {
     private DropCollector collector;
     private Replanter replanter;
     private List<BlockCoord> highLogs = List.of();
-    private int pillarBaseY;
-    private int pillarBuilt;
-    private int pillarTargetHeight;
-    private final List<BlockCoord> pillarCells = new ArrayList<>();
-    private DismantleExecutor dismantler;
+    private PillarColumn pillar;
+    private final List<BlockCoord> pillarRemaining = new ArrayList<>();
+    private PillarDismantler dismantler;
     private DropCollector highCollector;
     private boolean highBreaking;
     private int highLogIndex;
-    private boolean movedCloserHigh;
+    private int descendStall;
+    private String pillarFailure;
     private TreeSpecies treeSpecies;
     private int standingLogs;
     private int protectedLogs;
@@ -119,8 +123,10 @@ public final class ChopTreeScript implements ScriptInstance {
             case APPROACH_LOG -> approachLog();
             case COLLECT -> collect();
             case REPLANT -> replant();
+            case PILLAR_APPROACH -> pillarApproach();
             case PILLAR_BUILD -> pillarBuild();
             case CHOP_HIGH -> chopHigh();
+            case DESCEND_PILLAR -> descendPillar();
             case COLLECT_HIGH -> collectHigh();
             case DISMANTLE_PILLAR -> dismantlePillar();
         };
@@ -143,9 +149,6 @@ public final class ChopTreeScript implements ScriptInstance {
         }
         if (replanter != null) {
             replanter.cancel();
-        }
-        if (dismantler != null) {
-            dismantler.cancel();
         }
     }
 
@@ -221,6 +224,9 @@ public final class ChopTreeScript implements ScriptInstance {
         if (protectedLogs > 0) {
             text.append("; пропущено защищённых: ").append(protectedLogs);
         }
+        if (pillarFailure != null) {
+            text.append("; столб: ").append(pillarFailure);
+        }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());
         }
@@ -285,6 +291,7 @@ public final class ChopTreeScript implements ScriptInstance {
         plan = ChopPlan.of(tree, ChopTuning.REACH_ABOVE_BASE);
         highLogs = tree.logs().stream()
                 .filter(coord -> coord.y() > tree.base().y() + ChopTuning.REACH_ABOVE_BASE)
+                .sorted(Comparator.comparingInt(BlockCoord::y).reversed())
                 .toList();
         planIndex = 0;
         approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
@@ -300,19 +307,12 @@ public final class ChopTreeScript implements ScriptInstance {
         };
     }
 
-    private boolean highApproach;
-
     private ScriptStatus approachLog() {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> resumeChopPhase();
             case STUCK, TIMEOUT -> {
-                if (highApproach) {
-                    highLogIndex++;
-                } else {
-                    leaveStanding();
-                }
-                movedCloserHigh = false;
+                leaveStanding();
                 movedCloser = false;
                 yield resumeChopPhase();
             }
@@ -320,7 +320,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus resumeChopPhase() {
-        phase = highApproach ? Phase.CHOP_HIGH : Phase.CHOP;
+        phase = Phase.CHOP;
         return ScriptStatus.RUNNING;
     }
 
@@ -359,7 +359,6 @@ public final class ChopTreeScript implements ScriptInstance {
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
             if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloser) {
                 movedCloser = true;
-                highApproach = false;
                 approach.begin(standingPointUnder(log), ChopTuning.CLOSE_DISTANCE);
                 phase = Phase.APPROACH_LOG;
                 return ScriptStatus.RUNNING;
@@ -397,54 +396,60 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus startPillarBuild() {
-        pillarBaseY = spirit.blockPosition().getY();
-        int topY = highLogs.stream().mapToInt(BlockCoord::y).max().orElse(pillarBaseY + 1);
-        pillarTargetHeight = Math.max(1, topY - pillarBaseY - 1);
-        pillarBuilt = 0;
-        pillarCells.clear();
+        BlockPos stand = standingCellNearTrunk();
+        if (stand == null) {
+            return leaveHigh("рядом со стволом нет места для столба");
+        }
+        if (!stand.equals(spirit.blockPosition())) {
+            approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CLOSE_DISTANCE);
+            phase = Phase.PILLAR_APPROACH;
+            return ScriptStatus.RUNNING;
+        }
+        return beginPillar();
+    }
+
+    private ScriptStatus pillarApproach() {
+        return switch (approach.tick()) {
+            case MOVING -> ScriptStatus.RUNNING;
+            case ARRIVED -> beginPillar();
+            case STUCK, TIMEOUT -> leaveHigh("не подошёл к месту столба рядом со стволом");
+        };
+    }
+
+    private ScriptStatus beginPillar() {
+        int topY = highLogs.stream().mapToInt(BlockCoord::y).max().orElse(spirit.blockPosition().getY());
+        int height = topY - 2 - spirit.blockPosition().getY();
+        if (height < 1) {
+            highLogIndex = 0;
+            highBreaking = false;
+            phase = Phase.CHOP_HIGH;
+            return ScriptStatus.RUNNING;
+        }
+        String blockId = cheapBlock();
+        if (blockId == null) {
+            return leaveHigh("нет материала для столба: нужны земля или булыжник");
+        }
+        int have = PillarColumn.count(spirit, blockId);
+        if (have < height) {
+            return leaveHigh("нет материала '" + blockId + "': нужно " + height + ", есть " + have);
+        }
+        pillar = new PillarColumn(spirit, blockId, height);
         phase = Phase.PILLAR_BUILD;
         return ScriptStatus.RUNNING;
     }
 
     private ScriptStatus pillarBuild() {
-        if (pillarBuilt >= pillarTargetHeight) {
-            phase = Phase.CHOP_HIGH;
-            highLogIndex = 0;
-            highBreaking = false;
-            movedCloserHigh = false;
-            return ScriptStatus.RUNNING;
-        }
-        String blockId = cheapBlock();
-        if (blockId == null) {
-            return fail("нет материала для столба: нужны земля или булыжник");
-        }
-        BlockPos target = new BlockPos(tree.base().x(), pillarBaseY + pillarBuilt, tree.base().z());
-        if (!levelIsAir(target)) {
-            return fail("клетка " + target.toShortString() + " занята: столб не строится");
-        }
-        if (levelFluid(target)) {
-            return fail("в клетке " + target.toShortString() + " жидкость: столб не строится");
-        }
-        if (spirit.onGround() && pillarBuilt > 0 && spirit.getY() < target.getY() + 0.5) {
-            spirit.getJumpControl().jump();
-            return ScriptStatus.RUNNING;
-        }
-        BlockPlacer.Begin begin = new BlockPlacer(spirit).begin(target, BlockStates.stateFor(blockId), blockId);
-        if (begin instanceof BlockPlacer.Started) {
-            pillarCells.add(new BlockCoord(target.getX(), target.getY(), target.getZ()));
-            pillarBuilt++;
-            return ScriptStatus.RUNNING;
-        }
-        if (begin instanceof BlockPlacer.Protected p) {
-            return fail("ставить запрещено: " + p.reason());
-        }
-        BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
-        return switch (refused.reason()) {
-            case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно 1, есть 0");
-            case OCCUPIED -> fail("клетка " + target.toShortString() + " занята");
-            case NO_SUPPORT -> fail("под клеткой " + target.toShortString() + " нет опоры");
-            case OUT_OF_REACH -> fail("клетка " + target.toShortString() + " вне досягаемости");
-            case CHUNK_NOT_LOADED -> fail("чанк с клеткой " + target.toShortString() + " не загружен");
+        return switch (pillar.tick()) {
+            case RUNNING -> ScriptStatus.RUNNING;
+            case BUILT -> {
+                pillarRemaining.clear();
+                pillarRemaining.addAll(topDown(pillar.cells()));
+                highLogIndex = 0;
+                highBreaking = false;
+                phase = Phase.CHOP_HIGH;
+                yield ScriptStatus.RUNNING;
+            }
+            case FAILED -> leaveHigh("столб не построен: " + pillar.failureReason());
         };
     }
 
@@ -467,22 +472,51 @@ public final class ChopTreeScript implements ScriptInstance {
                 return protectedTree();
             }
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
-            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloserHigh) {
-                movedCloserHigh = true;
-                highApproach = true;
-                approach.begin(standingPointUnder(log), ChopTuning.CLOSE_DISTANCE);
-                phase = Phase.APPROACH_LOG;
-                return ScriptStatus.RUNNING;
-            }
             if (refused.reason() == BlockBreaker.RefuseReason.AIR) {
                 highLogIndex++;
-                movedCloserHigh = false;
-            } else {
-                highLogIndex++;
-                movedCloserHigh = false;
+                continue;
             }
+            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !pillarRemaining.isEmpty()) {
+                BlockCoord cell = pillarRemaining.remove(0);
+                dismantler = new PillarDismantler(spirit, List.of(cell));
+                descendStall = 0;
+                phase = Phase.DESCEND_PILLAR;
+                return ScriptStatus.RUNNING;
+            }
+            standingLogs++;
+            highLogIndex++;
         }
-        return collectHigh();
+        return startDismantle();
+    }
+
+    private ScriptStatus descendPillar() {
+        if (dismantler == null) {
+            phase = Phase.CHOP_HIGH;
+            return ScriptStatus.RUNNING;
+        }
+        PillarDismantler.Outcome result = dismantler.tick();
+        if (result == PillarDismantler.Outcome.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        if (result == PillarDismantler.Outcome.FAILED) {
+            dismantler = null;
+            standingLogs++;
+            highLogIndex++;
+            phase = Phase.CHOP_HIGH;
+            return ScriptStatus.RUNNING;
+        }
+        if (!spirit.onGround()) {
+            if (++descendStall > 40) {
+                descendStall = 0;
+                dismantler = null;
+                phase = Phase.CHOP_HIGH;
+            }
+            return ScriptStatus.RUNNING;
+        }
+        descendStall = 0;
+        dismantler = null;
+        phase = Phase.CHOP_HIGH;
+        return ScriptStatus.RUNNING;
     }
 
     private ScriptStatus collectHigh() {
@@ -492,45 +526,106 @@ public final class ChopTreeScript implements ScriptInstance {
         }
         return switch (highCollector.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
-            case DONE -> startDismantle();
-            case FAILED -> fail("подбор дропа после рубки верха: " + highCollector.failureReason());
+            case DONE -> params.replant() ? startReplant() : finishTree();
+            case FAILED -> {
+                pillarFailure = "часть дропа после рубки верха не подобрана: " + highCollector.failureReason();
+                LOGGER.info("Дух {} срубил верх, но не дотянулся до части дропа: {}", spirit.getUUID(),
+                        highCollector.failureReason());
+                yield params.replant() ? startReplant() : finishTree();
+            }
         };
     }
 
     private ScriptStatus startDismantle() {
         highCollector = null;
-        List<BlockCoord> topDown = new ArrayList<>(pillarCells);
-        Collections.reverse(topDown);
-        dismantler = new DismantleExecutor(spirit, topDown);
+        if (pillarRemaining.isEmpty()) {
+            pillar = null;
+            return startHighCollect();
+        }
+        dismantler = new PillarDismantler(spirit, new ArrayList<>(pillarRemaining));
         phase = Phase.DISMANTLE_PILLAR;
         return ScriptStatus.RUNNING;
     }
 
     private ScriptStatus dismantlePillar() {
-        if (dismantler == null || dismantler.done()) {
-            dismantler = null;
+        if (dismantler == null) {
+            return startHighCollect();
+        }
+        PillarDismantler.Outcome result = dismantler.tick();
+        if (result == PillarDismantler.Outcome.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        dismantler = null;
+        pillar = null;
+        pillarRemaining.clear();
+        return startHighCollect();
+    }
+
+    private ScriptStatus startHighCollect() {
+        if (highLogs.isEmpty()) {
             return params.replant() ? startReplant() : finishTree();
         }
-        dismantler.tick();
+        highCollector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS,
+                HIGH_PICKUP, OverflowMode.FAIL);
+        phase = Phase.COLLECT_HIGH;
         return ScriptStatus.RUNNING;
     }
 
-    private String cheapBlock() {
-        if (spirit.getInventory().countItem(Items.DIRT) > 0) {
-            return "minecraft:dirt";
-        }
-        if (spirit.getInventory().countItem(Items.COBBLESTONE) > 0) {
-            return "minecraft:cobblestone";
+    private ScriptStatus leaveHigh(String reason) {
+        standingLogs += highLogs.size();
+        pillarFailure = reason;
+        pillar = null;
+        pillarRemaining.clear();
+        return params.replant() ? startReplant() : finishTree();
+    }
+
+    private BlockPos standingCellNearTrunk() {
+        BlockPos base = toPos(tree.base());
+        int feetY = spirit.blockPosition().getY();
+        for (int radius = 1; radius <= 2; radius++) {
+            BlockPos best = null;
+            double bestDistance = Double.MAX_VALUE;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                        continue;
+                    }
+                    BlockPos pos = new BlockPos(base.getX() + dx, feetY, base.getZ() + dz);
+                    if (!isStandable(pos)) {
+                        continue;
+                    }
+                    double distance = spirit.position().distanceToSqr(Vec3.atCenterOf(pos));
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = pos;
+                    }
+                }
+            }
+            if (best != null) {
+                return best;
+            }
         }
         return null;
     }
 
-    private boolean levelIsAir(BlockPos pos) {
-        return spirit.level().getBlockState(pos).isAir();
+    private boolean isStandable(BlockPos pos) {
+        Level level = spirit.level();
+        BlockPos below = pos.below();
+        return (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
+                && (level.getBlockState(pos.above()).isAir() || level.getBlockState(pos.above()).canBeReplaced())
+                && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)
+                && level.getFluidState(pos).isEmpty()
+                && level.getFluidState(pos.above()).isEmpty();
     }
 
-    private boolean levelFluid(BlockPos pos) {
-        return !spirit.level().getFluidState(pos).isEmpty();
+    private static List<BlockCoord> topDown(List<BlockCoord> cells) {
+        List<BlockCoord> order = new ArrayList<>(cells);
+        Collections.reverse(order);
+        return order;
+    }
+
+    private String cheapBlock() {
+        return PillarColumn.cheapBlock(spirit);
     }
 
     private ScriptStatus startCollect() {
@@ -545,7 +640,9 @@ public final class ChopTreeScript implements ScriptInstance {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> highLogs.isEmpty()
                     ? (params.replant() ? startReplant() : finishTree())
-                    : (cheapBlock() == null ? finishWithStanding() : startPillarBuild());
+                    : (cheapBlock() == null
+                            ? leaveHigh("нет материала для столба: нужны земля или булыжник")
+                            : startPillarBuild());
             case FAILED -> fail("подбор дропа после рубки: " + collector.failureReason());
         };
     }
@@ -568,11 +665,6 @@ public final class ChopTreeScript implements ScriptInstance {
         lackedSaplings |= replanter.lackedSaplings();
         replanter = null;
         return finishTree();
-    }
-
-    private ScriptStatus finishWithStanding() {
-        standingLogs += plan.leftStanding();
-        return params.replant() ? startReplant() : finishTree();
     }
 
     private ScriptStatus finishTree() {
