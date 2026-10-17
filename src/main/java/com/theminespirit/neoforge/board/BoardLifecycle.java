@@ -29,6 +29,7 @@ public final class BoardLifecycle {
     }
 
     private static void onServerStopping(ServerStoppingEvent event) {
+        BoardRegistry.closeAll();
         BoardRegistry.clear();
     }
 }

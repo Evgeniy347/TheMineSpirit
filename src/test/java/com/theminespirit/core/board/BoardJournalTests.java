@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -48,7 +49,7 @@ class BoardJournalTests {
         journal.enqueue(entry(BoardLog.Event.DONE, "mine", BoardCase.BUILD_MINE, 1));
         journal.flushAll();
         Files.writeString(log(), "{\"event\":\"DONE\",\"tick\":", StandardCharsets.UTF_8,
-                java.nio.file.StandardOpenOption.APPEND);
+                StandardOpenOption.APPEND);
         BoardLedger ledger = new BoardLedger();
 
         BoardJournal.LoadResult result = journal.load(ledger);

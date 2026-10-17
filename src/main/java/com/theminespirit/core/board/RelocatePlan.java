@@ -33,6 +33,19 @@ public final class RelocatePlan {
         return DataTables.INSTANCE.board().current().immovable().contains(boardCase.name());
     }
 
+    public static String schemeFor(BoardCase boardCase) {
+        assertMovable(boardCase);
+        return switch (boardCase) {
+            case BUILD_PEN -> "pen_7x7";
+            case BUILD_HOUSE -> "house";
+            case ENCHANT_ROOM -> "enchant_room_v1";
+            case BUILD_FENCE -> "fence";
+            case BUILD_MINE -> "mine_entrance_v1";
+            default -> throw new IllegalArgumentException("Кейс " + boardCase + " не постройка: "
+                    + "схемы для переноса нет");
+        };
+    }
+
     public static Set<String> immovableNames() {
         return Set.copyOf(DataTables.INSTANCE.board().current().immovable());
     }

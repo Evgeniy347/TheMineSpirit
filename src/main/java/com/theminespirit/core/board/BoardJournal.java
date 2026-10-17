@@ -41,12 +41,12 @@ public final class BoardJournal {
 
     /** Сбрасывает не больше {@code maxLines} строк: остальное дочитается следующим тиком. */
     public int flush(int maxLines) {
+        if (pending.isEmpty()) {
+            return 0;
+        }
         if (maxLines < 1) {
             throw new IllegalArgumentException("Бюджет сброса " + maxLines + " меньше 1: "
                     + "журнал не продвинется и память будет расти");
-        }
-        if (pending.isEmpty()) {
-            return 0;
         }
         createParent();
         int written = 0;

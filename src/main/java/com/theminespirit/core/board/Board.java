@@ -29,11 +29,18 @@ public final class Board {
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final BoardLedger ledger = new BoardLedger();
     private final LongSupplier nowTicks;
+    private final BoardEvents events;
 
     public Board(LongSupplier nowTicks) {
+        this(nowTicks, BoardEvents.NONE);
+    }
+
+    public Board(LongSupplier nowTicks, BoardEvents events) {
         Objects.requireNonNull(nowTicks, "nowTicks не может быть null: доска считает просрочку "
                 + "и сортировку по времени, без часов задания жили бы вечно");
         this.nowTicks = nowTicks;
+        this.events = Objects.requireNonNull(events,
+                "Слушатель переходов не может быть null: без него задают BoardEvents.NONE");
     }
 
     /**
@@ -124,6 +131,7 @@ public final class Board {
         }
         statuses.put(ticketId, BoardStatus.ASSIGNED);
         claimAssignees.put(ticketId, spirit);
+        events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
         return BoardOutcome.CLAIMED;
     }
 
@@ -135,6 +143,8 @@ public final class Board {
         }
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.note(ticket.boardCase(), ticket.level());
+        events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId),
+                nowTicks.getAsLong());
         return true;
     }
 
@@ -143,8 +153,10 @@ public final class Board {
         if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
             return false;
         }
+        long now = nowTicks.getAsLong();
         statuses.put(ticketId, BoardStatus.FAILED);
-        failTicks.put(ticketId, nowTicks.getAsLong());
+        failTicks.put(ticketId, now);
+        events.transition(BoardLog.Event.FAILED, tickets.get(ticketId), claimAssignees.get(ticketId), now);
         return true;
     }
 
@@ -154,7 +166,7 @@ public final class Board {
             return false;
         }
         Set<String> cancelled = new HashSet<>();
-        cancelWithDependants(ticketId, cancelled);
+        cancelWithDependants(ticketId, cancelled, BoardLog.Event.CANCELLED);
         return true;
     }
 
@@ -198,7 +210,7 @@ public final class Board {
         }
         Set<String> cancelled = new HashSet<>();
         for (String id : detached) {
-            cancelWithDependants(id, cancelled);
+            cancelWithDependants(id, cancelled, BoardLog.Event.DETACHED);
         }
         return List.copyOf(detached);
     }
@@ -363,18 +375,20 @@ public final class Board {
         return false;
     }
 
-    private void cancelWithDependants(String ticketId, Set<String> cancelled) {
+    private void cancelWithDependants(String ticketId, Set<String> cancelled, BoardLog.Event event) {
         if (!cancelled.add(ticketId)) {
             return;
         }
+        BoardTicket ticket = tickets.get(ticketId);
         BoardStatus status = statuses.get(ticketId);
         if (status != null && status != BoardStatus.DONE && status != BoardStatus.FAILED
                 && status != BoardStatus.CANCELLED) {
             statuses.put(ticketId, BoardStatus.CANCELLED);
+            events.transition(event, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         }
-        for (BoardTicket ticket : tickets.values()) {
-            if (ticket.dependsOn().contains(ticketId)) {
-                cancelWithDependants(ticket.id(), cancelled);
+        for (BoardTicket dependant : tickets.values()) {
+            if (dependant.dependsOn().contains(ticketId)) {
+                cancelWithDependants(dependant.id(), cancelled, BoardLog.Event.CANCELLED);
             }
         }
     }

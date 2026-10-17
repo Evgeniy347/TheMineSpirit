@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ public final class BoardLog {
     private BoardLog() {
     }
 
-    public static String write(BoardLogEntry entry) {
+    public static Map<String, Object> toMap(BoardLogEntry entry) {
         Objects.requireNonNull(entry, "Запись журнала не может быть null: писать нечего");
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("event", entry.event().name());
@@ -44,6 +45,11 @@ public final class BoardLog {
         map.put("spirit", entry.spirit());
         map.put("configHash", entry.configHash());
         map.put("worldTime", entry.worldTime());
+        return Collections.unmodifiableMap(map);
+    }
+
+    public static String write(BoardLogEntry entry) {
+        Map<String, Object> map = toMap(entry);
         String json;
         try {
             json = MAPPER.writeValueAsString(map);
