@@ -6,6 +6,7 @@ import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmView;
 import com.theminespirit.core.farming.Ground;
+import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public final class LevelFarmView implements FarmView {
         BlockPos base = new BlockPos(ground.x(), ground.y() + 1, ground.z());
         BlockState baseState = read(base);
         Optional<CropKind> kind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(baseState.getBlock()).toString());
-        if (kind.isEmpty() || kind.get().harvestMethod() != com.theminespirit.core.farming.HarvestMethod.BREAK_COLUMN) {
+        if (kind.isEmpty() || kind.get().harvestMethod() != HarvestMethod.BREAK_COLUMN) {
             return 1;
         }
         int height = 0;

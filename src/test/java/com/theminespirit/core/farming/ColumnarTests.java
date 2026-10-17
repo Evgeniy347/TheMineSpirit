@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 class ColumnarTests {
     @Test
@@ -32,33 +33,28 @@ class ColumnarTests {
     }
 
     @Test
-    void planner_Columnar_SingleBlock_IsIneligible() {
+    void planner_SingleColumn_IsIneligible() {
         CropKind cane = CropKind.parse("sugar_cane");
         FarmTile tile = new FarmTile(Ground.OTHER, Above.CROP, Optional.of(new CropState(cane, 0)));
         MapFarmView view = new MapFarmView().set(0, 0, 0, tile).height(0, 0, 0, 1);
-        var result = FarmPlanner.next(FarmJob.HARVEST, cane, new com.theminespirit.core.observation.BlockCoord(0, 1, 0),
-                List.of(new com.theminespirit.core.observation.BlockCoord(0, 0, 0)), view,
-                coord -> coord.y() == 0 ? com.theminespirit.core.mining.Cell.SOLID
-                        : com.theminespirit.core.mining.Cell.PASSABLE,
-                Hydration.of(java.util.Set.of()));
+        var result = FarmPlanner.next(FarmJob.HARVEST, cane, new BlockCoord(0, 1, 0),
+                List.of(new BlockCoord(0, 0, 0)), view, coord -> coord.y() == 0 ? Cell.SOLID : Cell.PASSABLE,
+                Hydration.of(Set.of()));
         assertTrue(result instanceof FarmPlanner.Exhausted,
                 "Столб высотой 1 не цель: дух должен оставить недоросток, а выбрано " + result);
     }
 
     @Test
-    void planner_Columnar_TwoHigh_IsEligible() {
+    void planner_TwoHighColumn_IsEligible() {
         CropKind cane = CropKind.parse("sugar_cane");
         FarmTile tile = new FarmTile(Ground.OTHER, Above.CROP, Optional.of(new CropState(cane, 0)));
         MapFarmView view = new MapFarmView().set(0, 0, 0, tile).height(0, 0, 0, 2);
-        var result = FarmPlanner.next(FarmJob.HARVEST, cane, new com.theminespirit.core.observation.BlockCoord(0, 1, 0),
-                List.of(new com.theminespirit.core.observation.BlockCoord(0, 0, 0)), view,
-                coord -> coord.y() == 0 ? com.theminespirit.core.mining.Cell.SOLID
-                        : com.theminespirit.core.mining.Cell.PASSABLE,
-                Hydration.of(java.util.Set.of()));
+        var result = FarmPlanner.next(FarmJob.HARVEST, cane, new BlockCoord(0, 1, 0),
+                List.of(new BlockCoord(0, 0, 0)), view, coord -> coord.y() == 0 ? Cell.SOLID : Cell.PASSABLE,
+                Hydration.of(Set.of()));
         assertTrue(result instanceof FarmPlanner.Next,
                 "Столб высотой 2 обязан быть целью: нижний остаётся, верх собирается");
-        assertEquals(new com.theminespirit.core.observation.BlockCoord(0, 0, 0),
-                ((FarmPlanner.Next) result).target(), "цель — земля под столбом");
+        assertEquals(new BlockCoord(0, 0, 0), ((FarmPlanner.Next) result).target(), "цель — земля под столбом");
     }
 
     @Test

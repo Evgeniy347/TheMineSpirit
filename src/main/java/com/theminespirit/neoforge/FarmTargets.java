@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -80,14 +81,13 @@ public final class FarmTargets implements HarvestTargets {
             BlockPos base = pos;
             if (groundShift == 1) {
                 var state = level.getBlockState(pos);
-                var kind = CropKind.ofBlock(
-                        net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+                var kind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
                 if (kind.isPresent() && kind.get().harvestMethod() == HarvestMethod.BREAK_COLUMN) {
                     while (true) {
                         BlockPos below = base.below();
                         var belowState = level.getBlockState(below);
-                        var belowKind = CropKind.ofBlock(net.minecraft.core.registries.BuiltInRegistries.BLOCK
-                                .getKey(belowState.getBlock()).toString());
+                        var belowKind = CropKind.ofBlock(
+                                BuiltInRegistries.BLOCK.getKey(belowState.getBlock()).toString());
                         if (belowKind.isPresent() && belowKind.get() == kind.get()) {
                             base = below;
                         } else {
