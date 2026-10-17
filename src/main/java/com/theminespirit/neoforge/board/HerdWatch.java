@@ -117,7 +117,7 @@ public final class HerdWatch {
         return service.stock().available().getOrDefault(shortFeed, 0) > 0;
     }
 
-    private static boolean penBuilt(BoardService service, Species species) {
+    static boolean penBuilt(BoardService service, Species species) {
         String prefix = species.name().toLowerCase(Locale.ROOT);
         for (BoardTicket ticket : service.board().all()) {
             if (ticket.boardCase() == BoardCase.BUILD_PEN && ticket.id().startsWith(prefix)
