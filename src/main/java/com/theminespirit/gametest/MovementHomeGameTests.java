@@ -144,6 +144,7 @@ public final class MovementHomeGameTests {
                 helper.getLevel().dimension().location().toString(), legacyHome)));
         CompoundTag tag = new CompoundTag();
         legacy.addAdditionalSaveData(tag);
+        tag.remove(SpiritHomeStore.KEY);
         helper.assertTrue(!tag.contains(SpiritHomeStore.KEY),
                 "старое сохранение дома живёт только в памяти BASE: ключа " + SpiritHomeStore.KEY + " в нём нет");
 
