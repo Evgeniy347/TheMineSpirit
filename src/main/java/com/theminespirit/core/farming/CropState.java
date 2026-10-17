@@ -16,12 +16,10 @@ public record CropState(CropKind kind, int age) {
     }
 
     public boolean isMature() {
-        if (kind.harvestMethod() == HarvestMethod.PICK) {
-            return age >= 2;
-        }
-        if (kind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
-            return true;
-        }
-        return age == kind.maxAge();
+        return switch (kind.harvestMethod()) {
+            case PICK -> age >= 2;
+            case BREAK_COLUMN -> true;
+            case BREAK, BREAK_FRUIT -> age == kind.maxAge();
+        };
     }
 }

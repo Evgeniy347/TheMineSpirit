@@ -1,0 +1,77 @@
+package com.theminespirit.core.intellect;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.theminespirit.core.coordinator.SpiritSnapshot;
+import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.intellect.activity.ChopActivity;
+import com.theminespirit.core.intellect.activity.DefendActivity;
+import com.theminespirit.core.intellect.activity.FarmActivity;
+import com.theminespirit.core.intellect.activity.MineActivity;
+import com.theminespirit.core.intellect.activity.RestActivity;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
+class TacticalIntellectOutsideTests {
+    private static final UUID FIRST = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID SECOND = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
+    private static TacticalIntellect intellect() {
+        return new TacticalIntellect(
+                ActivityCatalog.adultsOnly(List.of(new ChopActivity(), new FarmActivity(), new MineActivity(),
+                        new RestActivity(), new DefendActivity())),
+                StrengthAssessorTests.PROFILES, StrengthAssessorTests.ARMOR);
+    }
+
+    private static SettlementView needy(List<UUID> ids) {
+        List<SpiritSnapshot> spirits = ids.stream().map(SettlementViews::spirit).toList();
+        return new SettlementView(ids.size(), 0, 2, 2, 0, 0, 0, 0, 0.2, SettlementViews.farmWork(),
+                Forage.NONE, spirits, 100);
+    }
+
+    @Test
+    void decide_OneWorkerOutsideNeed_MineNotAssigned() {
+        TacticalIntellect mind = intellect();
+
+        TacticalDecision decision =
+                mind.decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(),
+                        new StrategicQueue(), 100);
+
+        assertFalse(has(decision, ActivityId.MINE),
+                "Один дух внешней работы не получает: за границу поселения в одиночку не выходят");
+        assertTrue(decision.refusals().stream().anyMatch(reason -> reason.contains("MINE")
+                        && reason.contains("одиночку")),
+                "Отказ обязан попасть в журнал решений с причиной, фактически: " + decision.refusals());
+    }
+
+    @Test
+    void decide_TwoWorkersOutsideNeed_MineAssigned() {
+        TacticalDecision decision =
+                intellect().decide(needy(List.of(FIRST, SECOND)), new ActivityLedger(), new WorkReservations(),
+                        new StrategicQueue(), 100);
+
+        assertTrue(has(decision, ActivityId.MINE),
+                "Двое духов внешнюю работу получают: группа от порога — уже организация");
+        assertTrue(decision.refusals().isEmpty(),
+                "При организованном выходе отказов нет, фактически: " + decision.refusals());
+    }
+
+    @Test
+    void decide_OneWorkerWithPlayerOutsideNeed_MineAssigned() {
+        TacticalIntellect mind = intellect();
+        mind.trackPlayerEscort(true);
+
+        TacticalDecision decision =
+                mind.decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(),
+                        new StrategicQueue(), 100);
+
+        assertTrue(has(decision, ActivityId.MINE),
+                "С реальным игроком рядом один дух внешнюю работу получает: игрок ведёт за собой");
+    }
+
+    private static boolean has(TacticalDecision decision, ActivityId id) {
+        return decision.activities().assignments().stream().anyMatch(assignment -> assignment.activity() == id);
+    }
+}

@@ -13,6 +13,7 @@ import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
+import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
@@ -23,6 +24,7 @@ import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
+import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.processing.ProcessingRules;
@@ -64,6 +66,7 @@ public final class DataTables {
     private final TableHolder<KitFor> kitFor;
     private final TableHolder<IntellectTuning> intellect;
     private final TableHolder<InventoryNormTable> inventoryNorm;
+    private final TableHolder<OutsideRules> outside;
     private final TableHolder<ArmorTable> armor;
     private final TableHolder<FeedTable> feed;
     private final TableHolder<Map<String, SwordTier>> swords;
@@ -79,6 +82,7 @@ public final class DataTables {
     private final TableHolder<DescentLevels> descentLevels;
     private final TableHolder<DefenseProfile> priorities;
     private final TableHolder<RepairData> repair;
+    private final TableHolder<ObservationLimits> observation;
     private final Map<String, TableHolder<Schematic>> schematics;
     private final TableHolder<ProcessingRules> processing;
 
@@ -117,6 +121,9 @@ public final class DataTables {
         this.intellect = registry.registerLazy(
                 TableDefinition.single("intellect", IntellectTuning.RESOURCE, IntellectTuning::parse),
                 IntellectTuning::defaults);
+        this.outside = registry.registerLazy(
+                TableDefinition.single("outside", OutsideRules.RESOURCE, OutsideRules::parse),
+                OutsideRules::load);
         this.armor = registry.registerLazy(
                 TableDefinition.single("armor", "data/theminespirit/armor/armor_table.json", ArmorTable::parse),
                 () -> {
@@ -170,6 +177,9 @@ public final class DataTables {
         this.repair = registry.registerLazy(
                 TableDefinition.single("repair", RepairData.RESOURCE, RepairData::parse),
                 RepairData::load);
+        this.observation = registry.registerLazy(
+                TableDefinition.single("observation", ObservationLimits.RESOURCE, ObservationLimits::parse),
+                ObservationLimits::load);
         Map<String, TableHolder<Schematic>> liveSchematics = new LinkedHashMap<>();
         for (String file : LIVE_SCHEMATIC_FILES) {
             String path = PresetLibrary.SCHEMATICS_ROOT + file + ".json";
@@ -239,6 +249,10 @@ public final class DataTables {
         return intellect;
     }
 
+    public TableHolder<OutsideRules> outside() {
+        return outside;
+    }
+
     public TableHolder<ArmorTable> armor() {
         return armor;
     }
@@ -301,6 +315,10 @@ public final class DataTables {
 
     public TableHolder<ProcessingRules> processing() {
         return processing;
+    }
+
+    public TableHolder<ObservationLimits> observation() {
+        return observation;
     }
 
     /**

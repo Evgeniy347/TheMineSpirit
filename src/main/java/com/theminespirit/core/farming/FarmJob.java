@@ -13,7 +13,7 @@ public enum FarmJob {
         Objects.requireNonNull(filter, "Фильтр вида не может быть null: «любой вид» задают CropKind.ANY");
         return switch (this) {
             case TILL -> isTillable(tile.ground()) && isClearForTill(tile.above()) && watered;
-            case PLANT -> tile.ground() == Ground.FARMLAND && tile.above() == Above.AIR;
+            case PLANT -> isPlantable(tile, filter);
             case HARVEST -> tile.above() == Above.CROP && tile.crop().isPresent()
                     && matches(tile.crop().orElseThrow().kind(), filter)
                     && tile.crop().orElseThrow().isMature();
@@ -21,6 +21,13 @@ public enum FarmJob {
                     && matches(tile.crop().orElseThrow().kind(), filter)
                     && !tile.crop().orElseThrow().isMature();
         };
+    }
+
+    private static boolean isPlantable(FarmTile tile, CropKind filter) {
+        if (filter.hasSupport()) {
+            return tile.ground() == Ground.LOG;
+        }
+        return tile.ground() == Ground.FARMLAND && tile.above() == Above.AIR;
     }
 
     private static boolean isTillable(Ground ground) {

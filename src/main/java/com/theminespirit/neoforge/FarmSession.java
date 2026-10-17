@@ -16,7 +16,9 @@ import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 public final class FarmSession {
@@ -67,6 +69,7 @@ public final class FarmSession {
     private String failureReason;
     private BlockCoord currentGround;
     private CropKind currentKind;
+    private BlockCoord cropPos;
     private int columnHeight;
     private DropCollector collector;
 
@@ -170,6 +173,7 @@ public final class FarmSession {
 
     public Map<String, Object> saveState() {
         boolean replantPending = replant && currentGround != null && currentKind != null
+                && currentKind.harvestMethod() == HarvestMethod.BREAK && !currentKind.hasSupport()
                 && (state == State.COLLECT || state == State.REPLANT);
         if (!replantPending) {
             return Map.of(DONE_KEY, done);
@@ -310,23 +314,42 @@ public final class FarmSession {
             case PLANT -> plantNow(ground);
             case HARVEST -> {
                 currentKind = tile.crop().orElseThrow().kind();
-                if (currentKind.harvestMethod() == HarvestMethod.PICK) {
-                    pickNow(ground.above(), currentKind);
-                } else if (currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN) {
-                    int height = view.columnHeight(currentGround);
-                    if (height < 2) {
-                        ineligible++;
-                        finishTarget();
-                    } else {
-                        columnHeight = height;
-                        beginBreak(ground.above(height));
-                    }
-                } else {
-                    beginBreak(ground.above());
-                }
+                harvestCrop(ground);
             }
             case BONE_MEAL -> boneMealNow(ground.above());
         }
+    }
+
+    private void harvestCrop(BlockPos ground) {
+        HarvestMethod method = currentKind.harvestMethod();
+        if (method == HarvestMethod.PICK) {
+            pickNow(ground.above(), currentKind);
+        } else if (method == HarvestMethod.BREAK_COLUMN) {
+            int height = view.columnHeight(currentGround);
+            if (height < 2) {
+                ineligible++;
+                finishTarget();
+            } else {
+                columnHeight = height;
+                beginBreak(ground.above(height));
+            }
+        } else if (method == HarvestMethod.BREAK_FRUIT) {
+            harvestAttached(view.fruitAt(currentGround, currentKind));
+        } else if (currentKind.hasSupport()) {
+            harvestAttached(view.attachedCrop(currentGround, currentKind));
+        } else {
+            beginBreak(ground.above());
+        }
+    }
+
+    private void harvestAttached(Optional<BlockCoord> target) {
+        if (target.isEmpty()) {
+            ineligible++;
+            finishTarget();
+            return;
+        }
+        cropPos = target.get();
+        beginBreak(posOf(cropPos));
     }
 
     private void tillOrClearWeed(FarmTile tile, BlockPos ground) {
@@ -350,12 +373,28 @@ public final class FarmSession {
             return;
         }
         recordAction();
-        if (actions.plant(ground, crop)) {
+        if (plantAt(crop, ground)) {
             done++;
         } else {
             rejected++;
         }
         finishTarget();
+    }
+
+    private boolean plantAt(CropKind kind, BlockPos ground) {
+        if (!kind.hasSupport()) {
+            return actions.plant(ground, kind);
+        }
+        Optional<BlockCoord> spot = view.attachedSpot(currentGround, kind);
+        if (spot.isEmpty()) {
+            return false;
+        }
+        Direction side = Direction.fromDelta(spot.get().x() - ground.getX(), 0, spot.get().z() - ground.getZ());
+        if (side == null) {
+            throw new IllegalStateException("Клетка посадки " + spot.get() + " не сосед опоры " + ground
+                    + ": какао растёт только на боку ствола");
+        }
+        return actions.plantOnSide(ground, side, kind);
     }
 
     private void boneMealNow(BlockPos cropPos) {
@@ -431,7 +470,7 @@ public final class FarmSession {
         boolean column = currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN;
         PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK || column
                 ? PICK_PICKUP : PickupTuning.DEFAULT;
-        BlockCoord center = column ? coordOf(spirit.blockPosition()) : currentGround;
+        BlockCoord center = column ? coordOf(spirit.blockPosition()) : cropPos != null ? cropPos : currentGround;
         collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.FAIL);
         state = State.COLLECT;
     }
@@ -462,7 +501,7 @@ public final class FarmSession {
             noSeeds++;
         } else {
             recordAction();
-            if (!actions.plant(posOf(currentGround), currentKind)) {
+            if (!plantAt(currentKind, posOf(currentGround))) {
                 unreachable++;
             }
         }
@@ -472,6 +511,7 @@ public final class FarmSession {
     private void finishTarget() {
         currentGround = null;
         currentKind = null;
+        cropPos = null;
         columnHeight = 0;
         state = State.PICK;
     }

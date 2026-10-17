@@ -9,6 +9,7 @@ import com.theminespirit.core.rest.ObserveRequest;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.WorldScanner;
+import com.theminespirit.neoforge.observation.ObservationReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +130,7 @@ public final class ObserveJobs {
         }
 
         void complete() {
-            WorldObservation observation = session.result().observation();
+            WorldObservation observation = ObservationReader.read(spirit, session.result().observation());
             future.complete(includeEntities ? observation : withoutEntities(observation));
         }
 
@@ -141,6 +142,7 @@ public final class ObserveJobs {
     private static WorldObservation withoutEntities(WorldObservation observation) {
         return new WorldObservation(observation.botId(), observation.tick(), observation.position(),
                 observation.inventory(), observation.blocks(), List.of(), observation.containers(),
-                observation.radius());
+                observation.radius(), observation.spirit(), observation.groundItems(), observation.containerItems(),
+                observation.time());
     }
 }

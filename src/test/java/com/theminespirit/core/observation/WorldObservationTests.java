@@ -3,6 +3,7 @@ package com.theminespirit.core.observation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -22,6 +23,24 @@ class WorldObservationTests {
                 entities,
                 List.of(new ContainerRef("minecraft:chest", new BlockCoord(8, 63, -5))),
                 32);
+    }
+
+    private static WorldObservation richObservation() {
+        return new WorldObservation(
+                "spirit_1",
+                1L,
+                new BlockCoord(10, 64, -3),
+                List.of(new ItemCount("minecraft:iron_pickaxe", 1)),
+                List.of(new ItemCount("minecraft:stone", 9)),
+                List.of(),
+                List.of(new ContainerRef("minecraft:chest", new BlockCoord(8, 63, -5))),
+                32,
+                SpiritStatus.of(new HeldItem("minecraft:iron_pickaxe", 250), 18.0, 20.0, 0.7,
+                        new BoardTaskRef("MINE", "ASSIGNED")),
+                List.of(new GroundItem("minecraft:oak_log", 3)),
+                List.of(new ContainerContents(new BlockCoord(8, 63, -5),
+                        List.of(new ItemCount("minecraft:iron_ingot", 7)))),
+                new WorldTime(6000L, true));
     }
 
     @Test
@@ -91,6 +110,97 @@ class WorldObservationTests {
         WorldObservation second = observation(List.of(), List.of(new EntityRef("minecraft:cow", new BlockCoord(15, 64, -1))));
         assertNotEquals(first.hash(), second.hash(),
                 "Сдвиг сущности на блок изменяет картину мира — hash должен отличаться");
+    }
+
+    @Test
+    void hash_HealthChanged_HashDiffers() {
+        WorldObservation base = richObservation();
+        WorldObservation hurt = withSpirit(base, SpiritStatus.of(base.spirit().held(), 12.0, 20.0, 0.7,
+                base.spirit().boardTask()));
+        assertNotEquals(base.hash(), hurt.hash(),
+                "Падение здоровья меняет наблюдение — стратег обязан перепланировать, а не считать мир прежним");
+    }
+
+    @Test
+    void hash_HeldItemChanged_HashDiffers() {
+        WorldObservation base = richObservation();
+        WorldObservation switched = withSpirit(base, SpiritStatus.of(new HeldItem("minecraft:diamond_pickaxe", 150),
+                18.0, 20.0, 0.7, base.spirit().boardTask()));
+        assertNotEquals(base.hash(), switched.hash(),
+                "Смена предмета в руке — ресурс для стратега: hash обязан измениться, иначе решение устареет");
+    }
+
+    @Test
+    void hash_GroundItemsChanged_HashDiffers() {
+        WorldObservation base = richObservation();
+        WorldObservation picked = new WorldObservation(base.botId(), base.tick(), base.position(), base.inventory(),
+                base.blocks(), base.entities(), base.containers(), base.radius(), base.spirit(), List.of(),
+                base.containerItems(), base.time());
+        assertNotEquals(base.hash(), picked.hash(),
+                "Подобранные с земли предметы меняют ресурсы — hash обязан отличаться");
+    }
+
+    @Test
+    void hash_DayTimeChangedWithinSameDay_SameHash() {
+        WorldObservation base = richObservation();
+        WorldObservation laterSameDay = new WorldObservation(base.botId(), base.tick() + 100, base.position(),
+                base.inventory(), base.blocks(), base.entities(), base.containers(), base.radius(), base.spirit(),
+                base.groundItems(), base.containerItems(), new WorldTime(7000L, true));
+        assertEquals(base.hash(), laterSameDay.hash(),
+                "Точный тик суток в наблюдении есть, но в hash входит только день/ночь: иначе тик растёт каждый "
+                        + "цикл и стратег зовёт модель впустую");
+    }
+
+    @Test
+    void hash_DayTurnsToNight_HashDiffers() {
+        WorldObservation day = richObservation();
+        WorldObservation night = new WorldObservation(day.botId(), day.tick(), day.position(), day.inventory(),
+                day.blocks(), day.entities(), day.containers(), day.radius(), day.spirit(), day.groundItems(),
+                day.containerItems(), new WorldTime(14000L, false));
+        assertNotEquals(day.hash(), night.hash(),
+                "Смена дня и ночи — смена правил поведения: hash обязан измениться");
+    }
+
+    @Test
+    void hash_RichDataDifferentListOrder_IsEqual() {
+        WorldObservation first = new WorldObservation("spirit_1", 1L, new BlockCoord(10, 64, -3),
+                List.of(new ItemCount("minecraft:iron_pickaxe", 1)), List.of(), List.of(), List.of(), 32,
+                null,
+                List.of(new GroundItem("minecraft:oak_log", 3), new GroundItem("minecraft:oak_log", 2)),
+                List.of(new ContainerContents(new BlockCoord(9, 63, -5), List.of(new ItemCount("minecraft:coal", 1))),
+                        new ContainerContents(new BlockCoord(8, 63, -5), List.of(new ItemCount("minecraft:iron_ingot", 1)))),
+                null);
+        WorldObservation second = new WorldObservation("spirit_1", 1L, new BlockCoord(10, 64, -3),
+                List.of(new ItemCount("minecraft:iron_pickaxe", 1)), List.of(), List.of(), List.of(), 32,
+                null,
+                List.of(new GroundItem("minecraft:oak_log", 5)),
+                List.of(new ContainerContents(new BlockCoord(8, 63, -5), List.of(new ItemCount("minecraft:iron_ingot", 1))),
+                        new ContainerContents(new BlockCoord(9, 63, -5), List.of(new ItemCount("minecraft:coal", 1)))),
+                null);
+        assertEquals(first.hash(), second.hash(),
+                "Выпавшие предметы одного вида сводятся в одну запись, а контейнеры сортируются по позиции: "
+                        + "иначе тот же мир даёт разные хэши");
+    }
+
+    @Test
+    void toJson_RichObservation_NewFieldsMatchContract() {
+        String json = richObservation().toJson();
+        assertTrue(json.contains("\"held\":{\"item\":\"minecraft:iron_pickaxe\",\"durability\":250}"),
+                "Предмет в руке идёт полем held с id и прочностью: " + json);
+        assertTrue(json.contains("\"health\":18.0,\"max_health\":20.0,\"food\":0.7"),
+                "Здоровье, максимум здоровья и сытость идут полями наблюдения: " + json);
+        assertTrue(json.contains("\"board_task\":{\"case\":\"MINE\",\"status\":\"ASSIGNED\"}"),
+                "Текущее задание доски идёт полем board_task с кейсом и статусом: " + json);
+        assertTrue(json.contains("\"ground_items\":[{\"item\":\"minecraft:oak_log\",\"count\":3}]"),
+                "Выпавшие предметы идут полем ground_items с id и количеством: " + json);
+        assertTrue(json.contains("\"time\":{\"day\":true,\"day_time\":6000}"),
+                "Время суток идёт полем time с днём/ночью и тиком дня: " + json);
+    }
+
+    private static WorldObservation withSpirit(WorldObservation base, SpiritStatus spirit) {
+        return new WorldObservation(base.botId(), base.tick(), base.position(), base.inventory(), base.blocks(),
+                base.entities(), base.containers(), base.radius(), spirit, base.groundItems(), base.containerItems(),
+                base.time());
     }
 
     @Test
@@ -168,7 +278,8 @@ class WorldObservationTests {
                                 new ItemCount("iron_pickaxe", 1)),
                         List.of())),
                 Arguments.of("сущности и контейнеры", withContainers),
-                Arguments.of("крайние координаты и значения", extreme));
+                Arguments.of("крайние координаты и значения", extreme),
+                Arguments.of("новые поля: рука, здоровье, доска, дроп, сундуки, время", richObservation()));
     }
 
     @ParameterizedTest(name = "{0}")

@@ -5,5 +5,6 @@ public enum Ground {
     DIRT,
     GRASS,
     PATH,
+    LOG,
     OTHER
 }
