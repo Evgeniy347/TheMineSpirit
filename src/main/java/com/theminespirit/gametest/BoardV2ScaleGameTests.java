@@ -38,6 +38,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
+@SettlementSystems(board = true)
 public final class BoardV2ScaleGameTests {
     private static final String BATCH = "board_v2_scale";
     private static final int SPIRITS = 20;
@@ -50,15 +51,11 @@ public final class BoardV2ScaleGameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void prepareBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(false);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreBatch(ServerLevel level) {
-        SpiritConfig.setCoordinatorEnabled(true);
-        SpiritConfig.setBoardEnabled(true);
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
