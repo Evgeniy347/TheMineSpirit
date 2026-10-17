@@ -29,6 +29,43 @@ public final class FoodNorm {
         return new FoodNeed((long) Math.ceil(need / best), need);
     }
 
+    public static double need(int adults, int children, double days, double adultRation, double childRation) {
+        if (adults < 0) {
+            throw new IllegalArgumentException(
+                    "Взрослых = " + adults + ": норма еды считается на душу, душ не может быть отрицательно");
+        }
+        if (children < 0) {
+            throw new IllegalArgumentException(
+                    "Детей = " + children + ": норма еды считается на душу, душ не может быть отрицательно");
+        }
+        if (Double.isNaN(days) || Double.isInfinite(days) || days <= 0) {
+            throw new IllegalArgumentException(
+                    "Запас считается на " + days + " суток: срок обязан быть конечным и > 0");
+        }
+        if (Double.isNaN(adultRation) || Double.isInfinite(adultRation) || adultRation <= 0) {
+            throw new IllegalArgumentException(
+                    "Паёк взрослого = " + adultRation + ": суточная норма обязана быть конечной и > 0");
+        }
+        if (Double.isNaN(childRation) || Double.isInfinite(childRation) || childRation <= 0) {
+            throw new IllegalArgumentException(
+                    "Паёк ребёнка = " + childRation + ": суточная норма обязана быть конечной и > 0");
+        }
+        double need = days * (adults * adultRation + children * childRation);
+        if (Double.isInfinite(need)) {
+            throw new IllegalArgumentException("Норма еды переполнила шкалу: проверь население, срок и пайки");
+        }
+        return need;
+    }
+
+    public static FoodDeficit deficit(int adults, int children, double days, double adultRation,
+            double childRation, double stockNutrition) {
+        if (Double.isNaN(stockNutrition) || Double.isInfinite(stockNutrition) || stockNutrition < 0) {
+            throw new IllegalArgumentException(
+                    "Запас еды = " + stockNutrition + ": сытность запаса обязана быть конечной и >= 0");
+        }
+        return new FoodDeficit(need(adults, children, days, adultRation, childRation), stockNutrition);
+    }
+
     public static List<String> rankScore(NutritionTable table) {
         if (table == null) {
             throw new IllegalArgumentException("Ранг еды без таблицы сытности не строится: сытность — данные");

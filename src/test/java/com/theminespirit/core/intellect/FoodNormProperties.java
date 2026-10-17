@@ -58,4 +58,27 @@ class FoodNormProperties {
         assertEquals(FoodNorm.rankScore(table), FoodNorm.rankScore(table),
                 "Ранг детерминирован: иначе приоритет еды мигает между пересборками");
     }
+
+    @Property
+    void deficit_AnyInputs_NonNegative(@ForAll @IntRange(min = 0, max = 40) int adults,
+            @ForAll @IntRange(min = 0, max = 40) int children,
+            @ForAll @DoubleRange(min = 0.5, max = 3) double days,
+            @ForAll @DoubleRange(min = 0, max = 1000) double stock) {
+        FoodDeficit deficit = FoodNorm.deficit(adults, children, days, 1.5, 0.75, stock);
+
+        assertTrue(deficit.deficit() >= 0,
+                "Дефицит неотрицателен при любом запасе: излишек еды не превращается в долг");
+    }
+
+    @Property
+    void deficit_LargerPopulation_NeedsNoLess(@ForAll @IntRange(min = 0, max = 40) int adults,
+            @ForAll @IntRange(min = 0, max = 10) int children,
+            @ForAll @DoubleRange(min = 0.5, max = 3) double days,
+            @ForAll @DoubleRange(min = 0, max = 1000) double stock) {
+        FoodDeficit small = FoodNorm.deficit(adults, children, days, 1.5, 0.75, stock);
+        FoodDeficit large = FoodNorm.deficit(adults + 1, children, days, 1.5, 0.75, stock);
+
+        assertTrue(large.deficit() >= small.deficit(),
+                "Больше духов — дефицит не меньше: иначе рост поселения снизит спрос на еду");
+    }
 }

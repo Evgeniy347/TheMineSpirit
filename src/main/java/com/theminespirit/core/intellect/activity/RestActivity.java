@@ -21,7 +21,8 @@ public final class RestActivity implements Activity {
         if (view == null) {
             throw new IllegalArgumentException("Спрос отдыха без обстановки не считается: зависит от нужд и ночи");
         }
-        double rest = view.needsFood(IntellectTuning.FOOD_DAYS, IntellectTuning.FOOD_SAFETY)
+        double rest = view.foodDeficit(IntellectTuning.FOOD_DAYS, IntellectTuning.FOOD_RATION,
+                IntellectTuning.FOOD_CHILD_RATION).deficit() > 0
                 || view.needsOre(IntellectTuning.ORE_TARGET, IntellectTuning.IRON_TARGET,
                         IntellectTuning.WEAPON_TARGET) ? 1.0 : 4.5;
         if (SleepRule.isNight(view.dayFraction())) {

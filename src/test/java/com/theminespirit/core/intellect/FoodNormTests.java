@@ -34,6 +34,59 @@ class FoodNormTests {
     }
 
     @Test
+    void deficit_EmptyStock_EqualsNorm() {
+        FoodDeficit deficit = FoodNorm.deficit(4, 1, 2, 1.5, 0.75, 0);
+
+        assertEquals(13.5, deficit.need(),
+                "Норма 4 взрослых и ребёнка на 2 суток: 2 × (4×1.5 + 0.75) = 13.5 сытности");
+        assertEquals(0.0, deficit.stock(),
+                "Пустой склад — запас ноль: дефицит равен норме, иначе интеллект недооценит голод");
+        assertEquals(13.5, deficit.deficit(),
+                "Дефицит пустого склада равен норме: спрос добычи еды растёт от этого числа");
+    }
+
+    @Test
+    void deficit_StockAboveNorm_Zero() {
+        FoodDeficit deficit = FoodNorm.deficit(3, 0, 1, 1.5, 0.75, 10);
+
+        assertEquals(0.0, deficit.deficit(),
+                "Запас выше нормы не создаёт отрицательного дефицита: излишек еды не превращается в долг");
+    }
+
+    @Test
+    void deficit_PartialStock_Remainder() {
+        FoodDeficit deficit = FoodNorm.deficit(3, 0, 1, 1.5, 0.75, 1.5);
+
+        assertEquals(3.0, deficit.deficit(),
+                "Норма 4.5 минус запас 1.5 — дефицит 3: спрос растёт от нехватки, а не от всего запаса");
+    }
+
+    @Test
+    void deficit_ChildrenVersusAdults_NeedsLess() {
+        FoodDeficit withChildren = FoodNorm.deficit(2, 2, 1, 1.5, 0.75, 0);
+        FoodDeficit allAdults = FoodNorm.deficit(4, 0, 1, 1.5, 0.75, 0);
+
+        assertTrue(withChildren.need() < allAdults.need(),
+                "Дети едят меньше взрослых: норма поселения с детьми ниже, иначе ферма копит лишнее");
+    }
+
+    @Test
+    void deficit_BadInputs_Throw() {
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(-1, 0, 1, 1.5, 0.75, 0),
+                "Отрицательное число взрослых не описывает поселение: норма считается на душу");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(1, -1, 1, 1.5, 0.75, 0),
+                "Отрицательное число детей не описывает поселение: норма считается на душу");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(1, 0, 0, 1.5, 0.75, 0),
+                "Норма на ноль суток всегда выполнена: голод станет невидимым для спроса");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(1, 0, 1, 0, 0.75, 0),
+                "Паёк взрослого ноль делает голод невидимым: норма задаётся данными > 0");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(1, 0, 1, 1.5, -1, 0),
+                "Отрицательный паёк ребёнка переворачивает норму: спрос падает при голоде");
+        assertThrows(IllegalArgumentException.class, () -> FoodNorm.deficit(1, 0, 1, 1.5, 0.75, -1),
+                "Отрицательный запас невозможен: дефицит посчитался бы больше нормы");
+    }
+
+    @Test
     void rankScore_TastierFood_RanksHigher() {
         List<String> rank = FoodNorm.rankScore(TABLE);
 

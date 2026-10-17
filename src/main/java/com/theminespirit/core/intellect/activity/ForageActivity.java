@@ -6,6 +6,7 @@ import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
+import com.theminespirit.core.intellect.FoodDemand;
 import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
@@ -26,9 +27,7 @@ public final class ForageActivity implements Activity {
         if (!hasMethod(view)) {
             return Activity.checkedDemand(id(), 0);
         }
-        double norm = IntellectTuning.FOOD_DAYS * IntellectTuning.FOOD_SAFETY;
-        double need = Math.max(0, Math.min(1, (norm - view.foodNutritionPerSoul()) / norm));
-        return Activity.checkedDemand(id(), 1 + 8 * need);
+        return FoodDemand.demand(id(), view);
     }
 
     @Override

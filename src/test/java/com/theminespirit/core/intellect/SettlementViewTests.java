@@ -61,13 +61,35 @@ class SettlementViewTests {
     }
 
     @Test
-    void needsFood_BelowNorm_IsTrue() {
-        SettlementView settlement = view(4, 0, 0.5, 0.5, 64, 32, 2, List.of());
+    void foodDeficit_StockBelowNorm_IsRemainder() {
+        SettlementView settlement = view(4, 1, 1, 1, 64, 32, 2, List.of());
 
-        assertTrue(settlement.needsFood(1, 1.5),
-                "Сытности 0.5 при норме 1.5 не хватает: ферма обязана подняться в спросе");
-        assertFalse(view(4, 0, 0.5, 2, 64, 32, 2, List.of()).needsFood(1, 1.5),
-                "Сытности 2 при норме 1.5 хватает: ферма уступает место другим работам");
+        FoodDeficit deficit = settlement.foodDeficit(1, 1.5, 0.75);
+
+        assertEquals(5.25, deficit.need(),
+                "Норма трёх взрослых и ребёнка на сутки: 3×1.5 + 0.75 = 5.25 сытности");
+        assertEquals(4.0, deficit.stock(),
+                "Запас поселения — сытность на душу, умноженная на население: иначе дефицит не видит общий склад");
+        assertEquals(1.25, deficit.deficit(),
+                "Дефицит — норма минус запас: спрос добычи еды растёт от этой нехватки");
+    }
+
+    @Test
+    void foodDeficit_StockAboveNorm_Zero() {
+        SettlementView settlement = view(4, 1, 1, 2, 64, 32, 2, List.of());
+
+        assertEquals(0.0, settlement.foodDeficit(1, 1.5, 0.75).deficit(),
+                "Запас выше нормы не даёт дефицита: добыча еды уступает место другим работам");
+    }
+
+    @Test
+    void foodDeficit_MoreSpiritsWithSameStock_NoLess() {
+        SettlementView small = view(2, 0, 1, 1, 64, 32, 2, List.of());
+        SettlementView large = view(4, 0, 1, 1, 64, 32, 2, List.of());
+
+        assertTrue(large.foodDeficit(1, 1.5, 0.75).deficit()
+                        >= small.foodDeficit(1, 1.5, 0.75).deficit(),
+                "Больше духов при том же запасе на душу — дефицит не меньше: иначе большой посёлок голодает незаметно");
     }
 
     @Test
@@ -115,10 +137,12 @@ class SettlementViewTests {
     }
 
     @Test
-    void needsFood_BadHorizon_Throws() {
+    void foodDeficit_BadHorizon_Throws() {
         SettlementView settlement = view(2, 0, 2, 2, 64, 32, 2, List.of());
 
-        assertThrows(IllegalArgumentException.class, () -> settlement.needsFood(0, 1.5),
+        assertThrows(IllegalArgumentException.class, () -> settlement.foodDeficit(0, 1.5, 0.75),
                 "Норма еды на ноль суток всегда выполнена: голод станет невидимым для спроса");
+        assertThrows(IllegalArgumentException.class, () -> settlement.foodDeficit(1, 0, 0.75),
+                "Паёк взрослого ноль делает голод невидимым: норма задаётся данными > 0");
     }
 }
