@@ -1,7 +1,7 @@
 # Горячая перезагрузка таблиц данных
 
 Таблицы ценностей, коэффициентов и правил (ценность предметов, броня, корма, мечи, наборы, добыча, политики,
-постройки, доска задач, двери, тактика, голод, рыбалка, спуск и расширение шахты, приоритеты обороны) читаются
+постройки, схемы доски, доска задач, двери, тактика, голод, рыбалка, спуск и расширение шахты, приоритеты обороны) читаются
 не из classpath один раз, а из **ресурс-менеджера сервера**: их можно поменять
 на живом сервере командой `/reload`, без перезапуска и без установки нового мода.
 
@@ -37,6 +37,7 @@
 | `item_values` | `inventory/item_values.json` | ценность предметов и категории |
 | `base_kit` | `inventory/base_kit.json` | базовый набор духа |
 | `kit_activities` | `inventory/kit_activities.json` | наборы по деятельностям |
+| `inventory_norm` | `inventory/inventory_norm.json` | кривые спроса «освободить инвентарь» и пороги удержания задачи по деятельностям |
 | `armor` | `armor/armor_table.json` | порядок материалов брони, порог износа |
 | `feed` | `husbandry/feed.json` | чем кормить вид |
 | `sword` | `husbandry/sword.json` | тир мечей |
@@ -52,6 +53,10 @@
 | `descent` | `mining/descent.json` | целевой этаж спуска и интервал факелов |
 | `descent_levels` | `mining/descent_levels.json` | ширина и высота расширения шахты, ширина ступенек |
 | `priorities` | `tactics/priorities.json` | классы целей обороны и порядок их выбора по ролям |
+| `schematic_house` | `schematics/house.json` | схема дома поселения |
+| `schematic_fence` | `schematics/fence.json` | схема забора |
+| `schematic_pen` | `schematics/pen.json` | схема загона для животных |
+| `schematic_enchant_room` | `schematics/enchant_room.json` | схема чаровальни |
 
 Каталог `structure/*.nbt` — бинарные шаблоны структур для GameTest, а не таблица коэффициентов; он не
 перезагружается.
@@ -78,12 +83,15 @@
 - `com.theminespirit.neoforge.DataReload` — единственная подписка на `AddReloadListenerEvent`. На каждый
   `/reload` он читает json из серверного `ResourceManager` (мод + датапаки мира), парсит и кладёт в держатели;
   ошибка одной таблицы не мешает остальным.
+- `com.theminespirit.neoforge.SchematicResources` — загрузчик схем по имени для `build_schematic`: для схем,
+  зарегистрированных в `DataTables`, отдаёт `holder.current()`, остальные (тела пресетов) читает из classpath.
 - `com.theminespirit.neoforge.SpiritTablesCommand` — команда `/spirit tables`.
 
 ## Проверка
 
 - JUnit: `TableRegistryTests` — замена версии, атомарность, «неудачная загрузка оставляет старую», отчёт по
-  ошибке, независимость таблиц.
+  ошибке, независимость таблиц. `SchematicResourcesTests` — загрузчик схем (`build_schematic`) читает тело
+  зарегистрированной схемы из держателя, подмена в реестре видна потребителю, битый json оставляет прежнюю схему.
 - GameTest: `HotReloadGameTests` — датапак меняет `armor_table.json`, после перезагрузки дух надевает броню по
   новой таблице; битый json оставляет прежнюю таблицу и попадает в отчёт с ошибкой.
 

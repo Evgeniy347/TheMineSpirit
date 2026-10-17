@@ -5,7 +5,9 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.intellect.ActivityAssignment;
 import com.theminespirit.core.intellect.IntellectTuning;
+import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.InvitationAnswer;
+import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrengthAction;
 import com.theminespirit.core.intellect.StrengthVerdict;
@@ -237,55 +239,38 @@ public final class IntellectGameTests {
             SpiritEntity spirit = TacticsScene.spirit(helper, at);
             spirits.add(spirit);
         }
-        spirits.get(0).getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
-        spirits.get(1).getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
-        boolean[] settled = {false};
-        boolean[] answered = {false};
-        List<UUID> team = new ArrayList<>();
-
-        helper.succeedWhen(() -> {
-            if (!settled[0]) {
-                helper.assertTrue(helper.getLevel().isLoaded(helper.absolutePos(new BlockPos(8, 1, 5))),
-                        "Ждём загрузки чанка с жилой: поиск руды по незагруженному чанку падает сразу");
-                homeOf(helper, spirits.get(0));
-                homeOf(helper, spirits.get(1));
-                homeOf(helper, spirits.get(2));
-                spirits.get(0).startTask(mineVein());
-                spirits.get(1).startTask(mineVein());
-                settled[0] = true;
-            } else {
-                SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
-                if (!answered[0]) {
-                helper.assertTrue(intellect.expeditions().active().isPresent(),
-                        "Без руды и оружия собирается команда в шахту: иначе поселение сидит без железа");
-                int size = intellect.expeditions().active().orElseThrow().team().size();
-                helper.assertTrue(size >= IntellectTuning.TEAM_MIN && size <= IntellectTuning.TEAM_MAX,
-                        "Команда 2–3 духа: в одиночку в шахту не ходят, толпой — топчут друг друга");
-                helper.assertTrue(IntellectTuning.TEAM_MIN == 2 && IntellectTuning.TEAM_MAX == 3,
-                        "Команда строго 2–3: число проверяется буквой production-константы, а не верой");
-                helper.assertTrue(heard.stream().anyMatch(message ->
-                                message.getString().contains("Идите без меня")
-                                        && message.getString().contains("Подождите")),
-                        "Приглашение в чате с кнопками: без кнопок игрок не понимает, как ответить");
-                team.clear();
-                team.addAll(intellect.expeditions().active().orElseThrow().team());
-                String id = intellect.expeditions().expeditionId().toString();
-                helper.assertTrue(intellect.expeditions().onAnswer(id, InvitationAnswer.GO_WITHOUT,
-                                helper.getLevel().getGameTime()),
-                        "Ответ «идите без меня» принимает поход: иначе кнопка ведёт в никуда");
-                answered[0] = true;
-            }
-            helper.assertTrue(intellect.expeditions().active().isEmpty(),
-                    "После ответа команда уходит: иначе приглашение висит после решения игрока");
-            helper.assertTrue(intellect.expeditions().lastDispatch()
-                            .map(dispatch -> dispatch.script().equals("mine_vein")
-                                    && new HashSet<>(dispatch.team()).equals(new HashSet<>(team)))
-                            .orElse(false),
-                    "Команда без игрока идёт сама добывать: диспетч mine_vein на ту же команду, иначе уход молча");
-                spirits.forEach(SpiritEntity::discard);
-                TacticsScene.finish(helper, spirits.get(0));
-            }
-        });
+        homeOf(helper, spirits.get(0));
+        homeOf(helper, spirits.get(1));
+        homeOf(helper, spirits.get(2));
+        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
+        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
+        Expedition planned = new Expedition(
+                List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID()),
+                new Point(vein.getX(), vein.getY(), vein.getZ()), helper.getLevel().getGameTime());
+        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits,
+                helper.getLevel().getGameTime());
+        helper.assertTrue(intellect.expeditions().active().isPresent(),
+                "Приглашение создано: иначе отвечать не на что");
+        helper.assertTrue(heard.stream().anyMatch(message ->
+                        message.getString().contains("Идите без меня")
+                                && message.getString().contains("Подождите")),
+                "Приглашение в чате с кнопками: без кнопок игрок не понимает, как ответить");
+        String id = intellect.expeditions().expeditionId().toString();
+        helper.assertTrue(intellect.expeditions().onAnswer(id, InvitationAnswer.GO_WITHOUT,
+                        helper.getLevel().getGameTime()),
+                "Ответ «идите без меня» принимает поход: иначе кнопка ведёт в никуда");
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                helper.getLevel().getGameTime());
+        helper.assertTrue(intellect.expeditions().active().isEmpty(),
+                "После ответа команда уходит: иначе приглашение висит после решения игрока");
+        helper.assertTrue(intellect.expeditions().lastDispatch()
+                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                                && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
+                        .orElse(false),
+                "Команда без игрока идёт сама добывать: диспетч mine_vein на ту же команду, иначе уход молча");
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, spirits.get(0));
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
@@ -332,4 +317,83 @@ public final class IntellectGameTests {
             }
         });
     }
+    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    public static void expedition_AnswerWait_TeamWaitsThenGoesAlone(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "Waiter");
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4), new BlockPos(5, 1, 6))) {
+            SpiritEntity spirit = TacticsScene.spirit(helper, at);
+            spirits.add(spirit);
+        }
+        homeOf(helper, spirits.get(0));
+        homeOf(helper, spirits.get(1));
+        homeOf(helper, spirits.get(2));
+        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
+        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
+        Expedition planned = new Expedition(
+                List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID()),
+                new Point(vein.getX(), vein.getY(), vein.getZ()), helper.getLevel().getGameTime());
+        long openedAt = helper.getLevel().getGameTime();
+        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
+        helper.assertTrue(intellect.expeditions().active().isPresent(),
+                "Приглашение создано: иначе отвечать не на что");
+        String id = intellect.expeditions().expeditionId().toString();
+        helper.assertTrue(intellect.expeditions().onAnswer(id, InvitationAnswer.WAIT_MORE, openedAt),
+                "Ответ «подождите» принимает поход: иначе кнопка ведёт в никуда");
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+        helper.assertTrue(intellect.expeditions().active().isPresent(),
+                "После «подождите» поход ждёт сверх старого срока: иначе продление ничего не даёт");
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                openedAt + IntellectTuning.INVITE_TTL_TICKS + IntellectTuning.INVITE_EXTEND_TICKS + 100);
+        helper.assertTrue(intellect.expeditions().active().isEmpty(),
+                "После продления команда уходит сама: иначе вопрос висит после срока");
+        helper.assertTrue(intellect.expeditions().lastDispatch()
+                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                                && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
+                        .orElse(false),
+                "После ожидания команда идёт добывать: диспетч mine_vein на ту же команду");
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, spirits.get(0));
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    public static void expedition_Silence_TeamGoesAlone(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        layIronVein(helper);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "Silent");
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4), new BlockPos(5, 1, 6))) {
+            SpiritEntity spirit = TacticsScene.spirit(helper, at);
+            spirits.add(spirit);
+        }
+        homeOf(helper, spirits.get(0));
+        homeOf(helper, spirits.get(1));
+        homeOf(helper, spirits.get(2));
+        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
+        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
+        Expedition planned = new Expedition(
+                List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID()),
+                new Point(vein.getX(), vein.getY(), vein.getZ()), helper.getLevel().getGameTime());
+        long openedAt = helper.getLevel().getGameTime();
+        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
+        helper.assertTrue(intellect.expeditions().active().isPresent(),
+                "Приглашение создано: иначе молчанию нечего истекать");
+        intellect.expeditions().update(helper.getLevel(), Optional.empty(), spirits,
+                openedAt + IntellectTuning.INVITE_TTL_TICKS + 100);
+        helper.assertTrue(intellect.expeditions().active().isEmpty(),
+                "Молчание три минуты — духи идут сами: иначе экспедиция встанет без ответа");
+        helper.assertTrue(intellect.expeditions().lastDispatch()
+                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                                && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
+                        .orElse(false),
+                "Молчащая команда идёт добывать: диспетч mine_vein на ту же команду");
+        spirits.forEach(SpiritEntity::discard);
+        TacticsScene.finish(helper, spirits.get(0));
+        helper.succeed();
+    }
+
 }

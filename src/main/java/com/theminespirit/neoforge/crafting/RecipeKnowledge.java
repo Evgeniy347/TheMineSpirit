@@ -24,10 +24,11 @@ import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.registries.datamaps.builtin.FurnaceFuel;
+import net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps;
 
 public final class RecipeKnowledge implements ResourceKnowledge {
     private static final AtomicInteger INDEX_BUILDS = new AtomicInteger();
@@ -140,8 +141,13 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public int burnTicks(String item) {
-        return ItemIds.item(ItemIds.normalize(item))
-                .map(found -> new ItemStack(found).getBurnTime(RecipeType.SMELTING)).orElse(0);
+        return ItemIds.item(ItemIds.normalize(item)).map(RecipeKnowledge::dataMapBurnTicks).orElse(0);
+    }
+
+    @SuppressWarnings("deprecation") // ванильный геттер помечен @Deprecated, но data map NeoForge читается только через него
+    private static int dataMapBurnTicks(Item item) {
+        FurnaceFuel fuel = item.builtInRegistryHolder().getData(NeoForgeDataMaps.FURNACE_FUELS);
+        return fuel == null ? 0 : fuel.burnTime();
     }
 
     public Optional<RecipeSpec> craftRecipe(String item, Map<String, Integer> available) {

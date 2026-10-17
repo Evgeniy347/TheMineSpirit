@@ -41,11 +41,17 @@ for net_case in network_error_json network_error_stderr; do
 done
 check silent_model 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6
 check busy_tool_is_not_silence 0 1 FAKE_BUSY_TOOL=15 OPENCODE_IDLE_LIMIT=6
+# Как на ПК (без pgrep): долгий прогон тестов виден только по пульсу scripts/test.sh, без пульса — молчание.
+check heartbeat_is_not_silence 0 1 FAKE_HEARTBEAT=15 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
+check silent_without_pgrep 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
 check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
 check info_log_mentions_limit 0 1 FAKE_INFO_LOG=1
 check unfinished_answer_continues 0 3 FAKE_UNFINISHED=2
 check unfinished_answer_limit 0 4 FAKE_UNFINISHED=99 OPENCODE_UNFINISHED_LIMIT=3
 check compaction_restarts_with_reminder 0 2 FAKE_COMPACTION=1
+check loop_restarts_with_prompt 0 2 FAKE_LOOP=1
+grep -c "зацикливание" "$work/loop_restarts_with_prompt.state.args" | sed 's/^/  продолжений с напоминанием о зацикливании: /'
+check loop_limit_stops 76 4 FAKE_LOOP=99 OPENCODE_LOOP_LIMIT=3
 grep -q "Контекст сессии только что сжат" "$work/compaction_restarts_with_reminder.state.args" && v=OK || v=FAIL
 echo "$v compaction_restarts_with_reminder: второй запуск напоминает перечитать task.md и progress.md"
 [ "$(cat "$OPENCODE_TASK_FILE" 2>/dev/null)" = "тестовое задание" ] && v=OK || v=FAIL
@@ -62,7 +68,7 @@ check dirty_short_answer_continues 0 2 OPENCODE_REPO_DIR="$edited_repo" OPENCODE
 check exhausted 75 6 FAKE_FAILURES=99 OPENCODE_WAIT_LIMIT=0
 grep "перезапуск\|Остановлено" "$work/exhausted.out" | sed 's/^/  /'
 failures_after=$(wc -l < "$failures_log")
-echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+2+1+2+3+6 = 17: сбои провайдера, сетевые сбои, молчание, оборванные ответы, исчерпание)"
+echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+2+1+2+3+6 = 17: сбои провайдера, сетевые сбои, молчание, оборванные ответы, исчерпание; плюс записи зацикливания)"
 tail -n 1 "$failures_log" | sed 's/^/  последняя: /'
 
 # Режим ожидания (короткие интервалы через переменные): 5 быстрых перезапусков исчерпаны, дальше — пробы провайдера.

@@ -174,11 +174,26 @@ code=$?
     && ok "gametest-filter: имя пачки уходит в gradle системным свойством" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
+# unit всегда с --rerun: стёртые XML не вернутся из UP-TO-DATE/FROM-CACHE
+out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.example.SomeTests' 2>&1)
+grep -qx "test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
+    && ok "unit-rerun: gradle test идёт с --rerun" \
+    || fail "unit-rerun: args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_a combat_b 2>&1)
 code=$?
 [ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=combat_a,combat_b" "$argsfile" \
     && ok "gametest-filter: несколько фильтров через запятую" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
+# Замок и токен уходят в gradle системными свойствами: build.gradle сверяет их с маркером
+# замка в runGameTestServer, поэтому прямой ./gradlew runGameTestServer падает (docs/TESTING.md).
+out=$(ARGS_FILE="$argsfile" THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.lock=$work/tmp/lock" "$argsfile" \
+    && grep -q -- "-Dtheminespirit.gametest.token=" "$argsfile" \
+    && ok "gametest-lock-props: замок и токен уходят в gradle системными свойствами" \
+    || fail "gametest-lock-props: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
 # Параллельный gametest ждёт замок: занимаем замок живым процессом
 rm -rf "$work/tmp/lock.d"

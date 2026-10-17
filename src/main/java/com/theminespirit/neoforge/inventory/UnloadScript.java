@@ -4,11 +4,14 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ContainerChoice;
 import com.theminespirit.core.inventory.ContainerPicker;
+import com.theminespirit.core.inventory.DepositSelection;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.inventory.WarehouseSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.core.script.UnloadParams;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
@@ -18,14 +21,28 @@ import net.minecraft.world.item.ItemStack;
 
 public final class UnloadScript extends ContainerTask {
     private final UnloadParams params;
+    private final int protectedSlot;
+    private final int reservePercent;
     private List<KindGroup> groups;
     private int groupIndex;
     private boolean refusedOnce;
     private String lastRefusal;
 
     public UnloadScript(SpiritEntity spirit, UnloadParams params) {
+        this(spirit, params, -1, 0);
+    }
+
+    public static UnloadScript relief(SpiritEntity spirit, int protectedSlot) {
+        return new UnloadScript(spirit,
+                new UnloadParams(ContainerTarget.AUTO, CatalogLimits.CONTAINER_RADIUS_DEFAULT, true),
+                protectedSlot, WarehouseSpace.MIN_FREE_PERCENT);
+    }
+
+    private UnloadScript(SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent) {
         super(spirit, params.container(), params.radius());
         this.params = params;
+        this.protectedSlot = protectedSlot;
+        this.reservePercent = reservePercent;
     }
 
     @Override
@@ -36,7 +53,8 @@ public final class UnloadScript extends ContainerTask {
     @Override
     protected TransferRunner beginTransfer(Container container) {
         BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
-        List<Slice> surplus = kit.surplus(new StackMapper().map(spirit.getInventory()), InventoryTables.values());
+        List<Slice> surplus = DepositSelection.surplus(new StackMapper().map(spirit.getInventory()), kit,
+                InventoryTables.values(), protectedSlot);
         if (surplus.isEmpty()) {
             return null;
         }
@@ -59,7 +77,8 @@ public final class UnloadScript extends ContainerTask {
         }
         while (groupIndex < groups.size()) {
             KindGroup group = groups.get(groupIndex++);
-            ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), group.kind);
+            ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), group.kind,
+                    reservePercent);
             if (choice instanceof ContainerChoice.Refused refused) {
                 refusedOnce = true;
                 lastRefusal = refused.reason();
@@ -84,7 +103,7 @@ public final class UnloadScript extends ContainerTask {
     private List<KindGroup> groupByKind(AutoContainerScan scan) {
         List<Stack> inventory = scan.mapper().map(spirit.getInventory());
         BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
-        List<Slice> surplus = kit.surplus(inventory, InventoryTables.values());
+        List<Slice> surplus = DepositSelection.surplus(inventory, kit, InventoryTables.values(), protectedSlot);
         List<KindGroup> result = new ArrayList<>();
         for (Slice slice : surplus) {
             Stack kind = inventory.get(slice.slot());

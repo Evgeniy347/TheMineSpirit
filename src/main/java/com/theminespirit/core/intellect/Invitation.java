@@ -6,6 +6,7 @@ public final class Invitation {
     private long deadline;
     private InvitationStage stage;
     private boolean goWithout;
+    private int extendsUsed;
 
     public InvitationState open(long now) {
         if (now < 0) {
@@ -19,6 +20,7 @@ public final class Invitation {
         deadline = now + IntellectTuning.INVITE_TTL_TICKS;
         stage = InvitationStage.OPEN;
         goWithout = false;
+        extendsUsed = 0;
         return state(now);
     }
 
@@ -48,8 +50,11 @@ public final class Invitation {
             return state(now);
         }
         if (answer == InvitationAnswer.WAIT_MORE) {
-            stage = InvitationStage.EXTENDED;
-            deadline += IntellectTuning.INVITE_EXTEND_TICKS;
+            if (extendsUsed < IntellectTuning.INVITE_MAX_EXTENDS) {
+                stage = InvitationStage.EXTENDED;
+                deadline += IntellectTuning.INVITE_EXTEND_TICKS;
+                extendsUsed++;
+            }
         } else {
             stage = InvitationStage.GO_WITHOUT;
             goWithout = true;

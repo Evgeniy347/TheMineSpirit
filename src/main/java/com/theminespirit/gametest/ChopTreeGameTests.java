@@ -1041,7 +1041,7 @@ public final class ChopTreeGameTests {
         return false;
     }
 
-    private static SpiritEntity spawnChopper(GameTestHelper helper) {
+    static SpiritEntity spawnChopper(GameTestHelper helper) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
         return spirit;
@@ -1056,7 +1056,7 @@ public final class ChopTreeGameTests {
                 Map.of("species", species, "count", count, "radius", SEARCH_RADIUS, "replant", replant));
     }
 
-    private static void prepareField(GameTestHelper helper) {
+    static void prepareField(GameTestHelper helper) {
         clearField(helper);
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
@@ -1065,7 +1065,7 @@ public final class ChopTreeGameTests {
         }
     }
 
-    private static void clearField(GameTestHelper helper) {
+    static void clearField(GameTestHelper helper) {
         clearField(helper, FIELD_HEIGHT);
     }
 
@@ -1108,7 +1108,7 @@ public final class ChopTreeGameTests {
         return cells;
     }
 
-    private static void buildOakTree(GameTestHelper helper, int x, int z, int height) {
+    static void buildOakTree(GameTestHelper helper, int x, int z, int height) {
         buildTree(helper, x, z, height, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
     }
 
@@ -1128,7 +1128,7 @@ public final class ChopTreeGameTests {
         }
     }
 
-    private static void buildBirchTree(GameTestHelper helper, int x, int z, int height) {
+    static void buildBirchTree(GameTestHelper helper, int x, int z, int height) {
         buildTree(helper, x, z, height, Blocks.BIRCH_LOG, Blocks.BIRCH_LEAVES);
     }
 
@@ -1224,7 +1224,7 @@ public final class ChopTreeGameTests {
         }
     }
 
-    private static int countBlocksInWorld(GameTestHelper helper, Block block) {
+    static int countBlocksInWorld(GameTestHelper helper, Block block) {
         int count = 0;
         for (int x = -2; x < PLATFORM + 2; x++) {
             for (int y = 0; y < FIELD_HEIGHT; y++) {

@@ -98,4 +98,22 @@ class ExpeditionPlannerTests {
                 () -> new Expedition(List.of(uuid(1), uuid(2), uuid(3), uuid(4)), MINE, 0),
                 "Команда из четырёх в шахту не идёт: максимум трое");
     }
+
+    @Test
+    void expedition_ImmutableTeam_Accepted() {
+        Expedition expedition = new Expedition(List.of(uuid(1), uuid(2)), MINE, 0);
+
+        assertEquals(List.of(uuid(1), uuid(2)), expedition.team(),
+                "Команда в иммутабельном списке принимается: иначе любой вызов с List.of роняет поход "
+                        + "с NullPointerException вместо похода, а GameTest приглашения не собирается");
+    }
+
+    @Test
+    void expedition_NullMember_Throws() {
+        List<UUID> team = new ArrayList<>(List.of(uuid(1), uuid(2)));
+        team.set(1, null);
+
+        assertThrows(IllegalArgumentException.class, () -> new Expedition(team, MINE, 0),
+                "Команда с null-духом не идёт: каждый участник — конкретный дух");
+    }
 }

@@ -21,10 +21,21 @@ UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-360}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-300}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-600}"
 
-# Замок GameTest (переиспользуем логику из scripts/gametest.sh)
-GAMETEST_LOCK="${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}"
+# Замок GameTest (переиспользуем логику из scripts/gametest.sh).
+# Дефолт: на Windows — C:\ProgramData\theminespirit (общий для всех сессий и пользователей машины;
+# /tmp в Git Bash монтируется в %TEMP% текущего пользователя — у разных сессий opencode TEMP может
+# указывать в разные каталоги, и замок перестаёт быть общим). На Linux — /tmp.
+case "$OSTYPE" in
+    msys*|cygwin*|win*)
+        GAMETEST_LOCK="${THEMINESPIRIT_GAMETEST_LOCK:-${ALLUSERSPROFILE:-C:/ProgramData}/theminespirit/theminespirit-gametest.lock}"
+        ;;
+    *)
+        GAMETEST_LOCK="${THEMINESPIRIT_GAMETEST_LOCK:-/tmp/theminespirit-gametest.lock}"
+        ;;
+esac
 GAMETEST_WAIT="${THEMINESPIRIT_GAMETEST_WAIT:-1800}"
 GAMETEST_LOCK_DIR="$GAMETEST_LOCK.d"
+GAMETEST_TOKEN=""
 
 usage() {
     cat <<'EOF'
@@ -50,7 +61,7 @@ usage() {
   THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 360)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение gametest (по умолчанию 300)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 600)
-  THEMINESPIRIT_GAMETEST_LOCK        путь к замку (по умолчанию /tmp/theminespirit-gametest.lock)
+  THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
   THEMINESPIRIT_GAMETEST_NOFLOCK=1   принудительно использовать mkdir-замок (для Git Bash на Windows)
 EOF
@@ -109,7 +120,11 @@ acquire_dir_lock() {
     while true; do
         if mkdir "$GAMETEST_LOCK_DIR" 2>/dev/null; then
             echo $$ >"$GAMETEST_LOCK_DIR/pid"
-            trap release_dir_lock EXIT INT TERM
+            echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK_DIR/token"
+            # Один trap на выход: снять замок И остановить монитор. Отдельный trap release_dir_lock
+            # перезаписал бы stop_monitor, и фоновый монитор остался бы жив (на Windows без setsid).
+            trap 'release_dir_lock; stop_monitor' EXIT INT TERM
+            export GAMETEST_LOCK GAMETEST_TOKEN
             return 0
         fi
         holder=$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null || echo "")
@@ -201,12 +216,28 @@ start_monitor() {
                     exit 124
                 fi
             done
-        ) &
+        ) >/dev/null 2>&1 &
     fi
     MONITOR_PID=$!
 }
 
+# Пульс для надзора исполнителя (scripts/opencode-task.sh): пока скрипт жив — ждёт замок или гоняет тесты —
+# файл обновляется раз в 20 с, и надзор не путает долгий прогон с молчанием модели.
+HEARTBEAT_FILE="${THEMINESPIRIT_TEST_HEARTBEAT:-TestResults/test-running}"
+HEARTBEAT_PID=""
+start_heartbeat() {
+    mkdir -p "$(dirname "$HEARTBEAT_FILE")"
+    touch "$HEARTBEAT_FILE"
+    ( while kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; done ) &
+    HEARTBEAT_PID=$!
+}
+
 stop_monitor() {
+    if [ -n "$HEARTBEAT_PID" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+        HEARTBEAT_PID=""
+        rm -f "$HEARTBEAT_FILE"
+    fi
     if [ -n "$MONITOR_PID" ]; then
         kill -TERM "$MONITOR_PID" 2>/dev/null || kill -TERM -- "-$MONITOR_PID" 2>/dev/null || true
         MONITOR_PID=""
@@ -260,8 +291,9 @@ analyze_unit() {
 
     echo "FAIL unit: прошло $((total - failures - errors)), упало $((failures + errors))"
     if [ "$failures" -gt 0 ] || [ "$errors" -gt 0 ]; then
-        first_error=$(grep -m1 -E "FAILED|Exception|Error:" "$log" | head -1)
-        first_stack=$(grep -A 10 -m1 -E "FAILED|Exception|Error:" "$log" | head -12)
+        # Без -m1: на Windows (MSYS) grep с -m1 рано закрывает pipe, и `| head` теряет контекст -A.
+        first_error=$(grep -E "FAILED|Exception|Error:" "$log" | head -1)
+        first_stack=$(grep -A 10 -E "FAILED|Exception|Error:" "$log" | head -12)
         [ -n "$first_error" ] && echo "$first_error"
         [ -n "$first_stack" ] && echo "$first_stack"
     fi
@@ -310,16 +342,18 @@ ELAPSED=0
 
 echo "Режим: $MODE" >&2
 echo "Лог: $LOG_FILE" >&2
+start_heartbeat
 
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml
     start_monitor "unit"
+    # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
     set +e
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
@@ -348,15 +382,20 @@ else
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
         GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.filter=$FILTER_VALUE")
     fi
-
     if noflock; then
+        GAMETEST_TOKEN="$(date +%s%N)-$$"
+        mkdir -p "$(dirname "$GAMETEST_LOCK_DIR")" 2>/dev/null || true
         acquire_dir_lock
         LOCK_CODE=$?
         if [ "$LOCK_CODE" -eq 75 ]; then
             busy_hint "$GAMETEST_LOCK_DIR"
             exit 75
         fi
+    else
+        GAMETEST_TOKEN="$(date +%s%N)-$$"
+        export GAMETEST_LOCK GAMETEST_TOKEN
     fi
+    GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.lock=$GAMETEST_LOCK" "-Dtheminespirit.gametest.token=$GAMETEST_TOKEN")
 
     start_monitor "gametest"
 
@@ -368,7 +407,9 @@ else
             "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
         fi
     else
-        flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '"$@"' bash \
+        flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '
+            echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK.token"
+            "$@"' bash \
             "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!

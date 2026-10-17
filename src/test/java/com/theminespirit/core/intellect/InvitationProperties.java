@@ -3,6 +3,8 @@ package com.theminespirit.core.intellect;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.intellect.IntellectTuning;
+
 import java.util.ArrayList;
 import java.util.List;
 import net.jqwik.api.ForAll;
@@ -41,5 +43,21 @@ class InvitationProperties {
 
         assertEquals(InvitationStage.OPEN, state.stage(),
                 "Без ответа приглашение не закрывается раньше 3600 тиков: иначе вопрос умрёт до срока");
+        assertTrue(state.deadline() >= 0, "Срок не уходит в минус при любом времени до TTL");
+    }
+
+    @Property
+    void answer_WaitMore_NeverExceedsMaxExtends(@ForAll @IntRange(min = 0, max = 20) int extra) {
+        Invitation invitation = new Invitation();
+        invitation.open(0);
+        long maxDeadline = IntellectTuning.INVITE_TTL_TICKS
+                + (long) IntellectTuning.INVITE_MAX_EXTENDS * IntellectTuning.INVITE_EXTEND_TICKS;
+        for (int i = 0; i < IntellectTuning.INVITE_MAX_EXTENDS + extra; i++) {
+            invitation.answer(InvitationAnswer.WAIT_MORE, 10 + i);
+        }
+        assertTrue(invitation.answer(InvitationAnswer.WAIT_MORE, 1000).deadline() <= maxDeadline,
+                "Продлений не больше N из данных: иначе срок растёт бесконечно");
+        assertTrue(invitation.answer(InvitationAnswer.WAIT_MORE, 1000).deadline() >= 0,
+                "Срок не уходит в минус при продлениях");
     }
 }

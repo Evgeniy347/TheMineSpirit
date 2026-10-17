@@ -3,8 +3,11 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicParser;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableHolder;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class SchematicResources {
@@ -17,6 +20,10 @@ public final class SchematicResources {
         Objects.requireNonNull(file, "Имя схемы не может быть null: без него неизвестно, что грузить");
         if (file.isBlank()) {
             throw new IllegalArgumentException("Имя схемы пусто: по пустому имени схему не найти");
+        }
+        Optional<TableHolder<Schematic>> live = DataTables.INSTANCE.schematic(file);
+        if (live.isPresent()) {
+            return live.get().current();
         }
         Schematic cached = CACHE.get(file);
         if (cached != null) {

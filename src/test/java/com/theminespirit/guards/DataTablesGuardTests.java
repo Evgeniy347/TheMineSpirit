@@ -30,16 +30,11 @@ import org.junit.jupiter.api.Test;
  */
 class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
-    /** Не таблицы /reload — путь и причина. Тела пресетов из индекса presets сторож берёт сам (presetBodies). */
-    private static final Map<String, String> EXCLUDED = Map.ofEntries(
-            Map.entry("data/theminespirit/schematics/house.json",
-                    "схема грузится по имени, не на /reload (todo: горячие схемы)"),
-            Map.entry("data/theminespirit/schematics/fence.json",
-                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
-            Map.entry("data/theminespirit/schematics/pen.json",
-                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"),
-            Map.entry("data/theminespirit/schematics/enchant_room.json",
-                    "схема доски грузится по имени, не на /reload (todo: горячие схемы)"));
+    /**
+     * Не таблицы /reload — путь и причина. Исключений нет: схемы доски зарегистрированы в DataTables,
+     * тела пресетов сторож берёт сам (presetBodies).
+     */
+    private static final Map<String, String> EXCLUDED = Map.of();
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

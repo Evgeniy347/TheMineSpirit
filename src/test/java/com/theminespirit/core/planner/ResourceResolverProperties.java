@@ -109,6 +109,27 @@ class ResourceResolverProperties {
                         + "а топливо пригодится только следующей плавке. Предмет=" + root + ", количество=" + count);
     }
 
+    @Property
+    void resolve_AnySmeltPlan_OnlyMinimalFuelStepPrecedesSmelt(@ForAll @IntRange(min = 1, max = 64) int count) {
+        ResourceKnowledge knowledge = new StubKnowledge(
+                Set.of("iron_ore", "coal"), Map.of(), Map.of("iron_ingot", "iron_ore"));
+
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", count, knowledge);
+
+        List<ScriptCall> calls = new ArrayList<>();
+        flatten(plan, calls);
+        assertEquals(List.of(
+                new ScriptCall("gather", Map.of("block", "iron_ore", "count", count,
+                        "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT)),
+                new ScriptCall("gather", Map.of("block", "coal", "count", FuelTable.fuelNeeded(count, 1600),
+                        "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT)),
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", count, "radius", STATION_RADIUS))),
+                calls,
+                "План плавки обязан быть минимален (ровно столько угля, сколько нужно) и нести шаг топлива перед "
+                        + "плавкой: лишний уголь — потерянный груз, отсутствующий шаг — холодная печь. Количество="
+                        + count);
+    }
+
     private static void flatten(TaskNode node, List<ScriptCall> calls) {
         if (node instanceof SequenceNode sequence) {
             sequence.steps().forEach(step -> flatten(step, calls));
