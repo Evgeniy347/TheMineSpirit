@@ -510,6 +510,83 @@ class ItemToolScriptRuleTests(unittest.TestCase):
                 self.assertTrue(any("а" <= ch.lower() <= "я" for ch in str(ctx.exception)), "текст ошибки по-русски")
 
 
+class SequenceInventoryTests(unittest.TestCase):
+    """Кирка накапливается по шагам sequence/fallback: добыча после acquire/withdraw/equip, а не только из наблюдения."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog.from_capabilities(default_capabilities())
+        cls.policy = load_policy(APP / "policy.json")
+        cls.limits = PlanLimits()
+
+    def check(self, plan, inventory=frozenset()):
+        context = PlanContext((0, 64, 0), frozenset({"stone", "coal_ore", "iron_ore", "diamond_ore"}), inventory)
+        return check_plan(plan, self.catalog, self.policy, self.limits, context)
+
+    def rejected(self, plan, inventory=frozenset()):
+        with self.assertRaises(PlanError, msg="пустой инвентарь: шаг с рудой без накопленной кирки обязан отклониться") as ctx:
+            self.check(plan, inventory)
+        return str(ctx.exception)
+
+    def test_sequence_AcquireEquipMineVein_Accepted(self):
+        plan = {"type": "sequence", "steps": [script("acquire", item="stone_pickaxe", count=1),
+                                              script("equip", item="stone_pickaxe"),
+                                              script("mine_vein", ore="coal", count=4)]}
+        self.check(plan)
+
+    def test_sequence_WithdrawEquipMineVein_Accepted(self):
+        plan = {"type": "sequence", "steps": [script("withdraw", container="nearest", item="stone_pickaxe", count=1),
+                                              script("equip", item="stone_pickaxe"),
+                                              script("mine_vein", ore="coal", count=4)]}
+        self.check(plan)
+
+    def test_sequence_CraftEquipMineVein_Accepted(self):
+        plan = {"type": "sequence", "steps": [script("craft", item="stone_pickaxe", count=1),
+                                              script("equip", item="stone_pickaxe"),
+                                              script("mine_vein", ore="iron", count=2)]}
+        self.check(plan)
+
+    def test_sequence_EquipWithoutAcquire_GrantsItemInHand(self):
+        self.check({"type": "sequence", "steps": [script("equip", item="wooden_pickaxe"),
+                                                  script("mine_vein", ore="coal", count=2)]})
+
+    def test_sequence_MineVeinBeforeAcquire_RejectedNamingPath(self):
+        plan = {"type": "sequence", "steps": [script("mine_vein", ore="coal", count=2),
+                                              script("acquire", item="wooden_pickaxe", count=1)]}
+        self.assertIn("plan.steps[0]", self.rejected(plan))
+
+    def test_sequence_WoodenPickaxeTooLowForIron_Rejected(self):
+        plan = {"type": "sequence", "steps": [script("acquire", item="wooden_pickaxe", count=1),
+                                              script("mine_vein", ore="iron", count=2)]}
+        text = self.rejected(plan)
+        self.assertIn("каменн", text.lower(), "железная руда требует каменной кирки даже после деревянной")
+
+    def test_sequence_IronPickaxeAcquiredThenDiamondMined_Accepted(self):
+        plan = {"type": "sequence", "steps": [script("acquire", item="iron_pickaxe", count=1),
+                                              script("mine_vein", ore="diamond", count=1)]}
+        self.check(plan)
+
+    def test_nestedSequence_AcquireForFollowingSibling_Accepted(self):
+        plan = {"type": "sequence", "steps": [
+            {"type": "sequence", "steps": [script("acquire", item="stone_pickaxe", count=1),
+                                           script("equip", item="stone_pickaxe")]},
+            script("mine_vein", ore="coal", count=4)]}
+        self.check(plan)
+
+    def test_fallback_AcquireForLaterSibling_Accepted(self):
+        plan = {"type": "fallback", "steps": [script("acquire", item="stone_pickaxe", count=1),
+                                              script("mine_vein", ore="coal", count=4)]}
+        self.check(plan)
+
+    def test_parallel_AcquiredTool_NotVisibleToSibling_Rejected(self):
+        plan = {"type": "parallel", "mode": "all", "steps": [script("acquire", item="stone_pickaxe", count=1),
+                                                             script("mine_vein", ore="coal", count=4)]}
+        self.rejected(plan, frozenset())
+
+    def test_observationPickaxe_StillWorksWithoutAcquire_Accepted(self):
+        self.check(script("mine_vein", ore="iron", count=2), inventory=frozenset({"stone_pickaxe"}))
+
+
 def random_json(rng, depth=0):
     kinds = ["str", "int", "float", "bool", "none", "list", "dict"] if depth < 24 else ["str", "int", "none"]
     kind = rng.choice(kinds)
