@@ -285,6 +285,8 @@ class ScriptCatalogTests {
                                 "duration_ticks", new long[]{CatalogLimits.FISH_DURATION_MIN,
                                         CatalogLimits.FISH_DURATION_MAX},
                                 "radius", new long[]{1, 32})),
+                spec("bucket_fish", List.of(),
+                        Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("craft", List.of("item", "count"),
                         Map.of("count", new long[]{1, 256}, "radius", new long[]{1, 32})),
                 spec("smelt", List.of("item", "count"),

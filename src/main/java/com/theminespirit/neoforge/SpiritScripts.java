@@ -7,6 +7,7 @@ import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.planner.AcquireScript;
 import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
+import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.core.script.AttackParams;
 import com.theminespirit.core.script.DefendParams;
 import com.theminespirit.core.script.DisengageParams;
@@ -224,6 +225,7 @@ public final class SpiritScripts {
         table.put("hunt", spirit -> params -> new HuntScript(spirit, HuntParams.from(params)));
         table.put("capture", spirit -> params -> new CaptureScript(spirit, CaptureParams.from(params)));
         table.put("fish", spirit -> params -> new FishScript(spirit, FishingParams.from(params)));
+        table.put("bucket_fish", spirit -> params -> new BucketFishScript(spirit, BucketFishParams.from(params)));
         table.put("deposit", spirit -> params -> new DepositScript(spirit, TransferParams.from(params)));
         table.put("withdraw", spirit -> params -> new WithdrawScript(spirit, TransferParams.from(params)));
         table.put("eat", spirit -> params -> new EatScript(spirit, EatParams.from(params)));
