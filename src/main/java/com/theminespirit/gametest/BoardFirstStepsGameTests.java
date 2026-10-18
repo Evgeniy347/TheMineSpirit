@@ -15,7 +15,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
@@ -47,14 +46,18 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  * Первые шаги на доске: новое поселение → CLEAR_GROUNDS; дальше задания идут строго по цепочке,
  * каждое следующее — после выполнения предыдущего; выполненная цепочка новых заданий не плодит.
  * Всё синхронно: генератор — чистая функция от фактов мира, тело теста атомарно.
- * Доска общая на уровень: чужие first:* закрываем в начале, тени DONE снимаем prune напрямую
- * (без rebuild — чужая пересборка раздавала бы задания духам других сцен).
+ * Каждый сценарий — своя пачка и своя доска: генератор обходит мир радиусом 16, а структуры
+ * GameTest стоят в 16 блоках друг от друга — в общей пачке сосед ставит сундук или верстак,
+ * и факты чужой сцены подменяют шаг цепочки. Общая доска уровня вдобавок приносит чужие
+ * билеты (mine_level_*), которые держат шаг первыми шагами.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true)
 public final class BoardFirstStepsGameTests {
     private static final String BATCH = "board_first_steps";
+    private static final String STOCK_BATCH = "board_first_steps_stock";
+    private static final String TOOLS_BATCH = "board_first_steps_tools";
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
@@ -73,6 +76,26 @@ public final class BoardFirstStepsGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
+    @BeforeBatch(batch = STOCK_BATCH)
+    public static void stopMobsTargetingSpiritsForStock(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(false);
+    }
+
+    @AfterBatch(batch = STOCK_BATCH)
+    public static void restoreMobTargetingAfterStock(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(true);
+    }
+
+    @BeforeBatch(batch = TOOLS_BATCH)
+    public static void stopMobsTargetingSpiritsForTools(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(false);
+    }
+
+    @AfterBatch(batch = TOOLS_BATCH)
+    public static void restoreMobTargetingAfterTools(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(true);
+    }
+
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
     public static void firstSteps_NewSettlement_ChainInOrderWithoutDuplicates(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -80,21 +103,12 @@ public final class BoardFirstStepsGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
         ServerLevel level = helper.getLevel();
-        BoardService board = BoardRegistry.get(level);
+        BoardService board = isolatedBoard(level, "gametest-first-steps-chain.jsonl");
         placeLogs(helper, false);
         int prevIndex = -1;
         BoardCase lastCase = null;
         int streak = 0;
         boolean foreignTrees = false;
-
-        // Общая доска переживает сцены: чужие активные билеты (first:*, supply:* из соседних
-        // сцен) снимаем, иначе снабжение забирает духа и цепочка первых шагов стоит.
-        for (BoardTicket ticket : board.board().all()) {
-            BoardStatus status = board.board().statusOf(ticket.id()).orElse(null);
-            if (status != BoardStatus.DONE && status != BoardStatus.CANCELLED) {
-                board.board().cancel(ticket.id());
-            }
-        }
 
         for (int step = 0; step < 40 && !foreignTrees; step++) {
             long now = level.getGameTime();
@@ -167,7 +181,7 @@ public final class BoardFirstStepsGameTests {
      * содержит постановки. Доска — своя, отдельная от общей: на общей чужие сцены ставят
      * те же first: и gather:, и «шаг не поставлен» ловило бы чужой билет.
      */
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @GameTest(template = "arena", batch = STOCK_BATCH, timeoutTicks = 100)
     public static void firstSteps_EmptyStock_GathersBeforeStations(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -213,7 +227,7 @@ public final class BoardFirstStepsGameTests {
      * задание, следующее открывается после выполнения предыдущего; каменная ступень не открывается,
      * пока гейт не увидит булыжник из рецепта каменной кирки.
      */
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @GameTest(template = "arena", batch = TOOLS_BATCH, timeoutTicks = 100)
     public static void firstSteps_EmptyStock_WoodenToolsThenStone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
