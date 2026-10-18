@@ -5,6 +5,7 @@ import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
@@ -62,6 +63,10 @@ final class TreeChop {
 
     private static final PickupTuning HIGH_PICKUP = new PickupTuning(PickupTuning.REFRESH_TICKS,
             PickupTuning.PICKUP_REACH, 200, PickupTuning.MAX_DELAY_WAIT_TICKS);
+    // Подход к месту столба обязан закончиться именно в выбранной клетке, а не на её краю: PillarColumn
+    // строит столб от клетки под ногами, и остановка в соседней клетке ствола упирает прыжок в верхнее
+    // бревно. Прибытие поэтому доводится до центра клетки, но не дольше запаса на один шаг.
+    private static final int MAX_PILLAR_ALIGN_TICKS = 60;
 
     private final SpiritEntity spirit;
     private final IdFilter logFilter;
@@ -76,6 +81,8 @@ final class TreeChop {
     private Phase phase;
     private List<BlockCoord> highLogs = List.of();
     private PillarColumn pillar;
+    private BlockPos pillarStand;
+    private int pillarAlignTicks;
     private final List<BlockCoord> pillarRemaining = new ArrayList<>();
     private PillarDismantler dismantler;
     private DropCollector highCollector;
@@ -220,7 +227,7 @@ final class TreeChop {
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
             if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH && !movedCloser) {
                 movedCloser = true;
-                approach.begin(standingPointUnder(log), ChopTuning.CLOSE_DISTANCE);
+                approach.begin(closerPoint(log), ChopTuning.CLOSE_DISTANCE);
                 phase = Phase.APPROACH_LOG;
                 return Outcome.running();
             }
@@ -243,8 +250,37 @@ final class TreeChop {
         movedCloser = false;
     }
 
+    private Vec3 closerPoint(BlockCoord log) {
+        BlockPos stand = standingCellBeside(log);
+        return stand == null ? standingPointUnder(log) : Vec3.atBottomCenterOf(stand);
+    }
+
     private Vec3 standingPointUnder(BlockCoord log) {
         return Vec3.atBottomCenterOf(new BlockPos(log.x(), tree.base().y(), log.z()));
+    }
+
+    private BlockPos standingCellBeside(BlockCoord log) {
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                for (int dy = 0; dy <= 1; dy++) {
+                    BlockPos pos = new BlockPos(log.x() + dx, log.y() + dy, log.z() + dz);
+                    if (!isStandable(pos)) {
+                        continue;
+                    }
+                    double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos));
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = pos;
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private Outcome startCollect() {
@@ -312,6 +348,8 @@ final class TreeChop {
         if (stand == null) {
             return leaveHigh("рядом со стволом нет места для столба");
         }
+        pillarStand = stand;
+        pillarAlignTicks = 0;
         if (!stand.equals(spirit.blockPosition())) {
             approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CLOSE_DISTANCE);
             phase = Phase.PILLAR_APPROACH;
@@ -321,11 +359,28 @@ final class TreeChop {
     }
 
     private Outcome pillarApproach() {
+        if (!approach.isActive()) {
+            return alignToPillarStand();
+        }
         return switch (approach.tick()) {
             case MOVING -> Outcome.running();
-            case ARRIVED -> beginPillar();
+            case ARRIVED -> alignToPillarStand();
             case STUCK, TIMEOUT -> leaveHigh("не подошёл к месту столба рядом со стволом");
         };
+    }
+
+    private Outcome alignToPillarStand() {
+        Vec3 center = Vec3.atBottomCenterOf(pillarStand);
+        double dx = spirit.getX() - center.x;
+        double dz = spirit.getZ() - center.z;
+        if (spirit.blockPosition().equals(pillarStand) && CellCentering.centered(dx, dz)) {
+            return beginPillar();
+        }
+        if (++pillarAlignTicks > MAX_PILLAR_ALIGN_TICKS) {
+            return leaveHigh("не встал в клетку столба рядом со стволом");
+        }
+        spirit.getMoveControl().setWantedPosition(center.x, center.y, center.z, 1.0);
+        return Outcome.running();
     }
 
     private Outcome beginPillar() {
@@ -345,7 +400,8 @@ final class TreeChop {
         if (have < height) {
             return leaveHigh("нет материала '" + blockId + "': нужно " + height + ", есть " + have);
         }
-        pillar = new PillarColumn(spirit, blockId, height);
+        pillar = new PillarColumn(spirit, blockId, height,
+                pillarStand == null ? spirit.blockPosition() : pillarStand);
         phase = Phase.PILLAR_BUILD;
         return Outcome.running();
     }
@@ -381,8 +437,9 @@ final class TreeChop {
                 return Outcome.running();
             }
             if (begin instanceof BlockBreaker.Protected) {
-                pillar = null;
-                pillarRemaining.clear();
+        pillar = null;
+        pillarStand = null;
+        pillarRemaining.clear();
                 return Outcome.simple(State.PROTECTED);
             }
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;

@@ -49,6 +49,8 @@ public final class MineGameTests {
     private static final int RADIUS = 16;
     private static final int DIRT_HEAP_TIMEOUT_TICKS = 1000;
     private static final int REDSTONE_TIMEOUT_TICKS = 400;
+    private static final int UNPICKABLE_DELAY = 200;
+    private static final int UNPICKABLE_TICKS = 80;
     private static final int MAX_DROP_LINES = 12;
     private static final int LAVA_TOTAL = 1;
     private static final int CAVE_SHIFT_INSIDE_ARENA = -SHELL_MIN;
@@ -334,7 +336,9 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
                 Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18), SETTLE_TICKS);
+        // Радиус 4 — только своя арена: куб радиуса 16 захватывает блоки соседних сцен, и полный поиск
+        // чужой земли затягивал и без того долгую кучу за предел теста (флак полного прогона 18.10).
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18, 4), SETTLE_TICKS);
         HarvestProbe probe = HarvestProbe.attach(helper, spirit, run::started,
                 () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT),
                 () -> GameTestFixtures.countInWorld(helper, Items.DIRT),
@@ -392,7 +396,9 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
                 Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8), SETTLE_TICKS);
+        // Радиус 4 — только своя арена: иначе поиск читает землю соседних сцен и отказ по запечатанной
+        // стоянке ждёт конца чужого поиска вместо fail-fast (флак полного прогона 18.10).
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8, 4), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -821,6 +827,48 @@ public final class MineGameTests {
         });
     }
 
+    // [флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
+    @GameTest(template = "arena", batch = "gather_drop_delay", timeoutTicks = 600)
+    public static void gather_StoneDropTemporarilyUnpickable_CollectsAfterDelay(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
+        helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 1, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+        helper.setBlock(3 + CAVE_SHIFT_INSIDE_ARENA, 1, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper,
+                SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.WOODEN_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("stone", 2), SETTLE_TICKS);
+
+        int[] dropTick = { -1 };
+        helper.onEachTick(() -> {
+            List<ItemEntity> drops = GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE);
+            if (drops.isEmpty()) {
+                return;
+            }
+            if (dropTick[0] < 0) {
+                dropTick[0] = spirit.tickCount;
+            }
+            for (ItemEntity drop : drops) {
+                if (spirit.tickCount < dropTick[0] + UNPICKABLE_TICKS) {
+                    drop.setPickUpDelay(UNPICKABLE_DELAY);
+                } else {
+                    drop.setNoPickUpDelay();
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "временно не поднимаемый дроп не валит добычу, пока есть недобытые блоки: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 2,
+                    "оба булыжника обязаны попасть в инвентарь после снятия задержки, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "empty", batch = "mine_registry", timeoutTicks = 100)
     public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
@@ -972,7 +1020,11 @@ public final class MineGameTests {
     }
 
     private static ScriptCall gatherCall(String block, int count) {
-        return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", RADIUS));
+        return gatherCall(block, count, RADIUS);
+    }
+
+    private static ScriptCall gatherCall(String block, int count, int radius) {
+        return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
     }
 
 
