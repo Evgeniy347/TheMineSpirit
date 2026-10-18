@@ -8,6 +8,7 @@
 #   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 180), THEMINESPIRIT_UNIT_STOP_SECONDS (360)
 #   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (1500)
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
+# Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -423,6 +424,118 @@ stop_monitor() {
 trap stop_monitor EXIT TERM INT
 
 # ── Анализ результатов unit ──────────────────────────────────────────────────
+# Отчёты JUnit разбираются ОДНИМ процессом на все файлы: python, если есть, иначе один awk.
+# Прежний разбор делал ~18 fork на каждый XML (подоболочки $(echo | grep | head | grep), awk | sort на файл);
+# на Windows (MSYS) при сотнях XML и общей машине (ulimit -u 256, сотни bash) fork кончались, bash повторял
+# каждый ~30 с, и test.sh после BUILD SUCCESSFUL висел часами. Вывод разборщика: первая строка
+# «тестов падений ошибок», дальше — по строке на упавший тест «класс.имя» (без повторов, в порядке файлов).
+# THEMINESPIRIT_PYTHON — путь к python для разбора; none — только awk.
+read -r -d '' UNIT_REPORT_PY <<'PYEOF'
+import glob, html, os, re, sys
+attr = re.compile(r'([\w:.-]+)=\x22([^\x22]*)\x22')
+tag = re.compile(r'<(testsuite|testcase|failure|error)(?=[\s/>])([^>]*)>')
+cdata = re.compile(r'<!\[CDATA\[.*?\]\]>', re.S)
+def num(a, k):
+    try:
+        return int(a.get(k, '0'))
+    except ValueError:
+        return 0
+tot = fails = errs = 0
+names, seen = [], set()
+for path in sorted(glob.glob(os.path.join(sys.argv[1], 'TEST-*.xml'))):
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            text = cdata.sub('', fh.read())
+    except OSError:
+        continue
+    cls = name = ''
+    for m in tag.finditer(text):
+        kind, a = m.group(1), dict(attr.findall(m.group(2)))
+        if kind == 'testsuite':
+            tot += num(a, 'tests'); fails += num(a, 'failures'); errs += num(a, 'errors')
+        elif kind == 'testcase':
+            cls, name = html.unescape(a.get('classname', '')), html.unescape(a.get('name', ''))
+        else:
+            key = cls + '.' + name
+            if key not in seen:
+                seen.add(key); names.append(key)
+out = ['%d %d %d' % (tot, fails, errs)] + names
+sys.stdout.buffer.write(('\n'.join(out) + '\n').encode('utf-8'))
+PYEOF
+
+# Тот же разбор одним awk: список файлов идёт на stdin (не в argv — на Windows 6000 путей не влезут в командную
+# строку), каждый файл читается getline. CDATA (system-out тестов) вырезается: текст в нём — не теги.
+UNIT_REPORT_AWK='
+function unesc(s) {
+    gsub(/&lt;/, "<", s); gsub(/&gt;/, ">", s); gsub(/&quot;/, "\"", s); gsub(/&apos;/, "\047", s)
+    gsub(/&amp;/, "\\&", s)
+    return s
+}
+function attr(s, key) {
+    if (match(s, "[ \t]" key "=\"[^\"]*\"")) return substr(s, RSTART + length(key) + 3, RLENGTH - length(key) - 4)
+    return ""
+}
+{
+    file = $0; incdata = 0; cls = ""; name = ""
+    while ((getline line < file) > 0) {
+        kept = ""
+        while (line != "") {
+            if (incdata) {
+                p = index(line, "]]>")
+                if (!p) { line = ""; break }
+                line = substr(line, p + 3); incdata = 0; continue
+            }
+            p = index(line, "<![CDATA[")
+            if (!p) { kept = kept line; break }
+            kept = kept substr(line, 1, p - 1); line = substr(line, p + 9); incdata = 1
+        }
+        if (kept ~ /<testsuite[ \t>]/) {
+            tot += attr(kept, "tests") + 0; fails += attr(kept, "failures") + 0; errs += attr(kept, "errors") + 0
+        }
+        if (kept ~ /<testcase[ \t\/>]/) { cls = unesc(attr(kept, "classname")); name = unesc(attr(kept, "name")) }
+        if (kept ~ /<(failure|error)[ \t\/>]/) {
+            key = cls "." name
+            if (!(key in seen)) { seen[key] = 1; order[++n] = key }
+        }
+    }
+    close(file)
+}
+END { print tot + 0, fails + 0, errs + 0; for (i = 1; i <= n; i++) print order[i] }'
+
+# Путь к python для разбора (без fork: hash/BASH_CMDS вместо $(command -v)). Заглушку магазина
+# (…/WindowsApps/python3.exe) пропускаем: без установленного python она не разбирает, а открывает магазин.
+REPORT_PYTHON=""
+find_report_python() {
+    local cand path
+    for cand in "${THEMINESPIRIT_PYTHON:-}" "${PYTHON:-}" python3 python; do
+        [ -n "$cand" ] || continue
+        [ "$cand" = none ] && return 1
+        case "$cand" in
+            */*) [ -x "$cand" ] || continue; path="$cand" ;;
+            *) hash "$cand" 2>/dev/null || continue; path="${BASH_CMDS[$cand]:-}" ;;
+        esac
+        [ -n "$path" ] || continue
+        case "$path" in */WindowsApps/*) continue ;; esac
+        REPORT_PYTHON="$path"
+        return 0
+    done
+    return 1
+}
+
+# Печатает итог разбора (формат — выше). Python упал или выдал не то — разбираем awk.
+parse_unit_reports() {
+    local dir="$1" out=""
+    if find_report_python; then
+        out=$("$REPORT_PYTHON" -c "$UNIT_REPORT_PY" "$dir" 2>/dev/null)
+        case "${out%%$'\n'*}" in
+            [0-9]*' '[0-9]*' '[0-9]*) printf '%s\n' "$out"; return 0 ;;
+        esac
+    fi
+    local files=("$dir"/TEST-*.xml)
+    [ -e "${files[0]}" ] || files=()
+    printf '%s\n' "${files[@]}" | awk "$UNIT_REPORT_AWK"
+}
+
 analyze_unit() {
     local log="$1"
     local xml_dir="TestResults/unit/xml"
@@ -430,27 +543,14 @@ analyze_unit() {
     local total=0 failures=0 errors=0
     local first_error=""
     local first_stack=""
-    local failed_names=()
+    local failed_names=() report=()
 
-    for xml in "$xml_dir"/TEST-*.xml; do
-        [ -f "$xml" ] || continue
-        while IFS= read -r line; do
-            case "$line" in
-                *'<testsuite '*)
-                    t=$(echo "$line" | grep -o 'tests="[0-9]*"' | head -1 | grep -o '[0-9]*')
-                    f=$(echo "$line" | grep -o 'failures="[0-9]*"' | head -1 | grep -o '[0-9]*')
-                    e=$(echo "$line" | grep -o 'errors="[0-9]*"' | head -1 | grep -o '[0-9]*')
-                    total=$((total + ${t:-0}))
-                    failures=$((failures + ${f:-0}))
-                    errors=$((errors + ${e:-0}))
-                    ;;
-            esac
-        done < "$xml"
-
-        while IFS= read -r name; do
-            [ -n "$name" ] && failed_names+=("$name")
-        done < <(awk -F'"' '/<testcase / { name = $2; cls = $4 } /<(failure|error) / { print cls "." name }' "$xml" | sort -u)
-    done
+    mapfile -t report < <(parse_unit_reports "$xml_dir")
+    read -r total failures errors <<<"${report[0]:-}"
+    case "$total" in ''|*[!0-9]*) total=0 ;; esac
+    case "$failures" in ''|*[!0-9]*) failures=0 ;; esac
+    case "$errors" in ''|*[!0-9]*) errors=0 ;; esac
+    [ "${#report[@]}" -gt 1 ] && failed_names=("${report[@]:1}")
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         echo "OK unit: $total тестов, $ELAPSED с"
@@ -524,7 +624,6 @@ if [ "$MODE" = "unit" ]; then
     start_monitor "unit"
     # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
-    set +e
     if command -v setsid >/dev/null 2>&1; then
         setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
     else
@@ -536,7 +635,6 @@ if [ "$MODE" = "unit" ]; then
     CODE=$?
     GRADLE_PID=""
     rm -f "$LOG_FILE.gradlepid"
-    set -e
 
     ELAPSED=$(( $(date +%s) - START_TIME ))
 
@@ -574,7 +672,6 @@ else
 
     start_monitor "gametest"
 
-    set +e
     if noflock; then
         if command -v setsid >/dev/null 2>&1; then
             setsid "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
@@ -593,7 +690,6 @@ else
     CODE=$?
     GRADLE_PID=""
     rm -f "$LOG_FILE.gradlepid"
-    set -e
 
     ELAPSED=$(( $(date +%s) - START_TIME ))
 

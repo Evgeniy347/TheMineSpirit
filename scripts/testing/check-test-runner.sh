@@ -117,6 +117,68 @@ code=$?
     && ok "unit-build-error: код=1, BUILD ERROR + ошибка компиляции" \
     || fail "unit-build-error: код=$code, вывод: $out"
 
+# ── Разбор 6000 отчётов: одним процессом и быстро ────────────────────────────
+# Прежний разбор делал ~18 fork на XML: на Windows 50 файлов разбирались 150 с, 640 — полчаса, и test.sh
+# после BUILD SUCCESSFUL висел, держа пульс свежим. Фейковый gradle одним awk пишет 6000 XML (в каждом
+# 1–5 тестов; падение в файлах i%1000==7, ошибка в i%2500==11) и время своего конца; от конца gradle до
+# итога test.sh должно пройти меньше REPORT_LIMIT секунд.
+REPORT_LIMIT=30
+cat >"$work/bin/many-reports.awk" <<'GEN'
+BEGIN {
+    for (i = 1; i <= n; i++) {
+        f = dir "/TEST-com.example.Suite" i ".xml"
+        t = (i % 5) + 1; bad = (i % 1000 == 7); err = (i % 2500 == 11)
+        print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > f
+        print "<testsuite name=\"com.example.Suite" i "\" tests=\"" t "\" skipped=\"0\" failures=\"" bad "\" errors=\"" err "\" time=\"0.01\">" > f
+        for (k = 1; k <= t; k++) {
+            if (k == 1 && (bad || err)) {
+                tagname = bad ? "failure" : "error"
+                print "  <testcase name=\"case" k "\" classname=\"com.example.Suite" i "\" time=\"0.001\">" > f
+                print "    <" tagname " message=\"boom\" type=\"java.lang.AssertionError\">java.lang.AssertionError: boom" > f
+                print "  </" tagname ">" > f
+                print "  </testcase>" > f
+            } else {
+                print "  <testcase name=\"case" k "\" classname=\"com.example.Suite" i "\" time=\"0.001\"/>" > f
+            }
+        }
+        # Вывод теста с «тегами» внутри CDATA — не тесты и не падения.
+        print "  <system-out><![CDATA[<testsuite tests=\"99\" failures=\"99\"> <failure message=\"x\">" > f
+        print "]]></system-out>" > f
+        print "</testsuite>" > f
+        close(f)
+    }
+}
+GEN
+cat >"$work/bin/many-reports" <<'FAKE'
+#!/usr/bin/env bash
+mkdir -p TestResults/unit/xml
+awk -v n="${FAKE_XML_COUNT:?}" -v dir=TestResults/unit/xml -f "${FAKE_GEN:?}"
+echo "BUILD SUCCESSFUL"
+date +%s >"${FAKE_DONE:?}"
+exit 0
+FAKE
+chmod +x "$work/bin/many-reports"
+# 6000 файлов: сумма (i%5)+1 = 18000 тестов; падения 7,1007…5007 (6), ошибки 11,2511,5011 (3) — 9 упавших.
+for parser in default none; do
+    rm -f "$work/many.done"
+    out=$(THEMINESPIRIT_PYTHON="$([ "$parser" = none ] && echo none)" THEMINESPIRIT_GRADLEW="$work/bin/many-reports" \
+        FAKE_XML_COUNT=6000 FAKE_GEN="$work/bin/many-reports.awk" FAKE_DONE="$work/many.done" \
+        bash scripts/test.sh unit 2>&1)
+    code=$?
+    finished=$(date +%s)
+    done_at=$(cat "$work/many.done" 2>/dev/null || echo 0)
+    took=$((finished - done_at))
+    [ "$code" = 1 ] && echo "$out" | grep -q "FAIL unit: прошло 17991, упало 9" \
+        && echo "$out" | grep -qx "com.example.Suite7.case1" \
+        && echo "$out" | grep -qx "com.example.Suite11.case1" \
+        && ok "many-reports ($parser): 6000 XML — 18000 тестов, 9 упавших, имена упавших" \
+        || fail "many-reports ($parser): код=$code, вывод: $(echo "$out" | head -8)"
+    [ "$done_at" -gt 0 ] && [ "$took" -lt "$REPORT_LIMIT" ] \
+        && ok "many-reports ($parser): итог через $took с после конца gradle (предел $REPORT_LIMIT)" \
+        || fail "many-reports ($parser): итог через $took с после конца gradle (предел $REPORT_LIMIT)"
+done
+rm -f TestResults/unit/xml/TEST-*.xml
+
 # Предел unit: уменьшаем до 2 с
 export THEMINESPIRIT_GRADLEW="$work/bin/slow"
 export THEMINESPIRIT_UNIT_WARN_SECONDS=1
