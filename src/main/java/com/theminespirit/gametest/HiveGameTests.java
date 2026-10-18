@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -93,6 +94,35 @@ public final class HiveGameTests {
                     "улей обязан опустеть, фактически уровень " + honeyLevel(helper));
             helper.assertTrue(calm(bee),
                     "пчела обязана остаться невредимой и спокойной: " + describe(bee));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // Флак полного прогона 18.10: пчела влетала в клетку будущего костра, BlockPlacer отказывал OCCUPIED, и сбор
+    // проваливался сразу. Существо в клетке костра уходит — дух обязан дождаться и поставить костёр.
+    @GameTest(template = "arena", batch = "hive_fire_occupied", timeoutTicks = 400)
+    public static void harvest_BeeInCampfireCellLeaves_SpiritWaitsAndPlacesCampfire(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(HIVE, fullHive());
+        Bee bee = helper.spawn(EntityType.BEE, new BlockPos(4, 1, 4));
+        bee.setNoAi(true);
+        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START,
+                new ItemStack(Items.SHEARS),
+                new ItemStack(Items.OAK_LOG, 3),
+                new ItemStack(Items.STICK, 3),
+                new ItemStack(Items.COAL, 1));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
+        Vec3 away = helper.absoluteVec(new Vec3(1.5, 1, 7.5));
+        helper.runAfterDelay(40, () -> bee.teleportTo(away.x, away.y, away.z));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            HusbandryGameTests.assertSucceeded(helper, spirit,
+                    "пчела в клетке костра улетела — дух обязан дождаться и поставить костёр, а не провалить сбор");
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.CAMPFIRE),
+                    "костёр обязан стоять в клетке, которую освободила пчела");
             GameTestFixtures.finish(helper);
         });
     }

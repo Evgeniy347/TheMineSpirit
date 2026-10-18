@@ -46,6 +46,7 @@ public final class HiveSession {
 
     private static final String VERSION_KEY = "v";
     private static final int VERSION = 1;
+    private static final int FIRE_WAIT_TICKS = 100;
     private static final String DONE_KEY = "done";
     private static final String CAMPFIRE_ID = "minecraft:campfire";
     private static final double FIRE_ARRIVAL = 1.2;
@@ -63,6 +64,7 @@ public final class HiveSession {
     private BlockPos fireSpot;
     private BlockPos stand;
     private int done;
+    private int fireWaits;
 
     private HiveSession(SpiritEntity spirit, int searchRadius, int goal) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него некому собирать улей");
@@ -221,7 +223,13 @@ public final class HiveSession {
             return;
         }
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
+        boolean creatureInCell = refused.reason() == BlockPlacer.RefuseReason.OCCUPIED
+                && level.getBlockState(fireSpot).canBeReplaced();
+        if (creatureInCell && ++fireWaits <= FIRE_WAIT_TICKS) {
+            return;
+        }
         fail("костёр в " + fireSpot.toShortString() + " не поставлен (" + refused.reason()
+                + (creatureInCell ? ", клетку " + FIRE_WAIT_TICKS + " тиков занимало существо" : "")
                 + "): улей не тронут");
     }
 
