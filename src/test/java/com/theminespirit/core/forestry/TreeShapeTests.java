@@ -281,4 +281,50 @@ class TreeShapeTests {
                 () -> TreeShape.detect(AIR_START, grid),
                 "Разбор с не-бревна обязан отказывать: искать дерево с пустой клетки бессмысленно");
     }
+
+    @Test
+    void detect_NeighbourTreeNextToSelected_ReturnsOnlySelectedLogs() {
+        TreeGrid grid = new TreeGrid().soil(1, 0, 0);
+        for (int y = 1; y <= 3; y++) {
+            grid.log(1, y, 0);
+        }
+        grid.leaves(1, 4, 0).leaves(0, 4, 0).leaves(2, 4, 0);
+        grid.soil(4, 0, 0);
+        for (int y = 1; y <= 3; y++) {
+            grid.log(4, y, 0);
+        }
+        grid.leaves(4, 4, 0).leaves(3, 4, 0).leaves(5, 4, 0);
+
+        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(new BlockCoord(1, 1, 0), grid),
+                "Выбранное дерево рядом с соседним обязано распознаться: кроны не мешают разбору ствола");
+
+        assertEquals(Set.of(new BlockCoord(1, 1, 0), new BlockCoord(1, 2, 0), new BlockCoord(1, 3, 0)),
+                Set.copyOf(tree.logs()),
+                "Цели рубки — ровно брёвна выбранного дерева: соседнее дерево вплотную не входит, иначе "
+                        + "дальняя досягаемость срубила бы и его");
+    }
+
+    @Test
+    void detect_LogHutNextToSelected_IsRejectedAsNotATree() {
+        TreeGrid grid = new TreeGrid().soil(0, 0, 0);
+        for (int y = 1; y <= 4; y++) {
+            grid.log(0, y, 0);
+        }
+        grid.leaves(0, 5, 0).leaves(-1, 5, 0).leaves(0, 5, 1);
+        for (int y = 1; y <= 2; y++) {
+            for (int dx = 1; dx <= 2; dx++) {
+                for (int dz = 0; dz <= 1; dz++) {
+                    grid.log(dx, y, dz);
+                }
+            }
+        }
+
+        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(new BlockCoord(0, 1, 0), grid),
+                "Бревенчатая постройка вплотную к выбранному дереву обязана быть отвергнута: сруб постройки "
+                        + "игрока запрещён политикой «не трогать постройки»");
+
+        assertEquals(NotATree.Reason.NOT_A_TRUNK, rejection.reason(),
+                "Постройка выдаёт себя формой нижнего слоя: пять брёвен в основании шире квадрата 2x2, "
+                        + "поэтому ни одно её бревно не попадает в цели рубки");
+    }
 }

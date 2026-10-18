@@ -80,6 +80,14 @@ public final class BlockBreaker {
     }
 
     public Begin begin(BlockPos target, boolean tended, boolean demolish) {
+        return begin(target, tended, demolish, true);
+    }
+
+    public Begin beginAnyDistance(BlockPos target) {
+        return begin(target, false, false, false);
+    }
+
+    private Begin begin(BlockPos target, boolean tended, boolean demolish, boolean reachLimited) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
@@ -94,10 +102,12 @@ public final class BlockBreaker {
             return new Refused(RefuseReason.UNBREAKABLE, "блок " + blockId(targetState) + " в " + target.toShortString()
                     + " неразрушим: твёрдость " + hardness);
         }
-        double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
-        if (distance > REACH) {
-            return new Refused(RefuseReason.OUT_OF_REACH, "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
-                    + distance + "): сначала подойти");
+        if (reachLimited) {
+            double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
+            if (distance > REACH) {
+                return new Refused(RefuseReason.OUT_OF_REACH, "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа ("
+                        + distance + "): сначала подойти");
+            }
         }
         BlockProtection.Decision decision = tended ? spirit.protectionGate().checkHarvest(target, targetState)
                 : demolish ? spirit.protectionGate().checkDemolish(target, targetState)
