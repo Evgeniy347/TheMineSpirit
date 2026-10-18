@@ -305,7 +305,7 @@
 - [x] `explore`
 - [x] `flee_from` (скрипт `flee`), `retreat` (скрипт `retreat`)
 - [ ] `disengage`
-- [ ] `bridge`, `pillar_up`, `descend`, `climb`
+- [x] `pillar_up`, `descend` (скрипты `pillar_up`, `pillar_down`), `climb` (скрипт `climb`, 18.10); `bridge` — нет
 - [ ] `swim`, `cross_water`
 
 ### Восприятие

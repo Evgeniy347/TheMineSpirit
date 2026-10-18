@@ -266,6 +266,7 @@ class ScriptCatalogTests {
                 spec("retreat", List.of(), Map.of()),
                 spec("pillar_up", List.of("height"), Map.of("height", new long[]{1, 256})),
                 spec("pillar_down", List.of(), Map.of()),
+                spec("climb", List.of(), Map.of()),
                 spec("place_block", List.of("block", "x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
