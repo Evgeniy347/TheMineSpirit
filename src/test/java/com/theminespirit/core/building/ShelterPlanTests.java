@@ -89,6 +89,28 @@ class ShelterPlanTests {
     }
 
     @Test
+    void shelter_SideThree_WallsAndRoofCloseTinyBox() {
+        List<BlockCoord> cells = ShelterPlan.shelter(new BlockCoord(0, 64, 0), 3, 2, 64);
+
+        assertEquals(25, cells.size(),
+                "Укрытие 3×3 высотой 2 — 8 клеток стены на ярус плюс крыша 9: всего 25, иначе в коробке дыра");
+        assertTrue(!cells.contains(new BlockCoord(1, 64, 1)) && !cells.contains(new BlockCoord(1, 65, 1)),
+                "Интерьер 1×1 на всю высоту обязан оставаться пустым: иначе дух замурован внутри");
+        assertTrue(cells.contains(new BlockCoord(1, 66, 1)),
+                "Крыша обязана закрывать клетку интерьера: иначе паук падает духу на голову");
+    }
+
+    @Test
+    void shelter_SideOutsideThreeFour_IsRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ShelterPlan.shelter(new BlockCoord(0, 64, 0), 2, 2, 64),
+                "Укрытие 2×2 обязано отвергаться: внутри нет клетки для духа");
+        assertThrows(IllegalArgumentException.class,
+                () -> ShelterPlan.shelter(new BlockCoord(0, 64, 0), 5, 2, 64),
+                "Укрытие 5×5 обязано отвергаться: это уже не быстрое укрытие, а стройка");
+    }
+
+    @Test
     void shelter_InvalidInput_Throws() {
         assertThrows(NullPointerException.class, () -> ShelterPlan.shelter(null, 2, 64),
                 "Укрытие без угла обязано отвергаться: без привязки стенам негде встать");

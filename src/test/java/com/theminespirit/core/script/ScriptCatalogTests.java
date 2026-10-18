@@ -317,6 +317,8 @@ class ScriptCatalogTests {
                 spec("build_schematic", List.of("file", "x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
+                spec("build_fence", List.of("block", "points"), Map.of()),
+                spec("build_shelter", List.of(), Map.of("side", new long[]{3, 4})),
                 spec("fill_crater", List.of("crater"), Map.of()),
                 spec("deliver", List.of("item", "count", "to"), Map.of("count", new long[]{1, 256})),
                 spec("meet", List.of("target"), Map.of()),
