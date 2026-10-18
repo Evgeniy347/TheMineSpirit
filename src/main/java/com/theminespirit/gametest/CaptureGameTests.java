@@ -40,6 +40,8 @@ public final class CaptureGameTests {
     // центра, а часть уже поставленных блоков остаётся в мире и в новое кольцо не входит. Запас 128
     // переживает одну-две пересборки (флак capture_sheeponflat: «нужно 52, уже поставлено 0, есть 51»).
     private static final int RING_MATERIAL = 128;
+    // [флак] кольцо пересобирается за уходящей овцой (до нескольких раз): запас 2× к замеру ~400
+    private static final int CAPTURE_TIMEOUT_TICKS = 800;
 
     private CaptureGameTests() {
     }
@@ -54,7 +56,7 @@ public final class CaptureGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepOnFlat_CaughtAndHeld200Ticks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -95,7 +97,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepByStep_RingThreeHighAndCaught(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -135,7 +137,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepWalkingAway_BlockedAndCaught(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
