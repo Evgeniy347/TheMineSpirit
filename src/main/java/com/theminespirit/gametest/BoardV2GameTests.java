@@ -68,6 +68,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Pig;
@@ -94,6 +95,7 @@ public final class BoardV2GameTests {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String BATCH = "board_v2";
     private static final String EVERGREEN_BATCH = "board_v2_evergreen";
+    private static final String FOOD_BATCH = "board_v2_food";
     private static final int CLEAR_RADIUS = 4;
     private static final long NIGHT_TIME = 18_000L;
     private static final int NOON_TIME = 6_000;
@@ -168,6 +170,33 @@ public final class BoardV2GameTests {
                             + nightHungry.hunger().foodLevel());
             helper.assertTrue(board.board().find(fullId).isEmpty(),
                     "Сытый дух так и не получает задание: " + board.board().find(fullId).orElse(null));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = FOOD_BATCH, timeoutTicks = 400)
+    public static void food_HungryWithoutFood_WithdrawsFromStorehouse(GameTestHelper helper) {
+        GameTestFixtures.holdDayTime(helper, NOON_TIME);
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        ServerLevel level = helper.getLevel();
+        SpiritEntity hungry = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
+        hungry.hunger().restore(SpiritHunger.of(HUNGRY_LEVEL, 0, 0));
+        helper.setBlock(new BlockPos(5, 1, 4), Blocks.CHEST);
+        Container chest = (Container) level.getBlockEntity(helper.absolutePos(new BlockPos(5, 1, 4)));
+        chest.setItem(0, new ItemStack(Items.BREAD, 48));
+        BoardService board = BoardRegistry.get(level);
+        drainForeignTickets(board);
+        board.rebuild(level, level.getGameTime());
+        String id = "food:" + hungry.getUUID();
+        helper.assertTrue(board.board().find(id).isPresent(),
+                "Голодный дух без личной еды обязан получить RESTOCK_FOOD " + id
+                        + ": иначе он останется голодным при полном складе еды");
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(GameTestFixtures.countInInventory(hungry.getInventory(), Items.BREAD) > 0,
+                    "Дух обязан взять еду со склада по RESTOCK_FOOD, фактически хлеба в инвентаре "
+                            + GameTestFixtures.countInInventory(hungry.getInventory(), Items.BREAD));
             GameTestFixtures.finish(helper);
         });
     }
