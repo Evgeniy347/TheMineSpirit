@@ -49,6 +49,8 @@ public final class MineGameTests {
     private static final int RADIUS = 16;
     private static final int DIRT_HEAP_TIMEOUT_TICKS = 1000;
     private static final int REDSTONE_TIMEOUT_TICKS = 400;
+    private static final int UNPICKABLE_DELAY = 200;
+    private static final int UNPICKABLE_TICKS = 80;
     private static final int MAX_DROP_LINES = 12;
     private static final int LAVA_TOTAL = 1;
     private static final int CAVE_SHIFT_INSIDE_ARENA = -SHELL_MIN;
@@ -816,6 +818,48 @@ public final class MineGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 18,
                     "в инвентаре обязано быть 18 булыжника, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // [флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
+    @GameTest(template = "arena", batch = "gather_drop_delay", timeoutTicks = 600)
+    public static void gather_StoneDropTemporarilyUnpickable_CollectsAfterDelay(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
+        helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 1, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+        helper.setBlock(3 + CAVE_SHIFT_INSIDE_ARENA, 1, 3 + CAVE_SHIFT_INSIDE_ARENA, Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper,
+                SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.WOODEN_PICKAXE);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("stone", 2), SETTLE_TICKS);
+
+        int[] dropTick = { -1 };
+        helper.onEachTick(() -> {
+            List<ItemEntity> drops = GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE);
+            if (drops.isEmpty()) {
+                return;
+            }
+            if (dropTick[0] < 0) {
+                dropTick[0] = spirit.tickCount;
+            }
+            for (ItemEntity drop : drops) {
+                if (spirit.tickCount < dropTick[0] + UNPICKABLE_TICKS) {
+                    drop.setPickUpDelay(UNPICKABLE_DELAY);
+                } else {
+                    drop.setNoPickUpDelay();
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "временно не поднимаемый дроп не валит добычу, пока есть недобытые блоки: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 2,
+                    "оба булыжника обязаны попасть в инвентарь после снятия задержки, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
         });

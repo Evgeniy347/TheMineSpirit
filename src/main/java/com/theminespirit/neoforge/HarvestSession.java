@@ -8,6 +8,7 @@ import com.theminespirit.core.inventory.InventorySpace;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.DropRetries;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
@@ -70,6 +71,7 @@ public final class HarvestSession {
     private final Approach approach;
     private final TargetBuffer buffer = new TargetBuffer();
     private final ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
+    private final DropRetries dropRetries = new DropRetries(COLLECT_RADIUS);
 
     private State state = State.FIND;
     private Outcome outcome = Outcome.RUNNING;
@@ -132,8 +134,11 @@ public final class HarvestSession {
             return fail("дух исчез во время добычи");
         }
         if (mined >= count && collector == null) {
-            outcome = Outcome.SUCCEEDED;
-            return outcome;
+            if (dropRetries.isEmpty()) {
+                outcome = Outcome.SUCCEEDED;
+                return outcome;
+            }
+            beginRetryCollect();
         }
         ticks++;
         watchdog.tick();
@@ -458,9 +463,7 @@ public final class HarvestSession {
                 mined++;
                 watchdog.progress();
                 collectRuns++;
-                collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
-                        PickupTuning.DEFAULT,
-                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
+                collector = newCollector(currentTarget);
                 state = State.COLLECT;
             }
             case GONE -> {
@@ -480,7 +483,18 @@ public final class HarvestSession {
         }
         entityQueries += collector.entityQueries();
         if (collected == DropCollector.State.FAILED) {
-            fail("не удалось подобрать дроп у " + currentTarget + ": " + collector.failureReason());
+            String reason = collector.failureReason();
+            if (mined >= count) {
+                fail("не удалось подобрать дроп у " + currentTarget + ": " + reason);
+                return;
+            }
+            // Пока есть недобытые блоки, провал сбора не смертелен: следующий сломанный блок может освободить
+            // предмет (накрывающий блок, тесная ниша). Место запоминается и повторяется после всей добычи.
+            dropRetries.failed(currentTarget);
+            collector = null;
+            currentTarget = null;
+            currentStand = null;
+            state = State.PICK;
             return;
         }
         collector = null;
@@ -490,11 +504,19 @@ public final class HarvestSession {
             depositTried = false;
             depositFreed = false;
         }
-        if (mined >= count) {
-            outcome = Outcome.SUCCEEDED;
-        } else {
-            state = State.PICK;
-        }
+        state = State.PICK;
+    }
+
+    private void beginRetryCollect() {
+        currentTarget = dropRetries.poll();
+        currentStand = null;
+        collector = newCollector(currentTarget);
+        state = State.COLLECT;
+    }
+
+    private DropCollector newCollector(BlockCoord center) {
+        return new DropCollector(spirit, IdFilter.matchAll(), center, COLLECT_RADIUS, PickupTuning.DEFAULT,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
     }
 
     private Outcome fail(String reason) {
