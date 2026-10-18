@@ -138,6 +138,8 @@ public final class CatalogLimits {
     public static final int HERD_FEED_COUNT_DEFAULT = 8;
     public static final int HERD_WORK_COUNT_DEFAULT = 64;
 
+    public static final int HIVE_COUNT_DEFAULT = 1;
+
     // Норма поголовья: минимум пара для разведения, курам норма выше
     public static final int HERD_KEEP_MIN = 2;
     public static final int HERD_KEEP_MAX = 64;

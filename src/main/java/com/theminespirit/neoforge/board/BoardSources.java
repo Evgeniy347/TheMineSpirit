@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class BoardSources {
     private final WoolWatch wool = new WoolWatch();
     private final FishingWatch fishing = new FishingWatch();
+    private final HiveWatch hive = new HiveWatch();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
@@ -57,6 +58,10 @@ public final class BoardSources {
         wool.tick(level, service, spirits, stock, now);
         if (wool.live()) {
             live.add(WoolWatch.CAUSE);
+        }
+        hive.tick(level, service, spirits, stock, now);
+        if (hive.live()) {
+            live.add(HiveWatch.CAUSE);
         }
         live.addAll(CraterWatch.liveCauses(level, service));
         live.addAll(FenceWatch.liveCauses(level, service));

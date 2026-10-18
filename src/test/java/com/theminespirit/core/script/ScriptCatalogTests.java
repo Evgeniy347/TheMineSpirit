@@ -274,6 +274,8 @@ class ScriptCatalogTests {
                 spec("shear", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 64})),
                 spec("milk", List.of(), Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 64})),
                 spec("collect_eggs", List.of(), Map.of("radius", new long[]{1, 16})),
+                spec("harvest_hive", List.of(),
+                        Map.of("radius", new long[]{1, 16}, "count", new long[]{1, 64})),
                 spec("cull", List.of("species"),
                         Map.of("keep", new long[]{2, 64}, "radius", new long[]{1, 16})),
                 spec("herd_check", List.of(), Map.of("radius", new long[]{1, 16})),

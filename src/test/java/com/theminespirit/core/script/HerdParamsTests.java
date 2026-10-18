@@ -103,6 +103,25 @@ class HerdParamsTests {
     }
 
     @Test
+    void harvestHiveParams_RadiusAndCountOutsideLimits_AreRejected() {
+        assertEquals(new HarvestHiveParams(8, 2),
+                HarvestHiveParams.from(Map.of("radius", 8, "count", 2)),
+                "harvest_hive обязан сохранять радиус и число ульев: по ним адаптер ищет цель");
+        assertThrows(IllegalArgumentException.class,
+                () -> HarvestHiveParams.from(Map.of("radius", 0, "count", 1)),
+                "harvest_hive с радиусом 0 обязан отвергаться: искать улей негде");
+        assertThrows(IllegalArgumentException.class,
+                () -> HarvestHiveParams.from(Map.of("radius", 17, "count", 1)),
+                "harvest_hive с радиусом 17 обязан отвергаться: дальше загона ульев не ищут");
+        assertThrows(IllegalArgumentException.class,
+                () -> HarvestHiveParams.from(Map.of("radius", 8, "count", 0)),
+                "harvest_hive с нулём ульев обязан отвергаться: скрипт без цели бессмысленен");
+        assertThrows(IllegalArgumentException.class,
+                () -> HarvestHiveParams.from(Map.of("radius", 8, "count", 65)),
+                "harvest_hive с 65 ульями обязан отвергаться: за запуск обходят ограниченное число");
+    }
+
+    @Test
     void cullParams_KeepOutsideLimits_IsRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> CullParams.from(Map.of("species", "cow", "keep", 1, "radius", 8)),
@@ -146,13 +165,17 @@ class HerdParamsTests {
     void coreScripts_HerdSpecs_ExposeAgreedParams() {
         ScriptCatalog catalog = CoreScripts.defaultCatalog();
 
-        for (String id : List.of("breed", "feed", "shear", "milk", "collect_eggs", "cull", "herd_check", "hunt")) {
+        for (String id : List.of("breed", "feed", "shear", "milk", "collect_eggs", "harvest_hive",
+                "cull", "herd_check", "hunt")) {
             assertTrue(catalog.find(id).isPresent(),
                     "Каталог обязан содержать скрипт " + id + ": иначе стратег его не вызовет");
         }
         ScriptSpec breed = catalog.find("breed").orElseThrow();
         assertEquals(List.of("species", "radius", "pairs"), breed.params().stream().map(ParamSpec::name).toList(),
                 "breed обязан объявлять species, radius и pairs: другие имена стратег не передаст");
+        ScriptSpec hive = catalog.find("harvest_hive").orElseThrow();
+        assertEquals(List.of("radius", "count"), hive.params().stream().map(ParamSpec::name).toList(),
+                "harvest_hive обязан объявлять radius и count: другие имена стратег не передаст");
         ScriptSpec cull = catalog.find("cull").orElseThrow();
         assertEquals(List.of("species", "keep", "radius"), cull.params().stream().map(ParamSpec::name).toList(),
                 "cull обязан объявлять species, keep и radius");

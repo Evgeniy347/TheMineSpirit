@@ -27,12 +27,14 @@ class BoardConfigTests {
                 Map.entry("BREED_ANIMALS", 55),
                 Map.entry("COLLECT_DROPS", 55),
                 Map.entry("SHEAR_SHEEP", 55),
+                Map.entry("HARVEST_HIVE", 55),
                 Map.entry("HERD_CULL", 50),
                 Map.entry("HUNT_WILD_SHEEP", 50),
                 Map.entry("CLEAR_GROUNDS", 50),
                 Map.entry("BUILD_FENCE", 50),
                 Map.entry("LIGHTING", 50),
                 Map.entry("BUILD_HOUSE", 50),
+                Map.entry("PLACE_BEEHIVE", 50),
                 Map.entry("BUILD_MINE", 50),
                 Map.entry("ENCHANT_ROOM", 50),
                 Map.entry("CRAFT_ANVIL", 50),
@@ -77,6 +79,27 @@ class BoardConfigTests {
                         + "а молчаливое расхождение пересортирует выдачу. RESTOCK_FOOD — 70 "
                         + "(решение владельца 16.10 дало число только для 48 единиц, порядок "
                         + "«ниже поимки, выше загона» — из таблицы п. 3)");
+    }
+
+    @Test
+    void defaults_FromClasspath_HiveMatchesLiterals() {
+        BoardConfig config = DataTables.INSTANCE.board().current();
+
+        assertEquals(Map.of(
+                "hive_radius", 16,
+                "smoke_depth", 5,
+                "flower_radius", 4,
+                "flowers_min", 3,
+                "hive_planks", 6,
+                "hive_honeycomb", 3,
+                "site_radius", 8), config.hive(),
+                "Таблица пчёл обязана совпадать с литералами: радиус ульев, глубина дыма, "
+                        + "радиус цветов и их минимум, цена улья. Лишний ключ в файле без теста "
+                        + "и забытый ключ в тесте красят прогон");
+        assertEquals(5, config.hive().get("smoke_depth"),
+                "Предел в тесте, факт из production: дым костра достаёт улей на 5 блоков вниз");
+        assertEquals(3, config.hive().get("flowers_min"),
+                "Предел в тесте, факт из production: улей ставят, когда рядом минимум 3 цвета");
     }
 
     private static Map<String, Integer> expectedLevels() {

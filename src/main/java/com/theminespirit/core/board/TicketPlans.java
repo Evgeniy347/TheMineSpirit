@@ -62,6 +62,7 @@ public final class TicketPlans {
             case CRAFT_SMOKER -> Optional.of("minecraft:smoker");
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
+            case PLACE_BEEHIVE -> Optional.of(HiveRules.CRAFTED_BEEHIVE);
             default -> Optional.empty();
         };
     }
@@ -116,6 +117,8 @@ public final class TicketPlans {
                     target.count() > 0 ? target.count() : 1, target);
             case SHEAR_SHEEP -> shearSheep(target);
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
+            case HARVEST_HIVE -> harvestHive();
+            case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
             case LIGHTING -> lighting(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
@@ -319,6 +322,21 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("shear", Map.of(
                 "radius", WoolRules.shearRadius(),
                 "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+    }
+
+    private static TaskNode harvestHive() {
+        return new ScriptCall("harvest_hive", Map.of(
+                "radius", HiveRules.hiveRadius(),
+                "count", CatalogLimits.HIVE_COUNT_DEFAULT));
+    }
+
+    private static TaskNode placeBeehive(TicketTarget target) {
+        BlockCoord point = target.target();
+        BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
+        return sequence(
+                craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
+                new ScriptCall("place_block", Map.of("block", HiveRules.CRAFTED_BEEHIVE,
+                        "x", cell.x(), "y", cell.y(), "z", cell.z())));
     }
 
     private static TaskNode huntWildSheep(TicketTarget target) {
