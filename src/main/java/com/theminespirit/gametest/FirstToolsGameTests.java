@@ -133,16 +133,16 @@ public final class FirstToolsGameTests {
         });
     }
 
-    // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру.
-    // Деревья разнесены по арене: куча вплотную (4,4)/(5,4)/(4,5) оставляла стволам «без места для
-    // духа» и «недостижимо», и acquire oak_log висел в RUNNING/провале (флак firsttools_fromscratch).
+    // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
+    // кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
+    // компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
     @GameTest(template = "arena", batch = "first_tools_corner", timeoutTicks = 1200)
     public static void firstTools_FromScratch_FurnaceBesideTableAndCharcoalTorches(GameTestHelper helper) {
         field(helper);
         GameTestFixtures.holdDayTime(helper, DAY_TIME);
-        FullCycleScene.buildOakTree(helper, new BlockPos(2, 1, 7), WOOD_TREE);
-        FullCycleScene.buildOakTree(helper, new BlockPos(7, 1, 2), WOOD_TREE);
-        FullCycleScene.buildOakTree(helper, new BlockPos(2, 1, 2), WOOD_TREE);
+        FullCycleScene.buildOakTree(helper, new BlockPos(4, 1, 4), WOOD_TREE);
+        FullCycleScene.buildOakTree(helper, new BlockPos(5, 1, 4), WOOD_TREE);
+        FullCycleScene.buildOakTree(helper, new BlockPos(4, 1, 5), WOOD_TREE);
         FullCycleScene.placeCobblestoneRow(helper, FURNACE_COBBLESTONE + 1);
         helper.setBlock(6, 1, 6, Blocks.COAL_ORE);
         helper.setBlock(3, 1, 3, Blocks.CHEST);
