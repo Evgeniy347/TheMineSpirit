@@ -336,7 +336,9 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
                 Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18), SETTLE_TICKS);
+        // Радиус 4 — только своя арена: куб радиуса 16 захватывает блоки соседних сцен, и полный поиск
+        // чужой земли затягивал и без того долгую кучу за предел теста (флак полного прогона 18.10).
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18, 4), SETTLE_TICKS);
         HarvestProbe probe = HarvestProbe.attach(helper, spirit, run::started,
                 () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT),
                 () -> GameTestFixtures.countInWorld(helper, Items.DIRT),
@@ -394,7 +396,9 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA),
                 Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8), SETTLE_TICKS);
+        // Радиус 4 — только своя арена: иначе поиск читает землю соседних сцен и отказ по запечатанной
+        // стоянке ждёт конца чужого поиска вместо fail-fast (флак полного прогона 18.10).
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8, 4), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -1016,7 +1020,11 @@ public final class MineGameTests {
     }
 
     private static ScriptCall gatherCall(String block, int count) {
-        return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", RADIUS));
+        return gatherCall(block, count, RADIUS);
+    }
+
+    private static ScriptCall gatherCall(String block, int count, int radius) {
+        return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
     }
 
 
