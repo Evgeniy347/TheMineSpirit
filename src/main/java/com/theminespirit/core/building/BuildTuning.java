@@ -5,6 +5,7 @@ import com.theminespirit.core.movement.GotoTuning;
 public final class BuildTuning {
     public static final double STAND_ARRIVAL = 0.6;
     public static final int MAX_CONSECUTIVE_SKIPS = 16;
+    public static final int DEMO_PLATFORM_PADDING = 5;
 
     private BuildTuning() {
     }
