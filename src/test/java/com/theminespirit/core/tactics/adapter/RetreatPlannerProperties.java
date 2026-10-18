@@ -33,7 +33,7 @@ class RetreatPlannerProperties {
     void plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist(@ForAll("enemy") EnemyFact enemy,
             @ForAll @IntRange(min = 8, max = 64) int blocks) {
         RetreatPlanner.Input input = new RetreatPlanner.Input(SELF, FEET, List.of(enemy), FULL_ENV,
-                Optional.of(new Point(-8.5, 1, 0.5)), blocks);
+                Optional.of(new Point(-8.5, 1, 0.5)), blocks, false);
 
         for (RetreatMethod method : RetreatMethod.values()) {
             Optional<RetreatPlan> plan = RetreatPlanner.plan(method, input);
@@ -45,7 +45,8 @@ class RetreatPlannerProperties {
             boolean walk = plan.get() instanceof RetreatPlan.Walk;
             boolean wall = plan.get() instanceof RetreatPlan.Wall;
             boolean tower = plan.get() instanceof RetreatPlan.Tower;
-            int kinds = (walk ? 1 : 0) + (wall ? 1 : 0) + (tower ? 1 : 0);
+            boolean pour = plan.get() instanceof RetreatPlan.Pour;
+            int kinds = (walk ? 1 : 0) + (wall ? 1 : 0) + (tower ? 1 : 0) + (pour ? 1 : 0);
             assertTrue(kinds == 1, "Способ " + method + " даёт ровно один вид плана, получили " + plan.get());
         }
     }
@@ -54,7 +55,7 @@ class RetreatPlannerProperties {
     void plan_Barricade_NeverPlansMoreCellsThanBlocksInInventory(@ForAll("enemy") EnemyFact enemy,
             @ForAll @IntRange(min = 0, max = 12) int blocks) {
         RetreatPlanner.Input input = new RetreatPlanner.Input(SELF, FEET, List.of(enemy), EnvReading.NOTHING,
-                Optional.empty(), blocks);
+                Optional.empty(), blocks, false);
 
         Optional<RetreatPlan> plan = RetreatPlanner.plan(RetreatMethod.BARRICADE, input);
 
@@ -66,7 +67,7 @@ class RetreatPlannerProperties {
     @Property(tries = 200)
     void plan_Away_TargetIsFartherFromNearestEnemyThanSelf(@ForAll("enemy") EnemyFact enemy) {
         RetreatPlanner.Input input = new RetreatPlanner.Input(SELF, FEET, List.of(enemy), EnvReading.NOTHING,
-                Optional.empty(), 0);
+                Optional.empty(), 0, false);
 
         RetreatPlan.Walk walk = (RetreatPlan.Walk) RetreatPlanner.plan(RetreatMethod.AWAY, input).orElseThrow();
 

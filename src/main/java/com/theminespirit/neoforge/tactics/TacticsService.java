@@ -436,7 +436,7 @@ public final class TacticsService {
                 : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
         RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
-                retreatPoint, situation.self().blocks());
+                retreatPoint, situation.self().blocks(), situation.self().hasWaterBucket());
         return RetreatPlanner.plan(retreat.method(), input);
     }
 

@@ -24,7 +24,12 @@ class RetreatPlannerTests {
             Optional.of(new BlockCoord(-4, 0, 3)), 5.0, Optional.of(new BlockCoord(-2, 1, -3)), 3.6, 10, false);
 
     static RetreatPlanner.Input input(EnvReading env, Optional<Point> home, int blocks, EnemyFact... enemies) {
-        return new RetreatPlanner.Input(SELF, FEET, List.of(enemies), env, home, blocks);
+        return input(env, home, blocks, false, enemies);
+    }
+
+    static RetreatPlanner.Input input(EnvReading env, Optional<Point> home, int blocks, boolean bucket,
+            EnemyFact... enemies) {
+        return new RetreatPlanner.Input(SELF, FEET, List.of(enemies), env, home, blocks, bucket);
     }
 
     record Row(String name, RetreatMethod method, RetreatPlanner.Input input, Class<? extends RetreatPlan> kind) {
@@ -42,6 +47,12 @@ class RetreatPlannerTests {
                 new Row("WATER с найденной водой", RetreatMethod.WATER, input(WATER_AND_COVER, Optional.empty(), 0, ZOMBIE_EAST),
                         RetreatPlan.Walk.class),
                 new Row("WATER без воды", RetreatMethod.WATER, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST), null),
+                new Row("WATER без воды, есть ведро", RetreatMethod.WATER,
+                        input(EnvReading.NOTHING, Optional.empty(), 0, true, ZOMBIE_EAST), RetreatPlan.Pour.class),
+                new Row("WATER без воды и ведра, есть дом", RetreatMethod.WATER,
+                        input(EnvReading.NOTHING, home, 0, ZOMBIE_EAST), RetreatPlan.Walk.class),
+                new Row("WATER без воды, ведра и дома", RetreatMethod.WATER,
+                        input(EnvReading.NOTHING, Optional.empty(), 0, false, ZOMBIE_EAST), null),
                 new Row("KITE: бежать и стрелять", RetreatMethod.KITE, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST),
                         RetreatPlan.Walk.class),
                 new Row("AWAY: бежать прочь", RetreatMethod.AWAY, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST),
