@@ -46,6 +46,16 @@ class HelpCallPolicyTests {
     }
 
     @Test
+    void answer_CallingSpirit_NotChosenAsHelper() {
+        List<AssistOrder> orders = new HelpCallPolicy().answer(List.of(call(CALLER, 0), call(NEAR, 4)),
+                List.of(spirit(CALLER, 0, true), spirit(NEAR, 4, false), spirit(MIDDLE, 8, false)), HELP_RADIUS, 2);
+
+        assertEquals(List.of(new AssistOrder(MIDDLE, CALLER, true)), orders,
+                "Дух, который сам зовёт на помощь, не идёт помогать другому: он занят своим боем, "
+                        + "иначе два зова уводят одного помощника с его собственной нужды");
+    }
+
+    @Test
     void answer_SpiritOutsideRadius_NotCalled() {
         assertTrue(new HelpCallPolicy().answer(List.of(call(CALLER, 0)),
                 List.of(spirit(CALLER, 0, true), spirit(FAR, HELP_RADIUS + 1, false)), HELP_RADIUS, 2).isEmpty(),

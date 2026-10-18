@@ -27,12 +27,17 @@ public final class HelpCallPolicy {
         }
         List<AssistOrder> orders = new ArrayList<>();
         Set<UUID> used = new HashSet<>();
+        Set<UUID> calling = new HashSet<>();
+        for (HelpCall call : calls) {
+            calling.add(call.caller());
+        }
         for (HelpCall call : calls.stream()
                 .sorted(Comparator.comparingLong(HelpCall::raisedAt).thenComparing(call -> call.caller()))
                 .toList()) {
             List<SpiritSnapshot> helpers = spirits.stream()
                     .filter(spirit -> !spirit.id().equals(call.caller()))
                     .filter(spirit -> !used.contains(spirit.id()))
+                    .filter(spirit -> !calling.contains(spirit.id()))
                     .filter(spirit -> !spirit.attacked())
                     .filter(spirit -> spirit.pos().distanceTo(call.pos()) <= helpRadius)
                     .sorted(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(call.pos()))
