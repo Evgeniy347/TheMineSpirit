@@ -214,7 +214,7 @@ public final class BuildAuditGameTests {
     }
 
     // [флак] Дом из 17 блоков с одной занятой клеткой: перебор стоянок и повторный проход перед провалом.
-    @GameTest(template = "arena", batch = "build_audit_blocked", timeoutTicks = 1200)
+    @GameTest(template = "arena", batch = "build_audit_blocked", timeoutTicks = 800)
     public static void build_BlockedCell_FailsWithSkipCount(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

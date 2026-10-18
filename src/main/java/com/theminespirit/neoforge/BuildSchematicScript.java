@@ -251,6 +251,11 @@ final class BuildSchematicScript implements ScriptInstance {
                 return;
             }
         }
+        BlockState current = level.getBlockState(toPos(entry.pos()));
+        if (!current.isAir() && !current.canBeReplaced()) {
+            skipEntry(entry);
+            return;
+        }
         if (!approach.isActive()) {
             if (stands.isEmpty()) {
                 stands = standCandidates(entry.pos());
