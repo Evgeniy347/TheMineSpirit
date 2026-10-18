@@ -23,17 +23,28 @@ public final class FarmTargets implements HarvestTargets {
     private static final Set<Block> TILLABLE = Set.of(Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.DIRT_PATH);
 
     private final Level level;
-    private final BlockLocator.Search search;
+    private final Optional<BlockLocator.Search> search;
+    private final List<BlockCoord> plotGrounds;
     private final WaterScan water;
     private final int groundShift;
     private Hydration hydration;
     private int slices;
+    private int plotCursor;
 
     public FarmTargets(Level level, BlockPos center, int radius, FarmJob job, CropKind crop) {
         this.level = level;
-        this.search = BlockLocator.search(level, center, radius, blocksFor(job, crop));
+        this.search = Optional.of(BlockLocator.search(level, center, radius, blocksFor(job, crop)));
+        this.plotGrounds = List.of();
         this.water = job == FarmJob.TILL ? WaterScan.around(level, center, radius) : WaterScan.skipped();
         this.groundShift = job == FarmJob.HARVEST || job == FarmJob.BONE_MEAL ? 1 : 0;
+    }
+
+    public FarmTargets(Level level, BlockPos center, int radius, List<BlockCoord> plotGrounds, FarmJob job) {
+        this.level = level;
+        this.search = Optional.empty();
+        this.plotGrounds = List.copyOf(plotGrounds);
+        this.water = job == FarmJob.TILL ? WaterScan.around(level, center, radius) : WaterScan.skipped();
+        this.groundShift = 0;
     }
 
     @Override
@@ -42,9 +53,17 @@ public final class FarmTargets implements HarvestTargets {
             water.step(MAX_SLICES_PER_TICK);
             return List.of();
         }
-        for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {
+        if (search.isEmpty()) {
+            int to = Math.min(plotGrounds.size(), plotCursor + MAX_SLICES_PER_TICK);
+            List<BlockCoord> portion = plotGrounds.subList(plotCursor, to);
+            slices += portion.size();
+            plotCursor = to;
+            return portion;
+        }
+        BlockLocator.Search active = search.orElseThrow();
+        for (int i = 0; i < MAX_SLICES_PER_TICK && !active.done(); i++) {
             slices++;
-            List<BlockPos> found = search.step(1);
+            List<BlockPos> found = active.step(1);
             if (!found.isEmpty()) {
                 return groundsOf(found);
             }
@@ -54,7 +73,13 @@ public final class FarmTargets implements HarvestTargets {
 
     @Override
     public boolean done() {
-        return water.exceeded() || (water.done() && search.done());
+        if (water.exceeded()) {
+            return true;
+        }
+        if (water.done()) {
+            return search.map(BlockLocator.Search::done).orElse(plotCursor >= plotGrounds.size());
+        }
+        return false;
     }
 
     @Override
@@ -64,7 +89,7 @@ public final class FarmTargets implements HarvestTargets {
 
     @Override
     public int maxSlicesPerTick() {
-        return Math.max(search.maxSlicesPerTick(), water.maxSlicesPerTick());
+        return Math.max(search.map(BlockLocator.Search::maxSlicesPerTick).orElse(0), water.maxSlicesPerTick());
     }
 
     @Override

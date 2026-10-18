@@ -4,6 +4,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
+import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
@@ -61,7 +62,7 @@ public final class FarmSession {
     private final int count;
     private final int radius;
     private final boolean replant;
-    private final FarmTargets targets;
+    private final HarvestTargets targets;
     private final LevelFarmView view;
     private final LevelSafetyView safety;
     private final FarmActions actions;
@@ -96,14 +97,15 @@ public final class FarmSession {
     private UnloadScript deposit;
     private boolean depositTried;
 
-    private FarmSession(SpiritEntity spirit, FarmJob job, CropKind crop, int count, int radius, boolean replant) {
+    private FarmSession(SpiritEntity spirit, FarmJob job, CropKind crop, int count, int radius, boolean replant,
+            HarvestTargets targets) {
         this.spirit = spirit;
         this.job = job;
         this.crop = crop;
         this.count = count;
         this.radius = radius;
         this.replant = replant;
-        this.targets = new FarmTargets(spirit.level(), spirit.blockPosition(), radius, job, crop);
+        this.targets = targets;
         this.view = new LevelFarmView(spirit.level());
         this.safety = new LevelSafetyView(spirit.level());
         this.actions = new FarmActions(spirit);
@@ -112,19 +114,37 @@ public final class FarmSession {
     }
 
     public static FarmSession till(SpiritEntity spirit, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.TILL, CropKind.ANY, count, radius, false);
+        return new FarmSession(spirit, FarmJob.TILL, CropKind.ANY, count, radius, false,
+                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.TILL, CropKind.ANY));
     }
 
     public static FarmSession plantCrop(SpiritEntity spirit, CropKind crop, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.PLANT, crop, count, radius, false);
+        return new FarmSession(spirit, FarmJob.PLANT, crop, count, radius, false,
+                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.PLANT, crop));
     }
 
     public static FarmSession harvestCrop(SpiritEntity spirit, CropKind crop, int radius, boolean replant) {
-        return new FarmSession(spirit, FarmJob.HARVEST, crop, UNLIMITED, radius, replant);
+        return new FarmSession(spirit, FarmJob.HARVEST, crop, UNLIMITED, radius, replant,
+                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.HARVEST, crop));
     }
 
     public static FarmSession boneMeal(SpiritEntity spirit, CropKind crop, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.BONE_MEAL, crop, count, radius, false);
+        return new FarmSession(spirit, FarmJob.BONE_MEAL, crop, count, radius, false,
+                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.BONE_MEAL, crop));
+    }
+
+    public static FarmSession tillPlot(SpiritEntity spirit, FarmPlot plot) {
+        int groundY = plotGroundY(spirit);
+        return new FarmSession(spirit, FarmJob.TILL, CropKind.ANY, plot.cells(), plot.searchRadius(groundY), false,
+                new FarmTargets(spirit.level(), plotPos(plot, groundY), plot.searchRadius(groundY),
+                        plot.grounds(groundY), FarmJob.TILL));
+    }
+
+    public static FarmSession plantPlot(SpiritEntity spirit, CropKind crop, FarmPlot plot) {
+        int groundY = plotGroundY(spirit);
+        return new FarmSession(spirit, FarmJob.PLANT, crop, plot.cells(), plot.searchRadius(groundY), false,
+                new FarmTargets(spirit.level(), plotPos(plot, groundY), plot.searchRadius(groundY),
+                        plot.grounds(groundY), FarmJob.PLANT));
     }
 
     public Outcome tick() {
@@ -586,6 +606,15 @@ private Outcome refuseWithoutSupplies() {
         failureReason = reason;
         cancel();
         return outcome;
+    }
+
+    private static int plotGroundY(SpiritEntity spirit) {
+        return spirit.blockPosition().getY() - 1;
+    }
+
+    private static BlockPos plotPos(FarmPlot plot, int groundY) {
+        BlockCoord center = plot.center(groundY);
+        return new BlockPos(center.x(), center.y(), center.z());
     }
 
     private static BlockCoord coordOf(BlockPos pos) {
