@@ -21,7 +21,7 @@ public final class RetreatPlanner {
     public static final int WALL_HEIGHT = 2;
 
     public record Input(Point self, BlockCoord feet, List<EnemyFact> enemies, EnvReading env, Optional<Point> home,
-            int blocks) {
+            int blocks, boolean waterBucket) {
         public Input {
             if (self == null || feet == null || enemies == null || env == null || home == null) {
                 throw new IllegalArgumentException("RetreatPlanner.Input: self/feet/enemies/env/home = null; "
@@ -46,7 +46,7 @@ public final class RetreatPlanner {
         return switch (method) {
             case HOME -> input.home().map(home -> new RetreatPlan.Walk(home, HOME_ARRIVAL, false));
             case COVER -> input.env().cover().map(cell -> new RetreatPlan.Walk(center(cell), SPOT_ARRIVAL, false));
-            case WATER -> input.env().water().map(cell -> new RetreatPlan.Walk(center(cell), WATER_ARRIVAL, false));
+            case WATER -> water(input);
             case KITE -> Optional.of(new RetreatPlan.Walk(awayPoint(input, KITE_DISTANCE), RUN_ARRIVAL, true));
             case AWAY -> Optional.of(new RetreatPlan.Walk(awayPoint(input, AWAY_DISTANCE), RUN_ARRIVAL, false));
             case BARRICADE -> barricade(input);
@@ -54,6 +54,18 @@ public final class RetreatPlanner {
                     : Optional.of(new RetreatPlan.Tower(Math.min(PILLAR_HEIGHT, input.blocks())));
             case NONE -> Optional.empty();
         };
+    }
+
+    private static Optional<RetreatPlan> water(Input input) {
+        Optional<RetreatPlan> found = input.env().water()
+                .map(cell -> new RetreatPlan.Walk(center(cell), WATER_ARRIVAL, false));
+        if (found.isPresent()) {
+            return found;
+        }
+        if (input.waterBucket()) {
+            return Optional.of(new RetreatPlan.Pour());
+        }
+        return input.home().map(home -> new RetreatPlan.Walk(home, HOME_ARRIVAL, false));
     }
 
     static Point awayPoint(Input input, double distance) {

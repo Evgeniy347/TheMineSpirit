@@ -24,7 +24,7 @@
   "weights": {
     "BIAS": {"FIGHT": 0, "RETREAT": 0.2, "IGNORE": 0.5},
     "WIN_MARGIN": {"FIGHT": 2.0, "RETREAT": -1.6, "IGNORE": 0},
-    "LOW_HP": {"FIGHT": -1.5, "RETREAT": 2.0, "IGNORE": 0},
+    "LOW_HP": {"FIGHT": -2.0, "RETREAT": 2.5, "IGNORE": 0},
     "ENEMY_PRESSURE": {"FIGHT": -0.5, "RETREAT": 1.2, "IGNORE": -0.8},
     "URGENCY": {"FIGHT": -0.12, "RETREAT": 0.24, "IGNORE": -0.18},
     "PROXIMITY": {"FIGHT": 1.0, "RETREAT": 0.6, "IGNORE": -2.0},

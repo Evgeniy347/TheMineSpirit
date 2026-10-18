@@ -55,6 +55,7 @@ public final class RetreatExecutor {
             case RetreatPlan.Walk walk -> walk(walk, shootTarget);
             case RetreatPlan.Wall wall -> wall(wall);
             case RetreatPlan.Tower tower -> tower(tower);
+            case RetreatPlan.Pour ignored -> pour();
         };
     }
 
@@ -107,6 +108,23 @@ public final class RetreatExecutor {
             }
         }
         return pending ? Progress.BUILDING : Progress.DONE;
+    }
+
+    private Progress pour() {
+        approach.cancel();
+        spirit.gear().holdNothing();
+        if (spirit.isInWater()) {
+            return Progress.DONE;
+        }
+        BlockPos feet = spirit.blockPosition();
+        if (!(spirit.protectionGate().checkPlace(feet) instanceof BlockProtection.Allowed)) {
+            return Progress.DONE;
+        }
+        if (!spirit.gear().pourWater(feet)) {
+            return Progress.DONE;
+        }
+        collector.invalidate(feet);
+        return Progress.DONE;
     }
 
     private Progress tower(RetreatPlan.Tower tower) {
