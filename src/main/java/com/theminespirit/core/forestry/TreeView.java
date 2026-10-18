@@ -10,4 +10,6 @@ public interface TreeView {
     boolean isSoil(BlockCoord coord);
 
     boolean isArtificial(BlockCoord coord);
+
+    boolean isEmpty(BlockCoord coord);
 }

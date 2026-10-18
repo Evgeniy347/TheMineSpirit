@@ -8,6 +8,7 @@ import com.theminespirit.core.building.SchematicParser;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.fishing.FishingData;
+import com.theminespirit.core.forestry.ReplantData;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.hunger.HungerRules;
@@ -80,6 +81,7 @@ public final class DataTables {
     private final TableHolder<DoorRules> doors;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<FishingData> fishing;
+    private final TableHolder<ReplantData> replant;
     private final TableHolder<DescentData> descent;
     private final TableHolder<DescentLevels> descentLevels;
     private final TableHolder<DefenseProfile> priorities;
@@ -169,6 +171,9 @@ public final class DataTables {
         this.fishing = registry.registerLazy(
                 TableDefinition.single("fishing", FishingData.RESOURCE, FishingData::parse),
                 FishingData::load);
+        this.replant = registry.registerLazy(
+                TableDefinition.single("replant", ReplantData.RESOURCE, ReplantData::parse),
+                ReplantData::load);
         this.descent = registry.registerLazy(
                 TableDefinition.single("descent", DescentData.RESOURCE, DescentData::parse),
                 DescentData::load);
@@ -304,6 +309,10 @@ public final class DataTables {
 
     public TableHolder<FishingData> fishing() {
         return fishing;
+    }
+
+    public TableHolder<ReplantData> replant() {
+        return replant;
     }
 
     public TableHolder<DescentData> descent() {

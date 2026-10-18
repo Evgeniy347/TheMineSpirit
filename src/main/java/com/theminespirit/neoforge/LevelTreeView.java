@@ -21,6 +21,7 @@ public final class LevelTreeView implements TreeView {
         NATURAL_LEAVES,
         SOIL,
         ARTIFICIAL,
+        EMPTY,
         OTHER,
         UNKNOWN
     }
@@ -102,6 +103,11 @@ public final class LevelTreeView implements TreeView {
         return kind(coord) == Kind.ARTIFICIAL;
     }
 
+    @Override
+    public boolean isEmpty(BlockCoord coord) {
+        return kind(coord) == Kind.EMPTY;
+    }
+
     public long blockReads() {
         return blockReads;
     }
@@ -138,7 +144,10 @@ public final class LevelTreeView implements TreeView {
         if (state.is(BlockTags.DIRT) || state.is(Blocks.MANGROVE_ROOTS)) {
             return Kind.SOIL;
         }
-        return isBuilt(state) ? Kind.ARTIFICIAL : Kind.OTHER;
+        if (isBuilt(state)) {
+            return Kind.ARTIFICIAL;
+        }
+        return state.isAir() || state.canBeReplaced() ? Kind.EMPTY : Kind.OTHER;
     }
 
     private static boolean isBuilt(BlockState state) {

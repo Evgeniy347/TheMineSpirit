@@ -1,7 +1,12 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.forestry.AreaReplant;
 import com.theminespirit.core.forestry.ChopTuning;
+import com.theminespirit.core.forestry.ReplantData;
+import com.theminespirit.core.forestry.ReplantPlan;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,56 +31,70 @@ final class Replanter {
     private final SpiritEntity spirit;
     private final Item saplingItem;
     private final BlockState saplingState;
+    private final ReplantData data;
+    private final TreeView view;
+    private final List<BlockPos> trunkCells;
     private final List<BlockPos> targets;
     private final Approach approach;
     private int index;
     private int planted;
     private int skipped;
     private boolean lackedSaplings;
+    private final boolean areaAllowed;
+    private boolean areaPlanned;
 
-    Replanter(SpiritEntity spirit, TreeSpecies species, List<BlockPos> cells) {
+    Replanter(SpiritEntity spirit, TreeSpecies species, List<BlockPos> cells, TreeView view) {
         this.spirit = spirit;
         this.saplingItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(species.saplingId()));
         this.saplingState = Block.byItem(saplingItem).defaultBlockState();
+        this.data = ReplantData.loadDefault();
+        this.view = view;
+        this.trunkCells = List.copyOf(cells);
         this.approach = new Approach(spirit);
-        List<BlockPos> placeable = new ArrayList<>();
-        for (BlockPos cell : cells) {
-            if (canPlantAt(cell)) {
-                placeable.add(cell);
-            }
-        }
-        if (inventoryCount() < placeable.size()) {
-            lackedSaplings = true;
-            placeable.clear();
-        }
-        this.targets = List.copyOf(placeable);
+        List<BlockCoord> coords = trunkCells.stream().map(Replanter::toCoord).toList();
+        ReplantPlan plan = ReplantPlan.of(coords, inventoryCount(), data);
+        this.lackedSaplings = plan.cells().isEmpty();
+        this.areaAllowed = !plan.lacked();
+        this.targets = new ArrayList<>(plan.cells().stream().map(Replanter::toPos).toList());
     }
 
     State tick() {
-        if (index >= targets.size()) {
-            return State.DONE;
-        }
-        BlockPos cell = targets.get(index);
-        if (!withinReach(cell)) {
-            if (!approach.isActive()) {
-                approach.begin(Vec3.atCenterOf(cell), ChopTuning.STAND_DISTANCE);
+        while (true) {
+            if (index >= targets.size()) {
+                if (!areaPlanned && areaAllowed) {
+                    planArea();
+                    areaPlanned = true;
+                    if (index < targets.size()) {
+                        continue;
+                    }
+                }
+                return State.DONE;
             }
-            switch (approach.tick()) {
-                case MOVING -> {
-                    return State.RUNNING;
+            if (!hasSapling()) {
+                lackedSaplings = true;
+                return State.DONE;
+            }
+            BlockPos cell = targets.get(index);
+            if (!withinReach(cell)) {
+                if (!approach.isActive()) {
+                    approach.begin(Vec3.atCenterOf(cell), ChopTuning.STAND_DISTANCE);
                 }
-                case ARRIVED -> {
-                }
-                case STUCK, TIMEOUT -> {
-                    skipped++;
-                    index++;
-                    return State.RUNNING;
+                switch (approach.tick()) {
+                    case MOVING -> {
+                        return State.RUNNING;
+                    }
+                    case ARRIVED -> {
+                    }
+                    case STUCK, TIMEOUT -> {
+                        skipped++;
+                        index++;
+                        continue;
+                    }
                 }
             }
+            plant(cell);
+            index++;
         }
-        plant(cell);
-        index++;
-        return State.RUNNING;
     }
 
     void suspend() {
@@ -96,6 +115,18 @@ final class Replanter {
 
     boolean lackedSaplings() {
         return lackedSaplings;
+    }
+
+    private void planArea() {
+        if (inventoryCount() < 1) {
+            return;
+        }
+        List<BlockCoord> excluded = trunkCells.stream().map(Replanter::toCoord).toList();
+        BlockCoord base = excluded.stream().min(BlockCoord::compareTo).orElseThrow();
+        List<BlockCoord> area = AreaReplant.plan(base, excluded, data, view);
+        for (BlockCoord cell : area) {
+            targets.add(toPos(cell));
+        }
     }
 
     private void plant(BlockPos cell) {
@@ -122,6 +153,10 @@ final class Replanter {
         return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(cell)) <= BlockBreaker.REACH;
     }
 
+    private boolean hasSapling() {
+        return inventoryCount() >= 1;
+    }
+
     private int inventoryCount() {
         Container inventory = spirit.getInventory();
         int total = 0;
@@ -144,5 +179,13 @@ final class Replanter {
             }
         }
         return false;
+    }
+
+    private static BlockCoord toCoord(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private static BlockPos toPos(BlockCoord coord) {
+        return new BlockPos(coord.x(), coord.y(), coord.z());
     }
 }
