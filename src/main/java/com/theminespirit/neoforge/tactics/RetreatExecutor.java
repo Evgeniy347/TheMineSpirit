@@ -92,6 +92,9 @@ public final class RetreatExecutor {
 
     private Progress wall(RetreatPlan.Wall wall) {
         approach.cancel();
+        if (buildInProgress()) {
+            return Progress.DONE;
+        }
         Level level = spirit.level();
         boolean pending = false;
         for (BlockCoord cell : wall.cells()) {
@@ -129,6 +132,9 @@ public final class RetreatExecutor {
 
     private Progress tower(RetreatPlan.Tower tower) {
         approach.cancel();
+        if (buildInProgress()) {
+            return Progress.DONE;
+        }
         if (pillarBuilt >= tower.height() || spirit.gear().blocks() == 0) {
             return Progress.DONE;
         }
@@ -144,7 +150,14 @@ public final class RetreatExecutor {
         return Progress.BUILDING;
     }
 
+    private boolean buildInProgress() {
+        return spirit.currentTaskScript().filter("build_schematic"::equals).isPresent();
+    }
+
     private boolean canPlaceNow(BlockPos pos) {
+        if (buildInProgress()) {
+            return false;
+        }
         if (spirit.tickCount - lastPlaceTick < PLACE_INTERVAL_TICKS) {
             return false;
         }

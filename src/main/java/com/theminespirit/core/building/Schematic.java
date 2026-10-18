@@ -4,20 +4,31 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
-    public record Entry(int dx, int dy, int dz, String block, String text) {
+    public record Entry(int dx, int dy, int dz, String block, Map<String, String> state, String text) {
+        public Entry(int dx, int dy, int dz, String block) {
+            this(dx, dy, dz, block, Map.of(), "");
+        }
+
+        public Entry(int dx, int dy, int dz, String block, String text) {
+            this(dx, dy, dz, block, Map.of(), text);
+        }
+
+        public Entry(int dx, int dy, int dz, String block, Map<String, String> state) {
+            this(dx, dy, dz, block, state, "");
+        }
+
         public Entry {
             Objects.requireNonNull(block, "Блок схемы не может быть null: без него неизвестно, что ставить");
             if (block.isBlank()) {
                 throw new IllegalArgumentException("Блок схемы пуст: по пустому id блок не поставить");
             }
+            Objects.requireNonNull(state, "Состояние блока схемы не может быть null: пустое задаётся пустой картой");
+            state = Map.copyOf(state);
             text = text == null ? "" : text;
-        }
-
-        public Entry(int dx, int dy, int dz, String block) {
-            this(dx, dy, dz, block, "");
         }
     }
 
@@ -38,7 +49,7 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
             BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
             placed.add(new PlacedEntry(
                     new BlockCoord(origin.x() + cell.x(), origin.y() + entry.dy(), origin.z() + cell.z()),
-                    entry.block(), entry.text()));
+                    entry.block(), entry.state(), entry.text()));
         }
         placed.sort(Comparator.comparingInt((PlacedEntry e) -> e.pos().y())
                 .thenComparingInt(e -> placementRank(e.block()))
@@ -55,15 +66,25 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
         return path.equals("chest") || path.equals("trapped_chest") || path.endsWith("_chest") ? 1 : 0;
     }
 
-    public record PlacedEntry(BlockCoord pos, String block, String text) {
-        public PlacedEntry {
-            Objects.requireNonNull(pos, "Позиция блока не может быть null: без неё блок не поставить");
-            Objects.requireNonNull(block, "Блок схемы не может быть null: без него неизвестно, что ставить");
-            text = text == null ? "" : text;
+    public record PlacedEntry(BlockCoord pos, String block, Map<String, String> state, String text) {
+        public PlacedEntry(BlockCoord pos, String block) {
+            this(pos, block, Map.of(), "");
         }
 
-        public PlacedEntry(BlockCoord pos, String block) {
-            this(pos, block, "");
+        public PlacedEntry(BlockCoord pos, String block, String text) {
+            this(pos, block, Map.of(), text);
+        }
+
+        public PlacedEntry(BlockCoord pos, String block, Map<String, String> state) {
+            this(pos, block, state, "");
+        }
+
+        public PlacedEntry {
+            Objects.requireNonNull(pos, "Позиция блока схемы не может быть null: без неё неизвестно, куда ставить");
+            Objects.requireNonNull(block, "Блок схемы не может быть null: без него неизвестно, что ставить");
+            Objects.requireNonNull(state, "Состояние блока схемы не может быть null: пустое задаётся пустой картой");
+            state = Map.copyOf(state);
+            text = text == null ? "" : text;
         }
     }
 }
