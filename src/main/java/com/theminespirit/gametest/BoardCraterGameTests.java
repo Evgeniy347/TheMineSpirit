@@ -53,7 +53,7 @@ public final class BoardCraterGameTests {
     // [флак] заделка 3×3: путь к яме, добыча из инвентаря и 9 постановок плюс ожидание двух
     // пересборок (выдача и учёт): под нагрузкой машины в 400 тиков не укладывается, запас двойной.
     private static final int FILL_TIMEOUT_TICKS = 800;
-    private static final int SCENE_FIRST_PRIORITY = 100;
+    private static final String SCENE_TICKET_PREFIX = "board_test_";
 
     private BoardCraterGameTests() {
     }
@@ -146,11 +146,8 @@ public final class BoardCraterGameTests {
         BoardService board = BoardRegistry.get(level);
         drainForeignTickets(board);
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
-        // Приоритет выше «добыть доски» первых шагов: дух с домом без сундуков получает это задание, а в полном
-        // прогоне уходит за деревьями соседних сцен и не успевает к воронке (флак 18.10). Сцена проверяет гейт
-        // по земле и ровную заделку, а не порядок кейсов доски.
         board.submit(new BoardTicket("board_test_crater_fill", BoardCase.FILL_CRATER,
-                Optional.of(spirit.getUUID()), SCENE_FIRST_PRIORITY,
+                Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
                 level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("dirt", 9)),
                 TicketTarget.at(center).withCraterBlocks(9));
         board.rebuild(level, level.getGameTime());
@@ -167,6 +164,42 @@ public final class BoardCraterGameTests {
                             == BoardStatus.DONE,
                     "После заделки задание закрыто как DONE, статус "
                             + board.board().statusOf("board_test_crater_fill").orElse(null));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // Флак полного прогона 18.10 (crater_dirtgate_fillsflat): задание «добыть доски» без адресата выдавалось
+    // ближайшему духу — тому, кого ждала адресная заделка воронки; дух уходил за досками, а воронка ждала.
+    @GameTest(template = "arena", batch = "board_addressed_first", timeoutTicks = 100)
+    public static void issue_AddressedTicketWaiting_GenericTicketGoesToOtherSpirit(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity addressee = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        SpiritEntity other = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 8));
+        addressee.getInventory().setItem(0, new ItemStack(Items.DIRT, 16));
+        ServerLevel level = helper.getLevel();
+        BoardService board = BoardRegistry.get(level);
+        drainForeignTickets(board);
+        BlockCoord near = absolute(helper, new BlockPos(2, 1, 2));
+        board.submit(new BoardTicket("board_test_generic_planks", BoardCase.GATHER_MATERIALS, Optional.empty(),
+                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS), level.getGameTime(), 1,
+                BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), TicketTarget.at(near).withSupply("oak_planks", 4));
+        board.submit(new BoardTicket("board_test_addressed_crater", BoardCase.FILL_CRATER,
+                Optional.of(addressee.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(),
+                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("dirt", 9)),
+                TicketTarget.at(absolute(helper, new BlockPos(3, 0, 3))).withCraterBlocks(9));
+        board.rebuild(level, level.getGameTime());
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(addressee.getUUID().equals(board.board().holderOf("board_test_addressed_crater")
+                            .orElse(null)),
+                    "Адресное задание обязано достаться своему духу, хотя «добыть доски» выше и ближе к нему: "
+                            + "держатель " + board.board().holderOf("board_test_addressed_crater").orElse(null));
+            helper.assertTrue(other.getUUID().equals(board.board().holderOf("board_test_generic_planks").orElse(null)),
+                    "Задание без адресата берёт другой свободный дух, а не тот, кого ждёт адресное: держатель "
+                            + board.board().holderOf("board_test_generic_planks").orElse(null));
+            board.board().cancel("board_test_generic_planks");
+            board.board().cancel("board_test_addressed_crater");
             GameTestFixtures.finish(helper);
         });
     }
@@ -226,9 +259,14 @@ public final class BoardCraterGameTests {
      * засыпки воронки (35) и забирают единственного духа — сцена видит незасыпанную яму. Снимаем их до
      * своей постановки, как в BoardGameTests.supply_*.
      */
+    // Тесты пачки стартуют в один тик и делят доску: снимаем только задания вне сцен (первые шаги и т. п.), а
+    // задания соседней сцены с префиксом board_test_ не трогаем — иначе сцена, стартовавшая позже, отменяла
+    // заделку соседней (флак crater_dirtgate_fillsflat 18.10).
     private static void drainForeignTickets(BoardService board) {
         for (BoardTicket ticket : board.board().all()) {
-            board.board().cancel(ticket.id());
+            if (!ticket.id().startsWith(SCENE_TICKET_PREFIX)) {
+                board.board().cancel(ticket.id());
+            }
         }
     }
 }

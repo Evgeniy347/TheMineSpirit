@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -13,7 +14,6 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.EvergreenRules;
-import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.ResourceGate;
@@ -23,14 +23,14 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.coordinator.WorkKind;
-import com.theminespirit.core.husbandry.FeedTable;
-import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.hunger.SpiritHunger;
+import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -518,11 +518,16 @@ public final class BoardService {
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
+        Set<UUID> awaited = new HashSet<>();
         for (BoardTicket ticket : claimable) {
-            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now);
+            ticket.assignee().ifPresent(awaited::add);
+        }
+        for (BoardTicket ticket : claimable) {
+            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
             if (spirit == null) {
-                LOGGER.debug("Задание {} ждёт свободного духа: все духи уровня заняты", ticket.id());
-                return;
+                LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(),
+                        ticket.assignee().isPresent() ? "свой дух занят" : "свободных нет или их ждут свои задания");
+                continue;
             }
             TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
@@ -588,7 +593,7 @@ public final class BoardService {
     }
 
     private SpiritEntity chooseSpirit(BoardTicket ticket, List<SpiritEntity> spirits, ServerLevel level,
-            Map<UUID, Integer> held, long now) {
+            Map<UUID, Integer> held, long now, Set<UUID> awaited) {
         if (ticket.assignee().isPresent()) {
             Entity entity = level.getEntity(ticket.assignee().orElseThrow());
             if (entity instanceof SpiritEntity spirit && free(spirit, held, ticket, now)) {
@@ -596,7 +601,8 @@ public final class BoardService {
             }
             return null;
         }
-        return nearestFree(spirits, targets.get(ticket.id()), held, ticket, now);
+        List<SpiritEntity> unclaimed = spirits.stream().filter(spirit -> !awaited.contains(spirit.getUUID())).toList();
+        return nearestFree(unclaimed, targets.get(ticket.id()), held, ticket, now);
     }
 
     private boolean free(SpiritEntity spirit, Map<UUID, Integer> held, BoardTicket ticket, long now) {
