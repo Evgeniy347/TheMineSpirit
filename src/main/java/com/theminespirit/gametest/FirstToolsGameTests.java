@@ -42,38 +42,32 @@ public final class FirstToolsGameTests {
     }
 
     @BeforeBatch(batch = "first_tools_wood")
-    public static void boardOffWood(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(false);
+    public static void mobsOffWood(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_wood")
-    public static void boardOnWood(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(true);
+    public static void mobsOnWood(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = "first_tools_stone")
-    public static void boardOffStone(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(false);
+    public static void mobsOffStone(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_stone")
-    public static void boardOnStone(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(true);
+    public static void mobsOnStone(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = "first_tools_corner")
-    public static void boardOffCorner(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(false);
+    public static void mobsOffCorner(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_corner")
-    public static void boardOnCorner(ServerLevel level) {
-        SpiritConfig.setBoardEnabled(true);
+    public static void mobsOnCorner(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
