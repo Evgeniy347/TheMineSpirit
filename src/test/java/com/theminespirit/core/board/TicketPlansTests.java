@@ -54,6 +54,8 @@ class TicketPlansTests {
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
             Map.entry(BoardCase.CRAFT_ANVIL, "craft"),
             Map.entry(BoardCase.CRAFT_SMITHING_TABLE, "craft"),
+            Map.entry(BoardCase.CRAFT_SMOKER, "craft"),
+            Map.entry(BoardCase.FISH, "fish"),
             Map.entry(BoardCase.CRAFT_WOODEN_PICKAXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_AXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_SHOVEL, "craft"),
@@ -208,6 +210,28 @@ class TicketPlansTests {
         assertTrue(collectScripts(plan).contains("craft"),
                 "Полки достраиваются крафтом книжных полок: книги гейтят задание, "
                         + "а план их собирает в полки");
+    }
+
+    @Test
+    void plan_CraftSmoker_CraftsSmoker() {
+        TaskNode plan = TicketPlans.plan(BoardCase.CRAFT_SMOKER, target());
+        ScriptCall craft = findCall(plan, "craft");
+
+        assertEquals("minecraft:smoker", craft.params().get("item"),
+                "Кейс коптильни крафтит именно коптильню: без этого улов негде коптить");
+    }
+
+    @Test
+    void plan_Fish_GoesToPointAndFishes() {
+        BlockCoord point = new BlockCoord(7, 64, -3);
+        TaskNode plan = TicketPlans.plan(BoardCase.FISH, TicketTarget.at(point));
+
+        assertTrue(plan instanceof SequenceNode sequence && sequence.steps().size() == 2,
+                "Рыбалка как занятие — переход на рабочую точку и ловля: без перехода дух рыбачит "
+                        + "у случайной воды");
+        ScriptCall fish = (ScriptCall) ((SequenceNode) plan).steps().get(1);
+        assertEquals("fish", fish.script(),
+                "Второй шаг плана рыбалки — скрипт fish: без него занятие ничего не ловит");
     }
 
     @Test

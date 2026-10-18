@@ -35,6 +35,8 @@
     "CRAFT_BED": 40,
     "CRAFT_ANVIL": 50,
     "CRAFT_SMITHING_TABLE": 50,
+    "CRAFT_SMOKER": 50,
+    "FISH": 50,
     "WEAVE_WOOL": 40,
     "CRAFTING_STATION": 40,
     "STOCK_CHESTS": 40,
