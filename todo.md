@@ -229,11 +229,13 @@
       GameTest берут целью духа чужой сцены (follow range > расстояния между структурами). Решить: изоляция сцен (цель —
       только духи своей структуры в GameTest, или мобы в сценах без выключателя) и отдельно — должна ли сессия скрипта
       считать лимит сквозь паузы brain (production).
-      Ревизия 18.10: feed/capture_*/zombie_* — зелено в 3 полных прогонах и 3 пачках (изоляция сцен + mobsTargetSpirits).
+      Ревизия 18.10: feed/capture_*/zombie_* — зелено в полных прогонах и пачках (изоляция сцен + mobsTargetSpirits).
       `choptree_ninelogtrunkneedspillar_alllogschoppedandpillardismantled` падал в одном полном прогоне: столб не
       поднимался (дух сдвинут к стволу, прыжок задевал бревно — CellCentering). Починено в production: PillarColumn
-      каждый тик возвращает духа в центр клетки (218abc5b); GameTest `pillarUp_StartedBesideTrunk_ReturnsToCellCenter`
-      красный на родителе, зелёный с правкой.
+      каждый тик возвращает духа в центр клетки (a3eddd81); GameTest `pillarUp_StartedBesideTrunk_ReturnsToCellCenter`
+      красный на родителе, зелёный с правкой. Флек `capture_sheeponflat` (нужно 52 блока, есть 51 — овца вышла из
+      кольца и пересборка оставила часть блоков): запас блоков поднят до 128 (691b3955). Флек `feed_escapeefiveblocksaway`
+      (возврат приманкой 395 тиков при потолке 200): потолок работы 500, тест 800 ≈ 2× замера (66e15c23).
 - [x] Флек `zombifiedpiglin_sixblocksfromspirit_doesnottaketarget` (own-3; замечен исполнителем 30) — пиглин берёт цель:
       проверить, не бьёт ли его кто-то в сцене (HurtByTargetGoal) или не берёт ли он цель от соседней структуры.
       Ревизия 18.10: зелено в 3 полных прогонах и 3 пачках (mob_targets_zombified_piglin) — соседние структуры чистятся
