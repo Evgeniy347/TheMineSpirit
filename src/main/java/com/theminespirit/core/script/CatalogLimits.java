@@ -149,6 +149,11 @@ public final class CatalogLimits {
 
     public static final int DIG_SIZE_MIN = 1;
     public static final int DIG_SIZE_MAX = 16;
+
+    // Безопасная шахта (safe_mine): длина штольни в блоках
+    public static final int MINE_LENGTH_MIN = 1;
+    public static final int MINE_LENGTH_MAX = 256;
+    public static final int MINE_LENGTH_DEFAULT = 16;
     public static final int BUILD_VOLUME_MAX = 4096;
     public static final int SCHEMATIC_SIZE_MAX = 32;
     public static final int SCHEMATIC_BLOCKS_MAX = 4096;
