@@ -53,6 +53,7 @@ public final class BoardCraterGameTests {
     // [флак] заделка 3×3: путь к яме, добыча из инвентаря и 9 постановок плюс ожидание двух
     // пересборок (выдача и учёт): под нагрузкой машины в 400 тиков не укладывается, запас двойной.
     private static final int FILL_TIMEOUT_TICKS = 800;
+    private static final int SCENE_FIRST_PRIORITY = 100;
 
     private BoardCraterGameTests() {
     }
@@ -145,8 +146,11 @@ public final class BoardCraterGameTests {
         BoardService board = BoardRegistry.get(level);
         drainForeignTickets(board);
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
+        // Приоритет выше «добыть доски» первых шагов: дух с домом без сундуков получает это задание, а в полном
+        // прогоне уходит за деревьями соседних сцен и не успевает к воронке (флак 18.10). Сцена проверяет гейт
+        // по земле и ровную заделку, а не порядок кейсов доски.
         board.submit(new BoardTicket("board_test_crater_fill", BoardCase.FILL_CRATER,
-                Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                Optional.of(spirit.getUUID()), SCENE_FIRST_PRIORITY,
                 level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("dirt", 9)),
                 TicketTarget.at(center).withCraterBlocks(9));
         board.rebuild(level, level.getGameTime());
