@@ -23,6 +23,8 @@
 | `./gradlew runServer` | dev-сервер с модом в `run/` | сервер на порту 25565 |
 | `./gradlew runClient` | dev-клиент с модом (нужен графический стол) | окно Minecraft |
 | `./gradlew runData` | datagen в `src/generated/resources/` | сгенерированные json |
+| `scripts/schematic.sh check [файл\|id…]` | разбор и сторожа текстовых построек (`schematics/*.txt`) тем же кодом, что в моде | `Все постройки прошли: N` |
+| `scripts/schematic.sh show <файл\|id> [поворот]` | шапка, материалы и срезы по слоям постройки (с поворотом) | срезы `y0…` и строки `НАРУШЕНИЕ`, если есть |
 | `scripts/testing/check-strategist.sh` | тесты агента-стратега (`python3 -m unittest`, сценарии, сторожа) и сценарии надзора `scripts/strategist.sh` на фейковом REST; сервер Minecraft и настоящий opencode не нужны | все строки `OK` |
 | `cd agents/strategist && python3 -m unittest discover -s tests -t .` | только Python-тесты агента-стратега | `OK` в последней строке |
 | `scripts/publish.sh` | собирает мод и ставит jar на сервер `/opt/minecraft/server`, перезапуская его, если он работал. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
@@ -159,6 +161,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
 | [scripts/test.sh](scripts/test.sh) | единый запуск тестов: `unit [--tests <фильтр>]` и `gametest [имя пачки или теста…]`. Полный лог — в `TestResults/logs/`, на экран — итог. Пределы времени (переменные `THEMINESPIRIT_*_WARN_SECONDS` / `THEMINESPIRIT_*_STOP_SECONDS`): unit — предупреждение 3 мин, стоп 6 мин; gametest — предупреждение 5 мин, стоп 10 мин (жёсткий стоп, код 124). GameTest — под замком «один сервер на машину» | `OK unit: N тестов, T с` / `OK gametest: N тестов, T с`; `FAIL …` + первая ошибка + короткий стек + путь к логу; код 75 — идёт чужой GameTest; код 124 — стоп по пределу |
 | [scripts/gametest.sh](scripts/gametest.sh) | тонкая обёртка над `scripts/test.sh gametest` (совместимость) | то же, что `scripts/test.sh gametest` |
+| [scripts/schematic.sh](scripts/schematic.sh) | постройки в текстовом формате слоёв вне игры: `show` (материалы, срезы), `check` (сторожа) — через Gradle-задачу `schematicTool` | `OK <id>` на каждую постройку, код 1 при ошибке |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | Сторож памяти на domovoy при параллельных исполнителях: свободно < 15 % — SIGSTOP самой тяжёлой java сборки, > 25 % — SIGCONT | строка в журнале TestResults/mem-guard.log на каждое действие |
 | [scripts/lead/oc-watch.sh](scripts/lead/oc-watch.sh) | слежение главного агента за исполнителями (ПК и domovoy): завершения, зависания, ресурсы, сироты — только события; запуск через Monitor (docs/LEAD-AGENT.md → «Присмотр — инструменты») | строка на каждое событие |
 | [scripts/lead/res-pc.ps1](scripts/lead/res-pc.ps1) | ресурсы ПК и уборка сирот исполнителей (только процессы проекта и `find /`) | строки только при проблеме |
