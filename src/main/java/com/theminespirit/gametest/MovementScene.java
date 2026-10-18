@@ -45,8 +45,12 @@ final class MovementScene {
     }
 
     static TaskNode pointCall(GameTestHelper helper, String script, BlockPos relative) {
+        return call(script, pointParams(helper, relative));
+    }
+
+    static Map<String, Object> pointParams(GameTestHelper helper, BlockPos relative) {
         BlockCoord at = coord(helper, relative);
-        return call(script, Map.of("x", at.x(), "y", at.y(), "z", at.z()));
+        return Map.of("x", at.x(), "y", at.y(), "z", at.z());
     }
 
     static double distanceTo(GameTestHelper helper, SpiritEntity spirit, BlockPos relative) {
