@@ -1,8 +1,11 @@
 package com.theminespirit.core.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ScriptCatalog;
@@ -11,6 +14,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CapabilitiesJsonTests {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private static ScriptCatalog smallCatalog() {
         return ScriptCatalog.of(List.of(
                 new ScriptSpec("demo", "демо",
@@ -36,9 +41,9 @@ class CapabilitiesJsonTests {
                 + "\"silent\":{\"type\":\"boolean\"},"
                 + "\"mode\":{\"type\":\"string\",\"enum\":[\"fast\",\"slow\"]}},"
                 + "\"required\":[\"ratio\",\"mode\"]},"
-                + "\"preconditions\":[\"есть цель\"],\"effects\":[\"цель достигнута\"]},"
+                + "\"preconditions\":[\"есть цель\"],\"requires\":[],\"effects\":[\"цель достигнута\"]},"
                 + "{\"id\":\"idle\",\"summary\":\"ничего не делать\",\"params\":{\"type\":\"object\","
-                + "\"properties\":{},\"required\":[]},\"preconditions\":[],\"effects\":[]}]}";
+                + "\"properties\":{},\"required\":[]},\"preconditions\":[],\"requires\":[],\"effects\":[]}]}";
 
         String actual = CapabilitiesJson.toJson(smallCatalog());
 
@@ -52,6 +57,37 @@ class CapabilitiesJsonTests {
     void toJson_EmptyCatalog_WritesEmptyScriptList() {
         assertEquals("{\"scripts\":[]}", CapabilitiesJson.toJson(ScriptCatalog.of(List.of())),
                 "Пустой каталог — пустой список скриптов, а не null или ошибка: клиент отличает его от сбоя");
+    }
+
+    @Test
+    void toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog() throws Exception {
+        JsonNode scripts = MAPPER.readTree(CapabilitiesJson.toJson(CoreScripts.defaultCatalog())).get("scripts");
+
+        JsonNode ore = requires(scripts, "mine_vein");
+        assertEquals("tool", ore.get("kind").textValue(), "требование кирки — инструментальное");
+        assertEquals("pickaxe", ore.get("tool").textValue(), "требование кирки называет инструмент pickaxe");
+        assertEquals("ore", ore.get("param").textValue(), "уровень кирки для mine_vein зависит от параметра ore");
+        assertEquals(1, ore.get("tiers").get("any").intValue(), "любая руда требует хотя бы деревянную кирку");
+        assertEquals(2, ore.get("tiers").get("iron").intValue(), "железная руда требует каменную кирку");
+        assertEquals(3, ore.get("tiers").get("diamond").intValue(), "алмазная руда требует железную кирку");
+        assertEquals(4, ore.get("tiers").get("netherite").intValue(), "древние обломки требуют алмазную кирку");
+
+        JsonNode block = requires(scripts, "gather");
+        assertEquals("block", block.get("param").textValue(), "уровень кирки для gather зависит от параметра block");
+        assertEquals(1, block.get("tiers").get("stone").intValue(), "камень требует деревянную кирку");
+        assertEquals(2, block.get("tiers").get("iron_ore").intValue(), "железная руда требует каменную кирку");
+        assertEquals(4, block.get("tiers").get("obsidian").intValue(), "обсидиан требует алмазную кирку");
+        assertFalse(block.get("tiers").has("oak_log"), "бревно добывается топором, кирка для него не требуется");
+        assertEquals(0, block.get("fallback").intValue(), "блок вне таблицы кирки не требует");
+    }
+
+    private static JsonNode requires(JsonNode scripts, String id) {
+        for (JsonNode script : scripts) {
+            if (id.equals(script.get("id").textValue())) {
+                return script.get("requires").get(0);
+            }
+        }
+        throw new AssertionError("В каталоге нет скрипта " + id);
     }
 
     @Test

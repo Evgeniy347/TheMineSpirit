@@ -7,6 +7,7 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
 import java.util.ArrayList;
@@ -205,7 +206,8 @@ public final class CoreScripts {
                                 ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
                                 ParamSpec.integer("radius", false, CatalogLimits.HARVEST_RADIUS_MIN,
                                         CatalogLimits.HARVEST_RADIUS_MAX, CatalogLimits.HARVEST_RADIUS_DEFAULT)),
-                        List.of("в радиусе есть подходящая жила"), List.of("руда добыта")),
+                        List.of("в радиусе есть подходящая жила"),
+                        pickaxeForOre(), List.of("руда добыта")),
                 spec("dig_area", "выкопать область",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
@@ -243,7 +245,8 @@ public final class CoreScripts {
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.integer("radius", false, CatalogLimits.HARVEST_RADIUS_MIN,
                                         CatalogLimits.HARVEST_RADIUS_MAX, CatalogLimits.HARVEST_RADIUS_DEFAULT)),
-                        List.of("в радиусе есть подходящие блоки"), List.of("блоки собраны")),
+                        List.of("в радиусе есть подходящие блоки"),
+                        pickaxeForBlock(), List.of("блоки собраны")),
                 spec("collect_drops", "подобрать выпавшие предметы вокруг духа",
                         List.of(ParamSpec.integer("radius", false, CatalogLimits.DROP_RADIUS_MIN,
                                         CatalogLimits.DROP_RADIUS_MAX, CatalogLimits.DROP_RADIUS_DEFAULT),
@@ -548,6 +551,19 @@ public final class CoreScripts {
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
             List<String> effects) {
         return new ScriptSpec(id, summary, params, preconditions, effects);
+    }
+
+    private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,
+            List<ScriptRequirement> requires, List<String> effects) {
+        return new ScriptSpec(id, summary, params, preconditions, effects, requires);
+    }
+
+    private static List<ScriptRequirement> pickaxeForOre() {
+        return List.of(ScriptRequirement.pickaxe("ore", PickaxeTiers.oreTiers(), 1));
+    }
+
+    private static List<ScriptRequirement> pickaxeForBlock() {
+        return List.of(ScriptRequirement.pickaxe("block", PickaxeTiers.blockTiers(), ScriptRequirement.NO_TIER));
     }
 
     private static ParamSpec perceptionRadius() {

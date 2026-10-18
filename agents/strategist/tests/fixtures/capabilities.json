@@ -158,6 +158,27 @@
       ],
       "effects": [
         "руда добыта"
+      ],
+      "requires": [
+        {
+          "kind": "tool",
+          "tool": "pickaxe",
+          "param": "ore",
+          "tiers": {
+            "any": 1,
+            "coal": 1,
+            "iron": 2,
+            "copper": 2,
+            "gold": 3,
+            "redstone": 3,
+            "lapis": 2,
+            "diamond": 3,
+            "emerald": 3,
+            "quartz": 1,
+            "netherite": 4
+          },
+          "fallback": 1
+        }
       ]
     },
     {
@@ -191,6 +212,63 @@
       ],
       "effects": [
         "блоки собраны"
+      ],
+      "requires": [
+        {
+          "kind": "tool",
+          "tool": "pickaxe",
+          "param": "block",
+          "tiers": {
+            "stone": 1,
+            "deepslate": 1,
+            "granite": 1,
+            "diorite": 1,
+            "andesite": 1,
+            "tuff": 1,
+            "calcite": 1,
+            "dripstone_block": 1,
+            "basalt": 1,
+            "smooth_basalt": 1,
+            "blackstone": 1,
+            "netherrack": 1,
+            "end_stone": 1,
+            "sandstone": 1,
+            "red_sandstone": 1,
+            "crimson_nylium": 1,
+            "warped_nylium": 1,
+            "glowstone": 1,
+            "magma_block": 1,
+            "amethyst_block": 1,
+            "prismarine": 1,
+            "prismarine_bricks": 1,
+            "dark_prismarine": 1,
+            "sea_lantern": 1,
+            "coal_ore": 1,
+            "deepslate_coal_ore": 1,
+            "nether_quartz_ore": 1,
+            "iron_ore": 2,
+            "deepslate_iron_ore": 2,
+            "copper_ore": 2,
+            "deepslate_copper_ore": 2,
+            "lapis_ore": 2,
+            "deepslate_lapis_ore": 2,
+            "raw_iron_block": 2,
+            "raw_copper_block": 2,
+            "gold_ore": 3,
+            "deepslate_gold_ore": 3,
+            "nether_gold_ore": 3,
+            "redstone_ore": 3,
+            "deepslate_redstone_ore": 3,
+            "diamond_ore": 3,
+            "deepslate_diamond_ore": 3,
+            "emerald_ore": 3,
+            "deepslate_emerald_ore": 3,
+            "raw_gold_block": 3,
+            "obsidian": 4,
+            "ancient_debris": 4
+          },
+          "fallback": 0
+        }
       ]
     },
     {

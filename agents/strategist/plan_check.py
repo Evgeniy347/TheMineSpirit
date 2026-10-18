@@ -36,29 +36,6 @@ PICKAXE_REQUIREMENT = {
     3: "железная кирка или лучше",
     4: "алмазная кирка или лучше",
 }
-ORE_PICKAXE_LEVEL = {
-    "coal": 1, "quartz": 1,
-    "copper": 2, "iron": 2, "lapis": 2,
-    "gold": 3, "redstone": 3, "diamond": 3, "emerald": 3,
-    "netherite": 4,
-}
-BLOCK_PICKAXE_LEVEL = {
-    name: 1 for name in (
-        "stone", "deepslate", "granite", "diorite", "andesite", "tuff", "calcite", "dripstone_block", "basalt",
-        "smooth_basalt", "blackstone", "netherrack", "end_stone", "sandstone", "red_sandstone", "crimson_nylium",
-        "warped_nylium", "glowstone", "magma_block", "amethyst_block", "prismarine", "prismarine_bricks",
-        "dark_prismarine", "sea_lantern", "coal_ore", "deepslate_coal_ore", "nether_quartz_ore")
-}
-BLOCK_PICKAXE_LEVEL.update({
-    name: 2 for name in ("iron_ore", "deepslate_iron_ore", "copper_ore", "deepslate_copper_ore", "lapis_ore",
-                         "deepslate_lapis_ore", "raw_iron_block", "raw_copper_block")
-})
-BLOCK_PICKAXE_LEVEL.update({
-    name: 3 for name in ("gold_ore", "deepslate_gold_ore", "nether_gold_ore", "redstone_ore", "deepslate_redstone_ore",
-                         "diamond_ore", "deepslate_diamond_ore", "emerald_ore", "deepslate_emerald_ore", "raw_gold_block")
-})
-BLOCK_PICKAXE_LEVEL.update({name: 4 for name in ("obsidian", "ancient_debris")})
-
 ITEM_SCRIPTS = ("acquire", "craft", "equip", "withdraw")
 ITEM_PATTERN_SCRIPTS = frozenset({"equip"})
 ITEM_ID_SYMBOLS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789_:./-")
@@ -82,15 +59,17 @@ def item_id_problem(value: str, allow_pattern: bool) -> str | None:
     return None
 
 
-def required_pickaxe(script: str, params: dict) -> int | None:
-    if script == "mine_vein":
-        ore = params.get("ore", "any")
-        if ore == "any":
-            return 1
-        return ORE_PICKAXE_LEVEL.get(ore) if isinstance(ore, str) else None
-    if script == "gather":
-        block = params.get("block")
-        return BLOCK_PICKAXE_LEVEL.get(normalize_block(block)) if isinstance(block, str) else None
+def required_pickaxe(requirements, params: dict) -> int | None:
+    """Минимальный уровень кирки из требований каталога; None — шаг кирки не требует."""
+    for requirement in requirements or ():
+        if not isinstance(requirement, dict) or requirement.get("kind") != "tool"                 or requirement.get("tool") != "pickaxe":
+            continue
+        value = params.get(requirement.get("param"))
+        tiers = requirement.get("tiers") if isinstance(requirement.get("tiers"), dict) else {}
+        fallback = requirement.get("fallback", 0)
+        level = tiers.get(normalize_block(value), fallback) if isinstance(value, str) else fallback
+        if isinstance(level, int) and not isinstance(level, bool) and level > 0:
+            return level
     return None
 
 
@@ -159,6 +138,26 @@ def _inventory_from(observation: dict) -> frozenset | None:
     return inventory if known else None
 
 
+def _requirement_problem(requirement) -> str | None:
+    if not isinstance(requirement, dict):
+        return "требование должно быть JSON-объектом"
+    if requirement.get("kind") != "tool":
+        return "kind должен быть 'tool'"
+    if not isinstance(requirement.get("tool"), str) or not requirement["tool"]:
+        return "tool должен быть непустой строкой"
+    if not isinstance(requirement.get("param"), str) or not requirement["param"]:
+        return "param должен быть непустой строкой"
+    tiers = requirement.get("tiers")
+    if not isinstance(tiers, dict) or not all(isinstance(key, str) and isinstance(value, int)
+                                              and not isinstance(value, bool) and 1 <= value <= 4
+                                              for key, value in tiers.items()):
+        return "tiers должен быть объектом имя→уровень 1..4"
+    fallback = requirement.get("fallback", 0)
+    if isinstance(fallback, bool) or not isinstance(fallback, int) or not 0 <= fallback <= 4:
+        return "fallback должен быть целым 0..4"
+    return None
+
+
 def load_policy(path: Path) -> Policy:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -184,17 +183,34 @@ def load_policy(path: Path) -> Policy:
 
 
 class Catalog:
-    def __init__(self, scripts: dict[str, dict], conditions: dict[str, dict], raw: dict | None = None):
+    def __init__(self, scripts: dict[str, dict], conditions: dict[str, dict], raw: dict | None = None,
+                 requires: dict[str, list] | None = None):
         self.scripts = scripts
         self.conditions = conditions
         self.raw = raw if raw is not None else {}
+        self.requires = requires if requires is not None else {}
 
     @classmethod
     def from_capabilities(cls, capabilities) -> "Catalog":
         if not isinstance(capabilities, dict) or not isinstance(capabilities.get("scripts"), list):
             raise CatalogError("Каталог capabilities без списка scripts: проверьте ответ GET /v1/capabilities")
-        return cls(cls._index(capabilities["scripts"], "scripts"), cls._index(capabilities.get("conditions", []), "conditions"),
-                   capabilities)
+        scripts = capabilities["scripts"]
+        return cls(cls._index(scripts, "scripts"), cls._index(capabilities.get("conditions", []), "conditions"),
+                   capabilities, cls._requires(scripts))
+
+    @staticmethod
+    def _requires(entries) -> dict[str, list]:
+        requires: dict[str, list] = {}
+        for entry in entries:
+            value = entry.get("requires", [])
+            if not isinstance(value, list):
+                raise CatalogError(f"У записи '{entry['id']}' каталога scripts поле requires должно быть списком")
+            for requirement in value:
+                problem = _requirement_problem(requirement)
+                if problem:
+                    raise CatalogError(f"У записи '{entry['id']}' каталога scripts требование не разобрано: {problem}")
+            requires[entry["id"]] = value
+        return requires
 
     @staticmethod
     def _index(entries, field: str) -> dict[str, dict]:
@@ -309,7 +325,7 @@ class _Checker:
         if len(self.errors) == before and isinstance(node.get("params"), dict):
             self._item_rule(name, node["params"], path)
             if self.context is not None:
-                self._world_rules(name, node["params"], path, inventory)
+                self._world_rules(name, self.catalog.requires.get(name, ()), node["params"], path, inventory)
             return self._after_item_script(name, node["params"], inventory)
         return inventory
 
@@ -335,7 +351,7 @@ class _Checker:
         self._error(f"{path}.params.item: {value!r} — не id предмета: {problem}; пишите id как в наблюдении, "
                     f"например wooden_pickaxe или minecraft:oak_log{hint}")
 
-    def _world_rules(self, name: str, params: dict, path: str, inventory) -> None:
+    def _world_rules(self, name: str, requirements, params: dict, path: str, inventory) -> None:
         context = self.context
         if name == "goto":
             if context.position is None:
@@ -357,10 +373,10 @@ class _Checker:
                             f"(природные блоки перечислены в natural_blocks файла policy.json): собирайте только "
                             f"руду, камень, землю, песок, гравий, глину, брёвна, листву и растения — доски, стекло, "
                             f"кирпич и прочие постройки игрока не разбираются")
-        self._pickaxe_rule(name, params, path, inventory)
+        self._pickaxe_rule(name, requirements, params, path, inventory)
 
-    def _pickaxe_rule(self, name: str, params: dict, path: str, inventory) -> None:
-        level = required_pickaxe(name, params)
+    def _pickaxe_rule(self, name: str, requirements, params: dict, path: str, inventory) -> None:
+        level = required_pickaxe(requirements, params)
         if level is None:
             return
         if inventory is None:

@@ -234,6 +234,30 @@ class OpencodeBrainTests(BrainTestCase):
             self.brain(FAKE_TOOL="executed").complete("с", "п")
         self.assertIn("песочниц", str(ctx.exception), "выполненный инструмент — нарушение песочницы, а не обычный ответ")
 
+    def test_sandboxCheck_RejectedTool_ReportsNoExecution(self):
+        probe = self.brain(FAKE_TOOL="reject").sandbox_check()
+        self.assertEqual(("bash",), probe.attempted, "модель попросили выполнить ls: попытка вызова bash видна проверке")
+        self.assertEqual(("bash",), probe.rejected, "отказ песочницы приходит как status error")
+        self.assertEqual((), probe.executed, "выполнения нет — песочница в порядке")
+        self.assertIn("ls", self.args_log(), "задание проверки просит выполнить ls")
+
+    def test_sandboxCheck_ExecutedTool_ReportsExecution(self):
+        probe = self.brain(FAKE_TOOL="executed").sandbox_check()
+        self.assertEqual(("bash",), probe.executed, "status не error означает выполнение — проверка обязана это назвать")
+        self.assertEqual((), probe.rejected)
+
+    def test_sandboxCheck_NoToolAttempt_ReportsEmpty(self):
+        probe = self.brain().sandbox_check()
+        self.assertEqual((), probe.attempted, "модель может не вызвать инструмент: проверка не должна выдавать это за успех")
+        self.assertEqual((), probe.executed)
+
+    def test_sandboxCheck_ProviderFailure_RaisesUnavailable(self):
+        with self.assertRaises(BrainUnavailable):
+            self.brain(FAKE_ERROR="json", FAKE_ERROR_TEXT="Rate limit exceeded").sandbox_check()
+
+    def test_opencodeVersion_ReturnsBinaryVersion(self):
+        self.assertEqual("fake-opencode 9.9.9", self.brain().opencode_version())
+
     def test_probe_Ok_And_ProviderFailure(self):
         self.assertEqual("OK", self.brain().probe().text.strip())
         with self.assertRaises(BrainUnavailable) as ctx:
@@ -345,8 +369,18 @@ class AgentViolationsTests(unittest.TestCase):
 
     def test_wildcardAllowThenSpecificAsk_Fine(self):
         agent = {"permission": [{"permission": "*", "pattern": "*", "action": "allow"},
-                                {"permission": "read", "pattern": "*", "action": "ask"}], "tools": {"read": True}}
+                                {"permission": "read", "pattern": "*", "action": "ask"},
+                                {"permission": "edit", "pattern": "*", "action": "ask"},
+                                {"permission": "bash", "pattern": "*", "action": "ask"}],
+                 "tools": {"read": True, "edit": True, "bash": True}}
         self.assertEqual([], agent_violations(agent))
+
+    def test_coreToolDisabled_Violation(self):
+        agent = {"permission": [{"permission": "*", "pattern": "*", "action": "ask"}],
+                 "tools": {"read": True, "edit": True, "bash": False}}
+        problems = agent_violations(agent)
+        self.assertTrue(any(problem.startswith("bash") for problem in problems),
+                        f"выключенный bash — модель не сможет даже попытаться выполнить ls: {problems}")
 
     def test_garbage_Violation(self):
         for garbage in ({}, {"permission": "x", "tools": {}}, {"permission": [], "tools": []}):
@@ -354,11 +388,13 @@ class AgentViolationsTests(unittest.TestCase):
 
 
 class SandboxVerificationTests(BrainTestCase):
-    def test_sandboxConfig_StarDenyIsFirstKey(self):
+    def test_sandboxConfig_StarAskIsFirstKey(self):
         self.brain().complete("с", "п")
         permission = json.loads((self.cfg.sandbox_dir / "opencode.json").read_text(encoding="utf-8"))["permission"]
-        self.assertEqual("*", next(iter(permission)), "\"*\": deny первым ключом: новые инструменты opencode по умолчанию запрещены")
-        self.assertEqual("deny", permission["*"])
+        self.assertEqual("*", next(iter(permission)), "\"*\" первым ключом: новые инструменты opencode попадают под общий шаблон")
+        self.assertEqual("ask", permission["*"],
+                         "общий deny убирает read/edit/bash из набора инструментов: модель не может даже попытаться "
+                         "вызвать ls, а бесплатный тариф отвечает 403; ask отклоняется автоматически")
 
     def test_verify_SafeAgent_Passes(self):
         self.brain().verify()

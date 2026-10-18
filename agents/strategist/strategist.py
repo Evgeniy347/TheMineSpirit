@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Агент-стратег духов: раз в INTERVAL решает, чем заняться простаивающим духам, и ставит задачи по REST.
 
-Команды: once | run | status | probe | smoke  [--fixtures КАТАЛОГ] [--model МОДЕЛЬ] [--runs N]. Подробности: docs/STRATEGIST.md.
+Команды: once | run | status | probe | sandbox-check | smoke  [--fixtures КАТАЛОГ] [--model МОДЕЛЬ] [--runs N].
+Подробности: docs/STRATEGIST.md.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from runtime import Runtime
 from state import StateStore
 from tracker import Tracker
 
+EXIT_CHECK_FAILED = 1
 EXIT_BAD_CONFIG = 2
 EXIT_LOCKED = 3
 EXIT_BROKEN = 4
@@ -212,7 +214,7 @@ def breach_exit(strategist: Strategist) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="strategist.py", description=__doc__.splitlines()[0])
-    parser.add_argument("command", choices=["once", "run", "status", "probe", "smoke"])
+    parser.add_argument("command", choices=["once", "run", "status", "probe", "sandbox-check", "smoke"])
     parser.add_argument("--model", help="smoke: модель вместо STRATEGIST_MODEL")
     parser.add_argument("--runs", type=int, default=2, help="smoke: прогонов на каждое место (по умолчанию 2)")
     parser.add_argument("--fixtures", type=Path, help="каталог с записанными наблюдениями: поднять фейковый REST вместо мода")
@@ -254,6 +256,24 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "probe":
             reply = brain.probe()
             print(f"Проба прошла: модель {reply.model}, {reply.seconds} с, ответ «{reply.text.strip()[:80]}»")
+            return 0
+        if args.command == "sandbox-check":
+            if config.brain != "opencode":
+                print("sandbox-check проверяет песочницу opencode: при STRATEGIST_BRAIN=command проверять нечего",
+                      file=sys.stderr)
+                return EXIT_BAD_CONFIG
+            print(f"opencode: {brain.opencode_version()}")
+            probe = brain.sandbox_check()
+            if probe.executed:
+                print(f"FAIL песочница: инструмент {', '.join(probe.executed)} выполнился (status не error) — "
+                      "проверьте sandbox/opencode.json и запуск без флага автоодобрения", file=sys.stderr)
+                return EXIT_CHECK_FAILED
+            if not probe.attempted:
+                print(f"FAIL песочница: за {probe.seconds} с модель не попыталась выполнить ls — проверка "
+                      "не подтвердила отказ (модель не вызвала инструмент)", file=sys.stderr)
+                return EXIT_CHECK_FAILED
+            print(f"OK песочница: модель попыталась выполнить {', '.join(probe.attempted)} за {probe.seconds} с, "
+                  "инструмент отклонён (status error), выполнения нет")
             return 0
         strategist = build(config, brain, out=lambda text: print(f"[{datetime.now().strftime('%H:%M:%S')}] {text}", flush=True))
         if args.command == "once":
