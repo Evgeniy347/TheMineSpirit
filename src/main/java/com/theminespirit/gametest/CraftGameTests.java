@@ -13,8 +13,10 @@ import static com.theminespirit.gametest.CraftTestSupport.reload;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,10 +79,14 @@ public final class CraftGameTests {
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "кирка у верстака");
             assertCount(helper, spirit, Items.OAK_PLANKS, 0, "доски после крафта кирки");
             assertCount(helper, spirit, Items.STICK, 0, "палки после крафта кирки");
-            double distance = spirit.position().distanceTo(helper.absoluteVec(TABLE_FAR.getCenter()));
-            helper.assertTrue(spirit.getX() > startX + 0.5 && distance <= CraftTuning.STATION_REACH + 0.2,
-                    "дух обязан подойти к верстаку на " + CraftTuning.STATION_REACH + " блока и меньше, стоит в "
-                            + distance + " от него, сдвинулся по x на " + (spirit.getX() - startX));
+            BlockPos table = helper.absolutePos(TABLE_FAR);
+            BlockPos feet = spirit.blockPosition();
+            helper.assertTrue(spirit.getX() > startX + 0.5 && SpiritReach.reachable(
+                            new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                            new BlockCoord(table.getX(), table.getY(), table.getZ())),
+                    "дух обязан подойти к верстаку на досягаемость (" + SpiritReach.current().describe()
+                            + ", упрощение 44.2): стоит в " + feet.toShortString() + ", верстак " + table.toShortString()
+                            + ", сдвинулся по x на " + (spirit.getX() - startX));
             cleanup(helper, spirit);
         });
     }

@@ -40,8 +40,11 @@ public final class BlockBreakerGameTests {
 
         helper.assertTrue(ticks == expected, "ломка обязана занять ровно " + expected + " тиков, заняла " + ticks);
         helper.assertTrue(helper.getBlockState(TARGET).isAir(), "после ломки в клетке обязан быть воздух");
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.DIRT) == 1,
-                "рука на земле обязана оставить дроп: один блок земли, фактически "
+        helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 1
+                        && GameTestFixtures.countInWorld(helper, Items.DIRT) == 0,
+                "рука на земле обязана дать дроп — один блок земли сразу в инвентарь духа (дроп целевого блока в "
+                        + "инвентарь, решение владельца 18.10), в инвентаре "
+                        + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) + ", на земле "
                         + GameTestFixtures.countInWorld(helper, Items.DIRT));
         helper.assertTrue(breaker.crackStage() == -1, "после BROKEN трещина обязана быть снята, стадия " + breaker.crackStage());
         GameTestFixtures.reset(helper);
@@ -64,8 +67,9 @@ public final class BlockBreakerGameTests {
         runToEnd(breaker);
 
         helper.assertTrue(helper.getBlockState(TARGET).isAir(), "камень обязан исчезнуть");
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 1,
-                "кирка обязана дать булыжник, фактически " + GameTestFixtures.countInWorld(helper, Items.COBBLESTONE));
+        helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+                "кирка обязана дать булыжник прямо в инвентарь, фактически "
+                        + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
         helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == 1,
                 "износ кирки за блок обязан быть 1, фактически " + spirit.getInventory().getItem(TOOL_SLOT).getDamageValue());
         helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT + 1).getDamageValue() == 0,

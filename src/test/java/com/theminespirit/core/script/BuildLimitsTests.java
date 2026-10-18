@@ -54,7 +54,7 @@ class BuildLimitsTests {
         assertEquals(3, CatalogLimits.SHELTER_SIDE_MIN,
                 "Укрытие начинается с 3×3: в меньшем дух не встаёт внутри");
         assertEquals(4, CatalogLimits.SHELTER_SIDE_MAX,
-                "Укрытие кончается на 4×4: это размер быстрого укрепления Fortify");
+                "Укрытие кончается на 4×4: это размер быстрого укрытия build_shelter");
         assertEquals(64, CatalogLimits.SHELTER_BLOCKS_MAX,
                 "Бюджет укрытия 64 блока: стены 4×4 с крышей помещаются, лишнего дух не ставит");
     }

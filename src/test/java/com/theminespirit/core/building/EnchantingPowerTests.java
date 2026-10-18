@@ -14,8 +14,8 @@ class EnchantingPowerTests {
     private static final String TABLE = "minecraft:enchanting_table";
 
     private static Schematic load(String file) {
-        String path = "data/theminespirit/schematics/" + file + ".json";
-        return SchematicParser.parse(JsonResource.readClasspath(path), path);
+        String path = "data/theminespirit/schematics/" + file + SchematicTextParser.EXTENSION;
+        return SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic();
     }
 
     private static BlockCoord onlyTable(Schematic schematic) {

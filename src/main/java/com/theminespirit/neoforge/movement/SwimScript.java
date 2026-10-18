@@ -95,7 +95,9 @@ public final class SwimScript implements ScriptInstance {
     }
 
     private void surfaceForAir() {
-        if (spirit.isUnderWater() || (spirit.isInWater() && spirit.getAirSupply() < SURFACE_AIR_THRESHOLD)) {
+        boolean againstBank = spirit.isInWater() && spirit.horizontalCollision;
+        if (againstBank || spirit.isUnderWater()
+                || (spirit.isInWater() && spirit.getAirSupply() < SURFACE_AIR_THRESHOLD)) {
             spirit.getJumpControl().jump();
         }
     }

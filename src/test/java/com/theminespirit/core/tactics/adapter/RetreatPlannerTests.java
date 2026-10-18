@@ -66,12 +66,6 @@ class RetreatPlannerTests {
                         rallyInput(Optional.of(new Point(-4.5, 1, 0.5)), ZOMBIE_EAST), RetreatPlan.Walk.class),
                 new Row("RALLY без союзника", RetreatMethod.RALLY, input(EnvReading.NOTHING, Optional.empty(), 0,
                         ZOMBIE_EAST), null),
-                new Row("BARRICADE с шестью блоками", RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 6, ZOMBIE_EAST),
-                        RetreatPlan.Wall.class),
-                new Row("BARRICADE без блоков", RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST), null),
-                new Row("PILLAR с блоками", RetreatMethod.PILLAR, input(EnvReading.NOTHING, Optional.empty(), 8, ZOMBIE_EAST),
-                        RetreatPlan.Tower.class),
-                new Row("PILLAR без блоков", RetreatMethod.PILLAR, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST), null),
                 new Row("NONE: плана нет", RetreatMethod.NONE, input(WATER_AND_COVER, home, 64, ZOMBIE_EAST), null));
     }
 
@@ -128,31 +122,4 @@ class RetreatPlannerTests {
         assertTrue(walk.shooting(), "KITE отличается от AWAY тем, что дух стреляет на бегу");
     }
 
-    @Test
-    void plan_BarricadeSixBlocks_WallTwoHighThreeWideBetweenSpiritAndEnemy() {
-        RetreatPlan.Wall wall = (RetreatPlan.Wall) RetreatPlanner
-                .plan(RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 6, ZOMBIE_EAST)).orElseThrow();
-
-        assertEquals(6, wall.cells().size(), "Баррикада из шести блоков: три в ширину, два в высоту");
-        assertTrue(wall.cells().stream().allMatch(cell -> cell.x() == 1),
-                "Враг на востоке: стена стоит в клетках x = 1 между духом и врагом");
-        assertEquals(2, wall.cells().stream().map(BlockCoord::y).distinct().count(), "Высота стены — два блока");
-    }
-
-    @Test
-    void plan_BarricadeThreeBlocks_UsesOnlyAvailableBlocks() {
-        RetreatPlan.Wall wall = (RetreatPlan.Wall) RetreatPlanner
-                .plan(RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 3, ZOMBIE_EAST)).orElseThrow();
-
-        assertEquals(3, wall.cells().size(),
-                "Блоков в инвентаре три: больше клеток не планируется, дух не ставит блоков, которых у него нет");
-    }
-
-    @Test
-    void plan_PillarFewBlocks_HeightLimitedByBlocks() {
-        RetreatPlan.Tower tower = (RetreatPlan.Tower) RetreatPlanner
-                .plan(RetreatMethod.PILLAR, input(EnvReading.NOTHING, Optional.empty(), 2, ZOMBIE_EAST)).orElseThrow();
-
-        assertEquals(2, tower.height(), "Столб не выше числа блоков в инвентаре");
-    }
 }

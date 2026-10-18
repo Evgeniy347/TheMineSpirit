@@ -38,7 +38,7 @@ public final class RelocatePlan {
         assertMovable(boardCase);
         return switch (boardCase) {
             case BUILD_PEN -> "pen_7x7";
-            case BUILD_HOUSE -> "house";
+            case BUILD_HOUSE -> "stone_house";
             case BUILD_WAREHOUSE -> WarehouseRules.scheme(WarehouseRules.LAST_LEVEL);
             case ENCHANT_ROOM -> "enchant_room_v1";
             case BUILD_FENCE -> "fence";

@@ -29,12 +29,12 @@ class TacticsConfigTests {
     void loadDefault_ShippedFiles_ParseWithAllSections() {
         TacticsConfig config = TacticsConfig.loadDefault();
 
-        assertEquals(List.of(13, 7, 6, 9, 9, 16, 5),
+        assertEquals(List.of(13, 7, 6, 9, 7, 16, 5),
                 List.of(config.rules().hard().size(), config.rules().actions().size(),
                         config.rules().modeTransitions().size(), config.rules().states().size(),
                         config.rules().retreat().entries().size(), config.weights().matrix().size(),
                         config.modes().params().size()),
-                "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 9 способов отхода, "
+                "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 7 способов отхода (без баррикады и столба — отход не строит), "
                         + "16 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/TACTICS.md");
     }
 

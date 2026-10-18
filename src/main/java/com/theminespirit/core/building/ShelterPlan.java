@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public final class ShelterPlan {
     public static final int SHELTER_SIDE = 4;
+    public static final int WALL_HEIGHT = 2;
+    public static final int BLOCK_BUDGET = 64;
 
     private ShelterPlan() {
     }

@@ -16,7 +16,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
@@ -24,7 +24,6 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -143,11 +142,7 @@ public final class FirstStepsRunner {
 
             @Override
             public Map<String, Integer> schematicBlocks(String file) {
-                Map<String, Integer> blocks = new HashMap<>();
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    blocks.merge(entry.block(), 1, Integer::sum);
-                }
-                return blocks;
+                return PresetLibrary.countMaterials(SchematicResources.load(file));
             }
         };
     }

@@ -50,7 +50,7 @@ public final class SchematicGameTests {
 
     private static ScriptCall schematicCall(GameTestHelper helper, BlockPos anchor) {
         BlockPos absolute = helper.absolutePos(anchor);
-        return new ScriptCall("build_schematic", Map.of("file", "house", "x", absolute.getX(), "y", absolute.getY(),
+        return new ScriptCall("build_schematic", Map.of("file", "fixture_plate", "x", absolute.getX(), "y", absolute.getY(),
                 "z", absolute.getZ()));
     }
 

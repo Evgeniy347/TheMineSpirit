@@ -1,12 +1,14 @@
 package com.theminespirit.core.building;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Свойства блоков схем по id: полный блок (даёт опору), окно, дверь, проём, сундук, источник света.
- * Схема хранит только id блока, поэтому свойства решаются по Suffix-правилам, а не по состоянию.
+ * Свойства блоков схем по id: полный блок (даёт опору), окно, дверь, кровать, проём, сундук, источник света,
+ * настенный блок и предмет, которым блок ставится. Сторожа работают без игры, поэтому свойства решаются правилами
+ * по имени блока, а половина двери и часть кровати — по состоянию.
  */
 public final class SchematicBlocks {
     private static final Set<String> NON_FULL = Set.of(
@@ -30,6 +32,10 @@ public final class SchematicBlocks {
             "torch", "wall_torch", "soul_torch", "soul_wall_torch", "lantern", "soul_lantern",
             "glowstone", "sea_lantern", "shroomlight", "jack_o_lantern", "campfire", "soul_campfire",
             "fire", "soul_fire", "beacon", "conduit", "end_rod", "magma_block", "lava");
+
+    private static final String[][] WALL_VARIANTS = {
+            {"wall_torch", "torch"}, {"_wall_sign", "_sign"}, {"_wall_hanging_sign", "_hanging_sign"},
+            {"_wall_banner", "_banner"}, {"_wall_head", "_head"}, {"_wall_skull", "_skull"}, {"_wall_fan", "_fan"}};
 
     private SchematicBlocks() {
     }
@@ -60,6 +66,48 @@ public final class SchematicBlocks {
 
     public static boolean isDoor(String blockId) {
         return path(blockId).endsWith("_door");
+    }
+
+    public static String itemOf(String blockId) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестен предмет");
+        int colon = blockId.indexOf(':');
+        String namespace = colon < 0 ? "minecraft:" : blockId.substring(0, colon + 1);
+        String path = path(blockId);
+        for (String[] wall : WALL_VARIANTS) {
+            if (path.endsWith(wall[0])) {
+                return namespace + path.substring(0, path.length() - wall[0].length()) + wall[1];
+            }
+        }
+        return namespace + path;
+    }
+
+    public static boolean isWallMounted(String blockId) {
+        String path = path(blockId);
+        for (String[] wall : WALL_VARIANTS) {
+            if (path.endsWith(wall[0])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isBed(String blockId) {
+        return path(blockId).endsWith("_bed");
+    }
+
+    public static boolean isTwoPart(String blockId) {
+        return isDoor(blockId) || isBed(blockId);
+    }
+
+    public static boolean isSecondaryPart(String blockId, Map<String, String> state) {
+        Objects.requireNonNull(state, "Состояние блока не может быть null: пустое задаётся пустой картой");
+        if (isDoor(blockId)) {
+            return "upper".equals(state.get("half"));
+        }
+        if (isBed(blockId)) {
+            return "head".equals(state.get("part"));
+        }
+        return false;
     }
 
     public static boolean isEntranceBlock(String blockId) {

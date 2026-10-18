@@ -24,19 +24,11 @@ class WaterParamsTests {
     }
 
     @Test
-    void crossWater_BlockOmitted_IsNull() {
+    void crossWater_PointOnly_ParsesCoordinates() {
         CrossWaterParams params = CrossWaterParams.from(Map.of("x", 1, "y", 63, "z", 2));
 
-        assertNull(params.block(),
-                "Без block переправу строят из дешёвых блоков инвентаря: null значит «выбрать материал самому»");
-    }
-
-    @Test
-    void crossWater_BlockGiven_IsKept() {
-        CrossWaterParams params = CrossWaterParams.from(Map.of("x", 1, "y", 63, "z", 2, "block", "minecraft:oak_planks"));
-
-        assertEquals("minecraft:oak_planks", params.block(),
-                "Явно заданный block обязан доходить до моста: иначе просьба игрока ставить конкретный блок теряется");
+        assertEquals(new CrossWaterParams(1, 63, 2), params,
+                "Переправа — только точка: мост в переправе убран (упрощение 44.7), материала она не берёт");
     }
 
     @Test

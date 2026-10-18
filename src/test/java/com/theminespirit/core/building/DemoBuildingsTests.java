@@ -27,7 +27,7 @@ class DemoBuildingsTests {
 
     @Test
     void ids_Listed_ContainEveryChecklistBuilding() {
-        assertEquals(List.of("house", "family_house", "stone_house", "storage_hut", "storage", "well",
+        assertEquals(List.of("family_house", "stone_house", "storage_hut", "storage", "well",
                 "torch_post", "palisade_section", "pen", "enchant_room", "mine_entrance"), DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
                         + "и не найдёт нужную");
@@ -37,9 +37,9 @@ class DemoBuildingsTests {
     void level_EachScheme_ResolvesToBodyOrPreset() {
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             for (DemoBuildings.Level level : building.levels()) {
-                String path = PresetLibrary.SCHEMATICS_ROOT + level.scheme() + ".json";
+                String path = PresetLibrary.SCHEMATICS_ROOT + level.scheme() + SchematicTextParser.EXTENSION;
                 String body = JsonResource.readClasspath(path);
-                assertTrue(body.contains("\"blocks\""),
+                assertTrue(body.contains("layers:"),
                         "Схема уровня '" + level.scheme() + "' постройки '" + building.id()
                                 + "' обязана читаться из ресурсов мода: иначе демо-стройка не найдёт тело");
             }
@@ -95,8 +95,8 @@ class DemoBuildingsTests {
                 }
             }
         }
-        assertEquals(BuildingType.HOUSING, DemoBuildings.require("house").type(),
-                "Схема house — дом: без типа жилья сторож не проверит у неё окна, дверь и свет");
+        assertEquals(BuildingType.HOUSING, DemoBuildings.require("family_house").type(),
+                "Дом семьи — жильё: без типа жилья сторож не проверит у него окна, дверь и свет");
     }
 
     @Test

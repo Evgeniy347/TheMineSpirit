@@ -379,7 +379,7 @@ public final class TacticsService {
         schedule.evaluated(now, byEvent);
         memory = next.memory();
         next = withForcedRetreat(next);
-        retreat = RetreatCommitment.next(retreat, next, now, settings, progress == RetreatExecutor.Progress.BUILDING);
+        retreat = RetreatCommitment.next(retreat, next, now, settings);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
         Optional<LivingEntity> forcedTarget = designatedTarget();

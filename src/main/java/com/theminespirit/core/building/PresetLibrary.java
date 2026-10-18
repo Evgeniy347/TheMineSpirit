@@ -19,17 +19,16 @@ import java.util.TreeMap;
  * Загрузка проверяет, что габариты в метаданных совпадают с содержимым схемы, что у постройки есть вход
  * и что материалы посчитаны из блоков. Поиск — по типу строения и этапу развития поселения.
  *
- * <p>Индекс — {@code data/theminespirit/schematics/presets.json}: список пресетов, каждый ссылается на файл
- * тела схемы тем же форматом, что и {@code build_schematic}. Тела читаются тем же {@code ContentSource},
- * поэтому датапак мира может переопределить и индекс, и любую схему; библиотека перезагружается по /reload.
+ * <p>Индекс — {@code data/theminespirit/schematics/presets.json}: порядок id пресетов; тело и метаданные каждого
+ * (название, тип, этап, уровень, требование, вход, исключения сторожей) — в текстовом файле постройки
+ * {@code <id>.txt} того же формата, что читает {@code build_schematic}. Тела читаются тем же {@code ContentSource},
+ * поэтому датапак мира может переопределить и индекс, и любую постройку; библиотека перезагружается по /reload.
  */
 public final class PresetLibrary {
     public static final String INDEX_ID = "presets";
     public static final String SCHEMATICS_ROOT = "data/theminespirit/schematics/";
-    private static final int INDEX_VERSION = 1;
+    private static final int INDEX_VERSION = 2;
     private static final Set<String> ROOT_FIELDS = Set.of("version", "presets", "planned");
-    private static final Set<String> PRESET_FIELDS = Set.of("id", "file", "name", "stage", "type", "size", "entry",
-            "level", "requires");
     private static final Set<String> PLANNED_FIELDS = Set.of("level", "name", "requires");
     private static final Set<String> ENTRANCE_SUFFIXES = Set.of("_door", "_fence_gate", "_trapdoor", "_gate");
 
@@ -124,11 +123,11 @@ public final class PresetLibrary {
         List<JsonNode> entries = JsonResource.array(root.get("presets"), origin, "списка presets");
         List<String> paths = new ArrayList<>(entries.size());
         for (JsonNode entry : entries) {
-            if (!entry.isObject()) {
-                throw new IllegalStateException("Файл '" + origin + "': пресет обязан быть объектом с метаданными");
+            if (!entry.isTextual() || entry.asText().isBlank()) {
+                throw new IllegalStateException("Файл '" + origin + "': пресет в индексе задаётся строкой id, "
+                        + "метаданные живут в файле постройки <id>" + SchematicTextParser.EXTENSION);
             }
-            String file = JsonResource.text(entry.get("file"), origin, "поля file пресета");
-            paths.add(SCHEMATICS_ROOT + file + ".json");
+            paths.add(SCHEMATICS_ROOT + entry.asText() + SchematicTextParser.EXTENSION);
         }
         return List.copyOf(paths);
     }
@@ -155,7 +154,8 @@ public final class PresetLibrary {
         }
         List<Preset> presets = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
-            presets.add(parsePreset(entries.get(i), contents.get(i + 1), index.origin()));
+            presets.add(parsePreset(JsonResource.text(entries.get(i), index.origin(), "id пресета"),
+                    contents.get(i + 1)));
         }
         return new PresetLibrary(presets, parsePlanned(root, index.origin()));
     }
@@ -180,43 +180,22 @@ public final class PresetLibrary {
         return List.copyOf(planned);
     }
 
-    private static Preset parsePreset(JsonNode node, LoadedContent body, String indexOrigin) {
-        if (!node.isObject()) {
-            throw new IllegalStateException("Файл '" + indexOrigin + "': пресет обязан быть объектом с метаданными");
-        }
-        JsonResource.checkFields(node, PRESET_FIELDS, indexOrigin, "пресета");
-        String id = JsonResource.text(node.get("id"), indexOrigin, "поля id пресета");
-        String file = JsonResource.text(node.get("file"), indexOrigin, "поля file пресета '" + id + "'");
-        String name = JsonResource.text(node.get("name"), indexOrigin, "поля name пресета '" + id + "'");
-        int stage = JsonResource.integer(node.get("stage"), indexOrigin, "поля stage пресета '" + id + "'");
-        BuildingType type = BuildingType.byId(JsonResource.text(node.get("type"), indexOrigin,
-                        "поля type пресета '" + id + "'"))
-                .orElseThrow(() -> new IllegalStateException("Файл '" + indexOrigin + "': у пресета '" + id
-                        + "' неизвестный тип строения: он должен быть из списка типов поселения"));
-        int level = optionalInt(node.get("level"), indexOrigin, "поля level пресета '" + id + "'");
-        Optional<String> requires = optionalText(node.get("requires"), indexOrigin,
-                "поля requires пресета '" + id + "'");
-        Schematic schematic = SchematicParser.parse(body.json(), body.origin());
-        int[] declaredSize = triple(node.get("size"), indexOrigin, "поля size пресета '" + id + "'");
-        if (declaredSize[0] != schematic.sizeX() || declaredSize[1] != schematic.sizeY()
-                || declaredSize[2] != schematic.sizeZ()) {
-            throw new IllegalStateException("Файл '" + indexOrigin + "': у пресета '" + id + "' габариты "
-                    + declaredSize[0] + "×" + declaredSize[1] + "×" + declaredSize[2] + " не совпадают с телом схемы "
-                    + schematic.sizeX() + "×" + schematic.sizeY() + "×" + schematic.sizeZ()
-                    + ": метаданные разошлись с содержимым");
-        }
-        int[] entry = triple(node.get("entry"), indexOrigin, "поля entry пресета '" + id + "'");
-        BlockCoord entryPoint = new BlockCoord(entry[0], entry[1], entry[2]);
-        checkEntry(id, entryPoint, schematic, indexOrigin);
+    private static Preset parsePreset(String id, LoadedContent body) {
+        SchematicDocument document = SchematicTextParser.parse(body.json(), body.origin());
+        SchematicDocument.Header header = document.header();
+        String name = header.name().orElseThrow(() -> missing(body, id, "name"));
+        BuildingType type = header.type().orElseThrow(() -> missing(body, id, "type"));
+        int stage = header.stage().orElseThrow(() -> missing(body, id, "stage"));
+        BlockCoord entryPoint = header.entrance().orElseThrow(() -> missing(body, id, "entrance"));
+        Schematic schematic = document.schematic();
+        checkEntry(id, entryPoint, schematic, body.origin());
         Map<String, Integer> materials = countMaterials(schematic);
-        return new Preset(id, name, stage, type, level, requires, schematic, entryPoint, materials);
+        return new Preset(id, name, stage, type, header.level(), header.requires(), schematic, entryPoint, materials);
     }
 
-    private static int optionalInt(JsonNode node, String origin, String what) {
-        if (node == null || node.isNull()) {
-            return Preset.LEVEL_NONE;
-        }
-        return JsonResource.integer(node, origin, what);
+    private static IllegalStateException missing(LoadedContent body, String id, String key) {
+        return new IllegalStateException("Файл '" + body.origin() + "': у пресета '" + id + "' нет ключа " + key
+                + ": пресет обязан назвать себя, тип, этап и вход, иначе стратегу не из чего выбирать");
     }
 
     private static Optional<String> optionalText(JsonNode node, String origin, String what) {
@@ -260,30 +239,20 @@ public final class PresetLibrary {
         return null;
     }
 
-    /** Материалы считаются из блоков: одна запись на вид блока с числом, в порядке id для стабильного вывода. */
+    /**
+     * Материалы считаются из блоков: одна запись на вид блока с числом, в порядке id для стабильного вывода.
+     * Вторая половина двери и изголовье кровати предмета не требуют: их ставит тот же предмет, что и первую часть.
+     * Ключ — id предмета: настенный факел и табличка ставятся обычным факелом и табличкой.
+     */
     public static Map<String, Integer> countMaterials(Schematic schematic) {
         Objects.requireNonNull(schematic, "Схема не может быть null: материалы считают из её блоков");
         Map<String, Integer> counts = new TreeMap<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            counts.merge(entry.block(), 1, Integer::sum);
+            if (!SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+                counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
+            }
         }
         return Map.copyOf(counts);
-    }
-
-    private static int[] triple(JsonNode node, String origin, String what) {
-        if (node == null || !node.isArray() || node.size() != 3) {
-            throw new IllegalStateException("Файл '" + origin + "': у " + what + " ожидается список из 3 чисел");
-        }
-        int[] values = new int[3];
-        for (int i = 0; i < 3; i++) {
-            JsonNode item = node.get(i);
-            if (item == null || !item.isInt()) {
-                throw new IllegalStateException("Файл '" + origin + "': у " + what + " элемент " + i
-                        + " обязан быть целым числом");
-            }
-            values[i] = item.asInt();
-        }
-        return values;
     }
 
     public int size() {

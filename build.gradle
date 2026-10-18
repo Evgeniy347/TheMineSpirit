@@ -389,3 +389,14 @@ tasks.named('runGameTestServer') {
         }
     }
 }
+
+// Инструмент текстовых построек (scripts/schematic.sh): тот же разбор и те же сторожа, что в моде, без запуска игры.
+tasks.register('schematicTool', JavaExec) {
+    group = 'theminespirit'
+    description = 'Постройки в текстовом формате: show <файл|id> [поворот], check [файл|id…]'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.theminespirit.core.building.SchematicTool'
+    jvmArgs '-Dstdout.encoding=UTF-8', '-Dfile.encoding=UTF-8'
+    workingDir = projectDir
+    args((System.getProperty('theminespirit.schematic.args') ?: '').split('\u0001').findAll { !it.isEmpty() })
+}

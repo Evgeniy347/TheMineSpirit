@@ -235,7 +235,7 @@ public final class MineGameTests {
     }
 
     @GameTest(template = "arena", batch = "mine_sealed", timeoutTicks = 200)
-    public static void mineVein_SealedOre_FailsWithoutStand(GameTestHelper helper) {
+    public static void mineVein_SealedOreWithinReach_MinedFromPlaceNeighboursStay(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -251,25 +251,28 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "замурованная руда недобываема: задача обязана провалиться, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("подходящих блоков") && reason.contains("не осталось"),
-                    "причина обязана сказать, что подходящих блоков не осталось, фактически: " + reason);
-            helper.assertTrue(reason.contains("руда закрыта, нужен проход"),
-                    "к закрытой руде причина обязана называть выход — прокопать проход (dig_descent/dig_area), "
-                            + "а не только общий отказ, фактически: " + reason);
-            helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
-                    "замурованную руду нельзя пробивать через соседей: она обязана остаться");
-            helper.assertTrue(run.spiritTicks() <= 40,
-                    "отказ по замурованной руде обязан наступить за 40 тиков духа, заняло " + run.spiritTicks());
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "замурованная руда в досягаемости (упрощение 44.3: жила с места, без прямой видимости) обязана "
+                            + "добыться, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
+                            + ", причина " + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).isAir(),
+                    "руда обязана быть сломана");
+            for (BlockPos neighbour : List.of(new BlockPos(1, 2, 2), new BlockPos(3, 2, 2), new BlockPos(2, 1, 2),
+                    new BlockPos(2, 3, 2), new BlockPos(2, 2, 1), new BlockPos(2, 2, 3))) {
+                helper.assertTrue(helper.getBlockState(neighbour.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA))
+                                .is(Blocks.STONE),
+                        "камень вокруг руды не трогается: ломается только цель, а не проход к ней (" + neighbour + ")");
+            }
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.RAW_IRON) == 1,
+                    "сырое железо обязано лечь в инвентарь: дроп целевого блока сразу в инвентарь");
+            helper.assertTrue(spirit.pathBuilds() == 0, "руда в досягаемости ломается без подхода, путь строился "
+                    + spirit.pathBuilds() + " раз");
             GameTestFixtures.finish(helper);
         });
     }
 
     @GameTest(template = "arena", batch = "mine_pit", timeoutTicks = 200)
-    public static void mineVein_OreAboveThreeDeepPit_StaysAndSpiritKeepsHeight(GameTestHelper helper) {
+    public static void mineVein_OreAboveThreeDeepPit_MinedFromPlaceSpiritKeepsHeight(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         helper.setBlock(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA, Blocks.IRON_ORE);
@@ -284,14 +287,15 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "единственная стоянка без пола: задача обязана провалиться, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).is(Blocks.IRON_ORE),
-                    "руду у ямы без пола трогать нельзя");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "руда у ямы в досягаемости добывается с места (упрощение 44.3), статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(new BlockPos(-1 + CAVE_SHIFT_INSIDE_ARENA, 2, 2 + CAVE_SHIFT_INSIDE_ARENA)).isAir(),
+                    "руда обязана быть сломана");
             helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
-                    "дух не должен спускаться в яму глубиной 3 (навигация согласна прыгнуть): без проверки пола "
-                            + "стоянки он шагнёт за край. y был " + startY + ", стал " + spirit.getY());
+                    "дух не должен спускаться в яму глубиной 3: стоянка без пола запрещена, а руда берётся с места. "
+                            + "y был " + startY + ", стал " + spirit.getY());
             GameTestFixtures.finish(helper);
         });
     }
@@ -374,7 +378,7 @@ public final class MineGameTests {
     }
 
     @GameTest(template = "arena", batch = "gather_pocket", timeoutTicks = 400)
-    public static void gather_DirtRingAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
+    public static void gather_DirtRingAroundSealedPocket_MinedFromOutsideWithinReach(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         // Запечатанная стоянка (4,1,4): воздух с каменным полом, с четырёх сторон блоки земли,
@@ -402,22 +406,16 @@ public final class MineGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "восемь блоков земли вокруг запечатанной стоянки недобываемы: задача обязана провалиться, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("недостижимо: 8"),
-                    "причина обязана назвать 8 недостижимых блоков, фактически: " + reason);
-            helper.assertTrue(countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA) == 8,
-                    "запечатанную землю трогать нельзя: в мире обязано остаться 8 блоков, осталось "
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "земля вокруг запечатанной стоянки добывается снаружи, со стоянок в досягаемости (упрощение 44.3), "
+                            + "статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA) == 0
+                            && GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 8,
+                    "все 8 блоков земли обязаны оказаться в инвентаре, в мире осталось "
                             + countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 0,
-                    "добыть из запечатанного кольца нечего: в инвентаре обязано быть 0 земли, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
-            helper.assertTrue(run.spiritTicks() <= 200,
-                    "отказ по запечатанной стоянке обязан наступить за 200 тиков духа "
-                            + "(общая стоянка исключается после трёх неудачных подходов по ~41 тику), заняло "
-                            + run.spiritTicks());
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, 3, 4)).is(Blocks.STONE),
+                    "каменный колпак над стоянкой не трогается: ломается только цель");
             GameTestFixtures.finish(helper);
         });
     }

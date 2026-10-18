@@ -1,16 +1,17 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.inventory.InventorySpace;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingSpots;
-import com.theminespirit.core.fishing.FishingTuning;
+import com.theminespirit.core.fishing.FishingWait;
+import com.theminespirit.core.inventory.InventorySpace;
+import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.FishingParams;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -173,10 +174,10 @@ public final class FishScript implements ScriptInstance {
     private ScriptStatus startWait() {
         ItemStack rod = spirit.getInventory().getItem(rodSlot);
         int lureSpeed = (int) (EnchantmentHelper.getFishingTimeReduction(level, rod, spirit) * 20.0F);
-        int base = Mth.nextInt(spirit.getRandom(), FishingTuning.WAIT_MIN_TICKS, FishingTuning.WAIT_MAX_TICKS)
+        FishingWait wait = DataTables.INSTANCE.fishingWait().current();
+        int base = Mth.nextInt(spirit.getRandom(), wait.waitMinTicks(), wait.waitMaxTicks())
                 - lureSpeed;
-        int hooked = Mth.nextInt(spirit.getRandom(), FishingTuning.HOOKED_MIN_TICKS,
-                FishingTuning.HOOKED_MAX_TICKS);
+        int hooked = Mth.nextInt(spirit.getRandom(), wait.hookedMinTicks(), wait.hookedMaxTicks());
         waitTicks = Math.max(1, Math.max(0, base) + hooked);
         phase = Phase.WAIT;
         return ScriptStatus.RUNNING;

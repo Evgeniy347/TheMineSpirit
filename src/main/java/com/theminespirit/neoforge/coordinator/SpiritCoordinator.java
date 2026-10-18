@@ -24,7 +24,6 @@ import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.defense.DefenseService;
-import com.theminespirit.neoforge.fortify.FortifyRegistry;
 import com.theminespirit.neoforge.intellect.SettlementIntellect;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import net.minecraft.server.level.ServerLevel;
@@ -105,7 +104,6 @@ public final class SpiritCoordinator {
             posts.put(assignment.defender(), assignment.post());
         }
         applyPlan(plan, overlay, posts, helpCalls, tick);
-        FortifyRegistry.get(level).tick(state, members, tick);
         intellect.tick(level, members, snapshots, defendedPoint, reservations, tick);
     }
 

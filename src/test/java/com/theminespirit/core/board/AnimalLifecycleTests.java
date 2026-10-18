@@ -94,7 +94,7 @@ class AnimalLifecycleTests {
     }
 
     @Test
-    void lured_Submits_DismantleShelter() {
+    void lured_AnimalInPen_SubmitsNoShelterDismantling() {
         Board board = new Board(() -> 0);
         captureOnBoard(board, "capture_1");
         AnimalLifecycle lifecycle = new AnimalLifecycle(board, "wheat");
@@ -106,8 +106,8 @@ class AnimalLifecycleTests {
 
         lifecycle.lured();
 
-        assertTrue(hasActive(board, BoardCase.DISMANTLE_SHELTER),
-                "Животное в загоне — укрытие разбирается: третье звено цикла");
+        assertFalse(hasActive(board, BoardCase.DISMANTLE_SHELTER),
+                "Животное в загоне — цикл завершён: укрытия из блоков нет (упрощение 44.4), разбирать нечего");
     }
 
     @Test
@@ -122,9 +122,8 @@ class AnimalLifecycleTests {
 
         assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("animal_lure"),
                 "Гибель снимает «приманить»: приманка больше не нужна");
-        assertTrue(hasActive(board, BoardCase.DISMANTLE_SHELTER),
-                "После гибели появляется «разобрать укрытие»: кольцо отлова разбирается, "
-                        + "даже если животное не дожило до загона");
+        assertFalse(hasActive(board, BoardCase.DISMANTLE_SHELTER),
+                "После гибели разбирать нечего: отлов приманкой не ставит укрытия (упрощение 44.4)");
     }
 
     @Test
@@ -136,23 +135,6 @@ class AnimalLifecycleTests {
 
         assertTrue(board.all().isEmpty(),
                 "Гибель до отлова ничего не ставит: укрытия нет, разбирать нечего");
-    }
-
-    @Test
-    void lured_Twice_SubmitsSingleDismantle() {
-        Board board = new Board(() -> 0);
-        captureOnBoard(board, "capture_1");
-        AnimalLifecycle lifecycle = new AnimalLifecycle(board, "wheat");
-        lifecycle.captured("capture_1");
-        lifecycle.penBuilt("capture_1");
-
-        lifecycle.lured();
-        lifecycle.lured();
-
-        assertEquals(1, board.all().stream()
-                        .filter(ticket -> ticket.boardCase() == BoardCase.DISMANTLE_SHELTER)
-                        .count(),
-                "«Разобрать укрытие» дважды не ставится: одно укрытие — одна разборка");
     }
 
     @Test

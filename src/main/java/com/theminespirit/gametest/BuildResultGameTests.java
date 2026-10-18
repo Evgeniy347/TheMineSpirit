@@ -143,7 +143,7 @@ public final class BuildResultGameTests {
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 17));
         BlockPos absolute = helper.absolutePos(new BlockPos(3, 1, 3));
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
-                Map.of("file", "house", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
+                Map.of("file", "fixture_plate", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -164,7 +164,7 @@ public final class BuildResultGameTests {
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 5));
         BlockPos absolute = helper.absolutePos(new BlockPos(3, 1, 3));
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
-                Map.of("file", "house", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
+                Map.of("file", "fixture_plate", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {

@@ -14,11 +14,12 @@ class CaptureParamsTests {
         assertEquals(1, CatalogLimits.CAPTURE_RADIUS_MIN,
                 "Минимум радиуса отлова обязан быть 1: ближе животное видно всегда");
         assertEquals(16, CatalogLimits.CAPTURE_RADIUS_MAX,
-                "Максимум радиуса отлова обязан быть 16: дальше животное не догнать до постройки кольца");
+                "Максимум радиуса отлова обязан быть 16: дальше животное за кормом не поведёшь");
         assertEquals(8, CatalogLimits.CAPTURE_RADIUS_DEFAULT,
                 "Радиус отлова по умолчанию обязан быть 8: животное ищут вокруг духа");
-        assertEquals(4, CatalogLimits.CAPTURE_RECHECK_MAX,
-                "Предел наращивания слабых мест обязан быть 4: больше чинить нечего, кольцо либо держит, либо нет");
+        assertEquals(1200, CatalogLimits.CAPTURE_LEAD_TICKS,
+                "Предел отлова приманкой — 1200 тиков (минута): за это время животное доводят до загона или "
+                        + "называют причину, а не висят в RUNNING");
     }
 
     @Test

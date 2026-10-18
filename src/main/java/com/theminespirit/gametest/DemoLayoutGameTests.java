@@ -5,8 +5,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoPlacement;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SchematicResources;
@@ -32,11 +34,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoLayoutGameTests {
-    private static final int FAMILY_SIZE_X = 7;
-    private static final int FAMILY_SIZE_Y = 4;
-    private static final int FAMILY_SIZE_Z = 7;
-    private static final int ENTRY_X = 3;
-    private static final int ENTRY_Z = 0;
     private static final BlockPos ANCHOR = new BlockPos(15, 1, 15);
 
     private DemoLayoutGameTests() {
@@ -59,8 +56,9 @@ public final class DemoLayoutGameTests {
     }
 
     private static DemoPlacement placement(BlockPos anchor, int lookDx, int lookDz) {
+        Preset family = DataTables.INSTANCE.presets().current().byId("family_house").orElseThrow();
         return DemoPlacement.compute(anchor.getX(), anchor.getY(), anchor.getZ(), lookDx, lookDz,
-                ENTRY_X, ENTRY_Z, FAMILY_SIZE_X, FAMILY_SIZE_Y, FAMILY_SIZE_Z, null);
+                family.entry().x(), family.entry().z(), family.sizeX(), family.sizeY(), family.sizeZ(), null);
     }
 
     private static void assertPlatformPrepared(GameTestHelper helper, DemoPlacement placement) {

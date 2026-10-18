@@ -32,7 +32,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class CollectDropsGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(4, 1, 4);
-    private static final int PILLAR_HEIGHT = 4;
+    private static final int PILLAR_HEIGHT = 6;
     private static final int SETTLE_TICKS = 1;
     private static final int PILLAR_SETTLE_TICKS = 10;
     private static final int ENDLESS_PICKUP_DELAY = 32767;
@@ -75,7 +75,9 @@ public final class CollectDropsGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         GameTestFixtures.dropAt(helper, Items.OAK_LOG, 4, 2.5, 1, 2.5);
         GameTestFixtures.dropAt(helper, Items.BIRCH_LOG, 2, 6.5, 1, 2.5);
-        ItemEntity cobblestone = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 2.5, 1, 6.5);
+        // Булыжник в 6 блоках от старта и от пути к брёвнам — дальше радиуса магнита (5), но внутри radius 6:
+        // фильтр collect_drops решает сам, магнит его не подбирает.
+        ItemEntity cobblestone = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 4.5, 1, 10.5);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("collect_drops", Map.of("radius", 6, "filter", List.of("*_log"))), SETTLE_TICKS);
 
@@ -161,7 +163,7 @@ public final class CollectDropsGameTests {
     }
 
     @GameTest(template = "arena", batch = "drops_pit", timeoutTicks = 400)
-    public static void collectDrops_ItemAtBottomOfFourDeepPit_IsSkippedWithoutDescending(GameTestHelper helper) {
+    public static void collectDrops_ItemAtBottomOfFourDeepPit_PulledByMagnetWithoutDescending(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         for (int y = 0; y >= -3; y--) {
@@ -176,16 +178,15 @@ public final class CollectDropsGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "предмет на дне ямы недостижим: collect_drops обязан провалиться, статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("не дотянулся"),
-                    "причина обязана говорить о недостижимом предмете, фактически: " + reason);
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "предмет на дне ямы в радиусе магнита (5) притягивается без спуска (упрощение 44.1): collect_drops "
+                            + "обязан завершиться успехом, статус: " + spirit.taskStatus().map(RunStatus::name)
+                            .orElse("нет задачи") + ", причина " + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(Math.abs(spirit.getY() - startY) < 0.1,
                     "дух не должен спускаться в яму за предметом: y был " + startY + ", стал " + spirit.getY());
-            helper.assertTrue(!drop.isRemoved() && drop.getItem().getCount() == 1,
-                    "предмет на дне ямы обязан остаться нетронутым");
+            helper.assertTrue(drop.isRemoved()
+                            && GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+                    "предмет со дна ямы обязан оказаться в инвентаре, а не на дне");
             GameTestFixtures.finish(helper);
         });
     }

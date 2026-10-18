@@ -43,25 +43,10 @@ class RetreatPlannerProperties {
             }
             assertTrue(plan.isPresent(), "Способ " + method + " при наличии цели, дома и блоков обязан дать план");
             boolean walk = plan.get() instanceof RetreatPlan.Walk;
-            boolean wall = plan.get() instanceof RetreatPlan.Wall;
-            boolean tower = plan.get() instanceof RetreatPlan.Tower;
             boolean pour = plan.get() instanceof RetreatPlan.Pour;
-            int kinds = (walk ? 1 : 0) + (wall ? 1 : 0) + (tower ? 1 : 0) + (pour ? 1 : 0);
+            int kinds = (walk ? 1 : 0) + (pour ? 1 : 0);
             assertTrue(kinds == 1, "Способ " + method + " даёт ровно один вид плана, получили " + plan.get());
         }
-    }
-
-    @Property(tries = 200)
-    void plan_Barricade_NeverPlansMoreCellsThanBlocksInInventory(@ForAll("enemy") EnemyFact enemy,
-            @ForAll @IntRange(min = 0, max = 12) int blocks) {
-        RetreatPlanner.Input input = new RetreatPlanner.Input(SELF, FEET, List.of(enemy), EnvReading.NOTHING,
-                Optional.empty(), blocks, Optional.empty(), false);
-
-        Optional<RetreatPlan> plan = RetreatPlanner.plan(RetreatMethod.BARRICADE, input);
-
-        int cells = plan.map(p -> ((RetreatPlan.Wall) p).cells().size()).orElse(0);
-        assertTrue(cells <= blocks, "Баррикада планирует " + cells + " клеток при " + blocks
-                + " блоках в инвентаре: блоки не создаются из воздуха, лишние клетки значат ломку чужого запаса");
     }
 
     @Property(tries = 200)

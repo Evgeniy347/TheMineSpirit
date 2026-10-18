@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.ReachPlanner;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptInstance;
@@ -23,15 +25,18 @@ import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -79,6 +84,7 @@ public final class HarvestSession {
     private BlockCoord currentTarget;
     private BlockCoord currentStand;
     private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
+    private final Set<BlockCoord> reachStandsTried = new HashSet<>();
     private DropCollector collector;
     private UnloadScript deposit;
     private boolean depositTried;
@@ -282,9 +288,23 @@ public final class HarvestSession {
         planCalls++;
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(origin, buffer.targets(origin), safety,
+        List<BlockCoord> candidates = buffer.targets(origin);
+        for (BlockCoord candidate : candidates) {
+            boolean ownColumn = candidate.x() == origin.x() && candidate.z() == origin.z();
+            if (SpiritReach.reachable(origin, candidate) && !ownColumn && (vein || exposed(candidate))) {
+                if (acceptTarget(candidate)) {
+                    currentStand = origin;
+                    prepareBreak();
+                }
+                return;
+            }
+        }
+        MiningPlanner.Outcome result = MiningPlanner.next(origin, candidates, safety,
                 approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted exhausted) {
+            if ((exhausted.noStand() > 0 || exhausted.unreachable() > 0) && approachReachStand(origin, candidates)) {
+                return;
+            }
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
             unreachable += exhausted.unreachable();
@@ -293,34 +313,88 @@ public final class HarvestSession {
             return;
         }
         MiningPlanner.Next next = (MiningPlanner.Next) result;
-        BlockState targetState = level.getBlockState(toPos(next.target()));
-        if (!breaker.dropsAllowedFor(targetState)) {
-            buffer.remove(next.target());
-            if (breaker.toolBroke()) {
-                fail("инструмент сломался: добыто " + mined + " из " + count);
-                return;
-            }
-            if (mined == 0 && !skipWithoutTool) {
-                fail(tierReason(targetState));
-                return;
-            }
-            noTool++;
+        if (!acceptTarget(next.target())) {
             return;
         }
-        buffer.remove(next.target());
-        currentTarget = next.target();
         currentStand = next.stand();
         approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
                 APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
 
+    private boolean acceptTarget(BlockCoord target) {
+        BlockState targetState = level.getBlockState(toPos(target));
+        buffer.remove(target);
+        if (!breaker.dropsAllowedFor(targetState)) {
+            if (breaker.toolBroke()) {
+                fail("инструмент сломался: добыто " + mined + " из " + count);
+                return false;
+            }
+            if (mined == 0 && !skipWithoutTool) {
+                fail(tierReason(targetState));
+                return false;
+            }
+            noTool++;
+            return false;
+        }
+        currentTarget = target;
+        return true;
+    }
+
+    private boolean exposed(BlockCoord cell) {
+        BlockPos pos = toPos(cell);
+        for (Direction side : Direction.values()) {
+            BlockState neighbour = level.getBlockState(pos.relative(side));
+            if (neighbour.isAir() || neighbour.canBeReplaced()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean approachReachStand(BlockCoord origin, List<BlockCoord> candidates) {
+        ReachPlanner.World world = new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return true;
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return MiningSafety.canStand(feet, safety);
+            }
+        };
+        List<BlockCoord> reachable = vein ? candidates : candidates.stream().filter(this::exposed).toList();
+        Optional<BlockCoord> stand = ReachPlanner.nextStand(SpiritReach.current(), origin, reachable, world,
+                reachStandsTried, Set.copyOf(candidates));
+        if (stand.isEmpty()) {
+            return false;
+        }
+        reachStandsTried.add(stand.get());
+        currentTarget = null;
+        currentStand = stand.get();
+        approach.begin(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5), APPROACH_ARRIVAL);
+        state = State.APPROACH;
+        return true;
+    }
+
     private void approachTick() {
         switch (approach.tick()) {
             case MOVING -> {
             }
-            case ARRIVED -> prepareBreak();
+            case ARRIVED -> {
+                if (currentTarget == null) {
+                    state = State.PICK;
+                } else {
+                    prepareBreak();
+                }
+            }
             case STUCK, TIMEOUT -> {
+                if (currentTarget == null) {
+                    currentStand = null;
+                    state = State.PICK;
+                    return;
+                }
                 if (approachFailures.recordFailure(currentStand, currentTarget)) {
                     unreachable++;
                 } else {
@@ -341,7 +415,10 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
-        BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget));
+        BlockPos feet = spirit.blockPosition();
+        boolean inReach = SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), currentTarget);
+        BlockBreaker.Begin begin = inReach ? breaker.beginAnyDistance(toPos(currentTarget))
+                : breaker.begin(toPos(currentTarget));
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
             currentTarget = null;

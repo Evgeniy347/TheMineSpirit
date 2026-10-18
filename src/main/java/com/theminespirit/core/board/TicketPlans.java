@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.observation.BlockCoord;
@@ -21,7 +22,7 @@ import java.util.Set;
  * goto/acquire/fill/capture/build_schematic/withdraw/dig_area/clear_area/deliver.
  */
 public final class TicketPlans {
-    private static final String DEFAULT_SCHEME = "house";
+    private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
     private static final String DEFAULT_SUPPLY_ITEM = "dirt";
@@ -32,8 +33,8 @@ public final class TicketPlans {
     private static final int LIGHTING_TORCHES = 4;
     private static final int LIGHTING_OFFSET = 2;
     private static final String FENCE_SCHEME = "fence";
-    private static final String ENCHANT_ROOM_SCHEME = "enchant_room";
-    private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v1";
+    private static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
+    private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
     private static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_STEPS_SIZE = 3;
@@ -199,15 +200,20 @@ public final class TicketPlans {
 
     private static TaskNode captureAnimal(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
-        return new ScriptCall("capture", Map.of("species", species.name().toLowerCase(Locale.ROOT),
-                "radius", CatalogLimits.CAPTURE_RADIUS_DEFAULT));
+        return luredCapture(species, FeedTable.feedFor(species).get(0));
     }
 
     private static TaskNode lureAnimal(TicketTarget target) {
+        Species species = target.species() == null ? Species.COW : target.species();
         String lure = target.lureItem() == null ? DEFAULT_LURE_ITEM : target.lureItem();
+        return luredCapture(species, lure);
+    }
+
+    private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
-                new ScriptCall("withdraw", Map.of("container", "nearest", "item", lure, "count", 1)),
-                gotoTarget(target));
+                new ScriptCall("withdraw", Map.of("container", "nearest", "item", feed, "count", 1)),
+                new ScriptCall("capture", Map.of("species", species.name().toLowerCase(Locale.ROOT),
+                        "radius", CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
     private static TaskNode craft(String item, int count, TicketTarget target) {

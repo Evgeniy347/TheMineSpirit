@@ -9,10 +9,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Жизненный цикл животного одного вида на доске: отлов → загон → приманка → разбор укрытия.
- * Переходы — чистые функции состояния адаптер вызывает: captured (capture выполнен),
- * penBuilt (загон стоит), lured (животное в загоне), animalDied (гибель: «приманить»
- * снимается, появляется «разобрать укрытие»). Повторные вызовы не плодят дублей.
+ * Жизненный цикл животного одного вида на доске: отлов приманкой → загон → привести в загон. Укрытия из блоков
+ * нет (упрощение 44.4, решение владельца 18.10), разбирать после отлова нечего. Переходы — чистые функции
+ * состояния, адаптер вызывает: captured (capture выполнен), penBuilt (загон стоит), lured (животное в загоне),
+ * animalDied (гибель: «приманить» снимается). Повторные вызовы не плодят дублей.
  * Префикс id делает цикл независимым: реестр {@link HerdCycles} держит по циклу на вид.
  */
 public final class AnimalLifecycle {
@@ -77,13 +77,9 @@ public final class AnimalLifecycle {
     }
 
     public void lured() {
-        if (stage != Stage.PEN_BUILT || hasActive(dismantleId())) {
-            return;
+        if (stage == Stage.PEN_BUILT) {
+            stage = Stage.LURED;
         }
-        board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), 1, cause,
-                List.of(), Map.of()));
-        stage = Stage.LURED;
     }
 
     public void animalDied() {
@@ -91,12 +87,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.cancel(lureId());
-        if (!hasActive(dismantleId())) {
-            board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(),
-                    1, cause, List.of(), Map.of()));
-        }
-        stage = Stage.DISMANTLED;
+        stage = Stage.GONE;
     }
 
     private boolean hasActive(String ticketId) {
@@ -115,15 +106,11 @@ public final class AnimalLifecycle {
         return prefix + "_lure";
     }
 
-    private String dismantleId() {
-        return prefix + "_dismantle";
-    }
-
     private enum Stage {
         NONE,
         CAPTURED,
         PEN_BUILT,
         LURED,
-        DISMANTLED
+        GONE
     }
 }

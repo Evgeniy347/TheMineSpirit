@@ -1,148 +1,70 @@
 {
  "fixtures": [
   {
-   "file": "valid_storage",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ]
+   "file": "valid_storage"
   },
   {
    "file": "roof_hole",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "roof"
    ]
   },
   {
    "file": "entrance_in_wall",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "entrance"
    ]
   },
   {
    "file": "no_entrance",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "entrance"
    ]
   },
   {
    "file": "hanging_torch",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "support"
    ]
   },
   {
    "file": "chest_under_plank",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "chest_openable"
    ]
   },
   {
-   "file": "chest_stack",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ]
+   "file": "chest_stack"
   },
   {
    "file": "inner_height_one",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "inner_height"
    ]
   },
   {
    "file": "closed_wall_gap",
-   "type": "storage",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "closed_walls"
    ]
   },
   {
-   "file": "valid_house",
-   "type": "housing",
-   "entry": [
-    2,
-    1,
-    0
-   ]
+   "file": "valid_house"
   },
   {
    "file": "house_without_windows",
-   "type": "housing",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "window"
    ]
   },
   {
    "file": "house_without_door",
-   "type": "housing",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "door"
    ]
   },
   {
    "file": "house_without_light",
-   "type": "housing",
-   "entry": [
-    2,
-    1,
-    0
-   ],
    "expect": [
     "light"
    ]

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,7 @@ class SchematicRulesTests {
     private static final String ROOT = "schematic-rules/";
     private static final String INDEX = ROOT + "fixtures.json";
 
-    record Fixture(String file, BuildingType type, BlockCoord entry, List<SchematicRules.RuleId> expected) {
+    record Fixture(String file, List<SchematicRules.RuleId> expected) {
     }
 
     @Test
@@ -42,9 +41,8 @@ class SchematicRulesTests {
 
     @Test
     void chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot() {
-        Fixture stack = new Fixture("chest_stack", BuildingType.STORAGE, new BlockCoord(2, 1, 0), List.of());
-        Fixture plank = new Fixture("chest_under_plank", BuildingType.STORAGE, new BlockCoord(2, 1, 0),
-                List.of(SchematicRules.RuleId.CHEST_OPENABLE));
+        Fixture stack = new Fixture("chest_stack", List.of());
+        Fixture plank = new Fixture("chest_under_plank", List.of(SchematicRules.RuleId.CHEST_OPENABLE));
 
         assertEquals(List.of(), ruleIds(stack),
                 "Сундук над сундуком (стопка склада) не мешает открыть нижний: в ванили крышку держит только "
@@ -74,9 +72,10 @@ class SchematicRulesTests {
     }
 
     private static SchematicRules.Structure structure(Fixture fixture) {
-        String path = ROOT + fixture.file() + ".json";
-        Schematic schematic = SchematicParser.parse(JsonResource.readClasspath(path), path);
-        return new SchematicRules.Structure(fixture.file(), fixture.type(), schematic, fixture.entry());
+        String path = ROOT + fixture.file() + SchematicTextParser.EXTENSION;
+        SchematicDocument document = SchematicTextParser.parse(JsonResource.readClasspath(path), path);
+        return new SchematicRules.Structure(fixture.file(), document.header().type().orElseThrow(),
+                document.schematic(), document.header().entrance().orElseThrow());
     }
 
     private static List<Fixture> fixtures() {
@@ -84,23 +83,12 @@ class SchematicRulesTests {
         List<Fixture> fixtures = new ArrayList<>();
         for (JsonNode item : JsonResource.array(root.get("fixtures"), INDEX, "списка fixtures")) {
             String file = JsonResource.text(item.get("file"), INDEX, "поля file фикстуры");
-            String type = JsonResource.text(item.get("type"), INDEX, "поля type фикстуры");
-            BuildingType buildingType = BuildingType.byId(type).orElseThrow(() -> new IllegalStateException(
-                    "У фикстуры '" + file + "' неизвестный тип '" + type + "': правила жилья не выбрать"));
-            int[] entry = new int[3];
-            JsonNode entryNode = item.get("entry");
-            if (entryNode == null || !entryNode.isArray() || entryNode.size() != 3) {
-                throw new IllegalStateException("У фикстуры '" + file + "' entry обязан быть списком из 3 чисел");
-            }
-            for (int i = 0; i < 3; i++) {
-                entry[i] = JsonResource.integer(entryNode.get(i), INDEX, "поля entry фикстуры '" + file + "'");
-            }
             List<SchematicRules.RuleId> expected = new ArrayList<>();
             for (String id : JsonResource.optionalStrings(item.get("expect"), INDEX, "ожидаемых правил")) {
                 expected.add(SchematicRules.RuleId.byId(id).orElseThrow(() -> new IllegalStateException(
                         "У фикстуры '" + file + "' ожидается неизвестное правило '" + id + "'")));
             }
-            fixtures.add(new Fixture(file, buildingType, new BlockCoord(entry[0], entry[1], entry[2]), expected));
+            fixtures.add(new Fixture(file, expected));
         }
         return fixtures;
     }

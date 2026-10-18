@@ -32,8 +32,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Жизненный цикл животного на доске: животное рядом с базой → CAPTURE_ANIMAL один раз;
- * отлов → BUILD_PEN; загон → LURE_ANIMAL с гейтом по приманке; приманка → разбор укрытия,
- * гибель → «приманить» снято, разбор поставлен. Всё синхронно: доска — чистая очередь,
+ * отлов → BUILD_PEN; загон → LURE_ANIMAL с гейтом по приманке; укрытия из блоков нет (упрощение 44.4),
+ * поэтому разбирать нечего; гибель → «приманить» снято. Всё синхронно: доска — чистая очередь,
  * succeedWhen здесь не нужен (он завершает тест при первом нормальном выходе).
  */
 @GameTestHolder(ModIdentity.MOD_ID)
@@ -58,7 +58,7 @@ public final class BoardAnimalGameTests {
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
-    public static void animal_NearBase_LifecycleThroughGateAndDismantle(GameTestHelper helper) {
+    public static void animal_NearBase_LifecycleThroughGateWithoutShelter(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -106,24 +106,15 @@ public final class BoardAnimalGameTests {
                 "С пшеницей в запасах «приманить» выдаётся: доска сама снимает гейт");
 
         board.completeLure(Species.SHEEP);
-        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
-                "Животное в загоне — на доске ровно один DISMANTLE_SHELTER");
-        board.completeLure(Species.SHEEP);
-        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
-                "«Разобрать укрытие» дважды не ставится: одно укрытие — одна разборка");
+        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0,
+                "Животное в загоне — разбирать нечего: отлов приманкой не ставит укрытия (упрощение 44.4)");
         board.notifyAnimalDied(Species.SHEEP);
         helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
                         == BoardStatus.CANCELLED,
                 "Гибель снимает «приманить», статус "
                         + board.board().statusOf("sheep_lure").orElse(null));
-        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 1,
-                "После гибели укрытие всё равно разбирается ровно одним заданием");
-        // Разбор снимаем с доски: иначе PENDING без гейта уйдёт свободному духу чужой сцены.
-        for (BoardTicket ticket : board.board().all()) {
-            if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER) {
-                board.board().cancel(ticket.id());
-            }
-        }
+        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0,
+                "После гибели разбирать нечего: укрытия нет");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

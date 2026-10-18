@@ -87,6 +87,10 @@ public final class BlockBreaker {
         return begin(target, false, false, false);
     }
 
+    public Begin beginAnyDistance(BlockPos target, boolean tended) {
+        return begin(target, tended, false, false);
+    }
+
     private Begin begin(BlockPos target, boolean tended, boolean demolish, boolean reachLimited) {
         cancel();
         Level level = spirit.level();

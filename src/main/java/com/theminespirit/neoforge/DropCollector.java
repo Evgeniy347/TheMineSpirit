@@ -42,6 +42,7 @@ public final class DropCollector {
     private final SpiritEntity spirit;
     private final IdFilter items;
     private final AABB area;
+    private final long startTick;
     private final PickupTuning tuning;
     private final OverflowMode overflow;
     private final OverflowDecider decider;
@@ -75,6 +76,7 @@ public final class DropCollector {
         this.safety = new LevelSafetyView(spirit.level());
         this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
                 center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
+        this.startTick = spirit.level().getGameTime();
         spirit.trackDropCollector(this);
     }
 
@@ -89,6 +91,7 @@ public final class DropCollector {
             return fail("не успел подобрать предметы за " + tuning.totalTimeoutTicks() + " тиков");
         }
         queriedThisTick = false;
+        creditMagnetPulls();
         if (entityQueries == 0 || ticksSinceQuery >= tuning.refreshTicks()) {
             refresh();
         }
@@ -144,6 +147,10 @@ public final class DropCollector {
 
     public OverflowDecider decider() {
         return decider;
+    }
+
+    private void creditMagnetPulls() {
+        collected += spirit.claimMagnetPulls(area, items, startTick);
     }
 
     private void refresh() {

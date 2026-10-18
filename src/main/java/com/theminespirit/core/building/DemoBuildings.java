@@ -54,7 +54,6 @@ public final class DemoBuildings {
     }
 
     private static final List<Building> ALL = List.of(
-            new Building("house", "Дом", BuildingType.HOUSING, List.of(new Level(0, "house"))),
             new Building("family_house", "Дом семьи", BuildingType.HOUSING, List.of(new Level(0, "family_house"))),
             new Building("stone_house", "Каменный дом", BuildingType.HOUSING,
                     List.of(new Level(0, "stone_house"))),

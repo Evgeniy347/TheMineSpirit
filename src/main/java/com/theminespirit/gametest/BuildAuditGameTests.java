@@ -215,33 +215,62 @@ public final class BuildAuditGameTests {
 
     // [флак] Дом из 17 блоков с одной занятой клеткой: перебор стоянок и повторный проход перед провалом.
     @GameTest(template = "arena", batch = "build_audit_blocked", timeoutTicks = 800)
-    public static void build_BlockedCell_FailsWithSkipCount(GameTestHelper helper) {
+    public static void build_UnbreakableBlockInCell_FailsNamingBlock(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         BlockPos anchorRelative = new BlockPos(3, 1, 3);
-        helper.setBlock(anchorRelative, Blocks.DIRT);
+        helper.setBlock(anchorRelative, Blocks.BEDROCK);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 17));
         BlockPos anchor = helper.absolutePos(anchorRelative);
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
-                Map.of("file", "house", "x", anchor.getX(), "y", anchor.getY(), "z", anchor.getZ())), SETTLE_TICKS);
+                Map.of("file", "fixture_plate", "x", anchor.getX(), "y", anchor.getY(), "z", anchor.getZ())), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "Занятая клетка обязана провалить стройку, статус "
+                    "Клетка схемы с неразрушимым блоком обязана провалить стройку: схема не совпадёт с миром, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("пропущено 1"),
-                    "Причина обязана называть число пропусков, фактически: " + reason);
-            helper.assertTrue(reason.contains("занята блоком minecraft:dirt"),
-                    "Последний отказ обязан называть блок, занявший клетку: «нет стоянок» про занятую клетку "
-                            + "уводит разбор в выбор стоянок вместо раскладки (так был ошибочно разобран провал "
-                            + "склада). Фактически: " + reason);
+            helper.assertTrue(reason.contains("не совпало со схемой 1 ") && reason.contains("minecraft:bedrock"),
+                    "Причина обязана назвать число несовпавших клеток и блок, который не убрать: «нет стоянок» про "
+                            + "занятую клетку уводит разбор в выбор стоянок вместо раскладки. Фактически: " + reason);
             GameTestFixtures.finish(helper);
         });
     }
 
+    // [флак] 17 блоков плиты и одна очистка клетки от земли: с запасом на подходы.
+    @GameTest(template = "arena", batch = "build_audit_dirt_cell", timeoutTicks = 600)
+    public static void build_DirtInSchemeCell_ClearedThenBuilt(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        BlockPos anchorRelative = new BlockPos(3, 1, 3);
+        helper.setBlock(anchorRelative, Blocks.DIRT);
+        helper.setBlock(anchorRelative.offset(1, 1, 1), Blocks.DIRT);
+        Schematic schematic = SchematicResources.load("fixture_plate");
+        BlockCoord origin = origin(helper, anchorRelative);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 17));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
+                Map.of("file", "fixture_plate", "x", origin.x(), "y", origin.y(), "z", origin.z())), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "Земля в клетке схемы и в обязательной пустоте обязана быть убрана, а плита достроена: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
+                helper.assertTrue(helper.getLevel().getBlockState(new BlockPos(entry.pos().x(), entry.pos().y(),
+                        entry.pos().z())).is(Blocks.COBBLESTONE), "Клетка " + entry.pos() + " обязана держать булыжник");
+            }
+            for (BlockCoord cell : schematic.airCells(origin, BuildRotation.NONE)) {
+                helper.assertTrue(helper.getLevel().getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())).isAir(),
+                        "Клетка '.' схемы " + cell + " обязана стать пустой: земля внутри плиты убирается");
+            }
+            GameTestFixtures.finish(helper);
+        });
+    }
 
     // [флак] Восемь блоков с поворотом: дух подходит к каждой клетке с запасом.
     @GameTest(template = "arena", batch = "build_audit_state_rot", timeoutTicks = 1800)

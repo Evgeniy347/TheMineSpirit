@@ -2,16 +2,18 @@ package com.theminespirit.core.reload;
 
 import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.board.BoardConfig;
+import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.building.SchematicParser;
-import com.theminespirit.core.doors.DoorTuning;
+import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
+import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.fishing.FishingData;
+import com.theminespirit.core.fishing.FishingWait;
 import com.theminespirit.core.forestry.ReplantData;
+import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.SwordTier;
-import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.OutsideRules;
@@ -27,7 +29,9 @@ import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
+import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.ObservationLimits;
+import com.theminespirit.core.pickup.MagnetRules;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.processing.ProcessingRules;
@@ -52,8 +56,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class DataTables {
     /** Схемы, читаемые по имени потребителем: тела перечитываются на /reload вместе с остальными таблицами. */
-    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room",
-            "storage_v1", "storage_v2", "storage_v3", "storage_v4", "reach_wall", "state_demo");
+    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("fixture_plate", "fence", "storage_v1",
+            "storage_v2", "storage_v3", "storage_v4", "reach_wall", "state_demo");
 
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
@@ -82,6 +86,10 @@ public final class DataTables {
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
     private final TableHolder<DoorRules> doors;
+    private final TableHolder<BuildData> building;
+    private final TableHolder<MagnetRules> magnet;
+    private final TableHolder<FishingWait> fishingWait;
+    private final TableHolder<Unstuck> unstuck;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<FishingData> fishing;
     private final TableHolder<ReplantData> replant;
@@ -169,6 +177,14 @@ public final class DataTables {
         this.board = registry.registerLazy(
                 TableDefinition.single("board", BoardConfig.RESOURCE, BoardConfig::fromJson),
                 BoardConfig::readFromClasspath);
+        this.building = registry.registerLazy(
+                TableDefinition.single("building", BuildData.RESOURCE, BuildData::parse), BuildData::load);
+        this.magnet = registry.registerLazy(
+                TableDefinition.single("magnet", MagnetRules.RESOURCE, MagnetRules::parse), MagnetRules::load);
+        this.fishingWait = registry.registerLazy(
+                TableDefinition.single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse), FishingWait::load);
+        this.unstuck = registry.registerLazy(
+                TableDefinition.single("unstuck", Unstuck.RESOURCE, Unstuck::parse), Unstuck::load);
         this.doors = registry.registerLazy(
                 TableDefinition.single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse),
                 DoorTuning::loadDefault);
@@ -199,10 +215,11 @@ public final class DataTables {
                 ObservationLimits::load);
         Map<String, TableHolder<Schematic>> liveSchematics = new LinkedHashMap<>();
         for (String file : LIVE_SCHEMATIC_FILES) {
-            String path = PresetLibrary.SCHEMATICS_ROOT + file + ".json";
+            String path = PresetLibrary.SCHEMATICS_ROOT + file + SchematicTextParser.EXTENSION;
             liveSchematics.put(file, registry.registerLazy(
-                    TableDefinition.single("schematic_" + file, path, SchematicParser::parse),
-                    () -> SchematicParser.parse(JsonResource.readClasspath(path), path)));
+                    TableDefinition.single("schematic_" + file, path,
+                            (text, origin) -> SchematicTextParser.parse(text, origin).schematic()),
+                    () -> SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic()));
         }
         this.schematics = Map.copyOf(liveSchematics);
         this.processing = registry.registerLazy(
@@ -308,6 +325,22 @@ public final class DataTables {
 
     public TableHolder<BoardConfig> board() {
         return board;
+    }
+
+    public TableHolder<BuildData> building() {
+        return building;
+    }
+
+    public TableHolder<MagnetRules> magnet() {
+        return magnet;
+    }
+
+    public TableHolder<FishingWait> fishingWait() {
+        return fishingWait;
+    }
+
+    public TableHolder<Unstuck> unstuck() {
+        return unstuck;
     }
 
     public TableHolder<DoorRules> doors() {

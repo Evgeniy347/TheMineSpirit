@@ -27,14 +27,19 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
- * Каждая постройка демо-каталога и family_house в четырёх поворотах: BuildAudit обязан не найти
- * ни одного расхождения — ни по клеткам схемы, ни по лишним блокам, ни по числу постановок.
+ * Каждая постройка демо-каталога в четырёх поворотах: BuildAudit обязан не найти ни одного расхождения — ни по
+ * клеткам схемы, ни по лишним блокам, ни по числу постановок, — а дух обязан строить с места: число построений пути
+ * ограничено (решение владельца 18.10: «не бегает — ставит всё, до чего дотягивается»). Четыре поворота одной
+ * постройки — одна пачка: четыре арены строятся параллельно.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoAuditGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final int FLOOR_SIZE = 11;
+    // Решение владельца 18.10 (ветка reach-planner): дом семьи — не больше 15 построений пути на весь дом.
+    private static final int FAMILY_HOUSE_MAX_PATH_BUILDS = 15;
+    private static final int DEFAULT_MAX_PATH_BUILDS = 15;
 
     private DemoAuditGameTests() {
     }
@@ -73,20 +78,25 @@ public final class DemoAuditGameTests {
         return ((ScriptResult.Data) result).fields();
     }
 
-    private static void auditBuilt(GameTestHelper helper, String scheme, BuildRotation rotation) {
+    private static void audit(GameTestHelper helper, String building, int level, BuildRotation rotation) {
+        audit(helper, building, level, rotation, DEFAULT_MAX_PATH_BUILDS);
+    }
+
+    private static void audit(GameTestHelper helper, String building, int level, BuildRotation rotation,
+            int maxPathBuilds) {
+        String scheme = DemoBuildings.require(building).level(level).scheme();
         GameTestFixtures.reset(helper);
         floor(helper);
         Schematic schematic = SchematicResources.load(scheme);
-        BlockPos anchorRelative = new BlockPos(0, 1, 0);
-        BlockPos anchor = helper.absolutePos(anchorRelative);
+        BlockPos anchor = helper.absolutePos(new BlockPos(0, 1, 0));
         BlockCoord origin = new BlockCoord(anchor.getX(), anchor.getY(), anchor.getZ());
         preplaceWithoutItem(helper, schematic, origin, rotation);
         BuildAudit.Before before = BuildAudit.snapshot(helper.getLevel(), schematic, origin, rotation, 3);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(5, 1, 10));
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), spawnOutside(schematic, rotation));
         give(helper, spirit, schematic);
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
                 Map.of("file", scheme, "x", anchor.getX(), "y", anchor.getY(), "z", anchor.getZ(),
-                        "rotation", rotation.quarterTurns())), SETTLE_TICKS);
+                        "rotation", rotation.id())), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -99,8 +109,24 @@ public final class DemoAuditGameTests {
             BuildAudit.Result audit = BuildAudit.audit(helper.getLevel(), schematic, origin, rotation, before, skipped);
             helper.assertTrue(audit.ok(), "Постройка '" + scheme + "' (" + rotation
                     + ") обязана совпасть со схемой без лишних блоков, расхождения: " + audit.problems());
+            helper.assertTrue(spirit.pathBuilds() <= maxPathBuilds, "Постройка '" + scheme + "' (" + rotation
+                    + ") обязана уложиться в " + maxPathBuilds + " построений пути: дух ставит всё досягаемое с "
+                    + "места, а не подходит к каждому блоку; фактически " + spirit.pathBuilds());
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static BlockPos spawnOutside(Schematic schematic, BuildRotation rotation) {
+        int rotatedX = rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ());
+        int rotatedZ = rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ());
+        if (rotatedZ < FLOOR_SIZE) {
+            return new BlockPos(FLOOR_SIZE / 2, 1, FLOOR_SIZE - 1);
+        }
+        if (rotatedX < FLOOR_SIZE) {
+            return new BlockPos(FLOOR_SIZE - 1, 1, FLOOR_SIZE / 2);
+        }
+        throw new IllegalStateException("Постройка " + rotatedX + "×" + rotatedZ + " занимает весь пол арены "
+                + FLOOR_SIZE + "×" + FLOOR_SIZE + ": духу негде появиться снаружи");
     }
 
     private static void preplaceWithoutItem(GameTestHelper helper, Schematic schematic, BlockCoord origin,
@@ -121,85 +147,267 @@ public final class DemoAuditGameTests {
         }
     }
 
-    // [флак] 147 блоков дома: подход к клеткам стены с запасом, тест меряет результат, а не скорость.
-    @GameTest(template = "arena", batch = "demo_audit_family_none", timeoutTicks = 6000)
-    public static void demo_FamilyHouseNoRotation_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, "family_house", BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_familyhouse", timeoutTicks = 4000)
+    public static void demo_FamilyHouseNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 0, BuildRotation.NONE, FAMILY_HOUSE_MAX_PATH_BUILDS);
     }
 
-    // [флак] 147 блоков дома: подход к клеткам стены с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_family_90", timeoutTicks = 6000)
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_familyhouse", timeoutTicks = 4000)
     public static void demo_FamilyHouseClockwise90_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, "family_house", BuildRotation.CLOCKWISE_90);
+        audit(helper, "family_house", 0, BuildRotation.CLOCKWISE_90, FAMILY_HOUSE_MAX_PATH_BUILDS);
     }
 
-    // [флак] 147 блоков дома: подход к клеткам стены с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_family_180", timeoutTicks = 6000)
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_familyhouse", timeoutTicks = 4000)
     public static void demo_FamilyHouseClockwise180_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, "family_house", BuildRotation.CLOCKWISE_180);
+        audit(helper, "family_house", 0, BuildRotation.CLOCKWISE_180, FAMILY_HOUSE_MAX_PATH_BUILDS);
     }
 
-    // [флак] 147 блоков дома: подход к клеткам стены с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_family_270", timeoutTicks = 6000)
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_familyhouse", timeoutTicks = 4000)
     public static void demo_FamilyHouseCounterclockwise90_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, "family_house", BuildRotation.COUNTERCLOCKWISE_90);
+        audit(helper, "family_house", 0, BuildRotation.COUNTERCLOCKWISE_90, FAMILY_HOUSE_MAX_PATH_BUILDS);
     }
 
-    // [флак] 17 блоков первого дома: подход к клеткам с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_house", timeoutTicks = 3000)
-    public static void demo_House_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("house"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_stonehouse", timeoutTicks = 4000)
+    public static void demo_StoneHouseNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "stone_house", 0, BuildRotation.NONE);
     }
 
-    // [флак] 66 блоков склада: подход к клеткам с запасом, тест меряет результат, а не скорость.
-    @GameTest(template = "arena", batch = "demo_audit_storage_hut", timeoutTicks = 6000)
-    public static void demo_StorageHut_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("storage_hut"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_stonehouse", timeoutTicks = 4000)
+    public static void demo_StoneHouseClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "stone_house", 0, BuildRotation.CLOCKWISE_90);
     }
 
-    // [флак] 80 блоков каменного дома: подход к клеткам с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_stone_house", timeoutTicks = 6000)
-    public static void demo_StoneHouse_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("stone_house"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_stonehouse", timeoutTicks = 4000)
+    public static void demo_StoneHouseClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "stone_house", 0, BuildRotation.CLOCKWISE_180);
     }
 
-    // [флак] 13 блоков колодца, вода ставится без предмета.
-    @GameTest(template = "arena", batch = "demo_audit_well", timeoutTicks = 3000)
-    public static void demo_Well_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("well"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_stonehouse", timeoutTicks = 4000)
+    public static void demo_StoneHouseCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "stone_house", 0, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
-    // [флак] 4 блока факельного столба: факел ставится на забор после updateFromNeighbourShapes.
-    @GameTest(template = "arena", batch = "demo_audit_torch_post", timeoutTicks = 3000)
-    public static void demo_TorchPost_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("torch_post"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagehut", timeoutTicks = 4000)
+    public static void demo_StorageHutNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.NONE);
     }
 
-    // [флак] 8 блоков палисада с калиткой: подход к клеткам с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_palisade", timeoutTicks = 3000)
-    public static void demo_PalisadeSection_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("palisade_section"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagehut", timeoutTicks = 4000)
+    public static void demo_StorageHutClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.CLOCKWISE_90);
     }
 
-    // [флак] 14 блоков загона уровня 1: подход к клеткам с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_pen", timeoutTicks = 3000)
-    public static void demo_Pen_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("pen"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagehut", timeoutTicks = 4000)
+    public static void demo_StorageHutClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.CLOCKWISE_180);
     }
 
-    // [флак] 244 блока чаровальни уровня 1: подход к клеткам с запасом, тест меряет результат.
-    @GameTest(template = "arena", batch = "demo_audit_enchant", timeoutTicks = 12000)
-    public static void demo_EnchantRoom_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("enchant_room"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagehut", timeoutTicks = 4000)
+    public static void demo_StorageHutCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
-    // [флак] 17 блоков входа в шахту: подход к клеткам с запасом.
-    @GameTest(template = "arena", batch = "demo_audit_mine", timeoutTicks = 3000)
-    public static void demo_MineEntrance_MatchesScheme(GameTestHelper helper) {
-        auditBuilt(helper, scheme("mine_entrance"), BuildRotation.NONE);
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagelevel1", timeoutTicks = 4000)
+    public static void demo_StorageLevel1None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage", 1, BuildRotation.NONE);
     }
 
-    private static String scheme(String id) {
-        return DemoBuildings.require(id).levels().get(0).scheme();
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagelevel1", timeoutTicks = 4000)
+    public static void demo_StorageLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage", 1, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagelevel1", timeoutTicks = 4000)
+    public static void demo_StorageLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage", 1, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_storagelevel1", timeoutTicks = 4000)
+    public static void demo_StorageLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "storage", 1, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_well", timeoutTicks = 4000)
+    public static void demo_WellNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 0, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_well", timeoutTicks = 4000)
+    public static void demo_WellClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 0, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_well", timeoutTicks = 4000)
+    public static void demo_WellClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 0, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_well", timeoutTicks = 4000)
+    public static void demo_WellCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 0, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_torchpost", timeoutTicks = 4000)
+    public static void demo_TorchPostNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "torch_post", 0, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_torchpost", timeoutTicks = 4000)
+    public static void demo_TorchPostClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "torch_post", 0, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_torchpost", timeoutTicks = 4000)
+    public static void demo_TorchPostClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "torch_post", 0, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_torchpost", timeoutTicks = 4000)
+    public static void demo_TorchPostCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "torch_post", 0, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_palisadesection", timeoutTicks = 4000)
+    public static void demo_PalisadeSectionNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "palisade_section", 0, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_palisadesection", timeoutTicks = 4000)
+    public static void demo_PalisadeSectionClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "palisade_section", 0, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_palisadesection", timeoutTicks = 4000)
+    public static void demo_PalisadeSectionClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "palisade_section", 0, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_palisadesection", timeoutTicks = 4000)
+    public static void demo_PalisadeSectionCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "palisade_section", 0, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_penlevel1", timeoutTicks = 4000)
+    public static void demo_PenLevel1None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "pen", 1, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_penlevel1", timeoutTicks = 4000)
+    public static void demo_PenLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "pen", 1, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_penlevel1", timeoutTicks = 4000)
+    public static void demo_PenLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "pen", 1, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_penlevel1", timeoutTicks = 4000)
+    public static void demo_PenLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "pen", 1, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel1None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 1, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 1, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 1, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 1, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel2None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 2, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 2, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 2, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    public static void demo_EnchantRoomLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 2, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_mineentrance", timeoutTicks = 4000)
+    public static void demo_MineEntranceNone_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "mine_entrance", 1, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_mineentrance", timeoutTicks = 4000)
+    public static void demo_MineEntranceClockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "mine_entrance", 1, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_mineentrance", timeoutTicks = 4000)
+    public static void demo_MineEntranceClockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "mine_entrance", 1, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "mine_arena", batch = "demo_audit_mineentrance", timeoutTicks = 4000)
+    public static void demo_MineEntranceCounterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "mine_entrance", 1, BuildRotation.COUNTERCLOCKWISE_90);
     }
 }

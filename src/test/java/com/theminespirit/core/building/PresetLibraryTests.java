@@ -27,21 +27,29 @@ class PresetLibraryTests {
         return PresetLibrary.parse(contents);
     }
 
-    private static String body(String jsonSize, String blocks) {
-        return "{\"version\":1,\"size\":[" + jsonSize + "],\"blocks\":[" + blocks + "]}";
+    private static String body(String header, String... rows) {
+        StringBuilder text = new StringBuilder(header).append("legend:\n  'C': cobblestone\n  '#': oak_planks\n")
+                .append("  'D': oak_door[facing=north]\nlayers:\n");
+        for (int y = 0; y < rows.length; y++) {
+            text.append("  - y").append(y).append(": |\n");
+            for (String row : rows[y].split("/")) {
+                text.append("      ").append(row).append('\n');
+            }
+        }
+        return text.toString();
     }
 
-    private static LoadedContent indexWith(String presetFields) {
-        return new LoadedContent("{\"version\":1,\"presets\":[" + presetFields + "]}", "тестовый индекс",
-                TableStatus.Source.BUILTIN);
+    private static LoadedContent indexWith(String... ids) {
+        return new LoadedContent("{\"version\":2,\"presets\":[\"" + String.join("\",\"", ids) + "\"]}",
+                "тестовый индекс", TableStatus.Source.BUILTIN);
     }
 
-    private static LoadedContent bodyContent(String bodyJson) {
-        return new LoadedContent(bodyJson, "тестовое тело", TableStatus.Source.BUILTIN);
+    private static LoadedContent bodyContent(String text) {
+        return new LoadedContent(text, "тестовое тело", TableStatus.Source.BUILTIN);
     }
 
     @Test
-    void parse_RealIndex_LoadsAllTwelvePresets() {
+    void parse_RealIndex_LoadsAllSixteenPresets() {
         PresetLibrary library = loadReal();
 
         assertEquals(16, library.size(),
@@ -72,30 +80,24 @@ class PresetLibraryTests {
     }
 
     @Test
-    void parse_DeclaredSizeDiffersFromBody_IsRejected() {
-        LoadedContent index = indexWith("{\"id\":\"hut\",\"file\":\"hut\",\"name\":\"Хижина\",\"stage\":0,"
-                + "\"type\":\"housing\",\"size\":[5,4,5],\"entry\":[2,1,0]}");
-        LoadedContent body = bodyContent(body("2,1,1", "{\"pos\":[0,0,0],\"block\":\"minecraft:oak_planks\"},"
-                + "{\"pos\":[1,0,0],\"block\":\"minecraft:oak_planks\"}"));
+    void parse_PresetWithoutName_IsRejected() {
+        LoadedContent body = bodyContent(body("type: housing\nstage: 0\nsize: 2x1x1\nentrance: 0,0,0\n", ".C"));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> PresetLibrary.parse(List.of(index, body)),
-                "Метаданные, разошедшиеся с содержимым (габариты 5×4×5 против тела 2×1×1), обязаны отвергаться: "
-                        + "иначе пресет ставится по чужим габаритам");
+                () -> PresetLibrary.parse(List.of(indexWith("hut"), body)),
+                "Пресет без названия обязан отвергаться: /spirit presets и стратег показывают постройку по имени");
 
-        assertTrue(error.getMessage().contains("габариты"),
-                "Ошибка обязана называть причину — расхождение габаритов: иначе непонятно, что чинить; фактически: "
-                        + error.getMessage());
+        assertTrue(error.getMessage().contains("name"),
+                "Ошибка обязана называть недостающий ключ name; фактически: " + error.getMessage());
     }
 
     @Test
     void parse_EntryInsideSolidBlock_IsRejected() {
-        LoadedContent index = indexWith("{\"id\":\"post\",\"file\":\"post\",\"name\":\"Столб\",\"stage\":0,"
-                + "\"type\":\"infrastructure\",\"size\":[1,1,1],\"entry\":[0,0,0]}");
-        LoadedContent body = bodyContent(body("1,1,1", "{\"pos\":[0,0,0],\"block\":\"minecraft:oak_planks\"}"));
+        LoadedContent body = bodyContent(body("name: Столб\ntype: infrastructure\nstage: 0\nsize: 1x1x1\n"
+                + "entrance: 0,0,0\n", "#"));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> PresetLibrary.parse(List.of(index, body)),
+                () -> PresetLibrary.parse(List.of(indexWith("post"), body)),
                 "Точка входа, занятая сплошным блоком, обязана отвергаться: сквозь стену не войти");
 
         assertTrue(error.getMessage().contains("вход"),
@@ -104,30 +106,37 @@ class PresetLibraryTests {
 
     @Test
     void parse_EntryOutsideSize_IsRejected() {
-        LoadedContent index = indexWith("{\"id\":\"post\",\"file\":\"post\",\"name\":\"Столб\",\"stage\":0,"
-                + "\"type\":\"infrastructure\",\"size\":[1,1,1],\"entry\":[2,0,0]}");
-        LoadedContent body = bodyContent(body("1,1,1", "{\"pos\":[0,0,0],\"block\":\"minecraft:oak_planks\"}"));
+        LoadedContent body = bodyContent(body("name: Столб\ntype: infrastructure\nstage: 0\nsize: 1x1x1\n"
+                + "entrance: 2,0,0\n", "#"));
 
-        assertThrows(IllegalStateException.class, () -> PresetLibrary.parse(List.of(index, body)),
+        assertThrows(IllegalStateException.class, () -> PresetLibrary.parse(List.of(indexWith("post"), body)),
                 "Точка входа вне габаритов обязана отвергаться: через клетку за постройкой в неё не войти");
     }
 
     @Test
     void materials_BodyGainsOneBlock_CountsFollowBlocks() {
-        LoadedContent index = indexWith("{\"id\":\"floor\",\"file\":\"floor\",\"name\":\"Пол\",\"stage\":0,"
-                + "\"type\":\"infrastructure\",\"size\":[3,1,1],\"entry\":[2,0,0]}");
-        LoadedContent one = bodyContent(body("3,1,1", "{\"pos\":[0,0,0],\"block\":\"minecraft:cobblestone\"}"));
-        LoadedContent two = bodyContent(body("3,1,1", "{\"pos\":[0,0,0],\"block\":\"minecraft:cobblestone\"},"
-                + "{\"pos\":[1,0,0],\"block\":\"minecraft:cobblestone\"}"));
-
-        Preset single = PresetLibrary.parse(List.of(index, one)).byId("floor").orElseThrow();
-        Preset doubled = PresetLibrary.parse(List.of(index, two)).byId("floor").orElseThrow();
+        String header = "name: Пол\ntype: infrastructure\nstage: 0\nsize: 3x1x1\nentrance: 2,0,0\n";
+        Preset single = PresetLibrary.parse(List.of(indexWith("floor"), bodyContent(body(header, "C..")))).byId("floor")
+                .orElseThrow();
+        Preset doubled = PresetLibrary.parse(List.of(indexWith("floor"), bodyContent(body(header, "CC."))))
+                .byId("floor").orElseThrow();
 
         assertEquals(1, single.materials().get("minecraft:cobblestone"),
                 "Один блок в теле обязан дать один материал: число считается из блоков, а не пишется вручную");
         assertEquals(2, doubled.materials().get("minecraft:cobblestone"),
                 "Два блока в теле обязаны дать два материала: ручное число, совпавшее случайно, развалилось бы "
                         + "на подлоге с лишним блоком");
+    }
+
+    @Test
+    void materials_DoorTwoCells_CountsOneDoor() {
+        String header = "name: Проём\ntype: infrastructure\nstage: 0\nsize: 1x2x1\nentrance: 0,0,0\n";
+        Preset door = PresetLibrary.parse(List.of(indexWith("door"), bodyContent(body(header, "D", "D"))))
+                .byId("door").orElseThrow();
+
+        assertEquals(Map.of("minecraft:oak_door", 1), door.materials(),
+                "Дверь в двух клетках — один предмет: верхнюю половину ставит тот же предмет, иначе сундук демо "
+                        + "и гейт доски требовали бы вдвое больше дверей");
     }
 
     @Test
@@ -178,10 +187,7 @@ class PresetLibraryTests {
 
     @Test
     void countMaterials_DuplicateBlockId_SumsCounts() {
-        Schematic schematic = SchematicParser.parse(body("3,1,1",
-                "{\"pos\":[0,0,0],\"block\":\"minecraft:cobblestone\"},"
-                        + "{\"pos\":[1,0,0],\"block\":\"minecraft:cobblestone\"},"
-                        + "{\"pos\":[2,0,0],\"block\":\"minecraft:oak_planks\"}"), "тест");
+        Schematic schematic = SchematicTextParser.parse(body("size: 3x1x1\n", "CC#"), "тест").schematic();
         Map<String, Integer> materials = PresetLibrary.countMaterials(schematic);
 
         assertEquals(2, materials.get("minecraft:cobblestone"),
@@ -198,7 +204,7 @@ class PresetLibraryTests {
 
         assertEquals(16, paths.size(),
                 "Индекс обязан назвать по телу на каждый из шестнадцати пресетов: пропуск тела оставил бы пресет без схемы");
-        assertEquals(PresetLibrary.SCHEMATICS_ROOT + "storage_hut.json", paths.get(2),
+        assertEquals(PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt", paths.get(2),
                 "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой");
     }
 
@@ -252,12 +258,11 @@ class PresetLibraryTests {
 
     @Test
     void parse_RequiresUnknownPreset_IsRejected() {
-        LoadedContent index = indexWith("{\"id\":\"room\",\"file\":\"room\",\"name\":\"Зал\",\"stage\":2,"
-                + "\"type\":\"craft\",\"size\":[2,1,1],\"entry\":[0,0,0],\"level\":2,\"requires\":\"ghost\"}");
-        LoadedContent body = bodyContent(body("2,1,1", "{\"pos\":[1,0,0],\"block\":\"minecraft:cobblestone\"}"));
+        LoadedContent body = bodyContent(body("name: Зал\ntype: craft\nstage: 2\nlevel: 2\nrequires: ghost\n"
+                + "size: 2x1x1\nentrance: 0,0,0\n", ".C"));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> PresetLibrary.parse(List.of(index, body)),
+                () -> PresetLibrary.parse(List.of(indexWith("room"), body)),
                 "Требование неизвестного пресета обязано отвергаться: правило «предыдущий уровень построен» "
                         + "ссылается на постройку, которой нет");
 
@@ -284,11 +289,11 @@ class PresetLibraryTests {
 
     @Test
     void parse_PlannedUnknownRequires_IsRejected() {
-        LoadedContent index = new LoadedContent("{\"version\":1,\"presets\":[{\"id\":\"hut\",\"file\":\"hut\","
-                + "\"name\":\"Хижина\",\"stage\":0,\"type\":\"housing\",\"size\":[2,1,1],\"entry\":[0,0,0]}],"
+        LoadedContent index = new LoadedContent("{\"version\":2,\"presets\":[\"hut\"],"
                 + "\"planned\":[{\"level\":3,\"name\":\"Финал\",\"requires\":\"ghost\"}]}",
                 "тестовый индекс", TableStatus.Source.BUILTIN);
-        LoadedContent body = bodyContent(body("2,1,1", "{\"pos\":[1,0,0],\"block\":\"minecraft:oak_planks\"}"));
+        LoadedContent body = bodyContent(body("name: Хижина\ntype: housing\nstage: 0\nsize: 2x1x1\n"
+                + "entrance: 0,0,0\n", ".#"));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> PresetLibrary.parse(List.of(index, body)),

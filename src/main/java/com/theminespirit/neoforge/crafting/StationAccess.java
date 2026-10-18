@@ -1,13 +1,11 @@
 package com.theminespirit.neoforge.crafting;
 
-import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.Approach;
+import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 
 final class StationAccess {
     enum State {
@@ -27,7 +25,7 @@ final class StationAccess {
     private final StationType type;
     private final int radius;
     private final StationFinder finder;
-    private final Approach approach;
+    private final ReachApproach approach;
     private final Supply supply;
     private State state = State.WORKING;
     private BlockPos pos;
@@ -45,7 +43,7 @@ final class StationAccess {
         this.radius = radius;
         this.supply = supply;
         this.finder = new StationFinder(spirit.level(), spirit.blockPosition(), radius, type);
-        this.approach = new Approach(spirit);
+        this.approach = new ReachApproach(spirit);
     }
 
     State tick() {
@@ -128,7 +126,7 @@ final class StationAccess {
 
     private void headTo(BlockPos target) {
         pos = target;
-        approach.begin(Vec3.atCenterOf(target), CraftTuning.STATION_REACH);
+        approach.begin(target);
         walk();
     }
 

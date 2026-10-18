@@ -14,25 +14,6 @@ public sealed interface RetreatPlan {
         }
     }
 
-    record Wall(List<BlockCoord> cells) implements RetreatPlan {
-        public Wall {
-            if (cells == null || cells.isEmpty()) {
-                throw new IllegalArgumentException("RetreatPlan.Wall: у баррикады должна быть хотя бы одна клетка; "
-                        + "без блоков в инвентаре план не строится вовсе");
-            }
-            cells = List.copyOf(cells);
-        }
-    }
-
-    record Tower(int height) implements RetreatPlan {
-        public Tower {
-            if (height < 1) {
-                throw new IllegalArgumentException("RetreatPlan.Tower.height = " + height
-                        + ": столб ниже одного блока бессмыслен; без блоков в инвентаре план не строится");
-            }
-        }
-    }
-
     /** Вылить ведро воды под себя: MLG при падении и тушение огня, найденной воды рядом нет. */
     record Pour() implements RetreatPlan {
     }

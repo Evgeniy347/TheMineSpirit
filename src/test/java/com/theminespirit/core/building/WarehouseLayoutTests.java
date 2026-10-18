@@ -14,8 +14,8 @@ class WarehouseLayoutTests {
 
     private static WarehouseLayout layout(int level) {
         String file = "storage_v" + level;
-        String path = ROOT + file + ".json";
-        return WarehouseLayout.of(SchematicParser.parse(JsonResource.readClasspath(path), path));
+        String path = ROOT + file + SchematicTextParser.EXTENSION;
+        return WarehouseLayout.of(SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic());
     }
 
     @Test

@@ -3,25 +3,25 @@ package com.theminespirit.neoforge.movement;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.BridgeParams;
 import com.theminespirit.core.script.CrossWaterParams;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.SwimParams;
 import com.theminespirit.neoforge.GotoScript;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 
 public final class CrossWaterScript implements ScriptInstance {
+    private static final int SWIM_DEPTH = 2;
+
     private final SpiritEntity spirit;
     private final CrossWaterParams params;
     private final BlockCoord target;
     private ScriptInstance delegate;
     private boolean planned;
+    private int deepest;
     private String failureReason;
 
     public CrossWaterScript(SpiritEntity spirit, CrossWaterParams params) {
@@ -79,20 +79,11 @@ public final class CrossWaterScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         int floorY = feet.getY() - 1;
         int width = waterWidth(new BlockCoord(feet.getX(), floorY, feet.getZ()), target);
-        if (width == 0) {
+        if (width == 0 || deepest < SWIM_DEPTH) {
             delegate = new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()));
             return;
         }
-        Map<String, Integer> counts = CheapBlocks.counts(spirit);
-        String chosen = params.block() != null ? params.block()
-                : WaterCrossingPlanner.cheapestAvailable(counts).orElse(null);
-        int available = chosen == null ? 0 : CheapBlocks.count(spirit, chosen);
-        WaterCrossingPlanner.Method method = WaterCrossingPlanner.choose(width, available);
-        if (method == WaterCrossingPlanner.Method.BRIDGE) {
-            delegate = new BridgeScript(spirit, new BridgeParams(params.x(), params.y(), params.z(), width, chosen));
-        } else {
-            delegate = new SwimScript(spirit, new SwimParams(params.x(), params.y(), params.z()));
-        }
+        delegate = new SwimScript(spirit, new SwimParams(params.x(), params.y(), params.z()));
     }
 
     private int waterWidth(BlockCoord from, BlockCoord to) {
@@ -113,6 +104,7 @@ public final class CrossWaterScript implements ScriptInstance {
             if (isWater(x, from.y(), z)) {
                 run++;
                 widest = Math.max(widest, run);
+                deepest = Math.max(deepest, depthAt(x, from.y(), z));
             } else {
                 run = 0;
             }
@@ -130,6 +122,14 @@ public final class CrossWaterScript implements ScriptInstance {
             }
         }
         return widest;
+    }
+
+    private int depthAt(int x, int top, int z) {
+        int depth = 0;
+        while (depth < SWIM_DEPTH && isWater(x, top - depth, z)) {
+            depth++;
+        }
+        return depth;
     }
 
     private boolean isWater(int x, int y, int z) {

@@ -1,11 +1,12 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
-import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmPlanner;
+import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmTuning;
@@ -25,6 +26,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 public final class FarmSession {
+    // Дух на пашне (высота 15/16) стоит в клетке самой пашни: земля грядки — блок под точкой чуть ниже ног.
+    private static final double GROUND_PROBE = 0.2;
     public enum Outcome {
         RUNNING,
         SUCCEEDED,
@@ -307,6 +310,10 @@ public final class FarmSession {
         FarmPlanner.Next next = (FarmPlanner.Next) result;
         buffer.remove(next.target());
         currentGround = next.target();
+        if (SpiritReach.reachable(origin, currentGround)) {
+            state = State.ACT;
+            return;
+        }
         approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
                 APPROACH_ARRIVAL);
         state = State.APPROACH;
@@ -329,7 +336,7 @@ public final class FarmSession {
     }
 
     private boolean inReachOfTarget() {
-        return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(posOf(currentGround))) <= FarmTuning.REACH;
+        return SpiritReach.reachable(coordOf(spirit.blockPosition()), currentGround);
     }
 
     private void act() {
@@ -442,7 +449,7 @@ public final class FarmSession {
     }
 
     private void beginBreak(BlockPos target) {
-        if (breaker.begin(target, true) instanceof BlockBreaker.Started) {
+        if (breaker.beginAnyDistance(target, true) instanceof BlockBreaker.Started) {
             state = State.BREAK;
         } else {
             noStand++;
@@ -609,7 +616,7 @@ private Outcome refuseWithoutSupplies() {
     }
 
     private static int plotGroundY(SpiritEntity spirit) {
-        return spirit.blockPosition().getY() - 1;
+        return (int) Math.floor(spirit.getY() - GROUND_PROBE);
     }
 
     private static BlockPos plotPos(FarmPlot plot, int groundY) {

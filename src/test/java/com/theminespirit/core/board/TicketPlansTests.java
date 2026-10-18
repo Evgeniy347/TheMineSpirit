@@ -324,6 +324,8 @@ class TicketPlansTests {
         assertTrue(collectScripts(plan).contains("capture"),
                 "Отлов обязан идти скриптом capture: сам отлов — существующий механизм "
                         + " husbandry (25), план только его вызывает");
+        assertEquals("minecraft:wheat_seeds", findCall(plan, "withdraw").params().get("item"),
+                "Перед отловом курицы дух берёт её корм со склада: capture ведёт животное приманкой");
     }
 
     @Test
@@ -342,6 +344,9 @@ class TicketPlansTests {
         assertTrue(collectScripts(plan).contains("withdraw"),
                 "Приманить — сначала взять приманку: гейт требует приманку в запасах, "
                         + "а план — сначала вынуть её со склада");
+        assertTrue(collectScripts(plan).contains("capture"),
+                "Приманить — затем привести животное в загон скриптом capture (упрощение 44.4: приманка вместо "
+                        + "кольца); без него дух взял бы пшеницу и встал на месте");
     }
 
     @Test
@@ -407,10 +412,11 @@ class TicketPlansTests {
         ScriptCall one = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 1, target()), "build_schematic");
         ScriptCall two = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 2, target()), "build_schematic");
 
-        assertEquals("enchant_room", one.params().get("file"),
-                "Уровень 1 чаровальни — схема enchant_room: маленькое здание со столом по центру");
-        assertEquals("enchant_room_v1", two.params().get("file"),
-                "Уровень 2 чаровальни — готовый пресет enchant_room_v1: кольцо 15 полок для 30 уровня");
+        assertEquals("enchant_room_v1", one.params().get("file"),
+                "Уровень 1 чаровальни — пресет enchant_room_v1 (решение владельца 18.10: доска строит настоящие "
+                        + "пресеты, а не заготовку из четырёх столбов): стол и кольцо 15 полок для 30 уровня");
+        assertEquals("enchant_room_v2", two.params().get("file"),
+                "Уровень 2 чаровальни — пресет enchant_room_v2: второй стол и запас полок");
     }
 
     @Test

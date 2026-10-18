@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.theminespirit.neoforge.BuildPace;
 import com.theminespirit.neoforge.SpiritConfig;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
@@ -46,6 +47,9 @@ public final class GameTestFilter {
         // По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
         SpiritConfig.setBoardEnabled(false);
         SpiritConfig.setCoordinatorEnabled(false);
+        // Темп стройки (около 2 блоков в секунду) проверяет своя пачка build_pace; остальным сценам он только
+        // удлиняет прогон, геометрию постройки он не меняет.
+        BuildPace.overrideForGameTest(1);
         installSettlementBatches();
         List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         if (filters.isEmpty()) {

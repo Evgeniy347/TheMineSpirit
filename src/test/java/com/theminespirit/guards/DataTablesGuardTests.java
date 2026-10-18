@@ -32,11 +32,9 @@ class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
     /**
      * Не таблицы /reload — путь и причина. Исключений нет: схемы доски зарегистрированы в DataTables,
-     * тела пресетов сторож берёт сам (presetBodies).
+     * тела пресетов сторож берёт сам (presetBodies), исключения сторожей схем живут в самих файлах построек.
      */
-    private static final Map<String, String> EXCLUDED = Map.of(
-            "data/theminespirit/schematics/structure_exemptions.json",
-            "список исключений сторожа схем (З1): не игровые данные и не таблица /reload, читается только тестом");
+    private static final Map<String, String> EXCLUDED = Map.of();
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
@@ -45,7 +43,7 @@ class DataTablesGuardTests {
 
         List<String> jsonFiles = Files.walk(DATA_ROOT)
                 .filter(Files::isRegularFile)
-                .filter(p -> p.toString().endsWith(".json"))
+                .filter(p -> p.toString().endsWith(".json") || p.toString().endsWith(".txt"))
                 .map(p -> "data/theminespirit/" + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
                 .sorted()
                 .collect(Collectors.toList());
@@ -62,7 +60,7 @@ class DataTablesGuardTests {
         }
 
         assertEquals(List.of(), unregistered,
-                "JSON-файл данных не зарегистрирован в DataTables и не в исключениях: "
+                "Файл данных (json или текстовая постройка) не зарегистрирован в DataTables и не в исключениях: "
                         + "таблица без регистрации не перечитается на лету по /reload, изменение в датапаке мира игнорируется. "
                         + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED "
                         + "внутри DataTablesGuardTests с явной причиной. Правило: каждый json в data/theminespirit "

@@ -2,15 +2,14 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.engine.ScriptResult;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
@@ -18,7 +17,6 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -32,15 +30,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class CaptureGameTests {
     private static final int SETTLE_TICKS = 5;
-    private static final int HOLD_TICKS = 200;
-    private static final BlockPos START = new BlockPos(1, 1, 1);
-    private static final BlockPos FLOCK = new BlockPos(4, 1, 4);
+    private static final BlockPos START = new BlockPos(1, 1, 8);
+    private static final BlockPos HOME = new BlockPos(2, 1, 2);
+    private static final BlockPos FLOCK = new BlockPos(8, 1, 8);
     private static final String BATCH = "capture";
-    // Кольцо — около 52 блоков. Если животное выйдет из кольца, кольцо пересобирается вокруг нового
-    // центра, а часть уже поставленных блоков остаётся в мире и в новое кольцо не входит. Запас 128
-    // переживает одну-две пересборки (флак capture_sheeponflat: «нужно 52, уже поставлено 0, есть 51»).
-    private static final int RING_MATERIAL = 128;
-    // [флак] кольцо пересобирается за уходящей овцой (до нескольких раз): запас 2× к замеру ~400
+    // [флак] овца идёт за кормом шагом ванильной навигации; потолок ≈ 2× замера ~300 тиков.
     private static final int CAPTURE_TIMEOUT_TICKS = 800;
 
     private CaptureGameTests() {
@@ -57,143 +51,71 @@ public final class CaptureGameTests {
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
-    public static void capture_SheepOnFlat_CaughtAndHeld200Ticks(GameTestHelper helper) {
+    public static void capture_SheepOutsidePenWithWheat_LuredIntoPenWithoutBlocks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.spawn(EntityType.SHEEP, FLOCK);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
-        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 4), new ItemStack(Items.DIRT, 64));
+        spirit.setHome(absolute(helper, HOME));
         SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
-        AtomicInteger successTick = new AtomicInteger(-1);
-        AtomicReference<BlockPos> center = new AtomicReference<>();
-        helper.onEachTick(() -> {
-            if (spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && successTick.get() < 0) {
-                successTick.set(spirit.tickCount);
-                center.set(readCenter(spirit));
-            }
-        });
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(successTick.get() >= 0,
-                    "овца на ровной земле обязана пойматься: статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
-            helper.assertTrue(spirit.tickCount - successTick.get() >= HOLD_TICKS,
-                    "после поимки ждём " + HOLD_TICKS + " тиков: иначе неизвестно, держит ли кольцо");
-            BlockPos anchor = center.get();
-            helper.assertTrue(anchor != null, "итог поимки обязан нести центр кольца: без него негде искать овцу");
-            Sheep sheep = onlySheep(helper);
-            helper.assertTrue(sheep.blockPosition().getX() >= anchor.getX() - 1
-                    && sheep.blockPosition().getX() <= anchor.getX() + 2
-                    && sheep.blockPosition().getZ() >= anchor.getZ() - 1
-                    && sheep.blockPosition().getZ() <= anchor.getZ() + 2,
-                    "через " + HOLD_TICKS + " тиков овца обязана оставаться в кольце вокруг " + anchor + ", фактически "
-                            + sheep.blockPosition().toShortString() + "\n" + probe.report("овца вышла из кольца"));
-            helper.assertTrue(ringBlocks(helper) >= 24,
-                    "кольцо вокруг овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
-    public static void capture_SheepByStep_RingThreeHighAndCaught(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        for (int x = 3; x <= 5; x++) {
-            for (int z = 3; z <= 5; z++) {
-                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
-            }
-        }
-        Sheep sheep = helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
-        sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
-        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
-        AtomicInteger successTick = new AtomicInteger(-1);
-        helper.onEachTick(() -> {
-            if (spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && successTick.get() < 0) {
-                successTick.set(spirit.tickCount);
-            }
-            // Овца уходит: кольцо пересчитывается за ней. Материал на уже поставленные блоки не списывается
-            // заново — иначе на 17-й постановке дух видит «нужно 48, есть 47» и бросает отлов.
-            if (successTick.get() < 0) {
-                sheep.move(MoverType.SELF, new Vec3(0.06, 0, 0));
-            }
-        });
+                new ScriptCall("capture", Map.of("species", "sheep", "radius", 12)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "овца у ступеньки обязана пойматься: статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
-            helper.assertTrue(maxColumn(helper) == 3,
-                    "кольцо у ступеньки местами обязано быть из 3 блоков: стенка в 2 блока от низкой земли "
-                            + "лишь на 1 выше высокого пола, и овца уходит прыжком");
+                    "овца с пшеницей у духа обязана прийти в загон у дома (упрощение 44.4: приманка вместо кольца): "
+                            + "статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            Sheep sheep = onlySheep(helper);
+            BlockCoord home = absolute(helper, HOME);
+            double dx = sheep.getX() - (home.x() + 0.5);
+            double dz = sheep.getZ() - (home.z() + 0.5);
+            helper.assertTrue(dx * dx + dz * dz <= 4.5 * 4.5,
+                    "овца обязана стоять в загоне у дома (радиус " + CatalogLimits.CAPTURE_PEN_RADIUS + "), фактически "
+                            + sheep.blockPosition().toShortString() + ", дом " + home);
+            helper.assertTrue(placedBlocks(helper) == 0,
+                    "отлов приманкой не ставит ни одного блока земли из инвентаря: кольцо из блоков убрано решением "
+                            + "владельца 18.10");
             GameTestFixtures.finish(helper);
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
-    public static void capture_SheepWalkingAway_BlockedAndCaught(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        Sheep sheep = helper.spawn(EntityType.SHEEP, FLOCK);
-        sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
-        CaptureProbe probe = CaptureProbe.attach(helper, spirit);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
-        AtomicInteger successTick = new AtomicInteger(-1);
-        AtomicReference<BlockPos> center = new AtomicReference<>();
-        helper.onEachTick(() -> {
-            if (spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED && successTick.get() < 0) {
-                successTick.set(spirit.tickCount);
-                center.set(readCenter(spirit));
-            }
-            if (successTick.get() < 0) {
-                sheep.move(MoverType.SELF, new Vec3(0.08, 0, 0));
-            }
-        });
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(successTick.get() >= 0,
-                    "овца, идущая на восток, обязана пойматься: дух обязан отрезать её стенкой впереди. Статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет поимки"));
-            helper.assertTrue(spirit.tickCount - successTick.get() >= HOLD_TICKS,
-                    "после поимки ждём " + HOLD_TICKS + " тиков: иначе неизвестно, держит ли кольцо идущую овцу");
-            BlockPos anchor = center.get();
-            helper.assertTrue(anchor != null, "итог поимки обязан нести центр кольца: без него негде искать овцу");
-            helper.assertTrue(ringBlocks(helper) >= 24,
-                    "кольцо вокруг идущей овцы обязано стоять из всех 24 блоков: иначе считать поимку нельзя");
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
-    public static void capture_WithoutBlocks_FailsExplainingShortage(GameTestHelper helper) {
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    public static void capture_WithoutFeed_FailsNamingFeed(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.spawn(EntityType.SHEEP, FLOCK);
-        SpiritEntity spirit = spawnWith(helper, START);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 16));
+        spirit.setHome(absolute(helper, HOME));
         SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
+                new ScriptCall("capture", Map.of("species", "sheep", "radius", 12)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "без блоков отлов обязан провалиться, а статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("не хватило блоков"),
-                    "причина провала обязана объяснять нехватку блоков, фактически: " + reason);
-            helper.assertTrue(alive(helper).size() == 1,
-                    "провал без блоков обязан оставлять овцу целой: иначе отлов калечит стадо");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED && reason.contains("корма"),
+                    "без корма отлов обязан провалиться с причиной «нет корма», фактически "
+                            + spirit.taskStatus() + ": " + reason);
+            helper.assertTrue(placedBlocks(helper) == 0, "провал без корма не ставит блоков");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    public static void capture_WithoutHome_FailsNamingHome(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.spawn(EntityType.SHEEP, FLOCK);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 4));
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("capture", Map.of("species", "sheep", "radius", 12)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED && reason.contains("дома"),
+                    "без дома вести животное некуда: отлов обязан провалиться с причиной, фактически "
+                            + spirit.taskStatus() + ": " + reason);
             GameTestFixtures.finish(helper);
         });
     }
@@ -206,13 +128,9 @@ public final class CaptureGameTests {
         return spirit;
     }
 
-    private static BlockPos readCenter(SpiritEntity spirit) {
-        if (spirit.taskResult().orElse(null) instanceof ScriptResult.Data data
-                && data.fields().get("center") instanceof List<?> point && point.size() == 3
-                && point.get(0) instanceof Number x && point.get(2) instanceof Number z) {
-            return new BlockPos(x.intValue(), 1, z.intValue());
-        }
-        return null;
+    private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {
+        BlockPos pos = helper.absolutePos(relative);
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private static Sheep onlySheep(GameTestHelper helper) {
@@ -229,37 +147,17 @@ public final class CaptureGameTests {
                 entity -> !entity.isRemoved() && entity.isAlive());
     }
 
-    private static int ringBlocks(GameTestHelper helper) {
+    private static int placedBlocks(GameTestHelper helper) {
         int count = 0;
-        for (int x = 0; x < 9; x++) {
+        for (int x = 0; x < 11; x++) {
             for (int y = 1; y <= 5; y++) {
-                for (int z = 0; z < 9; z++) {
-                    var state = helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(x, y, z)));
-                    if (state.is(Blocks.DIRT) || state.is(Blocks.COBBLESTONE)) {
+                for (int z = 0; z < 11; z++) {
+                    if (helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(x, y, z))).is(Blocks.DIRT)) {
                         count++;
                     }
                 }
             }
         }
         return count;
-    }
-
-    private static int maxColumn(GameTestHelper helper) {
-        int tallest = 0;
-        for (int x = 0; x < 9; x++) {
-            for (int z = 0; z < 9; z++) {
-                int column = 0;
-                for (int y = 1; y <= 5; y++) {
-                    var state = helper.getLevel().getBlockState(helper.absolutePos(new BlockPos(x, y, z)));
-                    if (state.is(Blocks.DIRT) || state.is(Blocks.COBBLESTONE)) {
-                        column++;
-                    } else {
-                        break;
-                    }
-                }
-                tallest = Math.max(tallest, column);
-            }
-        }
-        return tallest;
     }
 }

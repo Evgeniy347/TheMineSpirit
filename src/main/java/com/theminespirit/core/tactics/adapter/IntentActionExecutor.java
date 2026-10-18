@@ -30,9 +30,7 @@ public final class IntentActionExecutor implements ActionExecutor {
         if (method == RetreatMethod.NONE) {
             return ExecutionResult.idle();
         }
-        return method == RetreatMethod.BARRICADE || method == RetreatMethod.PILLAR
-                ? new ExecutionResult.Building(method)
-                : new ExecutionResult.Moving(method);
+        return new ExecutionResult.Moving(method);
     }
 
     private static ExecutionResult fight(TacticalOutcome outcome, SituationContext context) {

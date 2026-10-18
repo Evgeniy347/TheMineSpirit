@@ -10,12 +10,6 @@ public sealed interface ExecutionResult {
         }
     }
 
-    record Building(RetreatMethod method) implements ExecutionResult {
-        public Building {
-            requireMethod(method);
-        }
-    }
-
     record Attacking(EnemyFact enemy) implements ExecutionResult {
         public Attacking {
             requireEnemy(enemy);
@@ -38,7 +32,7 @@ public sealed interface ExecutionResult {
 
     private static void requireMethod(RetreatMethod method) {
         if (method == null || method == RetreatMethod.NONE) {
-            throw new IllegalArgumentException("Способ отхода = " + method + ": движение и постройка требуют реального "
+            throw new IllegalArgumentException("Способ отхода = " + method + ": движение требует реального "
                     + "способа отхода; RetreatMethod.NONE означает простой (Idle)");
         }
     }

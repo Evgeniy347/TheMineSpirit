@@ -68,21 +68,6 @@ public final class SpiritGear {
         return count(Items.GOLDEN_APPLE) + count(Items.ENCHANTED_GOLDEN_APPLE);
     }
 
-    public boolean takeBlock(BlockPos pos) {
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            if (placeable(stack)) {
-                BlockState state = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
-                if (spirit.level().setBlock(pos, state, 3)) {
-                    stack.shrink(1);
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
-    }
-
     public boolean pourWater(BlockPos pos) {
         if (!spirit.level().getBlockState(pos).canBeReplaced()) {
             return false;

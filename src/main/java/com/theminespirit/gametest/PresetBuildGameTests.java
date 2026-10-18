@@ -1,10 +1,12 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
@@ -13,6 +15,7 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -101,71 +104,43 @@ public final class PresetBuildGameTests {
         return matches;
     }
 
-    // [флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
-    // иначе тест меряет скорость стройки, а не её результат.
+    // [флак] склад-хижина с места, с запасом на подходы; тест меряет результат, а не скорость.
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
     public static void preset_StorageHutFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
-        prepare(helper);
-        BlockPos anchor = new BlockPos(1, 1, 1);
-        Schematic schematic = SchematicResources.load("storage_hut");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
-                new ItemStack(Items.OAK_PLANKS, 64),
-                new ItemStack(Items.OAK_PLANKS, 16),
-                new ItemStack(Items.CHEST, 2));
-        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", anchor), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "склад-хижина по пресету обязана построиться целиком, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
-            int matches = countMatches(helper, schematic, anchor);
-            helper.assertTrue(matches == schematic.blocks().size(),
-                    "постройка обязана совпасть с пресетом блок в блок: поставлено " + matches + " из "
-                            + schematic.blocks().size());
-            helper.assertTrue(helper.getBlockState(anchor.offset(1, 1, 1)).is(Blocks.CHEST)
-                            && helper.getBlockState(anchor.offset(3, 1, 1)).is(Blocks.CHEST),
-                    "сундуки обязаны стоять внутри склада, а не в стене: иначе в них не зайти");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 3, 2)).is(Blocks.OAK_PLANKS),
-                    "крыша обязана закрывать склад: без неё постройка не закрыта");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir()
-                            && helper.getBlockState(anchor.offset(2, 2, 0)).isAir(),
-                    "дверной проём 1×2 обязан остаться пустым: дух выходит наружу, а не замуровывает себя");
-            GameTestFixtures.finish(helper);
-        });
+        buildPreset(helper, "storage_hut", "склад-хижина");
     }
 
-    // [флак] 81 блок каменного дома дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
+    // [флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
     public static void preset_StoneHouseFromLibrary_StandsWithRoof(GameTestHelper helper) {
-        prepare(helper);
+        buildPreset(helper, "stone_house", "каменный дом");
+    }
+
+    private static void buildPreset(GameTestHelper helper, String scheme, String title) {
+        GameTestFixtures.reset(helper);
+        wideFloor(helper);
         BlockPos anchor = new BlockPos(1, 1, 1);
-        Schematic schematic = SchematicResources.load("stone_house");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
-                new ItemStack(Items.COBBLESTONE, 64),
-                new ItemStack(Items.COBBLESTONE, 14),
-                new ItemStack(Items.GLASS_PANE, 2),
-                new ItemStack(Items.TORCH, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "stone_house", anchor), SETTLE_TICKS);
+        Schematic schematic = SchematicResources.load(scheme);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(9, 1, 9));
+        int slot = 0;
+        for (Map.Entry<String, Integer> material : PresetLibrary.countMaterials(schematic).entrySet()) {
+            Item item = BlockItems.itemFor(material.getKey());
+            for (int left = material.getValue(); left > 0; left -= item.getDefaultMaxStackSize()) {
+                spirit.getInventory().setItem(slot++, new ItemStack(item, Math.min(left, item.getDefaultMaxStackSize())));
+            }
+        }
+        SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, scheme, anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "каменный дом по пресету обязан построиться целиком, статус "
+                    title + " по пресету обязан построиться целиком из ровно своих материалов, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             int matches = countMatches(helper, schematic, anchor);
             helper.assertTrue(matches == schematic.blocks().size(),
-                    "дом обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
+                    title + " обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
-            helper.assertTrue(helper.getBlockState(anchor.offset(4, 3, 0)).is(Blocks.COBBLESTONE)
-                            && helper.getBlockState(anchor.offset(1, 3, 4)).is(Blocks.COBBLESTONE),
-                    "дальние клетки крыши обязаны быть поставлены: иначе дух не дотягивается до края постройки");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 3, 2)).is(Blocks.COBBLESTONE),
-                    "крыша дома обязана быть на месте: без неё постройка не закрыта");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir(),
-                    "дверной проём дома обязан остаться пустым: дух выходит наружу");
             GameTestFixtures.finish(helper);
         });
     }

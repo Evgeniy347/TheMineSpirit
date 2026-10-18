@@ -57,8 +57,7 @@ class IntentActionExecutorProperties {
         return switch (option) {
             case FIGHT -> Set.of(ExecutionResult.Attacking.class, ExecutionResult.Shooting.class,
                     ExecutionResult.Idle.class);
-            case RETREAT -> Set.of(ExecutionResult.Moving.class, ExecutionResult.Building.class,
-                    ExecutionResult.Idle.class);
+            case RETREAT -> Set.of(ExecutionResult.Moving.class, ExecutionResult.Idle.class);
             case IGNORE -> Set.of(ExecutionResult.Idle.class);
         };
     }

@@ -37,7 +37,6 @@ final class SpiritDemoCommand {
         spirit.then(literal("demo")
                 .then(literal("list").executes(SpiritDemoCommand::list))
                 .then(literal("stop").executes(SpiritDemoCommand::stop))
-                .then(building("house"))
                 .then(building("family_house"))
                 .then(building("stone_house"))
                 .then(building("storage_hut"))

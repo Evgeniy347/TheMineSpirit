@@ -12,6 +12,7 @@ import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.MemoryCodec;
@@ -48,6 +49,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -56,8 +58,8 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 public final class SpiritEntity extends PathfinderMob {
@@ -74,6 +76,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final ArmorEquipPolicy armorEquip = new ArmorEquipPolicy(this);
     private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
+    private final DropMagnet magnet = new DropMagnet(this);
     private SpiritBrain brain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -84,6 +87,7 @@ public final class SpiritEntity extends PathfinderMob {
     private Camp camp;
     private DropCollector activeCollector;
     private int pathBuilds;
+    private int teleports;
     private int entityQueries;
     private int snapshotBuilds;
     private long lastSayTick = Long.MIN_VALUE;
@@ -124,6 +128,7 @@ public final class SpiritEntity extends PathfinderMob {
         armorEquip.tick();
         hunger.tick();
         NightLeashGate.arm(this);
+        magnet.tick();
         policies.tick();
         if (demo) {
             tactics.pause();
@@ -573,6 +578,22 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void countPathBuild() {
         pathBuilds++;
+    }
+
+    public void countTeleport() {
+        teleports++;
+    }
+
+    public int teleports() {
+        return teleports;
+    }
+
+    public int magnetPulls() {
+        return magnet.pulls();
+    }
+
+    public int claimMagnetPulls(AABB area, IdFilter items, long since) {
+        return magnet.claim(area, items, since);
     }
 
     public int pathBuilds() {

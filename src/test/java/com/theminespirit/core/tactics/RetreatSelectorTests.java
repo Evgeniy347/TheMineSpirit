@@ -30,13 +30,13 @@ class RetreatSelectorTests {
                         .cover(5).build(), RetreatMethod.COVER, "retreat_cover"),
                 row("скелеты: укрытие, а не баррикада и не столб", world().enemies("skeleton", 12, 2).cover(5).blocks(20)
                         .build(), RetreatMethod.COVER, "retreat_cover"),
-                row("скелеты без укрытия: баррикада и столб закрыты", world().enemies("skeleton", 12, 2).blocks(20)
-                        .build(), RetreatMethod.NONE, ""),
-                row("крипер: баррикада не годится, столб годится", world().enemy("creeper", 4).blocks(10).build(),
-                        RetreatMethod.PILLAR, "retreat_pillar"),
-                row("фантом: столб не годится, баррикада годится", world().enemy("phantom", 10).blocks(10).build(),
-                        RetreatMethod.BARRICADE, "retreat_barricade"),
-                row("зомби вплотную: баррикада требует 3 блока", world().enemy("zombie", 2).blocks(7).build(),
+                row("скелеты без укрытия и с блоками: отход не строит, бежать некуда", world().enemies("skeleton", 12, 2)
+                        .blocks(20).build(), RetreatMethod.NONE, ""),
+                row("крипер и блоки в инвентаре: не столб, а бег прочь", world().enemy("creeper", 4).blocks(10).build(),
+                        RetreatMethod.AWAY, "retreat_away"),
+                row("фантом и блоки в инвентаре: не баррикада", world().enemy("phantom", 10).blocks(10).build(),
+                        RetreatMethod.NONE, ""),
+                row("зомби вплотную и блоки: строить нельзя, бежать поздно", world().enemy("zombie", 2).blocks(7).build(),
                         RetreatMethod.NONE, ""),
                 row("зомби и ведро воды рядом: вода из ведра", world().enemy("zombie", 5).bucket(true).build(),
                         RetreatMethod.WATER, "retreat_water_bucket"),

@@ -12,7 +12,7 @@ class BuildShelterParamsTests {
         assertEquals(3, BuildShelterParams.from(Map.of("side", 3)).side(),
                 "Укрытие 3×3 обязано приниматься: тесное, но дух встаёт внутри");
         assertEquals(4, BuildShelterParams.from(Map.of("side", 4)).side(),
-                "Укрытие 4×4 обязано приниматься: это размер быстрого укрепления Fortify");
+                "Укрытие 4×4 обязано приниматься: это размер быстрого укрытия build_shelter");
     }
 
     @Test

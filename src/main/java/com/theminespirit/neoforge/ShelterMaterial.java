@@ -1,4 +1,4 @@
-package com.theminespirit.neoforge.fortify;
+package com.theminespirit.neoforge;
 
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -12,8 +12,8 @@ import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class FortifyMaterial {
-    private FortifyMaterial() {
+public final class ShelterMaterial {
+    private ShelterMaterial() {
     }
 
     public static Optional<String> placeableBlockId(Container inventory) {

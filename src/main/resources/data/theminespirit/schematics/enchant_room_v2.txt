@@ -1,0 +1,55 @@
+# enchant_room_v2 — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+name: "Чаровальня, уровень 2 (больше: второй стол и запас полок)"
+type: craft
+stage: 2
+level: 2
+requires: enchant_room_v1
+size: 11x4x9   # Ш×В×Д
+entrance: 5,1,8
+legend:
+  'S': stone_bricks
+  '#': oak_planks
+  'K': bookshelf
+  'E': enchanting_table
+  'T': torch
+layers:
+  - y0: |
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+  - y1: |
+      ###########
+      #.........#
+      #..KKKKK..#
+      #..K...K..#
+      #..K.E.KE.#
+      #..K...K..#
+      #..KK.KK..#
+      #..KK.....#
+      #####.#####
+  - y2: |
+      ###########
+      #.........#
+      #..T......#
+      #.........#
+      #.........#
+      #.........#
+      #..T......#
+      #.........#
+      #####.#####
+  - y3: |
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+      SSSSSSSSSSS

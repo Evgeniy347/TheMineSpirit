@@ -156,7 +156,8 @@ public final class CatalogLimits {
     public static final int CAPTURE_RADIUS_MIN = 1;
     public static final int CAPTURE_RADIUS_MAX = 16;
     public static final int CAPTURE_RADIUS_DEFAULT = 8;
-    public static final int CAPTURE_RECHECK_MAX = 4;
+    public static final int CAPTURE_LEAD_TICKS = 1200;
+    public static final int CAPTURE_PEN_RADIUS = 3;
     // Дух замечает отбившихся чуть дальше края загона
     public static final int HERD_SIGHT_MARGIN = 4;
 

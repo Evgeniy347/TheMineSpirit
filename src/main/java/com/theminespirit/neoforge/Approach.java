@@ -1,12 +1,18 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.movement.GotoTuning;
 import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.movement.StuckWatcher;
+import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.policy.NightLeashGate;
+import java.util.Optional;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class Approach {
@@ -28,6 +34,7 @@ public final class Approach {
     private int timeoutTicks;
     private int elapsed;
     private int deadEndTicks;
+    private int teleports;
     private boolean active;
     private PathMode mode = PathMode.NORMAL;
     private String refusal;
@@ -70,6 +77,9 @@ public final class Approach {
             return State.TIMEOUT;
         }
         if (stuckWatcher.observe(spirit.getX(), spirit.getY(), spirit.getZ())) {
+            if (teleportCloser(target)) {
+                return State.MOVING;
+            }
             finish();
             return State.STUCK;
         }
@@ -88,6 +98,10 @@ public final class Approach {
         if (deadEnd != null) {
             deadEndTicks++;
             if (deadEndTicks >= GotoTuning.DEAD_END_CONFIRM_TICKS) {
+                if (teleportCloser(target)) {
+                    deadEndTicks = 0;
+                    return State.MOVING;
+                }
                 refusal = deadEnd;
                 finish();
                 return State.STUCK;
@@ -134,6 +148,7 @@ public final class Approach {
         timeoutTicks = GotoTuning.timeoutTicks(spirit.position().distanceTo(point));
         elapsed = 0;
         deadEndTicks = 0;
+        teleports = 0;
         refusal = null;
         active = true;
     }
@@ -166,6 +181,45 @@ public final class Approach {
         }
         return "путь упёрся в тупик в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
                 + " блоков от цели: стоянка за преградой";
+    }
+
+    public int teleports() {
+        return teleports;
+    }
+
+    private boolean teleportCloser(Vec3 target) {
+        Unstuck rules = DataTables.INSTANCE.unstuck().current();
+        if (teleports >= rules.teleportsPerApproach() || mode == PathMode.SWIM || mode == PathMode.CAREFUL) {
+            return false;
+        }
+        LevelSafetyView safety = new LevelSafetyView(spirit.level());
+        Optional<BlockCoord> step = rules.step(blockCoord(spirit.position()), blockCoord(target),
+                cell -> MiningSafety.canStand(cell, safety) && allowedThere(cell), this::clearPath);
+        if (step.isEmpty()) {
+            return false;
+        }
+        BlockCoord cell = step.get();
+        spirit.getNavigation().stop();
+        spirit.teleportTo(cell.x() + 0.5, cell.y(), cell.z() + 0.5);
+        teleports++;
+        spirit.countTeleport();
+        stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
+        pathRefresh = new PathRefreshPolicy();
+        return true;
+    }
+
+    private boolean allowedThere(BlockCoord cell) {
+        if (NightLeashGate.refusal(spirit, cell) != null) {
+            return false;
+        }
+        return spirit.workZone().map(zone -> zone.excess(cell) == 0).orElse(true);
+    }
+
+    private boolean clearPath(BlockCoord cell) {
+        Vec3 eye = spirit.getEyePosition();
+        Vec3 head = new Vec3(cell.x() + 0.5, cell.y() + spirit.getEyeHeight(), cell.z() + 0.5);
+        return spirit.level().clip(new ClipContext(eye, head, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,
+                spirit)).getType() == HitResult.Type.MISS;
     }
 
     private void moveToTarget(Vec3 target) {
