@@ -9,6 +9,7 @@ import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
 import com.theminespirit.core.script.AttackParams;
 import com.theminespirit.core.script.DefendParams;
+import com.theminespirit.core.script.DisengageParams;
 import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.BuildSchematicParams;
@@ -73,6 +74,7 @@ import com.theminespirit.core.script.TillParams;
 import com.theminespirit.core.script.FeedParams;
 import com.theminespirit.neoforge.combat.AttackScript;
 import com.theminespirit.neoforge.combat.DefendScript;
+import com.theminespirit.neoforge.combat.DisengageScript;
 import com.theminespirit.neoforge.combat.FleeScript;
 import com.theminespirit.neoforge.combat.RetreatScript;
 import com.theminespirit.neoforge.combat.SetCombatModeScript;
@@ -169,6 +171,8 @@ public final class SpiritScripts {
         table.put("defend", spirit -> observing(params -> new DefendScript(spirit, DefendParams.from(params))));
         table.put("flee", spirit -> observing(params -> new FleeScript(spirit, FleeParams.from(params))));
         table.put("retreat", spirit -> observing(params -> new RetreatScript(spirit, RetreatParams.from(params))));
+        table.put("disengage",
+                spirit -> observing(params -> new DisengageScript(spirit, DisengageParams.from(params))));
         table.put("deliver", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
         table.put("meet", spirit -> params -> new MeetScript(spirit, MeetParams.from(params)));
         table.put("wait", spirit -> params -> new WaitScript(spirit, WaitParams.from(params)));

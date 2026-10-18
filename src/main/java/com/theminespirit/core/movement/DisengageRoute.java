@@ -2,10 +2,12 @@ package com.theminespirit.core.movement;
 
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import java.util.Objects;
 
 public final class DisengageRoute {
-    public static final double RETREAT_MARGIN = 1.0;
+    public static final double ARRIVAL_SLACK = 0.5;
+    public static final double MIN_STEP = 1.0;
 
     private DisengageRoute() {
     }
@@ -25,7 +27,7 @@ public final class DisengageRoute {
             dz = 0.0;
             length = 1.0;
         }
-        double target = Math.max(distance, length + RETREAT_MARGIN);
+        double target = Math.max(distance + RetreatPlanner.HOME_ARRIVAL + ARRIVAL_SLACK, length + MIN_STEP);
         return new Point(threat.x() + dx / length * target, self.y(), threat.z() + dz / length * target);
     }
 

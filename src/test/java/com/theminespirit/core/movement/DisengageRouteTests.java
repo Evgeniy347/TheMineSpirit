@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.adapter.RetreatPlanner;
 import org.junit.jupiter.api.Test;
 
 class DisengageRouteTests {
@@ -17,8 +18,9 @@ class DisengageRouteTests {
         Point away = DisengageRoute.away(self, threat, 5);
 
         assertEquals(64.0, away.y(), 0.001, "точка отхода остаётся на высоте духа: он отходит, а не взбирается");
-        assertEquals(5, horizontal(threat, away), 0.001,
-                "точка отхода стоит ровно в distance от угрозы: иначе дух либо не выйдет из боя, либо уйдёт далеко");
+        assertEquals(5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK, horizontal(threat, away), 0.001,
+                "точка отхода стоит за требуемой дистанцией с запасом на прибытие отхода: без запаса дух "
+                        + "остановился бы ближе distance и не вышел из боя");
         assertTrue(away.x() > self.x(), "точка отхода лежит дальше от угрозы, чем дух: он пятится, а не идёт на врага");
     }
 
@@ -29,7 +31,7 @@ class DisengageRouteTests {
 
         Point away = DisengageRoute.away(self, threat, 5);
 
-        assertEquals(5, away.x(), 0.001,
+        assertEquals(5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK, away.x(), 0.001,
                 "при совпадении позиций направление не определено: берём +X, иначе NaN увёл бы духа в никуда");
         assertEquals(0, away.z(), 0.001, "при совпадении позиций отход идёт строго по +X");
     }
