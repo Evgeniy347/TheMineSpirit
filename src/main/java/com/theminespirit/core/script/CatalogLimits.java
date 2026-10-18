@@ -185,4 +185,13 @@ public final class CatalogLimits {
     public static final int RETREAT_TIMEOUT_TICKS = 1200;
     public static final int MEET_TIMEOUT_TICKS = 1200;
     public static final int DELIVER_TIMEOUT_TICKS = 1200;
+
+    // climb: подъём/спуск по лестнице, лиане или строительным лесам до конца колонны
+    public static final int CLIMB_TIMEOUT_TICKS = 1200;
+
+    // disengage: выход из боя отходом на дистанцию от ближайшего врага
+    public static final int DISENGAGE_TIMEOUT_TICKS = 600;
+    public static final int DISENGAGE_DISTANCE_MIN = 1;
+    public static final int DISENGAGE_DISTANCE_MAX = 16;
+    public static final int DISENGAGE_DISTANCE_DEFAULT = 5;
 }
