@@ -34,7 +34,9 @@ class DataTablesGuardTests {
      * Не таблицы /reload — путь и причина. Исключений нет: схемы доски зарегистрированы в DataTables,
      * тела пресетов сторож берёт сам (presetBodies).
      */
-    private static final Map<String, String> EXCLUDED = Map.of();
+    private static final Map<String, String> EXCLUDED = Map.of(
+            "data/theminespirit/schematics/structure_exemptions.json",
+            "список исключений сторожа схем (З1): не игровые данные и не таблица /reload, читается только тестом");
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

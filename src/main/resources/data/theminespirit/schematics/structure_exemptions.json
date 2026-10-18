@@ -1,0 +1,112 @@
+[
+ {
+  "schematic": "house",
+  "rule": "entrance",
+  "reason": "house — плита 3×2×3 без проёма: схема служит дешёвым маркером демо и GameTest; настоящий дом — family_house, замена схемы — З3"
+ },
+ {
+  "schematic": "house",
+  "rule": "roof",
+  "reason": "house — плита без крыши (17 блоков): дешёвый маркер демо и GameTest; настоящий дом — family_house, замена — З3"
+ },
+ {
+  "schematic": "house",
+  "rule": "inner_height",
+  "reason": "house — плита 3×2×3: внутренней высоты нет, это маркер, а не дом; настоящий дом — family_house, замена — З3"
+ },
+ {
+  "schematic": "house",
+  "rule": "window",
+  "reason": "house — плита без стен и окон: маркер демо и GameTest; настоящий дом — family_house, замена — З3"
+ },
+ {
+  "schematic": "house",
+  "rule": "door",
+  "reason": "house — плита без двери: формат схем не хранит state двери, замена дома — З3"
+ },
+ {
+  "schematic": "house",
+  "rule": "light",
+  "reason": "house — плита без источника света: маркер демо и GameTest; настоящий дом — family_house, замена — З3"
+ },
+ {
+  "schematic": "family_house",
+  "rule": "door",
+  "reason": "формат схем не хранит state двери: проём пуст, дверь появится при поддержке state в З3"
+ },
+ {
+  "schematic": "stone_house",
+  "rule": "door",
+  "reason": "формат схем не хранит state двери: проём пуст, дверь появится при поддержке state в З3"
+ },
+ {
+  "schematic": "well",
+  "rule": "closed_walls",
+  "reason": "колодец открыт: на слое y=1 стоят только угловые столбы, сплошных стен нет по замыслу"
+ },
+ {
+  "schematic": "well",
+  "rule": "entrance",
+  "reason": "вход колодца — клетка над водой в центре, а не дверь на внешней грани: это спуск к воде"
+ },
+ {
+  "schematic": "well",
+  "rule": "roof",
+  "reason": "колодец открыт сверху по замыслу: крыши нет, к воде должен быть доступ"
+ },
+ {
+  "schematic": "well",
+  "rule": "inner_height",
+  "reason": "шахта колодца уходит вниз, вода у дна: внутренней высоты в схеме нет"
+ },
+ {
+  "schematic": "pen_4x5",
+  "rule": "roof",
+  "reason": "загон открыт сверху по замыслу: животным нужен свет и воздух"
+ },
+ {
+  "schematic": "pen_4x5",
+  "rule": "inner_height",
+  "reason": "загон — периметр забора без пола и потолка: внутренней высоты нет"
+ },
+ {
+  "schematic": "pen_7x7",
+  "rule": "roof",
+  "reason": "загон открыт сверху по замыслу: животным нужен свет и воздух"
+ },
+ {
+  "schematic": "pen_7x7",
+  "rule": "inner_height",
+  "reason": "загон — периметр забора без пола и потолка: внутренней высоты нет"
+ },
+ {
+  "schematic": "pen_9x9",
+  "rule": "roof",
+  "reason": "загон открыт сверху по замыслу: животным нужен свет и воздух"
+ },
+ {
+  "schematic": "pen_9x9",
+  "rule": "inner_height",
+  "reason": "загон — периметр забора без пола и потолка: внутренней высоты нет"
+ },
+ {
+  "schematic": "mine_entrance_v1",
+  "rule": "closed_walls",
+  "reason": "вход в шахту — рама из брёвен по углам и навес сверху, а не сплошные стены"
+ },
+ {
+  "schematic": "mine_entrance_v1",
+  "rule": "entrance",
+  "reason": "вход в шахту — спуск в центре под навесом, а не дверь на внешней грани"
+ },
+ {
+  "schematic": "mine_entrance_v1",
+  "rule": "inner_height",
+  "reason": "спуск уходит вниз в породу: внутренняя высота задаётся шахтой, а не схемой входа"
+ },
+ {
+  "schematic": "torch_post",
+  "rule": "closed_walls",
+  "reason": "факельный столб 2×4×1 — не здание: замкнутого периметра стен у столба нет"
+ }
+]
