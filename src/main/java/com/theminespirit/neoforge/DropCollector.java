@@ -48,8 +48,11 @@ public final class DropCollector {
     private final Approach approach;
     private final LevelSafetyView safety;
     private final Set<String> skipped = new HashSet<>();
+    private final Set<BlockCoord> failedStands = new HashSet<>();
     private List<ItemEntity> nearby = List.of();
     private ItemEntity target;
+    private BlockCoord currentStand;
+    private int approachAttempts;
     private WorkTarget held;
     private UnloadScript relief;
     private boolean reliefTried;
@@ -105,6 +108,9 @@ public final class DropCollector {
                 return conclude();
             }
             delayWaited = 0;
+            approachAttempts = 0;
+            currentStand = null;
+            failedStands.clear();
         }
         return pursue();
     }
@@ -198,13 +204,27 @@ public final class DropCollector {
             return fail("инвентарь полон: не помещается " + unfit.item());
         }
         if (unreachable > 0) {
-            return fail("не дотянулся до " + unreachable + " предметов");
+            return fail("не дотянулся до " + unreachable + " предметов" + unreachableDetail());
         }
         return State.DONE;
     }
 
+    private String unreachableDetail() {
+        for (ItemEntity drop : nearby) {
+            if (!drop.isRemoved() && skipped.contains(drop.getStringUUID())) {
+                return " (" + itemId(drop.getItem()) + " в " + drop.blockPosition().toShortString()
+                        + " дольше " + (elapsed) + " тиков)";
+            }
+        }
+        return "";
+    }
+
     private State pursue() {
         if (withinPickupReach()) {
+            approach.cancel();
+            return pickUp();
+        }
+        if (target.blockPosition().equals(spirit.blockPosition())) {
             approach.cancel();
             return pickUp();
         }
@@ -221,18 +241,41 @@ public final class DropCollector {
         }
         return switch (state) {
             case MOVING -> State.RUNNING;
-            case ARRIVED, STUCK, TIMEOUT -> giveUpOnTarget();
+            case ARRIVED, STUCK, TIMEOUT -> retryApproach();
         };
+    }
+
+    private State retryApproach() {
+        approach.cancel();
+        if (currentStand != null) {
+            failedStands.add(currentStand);
+        }
+        currentStand = null;
+        approachAttempts++;
+        if (approachAttempts < PickupTuning.MAX_APPROACH_ATTEMPTS && hasUntriedStand()) {
+            return State.RUNNING;
+        }
+        return giveUpOnTarget();
+    }
+
+    private boolean hasUntriedStand() {
+        BlockCoord access = PickupSpot.accessCell(blockOf(target.blockPosition()), safety);
+        return PickupSpot.standsFor(access, blockOf(spirit.blockPosition()), safety).stream()
+                .anyMatch(spot -> !spot.equals(access) && !failedStands.contains(spot));
     }
 
     private void beginApproach() {
         BlockCoord access = PickupSpot.accessCell(blockOf(target.blockPosition()), safety);
-        Optional<BlockCoord> stand = PickupSpot.forDrop(access, blockOf(spirit.blockPosition()), safety);
-        if (stand.isPresent() && !stand.get().equals(access)) {
+        Optional<BlockCoord> stand = PickupSpot.standsFor(access, blockOf(spirit.blockPosition()), safety).stream()
+                .filter(spot -> !spot.equals(access) && !failedStands.contains(spot))
+                .findFirst();
+        if (stand.isPresent()) {
             BlockCoord spot = stand.get();
+            currentStand = spot;
             approach.begin(new Vec3(spot.x() + 0.5, spot.y(), spot.z() + 0.5), STAND_ARRIVAL);
             return;
         }
+        currentStand = null;
         approach.begin(target, tuning.pickupReach());
     }
 

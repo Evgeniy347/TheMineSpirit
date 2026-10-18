@@ -4,6 +4,9 @@ import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -27,35 +30,35 @@ public final class PickupSpot {
     }
 
     public static Optional<BlockCoord> forDrop(BlockCoord itemCell, BlockCoord from, SafetyView view) {
+        List<BlockCoord> stands = standsFor(itemCell, from, view);
+        return stands.isEmpty() ? Optional.empty() : Optional.of(stands.get(0));
+    }
+
+    public static List<BlockCoord> standsFor(BlockCoord itemCell, BlockCoord from, SafetyView view) {
         Objects.requireNonNull(itemCell, "Клетка предмета не может быть null: без неё неизвестно, где подбирать");
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая стоянка");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется безопасность стоянки");
         if (MiningSafety.canStand(itemCell, view)) {
-            return Optional.of(itemCell);
+            return List.of(itemCell);
         }
         if (view.cellAt(itemCell) != Cell.HAZARD) {
-            return Optional.empty();
+            return List.of();
         }
-        BlockCoord best = null;
-        long bestDistance = Long.MAX_VALUE;
+        List<BlockCoord> stands = new ArrayList<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
             for (int dz = -RADIUS; dz <= RADIUS; dz++) {
                 if ((dx == 0 && dz == 0) || (Math.abs(dx) == RADIUS && Math.abs(dz) == RADIUS)) {
                     continue;
                 }
                 BlockCoord stand = new BlockCoord(itemCell.x() + dx, itemCell.y(), itemCell.z() + dz);
-                if (!canStandBesideHazard(stand, view)) {
-                    continue;
-                }
-                long distance = distanceSquared(from, stand);
-                if (best == null || distance < bestDistance
-                        || (distance == bestDistance && stand.compareTo(best) < 0)) {
-                    best = stand;
-                    bestDistance = distance;
+                if (canStandBesideHazard(stand, view)) {
+                    stands.add(stand);
                 }
             }
         }
-        return Optional.ofNullable(best);
+        stands.sort(Comparator.comparingLong((BlockCoord stand) -> distanceSquared(from, stand))
+                .thenComparing(Comparator.naturalOrder()));
+        return List.copyOf(stands);
     }
 
     private static boolean canStandBesideHazard(BlockCoord feet, SafetyView view) {

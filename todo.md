@@ -145,6 +145,17 @@
       collected 1/2, чужих станций рядом нет), задача висела в RUNNING; готовое теперь подбирается каждый тик,
       постановка сырья — раз в `POLL_TICKS` (82ced4d3). Пачки smelt_campfire/smelt_campfire_materials/
       coordinator_work_free_tree — 3×, полный gametest 683 теста — 2× подряд зелёные.
+- [x] Флеки полного GameTest с корнем в production (18.10; deepseek-v4.1-flash):
+      `shear_sheepinpen_shearedalive` и `gather_stoneheapwithwoodenpickaxe_minesall` — «не дотянулся до 1
+      предметов»: `DropCollector` бросал достижимый предмет после первой осечки подхода (STUCK/TIMEOUT), а
+      `PickupSpot.forDrop` отдавал одну стоянку, которая могла оказаться за заградой. Теперь `standsFor` отдаёт
+      все стоянки по дальности, подход повторяется с неиспробованной (не больше `MAX_APPROACH_ATTEMPTS`),
+      предмет в клетке духа подбирается сразу, причина называет предмет, координату и число тиков; GameTest
+      `drops_corner` (паутина + запечатанная ближняя стоянка) на старом коде красный (3905a02a).
+      `firsttools_fromscratch_furnacebesidetableandcharcoaltorches` — станция ставилась вокруг места духа, и
+      печь уходила на 5+ блоков от верстака; `StationAccess` при постановке печи/коптильни кладёт её в рабочий
+      угол (`WorkCorner.anchor` верстака); GameTest `firsttools_tablealreadystanding_furnacebesideit` на
+      старом коде красный (40²) (576e33ba).
 - [x] Чеклист 38А: резолвер acquire планирует инструмент нужного уровня до блока (деревянная кирка до
       булыжника, каменная после деревянной), верстак раньше кирки, печь и топливо раньше плавки; JUnit/jqwik
       (`ToolTiersTests`, `FirstToolsChainTests`, 7429c1fa, 9f0dd0fa; prove-red OK).

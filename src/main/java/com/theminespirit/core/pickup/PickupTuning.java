@@ -5,6 +5,7 @@ public record PickupTuning(int refreshTicks, double pickupReach, int totalTimeou
     public static final double PICKUP_REACH = 1.5;
     public static final int TOTAL_TIMEOUT_TICKS = 2400;
     public static final int MAX_DELAY_WAIT_TICKS = 40;
+    public static final int MAX_APPROACH_ATTEMPTS = 2;
     public static final PickupTuning DEFAULT =
             new PickupTuning(REFRESH_TICKS, PICKUP_REACH, TOTAL_TIMEOUT_TICKS, MAX_DELAY_WAIT_TICKS);
     public static final int SELF_DROP_DELAY_TICKS = 400;
