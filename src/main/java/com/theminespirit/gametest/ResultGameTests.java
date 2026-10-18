@@ -268,8 +268,8 @@ public final class ResultGameTests {
     public static void chopTree_ReloadedAfterFirstTree_ResultKeepsCountersOfBoth(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
-        buildOakTree(helper, 4, 4, 8);
-        buildOakTree(helper, 6, 6, 5);
+        buildOakTree(helper, 3, 3, 5);
+        buildOakTree(helper, 8, 8, 5);
         SpiritEntity started = spawnedChopper(helper, rest);
         AtomicReference<SpiritEntity> spirit = new AtomicReference<>(started);
         ResultPoller poller = ResultPoller.start(helper, rest);
