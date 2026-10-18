@@ -12,6 +12,7 @@
     "RELOCATE_BUILDING": 60,
     "BREED_ANIMALS": 55,
     "SHEAR_SHEEP": 55,
+    "HARVEST_HIVE": 55,
     "HERD_CULL": 50,
     "COLLECT_DROPS": 55,
     "HUNT_WILD_SHEEP": 50,
@@ -19,6 +20,7 @@
     "BUILD_FENCE": 50,
     "LIGHTING": 50,
     "BUILD_HOUSE": 50,
+    "PLACE_BEEHIVE": 50,
     "BUILD_MINE": 50,
     "ENCHANT_ROOM": 50,
     "GATHER_MATERIALS": 45,
@@ -77,6 +79,15 @@
     "minecraft:bookshelf": 32,
     "minecraft:book": 32,
     "minecraft:paper": 128
+  },
+  "hive": {
+    "hive_radius": 16,
+    "smoke_depth": 5,
+    "flower_radius": 4,
+    "flowers_min": 3,
+    "hive_planks": 6,
+    "hive_honeycomb": 3,
+    "site_radius": 8
   },
   "herd": {
     "maxPerSpecies": 4,

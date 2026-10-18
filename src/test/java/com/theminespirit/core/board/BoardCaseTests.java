@@ -24,11 +24,12 @@ class BoardCaseTests {
                 "LURE_ANIMAL",
                 "DISMANTLE_SHELTER", "SUPPLY_SITE", "GATHER_MATERIALS", "ENCHANT_ROOM",
                 "ENCHANT_SHELVES", "BREED_ANIMALS", "EAT_TO_FULL", "HERD_CULL", "HUNT_WILD_SHEEP",
-                "RELOCATE_BUILDING", "RESTOCK_FOOD", "SHEAR_SHEEP", "TRANSFER_ITEM", "WEAVE_WOOL");
+                "RELOCATE_BUILDING", "RESTOCK_FOOD", "SHEAR_SHEEP", "TRANSFER_ITEM", "WEAVE_WOOL",
+                "HARVEST_HIVE", "PLACE_BEEHIVE");
 
         assertEquals(expected, actual,
-                "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б и 39 (37: 32 из v2/37Б "
-                        + "плюс CRAFT_SHEARS, SHEAR_SHEEP, HUNT_WILD_SHEEP, WEAVE_WOOL, CRAFT_BED): "
+                "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б, 39 и пчёлами (39: 37 прежних "
+                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE): "
                         + "каждый вид задания получает приоритет, гейт и план по своему имени; "
                         + "лишний кейс — сирота в таблице BoardRules, потерянный — задание без источника");
     }

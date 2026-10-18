@@ -77,7 +77,9 @@ class TicketPlansTests {
             Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"),
             Map.entry(BoardCase.TRANSFER_ITEM, "deliver"),
             Map.entry(BoardCase.SHEAR_SHEEP, "shear"),
-            Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"));
+            Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"),
+            Map.entry(BoardCase.HARVEST_HIVE, "harvest_hive"),
+            Map.entry(BoardCase.PLACE_BEEHIVE, "craft"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -241,6 +243,32 @@ class TicketPlansTests {
         assertTrue(collectScripts(plan).contains("clear_area"),
                 "Разбор укрытия — существующий clear_area: второй разборочный скрипт "
                         + "не заводим");
+    }
+
+    @Test
+    void plan_HarvestHive_UsesBoardRadius() {
+        ScriptCall harvest = findCall(TicketPlans.plan(BoardCase.HARVEST_HIVE, target()), "harvest_hive");
+
+        assertEquals(HiveRules.hiveRadius(), harvest.params().get("radius"),
+                "Сбор улья ищет полный улей в радиусе доски: иначе задание не нашло бы цель");
+        assertEquals(1, harvest.params().get("count"),
+                "Задание собирает один улей: несколько за раз оставили бы духа без отчёта по каждому");
+    }
+
+    @Test
+    void plan_PlaceBeehive_CraftsAndPlacesAboveSupport() {
+        BlockCoord support = new BlockCoord(12, 64, 3);
+        TaskNode plan = TicketPlans.plan(BoardCase.PLACE_BEEHIVE, TicketTarget.at(support));
+        List<String> scripts = collectScripts(plan);
+
+        assertTrue(scripts.contains("craft") && scripts.contains("place_block"),
+                "Постановка улья — крафт улья и установка: без крафта духу нечего ставить");
+        ScriptCall craft = findCall(plan, "craft");
+        assertEquals("minecraft:beehive", craft.params().get("item"),
+                "Крафтится именно улей: другой предмет не даст улей у цветов");
+        ScriptCall place = findCall(plan, "place_block");
+        assertEquals(support.y() + 1, place.params().get("y"),
+                "Улей ставится на опору из заявки, а не в её клетку: иначе блок заменил бы землю");
     }
 
     @Test
