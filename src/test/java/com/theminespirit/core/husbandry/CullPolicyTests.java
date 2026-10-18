@@ -97,6 +97,22 @@ class CullPolicyTests {
     }
 
     @Test
+    void pick_Sheep_RefusedEvenWithIronSword() {
+        List<AnimalRef> herd = List.of(
+                new AnimalRef("a", Species.SHEEP, false, false, true, new BlockCoord(1, 64, 0), true),
+                new AnimalRef("b", Species.SHEEP, false, false, true, new BlockCoord(3, 64, 0), true),
+                new AnimalRef("c", Species.SHEEP, false, false, true, new BlockCoord(5, 64, 0), true));
+
+        CullPolicy.Outcome result = CullPolicy.pick(herd, CENTER, Species.SHEEP, 2, SwordTier.IRON);
+
+        assertInstanceOf(CullPolicy.Refused.class, result,
+                "Овец загона не забивают даже железным мечом: шерсть стригут повторно, а не режут стадо");
+        assertTrue(((CullPolicy.Refused) result).reason().contains("овец загона не убиваем"),
+                "Отказ обязан называть правило: иначе стратег решит, что виноват меч. Фактически: "
+                        + ((CullPolicy.Refused) result).reason());
+    }
+
+    @Test
     void swordTiers_ProductionTable_MatchesVanillaOrder() {
         assertEquals(SwordTier.WOOD, SwordTier.ofItem("minecraft:wooden_sword"),
                 "Деревянный меч обязан читаться из таблицы: иначе забой разрешит не тот тир");

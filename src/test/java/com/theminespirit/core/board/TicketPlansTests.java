@@ -58,6 +58,9 @@ class TicketPlansTests {
             Map.entry(BoardCase.CRAFT_STONE_AXE, "craft"),
             Map.entry(BoardCase.CRAFT_STONE_SHOVEL, "craft"),
             Map.entry(BoardCase.CRAFT_STONE_SWORD, "craft"),
+            Map.entry(BoardCase.CRAFT_SHEARS, "craft"),
+            Map.entry(BoardCase.CRAFT_BED, "craft"),
+            Map.entry(BoardCase.WEAVE_WOOL, "craft"),
             Map.entry(BoardCase.BUILD_FENCE, "build_schematic"),
             Map.entry(BoardCase.LIGHTING, "place_block"),
             Map.entry(BoardCase.ENCHANT_ROOM, "build_schematic"),
@@ -67,7 +70,9 @@ class TicketPlansTests {
             Map.entry(BoardCase.HERD_CULL, "cull"),
             Map.entry(BoardCase.RELOCATE_BUILDING, "build_schematic"),
             Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"),
-            Map.entry(BoardCase.TRANSFER_ITEM, "deliver"));
+            Map.entry(BoardCase.TRANSFER_ITEM, "deliver"),
+            Map.entry(BoardCase.SHEAR_SHEEP, "shear"),
+            Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -113,7 +118,8 @@ class TicketPlansTests {
                 .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
                 .withSupply("bread", 1)
                 .withTransfer(UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
-                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1);
+                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1)
+                .withCraft("minecraft:white_bed", 1).withCount(2);
     }
 
     @Test

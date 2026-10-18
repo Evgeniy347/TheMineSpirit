@@ -44,6 +44,15 @@ class BreedingRulesTests {
     }
 
     @Test
+    void action_FourSheep_NoCull() {
+        assertEquals(BreedingRules.Action.NONE, BreedingRules.action(Species.SHEEP, 4, true),
+                "Четыре овцы — лимит выбран, но забой не ставится: овец загона не убиваем, "
+                        + "шерсть — возобновляемый ресурс");
+        assertFalse(BreedingRules.cullNeeded(Species.SHEEP, 4, true),
+                "HERD_CULL на овец не выдаётся: иначе доска сама наряжала бы духа резать своё стадо");
+    }
+
+    @Test
     void action_WithoutPen_None() {
         assertEquals(BreedingRules.Action.NONE, BreedingRules.action(Species.COW, 4, false),
                 "Без загона разведение и контроль численности не идут: стадо не приманено, "
@@ -102,7 +111,10 @@ class BreedingRulesTests {
 
         BreedingRules.Action action = BreedingRules.action(species, housed, true);
 
-        if (housed >= max) {
+        if (housed >= max && species == Species.SHEEP) {
+            assertEquals(BreedingRules.Action.NONE, action,
+                    "Овца на лимите не забивается: загон держит 4 головы, шерсть стригут повторно");
+        } else if (housed >= max) {
             assertEquals(BreedingRules.Action.CULL, action,
                     "При выбранном лимите (" + max + ") — контроль численности, а не разведение");
         } else if (housed >= min) {

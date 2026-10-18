@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
  * чья причина отпала.
  */
 public final class BoardSources {
+    private final WoolWatch wool = new WoolWatch();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
@@ -49,6 +50,10 @@ public final class BoardSources {
             HerdWatch.tick(level, service, spirits, now);
         }
         live.addAll(TransferWatch.liveCauses(service));
+        wool.tick(level, service, spirits, stock, now);
+        if (wool.live()) {
+            live.add(WoolWatch.CAUSE);
+        }
         live.addAll(CraterWatch.liveCauses(level, service));
         live.addAll(FenceWatch.liveCauses(level, service));
         return live;

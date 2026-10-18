@@ -38,7 +38,7 @@ public final class BreedingRules {
             return Action.NONE;
         }
         if (housed >= HerdCap.maxPerSpecies()) {
-            return Action.CULL;
+            return species == Species.SHEEP ? Action.NONE : Action.CULL;
         }
         return Action.BREED;
     }

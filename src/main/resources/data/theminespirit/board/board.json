@@ -10,8 +10,10 @@
     "DISMANTLE_SHELTER": 65,
     "RELOCATE_BUILDING": 60,
     "BREED_ANIMALS": 55,
+    "SHEAR_SHEEP": 55,
     "HERD_CULL": 50,
     "COLLECT_DROPS": 55,
+    "HUNT_WILD_SHEEP": 50,
     "CLEAR_GROUNDS": 50,
     "BUILD_FENCE": 50,
     "LIGHTING": 50,
@@ -28,6 +30,9 @@
     "CRAFT_WOODEN_AXE": 40,
     "CRAFT_WOODEN_PICKAXE": 40,
     "CRAFT_WOODEN_SHOVEL": 40,
+    "CRAFT_SHEARS": 40,
+    "CRAFT_BED": 40,
+    "WEAVE_WOOL": 40,
     "CRAFTING_STATION": 40,
     "STOCK_CHESTS": 40,
     "FILL_CRATER": 35,
@@ -75,6 +80,17 @@
   "tools": {
     "perSpirit": 1,
     "minSets": 1
+  },
+  "wool": {
+    "min_pen_sheep": 4,
+    "wild_sheep_radius": 48,
+    "wild_sheep_per_day": 4,
+    "string_threshold": 8,
+    "string_reserve": 4,
+    "shears_iron": 2,
+    "bed_wool": 3,
+    "bed_planks": 3,
+    "shear_radius": 8
   },
   "immovable": [
     "BUILD_MINE"
