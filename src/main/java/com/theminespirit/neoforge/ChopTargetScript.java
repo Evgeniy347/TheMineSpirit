@@ -80,10 +80,7 @@ public final class ChopTargetScript implements ScriptInstance {
     public String summary() {
         StringBuilder text = new StringBuilder("срублено 1 из 1");
         if (standingLogs > 0) {
-            text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
-        }
-        if (chop.pillarFailure() != null) {
-            text.append("; столб: ").append(chop.pillarFailure());
+            text.append("; оставлено брёвен: ").append(standingLogs);
         }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());

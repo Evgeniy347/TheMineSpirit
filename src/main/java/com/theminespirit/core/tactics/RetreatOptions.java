@@ -29,14 +29,20 @@ public record RetreatOptions(List<RetreatCandidate> candidates) {
 
     public RetreatChoice choice() {
         RetreatCandidate best = null;
+        RetreatCandidate rally = null;
         List<RetreatCandidate> ordered = candidates.stream()
                 .sorted(Comparator.comparing(candidate -> candidate.entry().method())).toList();
         for (RetreatCandidate candidate : ordered) {
-            if (best == null || candidate.utility() > best.utility() + TIE_EPSILON) {
+            if (candidate.entry().method() == RetreatMethod.RALLY) {
+                if (rally == null || candidate.utility() > rally.utility() + TIE_EPSILON) {
+                    rally = candidate;
+                }
+            } else if (best == null || candidate.utility() > best.utility() + TIE_EPSILON) {
                 best = candidate;
             }
         }
-        return best == null ? RetreatChoice.NONE
-                : new RetreatChoice(best.entry().method(), Optional.of(best.entry().id()));
+        RetreatCandidate chosen = rally != null ? rally : best;
+        return chosen == null ? RetreatChoice.NONE
+                : new RetreatChoice(chosen.entry().method(), Optional.of(chosen.entry().id()));
     }
 }

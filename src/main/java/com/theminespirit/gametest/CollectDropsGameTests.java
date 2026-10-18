@@ -190,6 +190,37 @@ public final class CollectDropsGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "drops_corner", timeoutTicks = 400)
+    public static void collectDrops_PreyInWebSealedNearestStand_ReachesItFromAnotherStand(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        helper.setBlock(5, 1, 5, Blocks.COBWEB);
+        helper.setBlock(2, 1, 5, Blocks.STONE);
+        helper.setBlock(2, 2, 5, Blocks.STONE);
+        helper.setBlock(3, 1, 4, Blocks.STONE);
+        helper.setBlock(3, 2, 4, Blocks.STONE);
+        helper.setBlock(3, 1, 6, Blocks.STONE);
+        helper.setBlock(3, 2, 6, Blocks.STONE);
+        helper.setBlock(4, 1, 5, Blocks.STONE);
+        helper.setBlock(4, 2, 5, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 5));
+        GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 1, 5.5, 1.5, 5.5);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("collect_drops", Map.of("radius", 6)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "предмет в углу за запечатанной стоянкой обязан подобраться с другой стоянки, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+                    "булыжник из паутины обязан попасть в инвентарь, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "drops_endless_delay", timeoutTicks = 400)
     public static void collectDrops_HeapWithEndlessPickupDelay_IsSkippedAfterBoundedWait(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

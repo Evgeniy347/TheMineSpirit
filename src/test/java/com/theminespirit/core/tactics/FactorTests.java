@@ -116,7 +116,7 @@ class FactorTests {
         RetreatTable table = TacticsConfig.loadDefault().rules().retreat();
         List<RetreatEntry> reversed = new ArrayList<>(table.entries());
         Collections.reverse(reversed);
-        RetreatTable flipped = new RetreatTable(reversed, table.callHelp());
+        RetreatTable flipped = new RetreatTable(reversed, table.callHelp(), table.rally());
 
         double straight = escapeValue(situation, table);
         double back = escapeValue(situation, flipped);

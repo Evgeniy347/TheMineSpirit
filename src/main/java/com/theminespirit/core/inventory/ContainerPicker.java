@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -18,6 +19,14 @@ public final class ContainerPicker {
         Objects.requireNonNull(containers, "Список контейнеров не может быть null: выбирать не из чего");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что докладывать");
+        String category = DataTables.INSTANCE.warehouseCategories().current().categoryOf(incoming.item());
+        int own = nearestMatching(containers, origin,
+                container -> category.equals(container.category())
+                        && (container.hasPartial(incoming)
+                        || WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent)));
+        if (own >= 0) {
+            return new ContainerChoice.Chosen(own);
+        }
         int partial = nearestMatching(containers, origin, container -> container.hasPartial(incoming));
         if (partial >= 0) {
             return new ContainerChoice.Chosen(partial);

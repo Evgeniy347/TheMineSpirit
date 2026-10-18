@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.tactics;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.coordinator.HelpCall;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.policy.PolicyId;
@@ -10,6 +11,7 @@ import com.theminespirit.core.tactics.DirectiveOwner;
 import com.theminespirit.core.tactics.DirectiveOwnership;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.Situation;
@@ -26,6 +28,7 @@ import com.theminespirit.core.tactics.adapter.DecisionOrder;
 import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.core.tactics.adapter.DecisionText;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
+import com.theminespirit.core.tactics.adapter.HelpCallGate;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
 import com.theminespirit.core.tactics.adapter.RetreatCommitment;
@@ -45,6 +48,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -69,6 +74,7 @@ public final class TacticsService {
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
     private final DecisionJournal journal = new DecisionJournal(settings.journalCapacity(),
             settings.journalMaxPerSecond());
+    private final HelpCallGate helpGate = new HelpCallGate();
     private final Approach approach;
     private final CombatActuator combat;
     private final RetreatExecutor retreating;
@@ -106,8 +112,10 @@ public final class TacticsService {
     private int blockReads;
     private int entityQueries;
     private int failures;
+    private int helpCalls;
     private String lastFailure;
     private String restoreFailure;
+    private Optional<HelpCall> helpCall = Optional.empty();
 
     public TacticsService(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -326,6 +334,19 @@ public final class TacticsService {
         return journal.last(limit);
     }
 
+    public Optional<HelpCall> helpCall() {
+        if (helpCall.isEmpty()) {
+            return Optional.empty();
+        }
+        long now = spirit.level().getGameTime();
+        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
+        return now - helpCall.get().raisedAt() <= tuning.callIntervalTicks() ? helpCall : Optional.empty();
+    }
+
+    public int helpCalls() {
+        return helpCalls;
+    }
+
     public StoredTactics snapshot() {
         return new StoredTactics(ordered, zone, ward.map(UUID::toString), Optional.ofNullable(memory), retreat);
     }
@@ -378,8 +399,31 @@ public final class TacticsService {
         returned = false;
         logChange(next);
         journalDecision(now, next, situation);
+        updateHelpCall(now, next, situation);
         outcome = next;
         facts = collected;
+    }
+
+    private void updateHelpCall(long now, TacticalOutcome next, Situation situation) {
+        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
+        boolean calls = next.decision() == TacticalOption.RETREAT
+                && situation.enemies().size() >= tuning.callMinEnemies();
+        helpCall = calls ? Optional.of(new HelpCall(spirit.getUUID(), situation.self().pos(), now)) : Optional.empty();
+        if (!calls || !helpGate.ready(now, tuning.callIntervalTicks())) {
+            return;
+        }
+        ServerPlayer player = playerNear(tuning.callRadius());
+        if (player == null) {
+            return;
+        }
+        BlockPos at = spirit.blockPosition();
+        player.sendSystemMessage(Component.literal("нужна помощь у " + at.getX() + " " + at.getY() + " " + at.getZ()));
+        helpGate.called(now);
+        helpCalls++;
+    }
+
+    private ServerPlayer playerNear(int radius) {
+        return spirit.level().getNearestPlayer(spirit, radius) instanceof ServerPlayer player ? player : null;
     }
 
     private void journalDecision(long now, TacticalOutcome next, Situation situation) {
@@ -436,7 +480,7 @@ public final class TacticsService {
                 : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
         RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
-                retreatPoint, situation.self().blocks(), situation.self().hasWaterBucket());
+                retreatPoint, situation.self().blocks(), collected.rally(), situation.self().hasWaterBucket());
         return RetreatPlanner.plan(retreat.method(), input);
     }
 

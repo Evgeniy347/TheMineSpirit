@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -137,6 +138,34 @@ class PickupSpotTests {
 
         assertTrue(spot.isEmpty(),
                 "Куст в лавовом кольце: безопасной стоянки рядом нет, подбор не должен подставлять духа под лаву");
+    }
+
+    @Test
+    void standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance() {
+        MapSafety safety = plantedBed();
+
+        List<BlockCoord> stands = PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety);
+
+        assertEquals(new BlockCoord(2, 1, 0), stands.get(0),
+                "Ближайшая к духу стоянка у куста обязана быть первой: по ней подбор идёт до того, как пробовать "
+                        + "следующие");
+        assertTrue(stands.size() > 1,
+                "Куст на открытом месте обязан дать больше одной стоянки: без запаса подбор бросал предмет, если "
+                        + "ближайшая стоянка оказалась за заградой, фактически " + stands);
+        assertTrue(stands.indexOf(new BlockCoord(1, 1, 2)) > 0,
+                "Дальняя стоянка обязана остаться в списке после ближней: именно её берёт повторная попытка, а не "
+                        + "пропуск предмета, список " + stands);
+        assertEquals(Optional.of(new BlockCoord(2, 1, 0)), PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety),
+                "forDrop обязан остаться ближайшей стоянкой из standsFor: поведение одиночного подбора не меняется");
+    }
+
+    @Test
+    void standsFor_ItemOnOpenGround_ReturnsItsOwnCellOnly() {
+        MapSafety safety = new MapSafety().floor();
+
+        assertEquals(List.of(ITEM), PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety),
+                "Предмет на проходимой клетке подбирается с неё же: список из одной клетки, поведение обычного дропа "
+                        + "не меняется");
     }
 
     private static MapSafety plantedBed() {

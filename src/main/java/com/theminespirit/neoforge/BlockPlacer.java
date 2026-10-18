@@ -1,18 +1,25 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BlockSupport;
+import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
 
 public final class BlockPlacer {
     public enum RefuseReason {
@@ -55,15 +62,22 @@ public final class BlockPlacer {
             return new Refused(RefuseReason.OCCUPIED,
                     "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current) + ": ставить некуда");
         }
-        double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
-        if (distance > BlockBreaker.REACH) {
-            return new Refused(RefuseReason.OUT_OF_REACH, "клетка " + target.toShortString() + " дальше " + BlockBreaker.REACH
-                    + " от глаз духа (" + distance + "): сначала подойти");
+        if (!livingEntities(level, target).isEmpty()) {
+            return new Refused(RefuseReason.OCCUPIED,
+                    "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
+        }
+        BlockCoord feet = new BlockCoord(spirit.blockPosition().getX(), spirit.blockPosition().getY(),
+                spirit.blockPosition().getZ());
+        BlockCoord cell = new BlockCoord(target.getX(), target.getY(), target.getZ());
+        if (!SpiritReach.reachable(feet, cell)) {
+            return new Refused(RefuseReason.OUT_OF_REACH, "клетка " + target.toShortString()
+                    + " вне досягаемости: подойди по горизонтали ближе " + SpiritReach.HORIZONTAL
+                    + " или опустись/поднимись в пределах " + SpiritReach.DOWN + "…" + SpiritReach.UP);
         }
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
-        if (!hasSupport(level, target)) {
+        if (!hasSupport(level, target, state)) {
             return new Refused(RefuseReason.NO_SUPPORT,
                     "под клеткой " + target.toShortString() + " нет опоры: блок без опоры обвалится или повиснет");
         }
@@ -74,6 +88,13 @@ public final class BlockPlacer {
         }
         spirit.getInventory().removeItemType(wanted, 1);
         level.setBlock(target, state, Block.UPDATE_ALL);
+        if (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                && !state.hasProperty(BlockStateProperties.BED_PART)) {
+            BlockState updated = Block.updateFromNeighbourShapes(state, level, target);
+            if (!updated.equals(state)) {
+                level.setBlock(target, updated, Block.UPDATE_ALL);
+            }
+        }
         level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
         if (level instanceof ServerLevel server) {
             PlacedBlocksData.get(server).markSpirit(target);
@@ -81,17 +102,40 @@ public final class BlockPlacer {
         return new Started(target.immutable());
     }
 
-    private static boolean hasSupport(Level level, BlockPos target) {
-        BlockPos below = target.below();
-        if (level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)) {
+    private List<LivingEntity> livingEntities(Level level, BlockPos target) {
+        return level.getEntitiesOfClass(LivingEntity.class, new AABB(target),
+                entity -> entity != spirit && !entity.isRemoved() && !entity.isSpectator());
+    }
+
+    /** Опора — общее правило {@link BlockSupport} (то же проверяет сторож схем) плюс верхняя половина двухчастного блока. */
+    private static boolean hasSupport(Level level, BlockPos target, BlockState state) {
+        if (upperHalfOnLower(level, target, state)) {
             return true;
         }
-        for (Direction side : Direction.Plane.HORIZONTAL) {
-            BlockPos neighbour = target.relative(side);
-            if (level.getBlockState(neighbour).isFaceSturdy(level, neighbour, side.getOpposite())) {
-                return true;
-            }
+        return BlockSupport.hasSupport((x, y, z, face) -> {
+            BlockPos pos = new BlockPos(x, y, z);
+            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
+        }, target.getX(), target.getY(), target.getZ());
+    }
+
+    private static Direction direction(BlockSupport.Face face) {
+        return switch (face) {
+            case UP -> Direction.UP;
+            case NORTH -> Direction.NORTH;
+            case SOUTH -> Direction.SOUTH;
+            case EAST -> Direction.EAST;
+            case WEST -> Direction.WEST;
+        };
+    }
+
+    private static boolean upperHalfOnLower(Level level, BlockPos target, BlockState state) {
+        if (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                || state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) != DoubleBlockHalf.UPPER) {
+            return false;
         }
-        return false;
+        BlockState lower = level.getBlockState(target.below());
+        return lower.is(state.getBlock())
+                && lower.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                && lower.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER;
     }
 }

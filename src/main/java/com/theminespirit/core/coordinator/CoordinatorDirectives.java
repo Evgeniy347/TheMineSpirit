@@ -17,7 +17,7 @@ public final class CoordinatorDirectives {
         if (plan == null) {
             throw new IllegalArgumentException("plan не может быть null: приказ координатора собирается из плана");
         }
-        if (plan.defendedPoint().isEmpty()) {
+        if (plan.defendedPoint().isEmpty() && plan.assists().isEmpty()) {
             return Map.of();
         }
         Map<UUID, CombatDirective> directives = new LinkedHashMap<>();

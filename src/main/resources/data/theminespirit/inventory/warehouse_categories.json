@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "name": "руда",
+      "match": ["*_ore", "raw_*", "coal", "charcoal", "flint", "*_scrap", "ancient_debris", "quartz",
+        "amethyst_shard", "echo_shard", "redstone", "lapis_lazuli"]
+    },
+    {
+      "name": "слитки",
+      "match": ["*_ingot", "*_nugget", "iron_block", "gold_block", "copper_block", "netherite_block",
+        "redstone_block", "lapis_block", "coal_block"]
+    },
+    {
+      "name": "камень",
+      "match": ["*_stone", "cobblestone", "*_cobblestone", "*_deepslate", "andesite", "diorite", "granite",
+        "gravel", "sand", "sandstone", "*_sandstone", "*_terracotta", "obsidian", "bricks", "*_bricks", "clay",
+        "*_concrete", "*_concrete_powder", "basalt", "tuff", "calcite", "dripstone_block", "pointed_dripstone"]
+    },
+    {
+      "name": "дерево",
+      "match": ["*_log", "*_wood", "*_planks", "stick", "*_sapling", "*_leaves", "*_fence", "*_fence_gate",
+        "*_door", "*_trapdoor", "*_stairs", "*_slab", "*_sign", "*_boat", "bamboo", "*_stem", "*_hyphae",
+        "crafting_table", "chest", "barrel", "ladder", "scaffolding"]
+    },
+    {
+      "name": "еда",
+      "match": ["cooked_*", "bread", "apple", "golden_apple", "enchanted_golden_apple", "melon_slice",
+        "sweet_berries", "glow_berries", "chorus_fruit", "carrot", "golden_carrot", "potato", "baked_potato",
+        "poisonous_potato", "beetroot", "beetroot_soup", "mushroom_stew", "rabbit_stew", "suspicious_stew",
+        "pumpkin_pie", "cookie", "cake", "beef", "porkchop", "chicken", "mutton", "cod", "salmon", "rabbit",
+        "tropical_fish", "pufferfish", "egg", "honey_bottle", "milk_bucket"]
+    },
+    {
+      "name": "урожай",
+      "match": ["wheat", "wheat_seeds", "*_seeds", "beetroot_seeds", "pumpkin_seeds", "melon_seeds",
+        "sugar_cane", "pumpkin", "carved_pumpkin", "melon", "cocoa_beans", "nether_wart", "brown_mushroom",
+        "red_mushroom", "*_mushroom", "kelp", "*_kelp", "sea_pickle", "cactus", "bamboo"]
+    },
+    {
+      "name": "инструменты",
+      "match": ["*_pickaxe", "*_axe", "*_shovel", "*_hoe", "shears", "flint_and_steel", "fishing_rod",
+        "bucket", "water_bucket", "lava_bucket", "powder_snow_bucket", "*_bucket", "compass", "clock",
+        "spyglass", "brush"]
+    },
+    {
+      "name": "оружие и броня",
+      "match": ["*_sword", "bow", "crossbow", "arrow", "*_arrow", "spectral_arrow", "tipped_arrow", "shield",
+        "trident", "*_helmet", "*_chestplate", "*_leggings", "*_boots", "*_horse_armor", "elytra", "wolf_armor"]
+    },
+    {
+      "name": "ценное",
+      "match": ["netherite_*", "diamond", "*_diamond", "diamond_block", "emerald", "emerald_block", "gold_ingot",
+        "gold_nugget", "gold_block", "*_gold*", "raw_gold", "nether_star", "enchanted_book", "beacon",
+        "dragon_egg", "*_shulker_box", "shulker_shell", "*_smithing_template", "heart_of_the_sea",
+        "nautilus_shell", "*_banner_pattern", "music_disc_*", "*_disc", "totem_of_undying"]
+    },
+    {
+      "name": "прочее",
+      "match": ["*"]
+    }
+  ]
+}

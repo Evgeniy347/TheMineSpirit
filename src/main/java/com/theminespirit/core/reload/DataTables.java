@@ -22,6 +22,7 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.OverflowTuning;
 import com.theminespirit.core.inventory.ValueTable;
+import com.theminespirit.core.inventory.WarehouseCategories;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
@@ -51,7 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class DataTables {
     /** Схемы, читаемые по имени потребителем: тела перечитываются на /reload вместе с остальными таблицами. */
-    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room");
+    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room",
+            "storage_v1", "storage_v2", "storage_v3", "storage_v4", "reach_wall", "state_demo");
 
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
@@ -64,6 +66,7 @@ public final class DataTables {
     private final TableHolder<TacticsConfig> tactics;
     private final TableHolder<TacticsAdapterSettings> adapter;
     private final TableHolder<ValueTable> values;
+    private final TableHolder<WarehouseCategories> warehouseCategories;
     private final TableHolder<BaseKit> kit;
     private final TableHolder<KitFor> kitFor;
     private final TableHolder<IntellectTuning> intellect;
@@ -109,6 +112,10 @@ public final class DataTables {
                     valueSeeds.incrementAndGet();
                     return ValueTable.load();
                 });
+        this.warehouseCategories = registry.registerLazy(
+                TableDefinition.single("warehouse_categories", WarehouseCategories.RESOURCE,
+                        WarehouseCategories::parse),
+                WarehouseCategories::load);
         this.kit = registry.registerLazy(
                 TableDefinition.single("base_kit", "data/theminespirit/inventory/base_kit.json", BaseKit::parse),
                 () -> {
@@ -241,6 +248,10 @@ public final class DataTables {
 
     public TableHolder<ValueTable> values() {
         return values;
+    }
+
+    public TableHolder<WarehouseCategories> warehouseCategories() {
+        return warehouseCategories;
     }
 
     public TableHolder<BaseKit> kit() {

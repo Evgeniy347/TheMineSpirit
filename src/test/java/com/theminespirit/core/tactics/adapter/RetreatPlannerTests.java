@@ -29,7 +29,12 @@ class RetreatPlannerTests {
 
     static RetreatPlanner.Input input(EnvReading env, Optional<Point> home, int blocks, boolean bucket,
             EnemyFact... enemies) {
-        return new RetreatPlanner.Input(SELF, FEET, List.of(enemies), env, home, blocks, bucket);
+        return new RetreatPlanner.Input(SELF, FEET, List.of(enemies), env, home, blocks, Optional.empty(), bucket);
+    }
+
+    static RetreatPlanner.Input rallyInput(Optional<Point> rally, EnemyFact... enemies) {
+        return new RetreatPlanner.Input(SELF, FEET, List.of(enemies), EnvReading.NOTHING, Optional.empty(), 0, rally,
+                false);
     }
 
     record Row(String name, RetreatMethod method, RetreatPlanner.Input input, Class<? extends RetreatPlan> kind) {
@@ -57,6 +62,10 @@ class RetreatPlannerTests {
                         RetreatPlan.Walk.class),
                 new Row("AWAY: бежать прочь", RetreatMethod.AWAY, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST),
                         RetreatPlan.Walk.class),
+                new Row("RALLY: точка сбора у союзника", RetreatMethod.RALLY,
+                        rallyInput(Optional.of(new Point(-4.5, 1, 0.5)), ZOMBIE_EAST), RetreatPlan.Walk.class),
+                new Row("RALLY без союзника", RetreatMethod.RALLY, input(EnvReading.NOTHING, Optional.empty(), 0,
+                        ZOMBIE_EAST), null),
                 new Row("BARRICADE с шестью блоками", RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 6, ZOMBIE_EAST),
                         RetreatPlan.Wall.class),
                 new Row("BARRICADE без блоков", RetreatMethod.BARRICADE, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST), null),
@@ -89,6 +98,26 @@ class RetreatPlannerTests {
         assertEquals(SELF.x() - RetreatPlanner.AWAY_DISTANCE, walk.target().x(), 1e-6,
                 "Бег прочь идёт в сторону, противоположную ближнему врагу, на AWAY_DISTANCE блоков");
         assertEquals(SELF.z(), walk.target().z(), 1e-6, "Враг на одной линии по x: поперёк бежать незачем");
+    }
+
+    @Test
+    void plan_RallyWithAllyPoint_WalksToThatPoint() {
+        Point ally = new Point(-4.5, 1, 3.5);
+        RetreatPlan.Walk walk = (RetreatPlan.Walk) RetreatPlanner
+                .plan(RetreatMethod.RALLY, rallyInput(Optional.of(ally), ZOMBIE_EAST)).orElseThrow();
+
+        assertEquals(ally, walk.target(),
+                "Точка сбора — сам союзник (ближайший дух или игрок), а не точка «прочь от врага»: "
+                        + "иначе дух бежит в пустое поле вместо своих");
+        assertEquals(RetreatPlanner.RALLY_ARRIVAL, walk.arrival(), 1e-6,
+                "К союзнику подходят на дистанцию сбора, а не встают внутрь него");
+    }
+
+    @Test
+    void plan_RallyWithoutAllyPoint_NoPlan() {
+        assertTrue(RetreatPlanner.plan(RetreatMethod.RALLY,
+                        input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST)).isEmpty(),
+                "Без союзника или игрока в радиусе RALLY не строит план: способ не должен подменяться бегом прочь");
     }
 
     @Test

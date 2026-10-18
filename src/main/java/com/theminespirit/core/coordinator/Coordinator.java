@@ -11,9 +11,15 @@ import java.util.UUID;
 public final class Coordinator {
     private final SectorAssigner sectorAssigner = new SectorAssigner();
     private final AssistPolicy assistPolicy = new AssistPolicy();
+    private final HelpCallPolicy helpCallPolicy = new HelpCallPolicy();
     private final WorkAllocator workAllocator = new WorkAllocator();
 
     public CoordinatorPlan plan(CoordinatorState state, WorkReservations reservations, long now) {
+        return plan(state, reservations, now, List.of(), 0);
+    }
+
+    public CoordinatorPlan plan(CoordinatorState state, WorkReservations reservations, long now,
+            List<HelpCall> helpCalls, double helpRadius) {
         if (state == null) {
             throw new IllegalArgumentException("state не может быть null: план строится из состояния поселения");
         }
@@ -30,7 +36,11 @@ public final class Coordinator {
                 ? sectorAssigner.assign(point.get(), radius,
                         defenders.stream().map(SpiritSnapshot::id).toList())
                 : List.of();
-        List<AssistOrder> assists = point.isPresent() ? assist(defense, state) : List.of();
+        List<AssistOrder> assists = new ArrayList<>();
+        if (point.isPresent()) {
+            assists.addAll(assist(defense, state));
+        }
+        assists.addAll(helpCallPolicy.answer(helpCalls, state.spirits(), helpRadius, CoordinatorTuning.MAX_ASSIST));
         List<WorkTarget> candidates = state.spirits().stream()
                 .flatMap(spirit -> spirit.workTarget().stream())
                 .distinct()

@@ -1,7 +1,10 @@
 package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.inventory.ContainerSnapshot;
+import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.inventory.WarehouseCategories;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockLocator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,13 +57,23 @@ final class AutoContainerScan {
             }
             containers.add(opened.container());
             BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            snapshots.add(new ContainerSnapshot(coord, mapper.map(opened.container())));
+            List<Stack> slots = mapper.map(opened.container());
+            String category = ContainerCategories.of(level, pos, slots, categories());
+            snapshots.add(new ContainerSnapshot(coord, slots, category));
         }
     }
 
     void updateSnapshot(int index) {
         Container container = containers.get(index);
-        snapshots.set(index, new ContainerSnapshot(snapshots.get(index).pos(), mapper.map(container)));
+        ContainerSnapshot previous = snapshots.get(index);
+        List<Stack> slots = mapper.map(container);
+        String category = ContainerCategories.of(level, BlockPos.containing(previous.pos().x(), previous.pos().y(),
+                previous.pos().z()), slots, categories());
+        snapshots.set(index, new ContainerSnapshot(previous.pos(), slots, category));
+    }
+
+    private static WarehouseCategories categories() {
+        return DataTables.INSTANCE.warehouseCategories().current();
     }
 
     StackMapper mapper() {

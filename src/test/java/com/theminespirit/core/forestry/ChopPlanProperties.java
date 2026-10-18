@@ -1,33 +1,42 @@
 package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
-import net.jqwik.api.constraints.IntRange;
 
 class ChopPlanProperties {
     @Property(tries = 200)
-    void of_AnyTreeAndReach_ReachablePartitionConsistent(
-            @ForAll @IntRange(min = 0, max = 5) int reach, @ForAll long seed) {
+    void of_AnyTreeAndStand_OrdersAllLogsFarthestFirst(@ForAll long seed) {
         Tree tree = randomTree(seed);
+        BlockCoord from = new BlockCoord((int) (seed % 5) - 2, 63, (int) (seed % 7) - 3);
 
-        ChopPlan plan = ChopPlan.of(tree, reach);
+        ChopPlan plan = ChopPlan.of(tree, from);
 
-        assertEquals(tree.logs().size(), plan.reachable().size() + plan.leftStanding(),
-                "Достижимые и оставленные брёвна обязаны в сумме дать все брёвна дерева: потерянное бревно "
-                        + "остаётся висеть в воздухе и не подбирается");
-        int limit = tree.base().y() + reach;
-        assertEquals(tree.logs().stream().filter(coord -> coord.y() <= limit).toList(), plan.reachable(),
-                "Достижимы ровно те брёвна, чья высота не выше base.y + reach: граница делит ствол "
-                        + "на рубку и остаток, и сдвиг границы обязан двигать разрез без дыр");
-        assertEquals(tree.logs().size() - plan.reachable().size(), plan.leftStanding(),
-                "Число оставленных брёвен обязано равняться разности всех и достижимых: расхождение "
-                        + "обманывает игрока в итоговом сообщении");
+        assertEquals(tree.logs().size(), plan.order().size(),
+                "План обязан нести каждое бревно дерева ровно один раз: потерянное бревно остаётся висеть "
+                        + "в воздухе, а дубликат — рубится дважды");
+        assertEquals(Set.copyOf(tree.logs()), Set.copyOf(plan.order()),
+                "Множество целей плана обязано совпасть с брёвнами дерева: план не добавляет и не теряет клеток");
+        for (int i = 1; i < plan.order().size(); i++) {
+            assertTrue(distanceSquared(plan.order().get(i - 1), from)
+                            >= distanceSquared(plan.order().get(i), from),
+                    "Порядок обязан быть по убыванию расстояния от стоянки: бревно " + plan.order().get(i)
+                            + " ближе предыдущего " + plan.order().get(i - 1) + " при стоянке " + from);
+        }
+    }
+
+    private static long distanceSquared(BlockCoord first, BlockCoord second) {
+        long dx = (long) first.x() - second.x();
+        long dy = (long) first.y() - second.y();
+        long dz = (long) first.z() - second.z();
+        return dx * dx + dy * dy + dz * dz;
     }
 
     private static Tree randomTree(long seed) {

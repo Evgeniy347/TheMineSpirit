@@ -51,6 +51,42 @@ class BoardCaseFailureTests {
     }
 
     @Test
+    void fail_SecondFailure_DoublesSameSpiritPause() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        long first = BoardTuning.caseFailPauseTicks();
+        failOnce(board, "first:0", SPIRIT_ONE, 0);
+        assertEquals(first, board.casePauseTicks(SPIRIT_ONE, CASE),
+                "Первый провал даёт начальную паузу: число в тесте — данные board.json");
+
+        now[0] = first;
+        failOnce(board, "first:1", SPIRIT_ONE, now[0]);
+        assertEquals(first * BoardTuning.caseFailMultiplier(), board.casePauseTicks(SPIRIT_ONE, CASE),
+                "Второй провал подряд удлиняет паузу этим же духом: иначе он снова долбит тот же кейс");
+        assertEquals(2, board.consecutiveFailures(SPIRIT_ONE, CASE),
+                "Счётчик серии в тесте — 2 провала подряд у одного духа");
+    }
+
+    @Test
+    void complete_AfterFailure_ResetsPauseToInitial() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        long first = BoardTuning.caseFailPauseTicks();
+        failOnce(board, "first:0", SPIRIT_ONE, 0);
+        now[0] = first;
+        failOnce(board, "first:1", SPIRIT_ONE, now[0]);
+        now[0] = first + first * BoardTuning.caseFailMultiplier();
+        board.submit(ticket("first:2"));
+        assertEquals(BoardOutcome.CLAIMED, board.claim("first:2", SPIRIT_ONE, now[0]),
+                "После паузы второй ступени дух снова берёт кейс");
+        assertTrue(board.complete("first:2"), "Успех закрывает задание и сбрасывает серию провалов");
+
+        failOnce(board, "first:3", SPIRIT_ONE, now[0]);
+        assertEquals(first, board.casePauseTicks(SPIRIT_ONE, CASE),
+                "Успех сбрасывает паузу до начальной: иначе редкие провалы копили бы экспоненту");
+    }
+
+    @Test
     void fail_OtherSpiritSameCase_NotPaused() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
@@ -66,11 +102,10 @@ class BoardCaseFailureTests {
     void fail_RepeatedLimit_DetachesCaseAndWritesJournal() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
-        long pause = BoardTuning.caseFailPauseTicks();
         int limit = BoardTuning.caseFailLimit();
         for (int attempt = 1; attempt <= limit; attempt++) {
             failOnce(board, "first:" + attempt, SPIRIT_ONE, now[0]);
-            now[0] += pause;
+            now[0] += board.casePauseTicks(SPIRIT_ONE, CASE);
         }
 
         assertTrue(board.caseDetached(SPIRIT_ONE, CASE),

@@ -6,6 +6,7 @@ import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnvFacts;
 import com.theminespirit.core.tactics.Orders;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.SelfFacts;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TimeOfDay;
@@ -37,18 +38,18 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public final class WorldFactCollector {
-    public static final int ALLY_RADIUS = 16;
     public static final long DAY_LENGTH = 24000;
     public static final long DUSK_START = 12000;
     public static final long NIGHT_START = 13000;
     public static final long NIGHT_END = 23000;
 
     public record Collected(SituationContext context, Map<String, LivingEntity> entities, EnvReading env, int blockReads,
-            int entityQueries, Optional<Point> home, Optional<Point> camp) {
+            int entityQueries, Optional<Point> home, Optional<Point> camp, Optional<Point> rally) {
     }
 
     private final TacticsAdapterSettings settings;
@@ -90,36 +91,50 @@ public final class WorldFactCollector {
         Optional<Point> home = home(spirit);
         Optional<Point> camp = camp(spirit);
         EnvFacts envFacts = EnvFactsBuilder.build(env, point(spirit.position()), lightAt(spirit), timeOfDay(level), home);
-        Orders orders = orders(spirit, inputs, found.enemies, found.allies);
+        Orders orders = orders(spirit, inputs, found.enemies, found.rally().isPresent());
         SelfFacts self = selfFacts(spirit, found.allies);
         SituationContext context = new SituationContext(self, enemies, envFacts, orders, inputs.ticksSinceHit(),
                 inputs.ticksSinceStrike());
-        return new Collected(context, byId, env, terrain.reads(), 1, home, camp);
+        return new Collected(context, byId, env, terrain.reads(), 1, home, camp, found.rally());
     }
 
     public void invalidate(BlockPos pos) {
         scanner.cache().invalidate(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
     }
 
-    private record Found(List<LivingEntity> enemies, int allies) {
+    private record Found(List<LivingEntity> enemies, int allies, Optional<Point> rally) {
     }
 
     private Found findEntities(SpiritEntity spirit) {
         double radius = settings.factRadius();
+        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
         List<LivingEntity> near = spirit.level().getEntitiesOfClass(LivingEntity.class,
                 spirit.getBoundingBox().inflate(radius),
-                entity -> entity != spirit && entity.isAlive() && (entity instanceof Enemy || entity instanceof SpiritEntity));
+                entity -> entity != spirit && entity.isAlive()
+                        && (entity instanceof Enemy || entity instanceof SpiritEntity || entity instanceof Player));
         List<LivingEntity> enemies = new ArrayList<>();
         int allies = 0;
+        LivingEntity nearestHelp = null;
+        double nearestHelpDistance = tuning.rallyRadius();
         for (LivingEntity entity : near) {
+            double distance = entity.distanceTo(spirit);
+            boolean help = entity instanceof SpiritEntity
+                    || entity instanceof Player player && !player.isSpectator();
+            if (help && distance <= tuning.rallyRadius()
+                    && (nearestHelp == null || distance < nearestHelpDistance
+                            || distance == nearestHelpDistance
+                                    && entity.getUUID().toString().compareTo(nearestHelp.getUUID().toString()) < 0)) {
+                nearestHelp = entity;
+                nearestHelpDistance = distance;
+            }
             if (entity instanceof SpiritEntity) {
-                allies += entity.distanceTo(spirit) <= ALLY_RADIUS ? 1 : 0;
-            } else if (entity.distanceTo(spirit) <= radius) {
+                allies += distance <= tuning.rallyRadius() ? 1 : 0;
+            } else if (entity instanceof Enemy && distance <= radius) {
                 enemies.add(entity);
             }
         }
         sortNearestFirst(enemies, spirit);
-        return new Found(enemies, allies);
+        return new Found(enemies, allies, Optional.ofNullable(nearestHelp).map(help -> point(help.position())));
     }
 
     private static void sortNearestFirst(List<LivingEntity> enemies, SpiritEntity spirit) {
@@ -165,9 +180,10 @@ public final class WorldFactCollector {
                 Math.min(64, allies), Math.min(2304, gear.healItems()));
     }
 
-    private static Orders orders(SpiritEntity spirit, TacticsInputs inputs, List<LivingEntity> enemies, int allies) {
+    private static Orders orders(SpiritEntity spirit, TacticsInputs inputs, List<LivingEntity> enemies,
+            boolean helpAvailable) {
         Optional<OrdersBuilder.Ward> ward = inputs.ward().flatMap(id -> wardOf(spirit, id, enemies));
-        return OrdersBuilder.build(inputs.mode(), inputs.zone(), ward, allies > 0);
+        return OrdersBuilder.build(inputs.mode(), inputs.zone(), ward, helpAvailable);
     }
 
     private static Optional<OrdersBuilder.Ward> wardOf(SpiritEntity spirit, UUID id, List<LivingEntity> enemies) {

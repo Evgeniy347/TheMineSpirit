@@ -27,8 +27,8 @@ class DemoBuildingsTests {
 
     @Test
     void ids_Listed_ContainEveryChecklistBuilding() {
-        assertEquals(List.of("house", "family_house", "stone_house", "storage_hut", "well", "torch_post",
-                "palisade_section", "pen", "enchant_room", "mine_entrance"), DemoBuildings.ids(),
+        assertEquals(List.of("house", "family_house", "stone_house", "storage_hut", "storage", "well",
+                "torch_post", "palisade_section", "pen", "enchant_room", "mine_entrance"), DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
                         + "и не найдёт нужную");
     }
@@ -80,6 +80,23 @@ class DemoBuildingsTests {
         assertEquals("enchant_room_v1", levelTwo.requires().orElseThrow(),
                 "Второй уровень чаровальни строится поверх первого: без требования upgrade заказал бы "
                         + "второй уровень на пустом месте");
+    }
+
+    @Test
+    void type_PresetSchemes_MatchPresetType() {
+        PresetLibrary library = loadReal();
+        for (DemoBuildings.Building building : DemoBuildings.all()) {
+            for (DemoBuildings.Level level : building.levels()) {
+                Preset preset = library.byId(level.scheme()).orElse(null);
+                if (preset != null) {
+                    assertEquals(preset.type(), building.type(),
+                            "Тип демо-постройки '" + building.id() + "' обязан совпадать с типом пресета '"
+                                    + preset.id() + "': иначе сторож схем применит к жилью правила склада");
+                }
+            }
+        }
+        assertEquals(BuildingType.HOUSING, DemoBuildings.require("house").type(),
+                "Схема house — дом: без типа жилья сторож не проверит у неё окна, дверь и свет");
     }
 
     @Test

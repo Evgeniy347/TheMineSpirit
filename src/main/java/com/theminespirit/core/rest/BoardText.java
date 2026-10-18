@@ -51,6 +51,7 @@ public final class BoardText {
             case PENDING -> "ждёт выдачи";
             case WAITING_RESOURCES -> "ждёт ресурсов";
             case ASSIGNED -> "выдано";
+            case BLOCKED -> "заблокировано";
             case DONE -> "выполнено";
             case FAILED -> "провалено";
             case CANCELLED -> "отменено";

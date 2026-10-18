@@ -128,6 +128,32 @@ class ContainerPickerTests {
     }
 
     @Test
+    void choose_WarehouseCategoryMatch_PreferredOverNearerOtherChest() {
+        ContainerSnapshot nearFood = snapshot(0, 64, 2, new Stack("minecraft:bread", 0, 10, 64), null);
+        ContainerSnapshot farOre = snapshotWithCategory(0, 64, 8, "руда");
+        List<ContainerSnapshot> containers = List.of(nearFood, farOre);
+
+        ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN,
+                new Stack("minecraft:raw_iron", 0, 1, 64));
+
+        assertEquals(1, ((ContainerChoice.Chosen) choice).index(),
+                "Сундук с табличкой «руда» обязан получить руду, даже если сундук «еда» ближе: "
+                        + "иначе раскладка по категориям не работает");
+    }
+
+    @Test
+    void choose_WarehouseSameCategory_PicksNearest() {
+        ContainerSnapshot nearOre = snapshotWithCategory(0, 64, 2, "руда");
+        ContainerSnapshot farOre = snapshotWithCategory(0, 64, 8, "руда");
+
+        ContainerChoice choice = ContainerPicker.choose(List.of(nearOre, farOre), ORIGIN,
+                new Stack("minecraft:raw_iron", 0, 1, 64));
+
+        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+                "Из двух сундуков одной категории выбирается ближайший: иначе дух ходил бы лишний путь");
+    }
+
+    @Test
     void choose_WarehouseLosingTwentyPercentReserve_Refuses() {
         List<Stack> slots = new ArrayList<>();
         for (int slot = 0; slot < 21; slot++) {
@@ -163,6 +189,13 @@ class ContainerPickerTests {
         assertInstanceOf(ContainerChoice.Chosen.class, choice,
                 "Сундук, где после новой стопки останется 22% свободного места, обязан принять сдачу: "
                         + "иначе дух отказывался бы от работы при живом складе");
+    }
+
+    private static ContainerSnapshot snapshotWithCategory(int x, int y, int z, String category) {
+        List<Stack> list = new ArrayList<>();
+        list.add(null);
+        list.add(null);
+        return new ContainerSnapshot(new BlockCoord(x, y, z), list, category);
     }
 
     private static ContainerSnapshot snapshot(int x, int y, int z, Stack... slots) {

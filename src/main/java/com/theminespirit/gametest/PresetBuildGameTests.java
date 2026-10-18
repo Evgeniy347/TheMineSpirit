@@ -101,15 +101,16 @@ public final class PresetBuildGameTests {
         return matches;
     }
 
-    // [флак] 67 блоков склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
+    // [флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 1800)
+    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
     public static void preset_StorageHutFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         prepare(helper);
         BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("storage_hut");
         SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
                 new ItemStack(Items.OAK_PLANKS, 64),
+                new ItemStack(Items.OAK_PLANKS, 16),
                 new ItemStack(Items.CHEST, 2));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "storage_hut", anchor), SETTLE_TICKS);
 
@@ -126,15 +127,16 @@ public final class PresetBuildGameTests {
             helper.assertTrue(helper.getBlockState(anchor.offset(1, 1, 1)).is(Blocks.CHEST)
                             && helper.getBlockState(anchor.offset(3, 1, 1)).is(Blocks.CHEST),
                     "сундуки обязаны стоять внутри склада, а не в стене: иначе в них не зайти");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 2, 2)).is(Blocks.OAK_PLANKS),
+            helper.assertTrue(helper.getBlockState(anchor.offset(2, 3, 2)).is(Blocks.OAK_PLANKS),
                     "крыша обязана закрывать склад: без неё постройка не закрыта");
-            helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir(),
-                    "дверной проём обязан остаться пустым: дух выходит наружу, а не замуровывает себя");
+            helper.assertTrue(helper.getBlockState(anchor.offset(2, 1, 0)).isAir()
+                            && helper.getBlockState(anchor.offset(2, 2, 0)).isAir(),
+                    "дверной проём 1×2 обязан остаться пустым: дух выходит наружу, а не замуровывает себя");
             GameTestFixtures.finish(helper);
         });
     }
 
-    // [флак] 85 блоков каменного дома дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
+    // [флак] 81 блок каменного дома дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
     public static void preset_StoneHouseFromLibrary_StandsWithRoof(GameTestHelper helper) {
         prepare(helper);
@@ -143,7 +145,8 @@ public final class PresetBuildGameTests {
         SpiritEntity spirit = spawnWith(helper, new BlockPos(3, 1, 6),
                 new ItemStack(Items.COBBLESTONE, 64),
                 new ItemStack(Items.COBBLESTONE, 14),
-                new ItemStack(Items.GLASS_PANE, 2));
+                new ItemStack(Items.GLASS_PANE, 2),
+                new ItemStack(Items.TORCH, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "stone_house", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {

@@ -109,6 +109,28 @@ class CoordinatorPlanTests {
     }
 
     @Test
+    void plan_HelpCallWithoutDefendedPoint_NearestFreeSpiritGetsUrgentAssist() {
+        UUID caller = UUID.fromString("44444444-4444-4444-4444-444444444444");
+        SpiritSnapshot calling = new SpiritSnapshot(caller, BASE, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 1, true,
+                Optional.empty(), 100, 1.0);
+        SpiritSnapshot near = new SpiritSnapshot(ALPHA, new Point(4, 64, 0), 1, SpiritRole.IDLE,
+                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 100, 1.0);
+        SpiritSnapshot busy = new SpiritSnapshot(BETA, new Point(25, 64, 0), 1, SpiritRole.IDLE,
+                CombatMode.DEFENSIVE, 1, true, Optional.empty(), 100, 1.0);
+        SpiritSnapshot far = new SpiritSnapshot(GAMMA, new Point(60, 64, 0), 1, SpiritRole.IDLE,
+                CombatMode.DEFENSIVE, 0, false, Optional.empty(), 100, 1.0);
+        CoordinatorState state = new CoordinatorState(Optional.empty(), 0,
+                List.of(calling, near, busy, far), 100);
+
+        CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100,
+                List.of(new HelpCall(caller, BASE, 100)), 32);
+
+        assertEquals(List.of(new AssistOrder(ALPHA, caller, true)), plan.assists(),
+                "Зов слышит ближайший свободный дух в радиусе R3, даже если дома нет; занятый и далёкий не идут, "
+                        + "а приказ помечен срочным для возврата к работе после боя");
+    }
+
+    @Test
     void plan_NullState_Throws() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Coordinator().plan(null, new WorkReservations(), 100),

@@ -18,11 +18,14 @@ public final class StationPlacer {
     }
 
     public static Optional<BlockPos> place(SpiritEntity spirit, StationType type) {
+        return place(spirit, type, spirit.blockPosition());
+    }
+
+    public static Optional<BlockPos> place(SpiritEntity spirit, StationType type, BlockPos origin) {
         Level level = spirit.level();
         if (spirit.getInventory().countItem(type.item()) < 1) {
             return Optional.empty();
         }
-        BlockPos origin = spirit.blockPosition();
         for (BlockPos cell : cellsAround(origin)) {
             Direction toward = Direction.getNearest(spirit.getX() - (cell.getX() + 0.5), 0,
                     spirit.getZ() - (cell.getZ() + 0.5));

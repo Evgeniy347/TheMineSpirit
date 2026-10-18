@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.item.ItemStack;
@@ -51,11 +52,9 @@ public final class HiveGameTests {
                     "улей обязан опустеть после сбора, фактически уровень " + honeyLevel(helper));
             helper.assertTrue(helper.getBlockState(HIVE).is(Blocks.BEEHIVE),
                     "улей обязан остаться на месте: сбор не ломает дом пчёл");
-            helper.assertTrue(first.isAlive() && second.isAlive(),
-                    "пчёлы обязаны остаться живы: их не убивают");
-            helper.assertTrue(first.getTarget() == null && second.getTarget() == null,
-                    "при дыме костра пчёлы не выбирают цель: цели " + first.getTarget() + " и "
-                            + second.getTarget());
+            helper.assertTrue(calm(first) && calm(second),
+                    "при дыме костра пчёлы не гибнут, не жалят и не выбирают цель: " + describe(first)
+                            + "; " + describe(second));
             GameTestFixtures.finish(helper);
         });
     }
@@ -92,8 +91,8 @@ public final class HiveGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB));
             helper.assertTrue(honeyLevel(helper) == 0,
                     "улей обязан опустеть, фактически уровень " + honeyLevel(helper));
-            helper.assertTrue(bee.isAlive() && bee.getTarget() == null,
-                    "пчела обязана остаться жива и без цели, фактически цель " + bee.getTarget());
+            helper.assertTrue(calm(bee),
+                    "пчела обязана остаться невредимой и спокойной: " + describe(bee));
             GameTestFixtures.finish(helper);
         });
     }
@@ -138,6 +137,20 @@ public final class HiveGameTests {
         return Blocks.BEEHIVE.defaultBlockState()
                 .setValue(BeehiveBlock.FACING, Direction.NORTH)
                 .setValue(BeehiveBlock.HONEY_LEVEL, 5);
+    }
+
+    /**
+     * Пчела спокойна: не убита, не жалила и не выбрала цель. Улетевшая в улей пчела по ванили уходит из мира
+     * (DISCARDED) — это не гибель, а обычная жизнь улья, поэтому «жива» проверяем по причине удаления.
+     */
+    private static boolean calm(Bee bee) {
+        Entity.RemovalReason removal = bee.getRemovalReason();
+        boolean unharmed = removal == null || removal == Entity.RemovalReason.DISCARDED;
+        return unharmed && !bee.hasStung() && (bee.isRemoved() || bee.getTarget() == null);
+    }
+
+    private static String describe(Bee bee) {
+        return "удалена " + bee.getRemovalReason() + ", жалила " + bee.hasStung() + ", цель " + bee.getTarget();
     }
 
     private static int honeyLevel(GameTestHelper helper) {
