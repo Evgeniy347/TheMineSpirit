@@ -12,11 +12,15 @@ public final class ToolBreakCost {
     public static final int APPROACH_TICKS = 10;
     public static final int CHEAP_PLACE_TICKS = 5;
     public static final int EXPENSIVE_PLACE_TICKS = 20;
-    public static final Set<String> THROWAWAY = Set.of(
+
+    // Порядок расходных блоков: земля и камень первыми. Засыпка и мосты берут первый
+    // доступный по этому порядку, поэтому он же задаёт детерминированный выбор материала.
+    public static final List<String> CHEAP_ORDER = List.of(
             "dirt", "cobblestone", "gravel", "sand",
             "oak_planks", "spruce_planks", "birch_planks", "jungle_planks", "acacia_planks",
             "dark_oak_planks", "mangrove_planks", "cherry_planks", "bamboo_planks",
             "crimson_planks", "warped_planks");
+    public static final Set<String> THROWAWAY = Set.copyOf(CHEAP_ORDER);
 
     private ToolBreakCost() {
     }
