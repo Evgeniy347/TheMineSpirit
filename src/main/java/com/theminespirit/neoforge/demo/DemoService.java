@@ -3,16 +3,21 @@ package com.theminespirit.neoforge.demo;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
+import com.theminespirit.core.building.GroundAnchor;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.slf4j.Logger;
@@ -21,7 +26,6 @@ import org.slf4j.Logger;
 public final class DemoService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double PICK_REACH = 32.0;
-    private static final int SPAWN_STEP_BACK = 2;
 
     private final ServerLevel level;
     private final List<DemoSession> sessions = new ArrayList<>();
@@ -37,6 +41,9 @@ public final class DemoService {
     public int start(CommandSourceStack source, DemoBuildings.Building building, int levelRequested,
             BlockPos explicit, BuildRotation rotation, int upgradeFrom, int upgradeTo) {
         ServerPlayer player = source.getPlayer();
+        if (player != null) {
+            stopOwnedBy(player.getUUID());
+        }
         Optional<BlockPos> resolved = anchor(source, explicit);
         if (resolved.isEmpty()) {
             source.sendFailure(Component.literal("Не нашёл, где строить: встаньте и посмотрите на площадку "
@@ -59,11 +66,11 @@ public final class DemoService {
                     + " не зарегистрирован"));
             return 0;
         }
-        DemoSession session = new DemoSession(level, spirit, plans);
+        DemoSession session = new DemoSession(level, spirit, plans, player == null ? null : player.getUUID());
         spirit.setDemo(true);
         spirit.setInvulnerable(true);
-        spirit.moveTo(anchor.getX() + 0.5 - lookDx * SPAWN_STEP_BACK, anchor.getY(),
-                anchor.getZ() + 0.5 - lookDz * SPAWN_STEP_BACK);
+        BlockCoord spawn = plans.get(0).placement().spawn();
+        spirit.moveTo(spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5);
         level.addFreshEntity(spirit);
         try {
             session.begin();
@@ -90,13 +97,22 @@ public final class DemoService {
     public int stop() {
         int removed = 0;
         for (DemoSession session : sessions) {
-            SpiritEntity spirit = session.spirit();
-            spirit.cancelTask();
-            spirit.discard();
+            session.abort();
+            session.spirit().discard();
             removed++;
         }
         sessions.clear();
         return removed;
+    }
+
+    private void stopOwnedBy(UUID owner) {
+        for (DemoSession session : new ArrayList<>(sessions)) {
+            if (owner.equals(session.owner())) {
+                session.abort();
+                session.spirit().discard();
+                sessions.remove(session);
+            }
+        }
     }
 
     private static List<DemoPlan> plans(DemoBuildings.Building building, int levelRequested, BlockPos anchor,
@@ -116,7 +132,7 @@ public final class DemoService {
         return List.of(DemoPlanner.plan(building, levelRequested, anchor, lookDx, lookDz, rotation));
     }
 
-    private static Optional<BlockPos> anchor(CommandSourceStack source, BlockPos explicit) {
+    private Optional<BlockPos> anchor(CommandSourceStack source, BlockPos explicit) {
         if (explicit != null) {
             return Optional.of(explicit);
         }
@@ -128,7 +144,20 @@ public final class DemoService {
         if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) {
             return Optional.empty();
         }
-        return Optional.of(blockHit.getBlockPos().above());
+        BlockPos hitPos = blockHit.getBlockPos();
+        int groundY;
+        try {
+            groundY = GroundAnchor.groundY(hitPos.getY(), level.getMinBuildHeight(),
+                    y -> isGround(new BlockPos(hitPos.getX(), y, hitPos.getZ())));
+        } catch (IllegalArgumentException noGround) {
+            return Optional.empty();
+        }
+        return Optional.of(new BlockPos(hitPos.getX(), groundY + 1, hitPos.getZ()));
+    }
+
+    private boolean isGround(BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return state.isCollisionShapeFullBlock(level, pos) && !state.is(BlockTags.LEAVES);
     }
 
     private static String format(List<DemoPlan> plans) {

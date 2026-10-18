@@ -27,6 +27,11 @@ public enum BuildRotation {
         return quarterTurns;
     }
 
+    /** Имя поворота для каталога скриптов: он ждёт строку из списка {@code none/clockwise_90/…}. */
+    public String id() {
+        return name().toLowerCase(Locale.ROOT);
+    }
+
     public static BuildRotation ofQuarterTurns(int turns) {
         int normalized = Math.floorMod(turns, 4);
         for (BuildRotation rotation : values()) {

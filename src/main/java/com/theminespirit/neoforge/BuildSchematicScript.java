@@ -46,6 +46,10 @@ final class BuildSchematicScript implements ScriptInstance {
         USE
     }
 
+    // Дух обходит постройку по площадке: запас демо-раскладки (5) позволяет встать на землю сбоку от
+    // дальнего угла крыши, куда ортогональный сосед не дотягивается.
+    private static final int STAND_RING_RADIUS = 3;
+
     private static final String[] SCAFFOLD_MATERIALS = {
             "minecraft:cobblestone", "minecraft:oak_planks", "minecraft:dirt", "minecraft:stone"
     };
@@ -87,7 +91,9 @@ final class BuildSchematicScript implements ScriptInstance {
         this.file = params.file();
         this.origin = new BlockCoord(params.x(), params.y(), params.z());
         this.rotation = params.rotation();
-        this.entries = SchematicResources.load(params.file()).entries(origin, rotation);
+        this.entries = SchematicResources.load(params.file()).entries(origin, rotation).stream()
+                .filter(entry -> BlockItems.hasBlockItem(entry.block()))
+                .toList();
         this.safety = new LevelSafetyView(level);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
@@ -287,10 +293,16 @@ final class BuildSchematicScript implements ScriptInstance {
         addStandOnTop(candidates, new BlockCoord(cell.x(), cell.y(), cell.z() + 1));
         addStandOnTop(candidates, new BlockCoord(cell.x(), cell.y(), cell.z() - 1));
         addDeepBelow(candidates, cell);
-        addColumnBelow(candidates, cell, 1, 0);
-        addColumnBelow(candidates, cell, -1, 0);
-        addColumnBelow(candidates, cell, 0, 1);
-        addColumnBelow(candidates, cell, 0, -1);
+        for (int radius = 1; radius <= STAND_RING_RADIUS; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                        continue;
+                    }
+                    addColumnBelow(candidates, cell, dx, dz);
+                }
+            }
+        }
         return List.copyOf(candidates);
     }
 

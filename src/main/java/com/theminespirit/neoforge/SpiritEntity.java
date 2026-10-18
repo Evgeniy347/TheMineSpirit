@@ -477,6 +477,14 @@ public final class SpiritEntity extends PathfinderMob {
         this.demo = demo;
     }
 
+    public void stripEquipment() {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!getItemBySlot(slot).isEmpty()) {
+                setItemSlot(slot, ItemStack.EMPTY);
+            }
+        }
+    }
+
     public Optional<String> currentTaskScript() {
         return brain == null ? Optional.empty() : brain.currentScript();
     }

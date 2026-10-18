@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -40,16 +41,27 @@ final class DemoSession {
     private final ServerLevel level;
     private final SpiritEntity spirit;
     private final List<DemoPlan> plans;
+    private final UUID owner;
     private int index;
 
-    DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans) {
+    DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner) {
         this.level = level;
         this.spirit = spirit;
         this.plans = List.copyOf(plans);
+        this.owner = owner;
     }
 
     SpiritEntity spirit() {
         return spirit;
+    }
+
+    UUID owner() {
+        return owner;
+    }
+
+    void abort() {
+        spirit.cancelTask();
+        spirit.stripEquipment();
     }
 
     void begin() {
@@ -59,6 +71,7 @@ final class DemoSession {
 
     boolean tick() {
         if (spirit.isRemoved()) {
+            abort();
             return false;
         }
         RunStatus status = spirit.taskStatus().orElse(null);
@@ -66,6 +79,7 @@ final class DemoSession {
             return true;
         }
         if (status == RunStatus.SUCCEEDED) {
+            placeWithoutItem(plans.get(index));
             if (index + 1 < plans.size()) {
                 index++;
                 prepare(plans.get(index));
@@ -76,6 +90,7 @@ final class DemoSession {
             return false;
         }
         announce(spirit.taskFailureReason().orElse("стройка не удалась"));
+        abort();
         spirit.discard();
         return false;
     }
@@ -124,19 +139,18 @@ final class DemoSession {
         params.put("x", plan.placement().origin().x());
         params.put("y", plan.placement().origin().y());
         params.put("z", plan.placement().origin().z());
-        params.put("rotation", plan.placement().rotation().quarterTurns());
+        params.put("rotation", plan.placement().rotation().id());
         return params;
     }
 
     private void prepare(DemoPlan plan) {
         clearVolume(plan);
         flattenFloor(plan);
-        placeWithoutItem(plan);
         fillChest(plan);
     }
 
     private void clearVolume(DemoPlan plan) {
-        for (var cell : plan.placement().clearBox().cells()) {
+        for (var cell : plan.placement().platform().cells()) {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             if (!level.getBlockState(pos).isAir()) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);

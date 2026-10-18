@@ -64,38 +64,39 @@ public final class DemoBuildGameTests {
 
     // [флак] 67 блоков склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "arena", batch = "demo_build", timeoutTicks = 2600)
+    @GameTest(template = "demo_arena", batch = "demo_build", timeoutTicks = 2600)
     public static void demo_StorageHutCommand_ChestAndSpiritBuildThenSpiritLeaves(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        BlockPos anchorRelative = new BlockPos(3, 1, 3);
+        BlockPos anchorRelative = new BlockPos(15, 1, 15);
         BlockPos anchor = helper.absolutePos(anchorRelative);
-        helper.setBlock(0, 1, 4, Blocks.DIRT);
+        helper.setBlock(10, 1, 14, Blocks.DIRT);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "gt_demo_hut");
 
         int accepted = dispatcher(helper).execute(demo("storage_hut", anchor) + " none", source(helper, player));
         helper.assertTrue(accepted == 1,
                 "Демо-стройка обязана начаться по команде оператора: результат=" + accepted + ", причина отказа "
                         + "в чате команды");
-        helper.assertTrue(helper.getBlockState(anchorRelative).is(Blocks.CHEST),
-                "Сундук с материалами обязан появиться в клетке-якоре сразу: без него дух ничего не построит");
-        List<SpiritEntity> spawned = spiritsNear(helper, anchor, 3);
+        BlockPos chest = new BlockPos(13, 1, 15);
+        helper.assertTrue(helper.getBlockState(chest).is(Blocks.CHEST),
+                "Сундук с материалами обязан появиться на площадке в стороне от входа сразу: без него дух "
+                        + "ничего не построит");
+        List<SpiritEntity> spawned = spiritsNear(helper, anchor, 5);
         helper.assertTrue(!spawned.isEmpty(),
-                "Дух-строитель обязан появиться рядом с сундуком: демонстрация без духа нечего показывать");
+                "Дух-строитель обязан появиться у площадки: демонстрация без духа нечего показывать");
         SpiritEntity spirit = spawned.get(0);
-        helper.assertTrue(helper.getBlockState(new BlockPos(0, 1, 4)).isAir(),
-                "Объём вокруг постройки обязан очиститься сразу: блок в кольце очистки остался на месте");
+        helper.assertTrue(helper.getBlockState(new BlockPos(10, 1, 14)).isAir(),
+                "Площадка вокруг постройки обязана очиститься сразу: блок в её объёме остался на месте");
 
         Schematic schematic = SchematicResources.load("storage_hut");
         helper.succeedWhen(() -> {
             helper.assertTrue(spirit.isRemoved(),
                     "После «Готово» дух обязан пропасть: он остался у постройки");
-            int matches = countMatches(helper, schematic, new BlockPos(1, 1, 4));
+            int matches = countMatches(helper, schematic, new BlockPos(13, 1, 16));
             helper.assertTrue(matches == schematic.blocks().size(),
                     "Постройка обязана совпасть со схемой блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
-            helper.assertTrue(helper.getBlockState(anchorRelative).is(Blocks.CHEST),
+            helper.assertTrue(helper.getBlockState(chest).is(Blocks.CHEST),
                     "Сундук после стройки остаётся на месте (пустым): он часть демонстрации");
             GameTestFixtures.finish(helper);
         });
@@ -103,12 +104,11 @@ public final class DemoBuildGameTests {
 
     // [флак] Загон строится двумя уровнями: дух проходит подход к 4+7 клеткам забора с лесами; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "arena", batch = "demo_upgrade", timeoutTicks = 2600)
+    @GameTest(template = "demo_arena", batch = "demo_upgrade", timeoutTicks = 2600)
     public static void demo_PenUpgradeOneToTwo_LeavesBiggerPen(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        BlockPos anchorRelative = new BlockPos(3, 1, 3);
+        BlockPos anchorRelative = new BlockPos(15, 1, 15);
         BlockPos anchor = helper.absolutePos(anchorRelative);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "gt_demo_pen");
 
@@ -116,19 +116,19 @@ public final class DemoBuildGameTests {
                 + anchor.getY() + " " + anchor.getZ() + " none", source(helper, player));
         helper.assertTrue(accepted == 1,
                 "Улучшение загона обязано начаться по команде: результат=" + accepted);
-        List<SpiritEntity> spawned = spiritsNear(helper, anchor, 3);
-        helper.assertTrue(!spawned.isEmpty(), "Дух-строитель обязан появиться рядом с сундуком");
+        List<SpiritEntity> spawned = spiritsNear(helper, anchor, 5);
+        helper.assertTrue(!spawned.isEmpty(), "Дух-строитель обязан появиться у площадки");
         SpiritEntity spirit = spawned.get(0);
 
         Schematic bigPen = SchematicResources.load("pen_7x7");
         helper.succeedWhen(() -> {
             helper.assertTrue(spirit.isRemoved(),
                     "После улучшения дух обязан пропасть: он остался у загона");
-            int matches = countMatches(helper, bigPen, new BlockPos(0, 1, 4));
+            int matches = countMatches(helper, bigPen, new BlockPos(12, 1, 16));
             helper.assertTrue(matches == bigPen.blocks().size(),
                     "После upgrade 1→2 загон обязан совпасть со схемой 7×7: поставлено " + matches + " из "
                             + bigPen.blocks().size());
-            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 6)).isAir(),
+            helper.assertTrue(helper.getBlockState(new BlockPos(15, 1, 20)).isAir(),
                     "Старый забор младшего уровня обязан исчезнуть: улучшение оставило лишний забор внутри");
             GameTestFixtures.finish(helper);
         });
