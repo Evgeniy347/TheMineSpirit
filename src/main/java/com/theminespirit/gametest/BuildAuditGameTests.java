@@ -1,10 +1,10 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import BuildRotation;
+import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.RunStatus;
-import ScriptResult;
+import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.BlockPlacer;
@@ -23,9 +23,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import BedPart;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
