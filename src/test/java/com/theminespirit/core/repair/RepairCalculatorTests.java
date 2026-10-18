@@ -62,26 +62,84 @@ class RepairCalculatorTests {
     }
 
     @Test
-    void chooseMethod_TwoDamagedPlainItems_ReturnsGrindstone() {
-        assertEquals(RepairMethod.GRINDSTONE, RepairCalculator.chooseMethod(2, false, 100, PICKAXE_MAX, 90),
-                "два одинаковых повреждённых незачарованных предмета чинятся в точиле");
+    void anvilResult_WornTool_AddsQuarterOfMax() {
+        assertEquals(212, RepairCalculator.anvilResult(150, 250, 25),
+                "150 + 25% от 250 (62) = 212: наковальня добавляет четверть максимума за материал");
     }
 
     @Test
-    void chooseMethod_EnchantedPair_ReturnsNone() {
-        assertEquals(RepairMethod.NONE, RepairCalculator.chooseMethod(2, true, 100, PICKAXE_MAX, 90),
-                "зачарованную пару в точило не кладут: чары потеряются, а наковальни с запасом опыта у духа нет");
+    void anvilResult_NearFull_CapsAtMax() {
+        assertEquals(250, RepairCalculator.anvilResult(230, 250, 25),
+                "230 + 62 = 292 обрезается до максимума 250: выше предела прочности не бывает");
     }
 
     @Test
-    void chooseMethod_SingleItem_ReturnsNone() {
-        assertEquals(RepairMethod.NONE, RepairCalculator.chooseMethod(1, false, 100, PICKAXE_MAX, 90),
-                "для точила нужны два одинаковых предмета: одно повреждённое не починить");
+    void anvilResult_BrokenTool_RestoresOnlyQuarter() {
+        assertEquals(62, RepairCalculator.anvilResult(0, 250, 25),
+                "0 + 62 = 62: у сломанного инструмента материал восстанавливает только четверть максимума");
     }
 
     @Test
-    void chooseMethod_ItemAboveThreshold_ReturnsNone() {
-        assertEquals(RepairMethod.NONE, RepairCalculator.chooseMethod(2, false, 240, PICKAXE_MAX, 90),
-                "если лучший из пары ещё крепок (240 выше порога 225), второй предмет тратить незачем");
+    void anvilResult_PercentOutOfRange_Throws() {
+        assertThrows(IllegalArgumentException.class, () -> RepairCalculator.anvilResult(100, 250, 0),
+                "Нулевая доля ремонта недопустима: материал тратился бы впустую");
+        assertThrows(IllegalArgumentException.class, () -> RepairCalculator.anvilResult(100, 250, 101),
+                "Доля ремонта выше 100% недопустима: предел прочности переполнился бы");
+    }
+
+    @Test
+    void chooseMethod_MaterialOnly_ReturnsAnvil() {
+        assertEquals(RepairMethod.ANVIL,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, false, false, true),
+                "Есть материал и нет второго инструмента — чиним наковальней");
+    }
+
+    @Test
+    void chooseMethod_SecondToolOnly_ReturnsGrindstone() {
+        assertEquals(RepairMethod.GRINDSTONE,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, true, false, true),
+                "Нет материала, но есть второй такой же инструмент — чиним точилом");
+    }
+
+    @Test
+    void chooseMethod_BothAvailable_CheapestWins() {
+        assertEquals(RepairMethod.ANVIL,
+                RepairCalculator.chooseMethod(new RepairCosts(1, 2, 10), true, true, false, true),
+                "Материал (1) + опыт (1×2) = 3 дешевле второго инструмента (10): выбираем наковальню");
+        assertEquals(RepairMethod.GRINDSTONE,
+                RepairCalculator.chooseMethod(new RepairCosts(1, 20, 10), true, true, false, true),
+                "Материал (1) + опыт (1×20) = 21 дороже второго инструмента (10): выбираем точило");
+    }
+
+    @Test
+    void chooseMethod_Enchanted_RequiresAnvil() {
+        assertEquals(RepairMethod.ANVIL,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, true, true, true),
+                "Зачарованный инструмент чинится только наковальней: точило снимет чары");
+        assertEquals(RepairMethod.NONE,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, true, true, true),
+                "Зачарованный инструмент без материала не чинится вовсе: точило снимет чары, а наковальня без "
+                        + "материала бесполезна");
+    }
+
+    @Test
+    void chooseMethod_NotDamagedEnough_ReturnsNone() {
+        assertEquals(RepairMethod.NONE,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, true, false, false),
+                "Крепкий инструмент не чиним даже при материале и паре: ресурс тратился бы зря");
+    }
+
+    @Test
+    void chooseMethod_NothingAvailable_ReturnsNone() {
+        assertEquals(RepairMethod.NONE,
+                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, false, false, true),
+                "Без материала и без второго инструмента чинить нечем");
+    }
+
+    @Test
+    void chooseMethod_NullCosts_Throws() {
+        assertThrows(NullPointerException.class,
+                () -> RepairCalculator.chooseMethod(null, true, true, false, true),
+                "Стоимость без чисел не задать: выбор способа обязан падать, а не подставлять нули");
     }
 }

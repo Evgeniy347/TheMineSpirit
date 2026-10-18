@@ -41,6 +41,12 @@ public final class FirstStepsPlan {
         if (!facts.houses()) {
             return Optional.of(BoardCase.BUILD_HOUSE);
         }
+        if (!facts.smithingTable()) {
+            return Optional.of(BoardCase.CRAFT_SMITHING_TABLE);
+        }
+        if (!facts.anvil()) {
+            return Optional.of(BoardCase.CRAFT_ANVIL);
+        }
         return Optional.empty();
     }
 }

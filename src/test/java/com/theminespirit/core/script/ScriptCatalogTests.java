@@ -331,7 +331,7 @@ class ScriptCatalogTests {
                                 "z", new long[]{WORLD_MIN, WORLD_MAX},
                                 "radius", new long[]{CatalogLimits.CAMP_RADIUS_MIN, CatalogLimits.CAMP_RADIUS_MAX})),
                 spec("clear_camp", List.of(), Map.of()),
-                spec("repair", List.of("item"), Map.of()),
+                spec("repair_tool", List.of("item"), Map.of()),
                 spec("use_block", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

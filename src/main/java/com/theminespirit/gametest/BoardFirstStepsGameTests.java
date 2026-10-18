@@ -58,6 +58,8 @@ public final class BoardFirstStepsGameTests {
     private static final String BATCH = "board_first_steps";
     private static final String STOCK_BATCH = "board_first_steps_stock";
     private static final String TOOLS_BATCH = "board_first_steps_tools";
+    private static final String SMITHY_BATCH = "board_first_steps_smithy";
+    private static final String SMITHY_IRON_BATCH = "board_first_steps_smithy_iron";
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
@@ -93,6 +95,26 @@ public final class BoardFirstStepsGameTests {
 
     @AfterBatch(batch = TOOLS_BATCH)
     public static void restoreMobTargetingAfterTools(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(true);
+    }
+
+    @BeforeBatch(batch = SMITHY_BATCH)
+    public static void stopMobsTargetingSpiritsForSmithy(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(false);
+    }
+
+    @AfterBatch(batch = SMITHY_BATCH)
+    public static void restoreMobTargetingAfterSmithy(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(true);
+    }
+
+    @BeforeBatch(batch = SMITHY_IRON_BATCH)
+    public static void stopMobsTargetingSpiritsForSmithyIron(ServerLevel level) {
+        SpiritConfig.setMobsTargetSpirits(false);
+    }
+
+    @AfterBatch(batch = SMITHY_IRON_BATCH)
+    public static void restoreMobTargetingAfterSmithyIron(ServerLevel level) {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
@@ -280,6 +302,91 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
+    /**
+     * Стул кузнеца и наковальня идут после дома: с железом (блоки и слитки) доска открывает
+     * крафт наковальни, а без железа ставит мелкие задачи добычи, а сам крафт ждёт. Все
+     * прежние факты цепочки подготовлены блоками, склад — инструментами и материалами.
+     */
+    @GameTest(template = "arena", batch = SMITHY_BATCH, timeoutTicks = 100)
+    public static void firstSteps_WithIron_CraftsAnvil(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity spirit = smithySettlement(helper);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-smithy.jsonl");
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(true)),
+                level.getGameTime());
+
+        helper.assertTrue(board.board().statusOf("first:craft_anvil").isPresent(),
+                "С железом (3 блока + 4 слитка из рецепта) наковальня открывается: статус "
+                        + board.board().statusOf("first:craft_anvil"));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = SMITHY_IRON_BATCH, timeoutTicks = 100)
+    public static void firstSteps_WithoutIron_WaitsWithGather(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity spirit = smithySettlement(helper);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-smithy-iron.jsonl");
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(false)),
+                level.getGameTime());
+
+        helper.assertTrue(board.board().statusOf("first:craft_anvil").isEmpty(),
+                "Без железа крафт наковальни не открывается: гейт из рецепта держит задание, статус "
+                        + board.board().statusOf("first:craft_anvil"));
+        boolean gather = board.board().statusOf("gather:iron_ingot").isPresent()
+                || board.board().statusOf("gather:iron_block").isPresent();
+        helper.assertTrue(gather,
+                "При недостаче железа на доску встаёт добыча слитка или блока: статусы "
+                        + board.board().statusOf("gather:iron_ingot") + " и "
+                        + board.board().statusOf("gather:iron_block"));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    /** Поселение со всеми фактами цепочки до кузнечества: дом, сундуки, верстак, шахта, забор,
+     * свет, постройка и стол кузнеца. Наковальни нет — её и проверяет тест. */
+    private static SpiritEntity smithySettlement(GameTestHelper helper) {
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        placeLogs(helper, true);
+        helper.setBlock(new BlockPos(6, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
+        helper.setBlock(new BlockPos(6, 1, 6), Blocks.COBBLESTONE);
+        helper.setBlock(new BlockPos(6, 2, 6), Blocks.COBBLESTONE);
+        helper.setBlock(new BlockPos(6, 1, 5), Blocks.LADDER);
+        helper.setBlock(new BlockPos(3, 1, 7), Blocks.OAK_FENCE);
+        helper.setBlock(new BlockPos(1, 1, 7), Blocks.TORCH);
+        helper.setBlock(new BlockPos(7, 1, 7), Blocks.TORCH);
+        helper.setBlock(new BlockPos(1, 1, 3), Blocks.TORCH);
+        helper.setBlock(new BlockPos(7, 1, 3), Blocks.TORCH);
+        helper.setBlock(new BlockPos(4, 1, 7), Blocks.OAK_STAIRS);
+        helper.setBlock(new BlockPos(5, 1, 2), Blocks.SMITHING_TABLE);
+        return spirit;
+    }
+
+    private static Map<String, Integer> smithyStock(boolean iron) {
+        Map<String, Integer> stock = new HashMap<>();
+        for (BoardCase tool : ToolSet.chain()) {
+            stock.merge(ToolSet.stockKey(tool), 1, Integer::sum);
+        }
+        stock.put("oak_planks", 256);
+        stock.put("stick", 256);
+        stock.put("oak_fence", 256);
+        stock.put("torch", 256);
+        stock.put("cobblestone", 256);
+        if (iron) {
+            stock.put("iron_ingot", 256);
+            stock.put("iron_block", 256);
+        }
+        return stock;
+    }
+
     private static void tick(ServerLevel level, BoardService board, SpiritEntity spirit,
             Map<String, Integer> stock) {
         FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.copyOf(stock)),
@@ -330,6 +437,8 @@ public final class BoardFirstStepsGameTests {
         items.putIfAbsent("oak_fence", 256);
         items.putIfAbsent("torch", 256);
         items.putIfAbsent("cobblestone", 256);
+        items.putIfAbsent("iron_ingot", 256);
+        items.putIfAbsent("iron_block", 256);
         return new StockView(items);
     }
 
@@ -406,6 +515,8 @@ public final class BoardFirstStepsGameTests {
             case BUILD_FENCE -> 11;
             case LIGHTING -> 12;
             case BUILD_HOUSE -> 13;
+            case CRAFT_SMITHING_TABLE -> 14;
+            case CRAFT_ANVIL -> 15;
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + boardCase);
         };
     }
@@ -439,6 +550,8 @@ public final class BoardFirstStepsGameTests {
                 helper.setBlock(new BlockPos(7, 1, 3), Blocks.TORCH);
             }
             case BUILD_HOUSE -> helper.setBlock(new BlockPos(4, 1, 7), Blocks.OAK_STAIRS);
+            case CRAFT_SMITHING_TABLE -> helper.setBlock(new BlockPos(5, 1, 2), Blocks.SMITHING_TABLE);
+            case CRAFT_ANVIL -> helper.setBlock(new BlockPos(5, 1, 4), Blocks.ANVIL);
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + head);
         }
     }
