@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class SchematicParser {
     private static final Set<String> ROOT_FIELDS = Set.of("version", "size", "blocks");
-    private static final Set<String> BLOCK_FIELDS = Set.of("pos", "block");
+    private static final Set<String> BLOCK_FIELDS = Set.of("pos", "block", "state");
     private static final int SCHEMATIC_VERSION = 1;
 
     private SchematicParser() {
@@ -55,13 +58,41 @@ public final class SchematicParser {
                 throw new IllegalStateException("Файл '" + origin + "': позиция [" + dx + "," + dy + "," + dz
                         + "] вне размера " + sx + "×" + sy + "×" + sz + ": блок вне схемы ставить некуда");
             }
-            entries.add(new Schematic.Entry(dx, dy, dz, JsonResource.text(node.get("block"), origin, "поля block схемы")));
+            entries.add(new Schematic.Entry(dx, dy, dz, JsonResource.text(node.get("block"), origin, "поля block схемы"),
+                    state(node.get("state"), origin, dx, dy, dz)));
         }
         if (entries.size() > CatalogLimits.SCHEMATIC_BLOCKS_MAX) {
             throw new IllegalStateException("Файл '" + origin + "': блоков " + entries.size() + ", а предел "
                     + CatalogLimits.SCHEMATIC_BLOCKS_MAX + ": большая схема стротится слишком долго");
         }
         return new Schematic(sx, sy, sz, entries);
+    }
+
+    private static Map<String, String> state(JsonNode node, String origin, int dx, int dy, int dz) {
+        if (node == null || node.isNull()) {
+            return Map.of();
+        }
+        if (!node.isObject()) {
+            throw new IllegalStateException("Файл '" + origin + "': у поля state блока [" + dx + "," + dy + "," + dz
+                    + "] ожидается объект свойств: свойства задаются парами имя-значение");
+        }
+        Map<String, String> properties = new LinkedHashMap<>();
+        Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            if (field.getKey().isBlank()) {
+                throw new IllegalStateException("Файл '" + origin + "': у состояния блока [" + dx + "," + dy + "," + dz
+                        + "] пустое имя свойства: по пустому имени свойство не найти");
+            }
+            JsonNode value = field.getValue();
+            if (!value.isTextual() || value.asText().isBlank()) {
+                throw new IllegalStateException("Файл '" + origin + "': у свойства '" + field.getKey()
+                        + "' блока [" + dx + "," + dy + "," + dz + "] ожидается непустая строка: "
+                        + "значения свойств блока задаются текстом");
+            }
+            properties.put(field.getKey(), value.asText());
+        }
+        return Map.copyOf(properties);
     }
 
     private static int intAt(JsonNode list, int index, String origin) {
