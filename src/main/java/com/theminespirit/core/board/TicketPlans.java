@@ -59,6 +59,7 @@ public final class TicketPlans {
             case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
             case CRAFT_ANVIL -> Optional.of("minecraft:anvil");
             case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
+            case CRAFT_SMOKER -> Optional.of("minecraft:smoker");
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
             default -> Optional.empty();
@@ -105,6 +106,8 @@ public final class TicketPlans {
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
+            case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
+            case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
@@ -202,6 +205,14 @@ public final class TicketPlans {
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(gotoTarget(target), new ScriptCall("craft",
                 Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
+    }
+
+    /** Рыбалка на запомненной рабочей точке: подойти к берегу и ловить удочкой. */
+    private static TaskNode fishWorkPoint(TicketTarget target) {
+        return sequence(gotoTarget(target), new ScriptCall("fish", Map.of(
+                "count", CatalogLimits.FISH_COUNT_DEFAULT,
+                "duration_ticks", CatalogLimits.FISH_DURATION_DEFAULT,
+                "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
     /** Инструмент набора: крафтится по числу комплектов поселения, но не больше партии каталога. */

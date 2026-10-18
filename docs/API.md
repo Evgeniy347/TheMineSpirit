@@ -306,6 +306,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 - `hunt` (`species`, `radius`, `count`) — забить диких животных
 - `capture` (`species`, `radius`) — поймать животное в кольцо из блоков
 - `fish` (`count`, `duration_ticks`, `radius`) — ловить рыбу удочкой у открытой воды
+- `bucket_fish` (`count`, `radius`) — поймать рыбу ведром у открытой воды (не больше предела из `fishing.json`)
 - `craft` (`item`, `count`, `radius`) — скрафтить предмет
 - `smelt` (`item`, `count`, `radius`) — переплавить предмет
 - `equip` (`item`) — надеть предмет

@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
  */
 public final class BoardSources {
     private final WoolWatch wool = new WoolWatch();
+    private final FishingWatch fishing = new FishingWatch();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
@@ -39,6 +40,7 @@ public final class BoardSources {
         FirstStepsRunner.tick(level, service, spirits, stock, now);
         EvergreenWatch.tick(level, service, spirits, now);
         FoodWatch.tick(level, service, spirits, stock, now);
+        fishing.tick(level, service, spirits, stock, now);
         RepairWatch.tick(level, service, spirits, now);
         PenBuild.tick(level, service, spirits, now);
         MineLevels.tick(level, service, spirits, now);

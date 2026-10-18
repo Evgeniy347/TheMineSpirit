@@ -1,4 +1,8 @@
 {
   "minWidth": 2,
-  "minDepth": 1
+  "minDepth": 1,
+  "workWidth": 5,
+  "workDepth": 2,
+  "bucketCount": 8,
+  "smokerFish": 16
 }

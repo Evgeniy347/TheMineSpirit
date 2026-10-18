@@ -106,6 +106,50 @@ class FishingSpotsTests {
                 "Без открытой воды находка обязана отказать: дух не рыбачит в воздухе");
     }
 
+    @Test
+    void findWorkPoint_FiveByFiveDepthTwo_ChoosesShoreStand() {
+        WaterView view = view(columns(2, 2, 64, 2, 5), Set.of(new BlockCoord(1, 64, 2)));
+
+        Optional<FishingSpots.Spot> found =
+                FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA, FishingSpots.SpotFilter.ALL);
+
+        assertTrue(found.isPresent(),
+                "Пятно 5x5 глубиной 2 — рабочая точка у воды: здесь дух рыбачит постоянно");
+        assertEquals(new BlockCoord(1, 64, 2), found.orElseThrow().stand(),
+                "Рабочая стоянка выбирается у берега ближайшего пятна воды");
+    }
+
+    @Test
+    void findWorkPoint_ShallowFiveByFive_Refuses() {
+        WaterView view = view(columns(2, 2, 64, 1, 5), Set.of(new BlockCoord(1, 64, 2)));
+
+        assertTrue(FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA,
+                        FishingSpots.SpotFilter.ALL).isEmpty(),
+                "Пятно 5x5 глубиной 1 не годится под рабочую точку: работа у воды требует глубины 2 из данных");
+    }
+
+    @Test
+    void findWorkPoint_FilterRejectsNearShore_PicksFarOne() {
+        List<WaterView.Column> water = new ArrayList<>(columns(2, 2, 64, 2, 5));
+        water.addAll(columns(30, 30, 64, 2, 5));
+        WaterView view = view(water, Set.of(new BlockCoord(1, 64, 2), new BlockCoord(29, 64, 30)));
+
+        FishingSpots.Spot spot = FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA,
+                (stand, cell) -> stand.x() >= 29).orElseThrow();
+
+        assertEquals(new BlockCoord(29, 64, 30), spot.stand(),
+                "Отвергнутая фильтром ближняя стоянка не выбирается: рабочая точка идёт от построек подальше");
+    }
+
+    @Test
+    void findWorkPoint_AllShoreRejected_Refuses() {
+        WaterView view = view(columns(2, 2, 64, 2, 5), Set.of(new BlockCoord(1, 64, 2)));
+
+        assertTrue(FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA,
+                        (stand, cell) -> false).isEmpty(),
+                "Если вся вода занята постройками, рабочая точка не находится: дух не рыбачит у чужого дома");
+    }
+
     private static WaterView view(List<WaterView.Column> columns, Set<BlockCoord> stands) {
         return new WaterView() {
             @Override

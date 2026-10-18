@@ -39,6 +39,42 @@ class CookableFoodsTests {
     }
 
     @Test
+    void isCookableFish_CodAndSalmon_True() {
+        assertTrue(CookableFoods.isCookableFish("minecraft:cod"),
+                "Треска жарится: иначе улов не превращается в еду");
+        assertTrue(CookableFoods.isCookableFish("minecraft:salmon"),
+                "Лосось жарится: иначе улов не превращается в еду");
+        assertFalse(CookableFoods.isCookableFish("minecraft:beef"),
+                "Говядина — не рыба: правило про улов сюда не тянется");
+    }
+
+    @Test
+    void isCookableFish_PufferAndTropical_False() {
+        assertTrue(CookableFoods.isFish("minecraft:pufferfish"),
+                "Иглобрюх — рыба: его кладут на склад, а не выбрасывают");
+        assertFalse(CookableFoods.isCookableFish("minecraft:pufferfish"),
+                "Иглобрюх не жарится: жареный иглобрюх — яд в игре, и портить его плавкой нельзя");
+        assertFalse(CookableFoods.isCookableFish("minecraft:tropical_fish"),
+                "Тропическая рыба не жарится: её держат для коллекции, а не для еды");
+    }
+
+    @Test
+    void best_FishAmongFoods_ChoosesFishWhenFattest() {
+        NutritionTable fishTable = new NutritionTable(Map.of(
+                "minecraft:cooked_cod", 5.0, "minecraft:cooked_beef", 8.0));
+
+        assertEquals(Optional.of("minecraft:cooked_cod"),
+                CookableFoods.best(Map.of("minecraft:cod", 3), fishTable),
+                "Треска — сырьё готовки: улов обязан попадать в набор жарки");
+    }
+
+    @Test
+    void best_OnlyPufferfish_Empty() {
+        assertEquals(Optional.empty(), CookableFoods.best(Map.of("minecraft:pufferfish", 3), TABLE),
+                "Иглобрюх не сырьё готовки: без пары сырьё → готовое намерение жарить не строится");
+    }
+
+    @Test
     void best_NoKnownRaw_Empty() {
         assertEquals(Optional.empty(), CookableFoods.best(Map.of("minecraft:stick", 3), TABLE),
                 "Палки — не сырьё готовки: без пары сырьё → готовое намерение не строится");
