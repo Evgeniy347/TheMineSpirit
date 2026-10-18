@@ -143,13 +143,10 @@ public final class ChopTreeScript implements ScriptInstance {
         StringBuilder text = new StringBuilder("срублено деревьев ").append(chopped).append(" из ")
                 .append(params.count());
         if (standingLogs > 0) {
-            text.append("; оставлено брёвен выше досягаемости: ").append(standingLogs);
+            text.append("; оставлено брёвен: ").append(standingLogs);
         }
         if (protectedLogs > 0) {
             text.append("; пропущено защищённых: ").append(protectedLogs);
-        }
-        if (chop.pillarFailure() != null) {
-            text.append("; столб: ").append(chop.pillarFailure());
         }
         if (params.replant()) {
             text.append("; replant: ").append(replantText());

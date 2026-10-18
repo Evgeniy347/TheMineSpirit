@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.ChopTreeScript;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -225,6 +226,70 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_two_adjacent", timeoutTicks = 400)
+    public static void chopTree_TwoAdjacentOaks_OnlySelectedChopped(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        buildOakTree(helper, 6, 4, 5);
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "chop_tree с count=1 обязан срубить ровно одно дерево из двух вплотную, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(logsInInventory == 5,
+                    "в инвентарь обязано попасть одно дерево (5 брёвен), фактически " + logsInInventory);
+            int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(logsInWorld == 5,
+                    "второе дерево вплотную обязано уцелеть целиком (5 брёвен), осталось " + logsInWorld);
+
+            clearField(helper);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "chop_tree_log_house", timeoutTicks = 400)
+    public static void chopTree_LogHouseNearby_HouseIntact(GameTestHelper helper) {
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        buildLogHut(helper, 8, 8, 3);
+        for (int x = 8; x <= 10; x++) {
+            for (int z = 8; z <= 10; z++) {
+                for (int y = 1; y <= 3; y++) {
+                    PlacedBlocksData.get(helper.getLevel()).mark(helper.absolutePos(new BlockPos(x, y, z)));
+                }
+            }
+        }
+        SpiritEntity spirit = spawnChopper(helper);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "chop_tree обязан срубить выбранное дерево рядом с домом из брёвен, причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
+            helper.assertTrue(logsInInventory == 5,
+                    "дерево срублено целиком: 5 брёвен в инвентаре, фактически " + logsInInventory);
+            int houseLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(houseLogs == 27,
+                    "дом из 27 брёвен рядом обязан уцелеть целиком, осталось " + houseLogs);
+            for (int x = 8; x <= 10; x++) {
+                for (int z = 8; z <= 10; z++) {
+                    for (int y = 1; y <= 3; y++) {
+                        PlacedBlocksData.get(helper.getLevel()).unmark(helper.absolutePos(new BlockPos(x, y, z)));
+                    }
+                }
+            }
+
+            clearField(helper);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "chop_tree_hut_and_pillar", timeoutTicks = 300)
     public static void chopTree_HutAndPillarRejected_NotATreeReturnsFail(GameTestHelper helper) {
         prepareField(helper);
@@ -254,7 +319,7 @@ public final class ChopTreeGameTests {
     }
 
     @GameTest(template = FIELD, batch = "chop_tree_eight_logs", timeoutTicks = 400)
-    public static void chopTree_EightLogTree_SixChoppedTwoStanding(GameTestHelper helper) {
+    public static void chopTree_EightLogTree_AllChoppedFromOneStand(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 8);
         SpiritEntity spirit = spawnChopper(helper);
@@ -264,16 +329,16 @@ public final class ChopTreeGameTests {
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "дерево из 8 брёвен: срубить 6 достижимых, 2 выше +5 — SUCCEEDED, причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
+                    "дерево из 8 брёвен: дух рубит всё дерево с одной стоянки без ограничения высоты — SUCCEEDED, "
+                            + "причина: " + spirit.taskFailureReason().orElse("нет"));
 
             int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            helper.assertTrue(logsInInventory == 6,
-                    "должно быть 6 брёвен в инвентаре (достижимых), фактически " + logsInInventory);
+            helper.assertTrue(logsInInventory == 8,
+                    "все 8 брёвен обязаны попасть в инвентарь, фактически " + logsInInventory);
 
             int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(logsInWorld == 2,
-                    "2 бревна выше досягаемости должны остаться в мире, осталось " + logsInWorld);
+            helper.assertTrue(logsInWorld == 0,
+                    "в мире не должно остаться брёвен дерева, осталось " + logsInWorld);
 
             clearField(helper);
         });
@@ -358,7 +423,7 @@ public final class ChopTreeGameTests {
                 helper.assertTrue(midChop, "ожидание середины рубки: хотя бы одно бревно срублено, задача идёт");
                 cancelledAt[0] = spirit.tickCount;
                 spirit.cancelTask();
-                frozenWorld.addAll(snapshotField(helper));
+                frozenWorld.addAll(snapshotFieldWithoutLeaves(helper));
                 frozenSpirit[0] = spirit.blockPosition();
             }
             helper.assertTrue(spirit.tickCount >= cancelledAt[0] + 40,
@@ -366,8 +431,10 @@ public final class ChopTreeGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
                     "статус задачи после отмены обязан быть CANCELLED: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(frozenWorld.equals(snapshotField(helper)),
-                    "через 40 тиков после отмены мир не должен меняться: ни ломки, ни трещин, ни подбора");
+            helper.assertTrue(frozenWorld.equals(snapshotFieldWithoutLeaves(helper)),
+                    "через 40 тиков после отмены дух не должен менять мир: ни ломки, ни трещин, ни подбора "
+                            + "(листва не в счёте: срубленное сверху дерево роняет крону, это механика игры, "
+                            + "а не действие духа)");
             helper.assertTrue(frozenSpirit[0].equals(spirit.blockPosition()),
                     "после отмены дух обязан стоять: был в " + frozenSpirit[0] + ", стал в " + spirit.blockPosition());
 
@@ -531,10 +598,8 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] замер 206/208 тиков в изоляции: 6 нижних брёвен, столб на 6 блоков, рубка верха и разбор
-    // столба; в полном прогоне соседние структуры держат чанки и удлиняют обход с подъёмом — потолок 900
-    @GameTest(template = "mine_arena", batch = "chop_tree_tall", timeoutTicks = 900)
-    public static void chopTree_NineLogTrunkNeedsPillar_AllLogsChoppedAndPillarDismantled(GameTestHelper helper) {
+    @GameTest(template = "mine_arena", batch = "chop_tree_tall", timeoutTicks = 400)
+    public static void chopTree_NineLogTrunk_AllLogsChoppedFromOneStand(GameTestHelper helper) {
         clearField(helper, TALL_FIELD_HEIGHT);
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
@@ -543,14 +608,13 @@ public final class ChopTreeGameTests {
         }
         buildTree(helper, 4, 4, 9, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
         SpiritEntity spirit = spawnChopper(helper);
-        spirit.getInventory().setItem(TOOL_SLOT + 1, new ItemStack(Items.COBBLESTONE, 16));
 
         SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "дерево высотой 9: брёвна выше +5 требуют столба, рубка обязана завершиться успешно. Статус: "
+                    "дерево высотой 9: дух рубит все брёвна с одной стоянки без столба. Статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
             int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
@@ -563,61 +627,72 @@ public final class ChopTreeGameTests {
                             + ", брёвен-блоков в мире " + countBlocksInWorld(helper, Blocks.OAK_LOG)
                             + ", булыжника-блоков в мире " + countBlocksInWorld(helper, Blocks.COBBLESTONE));
             helper.assertTrue(logsOnGround == 0,
-                    "дроп со столба и верха обязан быть подобран: на земле осталось " + logsOnGround
-                            + "; несобранные брёвна означают, что дух бросил верх дерева");
+                    "дроп со всего дерева обязан быть подобран: на земле осталось " + logsOnGround);
             int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
             helper.assertTrue(logsInWorld == 0,
                     "в мире не должно остаться ни одного бревна дерева, осталось " + logsInWorld);
-            int pillarInWorld = countBlocksInWorld(helper, Blocks.COBBLESTONE);
-            helper.assertTrue(pillarInWorld == 0,
-                    "столб обязан быть разобран целиком, осталось блоков булыжника: " + pillarInWorld);
-            int blocksBack = GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE);
-            helper.assertTrue(blocksBack == 16,
-                    "все 16 блоков столба обязаны вернуться в инвентарь, фактически " + blocksBack);
-            LOGGER.info("chop_tree, дерево 9 со столбом: {} тиков духа", run.spiritTicks());
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
+                    "столб не строится: булыжника в мире быть не должно");
+            LOGGER.info("chop_tree, дерево 9 с одной стоянки: {} тиков духа", run.spiritTicks());
 
             clearField(helper, TALL_FIELD_HEIGHT);
         });
     }
 
-    // [флак] замер 864 тика в изоляции: 36 брёвен выше досягаемости, столб на 12 блоков, рубка верха и
-    // разбор столба; потолок ≈ 2× замера с запасом на флаки полного прогона
+    // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
     @GameTest(template = "mine_arena", batch = "chop_tree_tall_2x2", timeoutTicks = 1800)
-    public static void chopTree_GiantSpruceTwoByTwoHeightFifteen_ChoppedWithPillar(GameTestHelper helper) {
-        clearField(helper, TALL_FIELD_HEIGHT);
+    public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
+        clearField(helper, 22);
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
                 helper.setBlock(x, 0, z, Blocks.DIRT);
             }
         }
-        buildSquaredTree(helper, 4, 4, 15, 15, Blocks.SPRUCE_LOG, Blocks.SPRUCE_LEAVES);
+        buildSquaredTree(helper, 4, 4, 20, 20, Blocks.SPRUCE_LOG, Blocks.SPRUCE_LEAVES);
         SpiritEntity spirit = spawnChopper(helper);
-        spirit.getInventory().setItem(TOOL_SLOT + 1, new ItemStack(Items.COBBLESTONE, 48));
+
+        BlockPos[] standAt = { null };
+        double[] maxShift = { 0 };
+        helper.onEachTick(() -> {
+            if (standAt[0] == null) {
+                if (helper.getBlockState(new BlockPos(4, 20, 4)).isAir()) {
+                    standAt[0] = spirit.blockPosition();
+                }
+                return;
+            }
+            if (!helper.getBlockState(new BlockPos(4, 1, 4)).isAir()) {
+                maxShift[0] = Math.max(maxShift[0], standAt[0].distSqr(spirit.blockPosition()));
+            }
+        });
 
         SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("spruce", 1), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "ель 2×2 высотой 15: брёвна выше досягаемости требуют столба, рубка обязана завершиться. Статус: "
+                    "ель 2×2 высотой 20: всё дерево рубится с одной стоянки без столба. Статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
             int logsInWorld = countBlocksInWorld(helper, Blocks.SPRUCE_LOG);
             helper.assertTrue(logsInWorld == 0,
-                    "все 60 брёвен ели 2×2 обязаны быть срублены, осталось " + logsInWorld);
+                    "все 80 брёвен ели 2×2 обязаны быть срублены, осталось " + logsInWorld);
             int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SPRUCE_LOG);
             int logsOnGround = GameTestFixtures.countInWorld(helper, Items.SPRUCE_LOG);
-            helper.assertTrue(logsInInventory + logsOnGround == 60,
-                    "все 60 брёвен ели обязаны сохраниться: в инвентаре " + logsInInventory
+            helper.assertTrue(logsInInventory + logsOnGround == 80,
+                    "все 80 брёвен ели обязаны сохраниться: в инвентаре " + logsInInventory
                             + ", на земле " + logsOnGround);
             helper.assertTrue(logsOnGround == 0,
-                    "дроп со столба и верха обязан быть подобран: на земле осталось " + logsOnGround);
-            int pillarInWorld = countBlocksInWorld(helper, Blocks.COBBLESTONE);
-            helper.assertTrue(pillarInWorld == 0,
-                    "столб обязан быть разобран целиком, осталось блоков булыжника: " + pillarInWorld);
-            LOGGER.info("chop_tree, ель 2×2 высотой 15 со столбом: {} тиков духа", run.spiritTicks());
+                    "дроп со всего дерева обязан быть подобран: на земле осталось " + logsOnGround);
+            helper.assertTrue(countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
+                    "столб не строится: булыжника в мире быть не должно");
+            helper.assertTrue(standAt[0] != null,
+                    "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
+            helper.assertTrue(maxShift[0] <= 1,
+                    "после подхода дух рубит с одной стоянки: сдвиг за всю рубку не больше 1 блока, "
+                            + "а он " + maxShift[0] + " (квадрат расстояния от стоянки " + standAt[0] + ")");
+            LOGGER.info("chop_tree, ель 2×2 высотой 20 с одной стоянки: {} тиков духа", run.spiritTicks());
 
-            clearField(helper, TALL_FIELD_HEIGHT);
+            clearField(helper, 22);
         });
     }
 
@@ -630,9 +705,9 @@ public final class ChopTreeGameTests {
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
-                    "дерево из " + TALL_TREE_LOGS + " брёвен: достижимые срублены, скрипт успешен, статус "
-                            + status[0] + ", причина: " + script.failureReason());
+            helper.assertTrue(helper.getBlockState(new BlockPos(4, TALL_TREE_LOGS, 4)).isAir(),
+                    "рубка обязана начаться с самого дальнего (верхнего) бревна: разбор дерева завершён, "
+                            + "счётчик чтений замер, статус " + status[0] + ", причина: " + script.failureReason());
             long reads = script.treeBlockReads();
             helper.assertTrue(reads >= TALL_TREE_LOGS,
                     "нижняя граница разбора: прочитано каждое из " + TALL_TREE_LOGS
@@ -651,10 +726,6 @@ public final class ChopTreeGameTests {
                             + 27L * TALL_TREE_LOGS + ". Прежняя граница была посажена на замер ровно и красила "
                             + "тест на одном лишнем чтении; если обход читает мир шире осознанно — перепроверь "
                             + "кеш LevelTreeView и подними границу вместе с MEASURED_TREE_READS");
-
-            helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)),
-                    "итог обязан назвать число оставленных брёвен выше досягаемости: " + (TALL_TREE_LOGS - 6)
-                            + ", а он: " + script.summary());
             LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, граница {}, бюджет {}",
                     TALL_TREE_LOGS, reads, MAX_TREE_READS, 27L * TALL_TREE_LOGS);
 
@@ -971,10 +1042,9 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] замер 372 тика: ветка за стеной, дух перебирает стоянки и считает оставленные брёвна;
-    // потолок 750 ≈ 2× замера
-    @GameTest(template = FIELD, batch = "chop_tree_left_standing", timeoutTicks = 750)
-    public static void chopTree_BranchBehindWall_LeftLogsAreCountedInSummary(GameTestHelper helper) {
+    // [флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
+    @GameTest(template = FIELD, batch = "chop_tree_reach_behind_wall", timeoutTicks = 500)
+    public static void chopTree_FarBranchBehindWall_ChoppedFromOneStand(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
         for (int x = 5; x <= 10; x++) {
@@ -982,9 +1052,7 @@ public final class ChopTreeGameTests {
         }
         // Лист кроны под первым бревном ветки удержал бы его дроп на высоте, куда не дотянуться.
         helper.setBlock(5, 5, 4, Blocks.AIR);
-        // Стена от земли до уровня ниже брёвен ветки и шире платформы: дух не заходит за x=7.
-        // Бревно x=10 недосягаемо наверняка (центр 10,5 против центра духа не дальше 7,5); x=8 и x=9
-        // достижимы или нет в зависимости от того, где встал дух, поэтому число оставленных читается из мира.
+        // Стена от земли до уровня ниже брёвен ветки: дух остаётся перед ней, но дотягивается через неё.
         for (int z = -2; z <= 12; z++) {
             for (int y = 1; y <= 5; y++) {
                 helper.setBlock(8, y, z, Blocks.STONE);
@@ -994,8 +1062,8 @@ public final class ChopTreeGameTests {
         ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1));
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
-        // Дроп с брёвен над стеной и за ней не достать: он уходит «в пропасть», иначе подбор падал бы
-        // не на проверяемом (счёт оставленных брёвен), а на предметах, которые и так нельзя подобрать.
+        // Дроп с брёвен за стеной не достать: он уходит «в пропасть», иначе подбор падал бы не на
+        // проверяемом (рубка через стену), а на предметах, которые и так нельзя подобрать.
         BlockPos beyond = helper.absolutePos(new BlockPos(8, 0, -2));
         AABB beyondWall = new AABB(beyond.getX(), beyond.getY(), beyond.getZ(), beyond.getX() + 4,
                 beyond.getY() + FIELD_HEIGHT, beyond.getZ() + 16);
@@ -1005,12 +1073,12 @@ public final class ChopTreeGameTests {
         helper.succeedWhen(() -> {
             String state = "статус " + status[0] + ", причина: " + script.failureReason() + ", итог: "
                     + script.summary();
-            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED, "дерево срублено, брёвна ветки остались: " + state);
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
+                    "далёкая ветка за стеной обязана быть срублена с одной стоянки: " + state);
             int left = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(left >= 1, "бревно x=10 недосягаемо и обязано остаться стоять: " + state);
-            helper.assertTrue(script.summary().contains("оставлено брёвен выше досягаемости: " + left),
-                    "итог обязан называть все оставленные брёвна, в том числе пропущенные после повторного "
-                            + "приближения: в мире " + left + ", а " + state);
+            helper.assertTrue(left == 0,
+                    "все брёвна дерева, включая ветку за стеной, обязаны быть срублены: в мире " + left + ", а "
+                            + state);
 
             clearField(helper);
         });
@@ -1223,13 +1291,13 @@ public final class ChopTreeGameTests {
         }
     }
 
-    private static List<String> snapshotField(GameTestHelper helper) {
+    private static List<String> snapshotFieldWithoutLeaves(GameTestHelper helper) {
         List<String> cells = new ArrayList<>();
         for (int x = 0; x < PLATFORM; x++) {
             for (int y = 1; y < FIELD_HEIGHT; y++) {
                 for (int z = 0; z < PLATFORM; z++) {
                     BlockState state = helper.getBlockState(new BlockPos(x, y, z));
-                    if (!state.isAir()) {
+                    if (!state.isAir() && !(state.getBlock() instanceof LeavesBlock)) {
                         cells.add(x + "," + y + "," + z + "=" + state);
                     }
                 }

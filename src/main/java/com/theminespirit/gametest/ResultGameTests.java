@@ -268,8 +268,8 @@ public final class ResultGameTests {
     public static void chopTree_ReloadedAfterFirstTree_ResultKeepsCountersOfBoth(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
-        buildOakTree(helper, 4, 4, 8);
-        buildOakTree(helper, 6, 6, 5);
+        buildOakTree(helper, 3, 3, 5);
+        buildOakTree(helper, 8, 8, 5);
         SpiritEntity started = spawnedChopper(helper, rest);
         AtomicReference<SpiritEntity> spirit = new AtomicReference<>(started);
         ResultPoller poller = ResultPoller.start(helper, rest);
@@ -310,12 +310,11 @@ public final class ResultGameTests {
                             + poller.latest() + ", тело " + poller.lastJson());
             String result = poller.lastJson().path("result").asText("");
             helper.assertTrue(result.contains("срублено деревьев 2 из 2"),
-                    "Итог обязан называть оба дерева «срублено деревьев 2 из 2», получено " + result);
-            helper.assertTrue(result.contains("оставлено"),
-                    "Итог обязан сохранить счётчик недостижимых брёвен первого дерева, получено " + result);
-            helper.assertTrue(countLogs(helper) == 2,
-                    "В мире обязаны остаться только 2 недостижимых бревна первого дерева, осталось "
-                            + countLogs(helper));
+                    "Итог обязан называть оба дерева «срублено деревьев 2 из 2» (счётчик пережил перезагрузку), "
+                            + "получено " + result);
+            helper.assertTrue(countLogs(helper) == 0,
+                    "Дух рубит дерево целиком с одной стоянки: после двух деревьев в мире не остаётся брёвен, "
+                            + "осталось " + countLogs(helper));
         });
     }
 

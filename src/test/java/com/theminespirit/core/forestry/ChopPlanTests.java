@@ -10,44 +10,46 @@ import org.junit.jupiter.api.Test;
 
 class ChopPlanTests {
     @Test
-    void of_EightLogsAboveSixtyFour_ReachableSixLeftTwo() {
-        ChopPlan plan = ChopPlan.of(trunk(64, 8), ChopTuning.REACH_ABOVE_BASE);
+    void of_StraightTrunk_OrdersFarthestFirst() {
+        ChopPlan plan = ChopPlan.of(trunk(64, 6), new BlockCoord(0, 64, 0));
 
-        assertEquals(List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(0, 66, 0),
-                        new BlockCoord(0, 67, 0), new BlockCoord(0, 68, 0), new BlockCoord(0, 69, 0)),
-                plan.reachable(),
-                "При досягаемости 5 блоков над основанием из 8 брёвен рубится нижние 6: дух стоит на земле "
-                        + "и не дотягивается до верхних брёвен без подъёма");
-        assertEquals(2, plan.leftStanding(),
-                "Два верхних бревна выше досягаемости обязан посчитать план как оставленные стоять: "
-                        + "их число уходит в итоговое сообщение игроку");
+        assertEquals(List.of(new BlockCoord(0, 69, 0), new BlockCoord(0, 68, 0), new BlockCoord(0, 67, 0),
+                        new BlockCoord(0, 66, 0), new BlockCoord(0, 65, 0), new BlockCoord(0, 64, 0)),
+                plan.order(),
+                "Дух рубит с одной стоянки и дотягивается до любого бревна: порядок обязан идти от самого "
+                        + "дальнего (высокого) бревна к ближнему, а не снизу вверх");
     }
 
     @Test
-    void of_SingleLog_ReachableOneLeftZero() {
-        ChopPlan plan = ChopPlan.of(trunk(64, 1), ChopTuning.REACH_ABOVE_BASE);
+    void of_FarBranch_ChoppedBeforeNearHighTrunk() {
+        Tree tree = new Tree(new BlockCoord(0, 64, 0),
+                List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(5, 64, 0)));
+        ChopPlan plan = ChopPlan.of(tree, new BlockCoord(0, 64, 0));
 
-        assertEquals(List.of(new BlockCoord(0, 64, 0)), plan.reachable(),
-                "Одинокий столб из одного бревна полностью достижим: план должен предложить его срубить");
-        assertEquals(0, plan.leftStanding(),
-                "Одиночный столб не оставляет брёвен выше досягаемости");
+        assertEquals(List.of(new BlockCoord(5, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(0, 64, 0)),
+                plan.order(),
+                "Порядок считается по расстоянию от стоянки, а не по одной высоте: далёкая ветка впереди "
+                        + "низкого верхнего бревна ствола, иначе «самое дальнее» правило нарушено");
     }
 
     @Test
-    void of_LogAtExactReachBoundary_IsReachable() {
-        ChopPlan plan = ChopPlan.of(trunk(64, 6), ChopTuning.REACH_ABOVE_BASE);
+    void of_SingleLog_ReturnsIt() {
+        ChopPlan plan = ChopPlan.of(trunk(64, 1), new BlockCoord(0, 64, 0));
 
-        assertEquals(6, plan.reachable().size(),
-                "Бревно ровно на границе base.y + reachAboveBase обязано входить в достижимые: граница "
-                        + "инклюзивна, иначе дух оставит видное бревно без причины");
-        assertEquals(0, plan.leftStanding(),
-                "Дерево до границы включительно рубятся целиком, оставленных брёвен нет");
+        assertEquals(List.of(new BlockCoord(0, 64, 0)), plan.order(),
+                "Одинокое бревно — вся цель рубки: план обязан нести его единственным пунктом");
     }
 
     @Test
-    void of_NegativeReach_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> ChopPlan.of(trunk(64, 3), -1),
-                "Отрицательная досягаемость недопустима: план с ней заявляет, что рубить нечего");
+    void of_NullTree_Throws() {
+        assertThrows(NullPointerException.class, () -> ChopPlan.of(null, new BlockCoord(0, 64, 0)),
+                "План без дерева построить нельзя: отсутствие проверки отдало бы пустой план и дух бросил бы рубку молча");
+    }
+
+    @Test
+    void of_NullFrom_Throws() {
+        assertThrows(NullPointerException.class, () -> ChopPlan.of(trunk(64, 3), null),
+                "План без стоянки построить нельзя: порядок рубки считается от стоянки духа");
     }
 
     private static Tree trunk(int baseY, int count) {
