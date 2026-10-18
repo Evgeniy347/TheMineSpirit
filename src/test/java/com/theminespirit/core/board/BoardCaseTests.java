@@ -18,16 +18,18 @@ class BoardCaseTests {
                 "CLEAR_GROUNDS", "COLLECT_DROPS", "STOCK_CHESTS", "CRAFTING_STATION", "CRAFT_BED",
                 "CRAFT_SHEARS", "BUILD_MINE", "CRAFT_WOODEN_PICKAXE", "CRAFT_WOODEN_AXE",
                 "CRAFT_WOODEN_SHOVEL", "CRAFT_STONE_PICKAXE", "CRAFT_STONE_AXE", "CRAFT_STONE_SHOVEL",
-                "CRAFT_STONE_SWORD", "CRAFT_ANVIL", "CRAFT_SMITHING_TABLE",
+                "CRAFT_STONE_SWORD", "CRAFT_ANVIL", "CRAFT_SMITHING_TABLE", "CRAFT_SMOKER",
                 "BUILD_FENCE", "LIGHTING", "BUILD_HOUSE", "BUILD_WAREHOUSE", "REPAIR_FENCE",
-                "REPAIR_BUILDING", "REPAIR_TOOL", "FILL_CRATER", "CAPTURE_ANIMAL", "BUILD_PEN", "LURE_ANIMAL",
+                "REPAIR_BUILDING", "REPAIR_TOOL", "FILL_CRATER", "FISH", "CAPTURE_ANIMAL", "BUILD_PEN",
+                "LURE_ANIMAL",
                 "DISMANTLE_SHELTER", "SUPPLY_SITE", "GATHER_MATERIALS", "ENCHANT_ROOM",
                 "ENCHANT_SHELVES", "BREED_ANIMALS", "EAT_TO_FULL", "HERD_CULL", "HUNT_WILD_SHEEP",
-                "RELOCATE_BUILDING", "RESTOCK_FOOD", "SHEAR_SHEEP", "TRANSFER_ITEM", "WEAVE_WOOL");
+                "RELOCATE_BUILDING", "RESTOCK_FOOD", "SHEAR_SHEEP", "TRANSFER_ITEM", "WEAVE_WOOL",
+                "HARVEST_HIVE", "PLACE_BEEHIVE");
 
         assertEquals(expected, actual,
-                "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б и 39 (37: 32 из v2/37Б "
-                        + "плюс CRAFT_SHEARS, SHEAR_SHEEP, HUNT_WILD_SHEEP, WEAVE_WOOL, CRAFT_BED): "
+                "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б, 39 и пчёлами (39: 37 прежних "
+                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE): "
                         + "каждый вид задания получает приоритет, гейт и план по своему имени; "
                         + "лишний кейс — сирота в таблице BoardRules, потерянный — задание без источника");
     }

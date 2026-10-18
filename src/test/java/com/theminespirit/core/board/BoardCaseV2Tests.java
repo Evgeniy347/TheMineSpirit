@@ -21,11 +21,10 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsFortyOne() {
-        assertEquals(41, BoardCase.values().length,
-                "Кейсов доски — 41: 40 из v2/37Б/39/кузнечества (CRAFT_TOOLS заменён семью кейсами "
-                        + "набора инструментов, плюс COLLECT_DROPS и TRANSFER_ITEM, пять кейсов шерсти, "
-                        + "CRAFT_ANVIL, CRAFT_SMITHING_TABLE и REPAIR_TOOL) и BUILD_WAREHOUSE чеклиста 41. "
+    void cases_TotalCount_IsFortyFive() {
+        assertEquals(45, BoardCase.values().length,
+                "Кейсов доски — 45: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
+                        + "(HARVEST_HIVE, PLACE_BEEHIVE) и BUILD_WAREHOUSE чеклиста 41. "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 

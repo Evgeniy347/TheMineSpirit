@@ -55,6 +55,8 @@ class TicketPlansTests {
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
             Map.entry(BoardCase.CRAFT_ANVIL, "craft"),
             Map.entry(BoardCase.CRAFT_SMITHING_TABLE, "craft"),
+            Map.entry(BoardCase.CRAFT_SMOKER, "craft"),
+            Map.entry(BoardCase.FISH, "fish"),
             Map.entry(BoardCase.CRAFT_WOODEN_PICKAXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_AXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_SHOVEL, "craft"),
@@ -76,7 +78,9 @@ class TicketPlansTests {
             Map.entry(BoardCase.RESTOCK_FOOD, "withdraw"),
             Map.entry(BoardCase.TRANSFER_ITEM, "deliver"),
             Map.entry(BoardCase.SHEAR_SHEEP, "shear"),
-            Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"));
+            Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"),
+            Map.entry(BoardCase.HARVEST_HIVE, "harvest_hive"),
+            Map.entry(BoardCase.PLACE_BEEHIVE, "craft"));
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
@@ -212,12 +216,60 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_CraftSmoker_CraftsSmoker() {
+        TaskNode plan = TicketPlans.plan(BoardCase.CRAFT_SMOKER, target());
+        ScriptCall craft = findCall(plan, "craft");
+
+        assertEquals("minecraft:smoker", craft.params().get("item"),
+                "Кейс коптильни крафтит именно коптильню: без этого улов негде коптить");
+    }
+
+    @Test
+    void plan_Fish_GoesToPointAndFishes() {
+        BlockCoord point = new BlockCoord(7, 64, -3);
+        TaskNode plan = TicketPlans.plan(BoardCase.FISH, TicketTarget.at(point));
+
+        assertTrue(plan instanceof SequenceNode sequence && sequence.steps().size() == 2,
+                "Рыбалка как занятие — переход на рабочую точку и ловля: без перехода дух рыбачит "
+                        + "у случайной воды");
+        ScriptCall fish = (ScriptCall) ((SequenceNode) plan).steps().get(1);
+        assertEquals("fish", fish.script(),
+                "Второй шаг плана рыбалки — скрипт fish: без него занятие ничего не ловит");
+    }
+
+    @Test
     void plan_DismantleShelter_ClearsShelter() {
         TaskNode plan = TicketPlans.plan(BoardCase.DISMANTLE_SHELTER, target());
 
         assertTrue(collectScripts(plan).contains("clear_area"),
                 "Разбор укрытия — существующий clear_area: второй разборочный скрипт "
                         + "не заводим");
+    }
+
+    @Test
+    void plan_HarvestHive_UsesBoardRadius() {
+        ScriptCall harvest = findCall(TicketPlans.plan(BoardCase.HARVEST_HIVE, target()), "harvest_hive");
+
+        assertEquals(HiveRules.hiveRadius(), harvest.params().get("radius"),
+                "Сбор улья ищет полный улей в радиусе доски: иначе задание не нашло бы цель");
+        assertEquals(1, harvest.params().get("count"),
+                "Задание собирает один улей: несколько за раз оставили бы духа без отчёта по каждому");
+    }
+
+    @Test
+    void plan_PlaceBeehive_CraftsAndPlacesAboveSupport() {
+        BlockCoord support = new BlockCoord(12, 64, 3);
+        TaskNode plan = TicketPlans.plan(BoardCase.PLACE_BEEHIVE, TicketTarget.at(support));
+        List<String> scripts = collectScripts(plan);
+
+        assertTrue(scripts.contains("craft") && scripts.contains("place_block"),
+                "Постановка улья — крафт улья и установка: без крафта духу нечего ставить");
+        ScriptCall craft = findCall(plan, "craft");
+        assertEquals("minecraft:beehive", craft.params().get("item"),
+                "Крафтится именно улей: другой предмет не даст улей у цветов");
+        ScriptCall place = findCall(plan, "place_block");
+        assertEquals(support.y() + 1, place.params().get("y"),
+                "Улей ставится на опору из заявки, а не в её клетку: иначе блок заменил бы землю");
     }
 
     @Test

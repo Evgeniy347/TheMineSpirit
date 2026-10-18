@@ -85,7 +85,7 @@ class TacticsConfigTests {
                         "\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0.2, \"IGNORE\": 0.5}",
                         "\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0.2}"), "weights.BIAS"),
                 broken("удалена строка фактора", "weights.json", TacticsTexts.mutate(weights,
-                        "    \"LOW_HP\": {\"FIGHT\": -1.5, \"RETREAT\": 2.0, \"IGNORE\": 0},\n", ""), "weights"),
+                        "    \"LOW_HP\": {\"FIGHT\": -2.0, \"RETREAT\": 2.5, \"IGNORE\": 0},\n", ""), "weights"),
                 broken("неизвестный фактор", "weights.json", TacticsTexts.mutate(weights, "\"HUNGER\"", "\"HUNGRY\""),
                         "weights.HUNGRY"),
                 broken("неизвестный вариант", "weights.json", TacticsTexts.mutate(weights, "\"IGNORE\": 0.5", "\"IGNOR\": 0.5"),

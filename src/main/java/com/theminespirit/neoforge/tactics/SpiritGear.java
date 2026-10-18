@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.EmptyBlockGetter;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.TntBlock;
@@ -78,6 +79,24 @@ public final class SpiritGear {
                 }
                 return false;
             }
+        }
+        return false;
+    }
+
+    public boolean pourWater(BlockPos pos) {
+        if (!spirit.level().getBlockState(pos).canBeReplaced()) {
+            return false;
+        }
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (!stack.is(Items.WATER_BUCKET)) {
+                continue;
+            }
+            if (!spirit.level().setBlock(pos, Blocks.WATER.defaultBlockState(), 3)) {
+                return false;
+            }
+            spirit.getInventory().setItem(slot, new ItemStack(Items.BUCKET));
+            return true;
         }
         return false;
     }

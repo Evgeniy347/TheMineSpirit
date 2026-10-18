@@ -54,6 +54,11 @@ final class TreeGrid implements TreeView {
         return this;
     }
 
+    TreeGrid air(int x, int y, int z) {
+        put(new BlockCoord(x, y, z), AIR);
+        return this;
+    }
+
     Set<BlockCoord> logs() {
         return Set.copyOf(logCoords);
     }
@@ -96,6 +101,11 @@ final class TreeGrid implements TreeView {
     public boolean isArtificial(BlockCoord coord) {
         artificialReads++;
         return cell(coord) == PLANKS;
+    }
+
+    @Override
+    public boolean isEmpty(BlockCoord coord) {
+        return cell(coord) == AIR;
     }
 
     private char cell(BlockCoord coord) {

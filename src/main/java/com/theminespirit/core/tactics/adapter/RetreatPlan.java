@@ -32,4 +32,8 @@ public sealed interface RetreatPlan {
             }
         }
     }
+
+    /** Вылить ведро воды под себя: MLG при падении и тушение огня, найденной воды рядом нет. */
+    record Pour() implements RetreatPlan {
+    }
 }

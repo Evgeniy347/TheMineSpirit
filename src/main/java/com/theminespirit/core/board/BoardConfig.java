@@ -25,7 +25,7 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Long> intervals, Map<String, Integer> levels, Map<String, Integer> herd,
         List<String> immovable, Map<String, Integer> supplies,
         Map<String, Map<String, Integer>> products, Map<String, Integer> tools,
-        Map<String, Integer> wool) {
+        Map<String, Integer> wool, Map<String, Integer> hive) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -68,12 +68,15 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Objects.requireNonNull(wool,
                 "Данные шерсти не могут быть null: пустую таблицу задают пустой картой, а не null");
         wool = Map.copyOf(wool);
+        Objects.requireNonNull(hive,
+                "Данные пчёл не могут быть null: пустую таблицу задают пустой картой, а не null");
+        hive = Map.copyOf(hive);
     }
 
     public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
             Map<String, Long> intervals) {
         this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of(),
-                Map.of());
+                Map.of(), Map.of());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -97,8 +100,9 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
         Map<String, Integer> tools = integers(root.get("tools"), origin, "tools", ToolSet::toolKey, false);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
+        Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
         return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies, products,
-                tools, wool);
+                tools, wool, hive);
     }
 
     public static BoardConfig readFromClasspath() {

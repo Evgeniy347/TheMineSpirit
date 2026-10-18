@@ -87,6 +87,7 @@ public final class SpiritEntity extends PathfinderMob {
     private TaskSnapshot pendingSnapshot;
     private String pendingRestoreFailure;
     private boolean child;
+    private boolean demo;
     private boolean nightLeashArmed;
     private boolean defenceAssigned;
     private int toolBreaks;
@@ -105,6 +106,13 @@ public final class SpiritEntity extends PathfinderMob {
         hunger.tick();
         NightLeashGate.arm(this);
         policies.tick();
+        if (demo) {
+            tactics.pause();
+            if (brain != null) {
+                brain.tick();
+            }
+            return;
+        }
         if (policies.isOverriding()) {
             tactics.pause();
             return;
@@ -290,6 +298,7 @@ public final class SpiritEntity extends PathfinderMob {
         SpiritBedStore.write(compound, bed);
         SpiritCampStore.write(compound, camp);
         SpiritChildStore.write(compound, child);
+        SpiritDemoStore.write(compound, demo);
         SpiritHungerStore.write(compound, hunger.state());
     }
 
@@ -330,6 +339,7 @@ public final class SpiritEntity extends PathfinderMob {
         restoreTactics(compound);
         restoreHunger(compound);
         child = SpiritChildStore.read(compound);
+        demo = SpiritDemoStore.read(compound);
         SpiritTaskStore.read(compound).ifPresent(json -> {
             pendingTaskJson = json;
             try {
@@ -457,6 +467,22 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void setChild(boolean child) {
         this.child = child;
+    }
+
+    public boolean isDemo() {
+        return demo;
+    }
+
+    public void setDemo(boolean demo) {
+        this.demo = demo;
+    }
+
+    public void stripEquipment() {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!getItemBySlot(slot).isEmpty()) {
+                setItemSlot(slot, ItemStack.EMPTY);
+            }
+        }
     }
 
     public Optional<String> currentTaskScript() {

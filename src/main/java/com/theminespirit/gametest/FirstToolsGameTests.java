@@ -6,6 +6,7 @@ import static com.theminespirit.gametest.CraftTestSupport.cleanup;
 import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
 import static com.theminespirit.gametest.CraftTestSupport.speedUpFurnaces;
+import static com.theminespirit.gametest.CraftTestSupport.stationsNear;
 import static com.theminespirit.gametest.FullCycleScene.TREE;
 
 import com.theminespirit.core.ModIdentity;
@@ -132,7 +133,9 @@ public final class FirstToolsGameTests {
         });
     }
 
-    // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру
+    // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
+    // кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
+    // компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
     @GameTest(template = "arena", batch = "first_tools_corner", timeoutTicks = 1200)
     public static void firstTools_FromScratch_FurnaceBesideTableAndCharcoalTorches(GameTestHelper helper) {
         field(helper);
@@ -165,7 +168,9 @@ public final class FirstToolsGameTests {
             BlockPos table = findBlock(helper, Blocks.CRAFTING_TABLE);
             BlockPos furnace = findBlock(helper, Blocks.FURNACE);
             helper.assertTrue(table != null, "дух обязан поставить верстак: без него не сделать кирку и печь");
-            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не получить древесный уголь");
+            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не получить древесный уголь; "
+                    + "печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
+                    + "; станции рядом: " + stationsNear(helper, spirit));
             helper.assertTrue(table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
                     "Рабочий угол: печь обязана стоять рядом с верстаком (не дальше " + CORNER_DISTANCE
                             + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
@@ -194,7 +199,9 @@ public final class FirstToolsGameTests {
 
     private static BlockPos findBlock(GameTestHelper helper, Block block) {
         for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
-            for (int y = 1; y < SCENE_HEIGHT; y++) {
+            // С y=0: дух иногда ставит печь на уровень пола (диагностика флака firsttools_fromscratch
+            // видела печь в мире, а поиск с y=1 её пропускал).
+            for (int y = 0; y < SCENE_HEIGHT; y++) {
                 for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
                     BlockPos pos = new BlockPos(x, y, z);
                     if (helper.getBlockState(pos).is(block)) {

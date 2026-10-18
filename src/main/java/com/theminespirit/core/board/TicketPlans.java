@@ -59,8 +59,10 @@ public final class TicketPlans {
             case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
             case CRAFT_ANVIL -> Optional.of("minecraft:anvil");
             case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
+            case CRAFT_SMOKER -> Optional.of("minecraft:smoker");
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
+            case PLACE_BEEHIVE -> Optional.of(HiveRules.CRAFTED_BEEHIVE);
             default -> Optional.empty();
         };
     }
@@ -106,6 +108,8 @@ public final class TicketPlans {
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
+            case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
+            case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
@@ -114,6 +118,8 @@ public final class TicketPlans {
                     target.count() > 0 ? target.count() : 1, target);
             case SHEAR_SHEEP -> shearSheep(target);
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
+            case HARVEST_HIVE -> harvestHive();
+            case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
             case LIGHTING -> lighting(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
@@ -207,6 +213,14 @@ public final class TicketPlans {
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(gotoTarget(target), new ScriptCall("craft",
                 Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
+    }
+
+    /** Рыбалка на запомненной рабочей точке: подойти к берегу и ловить удочкой. */
+    private static TaskNode fishWorkPoint(TicketTarget target) {
+        return sequence(gotoTarget(target), new ScriptCall("fish", Map.of(
+                "count", CatalogLimits.FISH_COUNT_DEFAULT,
+                "duration_ticks", CatalogLimits.FISH_DURATION_DEFAULT,
+                "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
     /** Инструмент набора: крафтится по числу комплектов поселения, но не больше партии каталога. */
@@ -313,6 +327,21 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("shear", Map.of(
                 "radius", WoolRules.shearRadius(),
                 "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+    }
+
+    private static TaskNode harvestHive() {
+        return new ScriptCall("harvest_hive", Map.of(
+                "radius", HiveRules.hiveRadius(),
+                "count", CatalogLimits.HIVE_COUNT_DEFAULT));
+    }
+
+    private static TaskNode placeBeehive(TicketTarget target) {
+        BlockCoord point = target.target();
+        BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
+        return sequence(
+                craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
+                new ScriptCall("place_block", Map.of("block", HiveRules.CRAFTED_BEEHIVE,
+                        "x", cell.x(), "y", cell.y(), "z", cell.z())));
     }
 
     private static TaskNode huntWildSheep(TicketTarget target) {

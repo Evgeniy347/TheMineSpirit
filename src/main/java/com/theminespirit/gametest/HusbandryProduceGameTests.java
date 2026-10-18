@@ -107,7 +107,9 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_lure", timeoutTicks = 400)
+    // [флак] овца может выйти из загона после первого возврата и приманка повторится (каждая укладка
+    // ограничена 150 тиками): замер 395 тиков работы духа, потолок 500 с запасом, сам тест 800 ≈ 2×
+    @GameTest(template = "arena", batch = "husbandry_lure", timeoutTicks = 800)
     public static void feed_EscapeeFiveBlocksAway_ReturnedInsideWithoutDamage(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -135,8 +137,9 @@ public final class HusbandryProduceGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(workingTicks.get() <= 200,
-                    "возврат приманкой обязан уложиться в 200 тиков работы духа (без пауз политики/тактики), "
+            helper.assertTrue(workingTicks.get() <= 500,
+                    "возврат приманкой обязан уложиться в 500 тиков работы духа (без пауз политики/тактики; "
+                            + "каждая укладка ≤150, овца может выйти повторно), "
                             + "заняло " + workingTicks.get()
                             + "; тиков духа всего: " + run.spiritTicks()
                             + "; пауз: " + pausedTicks.get()

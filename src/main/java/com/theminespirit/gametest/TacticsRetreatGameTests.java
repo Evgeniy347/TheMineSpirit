@@ -34,6 +34,9 @@ public final class TacticsRetreatGameTests {
     private static final int WALL_CELLS = 6;
     private static final int TOWER_BLOCKS = 8;
     private static final int ARROWS = 32;
+    private static final int FIRE_TICKS = 40;
+    private static final int FIRE_LIMIT_TICKS = 60;
+    private static final int WATER_CLEAR_RADIUS = 10;
 
     private TacticsRetreatGameTests() {
     }
@@ -174,6 +177,104 @@ public final class TacticsRetreatGameTests {
                     "исполняемый отход — WATER, получено " + spirit.tactics().retreat().method());
             helper.assertTrue(spirit.tactics().wantsControl(),
                     "в воде дух остаётся под тактикой: политика воды не вытаскивает его на сушу");
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    private static void clearWaterAround(SpiritEntity spirit) {
+        BlockPos center = spirit.blockPosition();
+        for (int dx = -WATER_CLEAR_RADIUS; dx <= WATER_CLEAR_RADIUS; dx++) {
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dz = -WATER_CLEAR_RADIUS; dz <= WATER_CLEAR_RADIUS; dz++) {
+                    BlockPos at = center.offset(dx, dy, dz);
+                    if (spirit.level().getBlockState(at).is(Blocks.WATER)) {
+                        spirit.level().setBlock(at, Blocks.AIR.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
+    }
+
+    @GameTest(template = "arena", batch = "tactics_retreat_fire_bucket", timeoutTicks = 300)
+    public static void retreatWater_OnFireWithBucket_PoursWaterUnderSelfAndExtinguishes(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
+        clearWaterAround(spirit);
+        BlockPos huskAt = new BlockPos(0, 1, 5);
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, huskAt);
+        PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, false, TacticsScene.LOW_HP);
+        boolean[] burned = {false};
+        helper.onEachTick(() -> {
+            if (!scene.started()) {
+                return;
+            }
+            if (!burned[0]) {
+                spirit.setRemainingFireTicks(200);
+                spirit.getInventory().addItem(new ItemStack(Items.WATER_BUCKET));
+                burned[0] = true;
+            }
+            if (burned[0] && spirit.getRemainingFireTicks() > 0 && scene.ticks() > FIRE_LIMIT_TICKS) {
+                helper.fail("дух с ведром не потушился за " + FIRE_LIMIT_TICKS + " тиков, огонь "
+                        + spirit.getRemainingFireTicks() + ", решение " + spirit.tactics().explain().orElse("нет"));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            scene.assertStarted();
+            helper.assertTrue(burned[0], "дух ещё не горел");
+            helper.assertTrue(spirit.getRemainingFireTicks() <= 0, "огонь на духе не погашен: "
+                    + spirit.getRemainingFireTicks());
+            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.WATER,
+                    "исполняемый отход — WATER (ведро), получено " + spirit.tactics().retreat().method()
+                            + ", ведро в инвентаре " + spirit.gear().hasWaterBucket() + ", блок в клетке "
+                            + spirit.blockPosition() + " = " + helper.getBlockState(spirit.blockPosition()));
+            helper.assertTrue(spirit.level().getBlockState(spirit.blockPosition()).is(Blocks.WATER),
+                    "ведро вылито под себя: в клетке духа " + spirit.blockPosition() + " должна быть вода, а там "
+                            + spirit.level().getBlockState(spirit.blockPosition()));
+            spirit.level().setBlock(spirit.blockPosition(), Blocks.AIR.defaultBlockState(), 3);
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "tactics_retreat_fire_away", timeoutTicks = 300)
+    public static void retreatWater_OnFireWithoutBucket_RunsAwayInsteadOfPouring(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
+        clearWaterAround(spirit);
+        BlockPos huskAt = new BlockPos(0, 1, 5);
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, huskAt);
+        PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, false, TacticsScene.LOW_HP);
+        boolean[] burned = {false};
+        double[] startGap = {Double.NaN};
+        int[] farAt = {-1};
+        helper.onEachTick(() -> {
+            if (!scene.started()) {
+                return;
+            }
+            if (!burned[0]) {
+                spirit.setRemainingFireTicks(FIRE_TICKS);
+                burned[0] = true;
+            }
+            if (Double.isNaN(startGap[0])) {
+                startGap[0] = spirit.distanceTo(husk);
+            }
+            if (farAt[0] < 0 && spirit.distanceTo(husk) >= startGap[0] + MIN_SEPARATION_GAIN) {
+                farAt[0] = scene.ticks();
+            }
+            if (farAt[0] < 0 && scene.ticks() > FIRE_LIMIT_TICKS) {
+                helper.fail("дух без ведра не ушёл от врага за " + FIRE_LIMIT_TICKS + " тиков: дистанция "
+                        + spirit.distanceTo(husk) + ", решение " + spirit.tactics().explain().orElse("нет"));
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            scene.assertStarted();
+            helper.assertTrue(burned[0], "дух ещё не горел");
+            helper.assertTrue(farAt[0] >= 0, "дистанция ещё не выросла");
+            helper.assertTrue(spirit.tactics().retreat().method() != RetreatMethod.WATER,
+                    "без ведра WATER не исполняется, получено " + spirit.tactics().retreat().method());
+            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.AWAY,
+                    "вместо воды обычный отход — AWAY, получено " + spirit.tactics().retreat().method());
             TacticsScene.finish(helper, spirit);
         });
     }

@@ -1088,6 +1088,14 @@ public final class MineGameTests {
                 helper.setBlock(x, 0, z, Blocks.STONE);
             }
         }
+        // Под полом — слой земли: в мире под полом не пустота, а если дух всё же сломает клетку пола,
+        // выпавший дроп осядет на землю в пределах сцены, а не провалится в пустоту (флак
+        // gather_stoneheap: «не дотянулся до 1 предметов» у y=-61). Землю gather "stone" не трогает.
+        for (int x = SHELL_MIN + shift; x <= SHELL_MAX + shift; x++) {
+            for (int z = SHELL_MIN + shift; z <= SHELL_MAX + shift; z++) {
+                helper.setBlock(x, -1, z, Blocks.DIRT);
+            }
+        }
     }
 
     private static int countBlock(GameTestHelper helper, Block block) {
