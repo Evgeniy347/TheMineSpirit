@@ -423,7 +423,7 @@ public final class ChopTreeGameTests {
                 helper.assertTrue(midChop, "ожидание середины рубки: хотя бы одно бревно срублено, задача идёт");
                 cancelledAt[0] = spirit.tickCount;
                 spirit.cancelTask();
-                frozenWorld.addAll(snapshotField(helper));
+                frozenWorld.addAll(snapshotFieldWithoutLeaves(helper));
                 frozenSpirit[0] = spirit.blockPosition();
             }
             helper.assertTrue(spirit.tickCount >= cancelledAt[0] + 40,
@@ -431,8 +431,10 @@ public final class ChopTreeGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
                     "статус задачи после отмены обязан быть CANCELLED: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(frozenWorld.equals(snapshotField(helper)),
-                    "через 40 тиков после отмены мир не должен меняться: ни ломки, ни трещин, ни подбора");
+            helper.assertTrue(frozenWorld.equals(snapshotFieldWithoutLeaves(helper)),
+                    "через 40 тиков после отмены дух не должен менять мир: ни ломки, ни трещин, ни подбора "
+                            + "(листва не в счёте: срубленное сверху дерево роняет крону, это механика игры, "
+                            + "а не действие духа)");
             helper.assertTrue(frozenSpirit[0].equals(spirit.blockPosition()),
                     "после отмены дух обязан стоять: был в " + frozenSpirit[0] + ", стал в " + spirit.blockPosition());
 
@@ -637,7 +639,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    // [флак] 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок с запасом на флаки полного прогона
+    // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
     @GameTest(template = "mine_arena", batch = "chop_tree_tall_2x2", timeoutTicks = 1800)
     public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
         clearField(helper, 22);
@@ -650,9 +652,16 @@ public final class ChopTreeGameTests {
         SpiritEntity spirit = spawnChopper(helper);
 
         BlockPos[] standAt = { null };
+        double[] maxShift = { 0 };
         helper.onEachTick(() -> {
-            if (standAt[0] == null && helper.getBlockState(new BlockPos(4, 20, 4)).isAir()) {
-                standAt[0] = spirit.blockPosition();
+            if (standAt[0] == null) {
+                if (helper.getBlockState(new BlockPos(4, 20, 4)).isAir()) {
+                    standAt[0] = spirit.blockPosition();
+                }
+                return;
+            }
+            if (!helper.getBlockState(new BlockPos(4, 1, 4)).isAir()) {
+                maxShift[0] = Math.max(maxShift[0], standAt[0].distSqr(spirit.blockPosition()));
             }
         });
 
@@ -678,9 +687,9 @@ public final class ChopTreeGameTests {
                     "столб не строится: булыжника в мире быть не должно");
             helper.assertTrue(standAt[0] != null,
                     "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
-            helper.assertTrue(standAt[0].distSqr(spirit.blockPosition()) <= 1,
-                    "после подхода дух рубит с места: сдвиг не больше 1 блока, а он сдвинулся с "
-                            + standAt[0] + " до " + spirit.blockPosition());
+            helper.assertTrue(maxShift[0] <= 1,
+                    "после подхода дух рубит с одной стоянки: сдвиг за всю рубку не больше 1 блока, "
+                            + "а он " + maxShift[0] + " (квадрат расстояния от стоянки " + standAt[0] + ")");
             LOGGER.info("chop_tree, ель 2×2 высотой 20 с одной стоянки: {} тиков духа", run.spiritTicks());
 
             clearField(helper, 22);
@@ -1282,13 +1291,13 @@ public final class ChopTreeGameTests {
         }
     }
 
-    private static List<String> snapshotField(GameTestHelper helper) {
+    private static List<String> snapshotFieldWithoutLeaves(GameTestHelper helper) {
         List<String> cells = new ArrayList<>();
         for (int x = 0; x < PLATFORM; x++) {
             for (int y = 1; y < FIELD_HEIGHT; y++) {
                 for (int z = 0; z < PLATFORM; z++) {
                     BlockState state = helper.getBlockState(new BlockPos(x, y, z));
-                    if (!state.isAir()) {
+                    if (!state.isAir() && !(state.getBlock() instanceof LeavesBlock)) {
                         cells.add(x + "," + y + "," + z + "=" + state);
                     }
                 }
