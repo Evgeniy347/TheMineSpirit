@@ -6,8 +6,10 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
+import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
+import com.theminespirit.core.mining.SafeMineMode;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
 import java.util.ArrayList;
@@ -240,6 +242,21 @@ public final class CoreScripts {
                                         CatalogLimits.WORLD_Y_MAX, DescentData.loadDefault().targetY())),
                         List.of("спуск расширен до уровня 2", "в инвентаре есть ступеньки"),
                         List.of("на двух полосах спуска уложены ступеньки, третья свободна под рельсы")),
+                spec("safe_mine", "пройти безопасную шахту: спуск лесенкой или штольню с освещением",
+                        List.of(
+                                ParamSpec.enumeration("mode", true, SafeMineMode.names()),
+                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX,
+                                        DescentData.loadDefault().targetY()),
+                                ParamSpec.integer("length", false, CatalogLimits.MINE_LENGTH_MIN,
+                                        CatalogLimits.MINE_LENGTH_MAX, CatalogLimits.MINE_LENGTH_DEFAULT),
+                                ParamSpec.integer("torchInterval", false, MiningTuning.DESCENT_TORCH_INTERVAL_MIN,
+                                        MiningTuning.DESCENT_TORCH_INTERVAL_MAX,
+                                        DescentData.loadDefault().torchInterval())),
+                        List.of("под ногами духа есть твёрдый пол"),
+                        List.of("проход 1×2 пройден до целевого этажа или заданной длины",
+                                "опасные клетки заложены блоком из инвентаря, сыпучее осыпано и выкопано",
+                                "проход освещён факелами через интервал")),
                 spec("gather", "собрать блоки заданного типа",
                         List.of(ParamSpec.text("block", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),

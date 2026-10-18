@@ -178,7 +178,7 @@ tiers = {"any": 1, "coal": 1, "iron": 2, …}, fallback = 1; значение п
 из таблицы еды; еды нет — `FAILED` с причиной.
 
 Скрипты стройки и земляных работ (`place_block`, `pillar_up`, `pillar_down`, `fill`, `clear_area`, `dig_area`, `dig_descent`,
-`dig_descent_widen`, `place_descent_stairs`, `build_schematic`, `light_area`):
+`dig_descent_widen`, `place_descent_stairs`, `safe_mine`, `build_schematic`, `light_area`):
 ставят и ломают блоки порциями по одному за тик, снизу вверх. Материалы — только из инвентаря духа;
 нехватка — `FAILED` с числами (`have`/`missing`), автоматической закупки нет. Свои поставленные блоки дух
 помечает и может разобрать; постройка игрока защищена. Лимиты: сторона куба `dig_area` 1..16, объём
@@ -211,6 +211,15 @@ tiers = {"any": 1, "coal": 1, "iron": 2, …}, fallback = 1; значение п
 - `place_descent_stairs` (`direction`, `y`) — поставить ступеньки на двух полосах существующего спуска (третью,
   центральную, оставляют под будущие рельсы — уровень 4). Каменные ступеньки кладутся по одной за тик снизу вверх,
   материал — из инвентаря духа; итог называет reached, y, depth, blocks_placed, reason.
+- `safe_mine` (`mode`, `direction`, `y`, `length`, `torchInterval`) — пройти безопасную шахту шириной один блок.
+  `mode` = `staircase` — спуск лесенкой вниз до этажа `y` (по умолчанию из `descent.json`): колонка ступени
+  копается в три клетки (две на духа и одна над головой, иначе дух упрётся в потолок следующей ступени);
+  `mode` = `tunnel` — горизонтальная штольня длиной `length` блоков в две клетки высоты. Пол под ногами и
+  боковые стенки с лавой или водой дух закладывает блоком из инвентаря (булыжник, земля, доски, песок),
+  провал под ногами останавливает проходку (reached=false, причина называет клетку), сыпучий блок (гравий,
+  песок) над головой сперва падает, и только потом его выкапывают — под падающий блок дух не заходит.
+  Факелы ставятся каждый `torchInterval`-й шаг (по умолчанию из `descent.json`). Итог: reached, y, depth,
+  blocks_dug, blocks_filled, torches, reason.
 - `build_schematic` (`file`, `x`, `y`, `z`) — постройка по файлу
   `data/theminespirit/schematics/<file>.json`: `{"version":1,"size":[sx,sy,sz],
   "blocks":[{"pos":[dx,dy,dz],"block":"minecraft:cobblestone"}]}`, якорь в `x,y,z`, порядок снизу вверх;
