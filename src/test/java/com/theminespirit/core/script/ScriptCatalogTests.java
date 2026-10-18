@@ -305,7 +305,13 @@ class ScriptCatalogTests {
                 spec("open", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),
-                spec("set_combat_mode", List.of("mode"), Map.of()));
+                spec("set_combat_mode", List.of("mode"), Map.of()),
+                spec("drop_to_player", List.of("item", "count", "to"), Map.of("count", new long[]{1, 256})),
+                spec("give", List.of("item", "count", "to"), Map.of("count", new long[]{1, 256})),
+                spec("take", List.of("item", "count", "from"), Map.of("count", new long[]{1, 256})),
+                spec("report", List.of(), Map.of()),
+                spec("swap_tool", List.of("block"), Map.of()),
+                spec("drink_potion", List.of("type"), Map.of()));
 
         return rows.stream().map(row -> Arguments.of(row));
     }
