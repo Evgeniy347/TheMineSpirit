@@ -48,6 +48,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
             Map.entry(BoardCase.COLLECT_DROPS, "collect_drops"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
+            Map.entry(BoardCase.BUILD_WAREHOUSE, "build_schematic"),
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
             Map.entry(BoardCase.REPAIR_TOOL, "repair_tool"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
@@ -410,7 +411,7 @@ class TicketPlansTests {
     @Provide
     Arbitrary<BoardCase> levelledCases() {
         return Arbitraries.of(BoardCase.BUILD_MINE, BoardCase.BUILD_PEN, BoardCase.ENCHANT_ROOM,
-                BoardCase.BUILD_HOUSE);
+                BoardCase.BUILD_HOUSE, BoardCase.BUILD_WAREHOUSE);
     }
 
     @Provide

@@ -85,6 +85,7 @@ public final class TicketPlans {
             case BUILD_PEN -> buildPenLevel(level, target);
             case ENCHANT_ROOM -> enchantRoomLevel(level, target);
             case BUILD_HOUSE -> buildHouse(target);
+            case BUILD_WAREHOUSE -> buildWarehouseLevel(level, target);
             default -> legacyPlan(boardCase, target);
         };
     }
@@ -160,6 +161,10 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("build_schematic",
                 Map.of("file", scheme, "x", target.target().x(), "y", target.target().y(),
                         "z", target.target().z())));
+    }
+
+    private static TaskNode buildWarehouseLevel(int level, TicketTarget target) {
+        return sequence(gotoTarget(target), schematic(WarehouseRules.scheme(level), target));
     }
 
     private static TaskNode enchantRoomLevel(int level, TicketTarget target) {
@@ -338,12 +343,40 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Перенос без схемы: в to строится та же постройка, "
                     + "что стояла в from, без имени схемы строить нечего");
         }
+        if (target.schemeFile().startsWith("storage_v")) {
+            return warehouseRelocate(target);
+        }
         return new SequenceNode(List.of(
                 gotoPoint(target.from()),
                 demolishBox(target.from(), RELOCATE_CLEAR_RADIUS),
                 gotoPoint(target.to()),
                 new ScriptCall("build_schematic", Map.of("file", target.schemeFile(),
                         "x", target.to().x(), "y", target.to().y(), "z", target.to().z()))));
+    }
+
+    private static TaskNode warehouseRelocate(TicketTarget target) {
+        int level = Integer.parseInt(target.schemeFile().substring("storage_v".length()));
+        int radius = warehouseRadius(level);
+        return new SequenceNode(List.of(
+                gotoPoint(target.from()),
+                demolishBox(target.from(), radius),
+                new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX)),
+                gotoPoint(target.to()),
+                new ScriptCall("unload", Map.of("container", "auto", "radius",
+                        CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
+    }
+
+    private static int warehouseRadius(int level) {
+        if (level < 1 || level > WarehouseRules.MAX_LEVEL) {
+            throw new IllegalArgumentException("Уровень склада " + level + " вне 1.."
+                    + WarehouseRules.MAX_LEVEL + ": радиуса сноса для него нет");
+        }
+        return switch (level) {
+            case 1 -> 4;
+            case 2 -> 7;
+            case 3 -> 10;
+            default -> 16;
+        };
     }
 
     private static TaskNode transferItem(TicketTarget target) {

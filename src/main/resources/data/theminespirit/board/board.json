@@ -7,6 +7,7 @@
     "CAPTURE_ANIMAL": 75,
     "RESTOCK_FOOD": 70,
     "BUILD_PEN": 65,
+    "BUILD_WAREHOUSE": 50,
     "LURE_ANIMAL": 65,
     "DISMANTLE_SHELTER": 65,
     "RELOCATE_BUILDING": 60,
@@ -68,6 +69,7 @@
   "levels": {
     "BUILD_MINE": 4,
     "BUILD_PEN": 3,
+    "BUILD_WAREHOUSE": 4,
     "ENCHANT_ROOM": 4,
     "BUILD_HOUSE": 4
   },

@@ -21,6 +21,7 @@ class BoardConfigTests {
                 Map.entry("RESTOCK_FOOD", 70),
                 Map.entry("REPAIR_TOOL", 85),
                 Map.entry("BUILD_PEN", 65),
+                Map.entry("BUILD_WAREHOUSE", 50),
                 Map.entry("LURE_ANIMAL", 65),
                 Map.entry("DISMANTLE_SHELTER", 65),
                 Map.entry("RELOCATE_BUILDING", 60),
@@ -82,7 +83,8 @@ class BoardConfigTests {
                 "BUILD_MINE", 4,
                 "BUILD_PEN", 3,
                 "ENCHANT_ROOM", 4,
-                "BUILD_HOUSE", 4);
+                "BUILD_HOUSE", 4,
+                "BUILD_WAREHOUSE", 4);
     }
 
     @Test
