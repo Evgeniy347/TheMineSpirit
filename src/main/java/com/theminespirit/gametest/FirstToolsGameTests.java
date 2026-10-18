@@ -6,6 +6,7 @@ import static com.theminespirit.gametest.CraftTestSupport.cleanup;
 import static com.theminespirit.gametest.CraftTestSupport.field;
 import static com.theminespirit.gametest.CraftTestSupport.prepare;
 import static com.theminespirit.gametest.CraftTestSupport.speedUpFurnaces;
+import static com.theminespirit.gametest.CraftTestSupport.stationsNear;
 import static com.theminespirit.gametest.FullCycleScene.TREE;
 
 import com.theminespirit.core.ModIdentity;
@@ -165,7 +166,9 @@ public final class FirstToolsGameTests {
             BlockPos table = findBlock(helper, Blocks.CRAFTING_TABLE);
             BlockPos furnace = findBlock(helper, Blocks.FURNACE);
             helper.assertTrue(table != null, "дух обязан поставить верстак: без него не сделать кирку и печь");
-            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не получить древесный уголь");
+            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не получить древесный уголь; "
+                    + "печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
+                    + "; станции рядом: " + stationsNear(helper, spirit));
             helper.assertTrue(table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
                     "Рабочий угол: печь обязана стоять рядом с верстаком (не дальше " + CORNER_DISTANCE
                             + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
