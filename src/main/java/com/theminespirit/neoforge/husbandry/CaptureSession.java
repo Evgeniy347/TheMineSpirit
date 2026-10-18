@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.building.BuildTuning;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.husbandry.CaptureFollow;
 import com.theminespirit.core.husbandry.EscapeCheck;
@@ -8,12 +9,11 @@ import com.theminespirit.core.husbandry.RingBuildOrder;
 import com.theminespirit.core.husbandry.RingGround;
 import com.theminespirit.core.husbandry.RingGround.Cell;
 import com.theminespirit.core.husbandry.RingPlan;
+import com.theminespirit.core.husbandry.RingStands;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.Approach;
-import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
@@ -82,7 +82,9 @@ public final class CaptureSession {
     private int queryCooldown;
     private int defers;
     private BlockCoord current;
+    private BlockCoord approachFor;
     private Cell previousAnimal;
+    private Cell lastAnimal;
     private boolean needsPlan = true;
 
     public CaptureSession(SpiritEntity spirit, Species species, int radius) {
@@ -255,7 +257,12 @@ public final class CaptureSession {
             return;
         }
         BlockPos animalPos = target.blockPosition();
-        Cell leading = CaptureFollow.leadingCell(animalCell(animalPos), previousAnimal);
+        Cell animal = animalCell(animalPos);
+        if (!animal.equals(lastAnimal)) {
+            previousAnimal = lastAnimal;
+            lastAnimal = animal;
+        }
+        Cell leading = CaptureFollow.leadingCell(animal, previousAnimal);
         current = RingBuildOrder.nextTarget(remaining, current, leading)
                 .orElse(null);
         if (current == null) {
@@ -311,28 +318,14 @@ public final class CaptureSession {
 
     private void placeCurrent(boolean raise) {
         BlockPos pos = new BlockPos(current.x(), current.y(), current.z());
-        double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
-        if (distance > BlockBreaker.REACH) {
-            List<BlockCoord> stands = StandSpots.of(current, safety, spiritCoord());
-            if (stands.isEmpty()) {
-                noteAttempt(raise);
-                return;
+        BlockCoord feet = spiritCoord();
+        if (!SpiritReach.reachable(feet, current) || SpiritReach.forbiddenStand(feet, current)) {
+            BlockCoord walkingTo = current;
+            approachCurrent(raise, feet);
+            if (!raise) {
+                placeOnTheWay(feet, walkingTo);
             }
-            if (!approach.isActive()) {
-                BlockCoord stand = stands.get(0);
-                approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-            }
-            switch (approach.tick()) {
-                case MOVING -> {
-                    return;
-                }
-                case ARRIVED -> approach.cancel();
-                case STUCK, TIMEOUT -> {
-                    approach.cancel();
-                    noteAttempt(raise);
-                    return;
-                }
-            }
+            return;
         }
         BlockPlacer.Begin begin = placer.begin(pos, wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
@@ -353,6 +346,42 @@ public final class CaptureSession {
             case NO_MATERIAL -> fail("не хватило блоков '" + blockId + "': нужно " + planSize + ", поставлено "
                     + placed);
             case OCCUPIED, NO_SUPPORT, CHUNK_NOT_LOADED, OUT_OF_REACH -> noteAttempt(raise);
+        }
+    }
+
+    private void placeOnTheWay(BlockCoord feet, BlockCoord walkingTo) {
+        for (BlockCoord block : remaining) {
+            if (block.equals(walkingTo) || !SpiritReach.reachable(feet, block) || SpiritReach.forbiddenStand(feet, block)
+                    || !restsOnBuilt(block) || occupiedByAnimal(block)) {
+                continue;
+            }
+            BlockPos pos = new BlockPos(block.x(), block.y(), block.z());
+            if (placer.begin(pos, wanted, blockId) instanceof BlockPlacer.Started) {
+                placed++;
+                remaining.remove(block);
+            }
+            return;
+        }
+    }
+
+    private boolean restsOnBuilt(BlockCoord block) {
+        BlockCoord below = new BlockCoord(block.x(), block.y() - 1, block.z());
+        return !ring.blocks().contains(below) || alreadyBuilt(below);
+    }
+
+    private void approachCurrent(boolean raise, BlockCoord feet) {
+        if (!approach.isActive() || !current.equals(approachFor)) {
+            List<BlockCoord> stands = RingStands.of(current, ring, remaining, safety, feet);
+            if (stands.isEmpty()) {
+                noteAttempt(raise);
+                return;
+            }
+            BlockCoord stand = stands.get(0);
+            approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+            approachFor = current;
+        }
+        if (approach.tick() != Approach.State.MOVING) {
+            noteAttempt(raise);
         }
     }
 
@@ -491,12 +520,11 @@ public final class CaptureSession {
         }
         Cell animal = animalCell(target.blockPosition());
         if (CaptureFollow.ringCovers(ring, animal)) {
-            previousAnimal = animal;
             return true;
         }
         center = animal;
-        previousAnimal = null;
         current = null;
+        approach.cancel();
         return false;
     }
 
