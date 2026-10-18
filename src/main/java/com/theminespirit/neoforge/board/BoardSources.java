@@ -44,6 +44,7 @@ public final class BoardSources {
         fishing.tick(level, service, spirits, stock, now);
         RepairWatch.tick(level, service, spirits, now);
         PenBuild.tick(level, service, spirits, now);
+        WarehouseWatch.tick(level, service, spirits, now);
         MineLevels.tick(level, service, spirits, now);
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
             lastEnchantCheck = now;

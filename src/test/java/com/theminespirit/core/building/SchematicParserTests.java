@@ -29,6 +29,26 @@ class SchematicParserTests {
     }
 
     @Test
+    void parse_SignWithoutText_KeepsEmptyText() {
+        String json = "{\"version\":1,\"size\":[1,1,1],\"blocks\":["
+                + "{\"pos\":[0,0,0],\"block\":\"minecraft:oak_sign\"}]}";
+
+        assertEquals("", SchematicParser.parse(json, ORIGIN).blocks().get(0).text(),
+                "Блок без поля text несёт пустую надпись: старые схемы обязаны читаться без текста");
+    }
+
+    @Test
+    void parse_SignWithText_KeepsCategory() {
+        String json = "{\"version\":1,\"size\":[1,1,1],\"blocks\":["
+                + "{\"pos\":[0,0,0],\"block\":\"minecraft:oak_sign\",\"text\":\"руда\"}]}";
+
+        Schematic.Entry entry = SchematicParser.parse(json, ORIGIN).blocks().get(0);
+
+        assertEquals("руда", entry.text(),
+                "Надпись таблички обязана читаться из схемы: по ней раскладка выбирает сундук категории");
+    }
+
+    @Test
     void parse_UnknownField_IsRejectedWithPath() {
         String json = "{\"version\":1,\"size\":[1,1,1],\"blocks\":[],\"extra\":1}";
 

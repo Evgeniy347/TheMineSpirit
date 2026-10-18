@@ -15,6 +15,7 @@ public final class RelocatePlan {
             BoardCase.BUILD_MINE,
             BoardCase.BUILD_PEN,
             BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_WAREHOUSE,
             BoardCase.ENCHANT_ROOM,
             BoardCase.BUILD_FENCE);
 
@@ -38,6 +39,7 @@ public final class RelocatePlan {
         return switch (boardCase) {
             case BUILD_PEN -> "pen_7x7";
             case BUILD_HOUSE -> "house";
+            case BUILD_WAREHOUSE -> WarehouseRules.scheme(WarehouseRules.LAST_LEVEL);
             case ENCHANT_ROOM -> "enchant_room_v1";
             case BUILD_FENCE -> "fence";
             case BUILD_MINE -> "mine_entrance_v1";

@@ -58,6 +58,7 @@ public final class BoardRules {
         priorities.put(BoardCase.BUILD_HOUSE, 50);
         priorities.put(BoardCase.PLACE_BEEHIVE, 50);
         priorities.put(BoardCase.BUILD_MINE, 50);
+        priorities.put(BoardCase.BUILD_WAREHOUSE, 50);
         priorities.put(BoardCase.ENCHANT_ROOM, 50);
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);

@@ -9,7 +9,7 @@ import java.util.Set;
 
 public final class SchematicParser {
     private static final Set<String> ROOT_FIELDS = Set.of("version", "size", "blocks");
-    private static final Set<String> BLOCK_FIELDS = Set.of("pos", "block");
+    private static final Set<String> BLOCK_FIELDS = Set.of("pos", "block", "text");
     private static final int SCHEMATIC_VERSION = 1;
 
     private SchematicParser() {
@@ -55,13 +55,21 @@ public final class SchematicParser {
                 throw new IllegalStateException("Файл '" + origin + "': позиция [" + dx + "," + dy + "," + dz
                         + "] вне размера " + sx + "×" + sy + "×" + sz + ": блок вне схемы ставить некуда");
             }
-            entries.add(new Schematic.Entry(dx, dy, dz, JsonResource.text(node.get("block"), origin, "поля block схемы")));
+            entries.add(new Schematic.Entry(dx, dy, dz, JsonResource.text(node.get("block"), origin, "поля block схемы"),
+                    optionalText(node.get("text"), origin, "поля text блока схемы")));
         }
         if (entries.size() > CatalogLimits.SCHEMATIC_BLOCKS_MAX) {
             throw new IllegalStateException("Файл '" + origin + "': блоков " + entries.size() + ", а предел "
                     + CatalogLimits.SCHEMATIC_BLOCKS_MAX + ": большая схема стротится слишком долго");
         }
         return new Schematic(sx, sy, sz, entries);
+    }
+
+    private static String optionalText(JsonNode node, String origin, String what) {
+        if (node == null || node.isNull()) {
+            return "";
+        }
+        return JsonResource.text(node, origin, what);
     }
 
     private static int intAt(JsonNode list, int index, String origin) {
