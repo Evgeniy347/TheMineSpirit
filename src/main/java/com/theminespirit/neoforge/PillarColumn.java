@@ -40,6 +40,10 @@ final class PillarColumn {
     private String failureReason;
 
     PillarColumn(SpiritEntity spirit, String blockId, int height) {
+        this(spirit, blockId, height, spirit.blockPosition());
+    }
+
+    PillarColumn(SpiritEntity spirit, String blockId, int height, BlockPos base) {
         if (height < 1) {
             throw new IllegalArgumentException("Высота столба " + height + " меньше 1: строить нечего");
         }
@@ -48,7 +52,7 @@ final class PillarColumn {
         this.blockId = blockId;
         this.state = BlockStates.stateFor(blockId);
         this.height = height;
-        BlockPos feet = spirit.blockPosition();
+        BlockPos feet = base.immutable();
         this.baseX = feet.getX();
         this.baseY = feet.getY();
         this.baseZ = feet.getZ();
