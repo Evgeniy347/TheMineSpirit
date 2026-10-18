@@ -66,6 +66,7 @@ import com.theminespirit.core.script.ShearParams;
 import com.theminespirit.core.script.SmeltParams;
 import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.SortChestParams;
+import com.theminespirit.core.script.SetCombatModeParams;
 import com.theminespirit.core.script.StepOverParams;
 import com.theminespirit.core.script.TillParams;
 import com.theminespirit.core.script.FeedParams;
@@ -73,6 +74,9 @@ import com.theminespirit.neoforge.combat.AttackScript;
 import com.theminespirit.neoforge.combat.DefendScript;
 import com.theminespirit.neoforge.combat.FleeScript;
 import com.theminespirit.neoforge.combat.RetreatScript;
+import com.theminespirit.neoforge.combat.SetCombatModeScript;
+import com.theminespirit.neoforge.blocks.OpenScript;
+import com.theminespirit.neoforge.blocks.UseBlockScript;
 import com.theminespirit.neoforge.crafting.CraftScript;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.crafting.SmeltScript;
@@ -208,6 +212,9 @@ public final class SpiritScripts {
         table.put("build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
         table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, BlockPointParams.from(params)));
+        table.put("use_block", spirit -> params -> new UseBlockScript(spirit, BlockPointParams.from(params)));
+        table.put("open", spirit -> params -> new OpenScript(spirit, BlockPointParams.from(params)));
+        table.put("set_combat_mode", spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
             return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()),

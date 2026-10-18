@@ -88,8 +88,7 @@ public final class ProtectionGate {
         return decision;
     }
 
-    public BlockProtection.Decision checkPlace(BlockPos pos) {
-        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    public BlockProtection.Decision checkPlace(BlockPos pos) {        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
         if (outside instanceof BlockProtection.Refused) {
             return outside;
@@ -106,6 +105,24 @@ public final class ProtectionGate {
             return new BlockProtection.Refused(PolicyId.WORK_ZONE, refused.reason());
         }
         return new BlockProtection.Allowed();
+    }
+
+    public BlockProtection.Decision checkUse(BlockPos pos) {
+        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        BlockProtection.Decision zone = checkTravel(coord);
+        if (zone instanceof BlockProtection.Refused) {
+            return zone;
+        }
+        Level level = spirit.level();
+        if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+            return new BlockProtection.Allowed();
+        }
+        String dimension = level.dimension().location().toString();
+        boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
+        boolean unprotectArea = level instanceof ServerLevel server
+                && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
+        boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
+        return PROTECTION.checkUse(neighbours(level, pos), placedByPlayer, inProtectedZone, unprotectArea);
     }
 
     public BlockProtection.Decision checkPortalTarget(BlockCoord target) {
