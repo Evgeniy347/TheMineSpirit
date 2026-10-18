@@ -240,6 +240,40 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "arena", batch = "command_spawn", timeoutTicks = 100)
+    public static void commandSpawn_Twice_GivesDifferentNumberedNames(GameTestHelper helper)
+            throws CommandSyntaxException {
+        GameTestFixtures.reset(helper);
+        buildFloor(helper);
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(2, 1, 1), "gt_spawn_names");
+        CommandSourceStack source = playerSource(player);
+        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
+                .getCommands().getDispatcher();
+
+        helper.assertTrue(dispatcher.execute("spirit spawn", source) == 1,
+                "Первый /spirit spawn обязан призвать духа");
+        helper.assertTrue(dispatcher.execute("spirit spawn", source) == 1,
+                "Второй /spirit spawn обязан призвать второго духа");
+
+        List<SpiritEntity> spawned = helper.getLevel().getEntitiesOfClass(SpiritEntity.class,
+                player.getBoundingBox().inflate(2), spirit -> !spirit.isRemoved());
+        helper.assertTrue(spawned.size() == 2,
+                "После двух /spirit spawn рядом с игроком два духа, фактически " + spawned.size());
+        String first = spawned.get(0).displayName();
+        String second = spawned.get(1).displayName();
+        helper.assertTrue(!first.equals(second),
+                "Два заспавненных духа обязаны иметь разные имена, фактически '" + first + "' и '"
+                        + second + "': иначе журнал не различит исполнителей");
+        helper.assertTrue(!SpiritEntity.DEFAULT_NAME.equals(first)
+                        && !SpiritEntity.DEFAULT_NAME.equals(second),
+                "Имена после /spirit spawn не остаются общим «spirit»: " + first + ", " + second);
+        for (SpiritEntity spirit : spawned) {
+            spirit.discard();
+        }
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
     private static CommandSourceStack playerSource(ServerPlayer player) {
         return player.server.createCommandSourceStack()
                 .withEntity(player)

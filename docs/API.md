@@ -578,7 +578,9 @@ data: {"state":"failed"}
 
 - `id` — id задания; `case` — кейс `BoardCase`; `priority` — вес (больше — раньше);
 - `assignee` — дух-держатель или `null` («любой свободный»);
-- `status` — `PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`DONE`/`FAILED`/`CANCELLED`;
+- `status` — `PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`BLOCKED`/`DONE`/`FAILED`/`CANCELLED`;
+  `BLOCKED` — задание проваливалось подряд `ticketFailLimit` раз (число в `board.json`), пока условия
+  (`requiredItems` по снимку запасов или само определение задания) не изменятся;
 - `requiredItems` — нужда гейта; `missing` — сколько чего не хватает по последнему снимку запасов (`null`-полей нет,
   пустая нехватка — `{}`);
 - `dependsOn` — id заданий-предшественников; `createdAt` — тик постановки; `level` — уровень постройки (≥ 1);
@@ -622,7 +624,7 @@ data: {"state":"failed"}
 Последние записи журнала заданий: `{"entries":[{...}]}` от свежих к старым. `limit` (query, необязателен) —
 сколько записей отдать, по умолчанию 5, границы 1..64; неизвестный параметр — 400 `invalid_request`.
 Запись журнала — та же, что строка JSONL на диске (`config/theminespirit/board-log.jsonl`): `event`
-(`SUBMITTED`/`ASSIGNED`/`DONE`/`FAILED`/`CANCELLED`/`DETACHED`), `tick`, `ticketId`, `case`, `level`, `cause`,
+(`SUBMITTED`/`ASSIGNED`/`DONE`/`FAILED`/`BLOCKED`/`UNBLOCKED`/`CANCELLED`/`DETACHED`), `tick`, `ticketId`, `case`, `level`, `cause`,
 `basePriority`, `effectivePriority`, `modifiers`, `spirit`, `configHash`, `worldTime`.
 
 ### DELETE /v1/board/tasks/{id}

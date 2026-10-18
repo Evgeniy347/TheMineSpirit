@@ -170,6 +170,7 @@ public final class BoardService {
         board.retain(liveCauses, now);
         retains++;
         issue(level, spirits, now);
+        flushBlockNotes();
         rebuilds++;
         lastRebuild = now;
         journal.flush(JournalService.FLUSH_BUDGET);
@@ -473,10 +474,11 @@ public final class BoardService {
                 }
             }
         } else {
-            board.fail(ticket.id());
+            board.fail(ticket.id(), stock);
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
+            flushBlockNotes();
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 captureFailed(ticket.id());
             }
@@ -489,6 +491,12 @@ public final class BoardService {
         WorkReserveHub.releaseAll(spirit);
         LOGGER.info("Дух {} {} задание {}: статус закрыт доской", spirit.displayName(),
                 success ? "завершил" : "провалил", ticket.id());
+    }
+
+    private void flushBlockNotes() {
+        for (BoardLogEntry entry : board.drainBlocks()) {
+            journal.recordEntry(entry);
+        }
     }
 
     private Species speciesFor(BoardTicket ticket) {

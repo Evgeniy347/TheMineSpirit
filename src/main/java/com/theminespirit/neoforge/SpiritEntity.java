@@ -23,6 +23,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.DropPolicy;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.WorkZone;
+import com.theminespirit.core.spirit.SpiritNames;
 import com.theminespirit.core.tactics.Layer;
 import com.theminespirit.core.tactics.adapter.StoredTactics;
 import com.theminespirit.core.tactics.adapter.TacticsFormatException;
@@ -40,11 +41,13 @@ import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import com.theminespirit.neoforge.tactics.TacticsService;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -53,6 +56,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
@@ -95,6 +99,21 @@ public final class SpiritEntity extends PathfinderMob {
 
     public SpiritEntity(EntityType<? extends SpiritEntity> entityType, Level level) {
         super(entityType, level);
+    }
+
+    @Override
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+        if (hasCustomName() || !(level() instanceof ServerLevel server)) {
+            return;
+        }
+        Set<String> taken = new HashSet<>();
+        for (Entity entity : server.getAllEntities()) {
+            if (entity instanceof SpiritEntity other && other.hasCustomName()) {
+                taken.add(other.getCustomName().getString());
+            }
+        }
+        setCustomName(Component.literal(SpiritNames.next(taken)));
     }
 
     @Override

@@ -42,8 +42,17 @@ public final class BoardTuning {
     /** После провала пара дух+кейс отдыхает: 1200 тиков (1 мин), а не ходит по кругу каждую пересборку. */
     public static final long CASE_FAIL_PAUSE_TICKS = 1200;
 
+    /** Каждый следующий провал подряд удлиняет паузу пары дух+кейс в столько раз. */
+    public static final long CASE_FAIL_MULTIPLIER = 2;
+
+    /** Пауза пары дух+кейс не растёт выше 9600 тиков (8 мин): иначе один сбойный кейс выключил бы духа навсегда. */
+    public static final long CASE_FAIL_PAUSE_CAP_TICKS = 9600;
+
     /** Столько провалов подряд снимают кейс с этого духа: дальше его берёт другой, а не тот же снова. */
     public static final int CASE_FAIL_LIMIT = 3;
+
+    /** Столько провалов подряд блокируют само задание до изменения условий: иначе цикл переиздаёт его бесконечно. */
+    public static final int TICKET_FAIL_LIMIT = 5;
 
     /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
     public static final long FENCE_PATROL_INTERVAL = 1000;
@@ -74,7 +83,10 @@ public final class BoardTuning {
             "stockBlockBudget",
             "failBackoffTicks",
             "caseFailPauseTicks",
+            "caseFailMultiplier",
+            "caseFailPauseCapTicks",
             "caseFailLimit",
+            "ticketFailLimit",
             "fencePatrolInterval",
             "enchantCheckInterval",
             "enchantShelvesMin",
@@ -117,8 +129,22 @@ public final class BoardTuning {
         return interval("caseFailPauseTicks", CASE_FAIL_PAUSE_TICKS);
     }
 
+    public static long caseFailMultiplier() {
+        long multiplier = interval("caseFailMultiplier", CASE_FAIL_MULTIPLIER);
+        return multiplier < 1 ? CASE_FAIL_MULTIPLIER : multiplier;
+    }
+
+    public static long caseFailPauseCapTicks() {
+        long cap = interval("caseFailPauseCapTicks", CASE_FAIL_PAUSE_CAP_TICKS);
+        return Math.max(cap, caseFailPauseTicks());
+    }
+
     public static int caseFailLimit() {
         return (int) interval("caseFailLimit", CASE_FAIL_LIMIT);
+    }
+
+    public static int ticketFailLimit() {
+        return (int) interval("ticketFailLimit", TICKET_FAIL_LIMIT);
     }
 
     public static long fencePatrolInterval() {
