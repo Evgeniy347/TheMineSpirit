@@ -8,6 +8,7 @@ import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
+import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
 import java.util.LinkedHashSet;
@@ -255,6 +256,11 @@ class ScriptCatalogTests {
                         Map.of("y", new long[]{-64, 319})),
                 spec("place_descent_stairs", List.of("direction"),
                         Map.of("y", new long[]{-64, 319})),
+                spec("safe_mine", List.of("mode", "direction"),
+                        Map.of("y", new long[]{-64, 319},
+                                "length", new long[]{CatalogLimits.MINE_LENGTH_MIN, CatalogLimits.MINE_LENGTH_MAX},
+                                "torchInterval", new long[]{MiningTuning.DESCENT_TORCH_INTERVAL_MIN,
+                                        MiningTuning.DESCENT_TORCH_INTERVAL_MAX})),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[]{1, 256})),
                 spec("collect_drops", List.of(), Map.of("radius", new long[]{1, 16})),
                 spec("harvest_crop", List.of(), Map.of("radius", new long[]{1, 16})),
@@ -336,7 +342,7 @@ class ScriptCatalogTests {
                                 "z", new long[]{WORLD_MIN, WORLD_MAX},
                                 "radius", new long[]{CatalogLimits.CAMP_RADIUS_MIN, CatalogLimits.CAMP_RADIUS_MAX})),
                 spec("clear_camp", List.of(), Map.of()),
-                spec("repair", List.of("item"), Map.of()),
+                spec("repair_tool", List.of("item"), Map.of()),
                 spec("use_block", List.of("x", "y", "z"),
                         Map.of("x", new long[]{WORLD_MIN, WORLD_MAX}, "y", new long[]{-64, 319},
                                 "z", new long[]{WORLD_MIN, WORLD_MAX})),

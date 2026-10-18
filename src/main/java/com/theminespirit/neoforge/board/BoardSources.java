@@ -39,6 +39,7 @@ public final class BoardSources {
         FirstStepsRunner.tick(level, service, spirits, stock, now);
         EvergreenWatch.tick(level, service, spirits, now);
         FoodWatch.tick(level, service, spirits, stock, now);
+        RepairWatch.tick(level, service, spirits, now);
         PenBuild.tick(level, service, spirits, now);
         MineLevels.tick(level, service, spirits, now);
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {

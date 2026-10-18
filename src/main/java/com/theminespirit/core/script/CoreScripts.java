@@ -6,8 +6,10 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
+import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
+import com.theminespirit.core.mining.SafeMineMode;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
 import java.util.ArrayList;
@@ -240,6 +242,21 @@ public final class CoreScripts {
                                         CatalogLimits.WORLD_Y_MAX, DescentData.loadDefault().targetY())),
                         List.of("спуск расширен до уровня 2", "в инвентаре есть ступеньки"),
                         List.of("на двух полосах спуска уложены ступеньки, третья свободна под рельсы")),
+                spec("safe_mine", "пройти безопасную шахту: спуск лесенкой или штольню с освещением",
+                        List.of(
+                                ParamSpec.enumeration("mode", true, SafeMineMode.names()),
+                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.integer("y", false, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX,
+                                        DescentData.loadDefault().targetY()),
+                                ParamSpec.integer("length", false, CatalogLimits.MINE_LENGTH_MIN,
+                                        CatalogLimits.MINE_LENGTH_MAX, CatalogLimits.MINE_LENGTH_DEFAULT),
+                                ParamSpec.integer("torchInterval", false, MiningTuning.DESCENT_TORCH_INTERVAL_MIN,
+                                        MiningTuning.DESCENT_TORCH_INTERVAL_MAX,
+                                        DescentData.loadDefault().torchInterval())),
+                        List.of("под ногами духа есть твёрдый пол"),
+                        List.of("проход 1×2 пройден до целевого этажа или заданной длины",
+                                "опасные клетки заложены блоком из инвентаря, сыпучее осыпано и выкопано",
+                                "проход освещён факелами через интервал")),
                 spec("gather", "собрать блоки заданного типа",
                         List.of(ParamSpec.text("block", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
@@ -543,10 +560,13 @@ public final class CoreScripts {
                         List.of(), List.of("лагерь поставлен и переживёт перезапуск")),
                 spec("clear_camp", "снять лагерь похода",
                         List.of(), List.of(), List.of("лагеря у духа нет")),
-                spec("repair", "починить инструмент или броню через точило (два одинаковых повреждённых предмета)",
+                spec("repair_tool", "починить инструмент: материалом на наковальне или двумя одинаковыми "
+                                + "повреждёнными в точиле (дешевле по опыту и материалу)",
                         List.of(ParamSpec.text("item", true)),
-                        List.of("в инвентаре есть два одинаковых повреждённых предмета"),
-                        List.of("предмет починен: сумма прочности + 5% от максимальной", "зачарования потеряны")),
+                        List.of("в инвентаре есть повреждённый предмет; есть материал ремонта или второй такой же",
+                                "для ремонта материалом рядом есть наковальня"),
+                        List.of("предмет починен: наковальня добавляет 25% максимума за материал, "
+                                + "точило — сумму прочности + 5% и теряет зачарования")),
                 spec("use_block", "нажать или переключить блок (рычаг, кнопка, дверь)",
                         List.of(
                                 ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,

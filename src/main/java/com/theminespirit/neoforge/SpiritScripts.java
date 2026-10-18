@@ -34,6 +34,7 @@ import com.theminespirit.core.script.FillParams;
 import com.theminespirit.core.script.FishingParams;
 import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.PillarUpParams;
+import com.theminespirit.core.script.SafeMineParams;
 import com.theminespirit.core.script.ClimbParams;
 import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.CollectEggsParams;
@@ -229,7 +230,7 @@ public final class SpiritScripts {
         table.put("sort_chest", spirit -> params -> new SortChestScript(spirit, SortChestParams.from(params)));
         table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
-        table.put("repair", spirit -> params -> new RepairScript(spirit, RepairParams.from(params)));
+        table.put("repair_tool", spirit -> params -> new RepairScript(spirit, RepairParams.from(params)));
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("pillar_up", spirit -> params -> new PillarUpScript(spirit, PillarUpParams.from(params)));
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
@@ -240,6 +241,7 @@ public final class SpiritScripts {
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("dig_descent", spirit -> params -> new DescentScript(spirit, DigDescentParams.from(params)));
+        table.put("safe_mine", spirit -> params -> new SafeMineScript(spirit, SafeMineParams.from(params)));
         table.put("dig_descent_widen",
                 spirit -> params -> new DigDescentWidenScript(spirit, DigDescentParams.from(params)));
         table.put("place_descent_stairs",
