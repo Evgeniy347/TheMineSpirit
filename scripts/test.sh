@@ -50,6 +50,7 @@ GAMETEST_BEAT_INTERVAL="${THEMINESPIRIT_GAMETEST_BEAT_SECONDS:-10}"
 GAMETEST_STALE="${THEMINESPIRIT_GAMETEST_STALE_SECONDS:-120}"
 GAMETEST_LEGACY_STALE="${THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS:-900}"
 LOCK_BEAT_PID=""
+DIR_LOCK_HELD=0
 
 usage() {
     cat <<'EOF'
@@ -143,7 +144,9 @@ file_mtime() {
 pid_is_live() {
     local pid="$1" rest
     if [ -r "/proc/$pid/stat" ]; then
-        rest=$(cat "/proc/$pid/stat" 2>/dev/null)
+        rest=""
+        read -r rest <"/proc/$pid/stat" 2>/dev/null
+        [ -n "$rest" ] || return 1
         rest="${rest##*) }"
         case "$rest" in
             Z*) return 1 ;;
@@ -210,28 +213,115 @@ kill_gametest_server() {
     return 0
 }
 
+# ── Гашение своих процессов по PID ───────────────────────────────────────────
+# Только дерево от известного своего PID (снимок ps до сигнала: после смерти родителя дети уходят к init).
+# Никаких pkill по шаблону — на машине живут прогоны других исполнителей.
+
+# Текущее время, с — встроенным printf, без fork date (на общей машине fork в дефиците).
+now_s() {
+    printf -v "$1" '%(%s)T' -1
+}
+
+# PID $1 и всех его потомков (корень первым). Пусто — корня нет среди живых процессов.
+own_tree_pids() {
+    ps -ef 2>/dev/null | awk -v root="$1" '
+        $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2; alive[$2] = 1 }
+        END {
+            if (!(root in alive)) exit
+            queue[1] = root; head = 1; tail = 1; queued[root] = 1
+            while (head <= tail) {
+                p = queue[head++]; print p
+                n = split(kids[p], list, " ")
+                for (k = 1; k <= n; k++) if (!(list[k] in queued)) { queued[list[k]] = 1; queue[++tail] = list[k] }
+            }
+        }'
+}
+
+# TERM процессу $1 и его потомкам, до $2 с (по умолчанию 5) ждём смерти, остальным — KILL.
+# $3=group — ещё и TERM группе $1 (gradle под setsid на Linux — лидер своей группы).
+kill_own_tree() {
+    local root="$1" grace="${2:-5}" pids pid alive now deadline
+    [ -n "$root" ] || return 0
+    pids=$(own_tree_pids "$root")
+    if [ -z "$pids" ]; then
+        pid_is_live "$root" || return 0
+        pids="$root"
+    fi
+    [ "${3:-}" = group ] && kill -TERM -- "-$root" 2>/dev/null
+    for pid in $pids; do
+        kill -TERM "$pid" 2>/dev/null
+    done
+    # Ожидание — по часам, а не по числу итераций: при нехватке fork каждый sleep сам тянется ~30 с.
+    now_s now
+    deadline=$((now + grace))
+    while :; do
+        alive=""
+        for pid in $pids; do
+            pid_is_live "$pid" && alive="$alive $pid"
+        done
+        [ -n "$alive" ] || return 0
+        pids="$alive"
+        now_s now
+        [ "$now" -lt "$deadline" ] || break
+        sleep 0.2
+    done
+    for pid in $pids; do
+        kill -KILL "$pid" 2>/dev/null
+    done
+    return 0
+}
+
+# Свой фоновый цикл (монитор, пульс): TERM — его trap гасит свой sleep и выходит; ждём до $2 с
+# без ps (быстро — выход скрипта не тормозит снятие замка), не умер — KILL всему его дереву.
+stop_own_loop() {
+    local pid="$1" grace="${2:-2}" now deadline
+    [ -n "$pid" ] || return 0
+    kill -TERM "$pid" 2>/dev/null || return 0
+    now_s now
+    deadline=$((now + grace))
+    while pid_is_live "$pid"; do
+        now_s now
+        if [ "$now" -ge "$deadline" ]; then
+            kill_own_tree "$pid" 0
+            return 0
+        fi
+        sleep 0.05
+    done
+    return 0
+}
+
 stop_lock_beat() {
     if [ -n "$LOCK_BEAT_PID" ]; then
-        kill "$LOCK_BEAT_PID" 2>/dev/null || true
+        stop_own_loop "$LOCK_BEAT_PID" 2
         LOCK_BEAT_PID=""
     fi
 }
 
 # Пульс замка: пишется только пока в маркере наш токен (перехваченный чужой маркер не трогаем).
+# Токен и время — встроенными read/printf (без fork на удар); sleep — в фоне с wait, чтобы его гасил trap.
 start_lock_beat() {
     (
-        while kill -0 "$$" 2>/dev/null \
-                && [ "$(cat "$GAMETEST_LOCK_DIR/token" 2>/dev/null)" = "$GAMETEST_TOKEN" ]; do
-            printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat.tmp" 2>/dev/null \
+        sleeper=""
+        trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+        while kill -0 "$$" 2>/dev/null; do
+            tok=""
+            read -r tok <"$GAMETEST_LOCK_DIR/token" 2>/dev/null
+            [ "$tok" = "$GAMETEST_TOKEN" ] || break
+            now_s now
+            printf '%s\n' "$now" >"$GAMETEST_LOCK_DIR/heartbeat.tmp" 2>/dev/null \
                 && mv -f "$GAMETEST_LOCK_DIR/heartbeat.tmp" "$GAMETEST_LOCK_DIR/heartbeat" 2>/dev/null
-            sleep "$GAMETEST_BEAT_INTERVAL"
+            sleep "$GAMETEST_BEAT_INTERVAL" &
+            sleeper=$!
+            wait "$sleeper"
+            sleeper=""
         done
-    ) >/dev/null 2>&1 &
+    ) </dev/null >/dev/null 2>&1 &
     LOCK_BEAT_PID=$!
 }
 
 release_dir_lock() {
     stop_lock_beat
+    DIR_LOCK_HELD=0
     [ -n "${GAMETEST_TOKEN:-}" ] || return 0
     local owner
     owner=$(cat "$GAMETEST_LOCK_DIR/token" 2>/dev/null || echo "")
@@ -254,11 +344,9 @@ acquire_dir_lock() {
             printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat"
             export GAMETEST_LOCK GAMETEST_TOKEN
             start_lock_beat
-            # Один trap на выход: остановить монитор (он гасит сервер GameTest) И снять замок.
-            # Порядок важен — замок снимается только после смерти сервера, иначе следующий прогон
-            # стартует параллельно. Отдельный trap release_dir_lock перезаписал бы stop_monitor,
-            # и фоновый монитор остался бы жив (на Windows без setsid).
-            trap 'stop_monitor; release_dir_lock' EXIT INT TERM
+            # Замок снимает общий trap выхода (cleanup) — после stop_monitor, т. е. после смерти сервера
+            # GameTest и gradle: иначе следующий прогон стартует параллельно.
+            DIR_LOCK_HELD=1
             return 0
         fi
         holder_pid=$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null || echo "")
@@ -311,6 +399,42 @@ MONITOR_PID=""
 GRADLE_PID=""
 START_TIME=0
 
+# Цикл монитора (в фоне). По пределу: метка .stopped, сервер GameTest своего worktree, затем дерево gradle
+# по PID (TERM, через 10 с KILL) и TERM главному скрипту: тот выходит с 124, даже если gradle не умер
+# и `wait` не вернулся бы. Сервер гасим первым: иначе снятие замка (flock/$LOCK.d) обгонит его смерть,
+# и следующий прогон пойдёт параллельно уже без замка (todo.md 17.10). Главный скрипт умер — монитор выходит.
+monitor_loop() {
+    local warned=0 now elapsed gpid sleeper=""
+    trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+    while kill -0 "$MONITOR_MAIN_PID" 2>/dev/null; do
+        sleep 1 &
+        sleeper=$!
+        wait "$sleeper"
+        sleeper=""
+        now_s now
+        elapsed=$((now - MONITOR_START_TIME))
+        if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
+            if [ "$MONITOR_MODE" = "gametest" ]; then
+                echo "ВНИМАНИЕ: полный GameTest идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
+            else
+                echo "ВНИМАНИЕ: unit идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
+            fi
+            warned=1
+        fi
+        if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
+            echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
+            : >"$MONITOR_LOG_FILE.stopped"
+            kill_gametest_server
+            gpid=""
+            [ -f "$MONITOR_LOG_FILE.gradlepid" ] && read -r gpid <"$MONITOR_LOG_FILE.gradlepid"
+            [ -n "$gpid" ] && kill_own_tree "$gpid" 10 "$MONITOR_GRADLE_GROUP"
+            trap - TERM
+            kill -TERM "$MONITOR_MAIN_PID" 2>/dev/null
+            exit 124
+        fi
+    done
+}
+
 start_monitor() {
     local mode="$1"
     if [ "$mode" = "unit" ]; then
@@ -323,105 +447,102 @@ start_monitor() {
 
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
-           MONITOR_MODE="$mode"
-    # Монитор в ветке setsid — отдельный bash: функции и переменные для гашения сервера нужны в окружении.
+           MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
+    # Монитор в ветке setsid — отдельный bash: функции и переменные для гашения нужны в окружении.
     export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
-    export -f pid_is_live gametest_server_pids kill_gametest_server
+    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree monitor_loop
     if command -v setsid >/dev/null 2>&1; then
-        setsid bash -c '
-            warned=0
-            while true; do
-                sleep 1
-                elapsed=$(( $(date +%s) - MONITOR_START_TIME ))
-                if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
-                    if [ "$MONITOR_MODE" = "gametest" ]; then
-                        echo "ВНИМАНИЕ: полный GameTest идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
-                    else
-                        echo "ВНИМАНИЕ: unit идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
-                    fi
-                    warned=1
-                fi
-                if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
-                    echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
-                    touch "$MONITOR_LOG_FILE.stopped"
-                    # Сначала гасим сервер GameTest своего worktree, потом клиент gradle: иначе
-                    # снятие замка (flock/$LOCK.d) обгонит смерть сервера, и следующий прогон
-                    # пойдёт параллельно уже без замка (todo.md 17.10).
-                    kill_gametest_server
-                    if [ -f "$MONITOR_LOG_FILE.gradlepid" ]; then
-                        GRADLE_PID_FROM_FILE=$(cat "$MONITOR_LOG_FILE.gradlepid")
-                        kill -TERM -- "-$GRADLE_PID_FROM_FILE" 2>/dev/null || kill -TERM "$GRADLE_PID_FROM_FILE" 2>/dev/null || true
-                    fi
-                    exit 124
-                fi
-            done
-        ' >/dev/null 2>&1 &
+        # gradle unit/gametest без flock запускается под setsid — лидером своей группы.
+        MONITOR_GRADLE_GROUP=group
+        setsid bash -c monitor_loop </dev/null >/dev/null 2>&1 &
     else
-        (
-            warned=0
-            while true; do
-                sleep 1
-                elapsed=$(( $(date +%s) - MONITOR_START_TIME ))
-                if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
-                    if [ "$MONITOR_MODE" = "gametest" ]; then
-                        echo "ВНИМАНИЕ: полный GameTest идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
-                    else
-                        echo "ВНИМАНИЕ: unit идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
-                    fi
-                    warned=1
-                fi
-                if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
-                    echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
-                    touch "$MONITOR_LOG_FILE.stopped"
-                    # Сначала гасим сервер GameTest своего worktree, потом клиент gradle: иначе
-                    # снятие замка (flock/$LOCK.d) обгонит смерть сервера, и следующий прогон
-                    # пойдёт параллельно уже без замка (todo.md 17.10).
-                    kill_gametest_server
-                    if [ -f "$MONITOR_LOG_FILE.gradlepid" ]; then
-                        GRADLE_PID_FROM_FILE=$(cat "$MONITOR_LOG_FILE.gradlepid")
-                        kill -TERM -- "-$GRADLE_PID_FROM_FILE" 2>/dev/null || kill -TERM "$GRADLE_PID_FROM_FILE" 2>/dev/null || true
-                    fi
-                    exit 124
-                fi
-            done
-        ) >/dev/null 2>&1 &
+        ( monitor_loop ) </dev/null >/dev/null 2>&1 &
     fi
     MONITOR_PID=$!
 }
 
+stop_timer() {
+    if [ -n "$MONITOR_PID" ]; then
+        stop_own_loop "$MONITOR_PID" 2
+        MONITOR_PID=""
+    fi
+}
+
 # Пульс для надзора исполнителя (scripts/opencode-task.sh): пока скрипт жив — ждёт замок или гоняет тесты —
-# файл обновляется раз в 20 с, и надзор не путает долгий прогон с молчанием модели.
+# файл обновляется раз в 20 с, и надзор не путает долгий прогон с молчанием модели. В файле — PID пульса.
+# Пульс живёт не дольше самого долгого законного прогона (ожидание замка + предел + запас): на Windows
+# осиротевший test.sh без gradle (17.10) держал пульс часами, и надзор не перезапускал зависшую сессию. Срок — по часам,
+# а не по числу ударов: при нехватке fork каждый sleep тянется ~30 с, и счёт ударов растягивался бы на часы.
+# Без fork на удар, кроме sleep: время — printf, запись — перенаправлением. sleep — в фоне с wait, чтобы
+# trap TERM гасил и его: после выхода скрипта от пульса не остаётся ни одного процесса.
 HEARTBEAT_FILE="${THEMINESPIRIT_TEST_HEARTBEAT:-TestResults/test-running}"
 HEARTBEAT_PID=""
 start_heartbeat() {
-    mkdir -p "$(dirname "$HEARTBEAT_FILE")"
-    touch "$HEARTBEAT_FILE"
+    local now deadline
+    case "$HEARTBEAT_FILE" in */*) mkdir -p "${HEARTBEAT_FILE%/*}" ;; esac
+    : >"$HEARTBEAT_FILE"
+    now_s now
+    deadline=$(( now + GAMETEST_WAIT + (UNIT_STOP > GAMETEST_STOP ? UNIT_STOP : GAMETEST_STOP) + 300 ))
     # stdout/stderr — в /dev/null: иначе фоновый sleep наследует пайп вызывающего
     # (out=$(scripts/test.sh …)) и держит его открытым до конца сна, задерживая проверки.
-    # Пульс живёт не дольше самого долгого законного прогона (ожидание замка + предел + запас): на Windows
-    # осиротевший test.sh без gradle (17.10) держал пульс часами, и надзор не перезапускал зависшую сессию.
-    local beats=$(( (GAMETEST_WAIT + (UNIT_STOP > GAMETEST_STOP ? UNIT_STOP : GAMETEST_STOP) + 300) / 20 ))
-    ( n=0; while [ "$n" -lt "$beats" ] && kill -0 "$$" 2>/dev/null; do touch "$HEARTBEAT_FILE" 2>/dev/null; sleep 20; n=$((n + 1)); done ) >/dev/null 2>&1 &
+    (
+        sleeper=""
+        trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+        while kill -0 "$$" 2>/dev/null; do
+            now_s now
+            [ "$now" -lt "$deadline" ] || break
+            printf '%s\n' "$BASHPID" >"$HEARTBEAT_FILE" 2>/dev/null
+            sleep 20 &
+            sleeper=$!
+            wait "$sleeper"
+            sleeper=""
+        done
+    ) </dev/null >/dev/null 2>&1 &
     HEARTBEAT_PID=$!
 }
 
-stop_monitor() {
-    # Сервер GameTest гасим до снятия замка (release_dir_lock в trap идёт после stop_monitor):
-    # иначе замок освободится, пока старый сервер ещё работает, и следующий прогон пойдёт параллельно.
-    kill_gametest_server
+stop_heartbeat() {
     if [ -n "$HEARTBEAT_PID" ]; then
-        kill "$HEARTBEAT_PID" 2>/dev/null || true
+        stop_own_loop "$HEARTBEAT_PID" 2
         HEARTBEAT_PID=""
         rm -f "$HEARTBEAT_FILE"
     fi
-    if [ -n "$MONITOR_PID" ]; then
-        kill -TERM "$MONITOR_PID" 2>/dev/null || kill -TERM -- "-$MONITOR_PID" 2>/dev/null || true
-        MONITOR_PID=""
+}
+
+stop_monitor() {
+    # Сервер GameTest и gradle гасим до снятия замка (release_dir_lock в cleanup идёт после stop_monitor):
+    # иначе замок освободится, пока старый сервер ещё работает, и следующий прогон пойдёт параллельно.
+    kill_gametest_server
+    if [ -n "$GRADLE_PID" ]; then
+        kill_own_tree "$GRADLE_PID" 10 "${MONITOR_GRADLE_GROUP:-}"
+        GRADLE_PID=""
     fi
+    stop_timer
+    stop_heartbeat
     return 0
 }
 
-trap stop_monitor EXIT TERM INT
+cleanup() {
+    stop_monitor
+    [ "$DIR_LOCK_HELD" = 1 ] && release_dir_lock
+    return 0
+}
+
+# Сигнал: выходим сразу (trap без exit продолжал скрипт с прерванной команды — test.sh жил после TERM).
+# TERM от монитора по пределу — код 124; чужой TERM/INT — 143/130. Уборка — в trap EXIT.
+on_signal() {
+    trap - TERM INT
+    if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
+        echo "стоп по пределу ${STOP_SECONDS} с"
+        echo "полный лог: $LOG_FILE"
+        exit 124
+    fi
+    exit "$1"
+}
+
+trap cleanup EXIT
+trap 'on_signal 143' TERM
+trap 'on_signal 130' INT
 
 # ── Анализ результатов unit ──────────────────────────────────────────────────
 # Отчёты JUnit разбираются ОДНИМ процессом на все файлы: python, если есть, иначе один awk.
@@ -612,7 +733,7 @@ analyze_gametest() {
 STAMP=$(date +%Y%m%d-%H%M%S-%N)
 LOG_FILE="$LOG_DIR/${STAMP}-${MODE}.log"
 rm -f "$LOG_FILE.stopped"
-START_TIME=$(date +%s)
+now_s START_TIME
 ELAPSED=0
 
 echo "Режим: $MODE" >&2
@@ -634,9 +755,13 @@ if [ "$MODE" = "unit" ]; then
     wait "$GRADLE_PID"
     CODE=$?
     GRADLE_PID=""
+    # Предел — только на gradle: монитор гасим до разбора отчётов, и метка .stopped после проверки ниже
+    # уже не появится (раньше она возникала посреди разбора, а скрипт продолжал жить).
+    stop_timer
     rm -f "$LOG_FILE.gradlepid"
 
-    ELAPSED=$(( $(date +%s) - START_TIME ))
+    now_s ELAPSED
+    ELAPSED=$((ELAPSED - START_TIME))
 
     if [ -f "$LOG_FILE.stopped" ]; then
         echo "стоп по пределу ${UNIT_STOP} с"
@@ -689,9 +814,11 @@ else
     wait "$GRADLE_PID"
     CODE=$?
     GRADLE_PID=""
+    stop_timer
     rm -f "$LOG_FILE.gradlepid"
 
-    ELAPSED=$(( $(date +%s) - START_TIME ))
+    now_s ELAPSED
+    ELAPSED=$((ELAPSED - START_TIME))
 
     if noflock; then
         release_dir_lock
