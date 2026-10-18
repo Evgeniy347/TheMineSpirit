@@ -12,11 +12,11 @@ import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-final class FortifyMaterial {
+public final class FortifyMaterial {
     private FortifyMaterial() {
     }
 
-    static Optional<String> placeableBlockId(Container inventory) {
+    public static Optional<String> placeableBlockId(Container inventory) {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (placeable(stack)) {

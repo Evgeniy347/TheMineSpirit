@@ -32,6 +32,10 @@ public enum CropKind {
             .filter(kind -> kind != ANY)
             .map(kind -> kind.name().toLowerCase(Locale.ROOT))
             .toList();
+    private static final List<String> PLOT_NAMES = Arrays.stream(values())
+            .filter(kind -> kind != ANY && !kind.hasSupport())
+            .map(kind -> kind.name().toLowerCase(Locale.ROOT))
+            .toList();
 
     private final String blockId;
     private final int maxAge;
@@ -71,6 +75,10 @@ public enum CropKind {
 
     public static List<String> plantableNames() {
         return PLANTABLE_NAMES;
+    }
+
+    public static List<String> plotNames() {
+        return PLOT_NAMES;
     }
 
     public String blockId() {

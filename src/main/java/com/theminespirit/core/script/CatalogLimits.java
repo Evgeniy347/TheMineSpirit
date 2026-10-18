@@ -77,6 +77,20 @@ public final class CatalogLimits {
     public static final int PLANT_COUNT_DEFAULT = 64;
     public static final int BONE_MEAL_COUNT_DEFAULT = 16;
 
+    // build_farm: прямоугольная грядка вокруг духа
+    public static final int FARM_PLOT_SIDE_MIN = 1;
+    public static final int FARM_PLOT_SIDE_MAX = 16;
+
+    // build_shelter: сторона укрытия и предел блоков, как бюджет укрепления
+    public static final int SHELTER_SIDE_MIN = 3;
+    public static final int SHELTER_SIDE_MAX = 4;
+    public static final int SHELTER_BLOCKS_MAX = 64;
+
+    // build_fence: точки контура и предел клеток забора
+    public static final int FENCE_CORNERS_MIN = 3;
+    public static final int FENCE_CORNERS_MAX = 64;
+    public static final int FENCE_BLOCKS_MAX = 512;
+
     public static final int NAV_RADIUS_MIN = 1;
     public static final int NAV_RADIUS_MAX = 32;
     public static final int NAV_RADIUS_DEFAULT = 16;

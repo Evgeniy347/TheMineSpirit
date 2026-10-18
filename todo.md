@@ -336,7 +336,7 @@
 - [x] `eat` (`eat`, 16.10); `drink_potion` (`drink_potion`, 18.10)
 
 ### Стройка, ферма, база
-- [ ] `build_farm`, `build_shelter`, `build_fence` (есть `build_schematic`, `fill`, `place_block` — не то)
+- [x] `build_farm`, `build_shelter`, `build_fence` (скрипты с планами `FarmPlot`/`FencePlan`/`ShelterPlan`, 18.10)
 - [x] `light_area` (`light_area`); `secure_area` — нет
 - [x] `use_block` (`use_block`: рычаг, кнопка, дверь) и `open` (`open`: дверь, люк, калитка, сундук — открыть и закрыть);
       `close` — только дверь (`close_door`); защита чужих механизмов через `ProtectionGate.checkUse`/unprotect
@@ -656,7 +656,7 @@
 ## P6 — бой, стройка, мультиботы, MCP
 
 - [ ] Бой/защита: `attack`, `defend`, `retreat`, `avoid`, `light_area`, `secure_area`.
-- [ ] Стройка: `build_farm`, `build_shelter` (`place_block`, `fill`, `clear_area`, `build_schematic` — сделаны).
+- [x] Стройка: `build_farm`, `build_shelter`, `build_fence` (`place_block`, `fill`, `clear_area`, `build_schematic` сделаны раньше).
 - [ ] Параллельные духи без конфликтов; масштаб и производительность.
 - [ ] MCP-обёртка над bridge для ИИ-агентов.
 
