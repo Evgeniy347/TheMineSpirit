@@ -7,11 +7,11 @@ import java.util.Optional;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-final class CampfireKit {
+public final class CampfireKit {
     private CampfireKit() {
     }
 
-    static boolean ensure(SpiritEntity spirit) {
+    public static boolean ensure(SpiritEntity spirit) {
         if (spirit.getInventory().countItem(StationType.CAMPFIRE.item()) > 0) {
             return true;
         }
