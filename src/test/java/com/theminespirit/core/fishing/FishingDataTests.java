@@ -78,6 +78,47 @@ class FishingDataTests {
     }
 
     @Test
+    void defaults_WorkPointAndBucketAndSmoker_AreDataDefaults() {
+        FishingData defaults = FishingData.defaults();
+
+        assertEquals(5, defaults.workWidth(),
+                "Рабочая точка у воды — 5x5: этому числу учат данные, а не код рыбалки");
+        assertEquals(2, defaults.workDepth(),
+                "Рабочая точка у воды глубиной 2: мелкую лужу на постоянное место не ставят");
+        assertEquals(8, defaults.bucketCount(),
+                "За один заход ведром ловят не больше 8 рыб: предел приходит из данных");
+        assertEquals(16, defaults.smokerFish(),
+                "Коптильню крафтят с 16 сырой рыбы: порог приходит из данных");
+    }
+
+    @Test
+    void parse_MissingWorkFields_FallsBackToDataDefaults() {
+        assertEquals(FishingData.defaults(), FishingData.parse("""
+                {"minWidth": 2, "minDepth": 1}""", "test"),
+                "Без новых полей файл рыбалки обязан брать умолчания: старый датапак мира не ломает рыбалку");
+    }
+
+    @Test
+    void parse_WorkPointFields_Accepted() {
+        assertEquals(new FishingData(2, 1, 6, 3, 4, 32), FishingData.parse("""
+                {"minWidth": 2, "minDepth": 1, "workWidth": 6, "workDepth": 3, "bucketCount": 4,
+                 "smokerFish": 32}""", "test"),
+                "Новые поля рыбалки обязаны читаться из файла: иначе числа не правятся датапаком");
+    }
+
+    @Test
+    void parse_WorkPointOutOfRange_Throws() {
+        assertThrows(IllegalStateException.class,
+                () -> FishingData.parse("""
+                        {"minWidth": 2, "minDepth": 1, "workWidth": 1}""", "test"),
+                "Рабочая точка уже 2x2 обязана отклоняться: у такой воды не встать и не забросить");
+        assertThrows(IllegalStateException.class,
+                () -> FishingData.parse("""
+                        {"minWidth": 2, "minDepth": 1, "bucketCount": 0}""", "test"),
+                "Нулевой предел рыбы в вёдрах обязан отклоняться: заход без ловли — пустая задача");
+    }
+
+    @Test
     void load_ClasspathResource_MatchesDefaults() {
         assertEquals(FishingData.defaults(), FishingData.load(),
                 "Файл " + FishingData.RESOURCE + " обязан совпадать с кодовыми DEFAULTS: расхождение тихо "

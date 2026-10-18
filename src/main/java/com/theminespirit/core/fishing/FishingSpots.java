@@ -15,27 +15,47 @@ public final class FishingSpots {
         }
     }
 
+    /** Отбор места по внешним правилам мира: близость к поселению, чужие постройки. */
+    public interface SpotFilter {
+        boolean allow(BlockCoord stand, BlockCoord water);
+
+        SpotFilter ALL = (stand, water) -> true;
+    }
+
     private FishingSpots() {
     }
 
     public static Optional<Spot> find(BlockCoord origin, WaterView view, FishingData data) {
+        Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них порог площади и глубины");
+        return find(origin, view, data.minWidth(), data.minDepth(), SpotFilter.ALL);
+    }
+
+    /** Рабочее место у воды: пятно крупнее разовой ловли, отобранное фильтром мира. */
+    public static Optional<Spot> findWorkPoint(BlockCoord origin, WaterView view, FishingData data,
+            SpotFilter filter) {
+        Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них размер рабочей точки");
+        return find(origin, view, data.workWidth(), data.workDepth(), filter);
+    }
+
+    public static Optional<Spot> find(BlockCoord origin, WaterView view, int width, int depth,
+            SpotFilter filter) {
         Objects.requireNonNull(origin, "Точка отсчёта не может быть null: по ней выбирается ближайший берег");
         Objects.requireNonNull(view, "Вид воды не может быть null: без него нечего выбирать");
-        Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них порог площади и глубины");
+        Objects.requireNonNull(filter, "Фильтр места не может быть null: пустой отбор задают SpotFilter.ALL");
         Map<Long, Column> surface = new LinkedHashMap<>();
         for (Column column : view.columns()) {
-            if (column.depth() >= data.minDepth()) {
+            if (column.depth() >= depth) {
                 surface.put(key(column.x(), column.z()), column);
             }
         }
         Spot best = null;
         long bestDistance = Long.MAX_VALUE;
         for (Column anchor : surface.values()) {
-            if (!areaAt(surface, anchor, data.minWidth())) {
+            if (!areaAt(surface, anchor, width)) {
                 continue;
             }
-            Spot spot = spotFor(anchor, data.minWidth(), origin, view);
-            if (spot == null) {
+            Spot spot = spotFor(anchor, width, origin, view);
+            if (spot == null || !filter.allow(spot.stand(), spot.water())) {
                 continue;
             }
             long distance = distanceSquared(origin, spot.stand());
