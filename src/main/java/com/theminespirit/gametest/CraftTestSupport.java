@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
@@ -55,8 +56,40 @@ final class CraftTestSupport {
     static void assertFinished(GameTestHelper helper, SpiritEntity spirit, SpiritRun run, RunStatus expected) {
         run.assertStarted();
         RunStatus actual = spirit.taskStatus().orElse(null);
-        helper.assertTrue(actual == expected, "задача обязана завершиться статусом " + expected + ", статус: "
-                + actual + ", причина: " + spirit.taskFailureReason().orElse("нет"));
+        if (actual != expected) {
+            helper.assertTrue(false, "задача обязана завершиться статусом " + expected + ", статус: "
+                    + actual + ", причина: " + spirit.taskFailureReason().orElse("нет")
+                    + "; станции рядом: " + stationsNear(helper, spirit));
+        }
+    }
+
+    // Диагностика флака «RUNNING» на плавке: печатаем станции рядом с духом и их содержимое —
+    // своя ускоренная скорость готовки не даёт, а чужая станция соседней сцены не ускоряется.
+    private static String stationsNear(GameTestHelper helper, SpiritEntity spirit) {
+        BlockPos center = spirit.blockPosition();
+        StringBuilder report = new StringBuilder();
+        for (int dx = -17; dx <= 17; dx++) {
+            for (int dy = -8; dy <= 8; dy++) {
+                for (int dz = -17; dz <= 17; dz++) {
+                    BlockPos cell = center.offset(dx, dy, dz);
+                    BlockState state = helper.getLevel().getBlockState(cell);
+                    if (!state.is(Blocks.FURNACE) && !state.is(Blocks.SMOKER) && !state.is(Blocks.BLAST_FURNACE)
+                            && !state.is(Blocks.CAMPFIRE)) {
+                        continue;
+                    }
+                    report.append(state.getBlock()).append('@').append(cell.toShortString());
+                    BlockEntity entity = helper.getLevel().getBlockEntity(cell);
+                    if (entity instanceof AbstractFurnaceBlockEntity furnace) {
+                        report.append("[in=").append(furnace.getItem(0)).append(" fuel=").append(furnace.getItem(1))
+                                .append(" out=").append(furnace.getItem(2)).append(']');
+                    } else if (entity instanceof CampfireBlockEntity campfire) {
+                        report.append(campfire.getItems());
+                    }
+                    report.append(' ');
+                }
+            }
+        }
+        return report.length() == 0 ? "нет" : report.toString();
     }
 
     static void assertReason(GameTestHelper helper, SpiritEntity spirit, String fragment) {
