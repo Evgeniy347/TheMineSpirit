@@ -234,6 +234,10 @@ public final class BuildAuditGameTests {
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("пропущено 1"),
                     "Причина обязана называть число пропусков, фактически: " + reason);
+            helper.assertTrue(reason.contains("занята блоком minecraft:dirt"),
+                    "Последний отказ обязан называть блок, занявший клетку: «нет стоянок» про занятую клетку "
+                            + "уводит разбор в выбор стоянок вместо раскладки (так был ошибочно разобран провал "
+                            + "склада). Фактически: " + reason);
             GameTestFixtures.finish(helper);
         });
     }

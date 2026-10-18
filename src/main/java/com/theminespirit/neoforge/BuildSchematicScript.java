@@ -253,6 +253,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         BlockState current = level.getBlockState(toPos(entry.pos()));
         if (!current.isAir() && !current.canBeReplaced()) {
+            lastRefusal = "клетка " + entry.pos() + " занята блоком " + BlockStates.idOf(current) + ": ставить некуда";
             skipEntry(entry);
             return;
         }
@@ -262,6 +263,9 @@ final class BuildSchematicScript implements ScriptInstance {
                 standIndex = 0;
             }
             if (standIndex >= stands.size()) {
+                if (stands.isEmpty()) {
+                    lastRefusal = "нет стоянок у " + entry.pos() + "; дух " + spiritCoord();
+                }
                 skipEntry(entry);
                 return;
             }
@@ -361,9 +365,6 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private void skipEntry(Schematic.PlacedEntry entry) {
-        if (stands.isEmpty()) {
-            lastRefusal = "нет стоянок у " + entry.pos() + "; дух " + spiritCoord();
-        }
         skipped++;
         release(entry.pos());
         resetEntry();
