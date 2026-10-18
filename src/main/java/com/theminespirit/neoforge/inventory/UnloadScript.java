@@ -23,26 +23,33 @@ public final class UnloadScript extends ContainerTask {
     private final UnloadParams params;
     private final int protectedSlot;
     private final int reservePercent;
+    private final String activity;
     private List<KindGroup> groups;
     private int groupIndex;
     private boolean refusedOnce;
     private String lastRefusal;
 
     public UnloadScript(SpiritEntity spirit, UnloadParams params) {
-        this(spirit, params, -1, 0);
+        this(spirit, params, -1, 0, null);
     }
 
     public static UnloadScript relief(SpiritEntity spirit, int protectedSlot) {
-        return new UnloadScript(spirit,
-                new UnloadParams(ContainerTarget.AUTO, CatalogLimits.CONTAINER_RADIUS_DEFAULT, true),
-                protectedSlot, WarehouseSpace.MIN_FREE_PERCENT);
+        return reliefFor(spirit, protectedSlot, null);
     }
 
-    private UnloadScript(SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent) {
+    public static UnloadScript reliefFor(SpiritEntity spirit, int protectedSlot, String activity) {
+        return new UnloadScript(spirit,
+                new UnloadParams(ContainerTarget.AUTO, CatalogLimits.CONTAINER_RADIUS_DEFAULT, true),
+                protectedSlot, WarehouseSpace.MIN_FREE_PERCENT, activity);
+    }
+
+    private UnloadScript(SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent,
+            String activity) {
         super(spirit, params.container(), params.radius());
         this.params = params;
         this.protectedSlot = protectedSlot;
         this.reservePercent = reservePercent;
+        this.activity = activity;
     }
 
     @Override
@@ -52,7 +59,7 @@ public final class UnloadScript extends ContainerTask {
 
     @Override
     protected TransferRunner beginTransfer(Container container) {
-        BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
+        BaseKit kit = kit();
         List<Slice> surplus = DepositSelection.surplus(new StackMapper().map(spirit.getInventory()), kit,
                 InventoryTables.values(), protectedSlot);
         if (surplus.isEmpty()) {
@@ -102,7 +109,7 @@ public final class UnloadScript extends ContainerTask {
 
     private List<KindGroup> groupByKind(AutoContainerScan scan) {
         List<Stack> inventory = scan.mapper().map(spirit.getInventory());
-        BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
+        BaseKit kit = kit();
         List<Slice> surplus = DepositSelection.surplus(inventory, kit, InventoryTables.values(), protectedSlot);
         List<KindGroup> result = new ArrayList<>();
         for (Slice slice : surplus) {
@@ -125,6 +132,10 @@ public final class UnloadScript extends ContainerTask {
         KindGroup created = new KindGroup(kind);
         result.add(created);
         return created;
+    }
+
+    private BaseKit kit() {
+        return KitFor.kitFor(activity != null ? activity : spirit.currentActivity().orElse(null), spirit.isChild());
     }
 
     private BlockCoord blockCoord() {
