@@ -83,6 +83,23 @@ class DemoBuildingsTests {
     }
 
     @Test
+    void type_PresetSchemes_MatchPresetType() {
+        PresetLibrary library = loadReal();
+        for (DemoBuildings.Building building : DemoBuildings.all()) {
+            for (DemoBuildings.Level level : building.levels()) {
+                Preset preset = library.byId(level.scheme()).orElse(null);
+                if (preset != null) {
+                    assertEquals(preset.type(), building.type(),
+                            "Тип демо-постройки '" + building.id() + "' обязан совпадать с типом пресета '"
+                                    + preset.id() + "': иначе сторож схем применит к жилью правила склада");
+                }
+            }
+        }
+        assertEquals(BuildingType.HOUSING, DemoBuildings.require("house").type(),
+                "Схема house — дом: без типа жилья сторож не проверит у неё окна, дверь и свет");
+    }
+
+    @Test
     void level_UnknownRequested_IsRejected() {
         assertThrows(IllegalArgumentException.class, () -> DemoBuildings.require("pen").level(4),
                 "Четвёртого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой");

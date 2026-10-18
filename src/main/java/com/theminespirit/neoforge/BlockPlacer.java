@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BlockSupport;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
@@ -82,16 +83,19 @@ public final class BlockPlacer {
     }
 
     private static boolean hasSupport(Level level, BlockPos target) {
-        BlockPos below = target.below();
-        if (level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)) {
-            return true;
-        }
-        for (Direction side : Direction.Plane.HORIZONTAL) {
-            BlockPos neighbour = target.relative(side);
-            if (level.getBlockState(neighbour).isFaceSturdy(level, neighbour, side.getOpposite())) {
-                return true;
-            }
-        }
-        return false;
+        return BlockSupport.hasSupport((x, y, z, face) -> {
+            BlockPos pos = new BlockPos(x, y, z);
+            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
+        }, target.getX(), target.getY(), target.getZ());
+    }
+
+    private static Direction direction(BlockSupport.Face face) {
+        return switch (face) {
+            case UP -> Direction.UP;
+            case NORTH -> Direction.NORTH;
+            case SOUTH -> Direction.SOUTH;
+            case EAST -> Direction.EAST;
+            case WEST -> Direction.WEST;
+        };
     }
 }
