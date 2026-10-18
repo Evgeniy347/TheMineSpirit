@@ -82,6 +82,8 @@ usage() {
   THEMINESPIRIT_GAMETEST_BEAT_SECONDS   период обновления пульса владельцем (10)
   THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS  порог для маркера старого test.sh без пульса (900)
   THEMINESPIRIT_GAMETEST_NOFLOCK=1   принудительно использовать mkdir-замок (для Git Bash на Windows)
+  THEMINESPIRIT_PYTHON               python для разбора отчётов unit (по умолчанию PYTHON, python3, python); none — только awk
+  THEMINESPIRIT_TEST_HEARTBEAT       файл пульса для надзора (по умолчанию TestResults/test-running)
 EOF
     exit 2
 }
