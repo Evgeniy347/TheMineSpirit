@@ -57,6 +57,8 @@ public final class TicketPlans {
         }
         return switch (boardCase) {
             case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
+            case CRAFT_ANVIL -> Optional.of("minecraft:anvil");
+            case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
             default -> Optional.empty();
@@ -100,6 +102,8 @@ public final class TicketPlans {
             case REPAIR_BUILDING -> repairBuilding(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
+            case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
+            case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);

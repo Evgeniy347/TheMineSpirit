@@ -5,12 +5,12 @@ import java.util.Set;
 
 /**
  * Факты о поселении для генератора первых шагов: есть ли дом, сундуки, верстак,
- * инструменты (запас цепочки), вход в шахту, забор, освещение, постройки. Собирает адаптер
- * из снимка мира; генератор читает только эти данные.
+ * инструменты (запас цепочки), вход в шахту, забор, освещение, постройки, стол кузнеца
+ * и наковальня. Собирает адаптер из снимка мира; генератор читает только эти данные.
  */
 public record SettlementFacts(boolean hasHome, boolean groundsCleared, int chests,
         boolean craftingStation, Set<String> tools, boolean mineEntrance, boolean fence,
-        boolean lighting, boolean houses) {
+        boolean lighting, boolean houses, boolean smithingTable, boolean anvil) {
 
     public SettlementFacts {
         if (chests < 0) {

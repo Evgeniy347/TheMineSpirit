@@ -51,6 +51,8 @@ class TicketPlansTests {
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
+            Map.entry(BoardCase.CRAFT_ANVIL, "craft"),
+            Map.entry(BoardCase.CRAFT_SMITHING_TABLE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_PICKAXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_AXE, "craft"),
             Map.entry(BoardCase.CRAFT_WOODEN_SHOVEL, "craft"),
@@ -425,6 +427,17 @@ class TicketPlansTests {
     }
 
     @Test
+    void craftItem_SmithyCases_ReturnStationItem() {
+        assertEquals(Optional.of("minecraft:anvil"), TicketPlans.craftItem(BoardCase.CRAFT_ANVIL),
+                "Кейс крафта наковальни обязан называть предмет наковальни: по нему гейт считает "
+                        + "железные блоки и слитки из рецепта");
+        assertEquals(Optional.of("minecraft:smithing_table"),
+                TicketPlans.craftItem(BoardCase.CRAFT_SMITHING_TABLE),
+                "Кейс крафта стола кузнеца обязан называть предмет стола: по нему гейт считает "
+                        + "материалы из рецепта");
+    }
+
+    @Test
     void craftItem_BuildHouse_Empty() {
         assertEquals(Optional.empty(), TicketPlans.craftItem(BoardCase.BUILD_HOUSE),
                 "Строительный кейс не крафт: передача ингредиентов ему не назначается");
@@ -435,6 +448,8 @@ class TicketPlansTests {
         List<BoardCase> craftCases = new ArrayList<>(ToolSet.chain());
         craftCases.add(BoardCase.STOCK_CHESTS);
         craftCases.add(BoardCase.CRAFTING_STATION);
+        craftCases.add(BoardCase.CRAFT_ANVIL);
+        craftCases.add(BoardCase.CRAFT_SMITHING_TABLE);
         craftCases.add(BoardCase.ENCHANT_SHELVES);
         for (BoardCase craftCase : craftCases) {
             TaskNode plan = TicketPlans.plan(craftCase, target());

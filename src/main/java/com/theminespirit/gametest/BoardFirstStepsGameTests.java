@@ -330,6 +330,8 @@ public final class BoardFirstStepsGameTests {
         items.putIfAbsent("oak_fence", 256);
         items.putIfAbsent("torch", 256);
         items.putIfAbsent("cobblestone", 256);
+        items.putIfAbsent("iron_ingot", 256);
+        items.putIfAbsent("iron_block", 256);
         return new StockView(items);
     }
 
@@ -406,6 +408,8 @@ public final class BoardFirstStepsGameTests {
             case BUILD_FENCE -> 11;
             case LIGHTING -> 12;
             case BUILD_HOUSE -> 13;
+            case CRAFT_SMITHING_TABLE -> 14;
+            case CRAFT_ANVIL -> 15;
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + boardCase);
         };
     }
@@ -439,6 +443,8 @@ public final class BoardFirstStepsGameTests {
                 helper.setBlock(new BlockPos(7, 1, 3), Blocks.TORCH);
             }
             case BUILD_HOUSE -> helper.setBlock(new BlockPos(4, 1, 7), Blocks.OAK_STAIRS);
+            case CRAFT_SMITHING_TABLE -> helper.setBlock(new BlockPos(5, 1, 2), Blocks.SMITHING_TABLE);
+            case CRAFT_ANVIL -> helper.setBlock(new BlockPos(5, 1, 4), Blocks.ANVIL);
             default -> throw new IllegalArgumentException("Не шаг цепочки: " + head);
         }
     }

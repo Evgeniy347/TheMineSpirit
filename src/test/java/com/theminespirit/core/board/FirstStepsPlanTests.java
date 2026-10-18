@@ -30,6 +30,8 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_HOUSE);
+        chain.add(BoardCase.CRAFT_SMITHING_TABLE);
+        chain.add(BoardCase.CRAFT_ANVIL);
         return chain;
     }
 
@@ -46,11 +48,11 @@ class FirstStepsPlanTests {
 
     private static SettlementFacts factsAt(int step) {
         return new SettlementFacts(true, step > 0, step > 1 ? 2 : 0, step > 2, toolsDone(step),
-                step > 10, step > 11, step > 12, step > 13);
+                step > 10, step > 11, step > 12, step > 13, step > 14, step > 15);
     }
 
     private static SettlementFacts emptySite() {
-        return new SettlementFacts(true, false, 0, false, Set.of(), false, false, false, false);
+        return new SettlementFacts(true, false, 0, false, Set.of(), false, false, false, false, false, false);
     }
 
     @Test
@@ -85,7 +87,7 @@ class FirstStepsPlanTests {
     @Test
     void next_WoodenMissing_ReturnedEvenWithStoneTool() {
         SettlementFacts facts = new SettlementFacts(true, true, 2, true,
-                Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)), true, true, true, true);
+                Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)), true, true, true, true, false, false);
 
         assertEquals(Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE), FirstStepsPlan.next(facts),
                 "Наличие каменной кирки без деревянной не продвигает цепочку: деревянный набор "
@@ -95,7 +97,7 @@ class FirstStepsPlanTests {
     @Test
     void next_AllDone_Empty() {
         SettlementFacts complete = new SettlementFacts(true, true, 2, true, toolsDone(Integer.MAX_VALUE),
-                true, true, true, true);
+                true, true, true, true, true, true);
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(complete),
                 "Всё сделано — генератор молчит: новые задания не плодятся, иначе доска "
@@ -105,7 +107,7 @@ class FirstStepsPlanTests {
     @Test
     void next_NoHome_Empty() {
         SettlementFacts noHome = new SettlementFacts(false, false, 0, false, Set.of(), false, false,
-                false, false);
+                false, false, false, false);
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(noHome),
                 "Без дома генератор не начинает цепочку: дом — точка поселения, её ставит "
@@ -131,7 +133,7 @@ class FirstStepsPlanTests {
     @Test
     void next_NegativeChests_Rejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new SettlementFacts(true, true, -1, true, Set.of(), true, true, true, true),
+                () -> new SettlementFacts(true, true, -1, true, Set.of(), true, true, true, true, true, true),
                 "Отрицательное число сундуков обязано отвергаться: оно прошло бы как "
                         + "«сундуков нет» и сломало бы шаг цепочки");
     }
@@ -139,7 +141,7 @@ class FirstStepsPlanTests {
     @Test
     void next_NullTools_Rejected() {
         assertThrows(NullPointerException.class,
-                () -> new SettlementFacts(true, true, 2, true, null, true, true, true, true),
+                () -> new SettlementFacts(true, true, 2, true, null, true, true, true, true, true, true),
                 "Набор инструментов не может быть null: пустой набор задают пустым множеством, "
                         + "а null спрятал бы «инструментов нет» за отказом");
     }
@@ -177,7 +179,8 @@ class FirstStepsPlanTests {
                 && to.chests() >= from.chests() && (!from.craftingStation() || to.craftingStation())
                 && to.tools().containsAll(from.tools()) && (!from.mineEntrance() || to.mineEntrance())
                 && (!from.fence() || to.fence()) && (!from.lighting() || to.lighting())
-                && (!from.houses() || to.houses());
+                && (!from.houses() || to.houses()) && (!from.smithingTable() || to.smithingTable())
+                && (!from.anvil() || to.anvil());
     }
 
     @Provide
@@ -198,7 +201,8 @@ class FirstStepsPlanTests {
                 factsAt(12),
                 factsAt(13),
                 factsAt(14),
-                new SettlementFacts(false, false, 0, false, Set.of(), false, false, false, false),
-                new SettlementFacts(true, true, 1, true, Set.of(), true, false, true, false));
+                factsAt(15),
+                new SettlementFacts(false, false, 0, false, Set.of(), false, false, false, false, false, false),
+                new SettlementFacts(true, true, 1, true, Set.of(), true, false, true, false, false, false));
     }
 }

@@ -63,6 +63,8 @@ public final class BoardRules {
         priorities.put(BoardCase.CRAFT_BED, 40);
         priorities.put(BoardCase.WEAVE_WOOL, 40);
         priorities.put(BoardCase.CRAFTING_STATION, 40);
+        priorities.put(BoardCase.CRAFT_ANVIL, 50);
+        priorities.put(BoardCase.CRAFT_SMITHING_TABLE, 50);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
         priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 40);
         priorities.put(BoardCase.CRAFT_WOODEN_AXE, 40);

@@ -35,6 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
@@ -175,6 +176,8 @@ public final class FirstStepsRunner {
         boolean fence = false;
         boolean lighting = false;
         boolean houses = false;
+        boolean smithingTable = false;
+        boolean anvil = false;
         BlockPos start = new BlockPos(home.x(), home.y(), home.z());
         for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
             for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
@@ -209,12 +212,18 @@ public final class FirstStepsRunner {
                     if (state.getBlock() instanceof StairBlock || state.getBlock() instanceof SlabBlock) {
                         houses = true;
                     }
+                    if (state.is(Blocks.SMITHING_TABLE)) {
+                        smithingTable = true;
+                    }
+                    if (state.getBlock() instanceof AnvilBlock) {
+                        anvil = true;
+                    }
                 }
             }
         }
         Set<String> tools = toolStock(stock);
         return new SettlementFacts(hasHome, groundsCleared, chests, craftingStation, tools, mineEntrance, fence,
-                lighting, houses);
+                lighting, houses, smithingTable, anvil);
     }
 
     /** Собранные инструменты набора: короткие ключи снимка запасов (wooden_pickaxe и т. п.). */
