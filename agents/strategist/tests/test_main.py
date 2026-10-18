@@ -98,6 +98,37 @@ class MainTests(unittest.TestCase):
         self.assertEqual(["sandbox_breach"], [e.get("code") for e in alerts])
         self.assertEqual(1, len([e for e in self.events() if e["event"] == "observed"]), "остальные духи не обрабатывались")
 
+    def test_sandboxCheck_RejectedTool_ExitsZeroAndNamesVersion(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake),
+               "FAKE_STATE": str(self.dir / "fake.state"), "FAKE_TOOL": "reject"}
+        code, out, err = self.run_main(["sandbox-check"], **env)
+        self.assertEqual(0, code, f"отклонённый песочницей ls — успешная проверка; stderr: {err}")
+        self.assertIn("fake-opencode 9.9.9", out, "проверка называет версию opencode для записи в STRATEGIST.md")
+        self.assertIn("OK песочница", out)
+        self.assertIn("выполнения нет", out)
+
+    def test_sandboxCheck_ExecutedTool_ExitsOne(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake),
+               "FAKE_STATE": str(self.dir / "fake.state"), "FAKE_TOOL": "executed"}
+        code, _, err = self.run_main(["sandbox-check"], **env)
+        self.assertEqual(1, code, "выполненный инструмент — провал проверки")
+        self.assertIn("выполнился", err)
+
+    def test_sandboxCheck_NoAttempt_ExitsOne(self):
+        fake = APP / "tests" / "fake_opencode.sh"
+        env = {"STRATEGIST_BRAIN": "opencode", "STRATEGIST_OPENCODE_BIN": str(fake),
+               "FAKE_STATE": str(self.dir / "fake.state")}
+        code, _, err = self.run_main(["sandbox-check"], **env)
+        self.assertEqual(1, code, "модель не вызвала инструмент — проверка не подтвердила отказ")
+        self.assertIn("не попыталась", err)
+
+    def test_sandboxCheck_CommandBrain_RejectedAsNotApplicable(self):
+        code, _, err = self.run_main(["sandbox-check"])
+        self.assertEqual(2, code)
+        self.assertIn("STRATEGIST_BRAIN=command", err)
+
     def test_secondInstance_RefusedByLock(self):
         lock = strategist.acquire_lock(self.home)
         self.assertIsNotNone(lock)

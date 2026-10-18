@@ -7,6 +7,7 @@
 #   scripts/strategist.sh status           жив ли, режим, модель, последний цикл, счётчики за час, активные задачи, последний сбой
 #   scripts/strategist.sh pause|resume     создать/убрать STRATEGIST_HOME/PAUSE: новых задач нет, отслеживание идёт
 #   scripts/strategist.sh once             один цикл в этом терминале и выход
+#   scripts/strategist.sh sandbox-check    проверить, что модель не может выполнить инструмент (ls) в песочнице opencode
 #   scripts/strategist.sh smoke [модель]   живая проба качества модели на записанных наблюдениях (в цикл не входит)
 #   scripts/strategist.sh logs [N]         последние N строк strategist.log (по умолчанию 50)
 #
@@ -15,7 +16,8 @@
 # нужен STRATEGIST_CONFIRM_LIVE=1. STRATEGIST_SESSION — имя tmux-сессии (mc-strategist; не oc-*, чтобы opencode-status-notify.sh
 # не принял её за исполнителя), STRATEGIST_ARGS — дополнительные аргументы агента (например, --fixtures для проверок).
 #
-# Коды выхода: 0 — готово (status: работает); 1 — не запущен или не удалось запуститься; 2 — неверное использование или конфигурация;
+# Коды выхода: 0 — готово (status: работает, sandbox-check: отказ подтверждён); 1 — не запущен, не удалось запуститься
+# или sandbox-check не подтвердил отказ; 2 — неверное использование или конфигурация;
 # 3 — второй экземпляр отказался; 4 — остановка не завершилась за STRATEGIST_STOP_WAIT секунд.
 set -uo pipefail
 
@@ -33,7 +35,7 @@ EXIT_LOCKED=3
 EXIT_STOP_TIMEOUT=4
 
 usage() {
-    sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
     exit "$EXIT_USAGE"
 }
 
@@ -139,6 +141,12 @@ cmd_once() {
     exec "$PYTHON" -u strategist.py once ${STRATEGIST_ARGS:-}
 }
 
+cmd_sandbox_check() {
+    command -v "$PYTHON" >/dev/null || { echo "$PYTHON не найден: стратегу нужен Python 3 (стандартная библиотека)" >&2; exit "$EXIT_USAGE"; }
+    cd "$APP_DIR" || exit "$EXIT_USAGE"
+    exec "$PYTHON" -u strategist.py sandbox-check
+}
+
 cmd_smoke() {
     require_tools
     cd "$APP_DIR" || exit "$EXIT_USAGE"
@@ -164,6 +172,7 @@ case "$command" in
     pause) cmd_pause ;;
     resume) cmd_resume ;;
     once) cmd_once ;;
+    sandbox-check) cmd_sandbox_check ;;
     smoke) cmd_smoke "$@" ;;
     logs) cmd_logs "$@" ;;
     *) usage ;;

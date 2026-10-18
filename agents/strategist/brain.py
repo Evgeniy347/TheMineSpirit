@@ -1,9 +1,9 @@
 """Мозги стратега: «промпт -> текст». OpencodeBrain (подпроцесс в песочнице) и CommandBrain (любая команда), общий FallbackBrain.
 
-Песочница opencode: инструменты read/edit/bash в режиме ask, остальные deny; процесс запускается БЕЗ флага автоодобрения,
-поэтому любой ask отклоняется автоматически и даже prompt injection из имён сущностей может вернуть только текст.
-deny для read/edit/bash убирает инструменты из запроса, и бесплатный тариф отвечает 403 («free tier can only be used from
-within OpenCode»), поэтому для них - ask.
+Песочница opencode: общий шаблон ask, нужные инструменты read/edit/bash тоже ask, остальные deny; процесс запускается БЕЗ
+флага автоодобрения, поэтому любой ask отклоняется автоматически и даже prompt injection из имён сущностей может вернуть
+только текст. deny для read/edit/bash (в том числе через общий "*": deny) убирает инструменты из запроса: бесплатный тариф
+отвечает 403, а модель не может даже попытаться вызвать ls, поэтому общий шаблон — ask.
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ from config import Config
 PROVIDER_PATTERN = r'free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
 NETWORK_PATTERN = r'cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
 PROBE_PROMPT = "ответь OK"
+SANDBOX_CHECK_PROMPT = "Выполни команду ls через bash и покажи вывод."
 AGENT_NAME = "strategist"
 POLL_SECONDS = 0.1
 KILL_GRACE_SECONDS = 2.0
@@ -44,7 +45,7 @@ TOOL_PERMISSION = {"write": "edit", "patch": "edit", "multiedit": "edit"}
 SAFE_ACTIONS = ("ask", "deny")
 DEBUG_TIMEOUT_SECONDS = 30
 SANDBOX_PERMISSION = {
-    "*": "deny",
+    "*": "ask",
     "read": "ask", "edit": "ask", "bash": "ask",
     "webfetch": "deny", "websearch": "deny", "task": "deny", "skill": "deny", "external_directory": "deny",
     "question": "deny", "glob": "deny", "grep": "deny", "list": "deny", "lsp": "deny", "todowrite": "deny",
@@ -60,6 +61,15 @@ class BrainReply:
     model: str
     seconds: float
     tool_attempts: int = 0
+
+
+@dataclass(frozen=True)
+class SandboxProbe:
+    model: str
+    seconds: float
+    attempted: tuple
+    rejected: tuple
+    executed: tuple
 
 
 class BrainUnavailable(Exception):
@@ -236,12 +246,17 @@ def _insert_account_rows(con: sqlite3.Connection, account, state) -> None:
             con.executemany(f"insert or replace into {name} values ({','.join('?' * len(rows[0]))})", rows)
 
 
+CORE_TOOLS = ("read", "edit", "bash")
+
+
 def agent_violations(agent: dict) -> list[str]:
     rules = agent.get("permission")
     tools = agent.get("tools")
     if not isinstance(rules, list) or not isinstance(tools, dict):
         return ["в выводе opencode debug agent нет списка permission или словаря tools"]
-    problems = []
+    problems = [f"{tool}: инструмент выключен, модель не сможет даже попытаться его вызвать; "
+                "проверьте общий шаблон песочницы (он обязан быть ask, а не deny)"
+                for tool in CORE_TOOLS if not tools.get(tool)]
     for tool, enabled in tools.items():
         if not enabled or tool == "invalid":
             continue
@@ -325,6 +340,26 @@ def keep_failure_output(runs: Path, out_path: Path, err_path: Path, meta: str | 
         path.unlink()
 
 
+def _tool_events(stdout: str):
+    texts, attempted, rejected, executed = [], [], [], []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        part = event.get("part") if isinstance(event.get("part"), dict) else {}
+        if event.get("type") == "text" and isinstance(part.get("text"), str) and part["text"].strip():
+            texts.append(part["text"])
+        elif event.get("type") == "tool_use":
+            state = part.get("state") if isinstance(part.get("state"), dict) else {}
+            tool = str(part.get("tool"))
+            attempted.append(tool)
+            (rejected if state.get("status") == "error" else executed).append(tool)
+    return texts, attempted, rejected, executed
+
+
 class OpencodeBrain:
     def __init__(self, config: Config, model: str, env: dict | None = None):
         self.config = config
@@ -372,6 +407,15 @@ class OpencodeBrain:
         return self._run(self.build_args(PROBE_PROMPT, agent=False), self.config.probe_timeout)
 
     def _run(self, args: list[str], timeout: float) -> BrainReply:
+        stdout, stderr, code, seconds = self._execute(args, timeout)
+        try:
+            return self._interpret(stdout, stderr, code, seconds)
+        except BrainError:
+            runs = self.config.home / "runs"
+            keep_failure_output(runs, runs / "last.out", runs / "last.err")
+            raise
+
+    def _execute(self, args: list[str], timeout: float) -> tuple[str, str, int, float]:
         if self._stop:
             raise BrainStopped(f"{self.model}: вызов не начат, стратег останавливается")
         runs = self.config.home / "runs"
@@ -395,11 +439,23 @@ class OpencodeBrain:
                 self._process = None
         if self._stop:
             raise BrainStopped(f"{self.model}: стратег останавливается, ответ не разбирается")
+        return stdout, stderr, code, time.monotonic() - started
+
+    def sandbox_check(self) -> SandboxProbe:
+        ensure_sandbox(self.config.sandbox_dir)
+        stdout, _, _, seconds = self._execute(self.build_args(SANDBOX_CHECK_PROMPT), self.config.probe_timeout)
+        _, attempted, rejected, executed = _tool_events(stdout)
+        return SandboxProbe(self.model, round(seconds, 2), tuple(attempted), tuple(rejected), tuple(executed))
+
+    def opencode_version(self) -> str:
         try:
-            return self._interpret(stdout, stderr, code, time.monotonic() - started)
-        except BrainError:
-            keep_failure_output(runs, out_path, err_path)
-            raise
+            done = subprocess.run([self.config.opencode_bin, "--version"],
+                                  capture_output=True, text=True, encoding="utf-8", timeout=DEBUG_TIMEOUT_SECONDS,
+                                  env=self.subprocess_env(), stdin=subprocess.DEVNULL)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise BrainError(f"Не удалось узнать версию opencode ({self.config.opencode_bin}): {error}") from error
+        text = (done.stdout or done.stderr).strip().splitlines()
+        return text[0] if text else "неизвестна"
 
     def keep_reply_failure(self, reply: BrainReply) -> None:
         runs = self.config.home / "runs"
@@ -429,22 +485,7 @@ class OpencodeBrain:
             time.sleep(POLL_SECONDS)
 
     def _interpret(self, stdout: str, stderr: str, code: int, seconds: float) -> BrainReply:
-        texts, attempted, executed = [], [], []
-        for line in stdout.splitlines():
-            try:
-                event = json.loads(line)
-            except ValueError:
-                continue
-            if not isinstance(event, dict):
-                continue
-            part = event.get("part") if isinstance(event.get("part"), dict) else {}
-            if event.get("type") == "text" and isinstance(part.get("text"), str) and part["text"].strip():
-                texts.append(part["text"])
-            elif event.get("type") == "tool_use":
-                state = part.get("state") if isinstance(part.get("state"), dict) else {}
-                attempted.append(str(part.get("tool")))
-                if state.get("status") != "error":
-                    executed.append(str(part.get("tool")))
+        texts, attempted, _, executed = _tool_events(stdout)
         text = "".join(texts)
         if executed:
             raise SandboxBreach(f"Нарушение песочницы: инструмент {', '.join(executed)} выполнился без отказа; "
@@ -543,6 +584,12 @@ class FallbackBrain:
 
     def probe(self) -> BrainReply:
         return self._with_fallback(lambda brain: brain.probe())
+
+    def sandbox_check(self):
+        return self.primary.sandbox_check()
+
+    def opencode_version(self) -> str:
+        return self.primary.opencode_version()
 
     def _with_fallback(self, call) -> BrainReply:
         try:

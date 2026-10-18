@@ -12,6 +12,10 @@
 # FAKE_BAD_MODEL=m      — для модели m (аргумент -m) сбой провайдера; для остальных работает
 # FAKE_PROBE_FAIL=1     — проба «ответь OK» сообщает о сбое провайдера
 state="${FAKE_STATE:?FAKE_STATE обязателен}"
+if [ "$1" = "--version" ]; then
+    echo "fake-opencode 9.9.9"
+    exit 0
+fi
 # FAKE_AGENT=allow|late_allow|garbage — итоговые права агента в «opencode debug agent»: bash allow / шаблон allow после общего ask / не JSON
 if [ "$1 $2" = "debug agent" ]; then
     echo "DEBUG_ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset} DATADIR=${XDG_DATA_HOME-unset}" >> "$state.args"

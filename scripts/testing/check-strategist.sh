@@ -9,7 +9,18 @@ rm -rf "$work"
 mkdir -p "$work"
 failed=0
 
-chars() { python3 -c 'import sys; print(sys.stdin.read().strip()[: int(sys.argv[1])])' "$1"; }
+pick_python() {
+    local cand
+    for cand in python3 python python3.exe python.exe; do
+        if command -v "$cand" >/dev/null 2>&1                 && "$cand" -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >/dev/null 2>&1; then
+            echo "$cand"
+            return 0
+        fi
+    done
+    return 1
+}
+PYTHON="$(pick_python)" || { echo "FAIL python: не найден рабочий python 3.8+"; exit 1; }
+chars() { "$PYTHON" -c 'import sys; print(sys.stdin.read().strip()[: int(sys.argv[1])])' "$1"; }
 ok() { echo "OK $1${2:+: $2}"; }
 fail() { echo "FAIL $1${2:+: $2}"; failed=1; }
 expect_code() {
@@ -21,7 +32,7 @@ expect_text() {
     if grep -qF -- "$needle" "$file" 2>/dev/null; then ok "$name" "найдено «$needle»"; else fail "$name" "в $file нет «$needle»"; fi
 }
 
-(cd agents/strategist && python3 -m unittest discover -s tests -t . >"$work/unittest.log" 2>&1)
+(cd agents/strategist && "$PYTHON" -m unittest discover -s tests -t . >"$work/unittest.log" 2>&1)
 code=$?
 ran="$(grep -m1 '^Ran ' "$work/unittest.log")"
 if [ "$code" = 0 ]; then ok "unittest" "$ran, $(tail -n 1 "$work/unittest.log")"; else fail "unittest" "$ran; $(tail -n 3 "$work/unittest.log" | tr '\n' ' ') (см. $work/unittest.log)"; fi
@@ -59,6 +70,16 @@ STRATEGIST_INTERVAL=1 "$script" start >"$work/badcfg.out" 2>&1
 expect_code "bad_config_start_fails" 1 $?
 expect_text "bad_config_names_variable" "STRATEGIST_INTERVAL" "$work/badcfg.out"
 rm -f "$STRATEGIST_HOME/strategist.log"
+
+export STRATEGIST_OPENCODE_BIN="$root/agents/strategist/tests/fake_opencode.sh"
+export FAKE_STATE="$work/fake.state"
+STRATEGIST_BRAIN=opencode FAKE_TOOL=reject "$script" sandbox-check >"$work/sandbox-ok.out" 2>&1
+expect_code "sandbox_check_rejected" 0 $?
+expect_text "sandbox_check_rejected_text" "OK песочница" "$work/sandbox-ok.out"
+expect_text "sandbox_check_names_version" "fake-opencode 9.9.9" "$work/sandbox-ok.out"
+STRATEGIST_BRAIN=opencode FAKE_TOOL=executed "$script" sandbox-check >"$work/sandbox-bad.out" 2>&1
+expect_code "sandbox_check_executed_fails" 1 $?
+expect_text "sandbox_check_executed_text" "выполнился" "$work/sandbox-bad.out"
 
 "$script" start >"$work/start.out" 2>&1
 expect_code "start" 0 $? "$(head -n 1 "$work/start.out")"
