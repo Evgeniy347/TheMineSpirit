@@ -2,6 +2,7 @@
   "priorities": {
     "REPAIR_FENCE": 100,
     "REPAIR_BUILDING": 90,
+    "REPAIR_TOOL": 85,
     "EAT_TO_FULL": 80,
     "CAPTURE_ANIMAL": 75,
     "RESTOCK_FOOD": 70,

@@ -96,7 +96,8 @@ class BoardRulesTests {
     }
 
     private static int groupRank(BoardCase boardCase) {
-        if (boardCase == BoardCase.REPAIR_FENCE || boardCase == BoardCase.REPAIR_BUILDING) {
+        if (boardCase == BoardCase.REPAIR_FENCE || boardCase == BoardCase.REPAIR_BUILDING
+                || boardCase == BoardCase.REPAIR_TOOL) {
             return 0;
         }
         if (boardCase == BoardCase.EAT_TO_FULL) {

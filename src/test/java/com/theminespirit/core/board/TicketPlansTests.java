@@ -49,6 +49,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.COLLECT_DROPS, "collect_drops"),
             Map.entry(BoardCase.BUILD_HOUSE, "build_schematic"),
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
+            Map.entry(BoardCase.REPAIR_TOOL, "repair_tool"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
             Map.entry(BoardCase.CRAFTING_STATION, "craft"),
             Map.entry(BoardCase.CRAFT_ANVIL, "craft"),
@@ -424,6 +425,15 @@ class TicketPlansTests {
                     "Кейс " + boardCase + " обязан назвать предмет своего инструмента: по нему "
                             + "TransferWatch ищет ингредиенты и передачу");
         }
+    }
+
+    @Test
+    void plan_RepairTool_CarriesItem() {
+        ScriptCall repair = findCall(TicketPlans.plan(BoardCase.REPAIR_TOOL, fullTarget()), "repair_tool");
+
+        assertEquals("minecraft:white_bed", repair.params().get("item"),
+                "План ремонта инструмента обязан нести в repair_tool тот же предмет, что задание доски: "
+                        + "без имени скрипт не знает, какой изношенный предмет чинить");
     }
 
     @Test

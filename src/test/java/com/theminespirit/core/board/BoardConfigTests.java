@@ -19,6 +19,7 @@ class BoardConfigTests {
                 Map.entry("EAT_TO_FULL", 80),
                 Map.entry("CAPTURE_ANIMAL", 75),
                 Map.entry("RESTOCK_FOOD", 70),
+                Map.entry("REPAIR_TOOL", 85),
                 Map.entry("BUILD_PEN", 65),
                 Map.entry("LURE_ANIMAL", 65),
                 Map.entry("DISMANTLE_SHELTER", 65),

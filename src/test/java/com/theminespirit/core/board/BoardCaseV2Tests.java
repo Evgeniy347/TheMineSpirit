@@ -21,13 +21,13 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsThirtyNine() {
-        assertEquals(39, BoardCase.values().length,
-                "Кейсов доски — 39: 32 из v2/37Б (CRAFT_TOOLS заменён семью кейсами набора "
+    void cases_TotalCount_IsForty() {
+        assertEquals(40, BoardCase.values().length,
+                "Кейсов доски — 40: 32 из v2/37Б (CRAFT_TOOLS заменён семью кейсами набора "
                         + "инструментов, плюс COLLECT_DROPS и TRANSFER_ITEM), пять кейсов чеклиста 39: "
                         + "CRAFT_SHEARS, SHEAR_SHEEP, HUNT_WILD_SHEEP, WEAVE_WOOL, CRAFT_BED, "
-                        + "и два кейса кузнечества: CRAFT_ANVIL, CRAFT_SMITHING_TABLE. Новый кейс "
-                        + "без приоритета, гейта и плана роняет сортировку выдачи");
+                        + "два кейса кузнечества (CRAFT_ANVIL, CRAFT_SMITHING_TABLE) и REPAIR_TOOL. "
+                        + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 
     @Test
@@ -110,6 +110,7 @@ class BoardCaseV2Tests {
                 .withScheme("pen")
                 .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
                 .withSupply("bread", 1)
+                .withCraft("minecraft:iron_pickaxe", 1)
                 .withTransfer(UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
                         UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1);
     }

@@ -100,6 +100,7 @@ public final class TicketPlans {
             case CLEAR_GROUNDS -> clearGrounds(target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
+            case REPAIR_TOOL -> repairTool(target);
             case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
@@ -277,6 +278,14 @@ public final class TicketPlans {
     private static TaskNode repairBuilding(TicketTarget target) {
         String scheme = target.schemeFile() == null ? "repair" : target.schemeFile();
         return sequence(gotoTarget(target), schematic(scheme, target));
+    }
+
+    private static TaskNode repairTool(TicketTarget target) {
+        if (target.craftItem() == null) {
+            throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
+                    + "чинит конкретный изношенный предмет, без имени чинить нечего");
+        }
+        return new ScriptCall("repair_tool", Map.of("item", target.craftItem()));
     }
 
     private static TaskNode breedAnimals(TicketTarget target) {
