@@ -45,6 +45,18 @@ class FishingNeedsTests {
     }
 
     @Test
+    void foodShare_EmptyStock_FullDeficit() {
+        assertEquals(1.0, FishingNeeds.foodShare(Map.of(), 1), 1e-9,
+                "Пустой склад при одной душе — полная нехватка еды: рыбалка становится постоянным занятием");
+    }
+
+    @Test
+    void foodShare_PlentyOfFood_NoDeficit() {
+        assertEquals(0.0, FishingNeeds.foodShare(Map.of("minecraft:cooked_beef", 4), 1), 1e-9,
+                "Сытый склад не гонит духа на рабочую точку: рыбалка идёт только по нужде");
+    }
+
+    @Test
     void wantsFishing_FoodShare_SplitsByZero() {
         assertFalse(FishingNeeds.wantsFishing(0.0),
                 "При достатке еды рыбалка как постоянное занятие не идёт: дух не ловит впрок");
