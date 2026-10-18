@@ -63,6 +63,12 @@ public final class MovementClimbGameTests {
         SpiritEntity spirit = MovementScene.spirit(helper, TOP);
         SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("climb", Map.of("down", true)),
                 MovementScene.SETTLE_TICKS);
+        double[] startY = {-1};
+        helper.onEachTick(() -> {
+            if (run.started() && startY[0] < 0) {
+                startY[0] = relativeY(helper, spirit);
+            }
+        });
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -70,6 +76,8 @@ public final class MovementClimbGameTests {
                     "спуск по лестнице обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(startY[0] >= LADDER_HEIGHT - 0.5,
+                    "спуск обязан начаться с верхней площадки y=" + LADDER_HEIGHT + ", а дух стартовал с y=" + startY[0]);
             double feetY = relativeY(helper, spirit);
             helper.assertTrue(feetY <= BASE.getY() + 0.5,
                     "дух обязан спуститься к низу колонны y=" + BASE.getY() + ", а оказался на y=" + feetY);
