@@ -49,11 +49,27 @@ public final class FortifyGameTests {
         return PlacedBlocksData.get(level).spiritSize();
     }
 
+    private static String fortifyReport(GameTestHelper helper, SpiritEntity builder, int before, BlockPos start) {
+        ServerLevel level = helper.getLevel();
+        int enemies = level.getEntitiesOfClass(Mob.class, builder.getBoundingBox().inflate(32.0)).size();
+        int stone = GameTestFixtures.countInInventory(builder.getInventory(), Items.STONE);
+        return "тик " + builder.tickCount + ", дух " + builder.blockPosition() + " из " + start
+                + ", задача " + builder.taskStatus().map(Enum::name).orElse("нет")
+                + " (" + builder.taskFailureReason().orElse("нет") + ")"
+                + ", скрипт " + builder.currentTaskScript().orElse("нет")
+                + ", камня " + stone
+                + ", врагов в 32 " + enemies
+                + ", блоков духа " + spiritBlocks(helper) + " (-" + before + ")"
+                + ", решений " + FortifyRegistry.get(level).decisionCalls()
+                + ", планов " + FortifyRegistry.get(level).planCalls();
+    }
+
     @GameTest(template = "arena", batch = "fortify_shelter", timeoutTicks = 300)
     public static void fortify_ManyEnemiesNoPassage_RaisesShelterWithoutBuryingBuilder(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         int before = spiritBlocks(helper);
         SpiritEntity builder = builderWithBlocks(helper, new BlockPos(5, 1, 5));
+        BlockPos start = builder.blockPosition();
         SpiritRun run = SpiritRun.launch(helper, builder, MovementScene.call("wait", Map.of("ticks", WAIT_TICKS)),
                 MovementScene.SETTLE_TICKS);
         threaten(helper, builder, FortifyTuning.FORTIFY_ENEMY_MIN);
@@ -65,7 +81,7 @@ public final class FortifyGameTests {
             int placed = spiritBlocks(helper) - before;
             helper.assertTrue(placed > 0,
                     "при " + FortifyTuning.FORTIFY_ENEMY_MIN + " врагах и без прохода интеллект обязан поднять укрытие, "
-                            + "поставлено блоков " + placed + ", решений " + FortifyRegistry.get(helper.getLevel()).decisionCalls());
+                            + "поставлено блоков " + placed + "; " + fortifyReport(helper, builder, before, start));
             BlockPos feet = builder.blockPosition();
             helper.assertTrue(!PlacedBlocksData.get(helper.getLevel()).isSpiritMarked(feet),
                     "строитель не замурован: его клетка не занята своим блоком");
@@ -85,6 +101,7 @@ public final class FortifyGameTests {
         }
         int before = spiritBlocks(helper);
         SpiritEntity builder = builderWithBlocks(helper, new BlockPos(5, 1, 5));
+        BlockPos start = builder.blockPosition();
         SpiritRun run = SpiritRun.launch(helper, builder, MovementScene.call("wait", Map.of("ticks", WAIT_TICKS)),
                 MovementScene.SETTLE_TICKS);
         threaten(helper, builder, FortifyTuning.FORTIFY_ENEMY_MIN);
@@ -96,7 +113,7 @@ public final class FortifyGameTests {
             int placed = spiritBlocks(helper) - before;
             helper.assertTrue(placed > 0,
                     "при проходе и " + FortifyTuning.FORTIFY_ENEMY_MIN + " врагах интеллект обязан запечатать проход, "
-                            + "поставлено блоков " + placed);
+                            + "поставлено блоков " + placed + "; " + fortifyReport(helper, builder, before, start));
             for (SpiritEntity spirit : spirits(helper, builder)) {
                 spirit.discard();
             }

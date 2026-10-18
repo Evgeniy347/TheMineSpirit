@@ -58,6 +58,11 @@ public final class FirstStepsRunner {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
+        // Поселение задаёт дом: без него homeOf подставил бы (0,64,0) и доска выдала бы first:*
+        // духу без дома (сцена REST получала чужое задание до своего POST).
+        if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
+            return;
+        }
         BlockCoord home = homeOf(spirits);
         SettlementFacts facts = buildFacts(level, home, stock);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
