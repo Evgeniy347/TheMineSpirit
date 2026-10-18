@@ -12,16 +12,20 @@ import static com.theminespirit.gametest.FullCycleScene.TREE;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.PlanParser;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -176,6 +180,34 @@ public final class FirstToolsGameTests {
                             + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
                             + ", печь " + furnace);
             assertCornerChests(helper, table);
+            cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "first_tools_corner", timeoutTicks = 400)
+    public static void firstTools_TableAlreadyStanding_FurnaceBesideIt(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        GameTestFixtures.holdDayTime(helper, DAY_TIME);
+        helper.setBlock(2, 1, 5, Blocks.CRAFTING_TABLE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 8));
+        spirit.getInventory().addItem(new ItemStack(Items.FURNACE));
+        spirit.getInventory().addItem(new ItemStack(Items.RAW_IRON, 2));
+        spirit.getInventory().addItem(new ItemStack(Items.COAL, 1));
+        speedUpFurnaces(helper);
+        SpiritRun run = SpiritRun.launch(helper, spirit,
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 1, "radius", 16)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            BlockPos table = helper.absolutePos(new BlockPos(2, 1, 5));
+            BlockPos furnace = findBlock(helper, Blocks.FURNACE);
+            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не переплавить железо");
+            helper.assertTrue(table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
+                    "печь обязана встать в рабочий угол рядом с верстаком (не дальше " + CORNER_DISTANCE
+                            + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
+                            + ", печь " + furnace);
+            assertCount(helper, spirit, Items.IRON_INGOT, 1, "слиток железа");
             cleanup(helper, spirit);
         });
     }
