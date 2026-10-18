@@ -51,7 +51,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class DataTables {
     /** Схемы, читаемые по имени потребителем: тела перечитываются на /reload вместе с остальными таблицами. */
-    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room");
+    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("house", "fence", "pen", "enchant_room",
+            "reach_wall", "state_demo");
 
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
