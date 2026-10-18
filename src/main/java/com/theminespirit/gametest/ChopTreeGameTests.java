@@ -557,7 +557,11 @@ public final class ChopTreeGameTests {
             int logsOnGround = GameTestFixtures.countInWorld(helper, Items.OAK_LOG);
             helper.assertTrue(logsInInventory + logsOnGround == 9,
                     "все 9 брёвен обязаны сохраниться в инвентаре или на земле: в инвентаре " + logsInInventory
-                            + ", на земле " + logsOnGround);
+                            + ", на земле " + logsOnGround
+                            + "; дух на " + spirit.blockPosition().toShortString()
+                            + ", тиков духа " + run.spiritTicks()
+                            + ", брёвен-блоков в мире " + countBlocksInWorld(helper, Blocks.OAK_LOG)
+                            + ", булыжника-блоков в мире " + countBlocksInWorld(helper, Blocks.COBBLESTONE));
             helper.assertTrue(logsOnGround == 0,
                     "дроп со столба и верха обязан быть подобран: на земле осталось " + logsOnGround
                             + "; несобранные брёвна означают, что дух бросил верх дерева");

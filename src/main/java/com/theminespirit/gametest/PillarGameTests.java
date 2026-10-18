@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.script.PillarUpParams;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
@@ -165,8 +166,7 @@ public final class PillarGameTests {
     }
 
     @GameTest(template = TEMPLATE, batch = "pillar_up_water", timeoutTicks = 100)
-    public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {
-        prepare(helper);
+    public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {        prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 1, SPIRIT_START.getZ(), Blocks.WATER);
         SpiritEntity spirit = spawnWithDirt(helper, 8);
         PillarUpScript script = new PillarUpScript(spirit, PillarUpParams.from(Map.of("height", 3)));
@@ -181,6 +181,46 @@ public final class PillarGameTests {
                 "причина обязана называть жидкость, фактически: " + reason);
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    // [флак] Клетка столба прижата к стволу: тело духа 0.6 шириной, сдвиг к стволу больше 0.2 задевает
+    // бревно на прыжке (CellCentering.TOLERANCE) и подъём встаёт (флак chop_tree_tall: «не поднялся на
+    // 5-й блок»). Столб обязан возвращать духа в центр клетки, а не оставлять его у ствола.
+    @GameTest(template = TEMPLATE, batch = "pillar_up_off_center", timeoutTicks = 300)
+    public static void pillarUp_StartedBesideTrunk_ReturnsToCellCenter(GameTestHelper helper) {
+        prepare(helper);
+        for (int y = 1; y <= 6; y++) {
+            helper.setBlock(SPIRIT_START.getX() + 1, y, SPIRIT_START.getZ(), Blocks.OAK_LOG);
+        }
+        SpiritEntity spirit = spawnWithDirt(helper, 8);
+        double centerX = SPIRIT_START.getX() + 0.5;
+        double centerZ = SPIRIT_START.getZ() + 0.5;
+        // Дух стартует сдвинутым к стволу — как после случайного сноса при подъёме.
+        spirit.moveTo(centerX + 0.3, spirit.getY(), centerZ);
+        PillarUpScript script = new PillarUpScript(spirit, PillarUpParams.from(Map.of("height", 4)));
+        ScriptStatus[] status = {ScriptStatus.RUNNING};
+        int[] ticks = {0};
+
+        helper.onEachTick(() -> {
+            if (status[0] != ScriptStatus.RUNNING || spirit.tickCount < SETTLE_TICKS) {
+                return;
+            }
+            ticks[0]++;
+            status[0] = script.tick();
+        });
+
+        helper.succeedWhen(() -> {
+            double dx = spirit.getX() - centerX;
+            double dz = spirit.getZ() - centerZ;
+            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED
+                            && dx * dx + dz * dz <= CellCentering.TOLERANCE * CellCentering.TOLERANCE,
+                    "дух, стартовавший у самого ствола, обязан вернуться в центр клетки столба и построить "
+                            + "его за " + ticks[0] + " тиков: сдвиг к стволу задевает бревно на прыжке "
+                            + "(флак chop_tree_tall), а он на " + spirit.position() + " при центре клетки "
+                            + centerX + "," + centerZ + ", статус " + status[0] + ", причина "
+                            + script.failureReason());
+            GameTestFixtures.finish(helper);
+        });
     }
 
     private static int countDirtInWorld(GameTestHelper helper) {

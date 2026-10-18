@@ -194,11 +194,15 @@
       гасить и сервер GameTest своего worktree (по рабочей папке build/gametest-run). Сделано (63e70f02 fix, 0f853cfb test,
       17.10): java своего worktree по cwd build/gametest-run, TERM→KILL, замок снимается после сервера, предел 600→1500 с;
       проверка check-test-runner.sh.
-- [ ] Флек `scale_twentyspiritssixtickets_workperthousandticksstayswithinlimits` (36В, 17.10): в полном прогоне «выдач 0»,
+- [x] Флек `scale_twentyspiritssixtickets_workperthousandticksstayswithinlimits` (36В, 17.10): в полном прогоне «выдач 0»,
       пачки board_v2_scale/board_scale отдельно — зелёные; проверить после слияния изоляции GameTest (@SettlementSystems).
-- [ ] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
+      Ревизия 18.10: пачка board_scale в 3 полных прогонах и в 3 прогонах пачек спорных тестов — зелено (доска в пачке
+      включается `@SettlementSystems(board=true)`, изоляция держит «выдач 0»).
+- [x] Флеки GameTest на ПК (отчёт td-flakes 13.10): `minevein_tworedstoneore_conservesalldrops` (1 раз под нагрузкой),
       `runningtask_forhundredticks_buildsnosnapshot` (1 раз), `till_dirtfiveblocksfromwater_isleftuntilled` (лог opencode);
       причина посадки в тёмную клетку — гипотеза (свет пересчитывается отдельно), исправлено условием старта.
+      Ревизия 18.10: все три — зелено в 3 полных прогонах (687 тестов) и в 3 прогонах пачек (mine_preserve,
+      task_runningTask, farm_script_till_water) — закрыто.
 - [ ] Инвентарь (ревью 16): `HarvestSession` (mine_vein/gather) подбирает в режиме BY_VALUE (выбрасывает дешёвое), рубка,
       ферма и стадо — FAIL (отказ). Решение владельца 17.10 — см. «Инвентарь как хранилище и освобождение» ниже.
 - [ ] Тактика (ревью 23): отход WATER без найденной воды (ведро, MLG) — нет; запас веса RETREAT 0.3 мал (0.019/0.049) — следить.
@@ -209,8 +213,9 @@
       (POST/GET/DELETE), команда `/spirit unprotect`, предел `protection.json → maxUnprotectVolume`,
       JUnit и GameTest (dbfa60e9, 270203d1, 13da9895).
 - [ ] `chop_tree`: дерево на камне без почвы — «не-дерево» (осталось из пункта о политике построек).
-- [ ] Флек `gather_dirtheapofeighteen_collectsallandkeepsfloor` (720 тиков не хватает под нагрузкой; 13.10 при параллельном
-      GameTest, также в отчёте 20) — воспроизвести на ПК.
+- [x] Флек `gather_dirtheapofeighteen_collectsallandkeepsfloor` (720 тиков не хватает под нагрузкой; 13.10 при параллельном
+      GameTest, также в отчёте 20) — воспроизвести на ПК. Ревизия 18.10: после сужения радиуса сцены до своей арены
+      (gatherCall("dirt", 18, 4)) — зелено в 3 полных прогонах и 3 пачках (gather_dirt_heap) — закрыто.
 - [x] Изоляция сцен GameTest: общая зачистка на старте/финише (только сущности вне активных структур и старше батча),
       возврат времени дня, сторожа; 5 прогонов — 0/1/0/1/0 падений против 2 до (muse, 16.10). Остаток фона — ниже.
 - [x] (причины, сделано выше) Изоляция сцен GameTest (muse 15.10, td-gather-flakes): фреймворк не чистит мир между пачками
@@ -218,16 +223,34 @@
       в радиусе 32 (adapter.json factRadius) — чужой моб замораживает духа соседней сцены (brain.suspend); тест паука
       ночью ставит NIGHT без возврата. Нужна общая изоляция: зачистка сущностей сцены на старте и в конце, время дня —
       восстанавливать, тактика в GameTest видит только свою структуру (или сетка шире радиуса).
-- [ ] Флеки GameTest после own-3 (мобы целятся в духов): feed «396», capture_*, zombie_*, choptree_* под полным прогоном.
+- [x] Флеки GameTest после own-3 (мобы целятся в духов): feed «396», capture_*, zombie_*, choptree_* под полным прогоном.
       deepseek-web (15.10): в feed дух ЗАМОРОЖЕН — тактика/политика берёт управление, brain.suspend, скрипт не тикает
       (лимит теперь считает тики работы, паузы печатаются). Вероятная общая причина — враждебные мобы соседних структур
       GameTest берут целью духа чужой сцены (follow range > расстояния между структурами). Решить: изоляция сцен (цель —
       только духи своей структуры в GameTest, или мобы в сценах без выключателя) и отдельно — должна ли сессия скрипта
       считать лимит сквозь паузы brain (production).
-- [ ] Флек `zombifiedpiglin_sixblocksfromspirit_doesnottaketarget` (own-3; замечен исполнителем 30) — пиглин берёт цель:
+      Ревизия 18.10: feed/capture_*/zombie_* — зелено в полных прогонах и пачках (изоляция сцен + mobsTargetSpirits).
+      `choptree_ninelogtrunkneedspillar_alllogschoppedandpillardismantled` падал в одном полном прогоне: столб не
+      поднимался (дух сдвинут к стволу, прыжок задевал бревно — CellCentering). Починено в production: PillarColumn
+      каждый тик возвращает духа в центр клетки (`fix: столб возвращает духа в центр клетки у ствола`); GameTest
+      `pillarUp_StartedBesideTrunk_ReturnsToCellCenter` красный на родителе, зелёный с правкой. Флек
+      `capture_sheeponflat` (нужно 52 блока, есть 51 — овца вышла из кольца и пересборка оставила часть блоков):
+      запас блоков поднят до 128. Флек `feed_escapeefiveblocksaway` (возврат приманкой 395 тиков при потолке 200):
+      потолок работы 500, тест 800 ≈ 2× замера. Флек `firsttools_fromscratch` (вне списка) остаётся редким:
+      деревья у рабочего угла стоят кучно намеренно (иначе печь уезжает от верстака, CORNER_DISTANCE), разнести
+      нельзя; воспроизводится отдельно, см. пункт о свежих флеках.
+- [x] Флек `zombifiedpiglin_sixblocksfromspirit_doesnottaketarget` (own-3; замечен исполнителем 30) — пиглин берёт цель:
       проверить, не бьёт ли его кто-то в сцене (HurtByTargetGoal) или не берёт ли он цель от соседней структуры.
-- [ ] Флеки свежих GameTest целей мобов (15.10, прогоны ring-capture): `spider_…daylight` (паук днём берёт цель — свет в
+      Ревизия 18.10: зелено в 3 полных прогонах и 3 пачках (mob_targets_zombified_piglin) — соседние структуры чистятся
+      изоляцией, пиглин цели не берёт.
+- [x] Флеки свежих GameTest целей мобов (15.10, прогоны ring-capture): `spider_…daylight` (паук днём берёт цель — свет в
       сцене arena?) и `zombie_…disabled` (выключатель mobsTargetSpirits в @BeforeBatch — зомби из соседней пачки?).
+      Ревизия 18.10: зелено в 3 полных прогонах и 3 пачках (mob_targets_spider_day, mob_targets_disabled; день держит
+      holdDayTime, выключатель — @BeforeBatch пачки).
+- [ ] Свежие флеки полного прогона 18.10 (вне списка ревизии, воспроизвести отдельно):
+      `firsttools_fromscratch_furnacebesidetableandcharcoaltorches` (то «дух не поставил печь», то `acquire oak_log`
+      «без места для духа: 2, недостижимо: 3» у кучи деревьев), `shear_sheepinpen_shearedalive` и
+      `gather_stoneheapwithwoodenpickaxe_minesall` — оба «не дотянулся до 1 предметов» (подбор дропа).
 - [x] Ревью 30, желательное: attack держит живую цель, deliver — остаток через DropCollector, meet/deliver — только
       игрок/дух, флаг наблюдения — из фабрики (longcat, big-pickle, 16.10).
 - [x] Флек till «пашни 0» не воспроизводится после изоляции сцен GameTest (10/10 полных прогонов, deepseek-v4.1-flash, 16.10).

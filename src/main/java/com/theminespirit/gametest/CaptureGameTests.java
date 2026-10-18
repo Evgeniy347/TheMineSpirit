@@ -36,6 +36,12 @@ public final class CaptureGameTests {
     private static final BlockPos START = new BlockPos(1, 1, 1);
     private static final BlockPos FLOCK = new BlockPos(4, 1, 4);
     private static final String BATCH = "capture";
+    // Кольцо — около 52 блоков. Если животное выйдет из кольца, кольцо пересобирается вокруг нового
+    // центра, а часть уже поставленных блоков остаётся в мире и в новое кольцо не входит. Запас 128
+    // переживает одну-две пересборки (флак capture_sheeponflat: «нужно 52, уже поставлено 0, есть 51»).
+    private static final int RING_MATERIAL = 128;
+    // [флак] кольцо пересобирается за уходящей овцой (до нескольких раз): запас 2× к замеру ~400
+    private static final int CAPTURE_TIMEOUT_TICKS = 800;
 
     private CaptureGameTests() {
     }
@@ -50,12 +56,12 @@ public final class CaptureGameTests {
         SpiritConfig.setMobsTargetSpirits(true);
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepOnFlat_CaughtAndHeld200Ticks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.spawn(EntityType.SHEEP, FLOCK);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
@@ -91,7 +97,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepByStep_RingThreeHighAndCaught(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -102,7 +108,7 @@ public final class CaptureGameTests {
         }
         Sheep sheep = helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
         sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
@@ -131,13 +137,13 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
     public static void capture_SheepWalkingAway_BlockedAndCaught(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         Sheep sheep = helper.spawn(EntityType.SHEEP, FLOCK);
         sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);

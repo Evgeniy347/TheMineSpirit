@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +90,7 @@ final class PillarColumn {
         if (danger != null) {
             return fail(danger);
         }
+        keepCentered();
         if (spirit.getY() >= target.getY() + PILLAR_CLEARANCE) {
             stallTicks = 0;
             return place(target);
@@ -98,12 +100,32 @@ final class PillarColumn {
         // pillar_up в RUNNING вечно (флак chop_tree_tall 17.10).
         if (++stallTicks > MAX_STALL_TICKS) {
             return fail("дух не поднялся на " + (target.getY() - baseY + 1) + "-й блок за " + MAX_STALL_TICKS
-                    + " тиков: вероятно, потолок над столбом");
+                    + " тиков (дух на " + spirit.blockPosition().toShortString() + ", y=" + spirit.getY()
+                    + ", на земле " + spirit.onGround() + ", столб от " + baseX + "," + baseY + "," + baseZ
+                    + ", построено " + built + "): вероятно, потолок над столбом");
         }
         if (spirit.onGround()) {
             spirit.getJumpControl().jump();
         }
         return Outcome.RUNNING;
+    }
+
+    /**
+     * Клетка столба прижата к стволу, а тело духа 0.6 шириной: сдвиг к стволу больше
+     * {@link CellCentering#TOLERANCE} задевает бревно на прыжке, и подъём встаёт
+     * (флак chop_tree_tall: «не поднялся на 5-й блок за 200 тиков»). Каждый тик возвращаем духа
+     * в середину клетки столба, а не надеемся на разовый прицел перед стройкой.
+     */
+    private void keepCentered() {
+        double centerX = baseX + 0.5;
+        double centerZ = baseZ + 0.5;
+        double dx = spirit.getX() - centerX;
+        double dz = spirit.getZ() - centerZ;
+        if (dx * dx + dz * dz <= CellCentering.TOLERANCE * CellCentering.TOLERANCE) {
+            return;
+        }
+        spirit.getNavigation().stop();
+        spirit.getMoveControl().setWantedPosition(centerX, spirit.getY(), centerZ, 1.0);
     }
 
     List<BlockCoord> cells() {
