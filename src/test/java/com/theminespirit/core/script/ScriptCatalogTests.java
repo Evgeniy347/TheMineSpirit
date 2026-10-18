@@ -9,6 +9,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.PickaxeTiers;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,25 @@ class ScriptCatalogTests {
         assertTrue(error.getMessage().contains("scan"),
                 "Сообщение об ошибке обязано называть дублирующийся id 'scan': по нему правят каталог. "
                         + "Фактическое сообщение: " + error.getMessage());
+    }
+
+    @Test
+    void defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers() {
+        for (ScriptSpec spec : CoreScripts.defaultCatalog().all()) {
+            List<String> names = spec.params().stream().map(ParamSpec::name).toList();
+            for (ScriptRequirement requirement : spec.requires()) {
+                assertTrue(names.contains(requirement.param()),
+                        "Требование скрипта " + spec.id() + " ссылается на параметр '" + requirement.param()
+                                + "', которого нет в каталоге: проверка плана не найдёт значение и пропустит шаг");
+                requirement.tiers().values().forEach(tier -> assertTrue(
+                        tier >= ScriptRequirement.MIN_TIER && tier <= ScriptRequirement.MAX_TIER,
+                        "Уровень инструмента " + tier + " в требовании скрипта " + spec.id()
+                                + " вне диапазона " + ScriptRequirement.MIN_TIER + ".." + ScriptRequirement.MAX_TIER));
+            }
+        }
+        assertEquals(OreKind.names(), List.copyOf(PickaxeTiers.oreTiers().keySet()),
+                "Таблица уровней руды обязана покрывать ровно виды OreKind в их порядке: пропущенная руда "
+                        + "получала бы уровень по умолчанию, лишняя — никогда не срабатывала");
     }
 
     @Test

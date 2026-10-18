@@ -2,6 +2,7 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.script.ParamSpec;
 import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.ScriptRequirement;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,8 +39,19 @@ public final class CapabilitiesJson {
         script.put("summary", spec.summary());
         script.put("params", params);
         script.put("preconditions", spec.preconditions());
+        script.put("requires", spec.requires().stream().map(CapabilitiesJson::requirement).toList());
         script.put("effects", spec.effects());
         return script;
+    }
+
+    private static Map<String, Object> requirement(ScriptRequirement requirement) {
+        Map<String, Object> json = new LinkedHashMap<>();
+        json.put("kind", requirement.kind());
+        json.put("tool", requirement.tool());
+        json.put("param", requirement.param());
+        json.put("tiers", requirement.tiers());
+        json.put("fallback", requirement.fallback());
+        return json;
     }
 
     private static Map<String, Object> schema(ParamSpec param) {
