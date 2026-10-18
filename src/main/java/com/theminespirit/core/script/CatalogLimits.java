@@ -159,6 +159,10 @@ public final class CatalogLimits {
     public static final int LIGHT_RADIUS_MAX = 32;
     public static final int LIGHT_RADIUS_DEFAULT = 16;
 
+    // Мост через провал или воду: сколько блоков ставится подряд (bridge.length)
+    public static final int BRIDGE_LENGTH_MIN = 1;
+    public static final int BRIDGE_LENGTH_MAX = 64;
+
     // Лагерь похода: радиус спокойной зоны скриптов set_camp/clear_camp
     public static final int CAMP_RADIUS_MIN = 1;
     public static final int CAMP_RADIUS_MAX = 32;

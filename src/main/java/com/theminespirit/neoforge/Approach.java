@@ -147,7 +147,7 @@ public final class Approach {
     }
 
     private String deadEndRefusal(Vec3 target) {
-        if (targetEntity != null || mode == PathMode.CAREFUL) {
+        if (targetEntity != null || mode == PathMode.CAREFUL || mode == PathMode.SWIM) {
             return null;
         }
         if (spirit.position().distanceTo(target) > GotoTuning.EARLY_REFUSAL_RANGE) {
