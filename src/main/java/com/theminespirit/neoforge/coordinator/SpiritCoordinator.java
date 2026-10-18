@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.Coordinator;
 import com.theminespirit.core.coordinator.CoordinatorPlan;
 import com.theminespirit.core.coordinator.CoordinatorState;
 import com.theminespirit.core.coordinator.CoordinatorTuning;
+import com.theminespirit.core.coordinator.HelpCall;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
@@ -16,7 +17,9 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.DirectiveOwner;
 import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.SafePointChoice;
+import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -47,6 +50,7 @@ public final class SpiritCoordinator {
     private final DefenseService defense = new DefenseService();
     private final Map<UUID, CombatDirective> lastDirectives = new HashMap<>();
     private final Map<UUID, String> lastForced = new HashMap<>();
+    private final Set<UUID> lastUrgent = new HashSet<>();
     private long lastSnapshotTick = -1;
     private int entityQueries;
     private int planCalls;
@@ -77,12 +81,14 @@ public final class SpiritCoordinator {
         entityQueries += CoordinatorTuning.SNAPSHOT_GROUP_QUERIES;
         planCalls++;
         List<SpiritSnapshot> snapshots = new ArrayList<>();
+        List<HelpCall> helpCalls = new ArrayList<>();
         for (SpiritEntity spirit : members) {
             if (spirit.isRemoved()) {
                 reservations.releaseAll(spirit.getUUID());
                 continue;
             }
             snapshots.add(SpiritSnapshotReader.read(spirit, tick));
+            spirit.tactics().helpCall().ifPresent(helpCalls::add);
             entityQueries += CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
         }
         expireStale(snapshots, tick);
@@ -90,14 +96,15 @@ public final class SpiritCoordinator {
         Optional<Point> defendedPoint = defendedPoint(members);
         double radius = defendedPoint.isPresent() ? CoordinatorTuning.DEFENSE_RADIUS : 0;
         CoordinatorState state = new CoordinatorState(defendedPoint, radius, snapshots, tick);
-        CoordinatorPlan plan = coordinator.plan(state, reservations, tick);
+        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
+        CoordinatorPlan plan = coordinator.plan(state, reservations, tick, helpCalls, tuning.helpRadius());
         lastState = state;
         Map<UUID, DefenseIssuedOrder> overlay = defense.tick(level, members, state, tick);
         Map<UUID, Point> posts = new HashMap<>();
         for (var assignment : defense.lastPlan().posts()) {
             posts.put(assignment.defender(), assignment.post());
         }
-        applyPlan(plan, overlay, posts, tick);
+        applyPlan(plan, overlay, posts, helpCalls, tick);
         FortifyRegistry.get(level).tick(state, members, tick);
         intellect.tick(level, members, snapshots, defendedPoint, reservations, tick);
     }
@@ -144,6 +151,7 @@ public final class SpiritCoordinator {
         for (UUID id : toRelease) {
             reservations.releaseAll(id);
             lastDirectives.remove(id);
+            lastUrgent.remove(id);
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
             if (spirit != null) {
                 spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
@@ -192,15 +200,26 @@ public final class SpiritCoordinator {
     }
 
     private void applyPlan(CoordinatorPlan plan, Map<UUID, DefenseIssuedOrder> overlay, Map<UUID, Point> posts,
-            long now) {
+            List<HelpCall> helpCalls, long now) {
         Map<UUID, CombatDirective> directives = new HashMap<>(CoordinatorDirectives.of(plan));
+        Set<UUID> callers = new HashSet<>();
+        for (HelpCall call : helpCalls) {
+            callers.add(call.caller());
+        }
+        directives.keySet().removeAll(callers);
         Set<UUID> assisted = new HashSet<>();
         for (AssistOrder assist : plan.assists()) {
             assisted.add(assist.helper());
         }
+        Set<UUID> urgent = new HashSet<>();
+        for (AssistOrder assist : plan.assists()) {
+            if (assist.urgent()) {
+                urgent.add(assist.helper());
+            }
+        }
         Map<UUID, String> forced = new HashMap<>();
         for (Map.Entry<UUID, DefenseIssuedOrder> entry : overlay.entrySet()) {
-            if (assisted.contains(entry.getKey())) {
+            if (assisted.contains(entry.getKey()) || callers.contains(entry.getKey())) {
                 continue;
             }
             directives.put(entry.getKey(), entry.getValue().directive());
@@ -214,12 +233,38 @@ public final class SpiritCoordinator {
             if (spirit == null || spirit.isRemoved()) {
                 continue;
             }
+            if (lastUrgent.contains(id) && !urgent.contains(id)) {
+                lastUrgent.remove(id);
+                lastDirectives.remove(id);
+                lastForced.remove(id);
+                spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
+                spirit.tactics().clearGuardZone();
+                spirit.tactics().setWard(null);
+                if (spirit.currentTaskScript().isPresent()) {
+                    continue;
+                }
+            }
+            if (urgent.contains(id)) {
+                CombatDirective last = lastDirectives.get(id);
+                if (last == null || !last.equals(d) || !Objects.equals(lastForced.get(id), forced.get(id))) {
+                    applyDirectiveToSpirit(spirit, d, forced.get(id), posts.get(id));
+                    lastDirectives.put(id, d);
+                    lastUrgent.add(id);
+                    if (forced.get(id) != null) {
+                        lastForced.put(id, forced.get(id));
+                    } else {
+                        lastForced.remove(id);
+                    }
+                }
+                continue;
+            }
             if (spirit.currentTaskScript().isPresent()) {
                 CombatDirective ours = lastDirectives.get(id);
                 CombatDirective current = spirit.tactics().activeDirective().orElse(null);
                 if (ours != null && ours.mode() == CombatMode.AGGRESSIVE && ours.equals(current)) {
                     lastDirectives.remove(id);
                     lastForced.remove(id);
+                    lastUrgent.remove(id);
                     spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
                     spirit.tactics().setWard(null);
                     Point post = posts.get(id);
@@ -233,12 +278,18 @@ public final class SpiritCoordinator {
                 }
                 lastDirectives.remove(id);
                 lastForced.remove(id);
+                lastUrgent.remove(id);
                 continue;
             }
             CombatDirective last = lastDirectives.get(id);
             if (last == null || !last.equals(d) || !Objects.equals(lastForced.get(id), forced.get(id))) {
                 applyDirectiveToSpirit(spirit, d, forced.get(id), posts.get(id));
                 lastDirectives.put(id, d);
+                if (urgent.contains(id)) {
+                    lastUrgent.add(id);
+                } else {
+                    lastUrgent.remove(id);
+                }
                 if (forced.get(id) != null) {
                     lastForced.put(id, forced.get(id));
                 } else {
@@ -252,6 +303,7 @@ public final class SpiritCoordinator {
             }
             CombatDirective last = lastDirectives.remove(id);
             lastForced.remove(id);
+            lastUrgent.remove(id);
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
             if (spirit == null || spirit.isRemoved()) {
                 continue;

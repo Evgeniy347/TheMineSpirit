@@ -23,7 +23,7 @@ class RetreatTrackerProperties {
     @Provide
     Arbitrary<RetreatMethod> movingMethods() {
         return Arbitraries.of(RetreatMethod.HOME, RetreatMethod.COVER, RetreatMethod.KITE, RetreatMethod.WATER,
-                RetreatMethod.BARRICADE, RetreatMethod.PILLAR, RetreatMethod.AWAY);
+                RetreatMethod.BARRICADE, RetreatMethod.PILLAR, RetreatMethod.RALLY, RetreatMethod.AWAY);
     }
 
     @Provide

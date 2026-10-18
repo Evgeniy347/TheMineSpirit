@@ -10,13 +10,18 @@ final class RetreatParser {
     }
 
     static RetreatTable parse(ConfigNode node, Function<ConfigNode, String> claimId) {
-        node.fields(new String[] {"methods", "callHelp"});
+        node.fields(new String[] {"methods", "callHelp", "rally"});
         List<RetreatEntry> entries = new ArrayList<>();
         for (ConfigNode item : node.get("methods").nonEmptyItems()) {
             entries.add(entry(item, claimId));
         }
         ConfigNode help = node.get("callHelp").fields(new String[] {"when"});
-        return new RetreatTable(entries, early(help.get("when")));
+        ConfigNode rally = node.get("rally").fields(new String[] {"rallyRadius", "callRadius", "callMinEnemies",
+                "callIntervalTicks", "helpRadius"});
+        RallyTuning tuning = rally.build(() -> new RallyTuning(rally.get("rallyRadius").integer(),
+                rally.get("callRadius").integer(), rally.get("callMinEnemies").integer(),
+                rally.get("callIntervalTicks").integer(), rally.get("helpRadius").integer()));
+        return new RetreatTable(entries, early(help.get("when")), tuning);
     }
 
     private static RetreatEntry entry(ConfigNode item, Function<ConfigNode, String> claimId) {

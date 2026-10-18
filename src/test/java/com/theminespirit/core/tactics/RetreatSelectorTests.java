@@ -63,6 +63,8 @@ class RetreatSelectorTests {
                 row("стрелок: близкий дом всё же лучше укрытия", world().enemy("skeleton", 12).home(20).cover(6)
                         .build(), RetreatMethod.HOME, "retreat_home"),
                 row("ничего нет, кроме бега прочь", world().enemy("zombie", 5).build(), RetreatMethod.AWAY, "retreat_away"),
+                row("союзник рядом: сбор к нему", world().enemy("zombie", 5).help(true).build(), RetreatMethod.RALLY,
+                        "retreat_rally"),
                 row("враг быстрее и ничего нет: бежать бессмысленно", world().enemy("zombie", 5).speed(0.2).build(),
                         RetreatMethod.NONE, ""));
     }
@@ -109,6 +111,17 @@ class RetreatSelectorTests {
                 .evaluate(Assessments.facts(world().enemy("zombie", 5).speed(0.2).build()));
 
         assertEquals(0, options.routes(), "Без способов отхода routes = 0: жёсткое правило «отступать некуда» опирается на это число");
+    }
+
+    @Test
+    void choice_RallyAvailable_ChosenEvenWhenAnotherRouteHasHigherUtility() {
+        Situation situation = world().enemy("zombie", 5).home(5).help(true).build();
+
+        RetreatChoice choice = selector(TacticsConfig.loadDefault()).evaluate(Assessments.facts(situation)).choice();
+
+        assertEquals(RetreatMethod.RALLY, choice.method(),
+                "При доступном сборе дух идёт к союзнику, а не в дом с большей полезностью: зов сильнее укрытия, "
+                        + "иначе товарищ остаётся без помощи");
     }
 
     @Test

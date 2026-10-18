@@ -29,13 +29,22 @@ class TacticsConfigTests {
     void loadDefault_ShippedFiles_ParseWithAllSections() {
         TacticsConfig config = TacticsConfig.loadDefault();
 
-        assertEquals(List.of(13, 7, 6, 9, 8, 16, 5),
+        assertEquals(List.of(13, 7, 6, 9, 9, 16, 5),
                 List.of(config.rules().hard().size(), config.rules().actions().size(),
                         config.rules().modeTransitions().size(), config.rules().states().size(),
                         config.rules().retreat().entries().size(), config.weights().matrix().size(),
                         config.modes().params().size()),
-                "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 8 способов отхода, "
+                "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 9 способов отхода, "
                         + "16 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/TACTICS.md");
+    }
+
+    @Test
+    void loadDefault_RallyTuning_MatchesRulesFile() {
+        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
+
+        assertEquals(new RallyTuning(16, 24, 2, 200, 32), tuning,
+                "Числа сбора, зова и отклика читаются из rules.json → retreat.rally: радиус сбора 16, зов слышен "
+                        + "в 24, от врагов 2, не чаще 200 тиков, помощь в 32");
     }
 
     @Test

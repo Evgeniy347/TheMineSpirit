@@ -16,16 +16,17 @@ public final class RetreatPlanner {
     public static final double SPOT_ARRIVAL = 0.5;
     public static final double WATER_ARRIVAL = 1.2;
     public static final double RUN_ARRIVAL = 1.5;
+    public static final double RALLY_ARRIVAL = 1.5;
     public static final int PILLAR_HEIGHT = 3;
     public static final int WALL_HALF_WIDTH = 1;
     public static final int WALL_HEIGHT = 2;
 
     public record Input(Point self, BlockCoord feet, List<EnemyFact> enemies, EnvReading env, Optional<Point> home,
-            int blocks, boolean waterBucket) {
+            int blocks, Optional<Point> rally, boolean waterBucket) {
         public Input {
-            if (self == null || feet == null || enemies == null || env == null || home == null) {
-                throw new IllegalArgumentException("RetreatPlanner.Input: self/feet/enemies/env/home = null; "
-                        + "план отхода строится по снятым фактам, отсутствие дома — Optional.empty()");
+            if (self == null || feet == null || enemies == null || env == null || home == null || rally == null) {
+                throw new IllegalArgumentException("RetreatPlanner.Input: self/feet/enemies/env/home/rally = null; "
+                        + "план отхода строится по снятым фактам, отсутствие дома или точки сбора — Optional.empty()");
             }
             if (blocks < 0) {
                 throw new IllegalArgumentException("RetreatPlanner.Input.blocks = " + blocks
@@ -48,6 +49,7 @@ public final class RetreatPlanner {
             case COVER -> input.env().cover().map(cell -> new RetreatPlan.Walk(center(cell), SPOT_ARRIVAL, false));
             case WATER -> water(input);
             case KITE -> Optional.of(new RetreatPlan.Walk(awayPoint(input, KITE_DISTANCE), RUN_ARRIVAL, true));
+            case RALLY -> input.rally().map(point -> new RetreatPlan.Walk(point, RALLY_ARRIVAL, false));
             case AWAY -> Optional.of(new RetreatPlan.Walk(awayPoint(input, AWAY_DISTANCE), RUN_ARRIVAL, false));
             case BARRICADE -> barricade(input);
             case PILLAR -> input.blocks() < 1 ? Optional.empty()
