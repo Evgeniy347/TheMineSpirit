@@ -36,6 +36,10 @@ public final class CaptureGameTests {
     private static final BlockPos START = new BlockPos(1, 1, 1);
     private static final BlockPos FLOCK = new BlockPos(4, 1, 4);
     private static final String BATCH = "capture";
+    // Кольцо — около 52 блоков. Если животное выйдет из кольца, кольцо пересобирается вокруг нового
+    // центра, а часть уже поставленных блоков остаётся в мире и в новое кольцо не входит. Запас 128
+    // переживает одну-две пересборки (флак capture_sheeponflat: «нужно 52, уже поставлено 0, есть 51»).
+    private static final int RING_MATERIAL = 128;
 
     private CaptureGameTests() {
     }
@@ -55,7 +59,7 @@ public final class CaptureGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.spawn(EntityType.SHEEP, FLOCK);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
@@ -102,7 +106,7 @@ public final class CaptureGameTests {
         }
         Sheep sheep = helper.spawn(EntityType.SHEEP, new BlockPos(4, 2, 4));
         sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
@@ -137,7 +141,7 @@ public final class CaptureGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         Sheep sheep = helper.spawn(EntityType.SHEEP, FLOCK);
         sheep.setNoAi(true);
-        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, 64));
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.DIRT, RING_MATERIAL));
         CaptureProbe probe = CaptureProbe.attach(helper, spirit);
         SpiritRun run = SpiritRun.launch(helper, spirit,
                 new ScriptCall("capture", Map.of("species", "sheep", "radius", 8)), SETTLE_TICKS);
