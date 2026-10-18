@@ -380,10 +380,13 @@ public final class CoordinatorGameTests {
     @GameTest(template = "arena", batch = "coordinator_work_free_tree", timeoutTicks = 400)
     public static void workFree_TwoSpiritsTwoTrees_EachReservesOwnTree(GameTestHelper helper) {
         TacticsScene.prepare(helper);
-        helper.setBlock(2, 0, 3, Blocks.DIRT);
-        helper.setBlock(8, 0, 7, Blocks.DIRT);
-        ChopTreeGameTests.buildBirchTree(helper, 2, 3, 5);
-        ChopTreeGameTests.buildBirchTree(helper, 8, 7, 5);
+        // Деревья разнесены дальше радиуса подбора дропа (ChopTuning.COLLECT_RADIUS = 6) по обеим осям:
+        // у соседних деревьев кубические области подбора пересекаются, и дух забирает брёвна соседа —
+        // рубка (5 брёвен своего дерева) делится 4/6 под таймингом полного прогона, хотя брони корректны.
+        helper.setBlock(1, 0, 1, Blocks.DIRT);
+        helper.setBlock(9, 0, 9, Blocks.DIRT);
+        ChopTreeGameTests.buildBirchTree(helper, 1, 1, 5);
+        ChopTreeGameTests.buildBirchTree(helper, 9, 9, 5);
         SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(2, 1, 1));
         SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(8, 1, 9));
         first.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
@@ -411,9 +414,11 @@ public final class CoordinatorGameTests {
                     "Оба духа доводят свою рубку до успеха: статусы "
                             + first.taskStatus().map(RunStatus::name).orElse("нет") + " и "
                             + second.taskStatus().map(RunStatus::name).orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(first.getInventory(), Items.BIRCH_LOG) == 5
-                            && GameTestFixtures.countInInventory(second.getInventory(), Items.BIRCH_LOG) == 5,
-                    "Каждый срубил своё дерево (по 5 брёвен): иначе двое делили одно, а второе осталось стоять");
+            int firstLogs = GameTestFixtures.countInInventory(first.getInventory(), Items.BIRCH_LOG);
+            int secondLogs = GameTestFixtures.countInInventory(second.getInventory(), Items.BIRCH_LOG);
+            helper.assertTrue(firstLogs == 5 && secondLogs == 5,
+                    "Каждый срубил своё дерево (по 5 брёвен): иначе двое делили одно, а второе осталось стоять; "
+                            + "фактически " + firstLogs + " и " + secondLogs);
             TacticsScene.finish(helper, first);
             second.discard();
         });
