@@ -38,6 +38,7 @@ public final class BoardSources {
         Set<String> live = new HashSet<>();
         FirstStepsRunner.tick(level, service, spirits, stock, now);
         EvergreenWatch.tick(level, service, spirits, now);
+        FoodWatch.tick(level, service, spirits, stock, now);
         PenBuild.tick(level, service, spirits, now);
         MineLevels.tick(level, service, spirits, now);
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {

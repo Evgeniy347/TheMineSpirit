@@ -75,6 +75,21 @@ public final class HungerState {
         return !bestFoodId().isEmpty();
     }
 
+    public double personalNutrition() {
+        double total = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (stack.isEmpty() || stack.get(DataComponents.FOOD) == null) {
+                continue;
+            }
+            Double satiety = FOOD_TABLE.nutrition().get(keyOf(stack));
+            if (satiety != null) {
+                total += satiety * stack.getCount();
+            }
+        }
+        return total;
+    }
+
     public String bestFoodId() {
         return FoodNorm.best(FOOD_TABLE, foodStock());
     }

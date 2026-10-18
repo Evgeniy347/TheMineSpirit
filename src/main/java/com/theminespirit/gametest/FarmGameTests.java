@@ -905,9 +905,38 @@ public final class FarmGameTests {
                             && GameTestFixtures.countInInventory(container, Items.DIRT) > 0,
                     "лишняя земля обязана уехать в сундук: иначе дух не освободил место и бросил сбор");
             int wheat = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT)
-                    + GameTestFixtures.countInWorld(helper, Items.WHEAT);
+                    + GameTestFixtures.countInWorld(helper, Items.WHEAT)
+                    + (chest instanceof Container container ? GameTestFixtures.countInInventory(container, Items.WHEAT) : 0);
             helper.assertTrue(wheat >= 2,
-                    "после сдачи урожай обеих клеток обязан собраться (в инвентаре или в мире), фактически " + wheat);
+                    "после сдачи урожай обеих клеток обязан собраться (в инвентаре, в мире или в сундуке), фактически "
+                            + wheat);
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "farm_deposit_harvest", timeoutTicks = 400)
+    public static void harvestCrop_NearChest_DepositsHarvestAndKeepsSeedReserve(GameTestHelper helper) {
+        arenaFloor(helper);
+        helper.setBlock(WATER, Blocks.WATER);
+        List<BlockPos> cells = bed();
+        for (BlockPos cell : cells) {
+            setCrop(helper, cell, CropKind.WHEAT, 7);
+        }
+        helper.setBlock(new BlockPos(7, 1, 7), Blocks.CHEST);
+        SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 24));
+        SpiritRun run = launch(helper, spirit, harvestCall(CropKind.WHEAT, false));
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            assertSucceeded(helper, spirit, "зрелый урожай обязан собраться и уехать на склад");
+            var chest = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(7, 1, 7)));
+            helper.assertTrue(chest instanceof Container container
+                            && GameTestFixtures.countInInventory(container, Items.WHEAT) >= cells.size(),
+                    "урожай обязан уехать в сундук склада: иначе фермер копит зерно у себя вместо сдачи");
+            int seeds = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS);
+            helper.assertTrue(seeds == 16,
+                    "запас семян на посадку (16) обязан остаться у фермы, а излишек уехать на склад, фактически "
+                            + seeds);
             GameTestFixtures.finish(helper);
         });
     }

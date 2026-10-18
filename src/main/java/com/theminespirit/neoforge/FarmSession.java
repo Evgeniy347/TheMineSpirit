@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
@@ -14,6 +15,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,8 +37,11 @@ public final class FarmSession {
         ACT,
         BREAK,
         COLLECT,
-        REPLANT
+        REPLANT,
+        DEPOSIT
     }
+
+    private static final String FARM_ACTIVITY = "farming";
 
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 3;
@@ -88,6 +93,8 @@ public final class FarmSession {
     private int actionTick = -1;
     private int actionsThisTick;
     private int maxActionsPerTick;
+    private UnloadScript deposit;
+    private boolean depositTried;
 
     private FarmSession(SpiritEntity spirit, FarmJob job, CropKind crop, int count, int radius, boolean replant) {
         this.spirit = spirit;
@@ -147,6 +154,7 @@ public final class FarmSession {
             case BREAK -> breakTick();
             case COLLECT -> collectTick();
             case REPLANT -> replantTick();
+            case DEPOSIT -> depositTick();
         }
         return outcome;
     }
@@ -156,6 +164,9 @@ public final class FarmSession {
         approach.cancel();
         if (collector != null) {
             collector.cancel();
+        }
+        if (deposit != null) {
+            deposit.cancel();
         }
     }
 
@@ -542,9 +553,32 @@ private Outcome refuseWithoutSupplies() {
         FarmTally tally = new FarmTally(done, requested, ineligible + rejected, noStand, noSeeds, 0, dry, unreachable, radius);
         if (tally.outcome(job) instanceof FarmTally.Failed failed) {
             fail(failed.text());
+        } else if (job == FarmJob.HARVEST && done > 0 && !depositTried) {
+            startDeposit();
         } else {
             outcome = Outcome.SUCCEEDED;
         }
+    }
+
+    private void startDeposit() {
+        depositTried = true;
+        breaker.cancel();
+        approach.cancel();
+        if (collector != null) {
+            collector.cancel();
+            collector = null;
+        }
+        deposit = UnloadScript.reliefFor(spirit, -1, FARM_ACTIVITY);
+        state = State.DEPOSIT;
+    }
+
+    private void depositTick() {
+        ScriptStatus status = deposit.tick();
+        if (status == ScriptStatus.RUNNING) {
+            return;
+        }
+        deposit = null;
+        outcome = Outcome.SUCCEEDED;
     }
 
     private Outcome fail(String reason) {
