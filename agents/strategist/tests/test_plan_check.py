@@ -213,6 +213,34 @@ class PlanCheckTests(unittest.TestCase):
                 with self.assertRaises(CatalogError):
                     Catalog.from_capabilities(bad)
 
+    def test_catalog_RequiresMalformed_RaisesCatalogError(self):
+        base = {"id": "gather", "params": {"type": "object", "properties": {}, "required": []}}
+        for name, requires in (
+                ("не список", {}),
+                ("не объект", [5]),
+                ("чужой kind", [{"kind": "item", "tool": "pickaxe", "param": "block", "tiers": {}, "fallback": 0}]),
+                ("пустой инструмент", [{"kind": "tool", "tool": "", "param": "block", "tiers": {}, "fallback": 0}]),
+                ("уровень вне 1..4", [{"kind": "tool", "tool": "pickaxe", "param": "block",
+                                      "tiers": {"stone": 5}, "fallback": 0}]),
+                ("fallback вне 0..4", [{"kind": "tool", "tool": "pickaxe", "param": "block",
+                                       "tiers": {}, "fallback": 9}])):
+            with self.subTest(case=name):
+                with self.assertRaises(CatalogError, msg=f"требование каталога ({name}) обязано отвергаться"):
+                    Catalog.from_capabilities({"scripts": [{**base, "requires": requires}]})
+
+    def test_pickaxeTier_ComesFromCatalogNotBuiltinTable(self):
+        capabilities = default_capabilities()
+        for entry in capabilities["scripts"]:
+            if entry["id"] == "gather":
+                entry["requires"] = [{"kind": "tool", "tool": "pickaxe", "param": "block",
+                                      "tiers": {"stone": 3}, "fallback": 0}]
+        catalog = Catalog.from_capabilities(capabilities)
+        context = PlanContext((0, 64, 0), frozenset({"stone"}), frozenset({"stone_pickaxe"}))
+        with self.assertRaises(PlanError, msg="каталог требует железную кирку для камня: встроенная таблица "
+                                              "стратега не должна подменять требование каталога") as ctx:
+            check_plan(script("gather", block="stone", count=1), catalog, self.policy, self.limits, context)
+        self.assertIn("железн", str(ctx.exception).lower())
+
     def test_check_Deterministic(self):
         for name, plan, _ in INVALID:
             with self.subTest(plan=name):

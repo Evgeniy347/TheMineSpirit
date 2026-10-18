@@ -33,8 +33,11 @@
 Ошибка одного духа остальных не останавливает.
 
 Для `mine_vein` и `gather` руды/камня локальная проверка требует кирку нужного уровня в инвентаре духа из наблюдения (поля
-`inventory` и `held`): руда с тегами
-`NEEDS_STONE_TOOL`/`NEEDS_IRON_TOOL`/`NEEDS_DIAMOND_TOOL` — каменную/железную/алмазную (как `RequiredTier` мода). Без подходящей кирки
+`inventory` и `held`). Уровни берутся не из таблицы стратега, а из структурного поля `requires` каталога
+`GET /v1/capabilities`: у `mine_vein` уровень выбирает `ore` (`any`/`coal`/`quartz` — 1, `copper`/`iron`/`lapis` — 2,
+`gold`/`redstone`/`diamond`/`emerald` — 3, `netherite` — 4), у `gather` — `block` (`stone` 1, `iron_ore` 2, `obsidian` 4;
+блок вне таблицы кирки не требует). Значение `fallback` действует для параметра вне таблицы, `0` — требования нет.
+Менять уровни — правкой каталога в моде, а не кода стратега. Без подходящей кирки
 план отклоняется с текстом для модели; если в наблюдении нет ни списка предметов, ни предмета в руке, проверка даёт предупреждение,
 а не отказ. Кирка и прочие инструменты накапливаются по шагам плана: после `acquire`/`craft`/`withdraw` предмет считается в инвентаре
 следующих шагов, после `equip` — в руке; `sequence` и `fallback` передают накопленное дальше, `parallel` — нет. Поэтому
@@ -113,10 +116,12 @@ task_id, outcome`. События: `cycle_start, bot_skipped, observed, decision
 
 ## Мозг: сменить модель, подключить Sonnet
 
-`opencode`: `opencode run` в песочнице `STRATEGIST_HOME/sandbox` без флагов обхода разрешений. Бесплатный тариф отвечает `403` («free tier
-can only be used from within OpenCode»), если запретить `read/edit/bash` как `deny`, поэтому для них `ask` (в неинтерактивном запуске
-отклоняется), `"*": "deny"` стоит первым ключом. Файл проверяется при каждом вызове, а при старте `opencode debug agent strategist` даёт
-итоговые права: для каждого включённого инструмента последнее общее правило обязано быть ask/deny, иначе отказ запуска (код 4).
+`opencode`: `opencode run` в песочнице `STRATEGIST_HOME/sandbox` без флагов обхода разрешений. Общий шаблон `"*": "ask"` стоит
+первым ключом: `deny` (в том числе общий) убирает `read/edit/bash` из набора инструментов — бесплатный тариф отвечает `403`
+(«free tier can only be used from within OpenCode»), а модель не может даже попытаться выполнить `ls`. Поэтому нужные
+инструменты `ask` (в неинтерактивном запуске запрос отклоняется автоматически), остальные — `deny`. Файл проверяется при
+каждом вызове, а при старте `opencode debug agent strategist` даёт итоговые права: `read/edit/bash` включены, для каждого
+включённого инструмента последнее общее правило обязано быть ask/deny, иначе отказ запуска (код 4).
 Переменные `OPENCODE_PERMISSION/CONFIG/CONFIG_CONTENT/CONFIG_DIR` из окружения мозга убираются. Выполненный инструмент —
 `alert sandbox_breach`, файл `PAUSE`, остановка агента (код 5). Каталог данных подпроцесса (`XDG_DATA_HOME`) — свой,
 `STRATEGIST_HOME/opencode-data`: сессии с полным промптом не копятся в общем `~/.local/share/opencode`. Вход в аккаунт
@@ -159,9 +164,18 @@ can only be used from within OpenCode»), если запретить `read/edit
 поэтому `gather.block` с ними — отказ до отправки с текстом для модели. Менять состав — менять и тест
 `test_policy_NaturalBlocks_CoverNaturalGroupsAndExcludePlayerMade`: он сторожит обе стороны правила.
 
+### Проверка песочницы после обновления opencode
+
+`scripts/strategist.sh sandbox-check` просит модель выполнить `ls` и проверяет, что в выводе `opencode` есть `tool_use`
+с `status:"error"` (песочница отклонила вызов) и нет выполнения. Код 0 — отказ подтверждён, 1 — инструмент выполнился
+или модель не попыталась его вызвать, 2 — проверка неприменима (`STRATEGIST_BRAIN=command`) или неверная конфигурация.
+Запускать после каждого обновления opencode; результат и версию записывать сюда. Проверенная версия — **opencode 1.19.3**
+(18.10, ПК): ручной прогон `opencode run` с моделью `opencode/big-pickle` в этой песочнице дал `tool_use` `bash` со
+`status:"error"` («The user rejected permission to use this specific tool call.»), выполнения не было.
+
 ## Команды
 
-`scripts/strategist.sh start|stop|status|pause|resume|once|smoke [модель]|logs [N]` (tmux-сессия `mc-strategist`, второй экземпляр
+`scripts/strategist.sh start|stop|status|pause|resume|once|sandbox-check|smoke [модель]|logs [N]` (tmux-сессия `mc-strategist`, второй экземпляр
 отказывается). `strategist.py … --fixtures agents/strategist/tests/fixtures` поднимает фейковый REST из записанных наблюдений. Тесты:
 `scripts/testing/check-strategist.sh` (все строки `OK`) или `cd agents/strategist && python3 -m unittest discover -s tests -t .`.
 Сценарии (`tests/scenarios/*.json`) и свойство случайных сценариев идут **без сети**: один и тот же фейковый REST зовётся
