@@ -3,16 +3,16 @@ package com.theminespirit.core.script;
 import java.util.Map;
 import java.util.Objects;
 
-public record CloseDoorParams(int x, int y, int z) {
-    public CloseDoorParams {
+public record BlockPointParams(int x, int y, int z) {
+    public BlockPointParams {
         checkCoordinate("x", x, CatalogLimits.WORLD_HORIZONTAL_LIMIT);
         checkY(y);
         checkCoordinate("z", z, CatalogLimits.WORLD_HORIZONTAL_LIMIT);
     }
 
-    public static CloseDoorParams from(Map<String, Object> params) {
+    public static BlockPointParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new CloseDoorParams(
+        return new BlockPointParams(
                 ScriptArgs.requireInt(params, "x"),
                 ScriptArgs.requireInt(params, "y"),
                 ScriptArgs.requireInt(params, "z"));

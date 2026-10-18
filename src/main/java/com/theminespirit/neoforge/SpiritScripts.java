@@ -19,7 +19,7 @@ import com.theminespirit.core.script.SetCampParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ChopTargetParams;
 import com.theminespirit.core.script.ClearAreaParams;
-import com.theminespirit.core.script.CloseDoorParams;
+import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.core.script.ComeToPlayerParams;
 import com.theminespirit.core.script.DigAreaParams;
 import com.theminespirit.core.script.DigDescentParams;
@@ -207,7 +207,7 @@ public final class SpiritScripts {
                 spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));
         table.put("build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
-        table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, CloseDoorParams.from(params)));
+        table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, BlockPointParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
             return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()),

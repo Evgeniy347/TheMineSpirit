@@ -480,7 +480,29 @@ public final class CoreScripts {
                 spec("repair", "починить инструмент или броню через точило (два одинаковых повреждённых предмета)",
                         List.of(ParamSpec.text("item", true)),
                         List.of("в инвентаре есть два одинаковых повреждённых предмета"),
-                        List.of("предмет починен: сумма прочности + 5% от максимальной", "зачарования потеряны"))));
+                        List.of("предмет починен: сумма прочности + 5% от максимальной", "зачарования потеряны")),
+                spec("use_block", "нажать или переключить блок (рычаг, кнопка, дверь)",
+                        List.of(
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                        List.of("в клетке есть нажимаемый блок (рычаг, кнопка, дверь)", "к блоку есть подход"),
+                        List.of("блок нажат или переключён", "чужой механизм в постройке игрока не трогается")),
+                spec("open", "открыть дверь, люк, калитку или сундук",
+                        List.of(
+                                ParamSpec.integer("x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("z", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                        List.of("в клетке есть дверь, люк, калитка или сундук", "к блоку есть подход"),
+                        List.of("дверь, люк или калитка открыты", "сундук открыт и закрыт")),
+                spec("set_combat_mode", "сменить режим тактики духа",
+                        List.of(ParamSpec.enumeration("mode", true, SetCombatModeParams.MODE_IDS)),
+                        List.of(),
+                        List.of("режим боя духа сменён", "смена записана в журнал решений тактики"))));
     }
 
     private static ScriptSpec spec(String id, String summary, List<ParamSpec> params, List<String> preconditions,

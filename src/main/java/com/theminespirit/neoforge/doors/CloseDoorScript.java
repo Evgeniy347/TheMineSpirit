@@ -4,7 +4,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CloseDoorParams;
+import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
@@ -27,7 +27,7 @@ public final class CloseDoorScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
 
-    public CloseDoorScript(SpiritEntity spirit, CloseDoorParams params) {
+    public CloseDoorScript(SpiritEntity spirit, BlockPointParams params) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = new BlockCoord(params.x(), params.y(), params.z());

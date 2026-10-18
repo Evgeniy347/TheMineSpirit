@@ -115,4 +115,35 @@ public final class BlockProtection {
         }
         return new Allowed();
     }
+
+    public Decision checkUse(List<String> neighbours, boolean playerPlaced, boolean inProtectedZone,
+            boolean unprotectArea) {
+        Objects.requireNonNull(neighbours, "Список соседей не может быть null: по нему отличают постройку от природы");
+        if (neighbours.size() != NEIGHBOUR_COUNT) {
+            throw new IllegalArgumentException("Соседей " + neighbours.size() + ", ожидается " + NEIGHBOUR_COUNT
+                    + ": 3×3×3 без самого блока; для незагруженной клетки передайте minecraft:air");
+        }
+        if (inProtectedZone) {
+            return new Refused(PolicyId.PROTECTED_ZONE, "механизм лежит в защищённой зоне (серверный конфиг protectedZones)");
+        }
+        if (unprotectArea) {
+            return new Allowed();
+        }
+        if (playerPlaced) {
+            return new Refused(PolicyId.PLAYER_BUILDINGS, "блок поставил игрок: чужие механизмы дух не трогает без разрешения");
+        }
+        int artificial = 0;
+        String example = null;
+        for (String neighbour : neighbours) {
+            if (!natural.matches(neighbour)) {
+                artificial++;
+                example = example == null ? neighbour : example;
+            }
+        }
+        if (artificial >= buildingThreshold) {
+            return new Refused(PolicyId.PLAYER_BUILDINGS, "вокруг механизма " + artificial + " искусственных блоков из "
+                    + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
+        }
+        return new Allowed();
+    }
 }
