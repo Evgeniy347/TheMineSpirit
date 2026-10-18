@@ -98,7 +98,7 @@ public final class WarehouseGameTests {
         }
     }
 
-    // [флак] 138 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
+    // [флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
     // иначе тест меряет скорость стройки, а не её результат.
     @GameTest(template = "arena", batch = "warehouse_build", timeoutTicks = 12000)
     public static void warehouse_LevelOneBuilt_AllChestsOpenable(GameTestHelper helper) {
@@ -111,7 +111,9 @@ public final class WarehouseGameTests {
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_LOG, 16),
                 new ItemStack(Items.CHEST, 18));
-        BlockPos anchor = new BlockPos(1, 0, 1);
+        // Пол схемы (dy=0) ложится на землю, как у DemoPlacement: якорь в слое пола арены занял бы клетки
+        // пола камнем, и строгая стройка считает их непостроенными.
+        BlockPos anchor = new BlockPos(1, 1, 1);
         SpiritRun run = SpiritRun.launch(helper, spirit, build(helper, "storage_v1", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
