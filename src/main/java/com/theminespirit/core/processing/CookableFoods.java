@@ -20,7 +20,19 @@ public final class CookableFoods {
 
     private static final Set<String> COOKED = Set.copyOf(new HashSet<>(RAW_TO_COOKED.values()));
 
+    private static final Set<String> FISH = Set.of(
+            "minecraft:cod", "minecraft:salmon", "minecraft:pufferfish", "minecraft:tropical_fish");
+
     private CookableFoods() {
+    }
+
+    public static boolean isFish(String item) {
+        return item != null && FISH.contains(item);
+    }
+
+    /** Рыба, которая жарится: иглобрюх и тропическая рыба в пищу не идут и на склад кладутся сырыми. */
+    public static boolean isCookableFish(String item) {
+        return isFish(item) && isRaw(item);
     }
 
     public static boolean isRaw(String item) {
