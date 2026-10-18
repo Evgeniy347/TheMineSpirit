@@ -38,8 +38,8 @@ class HerdParamsTests {
                 "Норма кур по умолчанию обязана быть 8: птица плодится быстрее");
         assertEquals(20, CatalogLimits.HERD_REFRESH_TICKS,
                 "Снимок стада обязан обновляться раз в 20 тиков: чаще — лишние запросы сущностей");
-        assertEquals(32, CatalogLimits.HERD_HUNT_RADIUS_MAX,
-                "Максимум радиуса охоты обязан быть 32: дальше дичь не выследить");
+        assertEquals(48, CatalogLimits.HERD_HUNT_RADIUS_MAX,
+                "Максимум радиуса охоты обязан быть 48: чеклист 39 ищет диких овец в радиусе 48 от дома");
         assertEquals(16, CatalogLimits.HERD_HUNT_RADIUS_DEFAULT,
                 "Радиус охоты по умолчанию обязан быть 16: дичь ищут шире загона");
     }
@@ -135,8 +135,8 @@ class HerdParamsTests {
                 () -> HuntParams.from(Map.of("species", "pig", "radius", 0, "count", 4)),
                 "hunt с радиусом 0 обязан отвергаться");
         assertThrows(IllegalArgumentException.class,
-                () -> HuntParams.from(Map.of("species", "pig", "radius", 33, "count", 4)),
-                "hunt с радиусом 33 обязан отвергаться: дальше дичь не выследить");
+                () -> HuntParams.from(Map.of("species", "pig", "radius", 49, "count", 4)),
+                "hunt с радиусом 49 обязан отвергаться: дальше дичь не выследить");
         assertThrows(IllegalArgumentException.class,
                 () -> HuntParams.from(Map.of("species", "pig", "radius", 16, "count", 65)),
                 "hunt с 65 головами обязан отвергаться");

@@ -102,6 +102,12 @@ public final class TicketPlans {
             case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
             case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
+            case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
+            case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
+            case WEAVE_WOOL -> craft(target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
+                    target.count() > 0 ? target.count() : 1, target);
+            case SHEAR_SHEEP -> shearSheep(target);
+            case HUNT_WILD_SHEEP -> huntWildSheep(target);
             case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
             case LIGHTING -> lighting(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
@@ -282,6 +288,28 @@ public final class TicketPlans {
         return new ScriptCall("cull", Map.of("species",
                 species.name().toLowerCase(Locale.ROOT),
                 "radius", CatalogLimits.HERD_RADIUS_DEFAULT));
+    }
+
+    private static TaskNode shearSheep(TicketTarget target) {
+        int count = target.count() > 0 ? target.count() : WoolRules.minPenSheep();
+        return sequence(gotoTarget(target), new ScriptCall("shear", Map.of(
+                "radius", WoolRules.shearRadius(),
+                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+    }
+
+    private static TaskNode huntWildSheep(TicketTarget target) {
+        int count = target.count() > 0 ? target.count() : WoolRules.wildSheepPerDay();
+        return sequence(gotoTarget(target), new ScriptCall("hunt", Map.of(
+                "species", Species.SHEEP.name().toLowerCase(Locale.ROOT),
+                "radius", WoolRules.wildSheepRadius(),
+                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+    }
+
+    private static String bedItem(TicketTarget target) {
+        if (target.craftItem() != null) {
+            return target.craftItem();
+        }
+        return WoolRules.CRAFTED_BED;
     }
 
     private static TaskNode relocateBuilding(TicketTarget target) {

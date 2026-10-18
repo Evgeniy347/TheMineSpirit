@@ -112,7 +112,7 @@ public final class CatalogLimits {
     public static final int HERD_RADIUS_DEFAULT = 8;
 
     public static final int HERD_HUNT_RADIUS_MIN = 1;
-    public static final int HERD_HUNT_RADIUS_MAX = 32;
+    public static final int HERD_HUNT_RADIUS_MAX = 48;
     public static final int HERD_HUNT_RADIUS_DEFAULT = 16;
 
     public static final int HERD_PAIRS_MIN = 1;

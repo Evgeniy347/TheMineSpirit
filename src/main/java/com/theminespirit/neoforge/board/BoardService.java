@@ -253,6 +253,17 @@ public final class BoardService {
         return live;
     }
 
+    /** Животные вида, взятые в укрытии: по ним отделяют своё стадо от дикого. */
+    public Set<UUID> capturedAnimals(Species species) {
+        Set<UUID> animals = new HashSet<>();
+        for (Capture capture : captures.values()) {
+            if (capture.species() == species) {
+                animals.add(capture.animal());
+            }
+        }
+        return Set.copyOf(animals);
+    }
+
     /** Живые причины стада: пойманное животное живо. Гибель снимает «приманить» и ставит разбор. */
     public Set<String> liveHerdCauses(ServerLevel level) {
         Set<String> live = new HashSet<>();
