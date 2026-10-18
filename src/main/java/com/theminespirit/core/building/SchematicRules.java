@@ -291,7 +291,8 @@ public final class SchematicRules {
             }
             BlockCoord cell = entry.getKey();
             String above = grid.get(new BlockCoord(cell.x(), cell.y() + 1, cell.z()));
-            if (above != null && SchematicBlocks.isFullBlock(above)) {
+            // Как в ванили: крышку держит только блок, проводящий редстоун; сундук над сундуком (стопка) не мешает.
+            if (above != null && SchematicBlocks.isFullBlock(above) && !SchematicBlocks.isChest(above)) {
                 violations.add(new Violation(RuleId.CHEST_OPENABLE, "над сундуком в клетке ["
                         + cell.x() + "," + cell.y() + "," + cell.z() + "] стоит полный блок '" + above
                         + "': сундук не открыть"));

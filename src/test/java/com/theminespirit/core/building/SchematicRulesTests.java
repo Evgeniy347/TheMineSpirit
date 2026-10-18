@@ -41,6 +41,19 @@ class SchematicRulesTests {
     }
 
     @Test
+    void chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot() {
+        Fixture stack = new Fixture("chest_stack", BuildingType.STORAGE, new BlockCoord(2, 1, 0), List.of());
+        Fixture plank = new Fixture("chest_under_plank", BuildingType.STORAGE, new BlockCoord(2, 1, 0),
+                List.of(SchematicRules.RuleId.CHEST_OPENABLE));
+
+        assertEquals(List.of(), ruleIds(stack),
+                "Сундук над сундуком (стопка склада) не мешает открыть нижний: в ванили крышку держит только "
+                        + "блок, проводящий редстоун, а сундук его не проводит");
+        assertEquals(List.of(SchematicRules.RuleId.CHEST_OPENABLE), ruleIds(plank),
+                "Доска над сундуком обязана браковаться: сундук под полным блоком не открыть");
+    }
+
+    @Test
     void ruleIds_AllValues_HaveUniqueNames() {
         List<String> ids = new ArrayList<>();
         for (SchematicRules.RuleId rule : SchematicRules.RuleId.values()) {

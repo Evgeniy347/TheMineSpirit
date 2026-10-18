@@ -70,6 +70,15 @@
    ]
   },
   {
+   "file": "chest_stack",
+   "type": "storage",
+   "entry": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
    "file": "inner_height_one",
    "type": "storage",
    "entry": [
