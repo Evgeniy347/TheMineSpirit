@@ -41,6 +41,7 @@ final class SpiritDemoCommand {
                 .then(building("family_house"))
                 .then(building("stone_house"))
                 .then(building("storage_hut"))
+                .then(building("storage"))
                 .then(building("well"))
                 .then(building("torch_post"))
                 .then(building("palisade_section"))

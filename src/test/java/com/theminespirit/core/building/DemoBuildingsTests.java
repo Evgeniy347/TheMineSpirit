@@ -27,8 +27,8 @@ class DemoBuildingsTests {
 
     @Test
     void ids_Listed_ContainEveryChecklistBuilding() {
-        assertEquals(List.of("house", "family_house", "stone_house", "storage_hut", "well", "torch_post",
-                "palisade_section", "pen", "enchant_room", "mine_entrance"), DemoBuildings.ids(),
+        assertEquals(List.of("house", "family_house", "stone_house", "storage_hut", "storage", "well",
+                "torch_post", "palisade_section", "pen", "enchant_room", "mine_entrance"), DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
                         + "и не найдёт нужную");
     }

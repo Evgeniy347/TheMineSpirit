@@ -57,6 +57,8 @@ public final class DemoBuildings {
             new Building("family_house", "Дом семьи", List.of(new Level(0, "family_house"))),
             new Building("stone_house", "Каменный дом", List.of(new Level(0, "stone_house"))),
             new Building("storage_hut", "Склад-хижина", List.of(new Level(0, "storage_hut"))),
+            new Building("storage", "Склад", List.of(new Level(1, "storage_v1"), new Level(2, "storage_v2"),
+                    new Level(3, "storage_v3"), new Level(4, "storage_v4"))),
             new Building("well", "Колодец", List.of(new Level(0, "well"))),
             new Building("torch_post", "Факельный столб", List.of(new Level(0, "torch_post"))),
             new Building("palisade_section", "Палисад-секция", List.of(new Level(0, "palisade_section"))),

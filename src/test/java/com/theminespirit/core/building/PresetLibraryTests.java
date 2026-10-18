@@ -44,12 +44,13 @@ class PresetLibraryTests {
     void parse_RealIndex_LoadsAllTwelvePresets() {
         PresetLibrary library = loadReal();
 
-        assertEquals(12, library.size(),
-                "Библиотека обязана прочитать все двенадцать пресетов, включая два уровня чаровальни "
-                        + "и загоны трёх уровней: без них стратегу не из чего составлять планировку поселения");
+        assertEquals(16, library.size(),
+                "Библиотека обязана прочитать все шестнадцать пресетов, включая два уровня чаровальни, "
+                        + "четыре уровня склада и загоны трёх уровней: без них стратегу не из чего "
+                        + "составлять планировку поселения");
         assertEquals(List.of("palisade_section", "torch_post", "storage_hut", "family_house", "stone_house",
                 "well", "pen_7x7", "pen_4x5", "pen_9x9", "mine_entrance_v1", "enchant_room_v1",
-                "enchant_room_v2"), library.ids(),
+                "enchant_room_v2", "storage_v1", "storage_v2", "storage_v3", "storage_v4"), library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
 
@@ -158,6 +159,24 @@ class PresetLibraryTests {
     }
 
     @Test
+    void requires_StorageLevels_PointAtPreviousLevel() {
+        PresetLibrary library = loadReal();
+
+        for (int level = 1; level <= 4; level++) {
+            Preset preset = library.byId("storage_v" + level).orElseThrow();
+            assertEquals(level, preset.level(),
+                    "Уровень склада " + level + " обязан нести свой номер: номер отличает ступень постройки");
+            if (level == 1) {
+                assertTrue(preset.requires().isEmpty(),
+                        "Первый уровень склада ничего не требует: предыдущего уровня у него нет");
+            } else {
+                assertEquals(Optional.of("storage_v" + (level - 1)), preset.requires(),
+                        "Уровень " + level + " обязан требовать предыдущий: без цепочки upgrade перескочил бы ступень");
+            }
+        }
+    }
+
+    @Test
     void countMaterials_DuplicateBlockId_SumsCounts() {
         Schematic schematic = SchematicParser.parse(body("3,1,1",
                 "{\"pos\":[0,0,0],\"block\":\"minecraft:cobblestone\"},"
@@ -177,8 +196,8 @@ class PresetLibraryTests {
 
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
-        assertEquals(12, paths.size(),
-                "Индекс обязан назвать по телу на каждый из двенадцати пресетов: пропуск тела оставил бы пресет без схемы");
+        assertEquals(16, paths.size(),
+                "Индекс обязан назвать по телу на каждый из шестнадцати пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(PresetLibrary.SCHEMATICS_ROOT + "storage_hut.json", paths.get(2),
                 "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой");
     }

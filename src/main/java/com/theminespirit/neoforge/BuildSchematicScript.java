@@ -381,7 +381,10 @@ final class BuildSchematicScript implements ScriptInstance {
     private PlaceOutcome place(Schematic.PlacedEntry entry, BlockState wanted) {
         BlockPlacer.Begin begin = placer.begin(toPos(entry.pos()), wanted, entry.block());
         release(entry.pos());
-        if (begin instanceof BlockPlacer.Started) {
+        if (begin instanceof BlockPlacer.Started started) {
+            if (!entry.text().isBlank()) {
+                SignTexts.write(level, started.pos(), entry.text());
+            }
             placed++;
             tally.placed(entry.block());
             cursor++;
