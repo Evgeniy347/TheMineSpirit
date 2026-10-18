@@ -66,7 +66,7 @@ public final class ChopTreeScript implements ScriptInstance {
         BlockPos center = spirit.blockPosition();
         this.search = BlockLocator.search(spirit.level(), center, params.radius(), Set.copyOf(logBlocks));
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.chop = new TreeChop(spirit, logFilter, params.replant());
+        this.chop = new TreeChop(spirit, logFilter, params.replant(), treeView);
     }
 
     @Override

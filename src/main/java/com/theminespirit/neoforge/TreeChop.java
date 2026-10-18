@@ -4,6 +4,7 @@ import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.IdFilter;
@@ -12,7 +13,9 @@ import com.theminespirit.core.pickup.PickupTuning;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -71,6 +74,7 @@ final class TreeChop {
     private final SpiritEntity spirit;
     private final IdFilter logFilter;
     private final boolean replant;
+    private final TreeView view;
     private final Approach approach;
     private final BlockBreaker breaker;
     private Tree tree;
@@ -98,10 +102,11 @@ final class TreeChop {
     private boolean breaking;
     private boolean movedCloser;
 
-    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant) {
+    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, TreeView view) {
         this.spirit = spirit;
         this.logFilter = logFilter;
         this.replant = replant;
+        this.view = view;
         this.approach = new Approach(spirit);
         this.breaker = new BlockBreaker(spirit);
     }
@@ -317,7 +322,7 @@ final class TreeChop {
         collector = null;
         int baseY = tree.base().y();
         List<BlockPos> cells = tree.logs().stream().filter(log -> log.y() == baseY).map(TreeChop::toPos).toList();
-        replanter = new Replanter(spirit, species, cells);
+        replanter = new Replanter(spirit, species, cells, view);
         phase = Phase.REPLANT;
         return Outcome.running();
     }
@@ -576,12 +581,19 @@ final class TreeChop {
     private BlockPos standingCellNearTrunk() {
         BlockPos base = toPos(tree.base());
         int feetY = spirit.blockPosition().getY();
+        Set<Long> trunkColumns = new HashSet<>();
+        for (BlockCoord log : tree.logs()) {
+            trunkColumns.add(columnKey(log.x(), log.z()));
+        }
         for (int radius = 1; radius <= 2; radius++) {
             BlockPos best = null;
             double bestDistance = Double.MAX_VALUE;
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                        continue;
+                    }
+                    if (trunkColumns.contains(columnKey(base.getX() + dx, base.getZ() + dz))) {
                         continue;
                     }
                     BlockPos pos = new BlockPos(base.getX() + dx, feetY, base.getZ() + dz);
@@ -600,6 +612,10 @@ final class TreeChop {
             }
         }
         return null;
+    }
+
+    private static long columnKey(int x, int z) {
+        return ((long) x << 32) | (z & 0xffffffffL);
     }
 
     private boolean isStandable(BlockPos pos) {

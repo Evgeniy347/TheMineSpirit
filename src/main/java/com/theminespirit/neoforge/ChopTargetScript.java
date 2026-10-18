@@ -41,7 +41,7 @@ public final class ChopTargetScript implements ScriptInstance {
         this.logBlocks = TreeBlocks.logs(TreeSpecies.ALL);
         this.logFilter = TreeBlocks.filter(TreeSpecies.ALL);
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.chop = new TreeChop(spirit, logFilter, params.replant());
+        this.chop = new TreeChop(spirit, logFilter, params.replant(), treeView);
     }
 
     @Override
