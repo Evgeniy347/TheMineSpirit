@@ -27,8 +27,11 @@ public final class Board {
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
+    private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
+    private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
     private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
+    private final List<BoardLogEntry> blockNotes = new ArrayList<>();
     private final BoardLedger ledger = new BoardLedger();
     private final LongSupplier nowTicks;
     private final BoardEvents events;
@@ -57,10 +60,15 @@ public final class Board {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, "
                 + "а не пустую заявку");
         if (tickets.containsKey(ticket.id())) {
-            if (statuses.get(ticket.id()) == BoardStatus.DONE) {
+            BoardStatus current = statuses.get(ticket.id());
+            if (current == BoardStatus.DONE
+                    || (current == BoardStatus.BLOCKED
+                            && conditionsChanged(tickets.get(ticket.id()), ticket))) {
                 tickets.put(ticket.id(), ticket);
                 statuses.put(ticket.id(), BoardStatus.PENDING);
                 claimAssignees.remove(ticket.id());
+                ticketFailures.remove(ticket.id());
+                blockedMissing.remove(ticket.id());
                 events.transition(BoardLog.Event.SUBMITTED, ticket, null, nowTicks.getAsLong());
                 return BoardOutcome.ACCEPTED;
             }
@@ -91,6 +99,7 @@ public final class Board {
     public List<BoardTicket> claimable(StockView stock, long now) {
         Objects.requireNonNull(stock, "stock не может быть null: гейт без снимка запасов не проверить");
         requireNow(now);
+        unblockChanged(stock, now);
         refreshGateStatuses(stock);
         List<BoardTicket> ready = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
@@ -120,6 +129,9 @@ public final class Board {
         BoardStatus status = statuses.get(ticketId);
         if (status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED) {
             return BoardOutcome.NOT_FOUND;
+        }
+        if (status == BoardStatus.BLOCKED) {
+            return BoardOutcome.BLOCKED;
         }
         if (!dependenciesDone(ticket)) {
             return BoardOutcome.NOT_FOUND;
@@ -152,6 +164,8 @@ public final class Board {
         if (holder != null) {
             caseFailures.remove(new SpiritCase(holder, ticket.boardCase()));
         }
+        ticketFailures.remove(ticketId);
+        blockedMissing.remove(ticketId);
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.note(ticket.boardCase(), ticket.level());
         events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId),
@@ -160,7 +174,12 @@ public final class Board {
     }
 
     public boolean fail(String ticketId) {
+        return fail(ticketId, new StockView(Map.of()));
+    }
+
+    public boolean fail(String ticketId, StockView stock) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
+        Objects.requireNonNull(stock, "stock не может быть null: по нему фиксируются условия блокировки");
         BoardTicket ticket = tickets.get(ticketId);
         if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
             return false;
@@ -173,6 +192,7 @@ public final class Board {
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
         }
+        noteTicketFailure(ticket, now, stock);
         return true;
     }
 
@@ -200,6 +220,36 @@ public final class Board {
         Objects.requireNonNull(boardCase, "boardCase не может быть null: счёт провалов идёт на кейс");
         CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
         return failures == null ? 0 : failures.consecutive;
+    }
+
+    /** Длина текущей паузы пары дух+кейс: 0 — пауз нет, иначе ступень экспоненциального отката. */
+    public long casePauseTicks(UUID spirit, BoardCase boardCase) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
+        Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
+        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
+        return failures == null ? 0 : BoardBackoff.pauseTicks(failures.consecutive);
+    }
+
+    public int ticketFailures(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: счёт провалов идёт по заданию");
+        return ticketFailures.getOrDefault(ticketId, 0);
+    }
+
+    public boolean blocked(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: блокировка читается по заданию");
+        return statuses.get(ticketId) == BoardStatus.BLOCKED;
+    }
+
+    /** Записи BLOCKED/UNBLOCKED: причина блокировки задания и её снятие. */
+    public List<BoardLogEntry> blocks() {
+        return List.copyOf(blockNotes);
+    }
+
+    /** Отдаёт записи блокировки и очищает буфер: адаптер пишет их в журнал ровно один раз. */
+    public List<BoardLogEntry> drainBlocks() {
+        List<BoardLogEntry> drained = List.copyOf(blockNotes);
+        blockNotes.clear();
+        return drained;
     }
 
     /** Записи DETACHED: кейс снят с духа после предела провалов подряд. */
@@ -341,6 +391,13 @@ public final class Board {
         return ticket.assignee().orElse(null) == spirit || spirit.equals(claimAssignees.get(ticket.id()));
     }
 
+    private static boolean conditionsChanged(BoardTicket before, BoardTicket after) {
+        return before.level() != after.level()
+                || !before.cause().equals(after.cause())
+                || !before.dependsOn().equals(after.dependsOn())
+                || !before.requiredItems().equals(after.requiredItems());
+    }
+
     private UUID holder(BoardTicket ticket) {
         return ticket.assignee().orElseGet(() -> claimAssignees.get(ticket.id()));
     }
@@ -438,6 +495,8 @@ public final class Board {
         if (status != null && status != BoardStatus.DONE && status != BoardStatus.FAILED
                 && status != BoardStatus.CANCELLED) {
             statuses.put(ticketId, BoardStatus.CANCELLED);
+            ticketFailures.remove(ticketId);
+            blockedMissing.remove(ticketId);
             events.transition(event, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         }
         for (BoardTicket dependant : tickets.values()) {
@@ -469,13 +528,51 @@ public final class Board {
         SpiritCase key = new SpiritCase(spirit, ticket.boardCase());
         CaseFailures failures = caseFailures.computeIfAbsent(key, ignored -> new CaseFailures());
         failures.consecutive++;
-        failures.pausedUntil = now + BoardTuning.caseFailPauseTicks();
+        failures.pausedUntil = now + BoardBackoff.pauseTicks(failures.consecutive);
         if (!failures.detached && failures.consecutive >= BoardTuning.caseFailLimit()) {
             failures.detached = true;
             detachments.add(new BoardLogEntry(BoardLog.Event.DETACHED, now, ticket.id(), ticket.boardCase(),
                     ticket.level(), ticket.cause(), ticket.priority(), ticket.priority(), List.of(),
                     spirit.toString(), ConfigStamp.current(), now));
         }
+    }
+
+    private void noteTicketFailure(BoardTicket ticket, long now, StockView stock) {
+        int failures = ticketFailures.merge(ticket.id(), 1, Integer::sum);
+        if (failures < BoardTuning.ticketFailLimit()) {
+            return;
+        }
+        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
+        statuses.put(ticket.id(), BoardStatus.BLOCKED);
+        blockedMissing.put(ticket.id(), missing);
+        blockNotes.add(new BoardLogEntry(BoardLog.Event.BLOCKED, now, ticket.id(), ticket.boardCase(),
+                ticket.level(), ticket.cause(), BoardRules.priorityOf(ticket.boardCase()), ticket.priority(),
+                reason(failures, missing), null, ConfigStamp.current(), now));
+    }
+
+    private void unblockChanged(StockView stock, long now) {
+        for (BoardTicket ticket : List.copyOf(tickets.values())) {
+            if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
+                continue;
+            }
+            Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
+            if (missing.equals(blockedMissing.getOrDefault(ticket.id(), Map.of()))) {
+                continue;
+            }
+            statuses.put(ticket.id(), BoardStatus.PENDING);
+            ticketFailures.remove(ticket.id());
+            blockedMissing.remove(ticket.id());
+            blockNotes.add(new BoardLogEntry(BoardLog.Event.UNBLOCKED, now, ticket.id(), ticket.boardCase(),
+                    ticket.level(), ticket.cause(), BoardRules.priorityOf(ticket.boardCase()),
+                    ticket.priority(), reason(0, missing), null, ConfigStamp.current(), now));
+        }
+    }
+
+    private static List<String> reason(int failures, Map<String, Integer> missing) {
+        List<String> reason = new ArrayList<>();
+        reason.add("failures=" + failures);
+        missing.forEach((item, count) -> reason.add("missing=" + item + ":" + count));
+        return List.copyOf(reason);
     }
 
     private record SpiritCase(UUID spirit, BoardCase boardCase) {

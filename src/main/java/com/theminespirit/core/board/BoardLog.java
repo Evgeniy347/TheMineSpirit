@@ -22,6 +22,8 @@ public final class BoardLog {
         ASSIGNED,
         DONE,
         FAILED,
+        BLOCKED,
+        UNBLOCKED,
         CANCELLED,
         DETACHED
     }

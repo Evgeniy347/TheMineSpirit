@@ -114,6 +114,31 @@ class BoardTuningTests {
     }
 
     @Test
+    void caseFailMultiplier_Is_Two() {
+        assertEquals(2, BoardTuning.CASE_FAIL_MULTIPLIER,
+                "Каждый следующий провал удваивает паузу пары дух+кейс: без роста дух возвращается "
+                        + "к сбойному заданию с той же частотой");
+        assertEquals(2, BoardTuning.caseFailMultiplier(),
+                "Множитель паузы читается из живой таблицы board: датапак меняет его без перезапуска");
+    }
+
+    @Test
+    void caseFailPauseCap_Is_EightMinutes() {
+        assertEquals(9600, BoardTuning.CASE_FAIL_PAUSE_CAP_TICKS,
+                "Потолок паузы — 9600 тиков (8 мин): без него экспонента выключала бы духа навсегда");
+        assertEquals(9600, BoardTuning.caseFailPauseCapTicks(),
+                "Потолок паузы читается из живой таблицы board: иначе /reload не ограничил бы откат");
+    }
+
+    @Test
+    void ticketFailLimit_Is_Five() {
+        assertEquals(5, BoardTuning.TICKET_FAIL_LIMIT,
+                "Пять провалов подряд блокируют само задание: иначе одна сбойная задача крутится бесконечно");
+        assertEquals(5, BoardTuning.ticketFailLimit(),
+                "Предел провалов задания читается из живой таблицы board: число настраивается датапаком");
+    }
+
+    @Test
     void caseFailLimit_Is_Three() {
         assertEquals(3, BoardTuning.CASE_FAIL_LIMIT,
                 "Три провала подряд снимают кейс с духа: предел 3 не даёт бесконечному циклу "
@@ -144,7 +169,10 @@ class BoardTuningTests {
                 (long) BoardTuning.STOCK_BLOCK_BUDGET,
                 BoardTuning.FAIL_BACKOFF_TICKS,
                 BoardTuning.CASE_FAIL_PAUSE_TICKS,
+                BoardTuning.CASE_FAIL_MULTIPLIER,
+                BoardTuning.CASE_FAIL_PAUSE_CAP_TICKS,
                 (long) BoardTuning.CASE_FAIL_LIMIT,
+                (long) BoardTuning.TICKET_FAIL_LIMIT,
                 BoardTuning.FENCE_PATROL_INTERVAL,
                 (long) BoardTuning.FENCE_WATCH_RADIUS,
                 BoardTuning.ENCHANT_CHECK_INTERVAL,
