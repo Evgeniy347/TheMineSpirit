@@ -103,6 +103,9 @@ public final class BridgeScript implements ScriptInstance {
         if (outcome != ScriptStatus.SUCCEEDED) {
             return Optional.empty();
         }
+        if (cells == null) {
+            return Optional.of(new ScriptResult.Text("переправа по сплошному полу: мост не потребовался"));
+        }
         return Optional.of(new ScriptResult.Text("мост длиной " + cells.size() + " поставлен, израсходовано "
                 + used + " блоков"));
     }
@@ -114,9 +117,11 @@ public final class BridgeScript implements ScriptInstance {
         step = Math.abs(dx) >= Math.abs(dz) ? new BlockCoord(Integer.signum(dx), 0, 0)
                 : new BlockCoord(0, 0, Integer.signum(dz));
         BlockCoord base = new BlockCoord(feet.getX(), feet.getY() - 1, feet.getZ());
-        BlockCoord start = findGapStart(base);
+        int span = Math.max(Math.abs(dx), Math.abs(dz));
+        BlockCoord start = findGapStart(base, Math.min(span, GAP_SCAN_LIMIT));
         if (start == null) {
             walking = true;
+            beginFinalWalk();
             initialized = true;
             return true;
         }
@@ -143,9 +148,14 @@ public final class BridgeScript implements ScriptInstance {
         return true;
     }
 
-    private BlockCoord findGapStart(BlockCoord base) {
+    private void beginFinalWalk() {
+        approach.begin(Vec3.atBottomCenterOf(new BlockPos(target.x(), target.y(), target.z())),
+                CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+    }
+
+    private BlockCoord findGapStart(BlockCoord base, int span) {
         BlockCoord cell = base;
-        for (int i = 0; i < GAP_SCAN_LIMIT; i++) {
+        for (int i = 0; i < span; i++) {
             cell = new BlockCoord(cell.x() + step.x(), cell.y(), cell.z() + step.z());
             if (!solidFloor(cell)) {
                 return cell;
@@ -157,8 +167,7 @@ public final class BridgeScript implements ScriptInstance {
     private ScriptStatus tickBuild() {
         if (placed >= cells.size()) {
             walking = true;
-            approach.begin(Vec3.atBottomCenterOf(new BlockPos(target.x(), target.y(), target.z())),
-                    CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+            beginFinalWalk();
             return tickWalk();
         }
         BlockCoord cell = cells.get(placed);

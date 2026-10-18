@@ -107,6 +107,26 @@ public final class WaterCrossGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "water_bridge_nogap", timeoutTicks = 400)
+    public static void bridge_NoGapOnSolidFloor_WalksToTarget(GameTestHelper helper) {
+        MovementScene.prepare(helper);
+        SpiritEntity spirit = MovementScene.spirit(helper, START);
+        stock(spirit, DIRT_STOCK);
+        Map<String, Object> params = new HashMap<>(MovementScene.pointParams(helper, new BlockPos(4, 1, 4)));
+        params.put("length", 2);
+        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("bridge", params),
+                MovementScene.SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "сплошной пол — моста не нужно: bridge обязан дойти до цели без ошибки, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            MovementScene.finish(helper);
+        });
+    }
+
     // [флак] заплыв через глубокий пруд: всплытия и подход за плавание под нагрузкой дольше
     @GameTest(template = "arena", batch = "water_swim", timeoutTicks = 800)
     public static void swim_AcrossDeepTank_SurfacesAndDoesNotDrown(GameTestHelper helper) {
