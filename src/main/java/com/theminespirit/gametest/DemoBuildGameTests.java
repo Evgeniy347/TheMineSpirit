@@ -62,7 +62,7 @@ public final class DemoBuildGameTests {
         return matches;
     }
 
-    // [флак] 67 блоков склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
+    // [флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
     @GameTest(template = "demo_arena", batch = "demo_build", timeoutTicks = 2600)
     public static void demo_StorageHutCommand_ChestAndSpiritBuildThenSpiritLeaves(GameTestHelper helper)

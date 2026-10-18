@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BlockSupport;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -106,22 +107,25 @@ public final class BlockPlacer {
                 entity -> entity != spirit && !entity.isRemoved() && !entity.isSpectator());
     }
 
+    /** Опора — общее правило {@link BlockSupport} (то же проверяет сторож схем) плюс верхняя половина двухчастного блока. */
     private static boolean hasSupport(Level level, BlockPos target, BlockState state) {
-        BlockPos below = target.below();
-        BlockState support = level.getBlockState(below);
-        if (!support.isAir() && !support.canBeReplaced()) {
-            return true;
-        }
         if (upperHalfOnLower(level, target, state)) {
             return true;
         }
-        for (Direction side : Direction.Plane.HORIZONTAL) {
-            BlockPos neighbour = target.relative(side);
-            if (level.getBlockState(neighbour).isFaceSturdy(level, neighbour, side.getOpposite())) {
-                return true;
-            }
-        }
-        return false;
+        return BlockSupport.hasSupport((x, y, z, face) -> {
+            BlockPos pos = new BlockPos(x, y, z);
+            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
+        }, target.getX(), target.getY(), target.getZ());
+    }
+
+    private static Direction direction(BlockSupport.Face face) {
+        return switch (face) {
+            case UP -> Direction.UP;
+            case NORTH -> Direction.NORTH;
+            case SOUTH -> Direction.SOUTH;
+            case EAST -> Direction.EAST;
+            case WEST -> Direction.WEST;
+        };
     }
 
     private static boolean upperHalfOnLower(Level level, BlockPos target, BlockState state) {
