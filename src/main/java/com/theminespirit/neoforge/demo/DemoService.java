@@ -60,6 +60,8 @@ public final class DemoService {
             return 0;
         }
         DemoSession session = new DemoSession(level, spirit, plans);
+        spirit.setDemo(true);
+        spirit.setInvulnerable(true);
         spirit.moveTo(anchor.getX() + 0.5 - lookDx * SPAWN_STEP_BACK, anchor.getY(),
                 anchor.getZ() + 0.5 - lookDz * SPAWN_STEP_BACK);
         level.addFreshEntity(spirit);

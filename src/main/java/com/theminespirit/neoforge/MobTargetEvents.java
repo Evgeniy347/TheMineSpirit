@@ -58,6 +58,9 @@ public final class MobTargetEvents {
         }
 
         private static boolean canTargetSpirit(Mob mob, SpiritEntity spirit, SpiritTargets.Condition condition) {
+            if (spirit.isDemo()) {
+                return false;
+            }
             return condition.holds(lightMagicValue(mob), mob.level().isDay(), spirit.isInWater());
         }
 
