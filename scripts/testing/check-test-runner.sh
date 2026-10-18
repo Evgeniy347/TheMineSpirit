@@ -117,6 +117,68 @@ code=$?
     && ok "unit-build-error: код=1, BUILD ERROR + ошибка компиляции" \
     || fail "unit-build-error: код=$code, вывод: $out"
 
+# ── Разбор 6000 отчётов: одним процессом и быстро ────────────────────────────
+# Прежний разбор делал ~18 fork на XML: на Windows 50 файлов разбирались 150 с, 640 — полчаса, и test.sh
+# после BUILD SUCCESSFUL висел, держа пульс свежим. Фейковый gradle одним awk пишет 6000 XML (в каждом
+# 1–5 тестов; падение в файлах i%1000==7, ошибка в i%2500==11) и время своего конца; от конца gradle до
+# итога test.sh должно пройти меньше REPORT_LIMIT секунд.
+REPORT_LIMIT=30
+cat >"$work/bin/many-reports.awk" <<'GEN'
+BEGIN {
+    for (i = 1; i <= n; i++) {
+        f = dir "/TEST-com.example.Suite" i ".xml"
+        t = (i % 5) + 1; bad = (i % 1000 == 7); err = (i % 2500 == 11)
+        print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > f
+        print "<testsuite name=\"com.example.Suite" i "\" tests=\"" t "\" skipped=\"0\" failures=\"" bad "\" errors=\"" err "\" time=\"0.01\">" > f
+        for (k = 1; k <= t; k++) {
+            if (k == 1 && (bad || err)) {
+                tagname = bad ? "failure" : "error"
+                print "  <testcase name=\"case" k "\" classname=\"com.example.Suite" i "\" time=\"0.001\">" > f
+                print "    <" tagname " message=\"boom\" type=\"java.lang.AssertionError\">java.lang.AssertionError: boom" > f
+                print "  </" tagname ">" > f
+                print "  </testcase>" > f
+            } else {
+                print "  <testcase name=\"case" k "\" classname=\"com.example.Suite" i "\" time=\"0.001\"/>" > f
+            }
+        }
+        # Вывод теста с «тегами» внутри CDATA — не тесты и не падения.
+        print "  <system-out><![CDATA[<testsuite tests=\"99\" failures=\"99\"> <failure message=\"x\">" > f
+        print "]]></system-out>" > f
+        print "</testsuite>" > f
+        close(f)
+    }
+}
+GEN
+cat >"$work/bin/many-reports" <<'FAKE'
+#!/usr/bin/env bash
+mkdir -p TestResults/unit/xml
+awk -v n="${FAKE_XML_COUNT:?}" -v dir=TestResults/unit/xml -f "${FAKE_GEN:?}"
+echo "BUILD SUCCESSFUL"
+date +%s >"${FAKE_DONE:?}"
+exit 0
+FAKE
+chmod +x "$work/bin/many-reports"
+# 6000 файлов: сумма (i%5)+1 = 18000 тестов; падения 7,1007…5007 (6), ошибки 11,2511,5011 (3) — 9 упавших.
+for parser in default none; do
+    rm -f "$work/many.done"
+    out=$(THEMINESPIRIT_PYTHON="$([ "$parser" = none ] && echo none)" THEMINESPIRIT_GRADLEW="$work/bin/many-reports" \
+        FAKE_XML_COUNT=6000 FAKE_GEN="$work/bin/many-reports.awk" FAKE_DONE="$work/many.done" \
+        bash scripts/test.sh unit 2>&1)
+    code=$?
+    finished=$(date +%s)
+    done_at=$(cat "$work/many.done" 2>/dev/null || echo 0)
+    took=$((finished - done_at))
+    [ "$code" = 1 ] && echo "$out" | grep -q "FAIL unit: прошло 17991, упало 9" \
+        && echo "$out" | grep -qx "com.example.Suite7.case1" \
+        && echo "$out" | grep -qx "com.example.Suite11.case1" \
+        && ok "many-reports ($parser): 6000 XML — 18000 тестов, 9 упавших, имена упавших" \
+        || fail "many-reports ($parser): код=$code, вывод: $(echo "$out" | head -8)"
+    [ "$done_at" -gt 0 ] && [ "$took" -lt "$REPORT_LIMIT" ] \
+        && ok "many-reports ($parser): итог через $took с после конца gradle (предел $REPORT_LIMIT)" \
+        || fail "many-reports ($parser): итог через $took с после конца gradle (предел $REPORT_LIMIT)"
+done
+rm -f TestResults/unit/xml/TEST-*.xml
+
 # Предел unit: уменьшаем до 2 с
 export THEMINESPIRIT_GRADLEW="$work/bin/slow"
 export THEMINESPIRIT_UNIT_WARN_SECONDS=1
@@ -127,6 +189,141 @@ unset THEMINESPIRIT_UNIT_WARN_SECONDS THEMINESPIRIT_UNIT_STOP_SECONDS
 [ "$code" = 124 ] && echo "$out" | grep -q "стоп по пределу 2 с" \
     && ok "unit-limit: код=124, стоп по пределу" \
     || fail "unit-limit: код=$code, вывод: $out"
+
+# ── Свои фоновые процессы test.sh не переживают его выход ────────────────────
+# На Windows зависший test.sh держал 3–5 своих bash (пульс, монитор, подоболочки), пульс оставался свежим,
+# и надзор исполнителя считал агента занятым. Фейковый gradle записывает: всех потомков test.sh, кроме своего
+# дерева (пульс, монитор и их sleep), PID пульса из файла пульса, свой PID и PID своего «рабочего» sleep.
+
+# Живые PID из файла $1 (по одному в строке) — через пробел; пусто — все мертвы.
+alive_from() {
+    local pid left=""
+    for pid in $(cat "$1" 2>/dev/null); do
+        kill -0 "$pid" 2>/dev/null && left="$left $pid"
+    done
+    printf '%s' "$left"
+}
+
+# Уборка за красным тестом: только PID из своих файлов.
+kill_from() {
+    local pid
+    for pid in $(cat "$@" 2>/dev/null); do kill -KILL "$pid" 2>/dev/null; done
+}
+
+# Запуск test.sh в фоне со страховкой: не вышел за $1 с — KILL по PID (старый test.sh висел в wait вечно).
+# Код — в $code, вывод — в $out, время — в $took.
+run_limited() {
+    local limit="$1" pid i=0 start
+    shift
+    start=$(date +%s)
+    "$@" >"$work/limited.out" 2>&1 &
+    pid=$!
+    while kill -0 "$pid" 2>/dev/null && [ "$i" -lt $((limit * 10)) ]; do
+        sleep 0.1; i=$((i + 1))
+    done
+    if kill -0 "$pid" 2>/dev/null; then
+        kill -KILL "$pid" 2>/dev/null
+        wait "$pid" 2>/dev/null
+        code=timeout
+    else
+        wait "$pid"; code=$?
+    fi
+    took=$(( $(date +%s) - start ))
+    out=$(cat "$work/limited.out")
+}
+
+cat >"$work/bin/record-kids" <<'FAKE'
+#!/usr/bin/env bash
+if [ -n "${FAKE_STUBBORN:-}" ]; then
+    # «Gradle», который не слушает TERM (игнор наследует и его sleep): гасится только KILL.
+    trap '' TERM
+fi
+echo $$ >"${FAKE_SELF:?}"
+# Пульс пишет свой PID сразу после старта — ждём, пока запишет.
+i=0
+while [ "$i" -lt 50 ] && [ ! -s "${THEMINESPIRIT_TEST_HEARTBEAT:?}" ]; do sleep 0.1; i=$((i + 1)); done
+cat "$THEMINESPIRIT_TEST_HEARTBEAT" >"${FAKE_HB:?}"
+# Потомки родителя (test.sh), кроме себя и своих потомков.
+ps -ef | awk -v root="$PPID" -v me="$$" '
+    $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2 }
+    END {
+        q[1] = root; h = 1; t = 1
+        while (h <= t) {
+            p = q[h++]; n = split(kids[p], l, " ")
+            for (k = 1; k <= n; k++) if (l[k] != me) { q[++t] = l[k]; print l[k] }
+        }
+    }' >"${FAKE_KIDS:?}"
+if [ -n "${FAKE_HANG:-}" ]; then
+    sleep 300 &
+    echo $! >"${FAKE_WORKER:?}"
+    wait $!
+    exit 0
+fi
+mkdir -p TestResults/unit/xml
+cat >TestResults/unit/xml/TEST-com.example.Kids.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.Kids" tests="1" failures="0" errors="0" skipped="0">
+  <testcase name="test1" classname="com.example.Kids"/>
+</testsuite>
+XML
+echo "BUILD SUCCESSFUL"
+exit 0
+FAKE
+chmod +x "$work/bin/record-kids"
+export THEMINESPIRIT_TEST_HEARTBEAT="$work/heartbeat" FAKE_KIDS="$work/kids.pids" FAKE_HB="$work/hb.pid" \
+       FAKE_SELF="$work/gradle.pid" FAKE_WORKER="$work/worker.pid"
+
+# 1. Обычный зелёный прогон: после выхода нет ни пульса, ни монитора, ни их sleep; файл пульса убран.
+: >"$FAKE_KIDS"; : >"$FAKE_HB"
+run_limited 60 env THEMINESPIRIT_GRADLEW="$work/bin/record-kids" bash scripts/test.sh unit
+sleep 0.5
+hb_pid=$(tr -dc '0-9' <"$FAKE_HB")
+left=$(alive_from "$FAKE_KIDS")
+[ "$code" = 0 ] && echo "$out" | grep -q "OK unit: 1 тест" \
+    && ok "own-procs: зелёный прогон, код=0" || fail "own-procs: код=$code, вывод: $out"
+[ -n "$hb_pid" ] && grep -qx "$hb_pid" "$FAKE_KIDS" && [ -s "$FAKE_KIDS" ] && [ -z "$left" ] \
+    && ok "own-procs: пульс (pid $hb_pid) и прочие фоновые процессы test.sh не пережили выход" \
+    || fail "own-procs: пульс=$hb_pid, потомки=[$(tr '\n' ' ' <"$FAKE_KIDS")], живы:[$left]"
+[ ! -e "$THEMINESPIRIT_TEST_HEARTBEAT" ] \
+    && ok "own-procs: файл пульса убран" || fail "own-procs: файл пульса остался"
+kill_from "$FAKE_KIDS"
+
+# 2. Чужой TERM посреди прогона: test.sh выходит сразу (код 143), гасит свой gradle, его sleep и пульс.
+: >"$FAKE_KIDS"; : >"$FAKE_HB"; : >"$FAKE_SELF"; : >"$FAKE_WORKER"
+FAKE_HANG=1 THEMINESPIRIT_GRADLEW="$work/bin/record-kids" bash scripts/test.sh unit >"$work/term.out" 2>&1 &
+term_pid=$!
+i=0
+while [ "$i" -lt 300 ] && [ ! -s "$FAKE_WORKER" ]; do sleep 0.1; i=$((i + 1)); done
+kill -TERM "$term_pid" 2>/dev/null
+i=0
+while [ "$i" -lt 300 ] && kill -0 "$term_pid" 2>/dev/null; do sleep 0.1; i=$((i + 1)); done
+if kill -0 "$term_pid" 2>/dev/null; then
+    kill -KILL "$term_pid" 2>/dev/null; code=timeout
+else
+    wait "$term_pid"; code=$?
+fi
+sleep 0.5
+left=$(alive_from "$FAKE_KIDS")$(alive_from "$FAKE_SELF")$(alive_from "$FAKE_WORKER")
+[ "$code" = 143 ] && [ -s "$FAKE_WORKER" ] && [ -z "$left" ] \
+    && ok "own-procs-term: TERM — код 143, gradle, его sleep и пульс погашены" \
+    || fail "own-procs-term: код=$code, живы:[$left], вывод: $(cat "$work/term.out")"
+kill_from "$FAKE_KIDS" "$FAKE_SELF" "$FAKE_WORKER"
+
+# 3. Предел времени, gradle глух к TERM: монитор добивает его дерево KILL, test.sh выходит с 124
+#    (старый test.sh ждал такой gradle в wait вечно, а метка .stopped появлялась без выхода).
+: >"$FAKE_KIDS"; : >"$FAKE_HB"; : >"$FAKE_SELF"; : >"$FAKE_WORKER"
+run_limited 60 env FAKE_HANG=1 FAKE_STUBBORN=1 THEMINESPIRIT_GRADLEW="$work/bin/record-kids" \
+    THEMINESPIRIT_UNIT_WARN_SECONDS=1 THEMINESPIRIT_UNIT_STOP_SECONDS=2 bash scripts/test.sh unit
+sleep 0.5
+left=$(alive_from "$FAKE_KIDS")$(alive_from "$FAKE_SELF")$(alive_from "$FAKE_WORKER")
+[ "$code" = 124 ] && echo "$out" | grep -q "стоп по пределу 2 с" \
+    && ok "limit-kill: глухой к TERM gradle — код 124 за $took с" \
+    || fail "limit-kill: код=$code за $took с, вывод: $out"
+[ -s "$FAKE_SELF" ] && [ -s "$FAKE_WORKER" ] && [ -z "$left" ] \
+    && ok "limit-kill: gradle, его sleep, пульс и монитор погашены" \
+    || fail "limit-kill: живы:[$left] (gradle $(cat "$FAKE_SELF"), sleep $(cat "$FAKE_WORKER"))"
+kill_from "$FAKE_KIDS" "$FAKE_SELF" "$FAKE_WORKER"
+unset THEMINESPIRIT_TEST_HEARTBEAT FAKE_KIDS FAKE_HB FAKE_SELF FAKE_WORKER
 
 # Предел gametest: уменьшаем до 2 с
 export THEMINESPIRIT_GRADLEW="$work/bin/slow"
@@ -397,7 +594,7 @@ FAKE
             && ok "signal-server: сервер GameTest погашен по TERM (pid $sig_server)" \
             || fail "signal-server: сервер GameTest жив после TERM (pid $sig_server)"
         [ "$sig_alive" = yes ] && kill -KILL "$sig_server" 2>/dev/null
-        # Клиент gradle на сигнале скрипт не гасит (это вне дефекта) — в тесте убираем свой по PID.
+        # Клиент gradle test.sh гасит сам (cleanup); за красным прогоном в тесте добиваем свой по PID.
         kill -KILL "$sig_client" 2>/dev/null
         rm -rf "$work/tmp/lock.d"
         ;;
