@@ -3,7 +3,6 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
@@ -20,8 +19,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class RepairGameTests {
-    private static final int IRON_PICKAXE_MAX = 250;
-    private static final int WOODEN_PICKAXE_MAX = 59;
     private static final int SETTLE_TICKS = 1;
 
     private RepairGameTests() {
@@ -45,10 +42,10 @@ public final class RepairGameTests {
                     "ремонт наковальней обязан завершиться успехом, статус: " + spirit.taskStatus().orElse(null)
                             + ", причина: " + spirit.taskFailureReason().orElse("нет"));
             int durability = bestDurability(spirit, Items.IRON_PICKAXE);
-            int expected = RepairCalculator.anvilResult(150, IRON_PICKAXE_MAX, RepairCalculator.ANVIL_REPAIR_PERCENT);
+            int expected = 212;
             helper.assertTrue(durability == expected,
-                    "прочность кирки после ремонта наковальней обязана быть " + expected + ", фактически "
-                            + durability);
+                    "150 + 25% от 250 (62) = 212: наковальня добавляет четверть максимума за слиток, "
+                            + "фактически " + durability);
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT) == 0,
                     "слиток обязан быть израсходован на ремонт, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT));
@@ -76,9 +73,10 @@ public final class RepairGameTests {
                     "после комбинирования обязана остаться одна кирка, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE));
             int durability = bestDurability(spirit, Items.WOODEN_PICKAXE);
-            int expected = RepairCalculator.grindstoneResult(19, 29, WOODEN_PICKAXE_MAX);
+            int expected = 51;
             helper.assertTrue(durability == expected,
-                    "прочность объединённой кирки обязана быть " + expected + ", фактически " + durability);
+                    "19 + 29 + 5% от 59 (3) = 51: точило складывает прочность и добавляет бонус, "
+                            + "фактически " + durability);
         });
     }
 
@@ -102,9 +100,9 @@ public final class RepairGameTests {
                     "после ремонта обязана остаться одна кирка, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE));
             int durability = bestDurability(spirit, Items.IRON_PICKAXE);
-            int expected = RepairCalculator.grindstoneResult(150, 100, IRON_PICKAXE_MAX);
+            int expected = 250;
             helper.assertTrue(durability == expected,
-                    "прочность починенной кирки обязана быть " + expected + ", фактически " + durability);
+                    "100 + 150 + 5% от 250 (13) = 263 обрезается до максимума 250, фактически " + durability);
         });
     }
 
