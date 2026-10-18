@@ -70,6 +70,16 @@ public final class CampfireSession {
             return fail("костёр не успел за " + timeoutTicks + " тиков: приготовлено " + collected + " из "
                     + wanted);
         }
+        // Подбор готового — каждый тик, а не раз в POLL_TICKS: при ускоренной готовке (GameTest-помпа)
+        // несколько предметов вызревают в один тик и падают одним местом; подбор раз в 10 тиков терял
+        // часть выхода, и сессия висела в RUNNING с пустым костром (флак 18.10). Постановка сырья —
+        // по-прежнему раз в POLL_TICKS, чтобы не дёргать слоты каждый тик.
+        collectDrops();
+        if (collected >= wanted) {
+            takeBack(campfire.get());
+            outcome = Outcome.SUCCEEDED;
+            return outcome;
+        }
         boolean pollNow = ticks % CraftTuning.POLL_TICKS == 0;
         ticks++;
         return pollNow ? poll(campfire.get()) : Outcome.RUNNING;
@@ -99,12 +109,6 @@ public final class CampfireSession {
 
     private Outcome poll(CampfireBlockEntity campfire) {
         polls++;
-        collectDrops();
-        if (collected >= wanted) {
-            takeBack(campfire);
-            outcome = Outcome.SUCCEEDED;
-            return outcome;
-        }
         placeFood(campfire);
         if (inputQueue > 0 && spirit.getInventory().countItem(input) < 1) {
             takeBack(campfire);
