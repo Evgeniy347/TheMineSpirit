@@ -318,7 +318,7 @@
 
 ### Бой и охота
 - [x] `attack` (цель, скрипт `attack`); `shoot` — нет
-- [ ] `set_combat_mode` (aggressive / defensive / protect / passive; режимы тактики есть, скрипта нет)
+- [x] `set_combat_mode` (`set_combat_mode`: passive/defensive/protect/aggressive; журнал решений; deepseek-v4.1-flash, 18.10). REST-команда `set_combat_mode` ещё нет
 - [x] `defend` (себя, скрипт `defend`), `hunt` (животные, скрипт `hunt`); `guard_area`, `hunt_hostile` — нет
 
 ### Инвентарь и крафт
@@ -330,7 +330,9 @@
 ### Стройка, ферма, база
 - [ ] `build_farm`, `build_shelter`, `build_fence` (есть `build_schematic`, `fill`, `place_block` — не то)
 - [x] `light_area` (`light_area`); `secure_area` — нет
-- [ ] `use_block` (рычаг, кнопка, дверь), `open` — нет; `close` (`close_door` — только дверь)
+- [x] `use_block` (`use_block`: рычаг, кнопка, дверь) и `open` (`open`: дверь, люк, калитка, сундук — открыть и закрыть);
+      `close` — только дверь (`close_door`); защита чужих механизмов через `ProtectionGate.checkUse`/unprotect
+      (deepseek-v4.1-flash, 18.10)
 
 ### Социум и мета
 - [x] `say` (`say`), `deliver` (`deliver`); `report`, `give`, `take` — нет
