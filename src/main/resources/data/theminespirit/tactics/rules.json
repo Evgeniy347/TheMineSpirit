@@ -114,11 +114,22 @@
        "requires": [{"fact": "self.blocks", "op": ">=", "value": 8}, {"fact": "enemy.anyRanged", "op": "==", "value": false}, {"fact": "enemy.anyFlies", "op": "==", "value": false}],
        "utility": {"base": 0.4},
        "bonus": []},
+      {"id": "retreat_rally", "method": "RALLY",
+       "requires": [{"fact": "order.helpAvailable", "op": "==", "value": true}],
+       "utility": {"base": 0.2},
+       "bonus": []},
       {"id": "retreat_away", "method": "AWAY",
        "requires": [{"fact": "derived.speedRatio", "op": ">=", "value": 1.0}, {"fact": "enemy.nearest", "op": ">", "value": 3}, {"fact": "enemy.anyRanged", "op": "==", "value": false}],
        "utility": {"base": 0.2},
        "bonus": []}
     ],
-    "callHelp": {"when": [{"fact": "order.helpAvailable", "op": "==", "value": true}]}
+    "callHelp": {"when": [{"fact": "order.helpAvailable", "op": "==", "value": true}]},
+    "rally": {
+      "rallyRadius": 16,
+      "callRadius": 24,
+      "callMinEnemies": 2,
+      "callIntervalTicks": 200,
+      "helpRadius": 32
+    }
   }
 }

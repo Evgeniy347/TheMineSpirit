@@ -15,7 +15,7 @@ class CoordinatorTuningTests {
     @Test
     void defenseRadius_DeclaredValue_MatchesTuningLiteral() {
         assertEquals(16.0, CoordinatorTuning.DEFENSE_RADIUS,
-                "Радиус обороны 16 — как ALLY_RADIUS и лимит follow.radius: сектора держат защитников у базы");
+                "Радиус обороны 16 — как радиус сбора духов и лимит follow.radius: сектора держат защитников у базы");
     }
 
     @Test

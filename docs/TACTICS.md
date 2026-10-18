@@ -45,7 +45,7 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 |---|---|
 | `enemies.json` | `{"enemies": [{type, hp, dps, speed, ranged, explosive, swims, flies, tier}]}`; ключ `minecraft:[a-z_]+`, обязателен `default` для неизвестного типа |
 | `weights.json` | `scales` (масштабы факторов), `weights` (матрица фактор × вариант, полная), `tieBreak`, `stickiness`, `holdTicks`, `hpDropRelease` |
-| `rules.json` | `hard`, `actions`, `modeTransitions`, `states`, `retreat` (`methods` + `callHelp`); `id` правил уникальны на весь файл |
+| `rules.json` | `hard`, `actions`, `modeTransitions`, `states`, `retreat` (`methods` + `callHelp` + `rally`); `id` правил уникальны на весь файл |
 | `modes.json` | `returnTolerance` и на режим `{initiates, radiusBase, engageRadius, pursuitRadius, anchor, leash, returnToAnchor}` |
 
 Правило: `{"id", "priority", "when": [атомы], "then": {...}}`. Атом: `{"fact", "op", "value"}`, `op` ∈
@@ -120,6 +120,10 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 Найденной воды нет: ведро превращает WATER в `RetreatPlan.Pour` — вода ставится в клетку духа (тушит огонь и
 гасит падение, MLG), пустое ведро возвращается в инвентарь; без ведра WATER-план вырождается в обычный отход
 `HOME` (дом или лагерь), а если и точки нет — плана нет, как и раньше для способа без цели.
+`RALLY` (полезность 0.2, но выбирается приоритетно, когда доступен) — сбор к ближайшему союзнику или игроку в радиусе
+`retreat.rally.rallyRadius`; точка плана — сам союзник, а не точка «прочь от врага». Условие — факт
+`order.helpAvailable`, который адаптер поднимает, когда рядом есть дух или не-спектатор-игрок в этом радиусе.
+Низкая полезность не раздувает `ESCAPE_ROUTE`: сбор не делает отход привлекательнее там, где дух ещё может драться.
 `AWAY` (бег прочь по открытой местности, полезность 0.2, ниже любого другого) добавлен ревью R6: условие — дух не медленнее
 врага, враг дальше 3 блоков и нет стрелков (в спину бьют из лука) (ближе — `cornered_fight` обязан оставаться возможным).
 Фактор `ESCAPE_ROUTE` — наибольшая полезность среди доступных способов (`RetreatOptions.bestUtility`, 0 при пустом
@@ -161,6 +165,11 @@ callHelp, state, mode, returnTo, trace, memory)`; `memory` адаптер пер
 - **Исполнение**: `CombatActuator` бьёт мечом из инвентаря (ATTACK_DAMAGE духа 1, лучший меч берётся в руку копией) и
   стреляет из лука; `RetreatPlanner` строит план отхода (бег к точке, стена 3x2, столб, ведро под себя), `RetreatExecutor` его исполняет,
   `RetreatCommitment` держит отход: бой прерывает бег, но не постройку, запасной AWAY уступает найденному лучшему способу.
+- **Зов помощи**: при отходе и врагах не меньше `retreat.rally.callMinEnemies` дух кладёт `HelpCall` в координатор
+  (в процессе, без сети) и пишет ближайшему игроку в радиусе `callRadius` «нужна помощь у x y z» не чаще
+  `callIntervalTicks` (`HelpCallGate`). Координатор отвечает `HelpCallPolicy`: срочный приказ защиты получает
+  ближайший дух в радиусе `helpRadius`, сам не атакованный; срочный приказ прерывает его задачу, а после снятия зова
+  задача возобновляется.
 - **Приказы**: `setCombatMode`, `setGuardZone`, `setWard` (будущая REST-команда `set_combat_mode` вызывает их); зона
   охраны — только явная, рабочая зона политик в приказы тактики не попадает.
 - **Дом, лагерь и укрепления**: отход `HOME` идёт к ближайшей из дома (`SpiritHome`) и лагеря похода (`Camp`,
