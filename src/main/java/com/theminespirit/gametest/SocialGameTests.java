@@ -393,4 +393,85 @@ public final class SocialGameTests {
             TacticsScene.finish(helper, spirit);
         });
     }
+
+    @GameTest(template = "arena", batch = "social_drop_player", timeoutTicks = 300)
+    public static void dropToPlayer_SpiritHasCobble_ItemLandsNearPlayer(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "DropTarget");
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("drop_to_player", Map.of(
+                "item", "cobblestone", "count", 3, "to", "player:DropTarget")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "drop_to_player обязан дойти до игрока и завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            int nearPlayer = helper.getLevel().getEntitiesOfClass(ItemEntity.class,
+                    player.getBoundingBox().inflate(1.5),
+                    drop -> !drop.isRemoved() && drop.getItem().is(Items.COBBLESTONE))
+                    .stream().mapToInt(drop -> drop.getItem().getCount()).sum();
+            helper.assertTrue(nearPlayer == 3,
+                    "рядом с игроком обязано лежать ровно 3 булыжника, фактически: " + nearPlayer);
+            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+                    "после броска у духа не должно остаться булыжников, осталось: "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            TacticsScene.finish(helper, spirit);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_give_spirit", timeoutTicks = 300)
+    public static void give_SpiritAddressee_ReceivesItems(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity giver = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        SpiritEntity receiver = TacticsScene.spirit(helper, new BlockPos(9, 1, 5));
+        receiver.setNoAi(true);
+        giver.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
+
+        SpiritRun run = SpiritRun.launch(helper, giver, new ScriptCall("give", Map.of(
+                "item", "cobblestone", "count", 3, "to", "spirit:" + receiver.getUUID())), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(giver.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "give обязан передать предмет духу и завершиться успехом, статус: "
+                            + giver.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + giver.taskFailureReason().orElse("нет"));
+            helper.assertTrue(GameTestFixtures.countInInventory(receiver.getInventory(), Items.COBBLESTONE) == 3,
+                    "дух-адресат обязан получить ровно 3 булыжника, у него: "
+                            + GameTestFixtures.countInInventory(receiver.getInventory(), Items.COBBLESTONE));
+            TacticsScene.finish(helper, giver);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "social_report", timeoutTicks = 150)
+    public static void report_PlayerAddressee_GetsStateLine(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 2));
+        List<Component> messages = new ArrayList<>();
+        GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 5), "ReportTarget", messages);
+
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("report", Map.of(
+                "to", "player:ReportTarget")), 10);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "report обязан отправить доклад и завершиться успехом, статус: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            String line = messages.stream().map(Component::getString)
+                    .filter(text -> text.contains("Доклад"))
+                    .findFirst().orElse("");
+            helper.assertTrue(line.contains("здоровье") && line.contains("инвентарь") && line.contains("где"),
+                    "доклад обязан называть здоровье, инвентарь и место, фактически: '" + line + "'");
+            helper.assertTrue(line.contains("cobblestone"),
+                    "доклад обязан кратко перечислять инвентарь, фактически: '" + line + "'");
+            TacticsScene.finish(helper, spirit);
+        });
+    }
 }

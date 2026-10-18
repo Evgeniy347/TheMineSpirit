@@ -328,10 +328,10 @@
 - [x] `defend` (себя, скрипт `defend`), `hunt` (животные, скрипт `hunt`); `guard_area`, `hunt_hostile` — нет
 
 ### Инвентарь и крафт
-- [x] `equip` (`equip`), `swap_tool` — нет; `craft` (`craft`), `smelt` (`smelt`), `repair` (`repair`, 17.10)
+- [x] `equip` (`equip`), `swap_tool` (`swap_tool`, 18.10); `craft` (`craft`), `smelt` (`smelt`), `repair` (`repair`, 17.10)
 - [x] `acquire` (`acquire`), `pick_up` (`collect_drops`), `deposit` (`deposit`), `withdraw` (`withdraw`),
-      `sort_chest` (`sort_chest`); `drop_to_player` — нет
-- [x] `eat` (`eat`, 16.10); `drink_potion` — нет
+      `sort_chest` (`sort_chest`); `drop_to_player` (`drop_to_player`, 18.10)
+- [x] `eat` (`eat`, 16.10); `drink_potion` (`drink_potion`, 18.10)
 
 ### Стройка, ферма, база
 - [ ] `build_farm`, `build_shelter`, `build_fence` (есть `build_schematic`, `fill`, `place_block` — не то)
@@ -341,7 +341,7 @@
       (deepseek-v4.1-flash, 18.10)
 
 ### Социум и мета
-- [x] `say` (`say`), `deliver` (`deliver`); `report`, `give`, `take` — нет
+- [x] `say` (`say`), `deliver` (`deliver`), `report` (`report`), `give` (`give`), `take` (`take`) — 18.10
 - [x] `wait` (`wait`); `stop`, `cancel` — команды (`/spirit cancel`, `DELETE /v1/tasks/{id}`), `set_priority` — нет
 - [x] композиция: `sequence`, `repeat`, `retry`, `fallback`, `parallel`, `condition` (движок дерева задач, P0)
 
