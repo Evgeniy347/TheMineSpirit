@@ -51,7 +51,7 @@
 
 ## Мёртвый код (владелец 19.10)
 
-14. [ ] **DeadCodeGuard** (`src/main/java`, кроме пакета `gametest`): класс, метод или поле production-кода, на которые
+14. [x] **DeadCodeGuard** (`src/main/java`, кроме пакета `gametest`): класс, метод или поле production-кода, на которые
     нет ссылок из другого production-кода, — нарушение. Ссылки из `src/test/java` и из `gametest` **не считаются**
     (код, который нужен только тестам, — мёртвый). Точки входа не нарушение: `@Mod`, `@EventBusSubscriber`,
     `@SubscribeEvent`, `@Override` (методы Minecraft/NeoForge/JDK), регистрация в реестрах, `record`-компоненты,
