@@ -43,6 +43,13 @@ class FarmStandSpotsTests {
     }
 
     @Test
+    void maxSafetyReads_SearchBoxVolume_Is324() {
+        assertEquals(9 * 4 * 9, FarmStandSpots.MAX_SAFETY_READS,
+                "Предел чтений обязан равняться объёму ящика 9×4×9 (окрестность ±4 по земле, 4 уровня по высоте): "
+                        + "поднятая константа тихо ослабит тест масштаба. Число правится только с тестом масштаба");
+    }
+
+    @Test
     void of_CachedView_ReadsStayWithinBound() {
         CountingSafety safety = flatFloor();
 

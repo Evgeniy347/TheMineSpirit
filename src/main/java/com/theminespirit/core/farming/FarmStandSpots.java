@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Objects;
 
 public final class FarmStandSpots {
+    public static final int MAX_SAFETY_READS = 324;
+
     private static final int STAND_RADIUS = 3;
     private static final double EYE_HEIGHT = 1.62;
     private static final double MAX_REACH_SQUARED = FarmTuning.REACH * FarmTuning.REACH;

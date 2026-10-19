@@ -10,11 +10,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ServerThreadCall {
     private static final long MILLIS_IN_SECOND = 1000;
 
     private final Executor serverThread;
+    private final AtomicInteger submitted = new AtomicInteger();
     private final Object stopLock = new Object();
     private boolean stopping;
 
@@ -27,6 +29,7 @@ public final class ServerThreadCall {
             if (stopping) {
                 throw stoppingError();
             }
+            submitted.incrementAndGet();
         }
         CompletableFuture<T> future = new CompletableFuture<>();
         try {
@@ -78,6 +81,10 @@ public final class ServerThreadCall {
             }
         }
         return result(future);
+    }
+
+    public int submittedCount() {
+        return submitted.get();
     }
 
     static String formatSeconds(Duration timeout) {

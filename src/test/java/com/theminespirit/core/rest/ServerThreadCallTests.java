@@ -135,6 +135,17 @@ class ServerThreadCallTests {
     }
 
     @Test
+    void submittedCount_EachSubmit_CountsOneHop() {
+        ServerThreadCall call = new ServerThreadCall(serverThread);
+
+        call.call(() -> 1, LONG_ENOUGH);
+        call.call(() -> 2, LONG_ENOUGH);
+
+        assertEquals(2, call.submittedCount(),
+                "Счётчик считает переходы на серверный поток: по одному на запрос, иначе тест на масштаб слеп");
+    }
+
+    @Test
     void submit_RejectedByExecutor_ThrowsInternalApiException() {
         ServerThreadCall call = new ServerThreadCall(task -> {
             throw new RejectedExecutionException("сервер остановлен");

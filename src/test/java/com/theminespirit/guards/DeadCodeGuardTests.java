@@ -30,6 +30,7 @@ class DeadCodeGuardTests {
             + "(?:<[^;{}()]*>\\s*)?"
             + "([A-Za-z_$][\\w$.]*(?:\\s*<[^{};()]*>)?(?:\\s*\\[\\])*)\\s+"
             + "([A-Za-z_$][\\w$]*)\\s*\\(", Pattern.MULTILINE);
+    private static final Pattern TEST_METHOD = Pattern.compile("\\bvoid\\s+([A-Za-z_$][\\w$]*)\\s*\\(");
     private static final Pattern FIELD = Pattern.compile("(?:^|[;{}])\\s*" + PREFIX
             + "([A-Za-z_$][\\w$.]*(?:\\s*<[^{};()]*>)?(?:\\s*\\[\\])*)\\s+"
             + "([A-Za-z_$][\\w$]*)\\s*(?==|;)", Pattern.MULTILINE);
@@ -87,10 +88,57 @@ class DeadCodeGuardTests {
             new Exception("src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»")
     );
 
+    private static final List<Probe> SCALE_PROBES = List.of(
+            new Probe("src/main/java/com/theminespirit/core/mining/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds",
+                    "gatherPolicy_ExactIds_ExistInRegistries",
+                    "список точных запретов gather обязан существовать в реестре блоков: опечатка ослепляет политику"),
+            new Probe("src/main/java/com/theminespirit/core/policy/BlockProtection.java|method|BlockProtection#denyPatterns",
+                    "file_Loaded_ThresholdIsSixAndGatherPolicyIsNotDuplicated",
+                    "deny не дублирует точные запреты GatherPolicy: списки не должны разъезжаться"),
+            new Probe("src/main/java/com/theminespirit/core/rest/ServerThreadCall.java|method|ServerThreadCall#submittedCount",
+                    "concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach",
+                    "счётчик переходов на серверный поток: один переход на запрос, отказы и чтения — без перехода"),
+            new Probe("src/main/java/com/theminespirit/core/farming/FarmPlanner.java|field|FarmPlanner#MAX_SAFETY_READS_PER_TARGET",
+                    "maxSafetyReadsPerTarget_SearchBoxVolume_Is324",
+                    "бюджет чтений безопасности на цель: масштаб планирования фермы"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#treeBlockReads",
+                    "chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog",
+                    "счётчик чтений разбора дерева: бюджет на бревно и кеш LevelTreeView"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchExaminedPositions",
+                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
+                    "счётчик прочитанных позиций поиска: только секции с брёвнами"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchMaxExaminedPositionsPerTick",
+                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
+                    "максимум прочитанных позиций за тик: не больше срезов ScanTuning"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#maxObserveReadsPerTick",
+                    "observe_Radius32_ReadsWithinPerTickBudget",
+                    "пик чтений observe за тик: одно наблюдение не должно ронять тик"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeActiveCount",
+                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
+                    "число активных наблюдений: середина скана для остановки и удаления духа"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeTickCalls",
+                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
+                    "счётчик тиков ObserveJobs: после stop() подписка снята, тик не дёргает мёртвый мост"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#peakObserveJobs",
+                    "observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent",
+                    "пик одновременных наблюдений: параллельные запросы не превышают лимит"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#taskWatcher",
+                    "watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty",
+                    "наблюдатель задач для теста масштаба: ровно один опрос на активную задачу за тик")
+    );
+
     private static final List<Exception> EXCEPTIONS = exceptions();
 
     @Test
     void productionSources_EveryDeclaration_IsReferencedOrEntryPoint() {
+        Set<String> knownTests = testMethodNames();
+        List<String> missingTests = SCALE_PROBES.stream()
+                .filter(probe -> !knownTests.contains(probe.test()))
+                .map(probe -> probe.key() + " — нет теста " + probe.test())
+                .toList();
+        assertEquals(List.of(), missingTests,
+                "Проба масштаба ссылается на несуществующий тест: исключение устарело и прикрывает мёртвый код. "
+                        + "Верните тест или удалите пробу: " + missingTests);
         List<Finding> findings = deadCode(production());
         List<String> offenders = new ArrayList<>();
         List<String> stale = new ArrayList<>();
@@ -190,8 +238,36 @@ class DeadCodeGuardTests {
                 "Сторож ложно считает ссылкой упоминание в комментарии или строке: такой код остаётся мёртвым");
     }
 
+    private static Set<String> testMethodNames() {
+        Set<String> names = new HashSet<>();
+        Matcher matcher;
+        for (Map<Path, String> sources : List.of(SourceFiles.javaUnder(SourceFiles.TEST), gameTests())) {
+            for (String source : sources.values()) {
+                matcher = TEST_METHOD.matcher(strip(source));
+                while (matcher.find()) {
+                    names.add(matcher.group(1));
+                }
+            }
+        }
+        return names;
+    }
+
+    private static Map<Path, String> gameTests() {
+        Map<Path, String> sources = new TreeMap<>();
+        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+            if (file.startsWith(SourceFiles.GAME_TESTS)) {
+                sources.put(file, text);
+            }
+        });
+        return sources;
+    }
+
     private static List<Exception> exceptions() {
-        return List.copyOf(OPEN_TASKS);
+        List<Exception> all = new ArrayList<>(OPEN_TASKS);
+        for (Probe probe : SCALE_PROBES) {
+            all.add(new Exception(probe.key(), "Проба теста " + probe.test() + ": " + probe.reason()));
+        }
+        return List.copyOf(all);
     }
 
     private static Map<Path, String> production() {
@@ -539,6 +615,9 @@ class DeadCodeGuardTests {
     }
 
     private record Parsed(List<Token> tokens, List<Declaration> declarations, boolean[] ignored) {
+    }
+
+    private record Probe(String key, String test, String reason) {
     }
 
     private record Exception(String key, String reason) {

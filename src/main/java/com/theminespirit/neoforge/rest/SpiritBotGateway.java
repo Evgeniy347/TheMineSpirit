@@ -53,8 +53,28 @@ public final class SpiritBotGateway implements BotGateway {
         return server;
     }
 
+    public TaskWatcher taskWatcher() {
+        return watcher;
+    }
+
     public ServerThreadCall serverCall() {
         return serverCall;
+    }
+
+    public int peakObserveJobs() {
+        return jobs.peakActive();
+    }
+
+    public int observeActiveCount() {
+        return jobs.activeCount();
+    }
+
+    public int observeTickCalls() {
+        return jobs.tickCalls();
+    }
+
+    public int maxObserveReadsPerTick() {
+        return jobs.maxReadsPerTick();
     }
 
     public void stop() {

@@ -70,6 +70,7 @@ public final class RestPlanGameTests {
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
         String taskPath = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
+        int hopsBefore = rest.gateway().serverCall().submittedCount();
         String extraParam = "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":1,\"speed\":9}}";
         CompletableFuture<List<String>> scenario = rest.post(taskPath, planBody(extraParam))
                 .thenCompose(extra -> {
@@ -93,6 +94,9 @@ public final class RestPlanGameTests {
                             && missing.json().path("error").path("code").asText().equals("invalid_request"),
                             "POST /v1/plan без поля plan обязан отвечать 400 invalid_request: " + missing.status()
                                     + " " + missing.body());
+                    int hops = rest.gateway().serverCall().submittedCount() - hopsBefore;
+                    problems.expect(hops == 0,
+                            "Проверка плана и отказы 422 не обращаются к серверному потоку: лишних переходов " + hops);
                     problems.expect(rest.gateway().taskRegistry().size() == 0,
                             "Сухой прогон и отказы не создают задач, записей " + rest.gateway().taskRegistry().size());
                     return problems.found();

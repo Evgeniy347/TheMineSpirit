@@ -92,6 +92,7 @@ public final class RestTaskGameTests {
         String changedBody = gotoBody(helper, requestId, NEAR_CORNER);
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks", body).thenCompose(first -> {
+            int hopsAfterFirst = rest.gateway().serverCall().submittedCount();
             return rest.post(botPath + "/tasks", body).thenCompose(replay ->
                     rest.post(botPath + "/tasks", changedBody).thenApply(changed -> {
                         problems.expect(replay.status() == 202,
@@ -103,6 +104,11 @@ public final class RestTaskGameTests {
                         problems.expect(changed.status() == 409 && changed.body().contains(requestId),
                                 "Тот же request_id с другим телом обязан давать 409, называя request_id: "
                                         + changed.status() + " " + changed.body());
+                        int hopsAfterRepeats = rest.gateway().serverCall().submittedCount();
+                        problems.expect(hopsAfterRepeats == hopsAfterFirst,
+                                "Повтор и отказ по request_id не должны обращаться к серверному потоку (дух не "
+                                        + "перезапускается): переходов " + hopsAfterFirst + " после первого запроса и "
+                                        + hopsAfterRepeats + " после повторов");
                         problems.expect(rest.gateway().taskRegistry().size() == 1,
                                 "В реестре обязана остаться одна запись, а не " + rest.gateway().taskRegistry().size());
                         return problems.found();

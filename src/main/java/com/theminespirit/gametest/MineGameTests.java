@@ -781,6 +781,16 @@ public final class MineGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "gather_policy", timeoutTicks = 100)
+    public static void gatherPolicy_ExactIds_ExistInRegistries(GameTestHelper helper) {
+        for (String id : GatherPolicy.forbiddenExactIds()) {
+            helper.assertTrue(BlockSets.resolve(IdFilter.of(List.of("minecraft:" + id))).size() == 1,
+                    "точный запрет gather '" + id + "' обязан существовать в реестре блоков: опечатка в списке "
+                            + "ослепляет политику");
+        }
+        helper.succeed();
+    }
+
     // [флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
     @GameTest(template = "arena", batch = "gather_stone_wooden", timeoutTicks = 1400)
     public static void gather_StoneHeapWithWoodenPickaxe_MinesAll(GameTestHelper helper) {

@@ -160,7 +160,11 @@ class BlockProtectionTests {
     }
 
     @Test
-    void file_Loaded_ThresholdIsSix() {
+    void file_Loaded_ThresholdIsSixAndGatherPolicyIsNotDuplicated() {
         assertEquals(6, protection.buildingThreshold(), "Порог «здания» 6 искусственных соседей из 26 (предварительное значение чеклиста)");
+        for (String exact : GatherPolicy.forbiddenExactIds()) {
+            assertFalse(protection.denyPatterns().contains("minecraft:" + exact),
+                    "protection.json → deny не повторяет точный id '" + exact + "' из GatherPolicy: дубль разъедется при правке одного из списков");
+        }
     }
 }

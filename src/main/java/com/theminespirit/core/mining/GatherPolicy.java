@@ -20,6 +20,10 @@ public final class GatherPolicy {
     private GatherPolicy() {
     }
 
+    public static Set<String> forbiddenExactIds() {
+        return FORBIDDEN_EXACT;
+    }
+
     public static Decision check(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: тогда непонятно, что запрещать");
         String path = namespacePath(blockId);

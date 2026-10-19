@@ -87,6 +87,13 @@ class FarmPlannerTests {
     }
 
     @Test
+    void maxSafetyReadsPerTarget_SearchBoxVolume_Is324() {
+        assertEquals(324, FarmPlanner.MAX_SAFETY_READS_PER_TARGET,
+                "Предел чтений на цель обязан равняться 324 (ящик стоянки 9×4×9): поднятая константа тихо ослабит "
+                        + "тесты масштаба. Число правится только с тестами масштаба");
+    }
+
+    @Test
     void next_HarvestOnMixedBed_PicksOnlyMatureCrop() {
         MapFarmView farm = wheatBed();
 
