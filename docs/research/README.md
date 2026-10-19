@@ -36,6 +36,7 @@
 | [bot-api-bridge/README.md](bot-api-bridge/README.md) | REST/MCP-мосты и игровые примитивы | mineflayer, minecraft-mcp-server, minecraft-mcp |
 | [millenaire-classic/README.md](millenaire-classic/README.md) | Деревни, экономика, торговля, квесты, культуры, стройка (классика) | Kinniken/Millenaire |
 | [millenaire-modern.md](millenaire-modern.md) | То же на NeoForge 1.21.1 и в rewrite | Leviaria/Millenaire, WangMioG/Millenaire-rewrite |
+| [test-performance.md](test-performance.md) | Производительность JUnit и GameTest: замеры и рекомендации | инструменты сборки |
 
 ## Самое ценное по областям
 
