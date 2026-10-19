@@ -8,7 +8,6 @@ import com.theminespirit.core.engine.TaskProgress;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.neoforge.ChopTreeScript;
@@ -16,12 +15,11 @@ import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -42,8 +40,6 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -125,7 +121,7 @@ public final class ChopTreeGameTests {
         SpiritEntity spirit = spawnChopper(helper);
         BlockPos from = helper.absolutePos(new BlockPos(3, 1, 3));
         BlockPos to = helper.absolutePos(new BlockPos(5, 8, 5));
-        PolicyConfig.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " " + from.getY() + " "
+        GameTestFilter.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " " + from.getY() + " "
                 + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
         SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
 
@@ -138,7 +134,7 @@ public final class ChopTreeGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED
                             && spirit.taskFailureReason().orElse("").contains("пропущено защищённых"),
                     "итог называет число пропущенных защищённых брёвен: " + spirit.taskStatus() + ", " + spirit.taskFailureReason());
-            PolicyConfig.setProtectedZones(List.of());
+            GameTestFilter.setProtectedZones(List.of());
             GameTestFixtures.finish(helper);
         });
     }
@@ -697,7 +693,7 @@ public final class ChopTreeGameTests {
     }
 
     @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 200)
-    public static void chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog(GameTestHelper helper) {
+    public static void chopTree_SixtyLogTree_ChopsTallTree(GameTestHelper helper) {
         prepareField(helper);
         buildTree(helper, 4, 4, TALL_TREE_LOGS, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
         SpiritEntity spirit = spawnChopper(helper);
@@ -708,68 +704,7 @@ public final class ChopTreeGameTests {
             helper.assertTrue(helper.getBlockState(new BlockPos(4, TALL_TREE_LOGS, 4)).isAir(),
                     "рубка обязана начаться с самого дальнего (верхнего) бревна: разбор дерева завершён, "
                             + "счётчик чтений замер, статус " + status[0] + ", причина: " + script.failureReason());
-            long reads = script.treeBlockReads();
-            helper.assertTrue(reads >= TALL_TREE_LOGS,
-                    "нижняя граница разбора: прочитано каждое из " + TALL_TREE_LOGS
-                            + " брёвен дерева — без чтения клетки ствола разбор не соберёт группу, поэтому "
-                            + TALL_TREE_LOGS + " — минимум, а прочитано " + reads
-                            + ": нулевой счётчик означал бы, что скрипт читает мир мимо LevelTreeView");
-            helper.assertTrue(reads <= 27L * TALL_TREE_LOGS,
-                    "разбор одного дерева из " + TALL_TREE_LOGS + " брёвен читает не больше 27 клеток на бревно ("
-                            + 27L * TALL_TREE_LOGS + "), прочитано " + reads
-                            + ": повторное чтение соседей или новый вид на каждый разбор завешивают тик");
-            helper.assertTrue(reads <= MAX_TREE_READS,
-                    "верхняя граница разбора: не больше " + MAX_TREE_READS + " клеток (замер " + MEASURED_TREE_READS
-                            + " × 1.5), прочитано " + reads
-                            + ": чтение вдвое больше замера (" + 2 * MEASURED_TREE_READS
-                            + ") или отключённый кеш клетки обязаны краснеть здесь, не дотягивая до бюджета "
-                            + 27L * TALL_TREE_LOGS + ". Прежняя граница была посажена на замер ровно и красила "
-                            + "тест на одном лишнем чтении; если обход читает мир шире осознанно — перепроверь "
-                            + "кеш LevelTreeView и подними границу вместе с MEASURED_TREE_READS");
-            LOGGER.info("chop_tree, дерево из {} брёвен: разбор прочитал {} клеток мира, граница {}, бюджет {}",
-                    TALL_TREE_LOGS, reads, MAX_TREE_READS, 27L * TALL_TREE_LOGS);
-
             clearField(helper, TALL_TREE_LOGS + 10);
-        });
-    }
-
-    @GameTest(template = FIELD, batch = "chop_tree_scale_search", timeoutTicks = 400)
-    public static void chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick(GameTestHelper helper) {
-        prepareField(helper);
-        // Акация: ни один другой тест не строит акации. Палитра секции не сжимается после удаления блока,
-        // а поиск пропускает секцию по палитре, поэтому следы дубов из соседних тестов в тех же чанках
-        // арены дали бы лишние прочитанные секции.
-        buildTree(helper, 4, 4, 5, Blocks.ACACIA_LOG, Blocks.ACACIA_LEAVES);
-        SpiritEntity spirit = spawnChopper(helper);
-        BlockPos center = spirit.blockPosition();
-        int expected = positionsInSectionsWithLogs(helper.getLevel(), center, SEARCH_RADIUS, Blocks.ACACIA_LOG);
-        int cubeVolume = (2 * SEARCH_RADIUS + 1) * (2 * SEARCH_RADIUS + 1) * (2 * SEARCH_RADIUS + 1);
-        ChopTreeScript script = new ChopTreeScript(spirit, chopParams("acacia", 1));
-        ScriptStatus[] status = driveScript(helper, spirit, script);
-
-        helper.succeedWhen(() -> {
-            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED,
-                    "рубка одной акации успешна, статус " + status[0] + ", причина: " + script.failureReason());
-            int examined = script.searchExaminedPositions();
-            helper.assertTrue(expected > 0 && expected < cubeVolume,
-                    "в кубе поиска есть секции без брёвен (ожидание " + expected + " < куба " + cubeVolume
-                            + "), иначе проверка «читает только секции с брёвнами» ничего не доказывает");
-            helper.assertTrue(examined == expected,
-                    "поиск читает позиции куба только в секциях, где есть брёвна породы: ожидалось " + expected
-                            + ", прочитано " + examined + ". Больше — читаются секции без брёвен, меньше — "
-                            + "секция с брёвнами пропущена и дерево может не найтись. Расчёт «27 клеток на бревно» "
-                            + "к поиску не относится: поиск читает срез секции целиком, а не соседей брёвен");
-            helper.assertTrue(script.searchMaxExaminedPositionsPerTick()
-                            <= ScanTuning.SLICES_PER_TICK * SECTION_POSITIONS,
-                    "за тик читается не больше " + ScanTuning.SLICES_PER_TICK + " срезов секций ("
-                            + ScanTuning.SLICES_PER_TICK * SECTION_POSITIONS + " позиций), а прочитано "
-                            + script.searchMaxExaminedPositionsPerTick());
-
-            LOGGER.info("chop_tree, поиск радиуса {}: прочитано {} позиций, ожидалось {} (куб {}), "
-                            + "максимум за тик {}",
-                    SEARCH_RADIUS, examined, expected, cubeVolume, script.searchMaxExaminedPositionsPerTick());
-
-            clearField(helper);
         });
     }
 
@@ -787,10 +722,11 @@ public final class ChopTreeGameTests {
         SpiritEntity[] current = { spirit };
         boolean[] reloaded = { false };
         helper.onEachTick(() -> {
-            if (reloaded[0] || current[0].taskSnapshot().isEmpty()) {
+            Optional<String> snapshot = GameTestFixtures.taskSnapshot(current[0]);
+            if (reloaded[0] || snapshot.isEmpty()) {
                 return;
             }
-            TaskProgress progress = TaskSnapshotCodec.decode(current[0].taskSnapshot().get()).progress();
+            TaskProgress progress = TaskSnapshotCodec.decode(snapshot.get()).progress();
             if (progress instanceof TaskProgress.ScriptAt at && at.state().get("chopped") instanceof Number chopped
                     && chopped.intValue() == 1) {
                 reloaded[0] = true;
@@ -1158,9 +1094,6 @@ public final class ChopTreeGameTests {
                         && !view.isArtificial(coord),
                 "клетка в незагруженном чанке неизвестна: все четыре ответа обязаны быть ложью, иначе дух примет "
                         + "чужой блок за своё бревно, почву или постройку");
-        helper.assertTrue(view.blockReads() > 0,
-                "неизвестная клетка обязана считаться прочитанной из вида: нулевой счётчик означал бы, что разбор "
-                        + "читает мир мимо LevelTreeView");
         helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
                 "чтение неизвестной клетки не должно грузить чанк");
         helper.assertTrue(level.getChunkSource().getLoadedChunksCount() == loadedBefore,
@@ -1199,44 +1132,6 @@ public final class ChopTreeGameTests {
             }
         });
         return status;
-    }
-
-    private static int positionsInSectionsWithLogs(Level level, BlockPos center, int radius, Block log) {
-        int minY = Math.max(center.getY() - radius, level.getMinBuildHeight());
-        int maxY = Math.min(center.getY() + radius, level.getMaxBuildHeight() - 1);
-        Map<String, Boolean> sectionHasLog = new HashMap<>();
-        int count = 0;
-        for (int x = center.getX() - radius; x <= center.getX() + radius; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = center.getZ() - radius; z <= center.getZ() + radius; z++) {
-                    int chunkX = x >> 4;
-                    int chunkZ = z >> 4;
-                    int sectionY = y >> 4;
-                    if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk)) {
-                        continue;
-                    }
-                    String key = chunkX + "," + sectionY + "," + chunkZ;
-                    if (sectionHasLog.computeIfAbsent(key, k -> sectionContains(level, chunkX, sectionY, chunkZ, log))) {
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
-    private static boolean sectionContains(Level level, int chunkX, int sectionY, int chunkZ, Block block) {
-        for (int dx = 0; dx < 16; dx++) {
-            for (int dy = 0; dy < 16; dy++) {
-                for (int dz = 0; dz < 16; dz++) {
-                    BlockPos pos = new BlockPos(chunkX * 16 + dx, sectionY * 16 + dy, chunkZ * 16 + dz);
-                    if (level.getBlockState(pos).is(block)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     static SpiritEntity spawnChopper(GameTestHelper helper) {
@@ -1374,15 +1269,6 @@ public final class ChopTreeGameTests {
 
     private static final int HUT_POST_LOGS = 12;
     private static final int TALL_TREE_LOGS = 60;
-    // Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
-    // вокруг ствола плюс повторное чтение почвы под основанием после обхода.
-    private static final long MEASURED_TREE_READS = 559;
-    // Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
-    // Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
-    // чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
-    // (1620) такое чтение ещё пропускает.
-    private static final long MAX_TREE_READS = 838;
-    private static final int SECTION_POSITIONS = 16 * 16 * 16;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
 

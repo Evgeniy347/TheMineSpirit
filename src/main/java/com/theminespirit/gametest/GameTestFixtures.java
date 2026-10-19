@@ -6,11 +6,13 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -21,6 +23,7 @@ import net.minecraft.gametest.framework.GameTestRunner;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,6 +41,12 @@ import net.minecraft.world.phys.Vec3;
 
 final class GameTestFixtures {
     static final int FLOOR_SIZE = 9;
+
+    static Optional<String> taskSnapshot(SpiritEntity spirit) {
+        CompoundTag tag = new CompoundTag();
+        spirit.saveWithoutId(tag);
+        return SpiritTaskStore.read(tag);
+    }
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
     private static final int SWEEP_MARGIN = 48;

@@ -2,7 +2,6 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.List;
@@ -43,12 +42,12 @@ public final class SimplificationGameTests {
 
     @BeforeBatch(batch = MAGNET_BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = MAGNET_BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @GameTest(template = "arena", batch = MAGNET_BATCH, timeoutTicks = 100)

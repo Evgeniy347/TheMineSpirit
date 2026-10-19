@@ -48,9 +48,9 @@ public final class AcquireBrainGameTests {
                 helper.assertTrue(reloaded.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "восстановленный acquire обязан продолжить с того же шага: статус "
                                 + reloaded.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-                helper.assertTrue(reloaded.taskSnapshot().isPresent(),
+                helper.assertTrue(GameTestFixtures.taskSnapshot(reloaded).isPresent(),
                         "снимок вложенного раннера обязан пережить сохранение: задача восстановлена без снимка");
-                String snapshot = reloaded.taskSnapshot().orElse("");
+                String snapshot = GameTestFixtures.taskSnapshot(reloaded).orElse("");
                 helper.assertTrue(snapshot.contains("attempts") || snapshot.contains("runner"),
                         "снимок обязан хранить состояние acquire (attempts/runner): " + snapshot);
             });

@@ -159,18 +159,6 @@ public final class ChopTreeScript implements ScriptInstance {
         return Optional.of(new ScriptResult.Text(summary()));
     }
 
-    public long treeBlockReads() {
-        return treeView.blockReads();
-    }
-
-    public int searchExaminedPositions() {
-        return search.examinedPositions();
-    }
-
-    public int searchMaxExaminedPositionsPerTick() {
-        return search.maxExaminedPerStep();
-    }
-
     private ScriptStatus find() {
         if (chopped >= params.count()) {
             return ScriptStatus.SUCCEEDED;

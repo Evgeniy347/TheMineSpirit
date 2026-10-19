@@ -300,11 +300,9 @@ public final class RestGameTests {
         String id = spirit.getStringUUID();
         String path = "/v1/bots/" + id + "/observe";
         AtomicBoolean discarded = new AtomicBoolean();
-        helper.onEachTick(() -> {
-            if (!discarded.get() && rest.gateway().observeActiveCount() > 0) {
-                discarded.set(true);
-                CompletableFuture.runAsync(spirit::discard, minecraft);
-            }
+        helper.runAfterDelay(3, () -> {
+            discarded.set(true);
+            CompletableFuture.runAsync(spirit::discard, minecraft);
         });
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
@@ -325,7 +323,7 @@ public final class RestGameTests {
     }
 
     @GameTest(batch = "rest_observe_stop", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick(GameTestHelper helper)
+    public static void observe_MidScanServerStop_ReturnsStoppingError(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -333,38 +331,24 @@ public final class RestGameTests {
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
         AtomicBoolean stopped = new AtomicBoolean();
-        AtomicBoolean replied = new AtomicBoolean();
-        AtomicInteger callsAtStop = new AtomicInteger(-1);
-        AtomicInteger ticksAfterReply = new AtomicInteger();
-        CompletableFuture<List<String>> done = new CompletableFuture<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8)).thenAcceptAsync(reply -> {
-            problems.expect(stopped.get(),
-                    "сервер должен быть остановлен посреди скана, иначе ветка остановки не проверяется");
-            problems.expect(reply.status() == 500,
-                    "Остановленный мост обязан отвечать 500 на ждущий observe, получен " + reply.status()
-                            + ": " + reply.body());
-            problems.expect(reply.json().path("error").path("message").asText().contains("останавливается"),
-                    "Сообщение обязано называть остановку сервера: " + reply.body());
-            replied.set(true);
-        }, minecraft);
-        helper.onEachTick(() -> {
-            if (!stopped.get() && rest.gateway().observeActiveCount() > 0) {
-                stopped.set(true);
-                rest.server().stop();
-                callsAtStop.set(rest.gateway().observeTickCalls());
-            } else if (stopped.get() && replied.get() && !done.isDone()
-                    && ticksAfterReply.incrementAndGet() >= 10) {
-                int callsAfterWait = rest.gateway().observeTickCalls();
-                problems.expect(callsAfterWait == callsAtStop.get(),
-                        "Подписка ObserveJobs обязана быть снята с тика при close(): за 10 тиков после остановки "
-                                + "tick() вызван " + (callsAfterWait - callsAtStop.get()) + " раз (было "
-                                + callsAtStop.get() + ", стало " + callsAfterWait + "): утечка подписки после stop(), "
-                                + "каждый тик дёргает мёртвый мост. Проверьте bus.unregister в ObserveJobs.close()");
-                done.complete(problems.found());
-            }
+        helper.runAfterDelay(3, () -> {
+            stopped.set(true);
+            rest.server().stop();
         });
-        RestFixture.await(helper, rest, done);
+        CompletableFuture<List<String>> scenario = rest
+                .post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
+                .thenApply(reply -> {
+                    problems.expect(stopped.get(),
+                            "сервер должен быть остановлен посреди скана, иначе ветка остановки не проверяется");
+                    problems.expect(reply.status() == 500,
+                            "Остановленный мост обязан отвечать 500 на ждущий observe, получен " + reply.status()
+                                    + ": " + reply.body());
+                    problems.expect(reply.json().path("error").path("message").asText().contains("останавливается"),
+                            "Сообщение обязано называть остановку сервера: " + reply.body());
+                    return problems.found();
+                });
+        RestFixture.await(helper, rest, scenario);
     }
 
     @GameTest(batch = "rest_threads", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)

@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -118,7 +117,7 @@ public final class ChopTargetGameTests {
         SpiritEntity spirit = ChopTreeGameTests.spawnChopper(helper);
         BlockPos from = helper.absolutePos(new BlockPos(3, 1, 3));
         BlockPos to = helper.absolutePos(new BlockPos(5, 8, 5));
-        PolicyConfig.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " "
+        GameTestFilter.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " "
                 + from.getY() + " " + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
         BlockPos target = helper.absolutePos(new BlockPos(4, 1, 4));
 
@@ -134,7 +133,7 @@ public final class ChopTargetGameTests {
                     "защищённое дерево обязано уцелеть, осталось брёвен "
                             + ChopTreeGameTests.countBlocksInWorld(helper, Blocks.OAK_LOG));
 
-            PolicyConfig.setProtectedZones(List.of());
+            GameTestFilter.setProtectedZones(List.of());
             GameTestFixtures.finish(helper);
         });
     }

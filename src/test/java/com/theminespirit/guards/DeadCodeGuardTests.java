@@ -87,40 +87,6 @@ class DeadCodeGuardTests {
             new Exception("src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»")
     );
 
-    private static final List<Exception> DEBT = List.of(
-            new Exception("src/main/java/com/theminespirit/neoforge/BuildPace.java|method|BuildPace#overrideForGameTest", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/BuildPace.java|method|BuildPace#useTable", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchExaminedPositions", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchMaxExaminedPositionsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#treeBlockReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#totalTicks", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#viewReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FillSession.java|method|FillSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#maxBreakerHitsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#totalTicks", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/LocateScript.java|method|LocateScript#maxExaminedPositionsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setBoardEnabled", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setCoordinatorEnabled", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setMobsTargetSpirits", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#activeDropCollector", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#equipmentDropChance", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#taskSnapshot", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritMemoryStore.java|method|SpiritMemoryStore#corruptLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/inventory/InventoryTables.java|method|InventoryTables#kitLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/inventory/InventoryTables.java|method|InventoryTables#valueLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/movement/StandWalker.java|method|StandWalker#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PlacedBlocksData.java|method|PlacedBlocksData#spiritPlacementCounts", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PlacedBlocksData.java|method|PlacedBlocksData#spiritSize", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PolicyConfig.java|method|PolicyConfig#setProtectedZones", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#maxObserveReadsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeActiveCount", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeTickCalls", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#peakObserveJobs", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#taskWatcher", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются")
-    );
-
     private static final List<Exception> EXCEPTIONS = exceptions();
 
     @Test
@@ -225,9 +191,7 @@ class DeadCodeGuardTests {
     }
 
     private static List<Exception> exceptions() {
-        List<Exception> all = new ArrayList<>(OPEN_TASKS);
-        all.addAll(DEBT);
-        return List.copyOf(all);
+        return List.copyOf(OPEN_TASKS);
     }
 
     private static Map<Path, String> production() {

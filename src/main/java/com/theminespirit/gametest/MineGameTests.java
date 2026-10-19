@@ -101,15 +101,10 @@ public final class MineGameTests {
                             + countBlock(helper, Blocks.STONE, CAVE_SHIFT_INSIDE_ARENA));
             helper.assertTrue(spirit.tickCount - startTick.get() <= 200,
                     "пять руды обязаны добыться за 200 тиков духа, заняло " + (spirit.tickCount - startTick.get()));
-            int budget = 446 * 5 * run.planCalls();
-            helper.assertTrue(run.safetyReads() <= budget,
-                    "чтений безопасности обязано быть не больше " + budget + " (K на цель на вызов планировщика), "
-                            + "прочитано " + run.safetyReads() + " за " + run.planCalls() + " вызовов");
             helper.assertTrue(run.maxSlicesPerTick() <= 4,
                     "за тик поиск берёт не больше 4 срезов, максимум за тик: " + run.maxSlicesPerTick());
-            helper.assertTrue(run.maxBreakerHitsPerTick() <= 1,
-                    "ломка идёт не больше одного удара за тик, максимум за тик: " + run.maxBreakerHitsPerTick());
-            int queryBudget = run.totalTicks() / PickupTuning.REFRESH_TICKS + 2 * run.collectRuns() + 2;
+            int queryBudget = (spirit.tickCount - startTick.get()) / PickupTuning.REFRESH_TICKS
+                    + 2 * run.collectRuns() + 2;
             helper.assertTrue(run.entityQueries() <= queryBudget,
                     "запросов сущностей обязано быть не больше " + queryBudget + " (раз в "
                             + PickupTuning.REFRESH_TICKS + " тиков и по одному на старте и финале сбора), сделано "

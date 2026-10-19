@@ -76,7 +76,6 @@ public final class LevelTreeView implements TreeView {
     private BlockCoord lastCoord;
     private Kind lastKind;
     private long lastGameTime = -1;
-    private long blockReads;
 
     public LevelTreeView(Level level, Set<Block> logs) {
         this.level = level;
@@ -108,15 +107,10 @@ public final class LevelTreeView implements TreeView {
         return kind(coord) == Kind.EMPTY;
     }
 
-    public long blockReads() {
-        return blockReads;
-    }
-
     private Kind kind(BlockCoord coord) {
         long gameTime = level.getGameTime();
         if (gameTime != lastGameTime || !coord.equals(lastCoord)) {
-            blockReads++;
-            lastKind = classify(coord);
+                lastKind = classify(coord);
             lastCoord = coord;
             lastGameTime = gameTime;
         }

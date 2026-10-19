@@ -22,8 +22,6 @@ public final class TaskWatcher {
     private final TaskReconciler reconciler;
     private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
     private final AtomicBoolean closed = new AtomicBoolean();
-    private volatile int lastTickPolls;
-    private volatile long totalPolls;
 
     public TaskWatcher(IEventBus bus, SpiritIndex index, TaskRegistry registry) {
         this.bus = bus;
@@ -31,14 +29,6 @@ public final class TaskWatcher {
         this.registry = registry;
         this.reconciler = new TaskReconciler(registry);
         bus.addListener(tickListener);
-    }
-
-    public int lastTickPolls() {
-        return lastTickPolls;
-    }
-
-    public long totalPolls() {
-        return totalPolls;
     }
 
     public void close() {
@@ -49,8 +39,6 @@ public final class TaskWatcher {
 
     private void tick() {
         List<TaskRecord> active = registry.watchableRecords();
-        lastTickPolls = active.size();
-        totalPolls += active.size();
         for (TaskRecord record : active) {
             reconciler.reconcile(record, read(record.bot()));
         }

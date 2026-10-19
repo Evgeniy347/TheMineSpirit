@@ -77,7 +77,6 @@ public final class DropCollector {
         this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
                 center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
         this.startTick = spirit.level().getGameTime();
-        spirit.trackDropCollector(this);
     }
 
     public State tick() {

@@ -22,7 +22,6 @@ public final class LocateScript implements ScriptInstance {
     private final BlockCoord origin;
     private final NearestTracker nearest;
     private final LocateSource source;
-    private int maxExaminedPerTick;
     private String failureReason;
     private Finding published;
 
@@ -41,9 +40,7 @@ public final class LocateScript implements ScriptInstance {
             failureReason = "дух исчез во время поиска";
             return ScriptStatus.FAILED;
         }
-        int examinedBefore = source.examinedPositions();
         source.advance().forEach(nearest::offer);
-        maxExaminedPerTick = Math.max(maxExaminedPerTick, source.examinedPositions() - examinedBefore);
         if (!source.done()) {
             return ScriptStatus.RUNNING;
         }
@@ -57,10 +54,6 @@ public final class LocateScript implements ScriptInstance {
 
     public int examinedPositions() {
         return source.examinedPositions();
-    }
-
-    public int maxExaminedPositionsPerTick() {
-        return maxExaminedPerTick;
     }
 
     @Override

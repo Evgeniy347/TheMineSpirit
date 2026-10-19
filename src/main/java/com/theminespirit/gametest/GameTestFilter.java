@@ -1,7 +1,7 @@
 package com.theminespirit.gametest;
 
-import com.theminespirit.neoforge.BuildPace;
 import com.theminespirit.neoforge.SpiritConfig;
+import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -24,6 +24,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.apache.logging.log4j.LogManager;
@@ -45,11 +46,8 @@ public final class GameTestFilter {
         // Доска и координатор тикают глобально и раздают задачи/приказы любому свободному духу,
         // включая духов чужих сцен: пачка chop_tree_* стояла в RUNNING с чужой задачей (флак 17.10).
         // По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
-        SpiritConfig.setBoardEnabled(false);
-        SpiritConfig.setCoordinatorEnabled(false);
-        // Темп стройки (около 2 блоков в секунду) проверяет своя пачка build_pace; остальным сценам он только
-        // удлиняет прогон, геометрию постройки он не меняет.
-        BuildPace.overrideForGameTest(1);
+        setBoardEnabled(false);
+        setCoordinatorEnabled(false);
         installSettlementBatches();
         List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         if (filters.isEmpty()) {
@@ -116,13 +114,36 @@ public final class GameTestFilter {
     }
 
     private static void enableSettlement(Settlement settlement) {
-        SpiritConfig.setBoardEnabled(settlement.board());
-        SpiritConfig.setCoordinatorEnabled(settlement.coordinator());
+        setBoardEnabled(settlement.board());
+        setCoordinatorEnabled(settlement.coordinator());
     }
 
     private static void disableSettlement() {
-        SpiritConfig.setBoardEnabled(false);
-        SpiritConfig.setCoordinatorEnabled(false);
+        setBoardEnabled(false);
+        setCoordinatorEnabled(false);
+    }
+
+    public static void setBoardEnabled(boolean value) {
+        setSpiritValue("spirit.boardEnabled", value);
+    }
+
+    public static void setCoordinatorEnabled(boolean value) {
+        setSpiritValue("spirit.coordinatorEnabled", value);
+    }
+
+    public static void setMobsTargetSpirits(boolean value) {
+        setSpiritValue("spirit.mobsTargetSpirits", value);
+    }
+
+    public static void setProtectedZones(List<String> lines) {
+        ModConfigSpec.ConfigValue<List<String>> value =
+                PolicyConfig.spec().getValues().get(List.of("policy", "protectedZones"));
+        value.set(List.copyOf(lines));
+    }
+
+    private static void setSpiritValue(String path, boolean value) {
+        ModConfigSpec.ConfigValue<Boolean> configValue = SpiritConfig.spec().getValues().get(path);
+        configValue.set(value);
     }
 
     @SuppressWarnings("unchecked")

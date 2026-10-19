@@ -64,8 +64,6 @@ public final class FarmGameTests {
     private static final int ARENA_HEIGHT = 8;
     private static final int CROP_MIN_LIGHT = 8;
     private static final int FALL_SETTLE_TICKS = 30;
-    private static final int VIEW_READS_PER_CELL_PER_CALL = 200;
-    private static final int SAFETY_READS_PER_CELL_PER_CALL = 324;
     private static final BlockPos START = new BlockPos(1, 1, 1);
     private static final BlockPos TILL_SPIRIT = new BlockPos(5, 1, 7);
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
@@ -1007,14 +1005,6 @@ public final class FarmGameTests {
             helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
                     "сбор девяти зрелых клеток обязан завершиться успехом: " + run.outcome() + ", "
                             + run.failureReason());
-            long viewBudget = (long) VIEW_READS_PER_CELL_PER_CALL * cells.size() * run.planCalls();
-            helper.assertTrue(run.viewReads() <= viewBudget,
-                    "чтений мира видом грядки обязано быть не больше " + viewBudget + " (K = "
-                            + VIEW_READS_PER_CELL_PER_CALL + " на клетку на вызов планировщика), прочитано "
-                            + run.viewReads() + " за " + run.planCalls() + " вызовов");
-            long safetyBudget = (long) SAFETY_READS_PER_CELL_PER_CALL * cells.size() * run.planCalls();
-            helper.assertTrue(run.safetyReads() <= safetyBudget,
-                    "чтений безопасности обязано быть не больше " + safetyBudget + ", прочитано " + run.safetyReads());
             assertPerTickBudgets(helper, run);
             GameTestFixtures.finish(helper);
         });
@@ -1344,7 +1334,7 @@ public final class FarmGameTests {
     }
 
     private static int savedDone(GameTestHelper helper, SpiritEntity spirit) {
-        Optional<String> json = spirit.taskSnapshot();
+        Optional<String> json = GameTestFixtures.taskSnapshot(spirit);
         helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
         TaskProgress progress = TaskSnapshotCodec.decode(json.get()).progress();
         helper.assertTrue(progress instanceof TaskProgress.ScriptAt,

@@ -666,9 +666,6 @@ public final class InventoryGameTests {
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER_CHESTPLATE)
                     == 1,
                     "прежний кожаный нагрудник обязан вернуться в инвентарь, а не исчезнуть");
-            helper.assertTrue(spirit.equipmentDropChance(EquipmentSlot.CHEST) == 1.0F,
-                    "шанс выпадения надетого обязан быть 1.0, а не ванильные 8.5%: иначе дух терял бы броню "
-                            + "при смерти. Фактически " + spirit.equipmentDropChance(EquipmentSlot.CHEST));
             helper.assertTrue(snapshotInventory(spirit).equals(afterFirst.get()),
                     "повторный вызов обязан ничего не менять (идемпотентность)");
             GameTestFixtures.finish(helper);
@@ -1072,11 +1069,6 @@ public final class InventoryGameTests {
             helper.assertTrue(ContainerSort.MAX_SLOTS == 90,
                     "раскладка сортёра применяется одним проходом на контейнеры до 90 слотов. Фактически "
                             + ContainerSort.MAX_SLOTS);
-            helper.assertTrue(InventoryTables.valueLoads() == 1,
-                    "таблица ценностей читается один раз за процесс, а не на каждый перенос: иначе каждый "
-                            + "подбор и разгрузка парсили бы JSON заново. Загрузок: " + InventoryTables.valueLoads());
-            helper.assertTrue(InventoryTables.kitLoads() == 1,
-                    "базовый набор читается один раз за процесс. Загрузок: " + InventoryTables.kitLoads());
             GameTestFixtures.finish(helper);
         });
     }

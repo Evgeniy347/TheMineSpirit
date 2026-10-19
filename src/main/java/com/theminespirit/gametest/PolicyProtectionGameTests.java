@@ -14,7 +14,6 @@ import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import com.theminespirit.neoforge.policy.UnprotectService;
 import java.util.List;
 import java.util.Map;
@@ -215,7 +214,7 @@ public final class PolicyProtectionGameTests {
         BlockPos to = helper.absolutePos(new BlockPos(6, 3, 5));
         String dimension = helper.getLevel().dimension().location().toString();
         try {
-            PolicyConfig.setProtectedZones(List.of(dimension + " " + from.getX() + " " + from.getY() + " " + from.getZ() + " "
+            GameTestFilter.setProtectedZones(List.of(dimension + " " + from.getX() + " " + from.getY() + " " + from.getZ() + " "
                     + to.getX() + " " + to.getY() + " " + to.getZ()));
             BlockBreaker breaker = new BlockBreaker(spirit);
 
@@ -227,7 +226,7 @@ public final class PolicyProtectionGameTests {
                     "постановка блока вне зоны разрешена");
             breaker.cancel();
         } finally {
-            PolicyConfig.setProtectedZones(List.of());
+            GameTestFilter.setProtectedZones(List.of());
         }
         GameTestFixtures.reset(helper);
         helper.succeed();

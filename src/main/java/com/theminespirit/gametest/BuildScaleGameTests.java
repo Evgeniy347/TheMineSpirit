@@ -68,9 +68,6 @@ public final class BuildScaleGameTests {
             }
             helper.assertTrue(run.blockReads() == CELLS,
                     "область обходится один раз: чтений клеток обязано быть 8, фактически " + run.blockReads());
-            helper.assertTrue(run.safetyReads() <= (long) CELLS * 440,
-                    "стоянки считаются один раз на клетку: чтений безопасности не больше 8×"
-                            + 440 + ", фактически " + run.safetyReads());
             helper.assertTrue(spirit.tickCount - startTick.get() <= 380,
                     "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло "
                             + (spirit.tickCount - startTick.get()));

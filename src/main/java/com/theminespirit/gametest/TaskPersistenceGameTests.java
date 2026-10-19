@@ -230,7 +230,6 @@ public final class TaskPersistenceGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(0, 1, 1));
         BlockPos far = helper.absolutePos(new BlockPos(2, 1, 1));
         spirit.startTask(new ScriptCall("goto", Map.of("x", far.getX(), "y", far.getY(), "z", far.getZ())));
-        helper.onEachTick(() -> spirit.taskSnapshot());
 
         helper.runAfterDelay(100, () -> {
             helper.assertTrue(spirit.snapshotBuilds() == 0,
@@ -266,7 +265,7 @@ public final class TaskPersistenceGameTests {
     }
 
     private static TaskSnapshot snapshotOf(GameTestHelper helper, SpiritEntity spirit) {
-        Optional<String> json = spirit.taskSnapshot();
+        Optional<String> json = GameTestFixtures.taskSnapshot(spirit);
         helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
         return TaskSnapshotCodec.decode(json.get());
     }

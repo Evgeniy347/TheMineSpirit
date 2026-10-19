@@ -206,7 +206,7 @@ public final class MovementPatrolGameTests {
     }
 
     private static Map<String, Object> scriptState(SpiritEntity spirit) {
-        Optional<String> json = spirit.taskSnapshot();
+        Optional<String> json = GameTestFixtures.taskSnapshot(spirit);
         if (json.isEmpty()) {
             return Map.of();
         }

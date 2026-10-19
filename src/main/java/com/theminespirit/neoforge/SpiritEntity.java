@@ -85,7 +85,6 @@ public final class SpiritEntity extends PathfinderMob {
     private SpiritHome home = SpiritHome.none();
     private BlockCoord bed;
     private Camp camp;
-    private DropCollector activeCollector;
     private int pathBuilds;
     private int teleports;
     private int entityQueries;
@@ -423,7 +422,6 @@ public final class SpiritEntity extends PathfinderMob {
         try {
             return MemoryCodec.decode(json);
         } catch (MemoryFormatException e) {
-            SpiritMemoryStore.countCorruptLoad();
             LOGGER.error("Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
                     getUUID(), e.getMessage(), e);
             return MemoryStore.empty();
@@ -440,18 +438,6 @@ public final class SpiritEntity extends PathfinderMob {
 
     public SpiritInventory getInventory() {
         return inventory;
-    }
-
-    public void trackDropCollector(DropCollector collector) {
-        this.activeCollector = collector;
-    }
-
-    public DropCollector activeDropCollector() {
-        return activeCollector;
-    }
-
-    public float equipmentDropChance(EquipmentSlot slot) {
-        return getEquipmentDropChance(slot);
     }
 
     public void startTask(TaskNode plan) {
@@ -528,13 +514,6 @@ public final class SpiritEntity extends PathfinderMob {
 
     public Optional<ScriptResult> taskResult() {
         return brain == null ? Optional.empty() : brain.successResult();
-    }
-
-    public Optional<String> taskSnapshot() {
-        if (brain == null) {
-            return Optional.empty();
-        }
-        return brain.snapshot().map(snapshot -> TaskSnapshotCodec.encode(snapshot));
     }
 
     public Optional<WorldObservation> observation() {

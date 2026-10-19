@@ -4,18 +4,14 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.neoforge.BuildPace;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -24,26 +20,15 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Темп стройки по схеме из таблицы building/build.json (решение владельца 18.10: около 2 блоков в секунду, взмах руки
- * обязателен). Остальные пачки GameTest строят с темпом 1 тик (BuildPace.overrideForGameTest), эта — с настоящим.
+ * обязателен).
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BuildPaceGameTests {
     private static final String BATCH = "build_pace";
     private static final int SETTLE_TICKS = 5;
-    private static final int GAME_TEST_PACE = 1;
 
     private BuildPaceGameTests() {
-    }
-
-    @BeforeBatch(batch = BATCH)
-    public static void useProductionPace(ServerLevel level) {
-        BuildPace.useTable();
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreGameTestPace(ServerLevel level) {
-        BuildPace.overrideForGameTest(GAME_TEST_PACE);
     }
 
     // [флак] 17 блоков по 10 тиков = 170 тиков стройки плюс подход; потолок ≈ 2× замера.
