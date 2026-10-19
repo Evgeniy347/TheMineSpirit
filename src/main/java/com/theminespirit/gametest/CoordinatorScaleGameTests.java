@@ -30,36 +30,25 @@ public final class CoordinatorScaleGameTests {
     private static final int SCALE_DISTANCE = 2;
     private static final double RING_RADIUS = 2.5;
 
-    private CoordinatorScaleGameTests() {
-    }
+    private CoordinatorScaleGameTests() {}
 
     @GameTest(template = "arena", batch = "coordinator_scale", timeoutTicks = 300)
     public static void scale_TwentySpiritsHundredTicks_CoordinatorWithinQueryBudget(GameTestHelper helper) {
         MovementScene.prepare(helper);
         ServerPlayer player = MovementScene.mockPlayer(helper, new BlockPos(4, 1, 4));
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(4, 1, 4));
-        List<SpiritEntity> spirits = new ArrayList<>();
-        for (int i = 0; i < SPIRITS; i++) {
-            double angle = 2 * Math.PI * i / SPIRITS;
-            SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new Vec3(4.5 + RING_RADIUS * Math.cos(angle),
-                    1, 4.5 + RING_RADIUS * Math.sin(angle)));
-            spirit.setHome(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
-            // keep_distance стартует сразу, а не через SETTLE_TICKS: пока дух простаивает, тактический
-            // интеллект поселения (32) успевает выдать ему занятие (ферма без грядок падает), и дух
-            // встречает наблюдение уже FAILED. Скрипт на духе интеллект не перебивает (TaskStarter).
-            spirit.startTask(MovementScene.call("keep_distance",
-                    Map.of("target", player.getName().getString(), "distance", SCALE_DISTANCE)));
-            spirits.add(spirit);
-        }
-        String initial = "после старта: скрипт " + spirits.get(0).currentTaskScript().orElse("нет")
-                + ", статус " + spirits.get(0).taskStatus().map(RunStatus::name).orElse("нет");
+        List<SpiritEntity> spirits = spawnKeepDistanceRing(helper, player, absoluteHome);
+        String initial =
+                "после старта: скрипт " + spirits.get(0).currentTaskScript().orElse("нет") + ", статус "
+                        + spirits.get(0).taskStatus().map(RunStatus::name).orElse("нет");
         int[] startedAt = {-1};
         int[] baseQueries = {0};
         int[] basePlans = {0};
         long[] startedGameTime = {-1};
         String[] firstStop = {null};
         helper.onEachTick(() -> {
-            if (startedAt[0] < 0 && spirits.stream().allMatch(spirit -> spirit.tickCount >= MovementScene.SETTLE_TICKS)) {
+            if (startedAt[0] < 0
+                    && spirits.stream().allMatch(spirit -> spirit.tickCount >= MovementScene.SETTLE_TICKS)) {
                 startedAt[0] = spirits.get(0).tickCount;
                 startedGameTime[0] = helper.getLevel().getGameTime();
                 SpiritCoordinator coordinator = settlementOf(helper, absoluteHome);
@@ -67,61 +56,99 @@ public final class CoordinatorScaleGameTests {
                 basePlans[0] = coordinator.planCalls();
             }
             if (startedAt[0] >= 0 && firstStop[0] == null) {
-                for (SpiritEntity spirit : spirits) {
-                    if (spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
-                        firstStop[0] = "дух " + spirit.getUUID() + " на тике " + spirit.tickCount + ": статус "
-                                + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                                + spirit.taskFailureReason().orElse("нет") + ", игрок " + player.blockPosition()
-                                + " (от духа " + spirit.distanceTo(player) + ")";
-                    }
-                }
+                noteFirstStop(spirits, player, firstStop);
             }
         });
 
         helper.succeedWhen(() -> {
             helper.assertTrue(startedAt[0] >= 0, "духи ещё не получили задачу");
-            helper.assertTrue(spirits.get(0).tickCount >= startedAt[0] + SCALE_TICKS,
+            helper.assertTrue(
+                    spirits.get(0).tickCount >= startedAt[0] + SCALE_TICKS,
                     "наблюдение за " + SCALE_TICKS + " тиками ещё не закончилось");
-            helper.assertTrue(CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS == 10,
+            helper.assertTrue(
+                    CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS == 10,
                     "Снимок поселения — раз в 10 тиков: чаще бюджет не сойдётся, реже — координатор слеп");
             SpiritCoordinator coordinator = settlementOf(helper, absoluteHome);
             int periods = SCALE_TICKS / 10 + 1;
-            int perPeriod = CoordinatorTuning.SNAPSHOT_GROUP_QUERIES + SPIRITS * CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
-            helper.assertTrue(coordinator.entityQueries() - baseQueries[0] <= periods * perPeriod,
+            int perPeriod =
+                    CoordinatorTuning.SNAPSHOT_GROUP_QUERIES + SPIRITS * CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
+            helper.assertTrue(
+                    coordinator.entityQueries() - baseQueries[0] <= periods * perPeriod,
                     "Двадцать духов за " + SCALE_TICKS + " тиков: запросов координатора не больше " + periods
                             + " периодов по " + perPeriod + " (перепись + чтения), иначе снимок читает мир каждый тик;"
                             + " фактические запросы " + (coordinator.entityQueries() - baseQueries[0])
                             + ", базовые " + baseQueries[0] + ", периоды " + periods + " по " + perPeriod
-                            + ", видно духов " + coordinator.snapshot().spirits().size()
+                            + ", видно духов "
+                            + coordinator.snapshot().spirits().size()
                             + ", окно игрового времени " + (helper.getLevel().getGameTime() - startedGameTime[0])
                             + ", окно тиков духа " + (spirits.get(0).tickCount - startedAt[0])
                             + ", первый сбой: " + (firstStop[0] == null ? "нет" : firstStop[0])
                             + ", " + initial);
-            helper.assertTrue(coordinator.planCalls() - basePlans[0] <= periods,
+            helper.assertTrue(
+                    coordinator.planCalls() - basePlans[0] <= periods,
                     "План поселения — раз за период: иначе координатор планирует чаще, чем видит мир;"
                             + " фактические планы " + (coordinator.planCalls() - basePlans[0])
                             + ", бюджет " + periods);
             List<SpiritSnapshot> seen = coordinator.snapshot().spirits();
-            helper.assertTrue(seen.size() == SPIRITS,
+            helper.assertTrue(
+                    seen.size() == SPIRITS,
                     "Снимок поселения видит всех " + SPIRITS + " духов: иначе координатор командует вслепую;"
                             + " фактически " + seen.size() + "; дом "
-                            + MovementScene.facts(helper, spirits.get(0), helper.getLevel().getDayTime()));
-            for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
-                        "keep_distance работает все " + SCALE_TICKS + " тиков: упавший скрипт не ходит, "
-                                + "и счёт запросов ничего бы не доказывал; статус "
-                                + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                                + spirit.taskFailureReason().orElse("нет") + ", первый сбой: "
-                                + (firstStop[0] == null ? "нет" : firstStop[0]) + "; "
-                                + MovementScene.facts(helper, spirit, helper.getLevel().getDayTime()));
-            }
+                            + MovementScene.facts(
+                                    helper, spirits.get(0), helper.getLevel().getDayTime()));
+            assertAllStillRunning(helper, spirits, firstStop);
             MovementScene.removePlayer(helper, player);
             MovementScene.finish(helper);
         });
     }
 
+    private static List<SpiritEntity> spawnKeepDistanceRing(
+            GameTestHelper helper, ServerPlayer player, BlockPos absoluteHome) {
+        List<SpiritEntity> spirits = new ArrayList<>();
+        for (int i = 0; i < SPIRITS; i++) {
+            double angle = 2 * Math.PI * i / SPIRITS;
+            SpiritEntity spirit = helper.spawn(
+                    ModEntities.SPIRIT.get(),
+                    new Vec3(4.5 + RING_RADIUS * Math.cos(angle), 1, 4.5 + RING_RADIUS * Math.sin(angle)));
+            spirit.setHome(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
+            // keep_distance стартует сразу, а не через SETTLE_TICKS: пока дух простаивает, тактический
+            // интеллект поселения (32) успевает выдать ему занятие (ферма без грядок падает), и дух
+            // встречает наблюдение уже FAILED. Скрипт на духе интеллект не перебивает (TaskStarter).
+            spirit.startTask(MovementScene.call(
+                    "keep_distance", Map.of("target", player.getName().getString(), "distance", SCALE_DISTANCE)));
+            spirits.add(spirit);
+        }
+        return spirits;
+    }
+
+    private static void noteFirstStop(List<SpiritEntity> spirits, ServerPlayer player, String[] firstStop) {
+        for (SpiritEntity spirit : spirits) {
+            if (spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
+                firstStop[0] = "дух " + spirit.getUUID() + " на тике " + spirit.tickCount + ": статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                        + spirit.taskFailureReason().orElse("нет") + ", игрок " + player.blockPosition()
+                        + " (от духа " + spirit.distanceTo(player) + ")";
+            }
+        }
+    }
+
+    private static void assertAllStillRunning(GameTestHelper helper, List<SpiritEntity> spirits, String[] firstStop) {
+        for (SpiritEntity spirit : spirits) {
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                    "keep_distance работает все " + SCALE_TICKS + " тиков: упавший скрипт не ходит, "
+                            + "и счёт запросов ничего бы не доказывал; статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет") + ", первый сбой: "
+                            + (firstStop[0] == null ? "нет" : firstStop[0]) + "; "
+                            + MovementScene.facts(
+                                    helper, spirit, helper.getLevel().getDayTime()));
+        }
+    }
+
     private static SpiritCoordinator settlementOf(GameTestHelper helper, BlockPos absoluteHome) {
-        return CoordinatorRegistry.get(helper.getLevel(), SettlementKey.homed(new BlockCoord(absoluteHome.getX(),
-                absoluteHome.getY(), absoluteHome.getZ())));
+        return CoordinatorRegistry.get(
+                helper.getLevel(),
+                SettlementKey.homed(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ())));
     }
 }

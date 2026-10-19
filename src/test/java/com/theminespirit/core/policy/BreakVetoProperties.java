@@ -15,10 +15,21 @@ import net.jqwik.api.constraints.IntRange;
 class BreakVetoProperties {
     private static final BlockCoord FEET = new BlockCoord(3, 40, -9);
     private static final BlockCoord UNDER = new BlockCoord(3, 39, -9);
-    private static final Cell[] PALETTE = {Cell.SOLID, Cell.SOLID, Cell.PASSABLE, Cell.PASSABLE, Cell.WATER, Cell.LAVA, Cell.FIRE, Cell.HAZARD, Cell.FALLING};
+    private static final Cell[] PALETTE = {
+        Cell.SOLID,
+        Cell.SOLID,
+        Cell.PASSABLE,
+        Cell.PASSABLE,
+        Cell.WATER,
+        Cell.LAVA,
+        Cell.FIRE,
+        Cell.HAZARD,
+        Cell.FALLING
+    };
 
     @Property(tries = 200)
-    void checkBelowFeet_RandomColumn_AllowedExactlyWhenSpiritLandsOnSolidWithinTwoBlocks(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void checkBelowFeet_RandomColumn_AllowedExactlyWhenSpiritLandsOnSolidWithinTwoBlocks(
+            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Cell[] column = new Cell[8];
         for (int i = 0; i < column.length; i++) {
@@ -32,10 +43,15 @@ class BreakVetoProperties {
             return index >= 0 && index < column.length ? column[index] : Cell.PASSABLE;
         });
 
-        assertEquals(landsSafely(column), safety instanceof BreakSafety.Safe,
+        assertEquals(
+                landsSafely(column),
+                safety instanceof BreakSafety.Safe,
                 "Ломка разрешена ровно тогда, когда после неё дух падает не больше чем на 2 блока на твёрдый пол. Колонна под целью: "
                         + Arrays.toString(column) + ", ответ: " + safety);
-        assertTrue(reads[0] <= 3, "Проверка читает не больше трёх клеток под целью (предел падения плюс клетка пола): иначе ломка тормозит тик. Чтений: " + reads[0]);
+        assertTrue(
+                reads[0] <= 3,
+                "Проверка читает не больше трёх клеток под целью (предел падения плюс клетка пола): иначе ломка тормозит тик. Чтений: "
+                        + reads[0]);
     }
 
     private static boolean landsSafely(Cell[] column) {

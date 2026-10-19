@@ -38,8 +38,8 @@ public final class SwimScript implements ScriptInstance {
         }
         if (!zoneChecked) {
             zoneChecked = true;
-            BlockCoord goal = new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y),
-                    (int) Math.floor(target.z));
+            BlockCoord goal =
+                    new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
             String refusal = TravelCheck.refusal(spirit, goal);
             if (refusal != null) {
                 return fail(refusal);
@@ -87,15 +87,20 @@ public final class SwimScript implements ScriptInstance {
                 yield outcome;
             }
             case MOVING -> ScriptStatus.RUNNING;
-            case TIMEOUT -> fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за "
-                    + approach.timeoutTicks() + " тиков");
-            case STUCK -> fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): путь "
-                    + (approach.refusal() == null ? "перекрыт" : approach.refusal()));
+            case TIMEOUT ->
+                fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за "
+                        + approach.timeoutTicks() + " тиков");
+            case STUCK ->
+                fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): путь "
+                        + (approach.refusal() == null ? "перекрыт" : approach.refusal()));
         };
     }
 
     private void surfaceForAir() {
-        if (spirit.isUnderWater() || (spirit.isInWater() && spirit.getAirSupply() < SURFACE_AIR_THRESHOLD)) {
+        boolean againstBank = spirit.isInWater() && spirit.horizontalCollision;
+        if (againstBank
+                || spirit.isUnderWater()
+                || (spirit.isInWater() && spirit.getAirSupply() < SURFACE_AIR_THRESHOLD)) {
             spirit.getJumpControl().jump();
         }
     }

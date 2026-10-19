@@ -13,8 +13,7 @@ public final class ExplosionAvoidance {
     public static final double SWELLING_EXTRA = 3.0;
     public static final double SCAN_RADIUS = CHARGED_CREEPER_HOLD + SWELLING_EXTRA + 1.0;
 
-    private ExplosionAvoidance() {
-    }
+    private ExplosionAvoidance() {}
 
     public enum ThreatType {
         CREEPER(CREEPER_HOLD),
@@ -68,8 +67,11 @@ public final class ExplosionAvoidance {
         }
         FleePlanner.Plan plan = FleePlanner.plan(self, planned, view);
         String urgency = urgent ? "срочно, угроза набухает: " : "";
-        return new PolicyVerdict.Reflex(PolicyId.EXPLOSIVE, plan.action(),
-                urgency + closest.type() + " в " + closest.pos().x() + " " + closest.pos().y() + " " + closest.pos().z()
-                        + ", держать " + closest.holdDistance() + " блоков");
+        return new PolicyVerdict.Reflex(
+                PolicyId.EXPLOSIVE,
+                plan.action(),
+                urgency + closest.type() + " в " + closest.pos().x() + " "
+                        + closest.pos().y() + " " + closest.pos().z() + ", держать " + closest.holdDistance()
+                        + " блоков");
     }
 }

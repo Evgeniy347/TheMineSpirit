@@ -18,9 +18,10 @@ public final class ScriptRegistry {
         Objects.requireNonNull(factories, "factories не может быть null: пустой реестр задают пустой картой");
         Map<String, ScriptFactory> byId = new LinkedHashMap<>();
         for (Map.Entry<String, ScriptFactory> entry : factories.entrySet()) {
-            String id = Objects.requireNonNull(entry.getKey(),
-                    "id скрипта не может быть null: по id движок находит реализацию");
-            ScriptFactory factory = Objects.requireNonNull(entry.getValue(),
+            String id = Objects.requireNonNull(
+                    entry.getKey(), "id скрипта не может быть null: по id движок находит реализацию");
+            ScriptFactory factory = Objects.requireNonNull(
+                    entry.getValue(),
                     "фабрика скрипта '" + id + "' не может быть null: без неё движок не создаст экземпляр");
             byId.put(id, factory);
         }

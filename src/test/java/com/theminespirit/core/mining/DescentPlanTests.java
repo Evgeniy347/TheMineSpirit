@@ -33,24 +33,34 @@ class DescentPlanTests {
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
-        assertEquals(3, plan.steps().size(),
+        assertEquals(
+                3,
+                plan.steps().size(),
                 "Спуск с этажа 3 до целевого 1 обязан состоять из трёх шагов: по одному на каждый этаж");
-        assertEquals(DescentStop.TARGET_Y, plan.stop(),
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
                 "Безопасная шахта без опасных клеток должна заканчиваться достижением цели, а не паникой");
         assertEquals("", plan.dangerReason(), "До цели дошли без опасности — причины остановки нет");
-        assertEquals(new BlockCoord(0, 4, 0), plan.steps().get(0).stand(),
+        assertEquals(
+                new BlockCoord(0, 4, 0),
+                plan.steps().get(0).stand(),
                 "Шаг 0 начинается со ступени входа: дух стоит там, где был");
-        assertEquals(List.of(
-                new BlockCoord(0, 4, 0), new BlockCoord(0, 5, 0), new BlockCoord(0, 6, 0)),
+        assertEquals(
+                List.of(new BlockCoord(0, 4, 0), new BlockCoord(0, 5, 0), new BlockCoord(0, 6, 0)),
                 plan.steps().get(0).passage(),
                 "Проход шага 0 — собственная колонка входа на высотах floor+1..floor+3");
-        assertEquals(new BlockCoord(1, 3, 0), plan.steps().get(1).stand(),
+        assertEquals(
+                new BlockCoord(1, 3, 0),
+                plan.steps().get(1).stand(),
                 "Шаг 1 — лесенкой: на этаж ниже и на блок ближе по направлению спуска");
-        assertEquals(List.of(
-                new BlockCoord(1, 3, 0), new BlockCoord(1, 4, 0), new BlockCoord(1, 5, 0)),
+        assertEquals(
+                List.of(new BlockCoord(1, 3, 0), new BlockCoord(1, 4, 0), new BlockCoord(1, 5, 0)),
                 plan.steps().get(1).passage(),
                 "Проход шага 1 — колонка его ступени на три клетки вверх");
-        assertEquals(new BlockCoord(2, 2, 0), plan.steps().get(2).stand(),
+        assertEquals(
+                new BlockCoord(2, 2, 0),
+                plan.steps().get(2).stand(),
                 "Последний шаг встаёт на этаж targetY в своей колонке");
     }
 
@@ -61,7 +71,9 @@ class DescentPlanTests {
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
         for (DescentStep step : plan.steps()) {
-            assertEquals(step.stand(), step.torch(),
+            assertEquals(
+                    step.stand(),
+                    step.torch(),
                     "Факел ставится в клетку ступней: освещает и площадку, и следующий выступ");
         }
     }
@@ -92,14 +104,19 @@ class DescentPlanTests {
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
-        assertEquals(1, plan.steps().size(),
+        assertEquals(
+                1,
+                plan.steps().size(),
                 "Перед лавой у боковой стенки прохода план обязан обрезаться: шаг с лавой не выполняется");
         assertEquals(DescentStop.DANGER, plan.stop(), "Лава — это остановка по опасности, а не достижение цели");
-        assertTrue(plan.dangerReason().startsWith("опасность: "),
+        assertTrue(
+                plan.dangerReason().startsWith("опасность: "),
                 "Причина остановки должна начинаться с 'опасность: ': по такому формату её узнают отчёт и игрок");
-        assertTrue(plan.dangerReason().contains("лава"),
+        assertTrue(
+                plan.dangerReason().contains("лава"),
                 "Причина обязана называть блок: 'лава' в тексте позволяет отличить лаву от пустоты");
-        assertTrue(plan.dangerReason().contains("(1, 3, -1)"),
+        assertTrue(
+                plan.dangerReason().contains("(1, 3, -1)"),
                 "Причина обязана называть клетку: игрок должен увидеть, где именно опасность");
     }
 
@@ -112,8 +129,7 @@ class DescentPlanTests {
         assertEquals(1, plan.steps().size(), "Перед лавой под полом следующего шага план обязан обрезаться");
         assertEquals(DescentStop.DANGER, plan.stop(), "Лава вместо пола — остановка по опасности");
         assertTrue(plan.dangerReason().contains("лава"), "Причина обязана называть блок");
-        assertTrue(plan.dangerReason().contains("подпол"),
-                "Причина обязана называть роль клетки: пол или подпол");
+        assertTrue(plan.dangerReason().contains("подпол"), "Причина обязана называть роль клетки: пол или подпол");
     }
 
     @Test
@@ -136,7 +152,8 @@ class DescentPlanTests {
 
         assertTrue(plan.steps().isEmpty(), "Нетвёрдый пол первого шага обязан останавливать спуск до копания");
         assertEquals(DescentStop.DANGER, plan.stop(), "Нетвёрдый пол — остановка по опасности");
-        assertTrue(plan.dangerReason().contains(label),
+        assertTrue(
+                plan.dangerReason().contains(label),
                 "Причина обязана называть блок словом '" + label + "', иначе игрок не отличит опасность");
     }
 
@@ -146,7 +163,9 @@ class DescentPlanTests {
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
-        assertEquals(3, plan.steps().size(),
+        assertEquals(
+                3,
+                plan.steps().size(),
                 "Сыпучий пол (песок, гравий) держит ноги духа: план обязан строиться как для твёрдого");
         assertEquals(DescentStop.TARGET_Y, plan.stop(), "Сыпучий пол — не опасность");
     }
@@ -157,7 +176,9 @@ class DescentPlanTests {
 
         DescentPlan plan = DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
-        assertEquals(DescentStop.TARGET_Y, plan.stop(),
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
                 "Пустая боковая стенка не льёт на духа жидкость и не мешает проходу: останавливаться нельзя");
     }
 
@@ -167,7 +188,9 @@ class DescentPlanTests {
 
         DescentPlan.from(world, ENTRY, EAST, 1, 4);
 
-        assertEquals(33, world.reads(),
+        assertEquals(
+                33,
+                world.reads(),
                 "Каждый шаг обязан читать ровно 11 клеток (пол, подпол, 3 клетки прохода с двумя боковыми): "
                         + "лишние чтения кладут серверный тик при планировании");
     }
@@ -176,11 +199,13 @@ class DescentPlanTests {
     void from_TorchIntervalLessThanOne_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentPlan.from(world, ENTRY, EAST, 1, 0),
                 "План с интервалом факелов 0 обязан отклоняться до чтения мира");
 
-        assertTrue(error.getMessage().contains("Интервал факелов"),
+        assertTrue(
+                error.getMessage().contains("Интервал факелов"),
                 "Нулевой интервал обязан отклоняться с указанием на интервал факелов");
     }
 
@@ -188,11 +213,13 @@ class DescentPlanTests {
     void from_TargetYAboveWorldCeiling_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentPlan.from(world, ENTRY, EAST, 320, 4),
                 "План с целью выше потолка мира обязан отклоняться до чтения мира");
 
-        assertTrue(error.getMessage().contains("Целевой этаж"),
+        assertTrue(
+                error.getMessage().contains("Целевой этаж"),
                 "Цель выше потолка мира обязана отклоняться с указанием на целевой этаж");
     }
 
@@ -200,11 +227,13 @@ class DescentPlanTests {
     void from_TargetYBelowWorldFloor_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentPlan.from(world, ENTRY, EAST, -65, 4),
                 "План с целью под дном мира обязан отклоняться до чтения мира");
 
-        assertTrue(error.getMessage().contains("Целевой этаж"),
+        assertTrue(
+                error.getMessage().contains("Целевой этаж"),
                 "Цель под дном мира обязана отклоняться с указанием на целевой этаж");
     }
 
@@ -212,24 +241,30 @@ class DescentPlanTests {
     void from_EntryOutsideWorldHeight_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentPlan.from(world, new BlockCoord(0, 320, 0), EAST, 1, 4),
                 "План от точки входа вне мира обязан отклоняться до чтения мира");
 
-        assertTrue(error.getMessage().contains("вне мира"),
+        assertTrue(
+                error.getMessage().contains("вне мира"),
                 "Вход вне мира по высоте обязан отклоняться до любого чтения мира");
     }
 
     @Test
     void worldBounds_PlanConstants_MatchCatalogLimits() {
-        assertEquals(CatalogLimits.WORLD_Y_MIN, DescentPlan.WORLD_MIN_Y,
+        assertEquals(
+                CatalogLimits.WORLD_Y_MIN,
+                DescentPlan.WORLD_MIN_Y,
                 "Граница мира в плане спуска обязана совпадать с каталогом: расхождение пустит план за дно мира");
-        assertEquals(CatalogLimits.WORLD_Y_MAX, DescentPlan.WORLD_MAX_Y,
+        assertEquals(
+                CatalogLimits.WORLD_Y_MAX,
+                DescentPlan.WORLD_MAX_Y,
                 "Граница мира в плане спуска обязана совпадать с каталогом: расхождение пустит план выше потолка");
     }
 
-    static CellWorld solidDescent(CellWorld world, int x, int z, DescentDirection direction, int entryFloor,
-            int targetY) {
+    static CellWorld solidDescent(
+            CellWorld world, int x, int z, DescentDirection direction, int entryFloor, int targetY) {
         int index = 0;
         for (int floor = entryFloor; floor >= targetY; floor--, index++) {
             int columnX = x + index * direction.dx;

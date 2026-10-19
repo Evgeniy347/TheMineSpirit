@@ -32,7 +32,9 @@ class CraftPlanProperties {
 
         CraftPlan plan = CraftPlan.of(recipe, count, available);
 
-        assertEquals(covered, plan.missing().isEmpty(),
+        assertEquals(
+                covered,
+                plan.missing().isEmpty(),
                 "Пустой missing обязан значить 'выполнимо', непустой — 'не хватает': иначе дух крафтит без "
                         + "материалов или отказывает при их наличии. Места: " + slotItems + ", число: " + count
                         + ", выход: " + outputCount + ", наличие: " + stock);
@@ -59,13 +61,18 @@ class CraftPlanProperties {
 
         CraftPlan plan = CraftPlan.of(recipe, count, available);
 
-        int total = plan.required().values().stream().mapToInt(Integer::intValue).sum();
-        assertEquals(plan.crafts() * slots.size(), total,
+        int total =
+                plan.required().values().stream().mapToInt(Integer::intValue).sum();
+        assertEquals(
+                plan.crafts() * slots.size(),
+                total,
                 "Суммарные расходы обязаны равняться числу крафтов на число мест рецепта");
         if (plan.feasible()) {
-            plan.required().forEach((item, need) -> assertTrue(need <= available.getOrDefault(item, 0),
-                    "Выполнимый план расходует " + item + " " + need + " при наличии "
-                            + available.getOrDefault(item, 0) + ": дух не может отдать то, чего нет"));
+            plan.required()
+                    .forEach((item, need) -> assertTrue(
+                            need <= available.getOrDefault(item, 0),
+                            "Выполнимый план расходует " + item + " " + need + " при наличии "
+                                    + available.getOrDefault(item, 0) + ": дух не может отдать то, чего нет"));
         }
     }
 

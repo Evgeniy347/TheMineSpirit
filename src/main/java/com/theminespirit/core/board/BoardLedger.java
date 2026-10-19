@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Отметки «постройка стоит»: какой кейс какого уровня выполнен. Живые DONE-задания
@@ -14,21 +15,20 @@ public final class BoardLedger {
     public static final String PREFIX = "building:";
 
     /** Разобранное условие постройки из зависимости: кейс и уровень, которые должны стоять. */
-    public record BuildingMark(BoardCase boardCase, int level) {
-    }
+    public record BuildingMark(BoardCase boardCase, int level) {}
 
     private final Set<String> built = new LinkedHashSet<>();
 
     public static String key(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс отметки не может быть null: без него непонятно, что стоит");
         if (level < 1) {
-            throw new IllegalArgumentException("Уровень отметки " + level + " меньше 1: первой всегда "
-                    + "стоит отметка уровня 1");
+            throw new IllegalArgumentException(
+                    "Уровень отметки " + level + " меньше 1: первой всегда " + "стоит отметка уровня 1");
         }
         return PREFIX + boardCase.name() + ":" + level;
     }
 
-    public static Optional<BuildingMark> parse(String dependency) {
+    public static Optional<BuildingMark> parse(@Nullable String dependency) {
         if (dependency == null || !dependency.startsWith(PREFIX)) {
             return Optional.empty();
         }

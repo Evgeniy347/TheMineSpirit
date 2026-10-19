@@ -18,8 +18,8 @@ public record Crater(UUID id, BlockCoord center, int radius, int groundLevel, lo
         Objects.requireNonNull(id, "Id воронки не может быть null: по нему скрипт находит воронку");
         Objects.requireNonNull(center, "Центр воронки не может быть null: без него неизвестно, где засыпать");
         if (radius < RADIUS_MIN || radius > RADIUS_MAX) {
-            throw new IllegalArgumentException("Радиус воронки " + radius + " вне диапазона " + RADIUS_MIN + ".." + RADIUS_MAX
-                    + ": воронка крипера не бывает такой");
+            throw new IllegalArgumentException("Радиус воронки " + radius + " вне диапазона " + RADIUS_MIN + ".."
+                    + RADIUS_MAX + ": воронка крипера не бывает такой");
         }
         if (groundLevel < CatalogLimits.WORLD_Y_MIN || groundLevel > CatalogLimits.WORLD_Y_MAX) {
             throw new IllegalArgumentException("Уровень земли " + groundLevel + " вне мира " + CatalogLimits.WORLD_Y_MIN

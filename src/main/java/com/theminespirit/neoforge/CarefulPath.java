@@ -6,8 +6,7 @@ import java.util.List;
 import net.minecraft.world.level.pathfinder.Path;
 
 public final class CarefulPath {
-    private CarefulPath() {
-    }
+    private CarefulPath() {}
 
     public static String refusal(Path path) {
         if (path == null) {

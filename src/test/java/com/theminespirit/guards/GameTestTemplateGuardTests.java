@@ -17,17 +17,12 @@ import org.junit.jupiter.api.Test;
  * {@code "arena"} (11×8×11), где сцена целиком помещается на активной площадке.
  */
 class GameTestTemplateGuardTests {
-    private static final Pattern GAMETEST_ANNOTATION = Pattern.compile(
-            "@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern GAMETEST_ANNOTATION =
+            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern EMPTY_TEMPLATE =
             Pattern.compile("template\\s*=\\s*(?:\"empty\"|EMPTY_TEMPLATE)(?![A-Za-z0-9_])");
     private static final String[] SPAWN_OR_BLOCK_MARKERS = {
-            "ModEntities.SPIRIT",
-            "spawnSpirit",
-            ".spawn(",
-            "setBlock",
-            "buildFloor",
-            ".fill(",
+        "ModEntities.SPIRIT", "spawnSpirit", ".spawn(", "setBlock", "buildFloor", ".fill(",
     };
 
     @Test
@@ -35,7 +30,9 @@ class GameTestTemplateGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "GameTest, который спавнит духа или ставит блоки, не должен использовать шаблон \"empty\" (3×3×3): "
                         + "сцена вылезает в соседний неактивный чанк, дух/блок не делает первого тика и тест флекает "
                         + "примерно 1 из 8. Такому тесту нужен шаблон \"arena\" (11×8×11), и вся сцена — внутри "
@@ -44,57 +41,73 @@ class GameTestTemplateGuardTests {
 
     @Test
     void gameTestTemplatePattern_EmptyWithSpawn_FindsViolation() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void spawn_SpiritType_Lives(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void spawn_SpiritType_Lives(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("spawn_SpiritType_Lives"), offendersOf(sample),
+        assertEquals(
+                List.of("spawn_SpiritType_Lives"),
+                offendersOf(sample),
                 "Сторож ослеп: спавн духа в шаблоне \"empty\" должен попадать в нарушители");
     }
 
     @Test
     void gameTestTemplatePattern_EmptyWithSetBlock_FindsViolation() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void floor_Stone_IsBuilt(GameTestHelper helper) {\n"
-                + "        helper.setBlock(0, 0, 0, Blocks.STONE);\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void floor_Stone_IsBuilt(GameTestHelper helper) {
+                                helper.setBlock(0, 0, 0, Blocks.STONE);
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("floor_Stone_IsBuilt"), offendersOf(sample),
+        assertEquals(
+                List.of("floor_Stone_IsBuilt"),
+                offendersOf(sample),
                 "Сторож ослеп: постановка блока в шаблоне \"empty\" должна попадать в нарушители");
     }
 
     @Test
     void gameTestTemplatePattern_ArenaWithSpawn_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", batch = \"spawn\", timeoutTicks = 100)\n"
-                + "    public static void spawn_SpiritType_Lives(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", batch = "spawn", timeoutTicks = 100)
+                            public static void spawn_SpiritType_Lives(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: шаблон \"arena\" со сценой внутри площадки — законное решение");
     }
 
     @Test
     void gameTestTemplatePattern_EmptyWithoutSpawnOrBlocks_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void registry_EveryScript_IsDescribed(GameTestHelper helper) {\n"
-                + "        helper.assertTrue(SpiritScripts.registryFor(null).ids().size() > 0, \"реестр пуст\");\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void registry_EveryScript_IsDescribed(GameTestHelper helper) {
+                                helper.assertTrue(SpiritScripts.registryFor(null).ids().size() > 0, "реестр пуст");
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: \"empty\" без спавна и блоков безопасен — читать нечего");
     }
 
@@ -102,8 +115,8 @@ class GameTestTemplateGuardTests {
         sources.forEach((file, text) -> {
             for (Method method : methodsOnEmptyTemplate(text)) {
                 if (spawnsOrPlacesBlocks(method.body())) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -170,6 +183,5 @@ class GameTestTemplateGuardTests {
         return false;
     }
 
-    private record Method(String name, int annotationStart, String body) {
-    }
+    private record Method(String name, int annotationStart, String body) {}
 }

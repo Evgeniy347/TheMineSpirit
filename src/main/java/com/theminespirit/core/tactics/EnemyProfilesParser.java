@@ -6,11 +6,11 @@ import java.util.regex.Pattern;
 
 final class EnemyProfilesParser {
     private static final Pattern TYPE_KEY = Pattern.compile("minecraft:[a-z_]+");
-    private static final String[] REQUIRED = {"type", "hp", "dps", "speed", "ranged", "explosive", "swims", "flies",
-            "tier"};
+    private static final String[] REQUIRED = {
+        "type", "hp", "dps", "speed", "ranged", "explosive", "swims", "flies", "tier"
+    };
 
-    private EnemyProfilesParser() {
-    }
+    private EnemyProfilesParser() {}
 
     static EnemyProfiles parse(ConfigNode root) {
         ConfigNode list = root.fields(new String[] {"enemies"}).get("enemies");
@@ -19,8 +19,10 @@ final class EnemyProfilesParser {
         for (ConfigNode item : list.nonEmptyItems()) {
             EnemyProfile profile = profile(item.fields(REQUIRED));
             if (byType.containsKey(profile.type()) || (fallback != null && isDefault(profile))) {
-                throw item.get("type").fail("тип '" + profile.type() + "' описан дважды",
-                        "каждый тип врага описывается ровно один раз");
+                throw item.get("type")
+                        .fail(
+                                "тип '" + profile.type() + "' описан дважды",
+                                "каждый тип врага описывается ровно один раз");
             }
             if (isDefault(profile)) {
                 fallback = profile;
@@ -29,24 +31,27 @@ final class EnemyProfilesParser {
             }
         }
         if (fallback == null) {
-            throw list.fail("нет профиля '" + EnemyProfiles.DEFAULT_KEY + "'",
+            throw list.fail(
+                    "нет профиля '" + EnemyProfiles.DEFAULT_KEY + "'",
                     "консервативный профиль для неизвестного типа обязателен: без него новый враг не оценить");
         }
         return new EnemyProfiles(byType, fallback);
     }
 
     private static boolean isDefault(EnemyProfile profile) {
-        return profile.type().equals(EnemyProfiles.DEFAULT_KEY);
+        return EnemyProfiles.DEFAULT_KEY.equals(profile.type());
     }
 
     private static EnemyProfile profile(ConfigNode item) {
         ConfigNode type = item.get("type");
         String key = type.text();
-        if (!key.equals(EnemyProfiles.DEFAULT_KEY) && !TYPE_KEY.matcher(key).matches()) {
-            throw type.fail("ключ '" + key + "' не подходит под шаблон minecraft:[a-z_]+ или default",
+        if (!EnemyProfiles.DEFAULT_KEY.equals(key) && !TYPE_KEY.matcher(key).matches()) {
+            throw type.fail(
+                    "ключ '" + key + "' не подходит под шаблон minecraft:[a-z_]+ или default",
                     "тип врага — id сущности вида minecraft:zombie");
         }
-        return item.build(() -> new EnemyProfile(key,
+        return item.build(() -> new EnemyProfile(
+                key,
                 item.get("hp").number(),
                 item.get("dps").number(),
                 item.get("speed").number(),

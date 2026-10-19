@@ -26,7 +26,9 @@ public final class IdFilter {
         for (String pattern : patterns) {
             normalized.add(normalizePattern(pattern));
         }
-        return normalized.isEmpty() || normalized.contains(ANY_PATTERN) ? MATCH_ALL : new IdFilter(List.copyOf(normalized));
+        return normalized.isEmpty() || normalized.contains(ANY_PATTERN)
+                ? MATCH_ALL
+                : new IdFilter(List.copyOf(normalized));
     }
 
     public boolean matches(String id) {
@@ -68,7 +70,7 @@ public final class IdFilter {
                         + pattern.charAt(i) + "': разрешены a-z, 0-9, _ : . / - и подстановка *");
             }
         }
-        return pattern.equals(ANY_PATTERN) ? pattern : qualify(pattern);
+        return ANY_PATTERN.equals(pattern) ? pattern : qualify(pattern);
     }
 
     private static String qualify(String id) {

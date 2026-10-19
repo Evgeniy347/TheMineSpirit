@@ -24,11 +24,14 @@ class SituationContextTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("invalidContexts")
     void context_InvalidField_IsRejected(String field, Executable build) {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, build,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                build,
                 "Повреждённый вход адаптера обязан падать сразу с именем поля: иначе он молча дойдёт до ядра и решение "
                         + "будет принято по фиктивным фактам");
 
-        assertTrue(error.getMessage().contains(field),
+        assertTrue(
+                error.getMessage().contains(field),
                 "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: "
                         + error.getMessage());
     }
@@ -49,12 +52,19 @@ class SituationContextTests {
     @Test
     void context_SourceEnemyList_IsCopied() {
         List<EnemyFact> source = new ArrayList<>(List.of(AdapterFixtures.enemy("minecraft:zombie", "z1", 3, 0)));
-        SituationContext context = new SituationContext(AdapterFixtures.self(), source,
-                AdapterFixtures.env(TimeOfDay.DAY), AdapterFixtures.orders(CombatMode.AGGRESSIVE), 0, 0);
+        SituationContext context = new SituationContext(
+                AdapterFixtures.self(),
+                source,
+                AdapterFixtures.env(TimeOfDay.DAY),
+                AdapterFixtures.orders(CombatMode.AGGRESSIVE),
+                0,
+                0);
 
         source.clear();
 
-        assertEquals(1, context.enemies().size(),
+        assertEquals(
+                1,
+                context.enemies().size(),
                 "Контекст неизменяем: список врагов копируется, иначе правка сборщика меняла бы факты задним числом");
     }
 
@@ -62,24 +72,30 @@ class SituationContextTests {
     void collect_NullContext_IsRejected() {
         CoreFactCollector collector = CoreFactCollector.withDefaultSettings();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> collector.collect(null),
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> collector.collect(null),
                 "Сборщик без контекста — ошибка вызова, а не пустая ситуация: тихий пропуск скрыл бы неверный код");
 
-        assertTrue(error.getMessage().contains("collect"),
+        assertTrue(
+                error.getMessage().contains("collect"),
                 "Сообщение называет метод сборщика; получили: " + error.getMessage());
     }
 
     @Test
     void constructor_NullSettings_IsRejected() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> new CoreFactCollector(null),
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> new CoreFactCollector(null),
                 "Без настроек неизвестен факт-радиус: сборщик обязан отказаться, а не искать врагов по всему миру");
 
-        assertTrue(error.getMessage().contains("settings"),
+        assertTrue(
+                error.getMessage().contains("settings"),
                 "Сообщение называет настройки; получили: " + error.getMessage());
     }
 
-    private static Executable build(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int sinceHit,
-            int sinceStrike) {
+    private static Executable build(
+            SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int sinceHit, int sinceStrike) {
         return () -> new SituationContext(self, enemies, env, orders, sinceHit, sinceStrike);
     }
 }

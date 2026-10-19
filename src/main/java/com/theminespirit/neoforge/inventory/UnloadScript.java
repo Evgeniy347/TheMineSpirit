@@ -33,23 +33,26 @@ public final class UnloadScript extends ContainerTask {
         this(spirit, params, -1, 0, null);
     }
 
-    public static UnloadScript relief(SpiritEntity spirit, int protectedSlot) {
-        return reliefFor(spirit, protectedSlot, null);
-    }
-
-    public static UnloadScript reliefFor(SpiritEntity spirit, int protectedSlot, String activity) {
-        return new UnloadScript(spirit,
-                new UnloadParams(ContainerTarget.AUTO, CatalogLimits.CONTAINER_RADIUS_DEFAULT, true),
-                protectedSlot, WarehouseSpace.MIN_FREE_PERCENT, activity);
-    }
-
-    private UnloadScript(SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent,
-            String activity) {
+    private UnloadScript(
+            SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent, String activity) {
         super(spirit, params.container(), params.radius());
         this.params = params;
         this.protectedSlot = protectedSlot;
         this.reservePercent = reservePercent;
         this.activity = activity;
+    }
+
+    public static UnloadScript relief(SpiritEntity spirit, int protectedSlot) {
+        return reliefFor(spirit, protectedSlot, null);
+    }
+
+    public static UnloadScript reliefFor(SpiritEntity spirit, int protectedSlot, String activity) {
+        return new UnloadScript(
+                spirit,
+                new UnloadParams(ContainerTarget.AUTO, CatalogLimits.CONTAINER_RADIUS_DEFAULT, true),
+                protectedSlot,
+                WarehouseSpace.MIN_FREE_PERCENT,
+                activity);
     }
 
     @Override
@@ -60,8 +63,8 @@ public final class UnloadScript extends ContainerTask {
     @Override
     protected TransferRunner beginTransfer(Container container) {
         BaseKit kit = kit();
-        List<Slice> surplus = DepositSelection.surplus(new StackMapper().map(spirit.getInventory()), kit,
-                InventoryTables.values(), protectedSlot);
+        List<Slice> surplus = DepositSelection.surplus(
+                new StackMapper().map(spirit.getInventory()), kit, InventoryTables.values(), protectedSlot);
         if (surplus.isEmpty()) {
             return null;
         }
@@ -72,8 +75,8 @@ public final class UnloadScript extends ContainerTask {
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         return switch (shortage) {
             case NONE, SOURCE_LACK -> ScriptStatus.SUCCEEDED;
-            case DEST_FULL -> failed("контейнер полон: разгружено " + moved
-                    + " предметов, остаток излишка остался у духа");
+            case DEST_FULL ->
+                failed("контейнер полон: разгружено " + moved + " предметов, остаток излишка остался у духа");
         };
     }
 
@@ -84,17 +87,17 @@ public final class UnloadScript extends ContainerTask {
         }
         while (groupIndex < groups.size()) {
             KindGroup group = groups.get(groupIndex++);
-            ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), group.kind,
-                    reservePercent);
+            ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), group.kind, reservePercent);
             if (choice instanceof ContainerChoice.Refused refused) {
                 refusedOnce = true;
                 lastRefusal = refused.reason();
                 continue;
             }
             int index = ((ContainerChoice.Chosen) choice).index();
-            TransferRunner runner = TransferRunner.slices(spirit.getInventory(), scan.containers().get(index),
-                    group.slices);
-            return new AutoMove(scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
+            TransferRunner runner = TransferRunner.slices(
+                    spirit.getInventory(), scan.containers().get(index), group.slices);
+            return new AutoMove(
+                    scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
         }
         return null;
     }
@@ -135,7 +138,8 @@ public final class UnloadScript extends ContainerTask {
     }
 
     private BaseKit kit() {
-        return KitFor.kitFor(activity != null ? activity : spirit.currentActivity().orElse(null), spirit.isChild());
+        return KitFor.kitFor(
+                activity != null ? activity : spirit.currentActivity().orElse(null), spirit.isChild());
     }
 
     private BlockCoord blockCoord() {

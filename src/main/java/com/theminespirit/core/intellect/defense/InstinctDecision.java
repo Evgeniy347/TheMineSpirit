@@ -5,8 +5,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public record InstinctDecision(CombatStance stance, Optional<Double> holdDistance, Optional<Point> cover,
-        Optional<UUID> handOff, String reason) {
+public record InstinctDecision(
+        CombatStance stance,
+        Optional<Double> holdDistance,
+        Optional<Point> cover,
+        Optional<UUID> handOff,
+        String reason) {
     public InstinctDecision {
         Objects.requireNonNull(stance, "stance не может быть null: стойка — суть инстинкта");
         Objects.requireNonNull(holdDistance, "holdDistance не может быть null: нет дистанции — Optional.empty()");

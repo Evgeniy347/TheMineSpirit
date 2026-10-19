@@ -51,17 +51,21 @@ class TaskRunnerProperties {
                 }
             }
         } catch (RuntimeException error) {
-            fail("движок не должен бросать исключения наружу на любом плане из простейших скриптов: "
-                    + "исключение уронит серверный тик. seed=" + seed + ", план=" + plan, error);
+            fail(
+                    "движок не должен бросать исключения наружу на любом плане из простейших скриптов: "
+                            + "исключение уронит серверный тик. seed=" + seed + ", план=" + plan,
+                    error);
             return;
         }
 
-        assertTrue(ticks <= TICK_LIMIT,
+        assertTrue(
+                ticks <= TICK_LIMIT,
                 "исполнение обязано завершаться за ограниченное число тиков: бесконечный прогон съест серверный тик. "
                         + "seed=" + seed + ", тиков=" + ticks + ", план=" + plan);
-        assertTrue(status == RunStatus.SUCCEEDED || status == RunStatus.FAILED,
-                "после завершения статус обязан быть терминальным из RunStatus: получили " + status
-                        + ". seed=" + seed + ", план=" + plan);
+        assertTrue(
+                status == RunStatus.SUCCEEDED || status == RunStatus.FAILED,
+                "после завершения статус обязан быть терминальным из RunStatus: получили " + status + ". seed=" + seed
+                        + ", план=" + plan);
     }
 
     private static TaskNode randomTree(Random random, int depth) {
@@ -72,11 +76,15 @@ class TaskRunnerProperties {
             case 0 -> new SequenceNode(randomChildren(random, depth));
             case 1 -> new RepeatNode(random.nextInt(4), randomTree(random, depth - 1));
             case 2 -> new FallbackNode(randomChildren(random, depth));
-            case 3 -> new ParallelNode(random.nextBoolean() ? ParallelMode.ALL : ParallelMode.ANY,
-                    randomChildren(random, depth));
-            default -> new ConditionNode(random.nextBoolean() ? YES : NO, Map.of(),
-                    randomTree(random, depth - 1),
-                    random.nextBoolean() ? randomTree(random, depth - 1) : null);
+            case 3 ->
+                new ParallelNode(
+                        random.nextBoolean() ? ParallelMode.ALL : ParallelMode.ANY, randomChildren(random, depth));
+            default ->
+                new ConditionNode(
+                        random.nextBoolean() ? YES : NO,
+                        Map.of(),
+                        randomTree(random, depth - 1),
+                        random.nextBoolean() ? randomTree(random, depth - 1) : null);
         };
     }
 

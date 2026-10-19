@@ -45,8 +45,8 @@ public final class TransferRunner {
     private int moved;
     private int maxMovesPerTick;
 
-    private TransferRunner(Container from, Container to, IdFilter filter, int requested,
-            Map<Integer, Integer> sliceRemaining) {
+    private TransferRunner(
+            Container from, Container to, IdFilter filter, int requested, Map<Integer, Integer> sliceRemaining) {
         this.from = from;
         this.to = to;
         this.filter = filter;
@@ -167,7 +167,8 @@ public final class TransferRunner {
 
     private boolean matches(Move move, Snapshot want) {
         ItemStack current = from.getItem(move.fromSlot());
-        if (current.isEmpty() || current.getCount() < want.count()
+        if (current.isEmpty()
+                || current.getCount() < want.count()
                 || !StackMapper.itemId(current).equals(want.item())
                 || !ItemStack.isSameItemSameComponents(want.sample(), current)) {
             return false;
@@ -225,6 +226,5 @@ public final class TransferRunner {
         return state;
     }
 
-    private record Snapshot(String item, ItemStack sample, int count) {
-    }
+    private record Snapshot(String item, ItemStack sample, int count) {}
 }

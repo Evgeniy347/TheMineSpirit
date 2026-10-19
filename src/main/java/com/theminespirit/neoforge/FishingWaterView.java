@@ -62,7 +62,8 @@ final class FishingWaterView implements WaterView {
 
     private boolean passable(BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        return state.getFluidState().isEmpty() && state.getCollisionShape(level, pos).isEmpty();
+        return state.getFluidState().isEmpty()
+                && state.getCollisionShape(level, pos).isEmpty();
     }
 
     private Optional<Column> readColumn(int x, int z) {
@@ -96,7 +97,7 @@ final class FishingWaterView implements WaterView {
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 if (dx * dx + dz * dz <= radius * radius) {
-                    result.add(new int[]{dx, dz});
+                    result.add(new int[] {dx, dz});
                 }
             }
         }

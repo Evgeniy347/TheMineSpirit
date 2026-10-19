@@ -69,15 +69,17 @@ class SseWriterTests {
 
     @Test
     void pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce() {
-        ScriptedStream stream = new ScriptedStream(List.of("id: 1\nevent: state\ndata: {\"s\":\"запущена\"}\n\n", ": keepalive\n\n"),
-                false);
+        ScriptedStream stream = new ScriptedStream(
+                List.of("id: 1\nevent: state\ndata: {\"s\":\"запущена\"}\n\n", ": keepalive\n\n"), false);
         RecordingOutput out = new RecordingOutput(Integer.MAX_VALUE);
 
         SseWriter.Outcome outcome = SseWriter.pump(stream, out);
 
         assertEquals(SseWriter.Outcome.FINISHED, outcome, "Поток, отдавший null, обязан завершаться штатно");
-        assertEquals("id: 1\nevent: state\ndata: {\"s\":\"запущена\"}\n\n: keepalive\n\n",
-                out.bytes.toString(StandardCharsets.UTF_8), "Кадры обязаны уходить по порядку в UTF-8");
+        assertEquals(
+                "id: 1\nevent: state\ndata: {\"s\":\"запущена\"}\n\n: keepalive\n\n",
+                out.bytes.toString(StandardCharsets.UTF_8),
+                "Кадры обязаны уходить по порядку в UTF-8");
         assertEquals(2, out.flushes, "Каждый кадр обязан сбрасываться сразу, иначе клиент увидит событие с задержкой");
         assertEquals(1, stream.closes, "Поток обязан закрыться ровно один раз: закрытие освобождает слот SSE");
     }
@@ -90,7 +92,9 @@ class SseWriterTests {
         SseWriter.Outcome outcome = SseWriter.pump(stream, out);
 
         assertEquals(SseWriter.Outcome.CLIENT_GONE, outcome, "Обрыв записи не ошибка моста: клиент ушёл");
-        assertEquals(1, stream.closes,
+        assertEquals(
+                1,
+                stream.closes,
                 "При IOException поток обязан закрыться и освободить слот: иначе 4 оборванных клиента навсегда "
                         + "заблокируют SSE");
     }

@@ -36,7 +36,9 @@ class RecipeChooserProperties {
         Optional<RecipeSpec> straight = RecipeChooser.pick(candidates, available);
         Optional<RecipeSpec> mixed = RecipeChooser.pick(shuffled, available);
 
-        assertEquals(straight, mixed,
+        assertEquals(
+                straight,
+                mixed,
                 "Выбор рецепта не должен зависеть от порядка кандидатов: порядок рецептов в датапаках случаен, "
                         + "а духи обязаны выбирать одинаково. Рецептов: " + candidates.size() + ", наличие: " + stock);
     }

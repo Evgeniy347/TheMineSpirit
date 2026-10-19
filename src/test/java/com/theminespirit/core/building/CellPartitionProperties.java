@@ -16,17 +16,18 @@ import net.jqwik.api.constraints.IntRange;
 class CellPartitionProperties {
     @Provide
     Arbitrary<List<BlockCoord>> cells() {
-        return Arbitraries.integers().between(-10, 10)
-                .flatMap(x -> Arbitraries.integers().between(-10, 10)
-                        .flatMap(y -> Arbitraries.integers().between(-10, 10)
-                                .map(z -> new BlockCoord(x, y, z))))
+        return Arbitraries.integers()
+                .between(-10, 10)
+                .flatMap(x -> Arbitraries.integers()
+                        .between(-10, 10)
+                        .flatMap(y -> Arbitraries.integers().between(-10, 10).map(z -> new BlockCoord(x, y, z))))
                 .list()
                 .ofMaxSize(30);
     }
 
     @Property
-    void split_AnyCellsAnyParts_DisjointAndFullCoverage(@ForAll("cells") List<BlockCoord> cells,
-            @ForAll @IntRange(min = 1, max = 6) int parts) {
+    void split_AnyCellsAnyParts_DisjointAndFullCoverage(
+            @ForAll("cells") List<BlockCoord> cells, @ForAll @IntRange(min = 1, max = 6) int parts) {
         List<List<BlockCoord>> shares = CellPartition.split(cells, parts);
 
         assertEquals(parts, shares.size(), "Долей ровно столько, сколько частей");
@@ -35,17 +36,23 @@ class CellPartitionProperties {
         for (List<BlockCoord> share : shares) {
             merged.addAll(share);
         }
-        assertEquals(cells.size(), merged.size(),
+        assertEquals(
+                cells.size(),
+                merged.size(),
                 "Доли вместе содержат столько клеток, сколько во входе: клетка не потеряна и не удвоена, то есть "
                         + "доли не пересекаются");
-        assertEquals(new HashSet<>(cells), new HashSet<>(merged),
+        assertEquals(
+                new HashSet<>(cells),
+                new HashSet<>(merged),
                 "Объединение долей совпадает со входом: полнота разбиения");
     }
 
     @Property
-    void split_AnyCellsAnyParts_Deterministic(@ForAll("cells") List<BlockCoord> cells,
-            @ForAll @IntRange(min = 1, max = 6) int parts) {
-        assertEquals(CellPartition.split(cells, parts), CellPartition.split(cells, parts),
+    void split_AnyCellsAnyParts_Deterministic(
+            @ForAll("cells") List<BlockCoord> cells, @ForAll @IntRange(min = 1, max = 6) int parts) {
+        assertEquals(
+                CellPartition.split(cells, parts),
+                CellPartition.split(cells, parts),
                 "Тот же вход даёт то же разбиение: доли стабильны между пересборками отряда");
     }
 }

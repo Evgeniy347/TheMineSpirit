@@ -8,15 +8,14 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Доска на шине событий: тик раз в BOARD_INTERVAL_TICKS по расписанию уровня. */
 public final class BoardLifecycle {
-    private BoardLifecycle() {
-    }
+    private BoardLifecycle() {}
 
     public static void register(IEventBus bus) {
         if (bus == null) {
             throw new IllegalArgumentException("bus не может быть null: без шины слушатель доски не встанет");
         }
         bus.addListener((ServerTickEvent.Post event) -> onServerTick(event));
-        bus.addListener((ServerStoppingEvent event) -> onServerStopping(event));
+        bus.addListener((ServerStoppingEvent event) -> onServerStopping());
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {
@@ -28,7 +27,7 @@ public final class BoardLifecycle {
         }
     }
 
-    private static void onServerStopping(ServerStoppingEvent event) {
+    private static void onServerStopping() {
         BoardRegistry.closeAll();
         BoardRegistry.clear();
     }

@@ -5,12 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public record ScriptRequirement(
-        String kind,
-        String tool,
-        String param,
-        Map<String, Integer> tiers,
-        int fallback) {
+public record ScriptRequirement(String kind, String tool, String param, Map<String, Integer> tiers, int fallback) {
 
     public static final String TOOL = "tool";
     public static final int NO_TIER = 0;
@@ -19,14 +14,16 @@ public record ScriptRequirement(
 
     public ScriptRequirement {
         if (!TOOL.equals(kind)) {
-            throw new IllegalArgumentException("Вид требования '" + kind + "' неизвестен: каталог понимает только '"
-                    + TOOL + "'");
+            throw new IllegalArgumentException(
+                    "Вид требования '" + kind + "' неизвестен: каталог понимает только '" + TOOL + "'");
         }
         if (tool == null || tool.isBlank()) {
-            throw new IllegalArgumentException("Инструмент требования пуст: без него проверка плана не знает, что искать");
+            throw new IllegalArgumentException(
+                    "Инструмент требования пуст: без него проверка плана не знает, что искать");
         }
         if (param == null || param.isBlank()) {
-            throw new IllegalArgumentException("Параметр требования пуст: без него требование не привязать к шагу плана");
+            throw new IllegalArgumentException(
+                    "Параметр требования пуст: без него требование не привязать к шагу плана");
         }
         Objects.requireNonNull(tiers, "tiers не может быть null: пустой набор задают пустой картой");
         Map<String, Integer> copy = new LinkedHashMap<>();
@@ -42,8 +39,8 @@ public record ScriptRequirement(
         }
         tiers = Collections.unmodifiableMap(copy);
         if (fallback < NO_TIER || fallback > MAX_TIER) {
-            throw new IllegalArgumentException("Запасной уровень требования равен " + fallback + ": допустимо от "
-                    + NO_TIER + " до " + MAX_TIER);
+            throw new IllegalArgumentException(
+                    "Запасной уровень требования равен " + fallback + ": допустимо от " + NO_TIER + " до " + MAX_TIER);
         }
     }
 

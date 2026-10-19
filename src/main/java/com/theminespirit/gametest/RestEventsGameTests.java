@@ -35,8 +35,7 @@ public final class RestEventsGameTests {
     private static final int BUCKET_CAPACITY = 40;
     private static final int MIN_LIMITED_IN_BURST = 30;
 
-    private RestEventsGameTests() {
-    }
+    private RestEventsGameTests() {}
 
     @GameTest(batch = "rest_events_flow", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_SequenceOfGotos_StateFirstThenProgressThenFinalSucceededAndStreamCloses(
@@ -45,24 +44,35 @@ public final class RestEventsGameTests {
         SpiritEntity spirit = rest.spawnHeldUntilStreamsOpen(helper, SPIRIT_START, 1);
         AtomicReference<RestFixture.SseCapture> stream = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LEGS).thenApply(accepted -> {
-            problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-            stream.set(rest.stream("/v1/tasks/" + accepted.json().path("task_id").asText() + "/events", Map.of()));
-            return problems.found();
-        });
+        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LEGS)
+                .thenApply(accepted -> {
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
+                    stream.set(rest.stream(
+                            "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events", Map.of()));
+                    return problems.found();
+                });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(stream.get() != null && stream.get().finished(),
+            helper.assertTrue(
+                    stream.get() != null && stream.get().finished(),
                     "Поток событий обязан закрыться после финального state; кадры пока: "
-                            + (stream.get() == null ? "нет потока" : stream.get().lines()));
+                            + (stream.get() == null
+                                    ? "нет потока"
+                                    : stream.get().lines()));
             List<RestFixture.Frame> frames = stream.get().frames();
-            helper.assertTrue(stream.get().contentType().startsWith("text/event-stream"),
-                    "Content-Type потока обязан быть text/event-stream, получен " + stream.get().contentType());
-            helper.assertTrue(!frames.isEmpty() && frames.get(0).event().equals("state"),
+            helper.assertTrue(
+                    stream.get().contentType().startsWith("text/event-stream"),
+                    "Content-Type потока обязан быть text/event-stream, получен "
+                            + stream.get().contentType());
+            helper.assertTrue(
+                    !frames.isEmpty() && "state".equals(frames.get(0).event()),
                     "Первым кадром обязан идти текущий state, получено " + frames);
-            helper.assertTrue(frames.stream().anyMatch(frame -> frame.event().equals("progress")),
+            helper.assertTrue(
+                    frames.stream().anyMatch(frame -> "progress".equals(frame.event())),
                     "Между шагами sequence обязан прийти хотя бы один progress, кадры " + frames);
             RestFixture.Frame last = frames.get(frames.size() - 1);
-            helper.assertTrue(last.event().equals("state") && last.json().path("state").asText().equals("succeeded"),
+            helper.assertTrue(
+                    "state".equals(last.event())
+                            && "succeeded".equals(last.json().path("state").asText()),
                     "Завершающим кадром обязан быть state succeeded, получено " + last);
             long previous = -1;
             for (RestFixture.Frame frame : frames.subList(1, frames.size())) {
@@ -82,39 +92,52 @@ public final class RestEventsGameTests {
         AtomicReference<RestFixture.SseCapture> second = new AtomicReference<>();
         AtomicReference<Long> resumedAfter = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LEGS).thenApply(accepted -> {
-            problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-            eventsPath.set("/v1/tasks/" + accepted.json().path("task_id").asText() + "/events");
-            first.set(rest.stream(eventsPath.get(), Map.of()));
-            return problems.found();
-        });
+        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LEGS)
+                .thenApply(accepted -> {
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
+                    eventsPath.set(
+                            "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events");
+                    first.set(rest.stream(eventsPath.get(), Map.of()));
+                    return problems.found();
+                });
         RestFixture.await(helper, rest, scenario, () -> {
             if (second.get() == null) {
                 RestFixture.Frame progress = first.get().frames().stream()
-                        .filter(frame -> frame.event().equals("progress")).findFirst().orElse(null);
-                helper.assertTrue(progress != null, "Ждём первый progress в первом потоке: " + first.get().lines());
+                        .filter(frame -> "progress".equals(frame.event()))
+                        .findFirst()
+                        .orElse(null);
+                helper.assertTrue(
+                        progress != null,
+                        "Ждём первый progress в первом потоке: " + first.get().lines());
                 first.get().cancel();
                 resumedAfter.set(progress.idNumber());
                 second.set(rest.stream(eventsPath.get(), Map.of("Last-Event-ID", progress.id())));
             }
-            helper.assertTrue(second.get().finished(),
-                    "Второй поток обязан закрыться после финального state; кадры: " + second.get().lines());
+            helper.assertTrue(
+                    second.get().finished(),
+                    "Второй поток обязан закрыться после финального state; кадры: "
+                            + second.get().lines());
             List<RestFixture.Frame> frames = second.get().frames();
             helper.assertTrue(!frames.isEmpty(), "После переподключения обязаны прийти оставшиеся кадры");
             for (RestFixture.Frame frame : frames) {
-                helper.assertTrue(frame.idNumber() > resumedAfter.get(),
+                helper.assertTrue(
+                        frame.idNumber() > resumedAfter.get(),
                         "Переподключение с Last-Event-ID " + resumedAfter.get() + " обязано отдавать только более "
                                 + "поздние кадры, получен " + frame);
             }
-            helper.assertTrue(frames.get(0).idNumber() == resumedAfter.get() + 1,
+            helper.assertTrue(
+                    frames.get(0).idNumber() == resumedAfter.get() + 1,
                     "Первым кадром после Last-Event-ID " + resumedAfter.get() + " обязан идти следующий кадр журнала "
                             + "с id " + (resumedAfter.get() + 1) + ", а не снимок состояния: " + frames.get(0));
             for (int i = 1; i < frames.size(); i++) {
-                helper.assertTrue(frames.get(i).idNumber() == frames.get(i - 1).idNumber() + 1,
+                helper.assertTrue(
+                        frames.get(i).idNumber() == frames.get(i - 1).idNumber() + 1,
                         "Кадры журнала обязаны идти подряд без пропусков и повторов: " + frames);
             }
             RestFixture.Frame last = frames.get(frames.size() - 1);
-            helper.assertTrue(last.event().equals("state") && last.json().path("state").asText().equals("succeeded"),
+            helper.assertTrue(
+                    "state".equals(last.event())
+                            && "succeeded".equals(last.json().path("state").asText()),
                     "Продолжение обязано дойти до завершающего state succeeded, получено " + last);
         });
     }
@@ -132,23 +155,33 @@ public final class RestEventsGameTests {
         CompletableFuture<List<String>> scenario = rest.post("/v1/bots/" + spirit.getStringUUID() + "/tasks", body)
                 .thenApply(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-                    stream.set(rest.stream("/v1/tasks/" + accepted.json().path("task_id").asText() + "/events",
+                    stream.set(rest.stream(
+                            "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events",
                             Map.of("Last-Event-ID", "1")));
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(stream.get() != null && stream.get().finished(),
+            helper.assertTrue(
+                    stream.get() != null && stream.get().finished(),
                     "Поток обязан закрыться после провала задачи; кадры: "
-                            + (stream.get() == null ? "нет потока" : stream.get().lines()));
+                            + (stream.get() == null
+                                    ? "нет потока"
+                                    : stream.get().lines()));
             List<RestFixture.Frame> frames = stream.get().frames();
-            JsonNode failed = frames.stream().filter(frame -> frame.event().equals("script_failed")).findFirst()
-                    .map(RestFixture.Frame::json).orElse(null);
+            JsonNode failed = frames.stream()
+                    .filter(frame -> "script_failed".equals(frame.event()))
+                    .findFirst()
+                    .map(RestFixture.Frame::json)
+                    .orElse(null);
             helper.assertTrue(failed != null, "Провал goto обязан дать кадр script_failed, кадры " + frames);
-            helper.assertTrue(failed.path("script").asText().equals("goto")
-                    && !failed.path("reason").asText().isBlank(),
+            helper.assertTrue(
+                    "goto".equals(failed.path("script").asText())
+                            && !failed.path("reason").asText().isBlank(),
                     "script_failed обязан называть скрипт goto и причину, получено " + failed);
             RestFixture.Frame last = frames.get(frames.size() - 1);
-            helper.assertTrue(last.event().equals("state") && last.json().path("state").asText().equals("failed"),
+            helper.assertTrue(
+                    "state".equals(last.event())
+                            && "failed".equals(last.json().path("state").asText()),
                     "Завершающим кадром обязан быть state failed, получено " + last);
         });
     }
@@ -164,38 +197,49 @@ public final class RestEventsGameTests {
         AtomicReference<RestFixture.SseCapture> retry = new AtomicReference<>();
         AtomicInteger retries = new AtomicInteger();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LONG_LEGS).thenApply(accepted -> {
-            problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-            eventsPath.set("/v1/tasks/" + accepted.json().path("task_id").asText() + "/events");
-            for (int i = 0; i < MAX_STREAMS; i++) {
-                open.add(rest.stream(eventsPath.get(), Map.of()));
-            }
-            return problems.found();
-        });
+        CompletableFuture<List<String>> scenario = postSequence(helper, rest, spirit, LONG_LEGS)
+                .thenApply(accepted -> {
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
+                    eventsPath.set(
+                            "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events");
+                    for (int i = 0; i < MAX_STREAMS; i++) {
+                        open.add(rest.stream(eventsPath.get(), Map.of()));
+                    }
+                    return problems.found();
+                });
         RestFixture.await(helper, rest, scenario, () -> {
             for (RestFixture.SseCapture stream : open) {
-                helper.assertTrue(stream.status().isDone() && stream.status().join() == 200,
+                helper.assertTrue(
+                        stream.status().isDone() && stream.status().join() == 200,
                         "Первые " + MAX_STREAMS + " потоков обязаны открыться со статусом 200");
             }
             if (fifth.get() == null) {
                 fifth.set(rest.stream(eventsPath.get(), Map.of()));
             }
             helper.assertTrue(fifth.get().status().isDone(), "Ответ на пятый поток ещё не пришёл");
-            helper.assertTrue(fifth.get().status().join() == 429,
-                    "Пятый одновременный поток обязан получить 429, получен " + fifth.get().status().join());
-            helper.assertTrue(fifth.get().lines().stream().anyMatch(line -> line.contains("rate_limited")),
-                    "429 пятого потока обязан нести код rate_limited: " + fifth.get().lines());
+            helper.assertTrue(
+                    fifth.get().status().join() == 429,
+                    "Пятый одновременный поток обязан получить 429, получен "
+                            + fifth.get().status().join());
+            helper.assertTrue(
+                    fifth.get().lines().stream().anyMatch(line -> line.contains("rate_limited")),
+                    "429 пятого потока обязан нести код rate_limited: "
+                            + fifth.get().lines());
             if (retry.get() == null) {
                 open.get(0).cancel();
             }
-            if (retry.get() == null || retry.get().status().isDone() && retry.get().status().join() == 429) {
+            if (retry.get() == null
+                    || (retry.get().status().isDone() && retry.get().status().join() == 429)) {
                 retry.set(rest.stream(eventsPath.get(), Map.of()));
                 retries.incrementAndGet();
             }
-            helper.assertTrue(retry.get().status().isDone() && retry.get().status().join() == 200,
+            helper.assertTrue(
+                    retry.get().status().isDone() && retry.get().status().join() == 200,
                     "После ухода клиента слот обязан освободиться, и новый поток откроется со статусом 200; попыток "
                             + retries.get() + ", последний статус "
-                            + (retry.get().status().isDone() ? retry.get().status().join() : "нет ответа"));
+                            + (retry.get().status().isDone()
+                                    ? retry.get().status().join()
+                                    : "нет ответа"));
         });
     }
 
@@ -206,19 +250,26 @@ public final class RestEventsGameTests {
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
         ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                RestFixture.followGoalBody(UUID.randomUUID().toString(), player)).thenCompose(accepted -> {
+        CompletableFuture<List<String>> scenario = rest.post(
+                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
+                .thenCompose(accepted -> {
                     RestFixture.SseCapture stream = rest.stream(
                             "/v1/tasks/" + accepted.json().path("task_id").asText() + "/events", Map.of());
-                    return stream.status().thenCompose(status -> {
-                        problems.expect(status == 200, "Поток событий обязан открыться со статусом 200: " + status);
-                        return rest.onServer(() -> {
-                            rest.gateway().stop();
-                            return null;
-                        });
-                    }).thenCompose(stopped -> stream.whenFinished().orTimeout(STOP_CLOSE_SECONDS, TimeUnit.SECONDS))
+                    return stream.status()
+                            .thenCompose(status -> {
+                                problems.expect(
+                                        status == 200, "Поток событий обязан открыться со статусом 200: " + status);
+                                return rest.onServer(() -> {
+                                    rest.gateway().stop();
+                                    return null;
+                                });
+                            })
+                            .thenCompose(
+                                    stopped -> stream.whenFinished().orTimeout(STOP_CLOSE_SECONDS, TimeUnit.SECONDS))
                             .handle((finished, error) -> {
-                                problems.expect(error == null,
+                                problems.expect(
+                                        error == null,
                                         "Остановка шлюза обязана закрывать открытые потоки событий за "
                                                 + STOP_CLOSE_SECONDS + " с, а не ждать кипалайва: поток остался "
                                                 + "открытым, " + error);
@@ -239,22 +290,36 @@ public final class RestEventsGameTests {
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = CompletableFuture.allOf(replies.toArray(new CompletableFuture<?>[0]))
                 .thenApply(done -> {
-                    long ok = replies.stream().filter(reply -> reply.join().status() == 200).count();
-                    List<RestFixture.Reply> limited = replies.stream().map(CompletableFuture::join)
-                            .filter(reply -> reply.status() == 429).toList();
-                    problems.expect(ok >= BUCKET_CAPACITY,
+                    long ok = replies.stream()
+                            .filter(reply -> reply.join().status() == 200)
+                            .count();
+                    List<RestFixture.Reply> limited = replies.stream()
+                            .map(CompletableFuture::join)
+                            .filter(reply -> reply.status() == 429)
+                            .toList();
+                    problems.expect(
+                            ok >= BUCKET_CAPACITY,
                             "Ведро адреса вмещает " + BUCKET_CAPACITY + " запросов: минимум столько обязано пройти, "
                                     + "прошло " + ok);
-                    problems.expect(limited.size() >= MIN_LIMITED_IN_BURST,
+                    problems.expect(
+                            limited.size() >= MIN_LIMITED_IN_BURST,
                             "Из " + BURST_REQUESTS + " мгновенных запросов не менее " + MIN_LIMITED_IN_BURST
                                     + " обязаны получить 429, получили " + limited.size() + " (прошло " + ok + ")");
-                    problems.expect(ok + limited.size() == BURST_REQUESTS,
-                            "Каждый запрос обязан получить либо 200, либо 429");
+                    problems.expect(
+                            ok + limited.size() == BURST_REQUESTS, "Каждый запрос обязан получить либо 200, либо 429");
                     for (RestFixture.Reply reply : limited) {
-                        String retryAfter = reply.headers().firstValue("Retry-After").orElse("");
-                        problems.expect(retryAfter.matches("[1-9][0-9]*"),
-                                "429 обязан нести Retry-After в целых секундах (минимум 1), получено '" + retryAfter + "'");
-                        problems.expect(reply.json().path("error").path("code").asText().equals("rate_limited"),
+                        String retryAfter =
+                                reply.headers().firstValue("Retry-After").orElse("");
+                        problems.expect(
+                                retryAfter.matches("[1-9][0-9]*"),
+                                "429 обязан нести Retry-After в целых секундах (минимум 1), получено '" + retryAfter
+                                        + "'");
+                        problems.expect(
+                                "rate_limited"
+                                        .equals(reply.json()
+                                                .path("error")
+                                                .path("code")
+                                                .asText()),
                                 "429 обязан нести код rate_limited: " + reply.body());
                     }
                     return problems.found();
@@ -262,16 +327,21 @@ public final class RestEventsGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    private static CompletableFuture<RestFixture.Reply> postSequence(GameTestHelper helper, RestFixture rest,
-            SpiritEntity spirit, int legs) {
+    private static CompletableFuture<RestFixture.Reply> postSequence(
+            GameTestHelper helper, RestFixture rest, SpiritEntity spirit, int legs) {
         StringBuilder steps = new StringBuilder();
         for (int i = 0; i < legs; i++) {
             BlockPos target = helper.absolutePos(i % 2 == 0 ? FAR_CORNER : SPIRIT_START);
             if (i > 0) {
                 steps.append(',');
             }
-            steps.append("{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":").append(target.getX())
-                    .append(",\"y\":").append(target.getY()).append(",\"z\":").append(target.getZ()).append("}}");
+            steps.append("{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":")
+                    .append(target.getX())
+                    .append(",\"y\":")
+                    .append(target.getY())
+                    .append(",\"z\":")
+                    .append(target.getZ())
+                    .append("}}");
         }
         String body = "{\"request_id\":\"" + UUID.randomUUID() + "\",\"plan\":{\"type\":\"sequence\",\"steps\":["
                 + steps + "]}}";

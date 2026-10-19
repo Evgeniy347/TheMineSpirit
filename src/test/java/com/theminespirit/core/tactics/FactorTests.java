@@ -27,20 +27,41 @@ class FactorTests {
     }
 
     private static Situation hazardousNight() {
-        return SituationBuilder.create().enemy("skeleton", 12).enemy("creeper", 3.5).time(TimeOfDay.NIGHT).light(4)
-                .lava(3).drop(6).food(0.25).allies(2).healItems(1).build();
+        return SituationBuilder.create()
+                .enemy("skeleton", 12)
+                .enemy("creeper", 3.5)
+                .time(TimeOfDay.NIGHT)
+                .light(4)
+                .lava(3)
+                .drop(6)
+                .food(0.25)
+                .allies(2)
+                .healItems(1)
+                .build();
     }
 
     private static Assessment assessment(Situation situation, double leashLeft) {
-        EnemyMetrics metrics = EnemyMetrics.of(situation, Assessments.profiles(), Scales.defaults().armor());
+        EnemyMetrics metrics = EnemyMetrics.of(
+                situation, Assessments.profiles(), Scales.defaults().armor());
         double margin = WinMargin.of(situation.self(), metrics, Scales.defaults());
         RetreatOptions escape = Assessments.escapeOf(situation);
-        return new Assessment(metrics, margin, escape.routes(), escape.bestUtility(), situation.orders().mode(), true,
-                0, leashLeft, 100, 10, TacticalState.CALM, 0, 1000);
+        return new Assessment(
+                metrics,
+                margin,
+                escape.routes(),
+                escape.bestUtility(),
+                situation.orders().mode(),
+                true,
+                0,
+                leashLeft,
+                100,
+                10,
+                TacticalState.CALM,
+                0,
+                1000);
     }
 
-    private static Arguments row(String name, Situation situation, double leashLeft,
-            Map<Factor, Double> expected) {
+    private static Arguments row(String name, Situation situation, double leashLeft, Map<Factor, Double> expected) {
         return Arguments.of(name, situation, leashLeft, expected);
     }
 
@@ -54,49 +75,147 @@ class FactorTests {
 
     static Stream<Arguments> situations() {
         return Stream.of(
-                row("один зомби, полное HP", lonelyZombie(), Assessment.UNBOUNDED,
-                        values(Factor.BIAS, 1, Factor.WIN_MARGIN, 1.0 / 3, Factor.LOW_HP, 0,
-                                Factor.ENEMY_PRESSURE, 0, Factor.PROXIMITY, 2.0 / 3, Factor.RANGED_EXPOSURE, 0,
-                                Factor.EXPLOSIVE_NEAR, 0, Factor.ALLY_SUPPORT, 0, Factor.ESCAPE_ROUTE, 0.2,
-                                Factor.TERRAIN_RISK, 0, Factor.DARKNESS, 0, Factor.HUNGER, 0,
-                                Factor.PROTECT_URGENCY, 0, Factor.LEASH_PRESSURE, 0, Factor.HEALING_AVAILABLE, 0)),
-                row("раненый против пятерых", hurtAgainstFive(), Assessment.UNBOUNDED,
-                        values(Factor.WIN_MARGIN, -1, Factor.LOW_HP, 1.0 / 3, Factor.ENEMY_PRESSURE, 1 - (8.0 / 15) / (100.0 / 6),
-                                Factor.PROXIMITY, 1 - 2.0 / 12, Factor.ESCAPE_ROUTE, 0)),
-                row("скелет, крипер, ночь, лава и обрыв", hazardousNight(), Assessment.UNBOUNDED,
-                        values(Factor.RANGED_EXPOSURE, (1.0 / 3) * (1 - 12.0 / 24), Factor.EXPLOSIVE_NEAR, 0.5,
-                                Factor.ALLY_SUPPORT, 2.0 / 3, Factor.ESCAPE_ROUTE, 0, Factor.TERRAIN_RISK, 0.5,
-                                Factor.DARKNESS, 1 - 4.0 / 15, Factor.HUNGER, 0.5, Factor.HEALING_AVAILABLE, 1.0 / 3,
-                                Factor.PROXIMITY, 1 - 3.5 / 12)),
-                row("приказ защищать, подопечного бьют, поводок на исходе",
-                        SituationBuilder.create().mode(CombatMode.PROTECT).ward(2, 2, true).enemy("zombie", 4).build(),
-                        1.0, values(Factor.PROTECT_URGENCY, 1, Factor.LEASH_PRESSURE, 0.5)),
-                row("поводок превышен", SituationBuilder.create().enemy("zombie", 4).build(), -3.0,
+                row(
+                        "один зомби, полное HP",
+                        lonelyZombie(),
+                        Assessment.UNBOUNDED,
+                        values(
+                                Factor.BIAS,
+                                1,
+                                Factor.WIN_MARGIN,
+                                1.0 / 3,
+                                Factor.LOW_HP,
+                                0,
+                                Factor.ENEMY_PRESSURE,
+                                0,
+                                Factor.PROXIMITY,
+                                2.0 / 3,
+                                Factor.RANGED_EXPOSURE,
+                                0,
+                                Factor.EXPLOSIVE_NEAR,
+                                0,
+                                Factor.ALLY_SUPPORT,
+                                0,
+                                Factor.ESCAPE_ROUTE,
+                                0.2,
+                                Factor.TERRAIN_RISK,
+                                0,
+                                Factor.DARKNESS,
+                                0,
+                                Factor.HUNGER,
+                                0,
+                                Factor.PROTECT_URGENCY,
+                                0,
+                                Factor.LEASH_PRESSURE,
+                                0,
+                                Factor.HEALING_AVAILABLE,
+                                0)),
+                row(
+                        "раненый против пятерых",
+                        hurtAgainstFive(),
+                        Assessment.UNBOUNDED,
+                        values(
+                                Factor.WIN_MARGIN,
+                                -1,
+                                Factor.LOW_HP,
+                                1.0 / 3,
+                                Factor.ENEMY_PRESSURE,
+                                1 - (8.0 / 15) / (100.0 / 6),
+                                Factor.PROXIMITY,
+                                1 - 2.0 / 12,
+                                Factor.ESCAPE_ROUTE,
+                                0)),
+                row(
+                        "скелет, крипер, ночь, лава и обрыв",
+                        hazardousNight(),
+                        Assessment.UNBOUNDED,
+                        values(
+                                Factor.RANGED_EXPOSURE,
+                                (1.0 / 3) * (1 - 12.0 / 24),
+                                Factor.EXPLOSIVE_NEAR,
+                                0.5,
+                                Factor.ALLY_SUPPORT,
+                                2.0 / 3,
+                                Factor.ESCAPE_ROUTE,
+                                0,
+                                Factor.TERRAIN_RISK,
+                                0.5,
+                                Factor.DARKNESS,
+                                1 - 4.0 / 15,
+                                Factor.HUNGER,
+                                0.5,
+                                Factor.HEALING_AVAILABLE,
+                                1.0 / 3,
+                                Factor.PROXIMITY,
+                                1 - 3.5 / 12)),
+                row(
+                        "приказ защищать, подопечного бьют, поводок на исходе",
+                        SituationBuilder.create()
+                                .mode(CombatMode.PROTECT)
+                                .ward(2, 2, true)
+                                .enemy("zombie", 4)
+                                .build(),
+                        1.0,
+                        values(Factor.PROTECT_URGENCY, 1, Factor.LEASH_PRESSURE, 0.5)),
+                row(
+                        "поводок превышен",
+                        SituationBuilder.create().enemy("zombie", 4).build(),
+                        -3.0,
                         values(Factor.LEASH_PRESSURE, 1)),
-                row("далеко от ночи в тёмной пещере без врагов", SituationBuilder.create().light(0).build(),
-                        Assessment.UNBOUNDED, values(Factor.DARKNESS, 1, Factor.WIN_MARGIN, 0, Factor.PROXIMITY, 0,
-                                Factor.ENEMY_PRESSURE, 0, Factor.LEASH_PRESSURE, 0)));
+                row(
+                        "далеко от ночи в тёмной пещере без врагов",
+                        SituationBuilder.create().light(0).build(),
+                        Assessment.UNBOUNDED,
+                        values(
+                                Factor.DARKNESS,
+                                1,
+                                Factor.WIN_MARGIN,
+                                0,
+                                Factor.PROXIMITY,
+                                0,
+                                Factor.ENEMY_PRESSURE,
+                                0,
+                                Factor.LEASH_PRESSURE,
+                                0)));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("situations")
-    void value_KnownSituation_MatchesHandComputedFactor(String name, Situation situation,
-            double leashLeft, Map<Factor, Double> expected) {
+    void value_KnownSituation_MatchesHandComputedFactor(
+            String name, Situation situation, double leashLeft, Map<Factor, Double> expected) {
         Assessment assessment = assessment(situation, leashLeft);
 
-        expected.forEach((factor, wanted) -> assertEquals(wanted,
-                factor.value(situation, assessment, Scales.defaults()), TOLERANCE,
-                "Ситуация «" + name + "», фактор " + factor + ": значение считается по формуле из docs/TACTICS.md; "
+        expected.forEach((factor, wanted) -> assertEquals(
+                wanted,
+                factor.value(situation, assessment, Scales.defaults()),
+                TOLERANCE,
+                "Ситуация «" + name + "», фактор " + factor
+                        + ": значение считается по формуле из docs/tactics/README.md; "
                         + "если формулу меняют осознанно, пересчитайте таблицу и веса сценариев"));
     }
 
     static Stream<Arguments> escapeWays() {
         return Stream.of(
-                Arguments.of("отходить некуда", SituationBuilder.create().enemy("zombie", 5).speed(0.2).build(), 0.0),
-                Arguments.of("только бег прочь", SituationBuilder.create().enemy("zombie", 5).build(), 0.2),
-                Arguments.of("дом в 10 и бег", SituationBuilder.create().enemy("zombie", 5).home(10).build(), 0.9375),
-                Arguments.of("дом в 10, укрытие в 5 и бег",
-                        SituationBuilder.create().enemy("zombie", 5).home(10).cover(5).build(), 0.9375));
+                Arguments.of(
+                        "отходить некуда",
+                        SituationBuilder.create().enemy("zombie", 5).speed(0.2).build(),
+                        0.0),
+                Arguments.of(
+                        "только бег прочь",
+                        SituationBuilder.create().enemy("zombie", 5).build(),
+                        0.2),
+                Arguments.of(
+                        "дом в 10 и бег",
+                        SituationBuilder.create().enemy("zombie", 5).home(10).build(),
+                        0.9375),
+                Arguments.of(
+                        "дом в 10, укрытие в 5 и бег",
+                        SituationBuilder.create()
+                                .enemy("zombie", 5)
+                                .home(10)
+                                .cover(5)
+                                .build(),
+                        0.9375));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -104,7 +223,10 @@ class FactorTests {
     void escapeRoute_AvailableWays_EqualsBestUtility(String name, Situation situation, double expected) {
         Assessment assessment = assessment(situation, Assessment.UNBOUNDED);
 
-        assertEquals(expected, Factor.ESCAPE_ROUTE.value(situation, assessment, Scales.defaults()), TOLERANCE,
+        assertEquals(
+                expected,
+                Factor.ESCAPE_ROUTE.value(situation, assessment, Scales.defaults()),
+                TOLERANCE,
                 "Ситуация «" + name + "»: ESCAPE_ROUTE — наибольшая полезность способа из rules.json "
                         + "(бег AWAY 0.2, дом в 10 блоках 1 − 10 × 0.00625 = 0.9375), а не число способов: "
                         + "иначе укрытие рядом и голое поле давали бы почти одинаковый вклад в отход");
@@ -112,7 +234,8 @@ class FactorTests {
 
     @Test
     void escapeRoute_TableOrder_DoesNotChangeValue() {
-        Situation situation = SituationBuilder.create().enemy("zombie", 5).home(10).cover(5).build();
+        Situation situation =
+                SituationBuilder.create().enemy("zombie", 5).home(10).cover(5).build();
         RetreatTable table = TacticsConfig.loadDefault().rules().retreat();
         List<RetreatEntry> reversed = new ArrayList<>(table.entries());
         Collections.reverse(reversed);
@@ -121,44 +244,92 @@ class FactorTests {
         double straight = escapeValue(situation, table);
         double back = escapeValue(situation, flipped);
 
-        assertEquals(0.9375, straight, TOLERANCE,
+        assertEquals(
+                0.9375,
+                straight,
+                TOLERANCE,
                 "Дом в 10 (0.9375) полезнее укрытия (0.4) и бега (0.2): фактор берёт наибольшую полезность");
-        assertEquals(straight, back, TOLERANCE,
+        assertEquals(
+                straight,
+                back,
+                TOLERANCE,
                 "Порядок строк способов в rules.json не влияет на фактор: берётся максимум, а не первый подходящий");
     }
 
     private static double escapeValue(Situation situation, RetreatTable table) {
-        RetreatOptions options = new RetreatSelector(table, new RuleCounter())
-                .evaluate(Assessments.facts(situation));
-        EnemyMetrics metrics = EnemyMetrics.of(situation, Assessments.profiles(), Scales.defaults().armor());
-        Assessment assessment = new Assessment(metrics, 0, options.routes(), options.bestUtility(),
-                situation.orders().mode(), true, 0, Assessment.UNBOUNDED, 100, 10, TacticalState.CALM, 0, 1000);
+        RetreatOptions options = new RetreatSelector(table, new RuleCounter()).evaluate(Assessments.facts(situation));
+        EnemyMetrics metrics = EnemyMetrics.of(
+                situation, Assessments.profiles(), Scales.defaults().armor());
+        Assessment assessment = new Assessment(
+                metrics,
+                0,
+                options.routes(),
+                options.bestUtility(),
+                situation.orders().mode(),
+                true,
+                0,
+                Assessment.UNBOUNDED,
+                100,
+                10,
+                TacticalState.CALM,
+                0,
+                1000);
         return Factor.ESCAPE_ROUTE.value(situation, assessment, Scales.defaults());
     }
 
     @Test
     void factors_DeclarationOrder_IsFixed() {
-        assertEquals(List.of("BIAS", "WIN_MARGIN", "LOW_HP", "ENEMY_PRESSURE", "PROXIMITY", "RANGED_EXPOSURE",
-                "EXPLOSIVE_NEAR", "ALLY_SUPPORT", "ESCAPE_ROUTE", "TERRAIN_RISK", "DARKNESS", "HUNGER",
-                "PROTECT_URGENCY", "LEASH_PRESSURE", "HEALING_AVAILABLE", "URGENCY"),
+        assertEquals(
+                List.of(
+                        "BIAS",
+                        "WIN_MARGIN",
+                        "LOW_HP",
+                        "ENEMY_PRESSURE",
+                        "PROXIMITY",
+                        "RANGED_EXPOSURE",
+                        "EXPLOSIVE_NEAR",
+                        "ALLY_SUPPORT",
+                        "ESCAPE_ROUTE",
+                        "TERRAIN_RISK",
+                        "DARKNESS",
+                        "HUNGER",
+                        "PROTECT_URGENCY",
+                        "LEASH_PRESSURE",
+                        "HEALING_AVAILABLE",
+                        "URGENCY"),
                 Arrays.stream(Factor.values()).map(Enum::name).toList(),
                 "Порядок объявления факторов — порядок членов суммы: перестановка меняет округление счёта в последнем знаке");
     }
 
     @Test
     void scales_UrgencyHorizon_IsTenSeconds() {
-        assertEquals(10, Scales.defaults().urgencyHorizon(), 0.0,
+        assertEquals(
+                10,
+                Scales.defaults().urgencyHorizon(),
+                0.0,
                 "Горизонт срочности 10 с — стартовое значение из задания: таблицы URGENCY ниже посчитаны от него; "
                         + "меняете горизонт — пересчитайте таблицы и вес URGENCY в weights.json");
     }
 
     static Stream<Arguments> urgencies() {
         return Stream.of(
-                Arguments.of("смерть сейчас", SituationBuilder.create().hp(0).enemy("zombie", 4).build(), 1),
-                Arguments.of("умрёт за 5 с", SituationBuilder.create().enemy("skeleton", 4).build(), 0.5),
-                Arguments.of("умрёт за 10 с", SituationBuilder.create().enemy("spider", 4).build(), 0),
+                Arguments.of(
+                        "смерть сейчас",
+                        SituationBuilder.create().hp(0).enemy("zombie", 4).build(),
+                        1),
+                Arguments.of(
+                        "умрёт за 5 с",
+                        SituationBuilder.create().enemy("skeleton", 4).build(),
+                        0.5),
+                Arguments.of(
+                        "умрёт за 10 с",
+                        SituationBuilder.create().enemy("spider", 4).build(),
+                        0),
                 Arguments.of("врагов нет", SituationBuilder.create().build(), 0),
-                Arguments.of("враг без урона", SituationBuilder.create().enemy("creeper", 4).build(), 0));
+                Arguments.of(
+                        "враг без урона",
+                        SituationBuilder.create().enemy("creeper", 4).build(),
+                        0));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -166,7 +337,10 @@ class FactorTests {
     void urgency_KnownTimeToDie_MatchesAbsoluteUrgency(String name, Situation situation, double expected) {
         Assessment assessment = assessment(situation, Assessment.UNBOUNDED);
 
-        assertEquals(expected, Factor.URGENCY.value(situation, assessment, Scales.defaults()), TOLERANCE,
+        assertEquals(
+                expected,
+                Factor.URGENCY.value(situation, assessment, Scales.defaults()),
+                TOLERANCE,
                 "Ситуация «" + name + "»: URGENCY = clamp01(1 − timeToDie / 10 с) — абсолютное время до смерти, "
                         + "а не доля перевеса как у ENEMY_PRESSURE; «враг без урона» проверяет, что dps 0 "
                         + "идёт через minDps и деления на ноль нет");
@@ -175,30 +349,40 @@ class FactorTests {
     @Test
     void winMargin_NoEnemies_IsZero() {
         Situation situation = SituationBuilder.create().build();
-        EnemyMetrics metrics = EnemyMetrics.of(situation, Assessments.profiles(), Scales.defaults().armor());
+        EnemyMetrics metrics = EnemyMetrics.of(
+                situation, Assessments.profiles(), Scales.defaults().armor());
 
-        assertEquals(0.0, WinMargin.of(situation.self(), metrics, Scales.defaults()), 0.0,
+        assertEquals(
+                0.0,
+                WinMargin.of(situation.self(), metrics, Scales.defaults()),
+                0.0,
                 "Без врагов запас победы равен 0: «побеждать» нечего, решение принимают правила, а не знак отрицательного числа");
     }
 
     @Test
     void winMargin_ZeroHp_IsMinusOne() {
         Situation situation = SituationBuilder.create().hp(0).enemy("zombie", 4).build();
-        EnemyMetrics metrics = EnemyMetrics.of(situation, Assessments.profiles(), Scales.defaults().armor());
+        EnemyMetrics metrics = EnemyMetrics.of(
+                situation, Assessments.profiles(), Scales.defaults().armor());
 
-        assertEquals(-1.0, WinMargin.of(situation.self(), metrics, Scales.defaults()), 0.0,
+        assertEquals(
+                -1.0,
+                WinMargin.of(situation.self(), metrics, Scales.defaults()),
+                0.0,
                 "Дух с нулевым HP проигрывает гарантированно: запас -1 без деления на ноль и NaN");
     }
 
     @Test
     void winMargin_ArmorReducesDamage_ArmoredSelfFightsBetter() {
         Situation bare = SituationBuilder.create().enemies("zombie", 4, 3).build();
-        Situation armored = SituationBuilder.create().armor(10).enemies("zombie", 4, 3).build();
+        Situation armored =
+                SituationBuilder.create().armor(10).enemies("zombie", 4, 3).build();
 
         double bareMargin = margin(bare);
         double armoredMargin = margin(armored);
 
-        assertTrue(armoredMargin > bareMargin,
+        assertTrue(
+                armoredMargin > bareMargin,
                 "Броня 10 (-40 % урона) повышает запас победы: " + bareMargin + " → " + armoredMargin
                         + "; иначе дух не ценит доспехи при выборе боя");
     }
@@ -207,24 +391,31 @@ class FactorTests {
     void effectiveHp_ArmorBeyondCap_StopsGrowing() {
         ArmorModel steep = new ArmorModel(0.1, 0.8);
 
-        assertEquals(steep.effectiveHp(10, 8), steep.effectiveHp(10, 20), 0.0,
+        assertEquals(
+                steep.effectiveHp(10, 8),
+                steep.effectiveHp(10, 20),
+                0.0,
                 "Снижение урона упирается в предел 0.8: без предела полный комплект брони делал бы духа бессмертным, "
                         + "а делитель 1 - снижение уходил бы в ноль");
     }
 
     private static double margin(Situation situation) {
-        EnemyMetrics metrics = EnemyMetrics.of(situation, Assessments.profiles(), Scales.defaults().armor());
+        EnemyMetrics metrics = EnemyMetrics.of(
+                situation, Assessments.profiles(), Scales.defaults().armor());
         return WinMargin.of(situation.self(), metrics, Scales.defaults());
     }
 
     @Test
     void factors_SixteenEnemies_StayWithinRange() {
-        Situation crowd = SituationBuilder.create().enemies("zombie", 3, Situation.MAX_ENEMIES).build();
+        Situation crowd = SituationBuilder.create()
+                .enemies("zombie", 3, Situation.MAX_ENEMIES)
+                .build();
         Assessment assessment = assessment(crowd, 2);
 
         for (Factor factor : Factor.values()) {
             double value = factor.value(crowd, assessment, Scales.defaults());
-            assertTrue(value >= -1 && value <= 1,
+            assertTrue(
+                    value >= -1 && value <= 1,
                     "Фактор " + factor + " вышел из [-1; 1] на MAX_ENEMIES врагах: " + value);
         }
     }

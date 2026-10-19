@@ -20,11 +20,21 @@ class CoordinatorStateProperties {
     }
 
     private Arbitrary<SpiritSnapshot> spirit() {
-        return Arbitraries.integers().between(0, 3).flatMap(threats -> Arbitraries.of(true, false)
-                .filter(attacked -> !attacked || threats > 0)
-                .map(attacked -> new SpiritSnapshot(UUID.randomUUID(), new Point(threats, 64, threats),
-                        threats / 4.0, SpiritRole.WORKER, CombatMode.DEFENSIVE, threats, attacked,
-                        Optional.empty(), threats, 1.0)));
+        return Arbitraries.integers()
+                .between(0, 3)
+                .flatMap(threats -> Arbitraries.of(true, false)
+                        .filter(attacked -> !attacked || threats > 0)
+                        .map(attacked -> new SpiritSnapshot(
+                                UUID.randomUUID(),
+                                new Point(threats, 64, threats),
+                                threats / 4.0,
+                                SpiritRole.WORKER,
+                                CombatMode.DEFENSIVE,
+                                threats,
+                                attacked,
+                                Optional.empty(),
+                                threats,
+                                1.0)));
     }
 
     @Property
@@ -32,7 +42,9 @@ class CoordinatorStateProperties {
         CoordinatorState state = new CoordinatorState(Optional.empty(), 0, spirits, 0);
 
         for (SpiritSnapshot spirit : state.spirits()) {
-            assertEquals(Optional.of(spirit), state.byId(spirit.id()),
+            assertEquals(
+                    Optional.of(spirit),
+                    state.byId(spirit.id()),
                     "Каждый дух состояния находится по своему id: иначе план не сопоставит решения с духами");
         }
     }

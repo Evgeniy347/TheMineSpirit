@@ -30,8 +30,7 @@ public final class CraterEvents {
     private static final int RIM_SAMPLES = 16;
     private static final int RIM_SCAN_DEPTH = 24;
 
-    private CraterEvents() {
-    }
+    private CraterEvents() {}
 
     public static void register(IEventBus bus) {
         bus.addListener(CraterEvents::onDetonate);
@@ -49,20 +48,30 @@ public final class CraterEvents {
         if (!nearSettlement(level, center)) {
             return;
         }
-        int radius = Math.max(Crater.RADIUS_MIN,
-                Math.min((int) Math.ceil(event.getExplosion().radius()), Crater.RADIUS_MAX));
+        int radius = Math.max(
+                Crater.RADIUS_MIN, Math.min((int) Math.ceil(event.getExplosion().radius()), Crater.RADIUS_MAX));
         int edge = rimLevel(level, center, radius);
-        Crater crater = new Crater(UUID.randomUUID(), new BlockCoord(center.getX(), center.getY(), center.getZ()),
-                radius, edge, level.getGameTime());
+        Crater crater = new Crater(
+                UUID.randomUUID(),
+                new BlockCoord(center.getX(), center.getY(), center.getZ()),
+                radius,
+                edge,
+                level.getGameTime());
         CraterStore.get(level).add(crater);
-        LOGGER.info("Запомнена воронка {} от крипера: центр {}, радиус {}, уровень края {}",
-                crater.id(), center.toShortString(), radius, edge);
+        LOGGER.info(
+                "Запомнена воронка {} от крипера: центр {}, радиус {}, уровень края {}",
+                crater.id(),
+                center.toShortString(),
+                radius,
+                edge);
     }
 
     private static boolean nearSettlement(ServerLevel level, BlockPos center) {
         int reach = SpiritConfig.craterHomeRadius();
         AABB area = new AABB(center).inflate(reach);
-        List<SpiritEntity> spirits = level.getEntitiesOfClass(SpiritEntity.class, area,
+        List<SpiritEntity> spirits = level.getEntitiesOfClass(
+                SpiritEntity.class,
+                area,
                 spirit -> !spirit.isRemoved() && spirit.home().isPresent());
         for (SpiritEntity spirit : spirits) {
             BlockCoord home = spirit.home().orElseThrow();
@@ -75,7 +84,6 @@ public final class CraterEvents {
         return false;
     }
 
-    /** Уровень земли края: самый частый столбец твёрдой поверхности по кольцу радиуса воронки. */
     private static int rimLevel(ServerLevel level, BlockPos center, int radius) {
         int baseline = level.getMinBuildHeight();
         int[] histogram = new int[level.getHeight() + 1];

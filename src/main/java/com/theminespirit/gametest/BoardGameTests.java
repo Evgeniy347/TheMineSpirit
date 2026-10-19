@@ -8,7 +8,6 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -36,17 +35,16 @@ public final class BoardGameTests {
     private static final int GATE_LOGS = 1;
     private static final int SUPPLY_WAIT_LIMIT = 200;
 
-    private BoardGameTests() {
-    }
+    private BoardGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     // [флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
@@ -66,15 +64,25 @@ public final class BoardGameTests {
             }
         }
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.CHEST);
-        board.submit(new BoardTicket(BUILD_ID, BoardCase.BUILD_HOUSE, Optional.of(spirit.getUUID()), 50,
-                helper.getLevel().getGameTime(), 1, BoardTicket.ALWAYS_CAUSE, List.of(),
-                Map.of("oak_log", GATE_LOGS)), TicketTarget.at(home));
+        board.submit(
+                new BoardTicket(
+                        BUILD_ID,
+                        BoardCase.BUILD_HOUSE,
+                        Optional.of(spirit.getUUID()),
+                        50,
+                        helper.getLevel().getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of("oak_log", GATE_LOGS)),
+                TicketTarget.at(home));
         board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
         AtomicInteger phase = new AtomicInteger(0);
         AtomicInteger supplyWaited = new AtomicInteger(0);
         helper.onEachTick(() -> {
             if (phase.get() == 0) {
-                helper.assertTrue(board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.WAITING_RESOURCES,
+                helper.assertTrue(
+                        board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.WAITING_RESOURCES,
                         "Без дерева в запасах стройка обязана висеть в WAITING_RESOURCES, статус "
                                 + board.board().statusOf(BUILD_ID).orElse(null) + ": стройка, стартовавшая "
                                 + "без ресурсов, ломает гейт доски");
@@ -90,17 +98,20 @@ public final class BoardGameTests {
                             + "зависнет навсегда");
                 }
             } else if (phase.get() == 1) {
-                helper.assertTrue(board.board().statusOf(BUILD_ID).orElse(null) != BoardStatus.FAILED,
+                helper.assertTrue(
+                        board.board().statusOf(BUILD_ID).orElse(null) != BoardStatus.FAILED,
                         "Стройка не может провалиться до выдачи: задание закрыто с провалом");
                 if (board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED) {
                     phase.set(2);
                 }
             } else {
-                helper.assertTrue(board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED,
+                helper.assertTrue(
+                        board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED,
                         "После добычи стройка обязана выдаться сама, статус "
                                 + board.board().statusOf(BUILD_ID).orElse(null) + ": ждущее задание, не "
                                 + "выданное после пополнения, — доска не будит свою очередь");
-                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                helper.assertTrue(
+                        spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "Стройка обязана быть выдана духу-владельцу: статус духа "
                                 + spirit.taskStatus().orElse(null));
                 board.board().cancel(BUILD_ID);
@@ -111,12 +122,6 @@ public final class BoardGameTests {
         });
     }
 
-    /**
-     * Общая доска уровня переживает границы сцен: до начала теста на ней висят билеты прошлых
-     * сцен, оставленные глобальным {@code FirstStepsRunner}. Билет без гейта приоритетнее добычи
-     * и забирает единственного свободного духа раньше supply — тест видит вечный PENDING.
-     * Чужие билеты снимаем до своей постановки (как тесты пачки firststeps в 35Б).
-     */
     private static void drainForeignTickets(BoardService board) {
         for (BoardTicket ticket : board.board().all()) {
             board.board().cancel(ticket.id());

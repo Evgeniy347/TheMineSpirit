@@ -11,12 +11,12 @@ final class RecordingPlanner implements Planner {
     private final List<Goal> goals = new ArrayList<>();
     private final List<WorldObservation> observations = new ArrayList<>();
 
-    static RecordingPlanner returning(TaskNode response) {
-        return new RecordingPlanner(response);
-    }
-
     private RecordingPlanner(TaskNode response) {
         this.response = response;
+    }
+
+    static RecordingPlanner returning(TaskNode response) {
+        return new RecordingPlanner(response);
     }
 
     @Override

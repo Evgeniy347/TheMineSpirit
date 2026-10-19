@@ -6,8 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public final class ChunkSquare {
-    private ChunkSquare() {
-    }
+    private ChunkSquare() {}
 
     public static Set<ChunkCoord> chunks(ChunkCoord center, int radius) {
         if (radius < 0) {

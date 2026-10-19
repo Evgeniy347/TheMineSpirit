@@ -27,14 +27,24 @@ import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 
 public final class SettlementViewBuilder {
-    private SettlementViewBuilder() {
-    }
+    private SettlementViewBuilder() {}
 
-    public static SettlementView build(List<SpiritSnapshot> snapshots, List<SpiritEntity> members,
-            StockLots lots, Optional<Point> home, List<EnemyFact> enemies, Forage forage, ServerLevel level,
-            long tick) {
-        if (snapshots == null || members == null || lots == null || home == null || enemies == null
-                || forage == null || level == null) {
+    public static SettlementView build(Input input) {
+        List<SpiritSnapshot> snapshots = input.snapshots();
+        List<SpiritEntity> members = input.members();
+        StockLots lots = input.lots();
+        Optional<Point> home = input.home();
+        List<EnemyFact> enemies = input.enemies();
+        Forage forage = input.forage();
+        ServerLevel level = input.level();
+        long tick = input.tick();
+        if (snapshots == null
+                || members == null
+                || lots == null
+                || home == null
+                || enemies == null
+                || forage == null
+                || level == null) {
             throw new IllegalArgumentException(
                     "Снимок поселения без духов, запасов, дома, врагов, добычи или уровня не собрать: "
                             + "вид зависит от всех сразу");
@@ -56,8 +66,21 @@ public final class SettlementViewBuilder {
         double nutritionPerSoul = population == 0 ? 0 : lots.foodNutrition() / population;
         double dayFraction = (level.getDayTime() % 24000L) / 24000.0;
         FarmWork farmWork = FarmWorkScanner.read(level, home, members, lots.seeds());
-        return new SettlementView(population, children, foodPerSoul, nutritionPerSoul, lots.ore(), lots.iron(),
-                lots.weapons(), enemies.size(), dayFraction, farmWork, forage, ordered, tick, lots.processing(),
+        return new SettlementView(
+                population,
+                children,
+                foodPerSoul,
+                nutritionPerSoul,
+                lots.ore(),
+                lots.iron(),
+                lots.weapons(),
+                enemies.size(),
+                dayFraction,
+                farmWork,
+                forage,
+                ordered,
+                tick,
+                lots.processing(),
                 inventoryFills(members, level));
     }
 
@@ -74,9 +97,18 @@ public final class SettlementViewBuilder {
             List<String> needs = spirit.currentPlan()
                     .map(plan -> NeedsOfPlan.collect(plan, recipes))
                     .orElse(List.of());
-            fills.put(spirit.getUUID(),
-                    InventoryNorm.fill(mapper.map(spirit.getInventory()), kit, needs, values));
+            fills.put(spirit.getUUID(), InventoryNorm.fill(mapper.map(spirit.getInventory()), kit, needs, values));
         }
         return Map.copyOf(fills);
     }
+
+    public record Input(
+            List<SpiritSnapshot> snapshots,
+            List<SpiritEntity> members,
+            StockLots lots,
+            Optional<Point> home,
+            List<EnemyFact> enemies,
+            Forage forage,
+            ServerLevel level,
+            long tick) {}
 }

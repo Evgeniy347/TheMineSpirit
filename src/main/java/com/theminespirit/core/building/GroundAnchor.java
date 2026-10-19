@@ -14,10 +14,8 @@ public final class GroundAnchor {
         boolean solid(int y);
     }
 
-    private GroundAnchor() {
-    }
+    private GroundAnchor() {}
 
-    /** Ближайший к {@code fromY} твёрдый блок не ниже {@code minY}; без него — ошибка. */
     public static int groundY(int fromY, int minY, SolidColumn column) {
         Objects.requireNonNull(column, "Столбец блоков не может быть null: без него неизвестно, где земля");
         for (int y = fromY; y >= minY; y--) {

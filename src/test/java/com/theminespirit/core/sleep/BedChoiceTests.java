@@ -22,7 +22,9 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.of(FAR), List.of(NEAR, FAR), Set.of(), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(FAR), chosen,
+        assertEquals(
+                Optional.of(FAR),
+                chosen,
                 "Своя кровать предпочтительнее ближней чужой: дух ложится на привычное место");
     }
 
@@ -31,7 +33,9 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.of(FAR), List.of(NEAR, FAR), Set.of(FAR), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(NEAR), chosen,
+        assertEquals(
+                Optional.of(NEAR),
+                chosen,
                 "Занятая своя кровать не берётся: дух ищет свободную, а не ложится поверх соседа");
     }
 
@@ -41,16 +45,19 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.of(outside), List.of(NEAR, outside), Set.of(), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(NEAR), chosen,
+        assertEquals(
+                Optional.of(NEAR),
+                chosen,
                 "Своя кровать за границей поселения не берётся ночью: за границу дух не выходит");
     }
 
     @Test
     void choose_OwnBedNotPresentInWorld_FallsBackToNearestFree() {
-        Optional<BlockCoord> chosen =
-                BedChoice.choose(Optional.of(FAR), List.of(NEAR), Set.of(), FROM, HOME, RADIUS);
+        Optional<BlockCoord> chosen = BedChoice.choose(Optional.of(FAR), List.of(NEAR), Set.of(), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(NEAR), chosen,
+        assertEquals(
+                Optional.of(NEAR),
+                chosen,
                 "Снесённая своя кровать не выбирается: помнится только та, что стоит в мире");
     }
 
@@ -59,8 +66,7 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(FAR, NEAR), Set.of(), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(NEAR), chosen,
-                "Без своей кровати берётся ближайшая свободная в поселении");
+        assertEquals(Optional.of(NEAR), chosen, "Без своей кровати берётся ближайшая свободная в поселении");
     }
 
     @Test
@@ -68,8 +74,7 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(NEAR, FAR), Set.of(NEAR), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(FAR), chosen,
-                "Занятую кровать не берут: двое духов не ложатся в одну кровать");
+        assertEquals(Optional.of(FAR), chosen, "Занятую кровать не берут: двое духов не ложатся в одну кровать");
     }
 
     @Test
@@ -77,8 +82,7 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(NEAR, FAR), Set.of(NEAR, FAR), FROM, HOME, RADIUS);
 
-        assertTrue(chosen.isEmpty(),
-                "Все кровати заняты — выбора нет: дух остаётся без места, а не ложится к соседу");
+        assertTrue(chosen.isEmpty(), "Все кровати заняты — выбора нет: дух остаётся без места, а не ложится к соседу");
     }
 
     @Test
@@ -87,20 +91,21 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(farOutside), Set.of(), FROM, HOME, RADIUS);
 
-        assertTrue(chosen.isEmpty(),
-                "Кровати за границей поселения ночью не выбираются: иначе дух уйдёт за поводок");
+        assertTrue(chosen.isEmpty(), "Кровати за границей поселения ночью не выбираются: иначе дух уйдёт за поводок");
     }
 
     @Test
     void choose_NullHome_Throws() {
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> BedChoice.choose(Optional.empty(), List.of(NEAR), Set.of(), FROM, null, RADIUS),
                 "Без дома нет границы поселения: ошибка обязана быть явной, а не молчаливым выбором");
     }
 
     @Test
     void choose_RadiusBelowOne_Throws() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> BedChoice.choose(Optional.empty(), List.of(NEAR), Set.of(), FROM, HOME, 0),
                 "Радиус меньше 1 не оставил бы ни одной кровати своей: отказ обязан быть явной ошибкой");
     }

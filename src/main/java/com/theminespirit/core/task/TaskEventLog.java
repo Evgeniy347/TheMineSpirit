@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskEventLog {
     public static final int CAPACITY = 256;
@@ -17,7 +18,7 @@ public final class TaskEventLog {
         CLOSED
     }
 
-    public record ReadResult(Kind kind, TaskEvent event) {
+    public record ReadResult(Kind kind, @Nullable TaskEvent event) {
         public static ReadResult event(TaskEvent event) {
             return new ReadResult(Kind.EVENT, event);
         }
@@ -41,7 +42,6 @@ public final class TaskEventLog {
     private final Condition changed = lock.newCondition();
     private final Deque<TaskEvent> events = new ArrayDeque<>();
     private long nextId = 1;
-    private long appendedCount;
     private boolean closed;
 
     public void append(List<TaskEvent> incoming) {
@@ -55,7 +55,6 @@ public final class TaskEventLog {
             }
             for (TaskEvent event : incoming) {
                 events.addLast(event.withId(nextId++));
-                appendedCount++;
             }
             while (events.size() > CAPACITY) {
                 events.removeFirst();
@@ -94,7 +93,7 @@ public final class TaskEventLog {
     }
 
     public ReadResult awaitAfter(long lastId, Duration timeout) throws InterruptedException {
-        long deadline = System.nanoTime() + timeout.toNanos();
+        long remaining = timeout.toNanos();
         lock.lock();
         try {
             while (true) {
@@ -106,21 +105,11 @@ public final class TaskEventLog {
                 if (closed) {
                     return ReadResult.closed();
                 }
-                long remaining = deadline - System.nanoTime();
                 if (remaining <= 0) {
                     return ReadResult.timeout();
                 }
-                changed.awaitNanos(remaining);
+                remaining = changed.awaitNanos(remaining);
             }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public long appendedCount() {
-        lock.lock();
-        try {
-            return appendedCount;
         } finally {
             lock.unlock();
         }

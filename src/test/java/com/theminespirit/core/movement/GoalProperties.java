@@ -25,7 +25,8 @@ class GoalProperties {
 
         assertEquals(
                 Math.min(new GoalBlock(first).heuristic(from), new GoalBlock(second).heuristic(from)),
-                composite.heuristic(from), EPS,
+                composite.heuristic(from),
+                EPS,
                 "Эвристика composite обязана равняться минимуму эвристик вложенных: иначе goto_block "
                         + "выберет не ближайший найденный блок, а случайный");
     }
@@ -42,11 +43,15 @@ class GoalProperties {
         BlockCoord target = new BlockCoord(tx, ty, tz);
         BlockCoord from = new BlockCoord(fx, fy, fz);
         double octile = Goal.octile(from, target);
-        List<Goal> goals = List.of(new GoalBlock(target), new GoalXZ(tx, tz), new GoalNear(target, radius),
+        List<Goal> goals = List.of(
+                new GoalBlock(target),
+                new GoalXZ(tx, tz),
+                new GoalNear(target, radius),
                 new GoalComposite(List.of(new GoalBlock(target), new GoalXZ(tx, tz))));
 
         for (Goal goal : goals) {
-            assertTrue(goal.heuristic(from) <= octile + EPS,
+            assertTrue(
+                    goal.heuristic(from) <= octile + EPS,
                     "Эвристика " + goal + " обязана не превышать истинную октиальную дистанцию " + octile
                             + ": завышенная эвристика недопустима для A* и ломает порядок целей");
         }

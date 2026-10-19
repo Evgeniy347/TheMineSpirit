@@ -1,7 +1,15 @@
 package com.theminespirit.core.tactics;
 
-public record EnemyProfile(String type, double hp, double dps, double speed, boolean ranged, boolean explosive,
-        boolean swims, boolean flies, int tier) {
+public record EnemyProfile(
+        String type,
+        double hp,
+        double dps,
+        double speed,
+        boolean ranged,
+        boolean explosive,
+        boolean swims,
+        boolean flies,
+        int tier) {
     public static final double MAX_HP = 2000;
     public static final double MAX_DPS = 200;
     public static final double MAX_SPEED = 2;

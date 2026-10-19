@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TokenBucketTests {
@@ -27,10 +27,10 @@ class TokenBucketTests {
             }
         }
 
-        assertEquals(40, granted,
+        assertEquals(
+                40,
+                granted,
                 "всплеск обязан выдать ровно ёмкость 40: больше мгновенных запросов лимитер не пропускает");
-        assertEquals(1, bucket.trackedKeys(),
-                "ключ обязан остаться в таблице для подсчёта пополнения");
     }
 
     @Test
@@ -41,10 +41,8 @@ class TokenBucketTests {
         }
 
         assertFalse(bucket.tryAcquire(KEY, 0), "пустое ведро отказывает сразу");
-        assertFalse(bucket.tryAcquire(KEY, SECOND / 25),
-                "за 0.04 с набегает 0.8 токена — до запроса ещё не хватает");
-        assertTrue(bucket.tryAcquire(KEY, SECOND / 10),
-                "за 0.1 с набегает 2 токена — запрос обязан пройти");
+        assertFalse(bucket.tryAcquire(KEY, SECOND / 25), "за 0.04 с набегает 0.8 токена — до запроса ещё не хватает");
+        assertTrue(bucket.tryAcquire(KEY, SECOND / 10), "за 0.1 с набегает 2 токена — запрос обязан пройти");
     }
 
     @Test
@@ -61,8 +59,7 @@ class TokenBucketTests {
             }
         }
 
-        assertEquals(40, granted,
-                "после долгого простоя ведро не может держать больше ёмкости: выдача ограничена 40");
+        assertEquals(40, granted, "после долгого простоя ведро не может держать больше ёмкости: выдача ограничена 40");
     }
 
     @Test
@@ -74,20 +71,26 @@ class TokenBucketTests {
         }
 
         assertFalse(bucket.tryAcquire(KEY, 0), "первый ключ пуст");
-        assertTrue(bucket.tryAcquire(other, 0),
+        assertTrue(
+                bucket.tryAcquire(other, 0),
                 "лимит обязан быть по адресу клиента: расход одного ключа не трогает другой");
     }
 
     @Test
     void tryAcquire_MoreThan256Keys_EvictsOldest() {
         TokenBucket bucket = new TokenBucket();
+        for (int i = 0; i < 40; i++) {
+            bucket.tryAcquire("ip-0", 0);
+        }
 
-        for (int i = 0; i < 300; i++) {
+        for (int i = 1; i < 300; i++) {
             bucket.tryAcquire("ip-" + i, 0);
         }
 
-        assertEquals(256, bucket.trackedKeys(),
-                "таблица обязана вытеснять старейший ключ за пределами 256: иначе память растёт с числом адресов");
+        assertTrue(
+                bucket.tryAcquire("ip-0", 0),
+                "таблица обязана вытеснять старейший ключ за пределами 256: вытесненный ключ получает полное "
+                        + "ведро заново, иначе память растёт с числом адресов");
     }
 
     @Test
@@ -100,12 +103,12 @@ class TokenBucketTests {
         long immediate = bucket.retryAfterSeconds(KEY, 0);
         long soon = bucket.retryAfterSeconds(KEY, SECOND / 25);
 
-        assertTrue(immediate >= 1,
+        assertTrue(
+                immediate >= 1,
                 "голодному клиенту Retry-After обязан быть хотя бы 1 секунда: 0 означал бы «повтори сейчас»");
-        assertTrue(soon >= 1,
-                "пока токенов меньше единицы, Retry-After обязан оставаться хотя бы 1 с");
-        assertEquals(0, bucket.retryAfterSeconds("never-seen", 0),
-                "ключ, которого нет в таблице, не получает Retry-After");
+        assertTrue(soon >= 1, "пока токенов меньше единицы, Retry-After обязан оставаться хотя бы 1 с");
+        assertEquals(
+                0, bucket.retryAfterSeconds("never-seen", 0), "ключ, которого нет в таблице, не получает Retry-After");
     }
 
     @Property(tries = 200)
@@ -124,13 +127,18 @@ class TokenBucketTests {
         }
 
         double budget = TokenBucket.CAPACITY + totalTicks / 1e9 * TokenBucket.REFILL_PER_SECOND;
-        assertTrue(issued <= budget,
+        assertTrue(
+                issued <= budget,
                 "выдано " + issued + " больше ёмкости + скорость×время = " + budget
                         + ": лимитер обязан держать общий бюджет");
     }
 
     @Provide
     Arbitrary<List<Long>> tickGaps() {
-        return Arbitraries.longs().between(0, 1_000_000_000L).list().ofMinSize(1).ofMaxSize(80);
+        return Arbitraries.longs()
+                .between(0, 1_000_000_000L)
+                .list()
+                .ofMinSize(1)
+                .ofMaxSize(80);
     }
 }

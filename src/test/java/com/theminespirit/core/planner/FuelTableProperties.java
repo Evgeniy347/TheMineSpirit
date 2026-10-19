@@ -15,11 +15,13 @@ class FuelTableProperties {
         int needed = FuelTable.fuelNeeded(count, burn, cook);
 
         long demand = (long) count * cook;
-        assertTrue((long) needed * burn >= demand,
+        assertTrue(
+                (long) needed * burn >= demand,
                 "Топлива обязано хватать: " + needed + " × " + burn + " тиков горения < " + demand
                         + " тиков плавки, печь встанет посреди работы");
-        assertTrue((long) (needed - 1) * burn < demand,
-                "Топлива должно быть минимально: на единицу меньше всё ещё хватало бы (" + needed + " × " + burn
-                        + " ≥ " + demand + "), значит дух сжигает лишнее");
+        assertTrue(
+                (long) (needed - 1) * burn < demand,
+                "Топлива должно быть минимально: на единицу меньше всё ещё хватало бы (" + needed + " × " + burn + " ≥ "
+                        + demand + "), значит дух сжигает лишнее");
     }
 }

@@ -37,7 +37,8 @@ public final class HazardScript implements ScriptInstance {
         BlockPos position = spirit.blockPosition();
         this.origin = new BlockCoord(position.getX(), position.getY(), position.getZ());
         this.terrain = new LoadedTerrain(spirit.level());
-        this.cursor = LoadedWorld.cursor(LoadedWorld.cube(spirit.level(), origin, query.radius().value()), origin);
+        this.cursor = LoadedWorld.cursor(
+                LoadedWorld.cube(spirit.level(), origin, query.radius().value()), origin);
     }
 
     @Override
@@ -52,7 +53,8 @@ public final class HazardScript implements ScriptInstance {
             maxSlicesPerTick = Math.max(maxSlicesPerTick, slicesThisTick);
             scan(slice.bounds());
         }
-        found = new ArrayList<>(new HazardFacts(found).closest(HazardFacts.MAX_REPORTED).hazards());
+        found = new ArrayList<>(
+                new HazardFacts(found).closest(HazardFacts.MAX_REPORTED).hazards());
         if (!cursor.isDone()) {
             return ScriptStatus.RUNNING;
         }
@@ -63,7 +65,8 @@ public final class HazardScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
+        return published == null
+                ? Optional.empty()
                 : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 

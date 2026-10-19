@@ -23,12 +23,12 @@ final class TacticsScene {
     static final float LOW_HP = 4.0F;
     static final int FOREVER = 1_000_000;
     static final long NOON = 6000;
+    static final int SETTLE_TICKS = 60;
     private static final int SWEEP_MARGIN = 45;
     private static final int SWEEP_DEPTH = 8;
     private static final int SWEEP_HEIGHT = 24;
 
-    private TacticsScene() {
-    }
+    private TacticsScene() {}
 
     static void prepare(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -53,10 +53,8 @@ final class TacticsScene {
         return mob;
     }
 
-    static final int SETTLE_TICKS = 60;
-
-    static PolicyScene ambush(GameTestHelper helper, SpiritEntity spirit, Mob enemy, BlockPos attackFrom,
-            boolean ai, float health) {
+    static PolicyScene ambush(
+            GameTestHelper helper, SpiritEntity spirit, Mob enemy, BlockPos attackFrom, boolean ai, float health) {
         return PolicyScene.launch(helper, spirit, SETTLE_TICKS, () -> {
             spirit.setHealth(health);
             Vec3 at = helper.absoluteVec(new Vec3(attackFrom.getX() + 0.5, attackFrom.getY(), attackFrom.getZ() + 0.5));
@@ -73,7 +71,8 @@ final class TacticsScene {
     }
 
     static void sweep(GameTestHelper helper) {
-        AABB around = new AABB(helper.absoluteVec(new Vec3(-SWEEP_MARGIN, -SWEEP_DEPTH, -SWEEP_MARGIN)),
+        AABB around = new AABB(
+                helper.absoluteVec(new Vec3(-SWEEP_MARGIN, -SWEEP_DEPTH, -SWEEP_MARGIN)),
                 helper.absoluteVec(new Vec3(SIZE + SWEEP_MARGIN, SWEEP_HEIGHT, SIZE + SWEEP_MARGIN)));
         for (Entity entity : helper.getLevel().getEntities((Entity) null, around, e -> !(e instanceof Player))) {
             entity.discard();

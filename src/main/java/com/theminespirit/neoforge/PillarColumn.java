@@ -1,13 +1,12 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.movement.CellCentering;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -110,12 +109,6 @@ final class PillarColumn {
         return Outcome.RUNNING;
     }
 
-    /**
-     * Клетка столба прижата к стволу, а тело духа 0.6 шириной: сдвиг к стволу больше
-     * {@link CellCentering#TOLERANCE} задевает бревно на прыжке, и подъём встаёт
-     * (флак chop_tree_tall: «не поднялся на 5-й блок за 200 тиков»). Каждый тик возвращаем духа
-     * в середину клетки столба, а не надеемся на разовый прицел перед стройкой.
-     */
     private void keepCentered() {
         double centerX = baseX + 0.5;
         double centerZ = baseZ + 0.5;
@@ -181,8 +174,7 @@ final class PillarColumn {
 
     private Outcome place(BlockPos target) {
         if (count(spirit, blockId) < 1) {
-            return fail("нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built
-                    + "-м блоке");
+            return fail("нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built + "-м блоке");
         }
         BlockPlacer.Begin begin = placer.begin(target, state, blockId);
         if (begin instanceof BlockPlacer.Started) {

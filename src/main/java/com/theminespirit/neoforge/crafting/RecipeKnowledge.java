@@ -50,7 +50,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     public static RecipeKnowledge of(RecipeManager manager, HolderLookup.Provider registries) {
         Objects.requireNonNull(manager, "manager не может быть null: рецепты берутся у сервера");
         Cached current = cache;
-        if (current == null || current.manager() != manager) {
+        if (current == null || !manager.equals(current.manager())) {
             current = new Cached(manager, buildIndex(manager, registries));
             cache = current;
         }
@@ -68,7 +68,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public boolean isGatherable(String item) {
         String id = ItemIds.normalize(item);
-        if (DropTable.shared().blocksFor(id)
+        if (DropTable.shared()
+                .blocksFor(id)
                 .map(blocks -> blocks.stream().anyMatch(RecipeKnowledge::gatherableBlock))
                 .orElse(false)) {
             return true;
@@ -81,8 +82,10 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public String gatherBlockFor(String item) {
         String id = ItemIds.normalize(item);
-        return DropTable.shared().blocksFor(id)
-                .flatMap(blocks -> blocks.stream().filter(RecipeKnowledge::gatherableBlock).findFirst())
+        return DropTable.shared()
+                .blocksFor(id)
+                .flatMap(blocks ->
+                        blocks.stream().filter(RecipeKnowledge::gatherableBlock).findFirst())
                 .orElse(id);
     }
 
@@ -120,7 +123,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     private static boolean gatherableBlock(String blockId) {
         String qualified = blockId.indexOf(':') < 0 ? "minecraft:" + blockId : blockId;
         ResourceLocation location = ResourceLocation.tryParse(qualified);
-        return location != null && BuiltInRegistries.BLOCK.containsKey(location)
+        return location != null
+                && BuiltInRegistries.BLOCK.containsKey(location)
                 && GatherPolicy.check(qualified) instanceof GatherPolicy.Allowed;
     }
 
@@ -137,8 +141,9 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public List<Ingredient> ingredientsFor(String item) {
         Map<String, Integer> totals = new LinkedHashMap<>();
-        craftRecipe(item, Map.of()).ifPresent(recipe -> recipe.ingredients()
-                .forEach(slot -> totals.merge(representative(slot), 1, Integer::sum)));
+        craftRecipe(item, Map.of())
+                .ifPresent(recipe ->
+                        recipe.ingredients().forEach(slot -> totals.merge(representative(slot), 1, Integer::sum)));
         List<Ingredient> ingredients = new ArrayList<>(totals.size());
         totals.forEach((name, count) -> ingredients.add(new Ingredient(name, count)));
         return List.copyOf(ingredients);
@@ -169,10 +174,13 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public int burnTicks(String item) {
-        return ItemIds.item(ItemIds.normalize(item)).map(RecipeKnowledge::dataMapBurnTicks).orElse(0);
+        return ItemIds.item(ItemIds.normalize(item))
+                .map(RecipeKnowledge::dataMapBurnTicks)
+                .orElse(0);
     }
 
-    @SuppressWarnings("deprecation") // ванильный геттер помечен @Deprecated, но data map NeoForge читается только через него
+    @SuppressWarnings(
+            "deprecation") // ванильный геттер помечен @Deprecated, но data map NeoForge читается только через него
     private static int dataMapBurnTicks(Item item) {
         FurnaceFuel fuel = item.builtInRegistryHolder().getData(NeoForgeDataMaps.FURNACE_FUELS);
         return fuel == null ? 0 : fuel.burnTime();
@@ -183,7 +191,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     public List<RecipeSpec> smeltRecipes(String product) {
-        return index.smeltingFor(ItemIds.normalize(product)).stream().sorted(Comparator.comparing(RecipeSpec::id))
+        return index.smeltingFor(ItemIds.normalize(product)).stream()
+                .sorted(Comparator.comparing(RecipeSpec::id))
                 .toList();
     }
 
@@ -196,7 +205,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
         // руды (iron_ore и deepslate_iron_ore — оба в DropTable), а deepslate_iron_ore
         // — частный блок, которого в мире может не быть: плавка через него план
         // строит добычу конкретного блока вместо универсального сырья.
-        Optional<String> raw = pickObtainable(alternatives.stream().filter(alternative -> ownBlock(alternative).isEmpty()));
+        Optional<String> raw = pickObtainable(alternatives.stream()
+                .filter(alternative -> ownBlock(alternative).isEmpty()));
         if (raw.isPresent()) {
             return raw.get();
         }
@@ -205,7 +215,9 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private Optional<String> pickObtainable(Stream<String> candidates) {
-        return candidates.filter(alternative -> canObtain(alternative, new HashSet<>())).findFirst();
+        return candidates
+                .filter(alternative -> canObtain(alternative, new HashSet<>()))
+                .findFirst();
     }
 
     private boolean canObtain(String item, Set<String> path) {
@@ -221,8 +233,9 @@ public final class RecipeKnowledge implements ResourceKnowledge {
                 return craft.get().ingredients().stream()
                         .allMatch(slot -> slot.alternatives().stream().anyMatch(alt -> canObtain(alt, path)));
             }
-            return smeltRecipes(item).stream().anyMatch(recipe -> recipe.ingredients().get(0).alternatives().stream()
-                    .anyMatch(alt -> canObtain(alt, path)));
+            return smeltRecipes(item).stream()
+                    .anyMatch(recipe ->
+                            recipe.ingredients().get(0).alternatives().stream().anyMatch(alt -> canObtain(alt, path)));
         } finally {
             path.remove(item);
         }
@@ -233,6 +246,5 @@ public final class RecipeKnowledge implements ResourceKnowledge {
         return RecipeIndex.of(RecipeCurator.curate(RecipeSource.read(manager, registries)));
     }
 
-    private record Cached(RecipeManager manager, RecipeIndex index) {
-    }
+    private record Cached(RecipeManager manager, RecipeIndex index) {}
 }

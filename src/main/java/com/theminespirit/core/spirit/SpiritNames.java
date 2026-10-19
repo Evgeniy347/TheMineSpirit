@@ -10,8 +10,7 @@ import java.util.Objects;
 public final class SpiritNames {
     public static final String PREFIX = "spirit";
 
-    private SpiritNames() {
-    }
+    private SpiritNames() {}
 
     public static String next(Collection<String> taken) {
         Objects.requireNonNull(taken, "Занятые имена не могут быть null: без них номер не выбрать");

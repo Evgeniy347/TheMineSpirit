@@ -45,7 +45,8 @@ public final class LookAtScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
+        return published == null
+                ? Optional.empty()
                 : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 
@@ -72,8 +73,15 @@ public final class LookAtScript implements ScriptInstance {
     }
 
     private List<String> entityTypesAt(BlockPos pos) {
-        return spirit.level().getEntities((Entity) null, new AABB(pos), e -> !e.isRemoved() && e != spirit
-                        && e.blockPosition().equals(pos)).stream()
+        return spirit
+                .level()
+                .getEntities(
+                        (Entity) null,
+                        new AABB(pos),
+                        e -> !e.isRemoved()
+                                && !e.equals(spirit)
+                                && e.blockPosition().equals(pos))
+                .stream()
                 .map(entity -> EntityType.getKey(entity.getType()).toString())
                 .toList();
     }

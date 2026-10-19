@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 
 public final class CampfireMaterials {
     public static final int STICKS = 3;
@@ -15,8 +16,7 @@ public final class CampfireMaterials {
     private static final List<String> LOG_SUFFIXES = List.of("_log", "_wood", "_stem", "_hyphae");
     private static final List<String> BAMBOO_LOGS = List.of("bamboo_block", "stripped_bamboo_block");
 
-    private CampfireMaterials() {
-    }
+    private CampfireMaterials() {}
 
     public record Cost(Map<String, Integer> consumed) {
         public Cost {
@@ -26,14 +26,16 @@ public final class CampfireMaterials {
 
     public static Optional<Cost> cost(Map<String, Integer> inventory) {
         if (inventory == null) {
-            throw new IllegalArgumentException("Материалы костра без описи не считаются: пустой запас задают пустой картой");
+            throw new IllegalArgumentException(
+                    "Материалы костра без описи не считаются: пустой запас задают пустой картой");
         }
         Map<String, Integer> left = normalized(inventory);
         Map<String, Integer> consumed = new TreeMap<>();
         if (!take(left, consumed, STICK, STICKS)) {
             return Optional.empty();
         }
-        Optional<String> coal = COAL_IDS.stream().filter(id -> left.getOrDefault(id, 0) > 0).findFirst();
+        Optional<String> coal =
+                COAL_IDS.stream().filter(id -> left.getOrDefault(id, 0) > 0).findFirst();
         if (coal.isEmpty() || !take(left, consumed, coal.get(), COALS)) {
             return Optional.empty();
         }
@@ -54,7 +56,7 @@ public final class CampfireMaterials {
         return Optional.of(new Cost(consumed));
     }
 
-    public static boolean isLog(String item) {
+    public static boolean isLog(@Nullable String item) {
         if (item == null || item.isBlank()) {
             return false;
         }

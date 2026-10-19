@@ -26,62 +26,83 @@ class GoalTests {
         return Stream.of(
                 Arguments.of(new GoalRow(new GoalBlock(new BlockCoord(0, 0, 0)), new BlockCoord(0, 0, 0), true, 0.0)),
                 Arguments.of(new GoalRow(new GoalBlock(new BlockCoord(0, 0, 0)), new BlockCoord(1, 0, 0), false, 1.0)),
-                Arguments.of(new GoalRow(new GoalBlock(new BlockCoord(0, 0, 0)), new BlockCoord(1, 0, 1), false,
-                        Math.sqrt(2.0))),
+                Arguments.of(new GoalRow(
+                        new GoalBlock(new BlockCoord(0, 0, 0)), new BlockCoord(1, 0, 1), false, Math.sqrt(2.0))),
                 Arguments.of(new GoalRow(new GoalBlock(new BlockCoord(0, 0, 0)), new BlockCoord(0, 3, 0), false, 3.0)),
-                Arguments.of(new GoalRow(new GoalBlock(new BlockCoord(2, 1, 3)), new BlockCoord(5, 1, 7), false,
+                Arguments.of(new GoalRow(
+                        new GoalBlock(new BlockCoord(2, 1, 3)),
+                        new BlockCoord(5, 1, 7),
+                        false,
                         4.0 + 3.0 * (Math.sqrt(2.0) - 1.0))),
                 Arguments.of(new GoalRow(new GoalXZ(4, -2), new BlockCoord(4, 10, -2), true, 0.0)),
                 Arguments.of(new GoalRow(new GoalXZ(4, -2), new BlockCoord(4, 10, 5), false, 7.0)),
-                Arguments.of(new GoalRow(new GoalXZ(4, -2), new BlockCoord(0, 0, 0), false,
-                        4.0 + 2.0 * (Math.sqrt(2.0) - 1.0))),
+                Arguments.of(new GoalRow(
+                        new GoalXZ(4, -2), new BlockCoord(0, 0, 0), false, 4.0 + 2.0 * (Math.sqrt(2.0) - 1.0))),
                 Arguments.of(new GoalRow(new GoalNear(new BlockCoord(0, 0, 0), 2), new BlockCoord(0, 0, 0), true, 0.0)),
                 Arguments.of(new GoalRow(new GoalNear(new BlockCoord(0, 0, 0), 2), new BlockCoord(2, 0, 0), true, 0.0)),
-                Arguments.of(new GoalRow(new GoalNear(new BlockCoord(0, 0, 0), 2), new BlockCoord(5, 0, 0), false, 3.0)),
+                Arguments.of(
+                        new GoalRow(new GoalNear(new BlockCoord(0, 0, 0), 2), new BlockCoord(5, 0, 0), false, 3.0)),
                 Arguments.of(new GoalRow(new GoalNear(new BlockCoord(1, 1, 1), 1), new BlockCoord(1, 2, 1), true, 0.0)),
                 Arguments.of(new GoalRow(
-                        new GoalComposite(List.of(new GoalBlock(new BlockCoord(0, 0, 0)),
-                                new GoalBlock(new BlockCoord(10, 0, 0)))),
-                        new BlockCoord(10, 0, 0), true, 0.0)),
+                        new GoalComposite(List.of(
+                                new GoalBlock(new BlockCoord(0, 0, 0)), new GoalBlock(new BlockCoord(10, 0, 0)))),
+                        new BlockCoord(10, 0, 0),
+                        true,
+                        0.0)),
                 Arguments.of(new GoalRow(
-                        new GoalComposite(List.of(new GoalBlock(new BlockCoord(0, 0, 0)),
-                                new GoalBlock(new BlockCoord(10, 0, 0)))),
-                        new BlockCoord(5, 0, 0), false, 5.0)),
+                        new GoalComposite(List.of(
+                                new GoalBlock(new BlockCoord(0, 0, 0)), new GoalBlock(new BlockCoord(10, 0, 0)))),
+                        new BlockCoord(5, 0, 0),
+                        false,
+                        5.0)),
                 Arguments.of(new GoalRow(
-                        new GoalComposite(List.of(new GoalNear(new BlockCoord(0, 0, 0), 0),
-                                new GoalBlock(new BlockCoord(3, 0, 4)))),
-                        new BlockCoord(3, 0, 4), true, 0.0)),
+                        new GoalComposite(List.of(
+                                new GoalNear(new BlockCoord(0, 0, 0), 0), new GoalBlock(new BlockCoord(3, 0, 4)))),
+                        new BlockCoord(3, 0, 4),
+                        true,
+                        0.0)),
                 Arguments.of(new GoalRow(
                         new GoalComposite(List.of(new GoalBlock(new BlockCoord(7, 0, 0)))),
-                        new BlockCoord(4, 0, 0), false, 3.0)));
+                        new BlockCoord(4, 0, 0),
+                        false,
+                        3.0)));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("goalTable")
     void goal_TableRow_SatisfactionAndHeuristicMatch(GoalRow row) {
-        assertEquals(row.satisfied(), row.goal().isSatisfied(row.feet()),
+        assertEquals(
+                row.satisfied(),
+                row.goal().isSatisfied(row.feet()),
                 "Цель " + row.goal() + " обязана считать позицию " + row.feet()
                         + (row.satisfied() ? " достигнутой" : " недостигнутой")
                         + ": иначе дух либо остановится раньше цели, либо пройдёт мимо неё");
-        assertEquals(row.heuristic(), row.goal().heuristic(row.feet()), EPS,
+        assertEquals(
+                row.heuristic(),
+                row.goal().heuristic(row.feet()),
+                EPS,
                 "Эвристика цели " + row.goal() + " от " + row.feet() + " обязана равняться " + row.heuristic()
                         + ": неверная эвристика ломает порядок целей и допустимость поиска пути");
     }
 
     @Test
     void composite_EmptyList_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> new GoalComposite(List.of()),
                 "Составная цель без вложенных обязана отвергаться: пустая цель недостижима, "
                         + "и дух встанет до первого шага, а стратег не узнает почему");
 
-        assertTrue(error.getMessage().contains("пуст"),
+        assertTrue(
+                error.getMessage().contains("пуст"),
                 "Отказ обязан объяснять, что список целей пуст. Фактическое: " + error.getMessage());
     }
 
     @Test
     void near_NegativeRadius_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new GoalNear(new BlockCoord(0, 0, 0), -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GoalNear(new BlockCoord(0, 0, 0), -1),
                 "Окрестность с отрицательным радиусом обязана отвергаться: такая цель недостижима "
                         + "и дух встанет до первого шага");
     }

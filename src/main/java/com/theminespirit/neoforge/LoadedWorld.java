@@ -8,11 +8,9 @@ import java.util.Set;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 
 final class LoadedWorld {
-    private LoadedWorld() {
-    }
+    private LoadedWorld() {}
 
     static Optional<BlockBox> cube(Level level, BlockCoord center, int radius) {
         return BlockBox.cube(center, radius).clampY(level.getMinBuildHeight(), level.getMaxBuildHeight() - 1);

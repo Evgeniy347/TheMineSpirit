@@ -24,8 +24,14 @@ public final class UnprotectService {
         return new UnprotectService(server.overworld());
     }
 
-    public UnprotectArea grant(String dimension, BlockCoord first, BlockCoord second, String grantedBy,
-            String reason, long ttlSeconds, long nowMillis) {
+    public UnprotectArea grant(
+            String dimension,
+            BlockCoord first,
+            BlockCoord second,
+            String grantedBy,
+            String reason,
+            long ttlSeconds,
+            long nowMillis) {
         if (ttlSeconds < 0) {
             throw new IllegalArgumentException("Срок жизни " + ttlSeconds + " секунд отрицателен: без срока задают 0");
         }
@@ -35,8 +41,10 @@ public final class UnprotectService {
                     + "(policy.protectedZones): защищённую зону снимают правкой конфига, а не разрешением");
         }
         long expiresAt = expiresAt(nowMillis, ttlSeconds);
-        UnprotectArea area = new UnprotectArea(UUID.randomUUID().toString(), dimension, box, grantedBy, nowMillis, reason, expiresAt);
-        return UnprotectAreasData.get(overworld).add(area, ProtectionConfig.load().maxUnprotectVolume(), nowMillis);
+        UnprotectArea area = new UnprotectArea(
+                UUID.randomUUID().toString(), dimension, box, grantedBy, nowMillis, reason, expiresAt);
+        return UnprotectAreasData.get(overworld)
+                .add(area, ProtectionConfig.load().maxUnprotectVolume(), nowMillis);
     }
 
     public List<UnprotectArea> list() {
@@ -58,7 +66,8 @@ public final class UnprotectService {
         try {
             return Math.addExact(nowMillis, Math.multiplyExact(ttlSeconds, MILLIS_PER_SECOND));
         } catch (ArithmeticException overflow) {
-            throw new IllegalArgumentException("Срок жизни " + ttlSeconds + " секунд не помещается в дату: уменьшите срок");
+            throw new IllegalArgumentException(
+                    "Срок жизни " + ttlSeconds + " секунд не помещается в дату: уменьшите срок");
         }
     }
 
@@ -66,9 +75,13 @@ public final class UnprotectService {
         Objects.requireNonNull(first, "Первый угол области не может быть null: область задаётся двумя углами");
         Objects.requireNonNull(second, "Второй угол области не может быть null: область задаётся двумя углами");
         return new BlockBox(
-                new BlockCoord(Math.min(first.x(), second.x()), Math.min(first.y(), second.y()),
+                new BlockCoord(
+                        Math.min(first.x(), second.x()),
+                        Math.min(first.y(), second.y()),
                         Math.min(first.z(), second.z())),
-                new BlockCoord(Math.max(first.x(), second.x()), Math.max(first.y(), second.y()),
+                new BlockCoord(
+                        Math.max(first.x(), second.x()),
+                        Math.max(first.y(), second.y()),
                         Math.max(first.z(), second.z())));
     }
 

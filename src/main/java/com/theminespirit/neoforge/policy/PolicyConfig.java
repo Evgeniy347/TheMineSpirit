@@ -13,6 +13,7 @@ public final class PolicyConfig {
     public static final String FILE_NAME = "theminespirit-policy.toml";
 
     private static final String EXAMPLE_ZONE = "minecraft:overworld 0 0 0 0 0 0";
+    private static final Object LOCK = new Object();
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> PROTECTED_ZONES;
 
@@ -22,39 +23,40 @@ public final class PolicyConfig {
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("policy");
-        PROTECTED_ZONES = builder
-                .comment("Защищённые зоны: дух не ломает и не ставит блоки внутри. Строка: «измерение x1 y1 z1 x2 y2 z2», не больше 64 строк.",
+        PROTECTED_ZONES = builder.comment(
+                        "Защищённые зоны: дух не ломает и не ставит блоки внутри. Строка: «измерение x1 y1 z1 x2 y2 z2», не больше 64 строк.",
                         "Пример: \"" + EXAMPLE_ZONE + "\". Ошибка в строке останавливает запуск сервера.")
-                .defineListAllowEmpty("protectedZones", List.of(), () -> EXAMPLE_ZONE, entry -> entry instanceof String);
+                .defineListAllowEmpty(
+                        "protectedZones", List.of(), () -> EXAMPLE_ZONE, entry -> entry instanceof String);
         builder.pop();
         SPEC = builder.build();
     }
 
-    private PolicyConfig() {
+    private PolicyConfig() {}
+
+    public static ModConfigSpec spec() {
+        return SPEC;
     }
 
     public static void register(ModContainer container, IEventBus modEventBus) {
-        container.registerConfig(ModConfig.Type.SERVER, SPEC, FILE_NAME);
+        container.registerConfig(ModConfig.Type.SERVER, spec(), FILE_NAME);
         modEventBus.addListener(ModConfigEvent.Loading.class, PolicyConfig::onConfig);
         modEventBus.addListener(ModConfigEvent.Reloading.class, PolicyConfig::onConfig);
     }
 
-    public static synchronized ProtectedZones zones() {
-        List<String> raw = List.copyOf(PROTECTED_ZONES.get());
-        if (!raw.equals(parsedFrom)) {
-            parsed = ProtectedZoneParser.parse(raw);
-            parsedFrom = raw;
+    public static ProtectedZones zones() {
+        synchronized (LOCK) {
+            List<String> raw = List.copyOf(PROTECTED_ZONES.get());
+            if (!raw.equals(parsedFrom)) {
+                parsed = ProtectedZoneParser.parse(raw);
+                parsedFrom = raw;
+            }
+            return parsed;
         }
-        return parsed;
-    }
-
-    public static synchronized void setProtectedZones(List<String> lines) {
-        ProtectedZoneParser.parse(lines);
-        PROTECTED_ZONES.set(List.copyOf(lines));
     }
 
     private static void onConfig(ModConfigEvent event) {
-        if (event.getConfig().getSpec() == SPEC) {
+        if (SPEC.equals(event.getConfig().getSpec())) {
             zones();
         }
     }

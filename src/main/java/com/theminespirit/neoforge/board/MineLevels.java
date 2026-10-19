@@ -28,14 +28,14 @@ final class MineLevels {
             3, Map.of("stone", 64),
             4, Map.of("iron_ingot", 16));
 
-    private MineLevels() {
-    }
+    private MineLevels() {}
 
     static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        OptionalInt next = BuildingLevels.nextLevel(BoardCase.BUILD_MINE, service.board().ledger());
+        OptionalInt next =
+                BuildingLevels.nextLevel(BoardCase.BUILD_MINE, service.board().ledger());
         if (next.isEmpty() || next.getAsInt() < 2) {
             return;
         }
@@ -45,16 +45,24 @@ final class MineLevels {
             return;
         }
         BlockCoord home = homeOf(spirits);
-        service.submit(new BoardTicket(id, BoardCase.BUILD_MINE, Optional.empty(),
-                BoardPriorities.effective(BoardCase.BUILD_MINE, PriorityContext.none()), now,
-                levelValue, BoardTicket.ALWAYS_CAUSE,
-                List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
-                LEVEL_MATERIALS.getOrDefault(levelValue, Map.of())), TicketTarget.at(home));
+        service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.BUILD_MINE,
+                        Optional.empty(),
+                        BoardPriorities.effective(BoardCase.BUILD_MINE, PriorityContext.none()),
+                        now,
+                        levelValue,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
+                        LEVEL_MATERIALS.getOrDefault(levelValue, Map.of())),
+                TicketTarget.at(home));
     }
 
     private static boolean active(BoardService service, String id) {
         BoardStatus status = service.board().statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
     }
 

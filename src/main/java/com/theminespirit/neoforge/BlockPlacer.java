@@ -11,11 +11,16 @@ import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -30,17 +35,13 @@ public final class BlockPlacer {
         NO_MATERIAL
     }
 
-    public sealed interface Begin permits Started, Refused, Protected {
-    }
+    public sealed interface Begin permits Started, Refused, Protected {}
 
-    public record Started(BlockPos pos) implements Begin {
-    }
+    public record Started(BlockPos pos) implements Begin {}
 
-    public record Refused(RefuseReason reason, String message) implements Begin {
-    }
+    public record Refused(RefuseReason reason, String message) implements Begin {}
 
-    public record Protected(PolicyId policy, String reason) implements Begin {
-    }
+    public record Protected(PolicyId policy, String reason) implements Begin {}
 
     private final SpiritEntity spirit;
 
@@ -54,68 +55,137 @@ public final class BlockPlacer {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что списывать");
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
-            return new Refused(RefuseReason.CHUNK_NOT_LOADED,
+            return new Refused(
+                    RefuseReason.CHUNK_NOT_LOADED,
                     "чанк с клеткой " + target.toShortString() + " не загружен: дух не грузит чанки ради стройки");
         }
         BlockState current = level.getBlockState(target);
         if (!current.isAir() && !current.canBeReplaced()) {
-            return new Refused(RefuseReason.OCCUPIED,
-                    "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current) + ": ставить некуда");
+            return new Refused(
+                    RefuseReason.OCCUPIED,
+                    "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
+                            + ": ставить некуда");
         }
         if (!livingEntities(level, target).isEmpty()) {
-            return new Refused(RefuseReason.OCCUPIED,
+            return new Refused(
+                    RefuseReason.OCCUPIED,
                     "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
         }
-        BlockCoord feet = new BlockCoord(spirit.blockPosition().getX(), spirit.blockPosition().getY(),
+        BlockCoord feet = new BlockCoord(
+                spirit.blockPosition().getX(),
+                spirit.blockPosition().getY(),
                 spirit.blockPosition().getZ());
         BlockCoord cell = new BlockCoord(target.getX(), target.getY(), target.getZ());
-        if (!SpiritReach.reachable(feet, cell)) {
-            return new Refused(RefuseReason.OUT_OF_REACH, "клетка " + target.toShortString()
-                    + " вне досягаемости: подойди по горизонтали ближе " + SpiritReach.HORIZONTAL
-                    + " или опустись/поднимись в пределах " + SpiritReach.DOWN + "…" + SpiritReach.UP);
+        SpiritReach reach = SpiritReach.current();
+        if (!reach.reaches(feet, cell)) {
+            return new Refused(
+                    RefuseReason.OUT_OF_REACH,
+                    "клетка " + target.toShortString() + " вне досягаемости духа (" + reach.describe()
+                            + "): сначала подойти");
         }
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
         if (!hasSupport(level, target, state)) {
-            return new Refused(RefuseReason.NO_SUPPORT,
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
                     "под клеткой " + target.toShortString() + " нет опоры: блок без опоры обвалится или повиснет");
         }
         Item wanted = BlockItems.itemFor(blockId);
         if (spirit.getInventory().countItem(wanted) < 1) {
-            return new Refused(RefuseReason.NO_MATERIAL,
-                    "нет материала '" + blockId + "': нужно 1, есть 0");
+            return new Refused(RefuseReason.NO_MATERIAL, "нет материала '" + blockId + "': нужно 1, есть 0");
         }
+        if (firstOfTwoParts(state) && !secondPartFree(level, target, state)) {
+            return new Refused(
+                    RefuseReason.OCCUPIED,
+                    "вторая половина " + blockId + " у " + target.toShortString()
+                            + " занята: дверь и кровать ставятся целиком");
+        }
+        ItemStack used = new ItemStack(wanted);
         spirit.getInventory().removeItemType(wanted, 1);
         level.setBlock(target, state, Block.UPDATE_ALL);
-        if (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
-                && !state.hasProperty(BlockStateProperties.BED_PART)) {
+        if (firstOfTwoParts(state)) {
+            state.getBlock().setPlacedBy(level, target, state, spirit, used);
+        } else {
             BlockState updated = Block.updateFromNeighbourShapes(state, level, target);
             if (!updated.equals(state)) {
                 level.setBlock(target, updated, Block.UPDATE_ALL);
             }
         }
-        level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
-        if (level instanceof ServerLevel server) {
-            PlacedBlocksData.get(server).markSpirit(target);
+        if (!level.getBlockState(target).is(state.getBlock())) {
+            spirit.getInventory().addItem(used);
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "блок " + blockId + " в " + target.toShortString()
+                            + " не держится и сразу исчез: настенному блоку нужна стена со стороны крепления");
         }
+        announcePlaced(level, target, state);
         return new Started(target.immutable());
     }
 
-    private List<LivingEntity> livingEntities(Level level, BlockPos target) {
-        return level.getEntitiesOfClass(LivingEntity.class, new AABB(target),
-                entity -> entity != spirit && !entity.isRemoved() && !entity.isSpectator());
+    private void announcePlaced(Level level, BlockPos target, BlockState state) {
+        level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
+        spirit.swing(InteractionHand.MAIN_HAND, true);
+        SoundType sound = state.getSoundType(level, target, spirit);
+        level.playSound(
+                null,
+                target,
+                sound.getPlaceSound(),
+                SoundSource.BLOCKS,
+                (sound.getVolume() + 1.0F) / 2.0F,
+                sound.getPitch() * 0.8F);
+        if (level instanceof ServerLevel server) {
+            PlacedBlocksData.get(server).markSpirit(target);
+            BlockPos second = secondPart(target, state);
+            if (second != null) {
+                PlacedBlocksData.get(server).markSpirit(second);
+            }
+        }
     }
 
-    /** Опора — общее правило {@link BlockSupport} (то же проверяет сторож схем) плюс верхняя половина двухчастного блока. */
-    private static boolean hasSupport(Level level, BlockPos target, BlockState state) {
+    private static boolean firstOfTwoParts(BlockState state) {
+        return secondPart(BlockPos.ZERO, state) != null;
+    }
+
+    private static BlockPos secondPart(BlockPos target, BlockState state) {
+        if (state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                && state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER) {
+            return target.above();
+        }
+        if (state.hasProperty(BlockStateProperties.BED_PART)
+                && state.getValue(BlockStateProperties.BED_PART) == BedPart.FOOT) {
+            return target.relative(state.getValue(BlockStateProperties.HORIZONTAL_FACING));
+        }
+        return null;
+    }
+
+    private boolean secondPartFree(Level level, BlockPos target, BlockState state) {
+        BlockPos second = secondPart(target, state);
+        BlockState current = level.getBlockState(second);
+        return (current.isAir() || current.canBeReplaced())
+                && livingEntities(level, second).isEmpty();
+    }
+
+    private List<LivingEntity> livingEntities(Level level, BlockPos target) {
+        return level.getEntitiesOfClass(
+                LivingEntity.class,
+                new AABB(target),
+                entity -> !entity.equals(spirit) && !entity.isRemoved() && !entity.isSpectator());
+    }
+
+    static boolean hasSupport(Level level, BlockPos target, BlockState state) {
         if (upperHalfOnLower(level, target, state)) {
             return true;
         }
-        return BlockSupport.hasSupport((x, y, z, face) -> {
-            BlockPos pos = new BlockPos(x, y, z);
-            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
-        }, target.getX(), target.getY(), target.getZ());
+        return BlockSupport.hasSupport(
+                        (x, y, z, face) -> {
+                            BlockPos pos = new BlockPos(x, y, z);
+                            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
+                        },
+                        target.getX(),
+                        target.getY(),
+                        target.getZ())
+                && state.canSurvive(level, target);
     }
 
     private static Direction direction(BlockSupport.Face face) {

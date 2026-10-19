@@ -6,8 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 final class RestJson {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private RestJson() {
-    }
+    private RestJson() {}
 
     static String write(Object value) {
         try {

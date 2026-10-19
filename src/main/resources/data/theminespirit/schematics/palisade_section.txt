@@ -1,0 +1,12 @@
+# palisade_section — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+name: "Палисад-секция (с калиткой)"
+type: defense
+stage: 0
+size: 8x1x1   # Ш×В×Д
+entrance: 3,0,0
+legend:
+  'F': oak_fence
+  'G': oak_fence_gate
+layers:
+  - y0: |
+      FFFGFFFF

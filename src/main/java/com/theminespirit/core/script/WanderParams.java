@@ -21,7 +21,6 @@ public record WanderParams(int radius, int durationTicks) {
     public static WanderParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new WanderParams(
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireInt(params, "duration_ticks"));
+                ScriptArgs.requireInt(params, "radius"), ScriptArgs.requireInt(params, "duration_ticks"));
     }
 }

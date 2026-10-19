@@ -6,8 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class FishingSpots {
+    private FishingSpots() {}
+
     public record Spot(BlockCoord stand, BlockCoord water) {
         public Spot {
             Objects.requireNonNull(stand, "Стоянка у воды не может быть null: с неё дух забрасывает удочку");
@@ -16,13 +19,11 @@ public final class FishingSpots {
     }
 
     /** Отбор места по внешним правилам мира: близость к поселению, чужие постройки. */
+    @FunctionalInterface
     public interface SpotFilter {
-        boolean allow(BlockCoord stand, BlockCoord water);
-
         SpotFilter ALL = (stand, water) -> true;
-    }
 
-    private FishingSpots() {
+        boolean allow(BlockCoord stand, BlockCoord water);
     }
 
     public static Optional<Spot> find(BlockCoord origin, WaterView view, FishingData data) {
@@ -30,15 +31,12 @@ public final class FishingSpots {
         return find(origin, view, data.minWidth(), data.minDepth(), SpotFilter.ALL);
     }
 
-    /** Рабочее место у воды: пятно крупнее разовой ловли, отобранное фильтром мира. */
-    public static Optional<Spot> findWorkPoint(BlockCoord origin, WaterView view, FishingData data,
-            SpotFilter filter) {
+    public static Optional<Spot> findWorkPoint(BlockCoord origin, WaterView view, FishingData data, SpotFilter filter) {
         Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них размер рабочей точки");
         return find(origin, view, data.workWidth(), data.workDepth(), filter);
     }
 
-    public static Optional<Spot> find(BlockCoord origin, WaterView view, int width, int depth,
-            SpotFilter filter) {
+    public static Optional<Spot> find(BlockCoord origin, WaterView view, int width, int depth, SpotFilter filter) {
         Objects.requireNonNull(origin, "Точка отсчёта не может быть null: по ней выбирается ближайший берег");
         Objects.requireNonNull(view, "Вид воды не может быть null: без него нечего выбирать");
         Objects.requireNonNull(filter, "Фильтр места не может быть null: пустой отбор задают SpotFilter.ALL");
@@ -59,7 +57,8 @@ public final class FishingSpots {
                 continue;
             }
             long distance = distanceSquared(origin, spot.stand());
-            if (best == null || distance < bestDistance
+            if (best == null
+                    || distance < bestDistance
                     || (distance == bestDistance && spot.stand().compareTo(best.stand()) < 0)) {
                 best = spot;
                 bestDistance = distance;
@@ -80,7 +79,7 @@ public final class FishingSpots {
         return true;
     }
 
-    private static Spot spotFor(Column anchor, int width, BlockCoord origin, WaterView view) {
+    private static @Nullable Spot spotFor(Column anchor, int width, BlockCoord origin, WaterView view) {
         BlockCoord bestStand = null;
         long bestDistance = Long.MAX_VALUE;
         for (int dx = -1; dx <= width; dx++) {
@@ -95,7 +94,8 @@ public final class FishingSpots {
                         continue;
                     }
                     long distance = distanceSquared(origin, stand);
-                    if (bestStand == null || distance < bestDistance
+                    if (bestStand == null
+                            || distance < bestDistance
                             || (distance == bestDistance && stand.compareTo(bestStand) < 0)) {
                         bestStand = stand;
                         bestDistance = distance;
@@ -111,14 +111,13 @@ public final class FishingSpots {
     }
 
     private static BlockCoord nearestWater(Column anchor, int width, BlockCoord stand) {
-        BlockCoord best = null;
-        long bestDistance = Long.MAX_VALUE;
+        BlockCoord best = new BlockCoord(anchor.x(), anchor.surfaceY(), anchor.z());
+        long bestDistance = distanceSquared(stand, best);
         for (int dx = 0; dx < width; dx++) {
             for (int dz = 0; dz < width; dz++) {
                 BlockCoord cell = new BlockCoord(anchor.x() + dx, anchor.surfaceY(), anchor.z() + dz);
                 long distance = distanceSquared(stand, cell);
-                if (best == null || distance < bestDistance
-                        || (distance == bestDistance && cell.compareTo(best) < 0)) {
+                if (distance < bestDistance || (distance == bestDistance && cell.compareTo(best) < 0)) {
                     best = cell;
                     bestDistance = distance;
                 }

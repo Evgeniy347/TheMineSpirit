@@ -19,8 +19,7 @@ public final class FarmWorkScanner {
     public static final int FARM_SCAN_BUDGET = 4096;
     private static final int READS_PER_TILE = 2;
 
-    private FarmWorkScanner() {
-    }
+    private FarmWorkScanner() {}
 
     public static FarmWork read(ServerLevel level, Optional<Point> home, List<SpiritEntity> members, int seeds) {
         if (level == null || home == null || members == null) {
@@ -47,7 +46,8 @@ public final class FarmWorkScanner {
                         return new FarmWork(mature, farmland, seeds);
                     }
                     FarmTile tile = view.tileAt(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-                    if (tile.above() == Above.CROP && tile.crop().isPresent()
+                    if (tile.above() == Above.CROP
+                            && tile.crop().isPresent()
                             && tile.crop().orElseThrow().isMature()) {
                         mature++;
                     } else if (tile.ground() == Ground.FARMLAND && tile.above() == Above.AIR) {
@@ -62,8 +62,7 @@ public final class FarmWorkScanner {
     private static BlockPos centerOf(Optional<Point> home, List<SpiritEntity> members) {
         if (home.isPresent()) {
             Point point = home.get();
-            return new BlockPos((int) Math.floor(point.x()), (int) Math.floor(point.y()),
-                    (int) Math.floor(point.z()));
+            return new BlockPos((int) Math.floor(point.x()), (int) Math.floor(point.y()), (int) Math.floor(point.z()));
         }
         for (SpiritEntity spirit : members) {
             if (!spirit.isRemoved()) {

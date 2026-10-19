@@ -26,8 +26,7 @@ public final class TacticsWitchGameTests {
     private static final int ARROWS = 32;
     private static final int MIN_SHOTS = 2;
 
-    private TacticsWitchGameTests() {
-    }
+    private TacticsWitchGameTests() {}
 
     private static void coverWallNorthWest(GameTestHelper helper) {
         for (int z = 8; z <= 10; z++) {
@@ -49,7 +48,10 @@ public final class TacticsWitchGameTests {
         coverWallNorthWest(helper);
         SpiritEntity spirit = swordsman(helper, CombatMode.DEFENSIVE);
         Witch witch = TacticsScene.watcher(helper, EntityType.WITCH, new BlockPos(10, 1, 5));
-        PolicyScene scene = PolicyScene.launch(helper, spirit, TacticsScene.SETTLE_TICKS,
+        PolicyScene scene = PolicyScene.launch(
+                helper,
+                spirit,
+                TacticsScene.SETTLE_TICKS,
                 () -> spirit.tactics().setCombatMode(CombatMode.AGGRESSIVE));
         boolean[] retreated = {false};
         boolean[] fought = {false};
@@ -61,12 +63,16 @@ public final class TacticsWitchGameTests {
                 retreated[0] |= outcome.decision() == TacticalOption.RETREAT;
                 fought[0] |= outcome.decision() == TacticalOption.FIGHT && outcome.action() == TacticalAction.ENGAGE;
                 if (retreated[0]) {
-                    helper.fail("полное HP и меч против ведьмы в 10 блоках с укрытием рядом: дух обязан драться, а не уходить: "
-                            + spirit.tactics().explain().orElse("нет"));
+                    helper.fail(
+                            "полное HP и меч против ведьмы в 10 блоках с укрытием рядом: дух обязан драться, а не уходить: "
+                                    + spirit.tactics().explain().orElse("нет"));
                 }
             });
             if (scene.ticks() % 10 == 2 && scene.ticks() < 40) {
-                LOGGER.info("witch_sword t={}: {}", scene.ticks(), spirit.tactics().explain().orElse("нет"));
+                LOGGER.info(
+                        "witch_sword t={}: {}",
+                        scene.ticks(),
+                        spirit.tactics().explain().orElse("нет"));
             }
         });
 
@@ -75,8 +81,10 @@ public final class TacticsWitchGameTests {
             helper.assertTrue(scene.ticks() >= OBSERVED_TICKS, "наблюдение за боем ещё идёт: " + scene.ticks());
             helper.assertTrue(fought[0], "дух обязан решить FIGHT/ENGAGE");
             helper.assertTrue(!retreated[0], "дух ни разу не отступил");
-            helper.assertTrue(spirit.tactics().combat().strikes() >= 1 || witch.getHealth() < witch.getMaxHealth(),
-                    "дух дошёл до ведьмы и бьёт: ударов " + spirit.tactics().combat().strikes());
+            helper.assertTrue(
+                    spirit.tactics().combat().strikes() >= 1 || witch.getHealth() < witch.getMaxHealth(),
+                    "дух дошёл до ведьмы и бьёт: ударов "
+                            + spirit.tactics().combat().strikes());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -89,8 +97,7 @@ public final class TacticsWitchGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.BOW));
         spirit.getInventory().addItem(new ItemStack(Items.ARROW, ARROWS));
         TacticsScene.watcher(helper, EntityType.WITCH, new BlockPos(10, 1, 5));
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 1, () -> {
-        });
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 1, () -> {});
         boolean[] retreated = {false};
         boolean[] shooting = {false};
         helper.onEachTick(() -> {
@@ -106,7 +113,10 @@ public final class TacticsWitchGameTests {
                 }
             });
             if (scene.ticks() % 10 == 2 && scene.ticks() < 40) {
-                LOGGER.info("witch_bow t={}: {}", scene.ticks(), spirit.tactics().explain().orElse("нет"));
+                LOGGER.info(
+                        "witch_bow t={}: {}",
+                        scene.ticks(),
+                        spirit.tactics().explain().orElse("нет"));
             }
         });
 
@@ -114,7 +124,8 @@ public final class TacticsWitchGameTests {
             scene.assertStarted();
             helper.assertTrue(scene.ticks() >= OBSERVED_TICKS, "наблюдение за боем ещё идёт: " + scene.ticks());
             helper.assertTrue(shooting[0], "с луком против ведьмы дальше 5 блоков дух решает FIGHT/SHOOT");
-            helper.assertTrue(spirit.tactics().combat().shots() >= MIN_SHOTS,
+            helper.assertTrue(
+                    spirit.tactics().combat().shots() >= MIN_SHOTS,
                     "дух стреляет: выстрелов " + spirit.tactics().combat().shots());
             TacticsScene.finish(helper, spirit);
         });

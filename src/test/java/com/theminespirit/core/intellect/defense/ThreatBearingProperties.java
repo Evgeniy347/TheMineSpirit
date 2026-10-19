@@ -21,36 +21,43 @@ class ThreatBearingProperties {
     @Provide
     Arbitrary<List<EnemyFact>> enemies() {
         return Combinators.combine(
-                Arbitraries.of("minecraft:zombie", "minecraft:skeleton", "minecraft:creeper",
-                        "minecraft:modded_beast"),
-                Arbitraries.create(UUID::randomUUID).map(UUID::toString),
-                Arbitraries.integers().between(-14, 14), Arbitraries.integers().between(-14, 14),
-                Arbitraries.integers().between(1, 3))
-                .as((type, id, x, z, count) -> new EnemyFact(type, id, new Point(x, 64, z), 1.0, 0, true, true,
-                        count))
-                .list().ofMinSize(1).ofMaxSize(6);
+                        Arbitraries.of(
+                                "minecraft:zombie",
+                                "minecraft:skeleton",
+                                "minecraft:creeper",
+                                "minecraft:modded_beast"),
+                        Arbitraries.create(UUID::randomUUID).map(UUID::toString),
+                        Arbitraries.integers().between(-14, 14),
+                        Arbitraries.integers().between(-14, 14),
+                        Arbitraries.integers().between(1, 3))
+                .as((type, id, x, z, count) -> new EnemyFact(type, id, new Point(x, 64, z), 1.0, 0, true, true, count))
+                .list()
+                .ofMinSize(1)
+                .ofMaxSize(6);
     }
 
     @Property
     void sum_AnyInput_EnemyCountPreserved(@ForAll("enemies") List<EnemyFact> enemies) {
-        List<DirectionThreat> threats = ThreatBearing.sum(enemies, ThreatBearingTests.CENTER,
-                ThreatBearingTests.PROFILES);
+        List<DirectionThreat> threats =
+                ThreatBearing.sum(enemies, ThreatBearingTests.CENTER, ThreatBearingTests.PROFILES);
 
         int input = enemies.stream().mapToInt(EnemyFact::count).sum();
         int sectors = threats.stream().mapToInt(DirectionThreat::enemies).sum();
 
-        assertEquals(input, sectors,
+        assertEquals(
+                input,
+                sectors,
                 "Сумма врагов по секторам равна входному числу: иначе враг потеряется и направление ослабеет");
     }
 
     @Property
     void sum_AnyInput_StrengthNonNegative(@ForAll("enemies") List<EnemyFact> enemies) {
-        List<DirectionThreat> threats = ThreatBearing.sum(enemies, ThreatBearingTests.CENTER,
-                ThreatBearingTests.PROFILES);
+        List<DirectionThreat> threats =
+                ThreatBearing.sum(enemies, ThreatBearingTests.CENTER, ThreatBearingTests.PROFILES);
 
         for (DirectionThreat threat : threats) {
-            assertTrue(threat.strength() >= 0,
-                    "Сила сектора неотрицательна: иначе вес направления исказит распределение");
+            assertTrue(
+                    threat.strength() >= 0, "Сила сектора неотрицательна: иначе вес направления исказит распределение");
         }
     }
 

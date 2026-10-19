@@ -137,7 +137,7 @@ class PlanCheckTests(unittest.TestCase):
                 try:
                     self.check(plan)
                 except PlanError as error:
-                    self.fail(f"допустимый план «{name}» отвергнут: {error}. Проверь plan_check против docs/API.md и каталога")
+                    self.fail(f"допустимый план «{name}» отвергнут: {error}. Проверь plan_check против docs/api/plan.md и каталога")
 
     def test_invalidPlans_Table_RejectedWithRussianTextNamingNode(self):
         self.assertGreaterEqual(len(VALID) + len(INVALID), 30, "в таблице не меньше 30 планов")

@@ -13,16 +13,15 @@ import net.minecraft.world.level.Level;
 final class SurroundingsReader {
     static final int WATER_SEARCH_RADIUS = 6;
 
-    private SurroundingsReader() {
-    }
+    private SurroundingsReader() {}
 
-    static LocalSurroundings read(SpiritEntity spirit, LevelSafetyView view, BodyFlags flags, Optional<BlockCoord> water) {
+    static LocalSurroundings read(
+            SpiritEntity spirit, LevelSafetyView view, BodyFlags flags, Optional<BlockCoord> water) {
         BlockPos feet = spirit.blockPosition();
         return LocalSurroundings.read(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), view, flags, water);
     }
 
-    record WaterSearch(Optional<BlockCoord> cell, int reads) {
-    }
+    record WaterSearch(Optional<BlockCoord> cell, int reads) {}
 
     static WaterSearch nearestWater(SpiritEntity spirit) {
         Level level = spirit.level();
@@ -43,7 +42,8 @@ final class SurroundingsReader {
                 }
             }
         }
-        Optional<BlockCoord> cell = best == null ? Optional.empty() : Optional.of(new BlockCoord(best.getX(), best.getY(), best.getZ()));
+        Optional<BlockCoord> cell =
+                best == null ? Optional.empty() : Optional.of(new BlockCoord(best.getX(), best.getY(), best.getZ()));
         return new WaterSearch(cell, reads);
     }
 }

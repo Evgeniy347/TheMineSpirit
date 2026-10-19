@@ -27,7 +27,6 @@ public enum BuildRotation {
         return quarterTurns;
     }
 
-    /** Имя поворота для каталога скриптов: он ждёт строку из списка {@code none/clockwise_90/…}. */
     public String id() {
         return name().toLowerCase(Locale.ROOT);
     }
@@ -42,7 +41,6 @@ public enum BuildRotation {
         throw new IllegalStateException("Четверть " + turns + " не сопоставлена ни одному повороту");
     }
 
-    /** Принимает имя ({@code none}, {@code clockwise_90}…) или градусы ({@code 0}, {@code 90}, {@code 180}, {@code 270}). */
     public static BuildRotation parse(String text) {
         Objects.requireNonNull(text, "Поворот не может быть null: без него неизвестно, как ставить постройку");
         String normalized = text.trim().toLowerCase(Locale.ROOT);
@@ -51,8 +49,9 @@ public enum BuildRotation {
             case "90", "clockwise_90" -> CLOCKWISE_90;
             case "180", "clockwise_180" -> CLOCKWISE_180;
             case "270", "-90", "counterclockwise_90" -> COUNTERCLOCKWISE_90;
-            default -> throw new IllegalArgumentException("Неизвестный поворот '" + text
-                    + "': допустимы 0, 90, 180, 270 или none, clockwise_90, clockwise_180, counterclockwise_90");
+            default ->
+                throw new IllegalArgumentException("Неизвестный поворот '" + text
+                        + "': допустимы 0, 90, 180, 270 или none, clockwise_90, clockwise_180, counterclockwise_90");
         };
     }
 
@@ -64,7 +63,6 @@ public enum BuildRotation {
         return quarterTurns % 2 == 0 ? sizeZ : sizeX;
     }
 
-    /** Клетка (dx, dz) схемы внутри повёрнутой коробки той же схемы. */
     public Cell rotate(int dx, int dz, int sizeX, int sizeZ) {
         return switch (this) {
             case NONE -> new Cell(dx, dz);
@@ -74,7 +72,6 @@ public enum BuildRotation {
         };
     }
 
-    /** Поворот направления без переноса: вектор (dx, dz) на четверть оборотов. */
     public static DirectionVector rotateDirection(int dx, int dz, int quarterTurns) {
         return switch (Math.floorMod(quarterTurns, 4)) {
             case 1 -> new DirectionVector(-dz, dx);
@@ -84,8 +81,7 @@ public enum BuildRotation {
         };
     }
 
-    public record Cell(int x, int z) {
-    }
+    public record Cell(int x, int z) {}
 
     public record DirectionVector(int dx, int dz) {
         public boolean equalsVector(int otherDx, int otherDz) {

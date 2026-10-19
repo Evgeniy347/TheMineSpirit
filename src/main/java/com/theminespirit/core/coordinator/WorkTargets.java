@@ -11,11 +11,9 @@ import java.util.Optional;
  */
 public final class WorkTargets {
     private static final Comparator<WorkTarget> ORDER =
-            Comparator.comparing((WorkTarget target) -> target.kind())
-                    .thenComparing(WorkTarget::anchor);
+            Comparator.comparing((WorkTarget target) -> target.kind()).thenComparing(WorkTarget::anchor);
 
-    private WorkTargets() {
-    }
+    private WorkTargets() {}
 
     public static Optional<WorkTarget> current(Collection<WorkTarget> owned) {
         if (owned == null) {

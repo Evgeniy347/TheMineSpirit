@@ -8,7 +8,7 @@ public record Goal(String text, Map<String, Object> params) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("Текст цели пуст: по тексту планировщик выбирает сценарий выполнения");
         }
-        params = Map.copyOf(Objects.requireNonNull(params,
-                "params не может быть null: пустой набор параметров задают пустой картой"));
+        params = Map.copyOf(Objects.requireNonNull(
+                params, "params не может быть null: пустой набор параметров задают пустой картой"));
     }
 }

@@ -2,7 +2,6 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 final class DecisionRoutes {

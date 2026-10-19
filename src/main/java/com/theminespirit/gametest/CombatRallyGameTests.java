@@ -34,8 +34,7 @@ public final class CombatRallyGameTests {
     private static final double RALLY_DISTANCE = 3.0;
     private static final int DISCOVERY_LIMIT_TICKS = 200;
 
-    private CombatRallyGameTests() {
-    }
+    private CombatRallyGameTests() {}
 
     @GameTest(template = "arena", batch = "combat_rally", timeoutTicks = 400)
     public static void rally_LowHpBesideTwoZombies_RunsToAllyAndAllyJoinsFight(GameTestHelper helper) {
@@ -75,20 +74,25 @@ public final class CombatRallyGameTests {
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(ralliedAt[0] >= 0,
+            helper.assertTrue(
+                    ralliedAt[0] >= 0,
                     "отход обязан идти к союзнику (RALLY), а не просто от врага; решение "
                             + caller.tactics().explain().orElse("нет"));
-            helper.assertTrue(arrivedAt[0] >= 0,
-                    "дух не дошёл до союзника: расстояние " + caller.position().distanceTo(ally.position())
-                            + " из " + startDistance);
-            helper.assertTrue(helpedAt[0] >= 0,
+            helper.assertTrue(
+                    arrivedAt[0] >= 0,
+                    "дух не дошёл до союзника: расстояние " + caller.position().distanceTo(ally.position()) + " из "
+                            + startDistance);
+            helper.assertTrue(
+                    helpedAt[0] >= 0,
                     "союзник не получил зов через координатор и не встал на защиту: режим "
                             + ally.tactics().combatMode());
-            helper.assertTrue(ally.currentTaskScript().isPresent(),
+            helper.assertTrue(
+                    ally.currentTaskScript().isPresent(),
                     "занятый дух обязан сохранить свою задачу, пока помогает: иначе после боя ему нечего возобновлять");
-            helper.assertTrue(ally.getTarget() != null || ally.tactics().combat().strikes() > 0,
-                    "союзник обязан вступить в бой, а не только сменить режим; цель " + ally.getTarget()
-                            + ", ударов " + ally.tactics().combat().strikes());
+            helper.assertTrue(
+                    ally.getTarget() != null || ally.tactics().combat().strikes() > 0,
+                    "союзник обязан вступить в бой, а не только сменить режим; цель " + ally.getTarget() + ", ударов "
+                            + ally.tactics().combat().strikes());
             TacticsScene.finish(helper, caller);
             ally.discard();
         });
@@ -121,16 +125,19 @@ public final class CombatRallyGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(callTicks.size() >= 2,
-                    "за время наблюдения зов обязан повториться: иначе частота не проверена, "
-                            + "сообщений " + messages.size());
+            helper.assertTrue(
+                    callTicks.size() >= 2,
+                    "за время наблюдения зов обязан повториться: иначе частота не проверена, " + "сообщений "
+                            + messages.size());
             for (int index = 1; index < callTicks.size(); index++) {
                 int gap = callTicks.get(index) - callTicks.get(index - 1);
-                helper.assertTrue(gap >= tuning.callIntervalTicks(),
+                helper.assertTrue(
+                        gap >= tuning.callIntervalTicks(),
                         "зовы в чат " + callTicks.get(index - 1) + " и " + callTicks.get(index) + " ближе предела "
                                 + tuning.callIntervalTicks() + " тиков: игрок получает спам вместо просьбы");
             }
-            helper.assertTrue(messages.stream().allMatch(message -> message.getString().startsWith("нужна помощь у ")),
+            helper.assertTrue(
+                    messages.stream().allMatch(message -> message.getString().startsWith("нужна помощь у ")),
                     "текст зова обязан называть место, получено " + messages);
             TacticsScene.finish(helper, caller);
         });

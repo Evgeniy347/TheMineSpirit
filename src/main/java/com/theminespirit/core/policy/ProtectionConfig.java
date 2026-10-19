@@ -1,25 +1,25 @@
 package com.theminespirit.core.policy;
 
-import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import java.util.Set;
 
 public final class ProtectionConfig {
     public static final String RESOURCE = "data/theminespirit/policy/protection.json";
 
-    private static final Set<String> FIELDS = Set.of("deny", "natural", "buildingThreshold", "maxUnprotectVolume");
+    private static final String DENY = "deny";
+    private static final String NATURAL = "natural";
+    private static final Set<String> FIELDS = Set.of(DENY, NATURAL, "buildingThreshold", "maxUnprotectVolume");
 
-    private ProtectionConfig() {
-    }
+    private ProtectionConfig() {}
 
     public static BlockProtection load() {
         return DataTables.INSTANCE.protection().current();
     }
 
-    /** Чтение из classpath для начальной версии держателя: не заглядывает в сам держатель. */
     public static BlockProtection readClasspath() {
         return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
     }
@@ -27,12 +27,12 @@ public final class ProtectionConfig {
     public static BlockProtection parse(String json, String origin) {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "protection.json");
-        List<String> deny = JsonResource.strings(root.get("deny"), origin, "deny");
-        List<String> natural = JsonResource.strings(root.get("natural"), origin, "natural");
+        List<String> deny = JsonResource.strings(root.get(DENY), origin, DENY);
+        List<String> natural = JsonResource.strings(root.get(NATURAL), origin, NATURAL);
         int threshold = JsonResource.integer(root.get("buildingThreshold"), origin, "buildingThreshold");
         int maxUnprotectVolume = JsonResource.integer(root.get("maxUnprotectVolume"), origin, "maxUnprotectVolume");
-        IdFilter denyFilter = filter(deny, origin, "deny");
-        IdFilter naturalFilter = filter(natural, origin, "natural");
+        IdFilter denyFilter = filter(deny, origin, DENY);
+        IdFilter naturalFilter = filter(natural, origin, NATURAL);
         BlockProtection protection;
         try {
             protection = new BlockProtection(denyFilter, naturalFilter, threshold, maxUnprotectVolume);
@@ -47,7 +47,8 @@ public final class ProtectionConfig {
         try {
             return IdFilter.of(patterns);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл '" + origin + "': в списке " + what + " неверный шаблон: " + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл '" + origin + "': в списке " + what + " неверный шаблон: " + error.getMessage(), error);
         }
     }
 
@@ -66,7 +67,8 @@ public final class ProtectionConfig {
     }
 
     private static IllegalStateException overlap(String origin, String pattern) {
-        return new IllegalStateException("Файл '" + origin + "': шаблон '" + pattern + "' попал и в deny, и в natural: блок не может быть "
-                + "одновременно защищённым и природным. Уберите шаблон из одного списка");
+        return new IllegalStateException(
+                "Файл '" + origin + "': шаблон '" + pattern + "' попал и в deny, и в natural: блок не может быть "
+                        + "одновременно защищённым и природным. Уберите шаблон из одного списка");
     }
 }

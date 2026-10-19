@@ -9,14 +9,15 @@ import java.util.Objects;
 
 /** Сводит повторы одного предмета в одну запись и сортирует по id: одинаковый набор даёт одинаковый список. */
 public final class ItemCounts {
-    private ItemCounts() {
-    }
+    private ItemCounts() {}
 
     public static List<ItemCount> aggregate(List<ItemCount> entries, String field) {
-        Objects.requireNonNull(entries, field + " не может быть null: пустой список передаётся как список без элементов");
+        Objects.requireNonNull(
+                entries, field + " не может быть null: пустой список передаётся как список без элементов");
         Map<String, Integer> merged = new LinkedHashMap<>();
         for (ItemCount entry : entries) {
-            Objects.requireNonNull(entry, field + " не может содержать null: список описывает только существующие предметы");
+            Objects.requireNonNull(
+                    entry, field + " не может содержать null: список описывает только существующие предметы");
             merged.merge(entry.item(), entry.count(), Integer::sum);
         }
         List<ItemCount> result = new ArrayList<>(merged.size());

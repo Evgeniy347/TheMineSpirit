@@ -16,11 +16,10 @@ import net.minecraft.network.chat.Component;
  * По этому списку человек проверяет, что датапак переопределил таблицу и что /reload прошёл без ошибок.
  */
 final class SpiritTablesCommand {
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss")
-            .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter TIME =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
-    private SpiritTablesCommand() {
-    }
+    private SpiritTablesCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("tables").executes(context -> list(context.getSource())));
@@ -43,8 +42,10 @@ final class SpiritTablesCommand {
         }
         int total = DataTables.INSTANCE.registry().holders().size();
         int failed = errors;
-        source.sendSuccess(() -> Component.literal("Всего таблиц: " + total + ", с ошибкой: " + failed
-                + (failed == 0 ? ". Данные применяются на лету." : ". Сломанные остались в прежней версии.")), false);
+        source.sendSuccess(
+                () -> Component.literal("Всего таблиц: " + total + ", с ошибкой: " + failed
+                        + (failed == 0 ? ". Данные применяются на лету." : ". Сломанные остались в прежней версии.")),
+                false);
         return total;
     }
 }

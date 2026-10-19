@@ -16,8 +16,7 @@ public final class PickupSpot {
 
     private static final Set<Cell> UNREACHABLE_NEIGHBORS = Set.of(Cell.LAVA, Cell.FIRE);
 
-    private PickupSpot() {
-    }
+    private PickupSpot() {}
 
     public static BlockCoord accessCell(BlockCoord itemCell, SafetyView view) {
         Objects.requireNonNull(itemCell, "Клетка предмета не может быть null: без неё неизвестно, где подбирать");

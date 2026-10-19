@@ -21,7 +21,9 @@ class HydrationProperties {
         }
         BlockCoord ground = new BlockCoord(random.nextInt(-3, 4), 0, random.nextInt(-3, 4));
 
-        assertEquals(HydrationTests.bruteForce(water, ground), Hydration.of(water).watered(ground),
+        assertEquals(
+                HydrationTests.bruteForce(water, ground),
+                Hydration.of(water).watered(ground),
                 "watered обязан совпадать с перебором ящика [x−4,x+4]×[y,y+1]×[z−4,z+4]: иначе till вспашет сухую "
                         + "землю или откажет на политой. Вода: " + water + ", земля: " + ground);
     }

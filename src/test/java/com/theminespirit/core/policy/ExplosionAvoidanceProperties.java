@@ -43,7 +43,7 @@ class ExplosionAvoidanceProperties {
     private static List<ThreatFact> randomThreats(Random random, int count) {
         List<ThreatFact> facts = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            ThreatType type = ThreatType.values()[random.nextInt(ThreatType.values().length)];
+            ThreatType type = List.of(ThreatType.values()).get(random.nextInt(ThreatType.values().length));
             BlockCoord pos = new BlockCoord(random.nextInt(21), 1, random.nextInt(21));
             facts.add(new ThreatFact(type, pos, random.nextInt(4) == 0));
         }
@@ -51,7 +51,8 @@ class ExplosionAvoidanceProperties {
     }
 
     @Property(tries = 200)
-    void evaluate_RandomThreats_ClearExactlyWhenEveryHoldDistanceIsKept(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void evaluate_RandomThreats_ClearExactlyWhenEveryHoldDistanceIsKept(
+            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BlockCoord self = new BlockCoord(4 + random.nextInt(13), 1, 4 + random.nextInt(13));
         List<ThreatFact> facts = randomThreats(random, random.nextInt(4));
@@ -59,8 +60,11 @@ class ExplosionAvoidanceProperties {
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(self, facts, ROOM);
 
         boolean allKept = worstSlack(self, facts) >= 0;
-        assertEquals(allKept, verdict instanceof PolicyVerdict.Clear,
-                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 9, +3 при набухании). Угрозы: " + facts);
+        assertEquals(
+                allKept,
+                verdict instanceof PolicyVerdict.Clear,
+                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 9, +3 при набухании). Угрозы: "
+                        + facts);
     }
 
     @Property(tries = 200)
@@ -72,13 +76,16 @@ class ExplosionAvoidanceProperties {
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(self, List.of(fact), ROOM);
 
         if (verdict instanceof PolicyVerdict.Reflex reflex && reflex.action() instanceof ReflexAction.Flee flee) {
-            assertTrue(distance(flee.cell(), fact.pos()) >= distance(self, fact.pos()),
-                    "После плана расстояние до угрозы не меньше исходного: иначе дух бежит к взрыву. Угроза: " + fact + ", цель: " + flee.cell());
+            assertTrue(
+                    distance(flee.cell(), fact.pos()) >= distance(self, fact.pos()),
+                    "После плана расстояние до угрозы не меньше исходного: иначе дух бежит к взрыву. Угроза: " + fact
+                            + ", цель: " + flee.cell());
         }
     }
 
     @Property(tries = 200)
-    void evaluate_SeveralThreats_FleeCellKeepsHoldsOrIsNotWorseThanStart(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void evaluate_SeveralThreats_FleeCellKeepsHoldsOrIsNotWorseThanStart(
+            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         BlockCoord self = new BlockCoord(4 + random.nextInt(13), 1, 4 + random.nextInt(13));
         List<ThreatFact> facts = randomThreats(random, 2 + random.nextInt(2));
@@ -86,8 +93,10 @@ class ExplosionAvoidanceProperties {
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(self, facts, ROOM);
 
         if (verdict instanceof PolicyVerdict.Reflex reflex && reflex.action() instanceof ReflexAction.Flee flee) {
-            assertTrue(worstSlack(flee.cell(), facts) >= Math.min(0, worstSlack(self, facts)),
-                    "С несколькими угрозами цель либо держит все расстояния, либо не хуже старта по самой близкой угрозе. Угрозы: " + facts + ", цель: " + flee.cell());
+            assertTrue(
+                    worstSlack(flee.cell(), facts) >= Math.min(0, worstSlack(self, facts)),
+                    "С несколькими угрозами цель либо держит все расстояния, либо не хуже старта по самой близкой угрозе. Угрозы: "
+                            + facts + ", цель: " + flee.cell());
         }
     }
 }

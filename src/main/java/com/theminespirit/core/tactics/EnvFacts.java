@@ -1,7 +1,14 @@
 package com.theminespirit.core.tactics;
 
-public record EnvFacts(double lavaNear, double dropHeight, int light, TimeOfDay timeOfDay, double homeDistance,
-        boolean homeReachable, double coverDistance, double waterDistance) {
+public record EnvFacts(
+        double lavaNear,
+        double dropHeight,
+        int light,
+        TimeOfDay timeOfDay,
+        double homeDistance,
+        boolean homeReachable,
+        double coverDistance,
+        double waterDistance) {
     public static final double FAR_DISTANCE = 1000.0;
     public static final int MAX_LIGHT = 15;
 

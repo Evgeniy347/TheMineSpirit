@@ -54,28 +54,43 @@ public final class DemoBuildings {
     }
 
     private static final List<Building> ALL = List.of(
-            new Building("house", "Дом", BuildingType.HOUSING, List.of(new Level(0, "house"))),
             new Building("family_house", "Дом семьи", BuildingType.HOUSING, List.of(new Level(0, "family_house"))),
-            new Building("stone_house", "Каменный дом", BuildingType.HOUSING,
-                    List.of(new Level(0, "stone_house"))),
-            new Building("storage_hut", "Склад-хижина", BuildingType.STORAGE,
-                    List.of(new Level(0, "storage_hut"))),
-            new Building("storage", "Склад", BuildingType.STORAGE, List.of(new Level(1, "storage_v1"),
-                    new Level(2, "storage_v2"), new Level(3, "storage_v3"), new Level(4, "storage_v4"))),
+            new Building("stone_house", "Каменный дом", BuildingType.HOUSING, List.of(new Level(0, "stone_house"))),
+            new Building("storage_hut", "Склад-хижина", BuildingType.STORAGE, List.of(new Level(0, "storage_hut"))),
+            new Building(
+                    "storage",
+                    "Склад",
+                    BuildingType.STORAGE,
+                    List.of(
+                            new Level(1, "storage_v1"),
+                            new Level(2, "storage_v2"),
+                            new Level(3, "storage_v3"),
+                            new Level(4, "storage_v4"))),
             new Building("well", "Колодец", BuildingType.INFRASTRUCTURE, List.of(new Level(0, "well"))),
-            new Building("torch_post", "Факельный столб", BuildingType.INFRASTRUCTURE,
-                    List.of(new Level(0, "torch_post"))),
-            new Building("palisade_section", "Палисад-секция", BuildingType.DEFENSE,
+            new Building(
+                    "torch_post", "Факельный столб", BuildingType.INFRASTRUCTURE, List.of(new Level(0, "torch_post"))),
+            new Building(
+                    "palisade_section",
+                    "Палисад-секция",
+                    BuildingType.DEFENSE,
                     List.of(new Level(0, "palisade_section"))),
-            new Building("pen", "Загон", BuildingType.FARM, List.of(new Level(1, "pen_4x5"),
-                    new Level(2, "pen_7x7"), new Level(3, "pen_9x9"))),
-            new Building("enchant_room", "Чаровальня", BuildingType.CRAFT, List.of(new Level(1, "enchant_room_v1"),
-                    new Level(2, "enchant_room_v2"))),
-            new Building("mine_entrance", "Вход в шахту", BuildingType.INFRASTRUCTURE,
+            new Building(
+                    "pen",
+                    "Загон",
+                    BuildingType.FARM,
+                    List.of(new Level(1, "pen_4x5"), new Level(2, "pen_7x7"), new Level(3, "pen_9x9"))),
+            new Building(
+                    "enchant_room",
+                    "Чаровальня",
+                    BuildingType.CRAFT,
+                    List.of(new Level(1, "enchant_room_v1"), new Level(2, "enchant_room_v2"))),
+            new Building(
+                    "mine_entrance",
+                    "Вход в шахту",
+                    BuildingType.INFRASTRUCTURE,
                     List.of(new Level(1, "mine_entrance_v1"))));
 
-    private DemoBuildings() {
-    }
+    private DemoBuildings() {}
 
     public static List<Building> all() {
         return ALL;
@@ -101,7 +116,7 @@ public final class DemoBuildings {
     }
 
     public static Building require(String id) {
-        return byId(id).orElseThrow(() -> new IllegalArgumentException("Неизвестная постройка '" + id
-                + "': допустимы " + ids()));
+        return byId(id).orElseThrow(
+                        () -> new IllegalArgumentException("Неизвестная постройка '" + id + "': допустимы " + ids()));
     }
 }

@@ -23,8 +23,7 @@ import net.minecraft.server.level.ServerLevel;
  * на доске выполненным — оно видно как условие, а не исчезает.
  */
 final class EvergreenWatch {
-    private EvergreenWatch() {
-    }
+    private EvergreenWatch() {}
 
     static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -35,10 +34,16 @@ final class EvergreenWatch {
             EatNeed eat = eatNeed(spirit);
             SpiritView view = viewOf(spirit);
             if (needsEat(spirit, eat, view)) {
-                service.submit(new BoardTicket(id, BoardCase.EAT_TO_FULL,
+                service.submit(new BoardTicket(
+                        id,
+                        BoardCase.EAT_TO_FULL,
                         Optional.of(spirit.getUUID()),
                         BoardPriorities.effective(BoardCase.EAT_TO_FULL, PriorityContext.none()),
-                        now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()));
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()));
                 continue;
             }
             cancelWaiting(service, id);
@@ -46,8 +51,7 @@ final class EvergreenWatch {
     }
 
     private static boolean needsEat(SpiritEntity spirit, EatNeed eat, SpiritView view) {
-        return spirit.hunger().hasFood() && !eat.full()
-                && Applicability.applicable(BoardCase.EAT_TO_FULL, eat, view);
+        return spirit.hunger().hasFood() && !eat.full() && Applicability.applicable(BoardCase.EAT_TO_FULL, eat, view);
     }
 
     private static void cancelWaiting(BoardService service, String id) {
@@ -58,13 +62,14 @@ final class EvergreenWatch {
     }
 
     private static EatNeed eatNeed(SpiritEntity spirit) {
-        return new EatNeed(spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()),
-                SpiritHunger.MAX_FOOD, (int) Math.ceil(spirit.getMaxHealth()));
+        return new EatNeed(
+                spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
+                        Math.ceil(spirit.getMaxHealth()));
     }
 
     private static SpiritView viewOf(SpiritEntity spirit) {
-        return new SpiritView(spirit.tactics().wantsControl(), false,
-                spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
+        return new SpiritView(
+                spirit.tactics().wantsControl(), false, spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
     }
 
     static String ticketId(SpiritEntity spirit) {

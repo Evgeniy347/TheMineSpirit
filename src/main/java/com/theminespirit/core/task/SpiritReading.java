@@ -2,15 +2,23 @@ package com.theminespirit.core.task;
 
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import org.jspecify.annotations.Nullable;
 
-public record SpiritReading(boolean present, boolean alive, RunStatus status, RunProgress progress,
-        String failureReason, RunProgress failedAt, long generation, Object result) {
+public record SpiritReading(
+        boolean present,
+        boolean alive,
+        @Nullable RunStatus status,
+        @Nullable RunProgress progress,
+        @Nullable String failureReason,
+        @Nullable RunProgress failedAt,
+        long generation,
+        @Nullable Object result) {
     public static final long UNKNOWN_GENERATION = 0;
 
-    private static final SpiritReading ABSENT = new SpiritReading(false, false, null, null, null, null,
-            UNKNOWN_GENERATION, null);
-    private static final SpiritReading DEAD = new SpiritReading(true, false, null, null, null, null,
-            UNKNOWN_GENERATION, null);
+    private static final SpiritReading ABSENT =
+            new SpiritReading(false, false, null, null, null, null, UNKNOWN_GENERATION, null);
+    private static final SpiritReading DEAD =
+            new SpiritReading(true, false, null, null, null, null, UNKNOWN_GENERATION, null);
 
     public static SpiritReading absent() {
         return ABSENT;
@@ -24,13 +32,13 @@ public record SpiritReading(boolean present, boolean alive, RunStatus status, Ru
         return living(status, progress, failureReason, null);
     }
 
-    public static SpiritReading living(RunStatus status, RunProgress progress, String failureReason, Object result) {
+    public static SpiritReading living(
+            RunStatus status, RunProgress progress, String failureReason, @Nullable Object result) {
         return new SpiritReading(true, true, status, progress, failureReason, null, UNKNOWN_GENERATION, result);
     }
 
     public static SpiritReading failed(String failureReason, RunProgress failedAt) {
-        return new SpiritReading(true, true, RunStatus.FAILED, null, failureReason, failedAt, UNKNOWN_GENERATION,
-                null);
+        return new SpiritReading(true, true, RunStatus.FAILED, null, failureReason, failedAt, UNKNOWN_GENERATION, null);
     }
 
     public SpiritReading withGeneration(long taskGeneration) {

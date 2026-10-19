@@ -13,10 +13,10 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
@@ -24,7 +24,6 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +33,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
@@ -51,11 +49,10 @@ public final class FirstStepsRunner {
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
 
-    private FirstStepsRunner() {
-    }
+    private FirstStepsRunner() {}
 
-    public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
-            StockView stock, long now) {
+    public static void tick(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
@@ -87,34 +84,51 @@ public final class FirstStepsRunner {
         }
         String id = "first:" + caseValue.name().toLowerCase(Locale.ROOT);
         LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
-        service.submit(new BoardTicket(id, caseValue, Optional.empty(), BoardRules.priorityOf(caseValue), now,
-                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), target);
+        service.submit(
+                new BoardTicket(
+                        id,
+                        caseValue,
+                        Optional.empty(),
+                        BoardRules.priorityOf(caseValue),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                target);
     }
 
-    /** Цель задания: точка поселения, а для инструментов — ещё и число комплектов из таблицы board. */
     private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, int spirits) {
         TicketTarget target = TicketTarget.at(home);
         return ToolSet.isTool(caseValue) ? target.withToolCount(ToolSet.count(spirits)) : target;
     }
 
-    /** Мелочь на доску: добыть недостающий материал в запас, тогда ждущий шаг откроется. */
-    private static void postGather(BoardService service, MaterialSource source, BlockCoord home, String item,
-            int shortage, long now) {
+    private static void postGather(
+            BoardService service, MaterialSource source, BlockCoord home, String item, int shortage, long now) {
         String id = GATHER_PREFIX + item;
         BoardStatus status = service.board().statusOf(id).orElse(null);
-        if (status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        if (status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED) {
             return;
         }
         int batch = GatherBatch.round(shortage, source.outputCount(item));
         LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", item, batch);
-        service.submit(new BoardTicket(id, BoardCase.GATHER_MATERIALS, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS), now, 1, BoardTicket.ALWAYS_CAUSE,
-                List.of(), Map.of()), TicketTarget.at(home).withSupply(item, batch));
+        service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.GATHER_MATERIALS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home).withSupply(item, batch));
     }
 
-    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue,
-            TicketTarget target) {
+    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
         try {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             return CaseMaterials.need(plan, source);
@@ -124,10 +138,6 @@ public final class FirstStepsRunner {
         }
     }
 
-    /**
-     * Материалы из игры: рецепты предметов и блоки схем. Схемы кэширует
-     * {@link SchematicResources}, рецепты — {@link RecipeKnowledge}.
-     */
     private static MaterialSource materialSource(ServerLevel level) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(level);
         return new MaterialSource() {
@@ -143,11 +153,7 @@ public final class FirstStepsRunner {
 
             @Override
             public Map<String, Integer> schematicBlocks(String file) {
-                Map<String, Integer> blocks = new HashMap<>();
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    blocks.merge(entry.block(), 1, Integer::sum);
-                }
-                return blocks;
+                return PresetLibrary.countMaterials(SchematicResources.load(file));
             }
         };
     }
@@ -155,18 +161,14 @@ public final class FirstStepsRunner {
     private static boolean hasActive(BoardService service, BoardCase boardCase) {
         return service.board().all().stream()
                 .filter(t -> t.boardCase() == boardCase)
-                .anyMatch(t -> service.board().statusOf(t.id())
-                        .map(s -> s == BoardStatus.PENDING || s == BoardStatus.WAITING_RESOURCES
+                .anyMatch(t -> service.board()
+                        .statusOf(t.id())
+                        .map(s -> s == BoardStatus.PENDING
+                                || s == BoardStatus.WAITING_RESOURCES
                                 || s == BoardStatus.ASSIGNED)
                         .orElse(false));
     }
 
-    /**
-     * Факты поселения из снимка мира: деревья (брёвна/листва — земля не зачищена), вход в шахту
-     * (лестница спуска — знак построенного входа), забор (то же множество ограждений, что видит
-     * {@code FenceWatch}, иначе runner и событие говорили бы о разных заборах). Сканирование
-     * бюджетировано радиусом и вызывается раз в пересборку, а не каждый тик.
-     */
     private static SettlementFacts buildFacts(ServerLevel level, BlockCoord home, StockView stock) {
         boolean hasHome = true;
         boolean groundsCleared = true;
@@ -222,11 +224,20 @@ public final class FirstStepsRunner {
             }
         }
         Set<String> tools = toolStock(stock);
-        return new SettlementFacts(hasHome, groundsCleared, chests, craftingStation, tools, mineEntrance, fence,
-                lighting, houses, smithingTable, anvil);
+        return new SettlementFacts(
+                hasHome,
+                groundsCleared,
+                chests,
+                craftingStation,
+                tools,
+                mineEntrance,
+                fence,
+                lighting,
+                houses,
+                smithingTable,
+                anvil);
     }
 
-    /** Собранные инструменты набора: короткие ключи снимка запасов (wooden_pickaxe и т. п.). */
     private static Set<String> toolStock(StockView stock) {
         Set<String> tools = new HashSet<>();
         for (BoardCase toolCase : ToolSet.chain()) {

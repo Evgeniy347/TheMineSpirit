@@ -1,6 +1,13 @@
 package com.theminespirit.core.tactics;
 
-public record Orders(CombatMode mode, Point zoneCenter, double zoneRadius, Point ward, boolean wardThreatened,
+import org.jspecify.annotations.Nullable;
+
+public record Orders(
+        CombatMode mode,
+        @Nullable Point zoneCenter,
+        double zoneRadius,
+        @Nullable Point ward,
+        boolean wardThreatened,
         boolean helpAvailable) {
     public static final double MAX_ZONE_RADIUS = 256;
 

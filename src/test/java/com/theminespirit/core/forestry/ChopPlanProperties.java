@@ -19,16 +19,22 @@ class ChopPlanProperties {
 
         ChopPlan plan = ChopPlan.of(tree, from);
 
-        assertEquals(tree.logs().size(), plan.order().size(),
+        assertEquals(
+                tree.logs().size(),
+                plan.order().size(),
                 "План обязан нести каждое бревно дерева ровно один раз: потерянное бревно остаётся висеть "
                         + "в воздухе, а дубликат — рубится дважды");
-        assertEquals(Set.copyOf(tree.logs()), Set.copyOf(plan.order()),
+        assertEquals(
+                Set.copyOf(tree.logs()),
+                Set.copyOf(plan.order()),
                 "Множество целей плана обязано совпасть с брёвнами дерева: план не добавляет и не теряет клеток");
         for (int i = 1; i < plan.order().size(); i++) {
-            assertTrue(distanceSquared(plan.order().get(i - 1), from)
+            assertTrue(
+                    distanceSquared(plan.order().get(i - 1), from)
                             >= distanceSquared(plan.order().get(i), from),
-                    "Порядок обязан быть по убыванию расстояния от стоянки: бревно " + plan.order().get(i)
-                            + " ближе предыдущего " + plan.order().get(i - 1) + " при стоянке " + from);
+                    "Порядок обязан быть по убыванию расстояния от стоянки: бревно "
+                            + plan.order().get(i) + " ближе предыдущего "
+                            + plan.order().get(i - 1) + " при стоянке " + from);
         }
     }
 
@@ -46,8 +52,7 @@ class ChopPlanProperties {
         logs.add(base);
         int extra = random.nextInt(20);
         for (int i = 0; i < extra; i++) {
-            BlockCoord coord = new BlockCoord(random.nextInt(5) - 2, 62 + random.nextInt(12),
-                    random.nextInt(5) - 2);
+            BlockCoord coord = new BlockCoord(random.nextInt(5) - 2, 62 + random.nextInt(12), random.nextInt(5) - 2);
             if (!logs.contains(coord)) {
                 logs.add(coord);
             }

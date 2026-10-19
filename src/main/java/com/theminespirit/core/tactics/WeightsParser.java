@@ -2,23 +2,24 @@ package com.theminespirit.core.tactics;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 final class WeightsParser {
-    private static final String[] FIELDS = {"scales", "weights", "tieBreak", "stickiness", "holdTicks",
-            "hpDropRelease"};
+    private static final String[] FIELDS = {"scales", "weights", "tieBreak", "stickiness", "holdTicks", "hpDropRelease"
+    };
 
-    private WeightsParser() {
-    }
+    private WeightsParser() {}
 
     static ScoreWeights parse(ConfigNode root) {
         root.fields(FIELDS);
         FactorScales scales = FactorScalesParser.parse(root.get("scales"));
         Map<Factor, Map<TacticalOption, Double>> matrix = matrix(root.get("weights"));
-        return root.build(() -> new ScoreWeights(matrix, tieBreak(root.get("tieBreak")),
+        return root.build(() -> new ScoreWeights(
+                matrix,
+                tieBreak(root.get("tieBreak")),
                 root.get("stickiness").number(),
                 root.get("holdTicks").integer(),
                 root.get("hpDropRelease").number(),
@@ -31,12 +32,14 @@ final class WeightsParser {
         for (Map.Entry<String, ConfigNode> row : rows.entrySet()) {
             Factor factor = row.getValue().enumValueOf(Factor.class, row.getKey(), "фактор");
             if (matrix.put(factor, rowOf(row.getValue())) != null) {
-                throw row.getValue().fail("фактор " + factor + " описан дважды", "ключи регистронезависимы: уберите дубль");
+                throw row.getValue()
+                        .fail("фактор " + factor + " описан дважды", "ключи регистронезависимы: уберите дубль");
             }
         }
         for (Factor factor : Factor.values()) {
             if (!matrix.containsKey(factor)) {
-                throw weights.fail("нет строки весов для фактора " + factor,
+                throw weights.fail(
+                        "нет строки весов для фактора " + factor,
                         "матрица весов полная: у каждого фактора есть вес для FIGHT, RETREAT и IGNORE");
             }
         }
@@ -48,13 +51,14 @@ final class WeightsParser {
         for (Map.Entry<String, ConfigNode> cell : row.entries().entrySet()) {
             TacticalOption option = cell.getValue().enumValueOf(TacticalOption.class, cell.getKey(), "вариант решения");
             if (weights.put(option, cell.getValue().number()) != null) {
-                throw cell.getValue().fail("вариант " + option + " описан дважды", "ключи регистронезависимы: уберите дубль");
+                throw cell.getValue()
+                        .fail("вариант " + option + " описан дважды", "ключи регистронезависимы: уберите дубль");
             }
         }
         for (TacticalOption option : TacticalOption.values()) {
             if (!weights.containsKey(option)) {
-                throw row.fail("нет веса для варианта " + option,
-                        "каждая строка содержит веса для FIGHT, RETREAT и IGNORE");
+                throw row.fail(
+                        "нет веса для варианта " + option, "каждая строка содержит веса для FIGHT, RETREAT и IGNORE");
             }
         }
         return weights;
@@ -62,7 +66,7 @@ final class WeightsParser {
 
     private static List<TacticalOption> tieBreak(ConfigNode node) {
         List<TacticalOption> order = new ArrayList<>();
-        Set<TacticalOption> seen = new HashSet<>();
+        Set<TacticalOption> seen = EnumSet.noneOf(TacticalOption.class);
         for (ConfigNode item : node.nonEmptyItems()) {
             TacticalOption option = item.enumValue(TacticalOption.class);
             if (!seen.add(option)) {
@@ -71,7 +75,8 @@ final class WeightsParser {
             order.add(option);
         }
         if (order.size() != TacticalOption.values().length) {
-            throw node.fail("в порядке ничьей " + order.size() + " вариантов из " + TacticalOption.values().length,
+            throw node.fail(
+                    "в порядке ничьей " + order.size() + " вариантов из " + TacticalOption.values().length,
                     "перечислите FIGHT, RETREAT и IGNORE: иначе ничья не разрешится для пропущенного");
         }
         return order;

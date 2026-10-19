@@ -7,8 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 
 public final class BlockSets {
-    private BlockSets() {
-    }
+    private BlockSets() {}
 
     public static Set<Block> resolve(IdFilter filter) {
         Set<Block> blocks = new HashSet<>();

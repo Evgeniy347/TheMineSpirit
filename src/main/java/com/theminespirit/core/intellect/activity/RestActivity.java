@@ -22,9 +22,12 @@ public final class RestActivity implements Activity {
             throw new IllegalArgumentException("Спрос отдыха без обстановки не считается: зависит от нужд и ночи");
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();
-        double rest = view.foodDeficit(tuning.foodDays(), tuning.foodRation(),
-                tuning.foodChildRation()).deficit() > 0
-                || view.needsOre(tuning.oreTarget(), tuning.ironTarget(), tuning.weaponTarget()) ? 1.0 : 4.5;
+        double rest = view.foodDeficit(tuning.foodDays(), tuning.foodRation(), tuning.foodChildRation())
+                                        .deficit()
+                                > 0
+                        || view.needsOre(tuning.oreTarget(), tuning.ironTarget(), tuning.weaponTarget())
+                ? 1.0
+                : 4.5;
         if (SleepRule.isNight(view.dayFraction())) {
             rest = Math.max(rest, 6.0);
         }

@@ -3,6 +3,7 @@ package com.theminespirit.core.night;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class NightLeash {
     public static final String OUTSIDE_SETTLEMENT_REASON = "ночь: за границу поселения не выходим";
@@ -10,8 +11,8 @@ public final class NightLeash {
     private final DoorTuning.DoorRules rules;
 
     public NightLeash(DoorTuning.DoorRules rules) {
-        this.rules = Objects.requireNonNull(rules,
-                "Ночной поводок без правил не работает: порог вечера и радиус поселения живут в doors.json");
+        this.rules = Objects.requireNonNull(
+                rules, "Ночной поводок без правил не работает: порог вечера и радиус поселения живут в doors.json");
     }
 
     public static NightLeash withDefaultRules() {
@@ -24,8 +25,7 @@ public final class NightLeash {
 
     public boolean isEvening(double dayFraction) {
         if (Double.isNaN(dayFraction) || dayFraction < 0.0 || dayFraction > 1.0) {
-            throw new IllegalArgumentException(
-                    "Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
+            throw new IllegalArgumentException("Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
         }
         return dayFraction >= rules.eveningDayFraction();
     }
@@ -40,14 +40,13 @@ public final class NightLeash {
         return horizontalDistance(position, home) <= radius;
     }
 
-    public boolean armedNext(boolean evening, boolean armed, boolean insideSettlement) {
-        return evening && (armed || insideSettlement);
+    public boolean armedNext(ArmedState state) {
+        return state.evening() && (state.armed() || state.insideSettlement());
     }
 
-    public Decision checkTarget(BlockCoord target, BlockCoord home, int radius, boolean evening,
-            boolean insideSinceEvening, boolean followingPlayer) {
+    public Decision checkTarget(BlockCoord target, @Nullable BlockCoord home, int radius, TargetState state) {
         Objects.requireNonNull(target, "Цель не может быть null: проверяется, лежит ли она в поселении");
-        if (!evening || !insideSinceEvening || followingPlayer || home == null) {
+        if (!state.evening() || !state.insideSinceEvening() || state.followingPlayer() || home == null) {
             return new Allowed();
         }
         if (insideSettlement(target, home, radius)) {
@@ -56,11 +55,9 @@ public final class NightLeash {
         return new Refused(OUTSIDE_SETTLEMENT_REASON);
     }
 
-    public sealed interface Decision {
-    }
+    public sealed interface Decision {}
 
-    public record Allowed() implements Decision {
-    }
+    public record Allowed() implements Decision {}
 
     public record Refused(String reason) implements Decision {
         public Refused {
@@ -73,4 +70,8 @@ public final class NightLeash {
         double dz = first.z() - second.z();
         return Math.sqrt(dx * dx + dz * dz);
     }
+
+    public record ArmedState(boolean evening, boolean armed, boolean insideSettlement) {}
+
+    public record TargetState(boolean evening, boolean insideSinceEvening, boolean followingPlayer) {}
 }

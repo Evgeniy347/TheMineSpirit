@@ -110,7 +110,13 @@ public final class UnprotectAreasData extends SavedData {
         BlockBox box = new BlockBox(
                 new BlockCoord(tag.getInt(MIN_X), tag.getInt(MIN_Y), tag.getInt(MIN_Z)),
                 new BlockCoord(tag.getInt(MAX_X), tag.getInt(MAX_Y), tag.getInt(MAX_Z)));
-        return new UnprotectArea(tag.getString(ID), tag.getString(DIMENSION), box, tag.getString(GRANTED_BY),
-                tag.getLong(GRANTED_AT), tag.getString(REASON), tag.getLong(EXPIRES_AT));
+        return new UnprotectArea(
+                tag.getString(ID),
+                tag.getString(DIMENSION),
+                box,
+                tag.getString(GRANTED_BY),
+                tag.getLong(GRANTED_AT),
+                tag.getString(REASON),
+                tag.getLong(EXPIRES_AT));
     }
 }

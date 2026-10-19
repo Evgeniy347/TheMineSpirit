@@ -37,7 +37,8 @@ public final class BlockerProbe {
         int steps = Math.min((int) Math.ceil(distance), BLOCK_BUDGET - blockReads);
         for (int i = 1; i <= steps; i++) {
             double part = i / (double) (steps + 1);
-            BlockPos pos = new BlockPos((int) Math.floor(self.x() + (threat.x() - self.x()) * part),
+            BlockPos pos = new BlockPos(
+                    (int) Math.floor(self.x() + (threat.x() - self.x()) * part),
                     (int) Math.floor(self.y() + (threat.y() - self.y()) * part),
                     (int) Math.floor(self.z() + (threat.z() - self.z()) * part));
             if (!level.isLoaded(pos)) {

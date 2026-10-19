@@ -10,9 +10,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public record SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
-        int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-        List<SpiritSnapshot> spirits, long tick, ProcessingStock processing,
+public record SettlementView(
+        int population,
+        int children,
+        double foodPerSoul,
+        double foodNutritionPerSoul,
+        int ore,
+        int iron,
+        int weapons,
+        int threats,
+        double dayFraction,
+        FarmWork farmWork,
+        Forage forage,
+        List<SpiritSnapshot> spirits,
+        long tick,
+        ProcessingStock processing,
         Map<UUID, InventoryFill> inventoryFills) {
     public SettlementView {
         if (population < 0) {
@@ -23,16 +35,15 @@ public record SettlementView(int population, int children, double foodPerSoul, d
             throw new IllegalArgumentException("Детей = " + children + ": число детей не может быть отрицательным");
         }
         if (children > population) {
-            throw new IllegalArgumentException("Детей = " + children + " при населении " + population
-                    + ": детей не может быть больше, чем духов");
+            throw new IllegalArgumentException(
+                    "Детей = " + children + " при населении " + population + ": детей не может быть больше, чем духов");
         }
         if (Double.isNaN(foodPerSoul) || Double.isInfinite(foodPerSoul) || foodPerSoul < 0) {
             throw new IllegalArgumentException("Еды на душу = " + foodPerSoul + ": запас обязан быть конечным и >= 0");
         }
-        if (Double.isNaN(foodNutritionPerSoul) || Double.isInfinite(foodNutritionPerSoul)
-                || foodNutritionPerSoul < 0) {
-            throw new IllegalArgumentException("Сытности на душу = " + foodNutritionPerSoul
-                    + ": запас обязан быть конечным и >= 0");
+        if (Double.isNaN(foodNutritionPerSoul) || Double.isInfinite(foodNutritionPerSoul) || foodNutritionPerSoul < 0) {
+            throw new IllegalArgumentException(
+                    "Сытности на душу = " + foodNutritionPerSoul + ": запас обязан быть конечным и >= 0");
         }
         if (ore < 0) {
             throw new IllegalArgumentException("Руды = " + ore + ": запас не может быть отрицательным");
@@ -56,7 +67,8 @@ public record SettlementView(int population, int children, double foodPerSoul, d
             throw new IllegalArgumentException("Добыча еды не может быть null: её отсутствие задают Forage.NONE");
         }
         if (spirits == null) {
-            throw new IllegalArgumentException("Список духов не может быть null: пустое поселение задают пустым списком");
+            throw new IllegalArgumentException(
+                    "Список духов не может быть null: пустое поселение задают пустым списком");
         }
         for (int index = 1; index < spirits.size(); index++) {
             UUID prev = spirits.get(index - 1).id();
@@ -74,8 +86,8 @@ public record SettlementView(int population, int children, double foodPerSoul, d
                     "Запас переработки не может быть null: его отсутствие задают ProcessingStock.NONE");
         }
         if (inventoryFills == null) {
-            throw new IllegalArgumentException("Заполнения инвентарей не могут быть null: "
-                    + "пустое задают пустой картой");
+            throw new IllegalArgumentException(
+                    "Заполнения инвентарей не могут быть null: " + "пустое задают пустой картой");
         }
         for (Map.Entry<UUID, InventoryFill> entry : inventoryFills.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null) {
@@ -87,25 +99,102 @@ public record SettlementView(int population, int children, double foodPerSoul, d
         spirits = List.copyOf(spirits);
     }
 
-    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
-            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-            List<SpiritSnapshot> spirits, long tick) {
-        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
-                farmWork, forage, spirits, tick, ProcessingStock.NONE, Map.of());
+    public SettlementView(
+            int population,
+            int children,
+            double foodPerSoul,
+            double foodNutritionPerSoul,
+            int ore,
+            int iron,
+            int weapons,
+            int threats,
+            double dayFraction,
+            FarmWork farmWork,
+            Forage forage,
+            List<SpiritSnapshot> spirits,
+            long tick) {
+        this(
+                population,
+                children,
+                foodPerSoul,
+                foodNutritionPerSoul,
+                ore,
+                iron,
+                weapons,
+                threats,
+                dayFraction,
+                farmWork,
+                forage,
+                spirits,
+                tick,
+                ProcessingStock.NONE,
+                Map.of());
     }
 
-    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
-            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-            List<SpiritSnapshot> spirits, long tick, ProcessingStock processing) {
-        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
-                farmWork, forage, spirits, tick, processing, Map.of());
+    public SettlementView(
+            int population,
+            int children,
+            double foodPerSoul,
+            double foodNutritionPerSoul,
+            int ore,
+            int iron,
+            int weapons,
+            int threats,
+            double dayFraction,
+            FarmWork farmWork,
+            Forage forage,
+            List<SpiritSnapshot> spirits,
+            long tick,
+            ProcessingStock processing) {
+        this(
+                population,
+                children,
+                foodPerSoul,
+                foodNutritionPerSoul,
+                ore,
+                iron,
+                weapons,
+                threats,
+                dayFraction,
+                farmWork,
+                forage,
+                spirits,
+                tick,
+                processing,
+                Map.of());
     }
 
-    public SettlementView(int population, int children, double foodPerSoul, double foodNutritionPerSoul, int ore,
-            int iron, int weapons, int threats, double dayFraction, FarmWork farmWork, Forage forage,
-            List<SpiritSnapshot> spirits, long tick, Map<UUID, InventoryFill> inventoryFills) {
-        this(population, children, foodPerSoul, foodNutritionPerSoul, ore, iron, weapons, threats, dayFraction,
-                farmWork, forage, spirits, tick, ProcessingStock.NONE, inventoryFills);
+    public SettlementView(
+            int population,
+            int children,
+            double foodPerSoul,
+            double foodNutritionPerSoul,
+            int ore,
+            int iron,
+            int weapons,
+            int threats,
+            double dayFraction,
+            FarmWork farmWork,
+            Forage forage,
+            List<SpiritSnapshot> spirits,
+            long tick,
+            Map<UUID, InventoryFill> inventoryFills) {
+        this(
+                population,
+                children,
+                foodPerSoul,
+                foodNutritionPerSoul,
+                ore,
+                iron,
+                weapons,
+                threats,
+                dayFraction,
+                farmWork,
+                forage,
+                spirits,
+                tick,
+                ProcessingStock.NONE,
+                inventoryFills);
     }
 
     public Optional<InventoryFill> inventoryFill(UUID spirit) {
@@ -128,8 +217,7 @@ public record SettlementView(int population, int children, double foodPerSoul, d
     }
 
     public FoodDeficit foodDeficit(double days, double adultRation, double childRation) {
-        return FoodNorm.deficit(adults(), children, days, adultRation, childRation,
-                foodNutritionPerSoul * population);
+        return FoodNorm.deficit(adults(), children, days, adultRation, childRation, foodNutritionPerSoul * population);
     }
 
     public boolean needsOre(int oreTarget, int ironTarget, int weaponTarget) {

@@ -20,7 +20,9 @@ class ClimbRouteTests {
     void span_TwoColumnsAtFeet_PicksColumnContainingFeet() {
         ClimbRoute.Span span = ClimbRoute.span(List.of(1, 2, 3, 8, 9), 8).orElseThrow();
 
-        assertEquals(8, span.bottomY(),
+        assertEquals(
+                8,
+                span.bottomY(),
                 "дух у второй колонны обязан лезть по ней, а не по дальней: иначе он пойдёт в чужую сторону");
         assertEquals(9, span.topY(), "верх второй колонны — её ступень");
     }
@@ -42,7 +44,8 @@ class ClimbRouteTests {
 
     @Test
     void span_EmptyList_IsEmpty() {
-        assertTrue(ClimbRoute.span(List.of(), 1).isEmpty(),
+        assertTrue(
+                ClimbRoute.span(List.of(), 1).isEmpty(),
                 "пустая колонна — это отсутствие лестницы: скрипт обязан получить пусто и отказать с причиной");
     }
 
@@ -56,7 +59,9 @@ class ClimbRouteTests {
 
     @Test
     void span_BottomAboveTop_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> new ClimbRoute.Span(6, 1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ClimbRoute.Span(6, 1),
                 "низ выше верха — неверная колонна: такой span должен отвергаться, а не молча идти вверх ногами");
     }
 }

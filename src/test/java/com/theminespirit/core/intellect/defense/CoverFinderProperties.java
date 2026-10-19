@@ -19,8 +19,10 @@ import net.jqwik.api.Provide;
 class CoverFinderProperties {
     @Provide
     Arbitrary<Point> points() {
-        return Combinators.combine(Arbitraries.integers().between(-12, 12),
-                Arbitraries.integers().between(-12, 12)).as((x, z) -> new Point(x, 64, z));
+        return Combinators.combine(
+                        Arbitraries.integers().between(-12, 12),
+                        Arbitraries.integers().between(-12, 12))
+                .as((x, z) -> new Point(x, 64, z));
     }
 
     @Provide
@@ -34,35 +36,47 @@ class CoverFinderProperties {
     }
 
     @Property
-    void between_AnyInput_SelectedFromInput(@ForAll("points") Point self, @ForAll("points") Point threat,
-            @ForAll("blockerLists") List<Point> blockers, @ForAll("corridors") double corridor) {
+    void between_AnyInput_SelectedFromInput(
+            @ForAll("points") Point self,
+            @ForAll("points") Point threat,
+            @ForAll("blockerLists") List<Point> blockers,
+            @ForAll("corridors") double corridor) {
         Optional<Point> cover = CoverFinder.between(self, threat, blockers, corridor);
 
-        assertTrue(cover.isEmpty() || blockers.contains(cover.orElseThrow()),
+        assertTrue(
+                cover.isEmpty() || blockers.contains(cover.orElseThrow()),
                 "Выбранное укрытие — из входа: иначе боец пойдёт к точке, которой нет в мире");
     }
 
     @Property
-    void between_AnyInput_ProjectionBetweenEnds(@ForAll("points") Point self, @ForAll("points") Point threat,
-            @ForAll("blockerLists") List<Point> blockers, @ForAll("corridors") double corridor) {
+    void between_AnyInput_ProjectionBetweenEnds(
+            @ForAll("points") Point self,
+            @ForAll("points") Point threat,
+            @ForAll("blockerLists") List<Point> blockers,
+            @ForAll("corridors") double corridor) {
         Optional<Point> cover = CoverFinder.between(self, threat, blockers, corridor);
 
         if (cover.isPresent()) {
             Point chosen = cover.orElseThrow();
             double toSelf = dot(chosen, self, threat, true);
             double toThreat = dot(chosen, self, threat, false);
-            assertTrue(toSelf >= 0 && toThreat <= 0,
+            assertTrue(
+                    toSelf >= 0 && toThreat <= 0,
                     "Укрытие лежит между духом и угрозой: иначе линия обстрела проходит мимо кандидата");
         }
     }
 
     @Property
-    void between_ShuffledInput_SameResult(@ForAll("points") Point self, @ForAll("points") Point threat,
-            @ForAll("blockerLists") List<Point> blockers, @ForAll("corridors") double corridor) {
+    void between_ShuffledInput_SameResult(
+            @ForAll("points") Point self,
+            @ForAll("points") Point threat,
+            @ForAll("blockerLists") List<Point> blockers,
+            @ForAll("corridors") double corridor) {
         List<Point> shuffled = new ArrayList<>(blockers);
         Collections.shuffle(shuffled, new Random(17));
 
-        assertEquals(CoverFinder.between(self, threat, blockers, corridor),
+        assertEquals(
+                CoverFinder.between(self, threat, blockers, corridor),
                 CoverFinder.between(self, threat, shuffled, corridor),
                 "Укрытие не зависит от порядка входа: иначе боец мечется между кандидатами");
     }

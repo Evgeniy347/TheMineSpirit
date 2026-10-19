@@ -3,9 +3,9 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
@@ -25,8 +25,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritGameTests {
-    private SpiritGameTests() {
-    }
+    private SpiritGameTests() {}
 
     @GameTest(batch = "spirit_adapterRegistry", template = "arena", timeoutTicks = 100)
     public static void adapterRegistry_EveryScriptId_IsDescribedInCatalog(GameTestHelper helper) {
@@ -35,12 +34,14 @@ public final class SpiritGameTests {
         ScriptRegistry registry = SpiritScripts.registryFor(spirit);
         ScriptCatalog catalog = CoreScripts.defaultCatalog();
         for (String id : registry.ids()) {
-            helper.assertTrue(catalog.find(id).isPresent(),
+            helper.assertTrue(
+                    catalog.find(id).isPresent(),
                     "Скрипт '" + id + "' адаптера отсутствует в каталоге скриптов: реестр выдаёт id, которого нет в "
                             + "CoreScripts.defaultCatalog()");
         }
         ScriptCatalog restricted = SpiritScripts.catalogFor(spirit);
-        helper.assertTrue(!restricted.all().isEmpty(),
+        helper.assertTrue(
+                !restricted.all().isEmpty(),
                 "catalogFor должен возвращать непустой каталог для реализованных скриптов: иначе LlmPlanner получит пустой каталог");
         helper.succeed();
     }
@@ -50,7 +51,8 @@ public final class SpiritGameTests {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
 
-        helper.assertTrue(spirit.isAlive(),
+        helper.assertTrue(
+                spirit.isAlive(),
                 "Дух обязан появляться живым в мире: сломанная сущность не сможет выполнять скрипты goto/follow");
         helper.succeed();
     }
@@ -61,21 +63,27 @@ public final class SpiritGameTests {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos absolute = helper.absolutePos(new BlockPos(1, 1, 1));
-        WorldScanner.Scan scan = WorldScanner.observe(helper.getLevel(), "spirit_1",
-                new BlockCoord(
-                        absolute.getX(), absolute.getY(), absolute.getZ()),
-                ScanRadius.of(2), spirit.getInventory());
+        WorldScanner.Scan scan = WorldScanner.observe(
+                helper.getLevel(),
+                "spirit_1",
+                new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()),
+                ScanRadius.of(2),
+                spirit.getInventory());
         WorldObservation observation = scan.observation();
 
-        helper.assertTrue(scan.scannedPositions() > 0,
+        helper.assertTrue(
+                scan.scannedPositions() > 0,
                 "Скан обязан считать просмотренные позиции: по пустому числу GameTest не проверит счётчик "
                         + "и не заметит, что обход грузит чанки");
-        helper.assertTrue(!observation.blocks().isEmpty(),
+        helper.assertTrue(
+                !observation.blocks().isEmpty(),
                 "Скан вокруг духа обязан видеть блоки пола: при пустом наблюдении ИИ не может планировать добычу");
-        helper.assertTrue(observation.hash().length() == 64,
+        helper.assertTrue(
+                observation.hash().length() == 64,
                 "hash наблюдения обязан быть SHA-256 длиной 64: по нему bridge сравнивает картины мира");
-        helper.assertTrue(observation.entities().stream()
-                        .anyMatch(entity -> entity.type().equals(ModIdentity.MOD_ID + ":spirit")),
+        helper.assertTrue(
+                observation.entities().stream()
+                        .anyMatch(entity -> (ModIdentity.MOD_ID + ":spirit").equals(entity.type())),
                 "Скан обязан видеть самого духа в списке сущностей: без этого наблюдение не видит bot-а себя");
         helper.succeed();
     }
@@ -95,7 +103,8 @@ public final class SpiritGameTests {
                 break;
             }
         }
-        helper.assertTrue(firstUnloaded != Integer.MIN_VALUE,
+        helper.assertTrue(
+                firstUnloaded != Integer.MIN_VALUE,
                 "В пределах 256 чанков к востоку обязана найтись незагруженная область: иначе мир загружен "
                         + "целиком и тест не может проверить пропуск незагруженных чанков");
         // Центр ставится так, чтобы крайний восточный чанк радиуса совпал с найденным незагруженным: тогда
@@ -103,19 +112,25 @@ public final class SpiritGameTests {
         int centerX = firstUnloaded * 16 - 24;
         BlockPos center = new BlockPos(centerX, base.getY(), base.getZ());
         int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
-        WorldScanner.Scan scan = WorldScanner.observe(helper.getLevel(), "spirit_1",
+        WorldScanner.Scan scan = WorldScanner.observe(
+                helper.getLevel(),
+                "spirit_1",
                 new BlockCoord(center.getX(), center.getY(), center.getZ()),
-                ScanRadius.of(32), spirit.getInventory());
+                ScanRadius.of(32),
+                spirit.getInventory());
         int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
 
-        helper.assertTrue(scan.skippedChunks() > 0,
+        helper.assertTrue(
+                scan.skippedChunks() > 0,
                 "Скан радиусом 32 обязан встретить незагруженные чанки у края загруженной области, иначе тест "
                         + "доказывает неработу загрузки на пустом множестве: пропущено " + scan.skippedChunks());
-        helper.assertTrue(after == before,
+        helper.assertTrue(
+                after == before,
                 "Скан у края загруженной области обязан не грузить чанки: было " + before
                         + " загруженных чанков, стало " + after + ". Обращение к getBlockState незагруженного "
                         + "чанка синхронно грузит его и фризит серверный тик");
-        helper.assertTrue(scan.scannedPositions() > 0,
+        helper.assertTrue(
+                scan.scannedPositions() > 0,
                 "Скан обязан просмотреть позиции уже загруженных чанков, а не ничего: просмотрено "
                         + scan.scannedPositions());
         helper.succeed();
@@ -132,10 +147,15 @@ public final class SpiritGameTests {
 
         helper.succeedWhen(() -> {
             double distance = spirit.position().distanceTo(targetCenter);
-            helper.assertTrue(distance <= 1.5,
+            helper.assertTrue(
+                    distance <= 1.5,
                     "goto обязан довести духа до цели: расстояние " + distance + " больше допуска 1.5. "
-                            + "Статус задачи: " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskStatus().map(status -> status != RunStatus.FAILED).orElse(true),
+                            + "Статус задачи: "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(
+                    spirit.taskStatus()
+                            .map(status -> status != RunStatus.FAILED)
+                            .orElse(true),
                     "goto обязан не падать, пока цель достижима: провал скрипта остановил бы движение духа");
         });
     }
@@ -147,19 +167,25 @@ public final class SpiritGameTests {
         buildFloor(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos target = helper.absolutePos(new BlockPos(1, 1, 1));
-        spirit.startTask(new ScriptCall("goto",
-                Map.of("x", target.getX(), "y", target.getY() + 20, "z", target.getZ())));
+        spirit.startTask(
+                new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY() + 20, "z", target.getZ())));
 
         helper.succeedWhen(() -> {
             RunStatus status = spirit.taskStatus().orElse(null);
-            helper.assertTrue(status == RunStatus.FAILED,
+            helper.assertTrue(
+                    status == RunStatus.FAILED,
                     "goto к недостижимой точке обязан довести задачу до FAILED, а не потерять её: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskFailureReason().filter(reason -> !reason.isBlank()).isPresent(),
+            helper.assertTrue(
+                    spirit.taskFailureReason()
+                            .filter(reason -> !reason.isBlank())
+                            .isPresent(),
                     "после провала причина обязана дойти до задачи, а не теряться. Фактическое: "
                             + spirit.taskFailureReason().orElse("нет причины"));
-            helper.assertTrue(spirit.taskFailureReason().filter(reason -> reason.contains("не дошёл")
-                            || reason.contains("застрял")).isPresent(),
+            helper.assertTrue(
+                    spirit.taskFailureReason()
+                            .filter(reason -> reason.contains("не дошёл") || reason.contains("застрял"))
+                            .isPresent(),
                     "причина падения goto обязана описывать неудачу перемещения, а не общий текст движка. "
                             + "Фактическое: " + spirit.taskFailureReason().orElse("нет причины"));
         });

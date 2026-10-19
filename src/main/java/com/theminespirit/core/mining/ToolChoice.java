@@ -9,11 +9,10 @@ public final class ToolChoice {
     public static final double HAND_SPEED = 1.0;
     public static final int UNWEARING = 0;
 
-    private ToolChoice() {
-    }
+    private ToolChoice() {}
 
-    public record ToolOption(int slot, double speed, boolean correctForDrops, int remainingUses, int maxUses,
-            boolean enchanted) {
+    public record ToolOption(
+            int slot, double speed, boolean correctForDrops, int remainingUses, int maxUses, boolean enchanted) {
         public static ToolOption of(int slot, double speed, boolean correctForDrops) {
             return new ToolOption(slot, speed, correctForDrops, UNWEARING, UNWEARING, false);
         }
@@ -23,8 +22,7 @@ public final class ToolChoice {
         }
     }
 
-    public record Choice(int slot, double speed, boolean dropsAllowed) {
-    }
+    public record Choice(int slot, double speed, boolean dropsAllowed) {}
 
     public static Choice best(List<ToolOption> options) {
         return best(options, ToolReserve.defaults());
@@ -37,7 +35,8 @@ public final class ToolChoice {
     }
 
     public static Choice best(List<ToolOption> options, ToolReserve reserve) {
-        Objects.requireNonNull(options, "options не может быть null: пустой набор инструментов задаётся пустым списком");
+        Objects.requireNonNull(
+                options, "options не может быть null: пустой набор инструментов задаётся пустым списком");
         Objects.requireNonNull(reserve, "reserve не может быть null: по нему решается, износился ли инструмент");
         ToolOption best = null;
         boolean anyCorrect = false;
@@ -49,7 +48,8 @@ public final class ToolChoice {
             if (option.spent(reserve)) {
                 continue;
             }
-            if (best == null || option.speed() > best.speed()
+            if (best == null
+                    || option.speed() > best.speed()
                     || (option.speed() == best.speed() && option.slot() < best.slot())) {
                 best = option;
             }

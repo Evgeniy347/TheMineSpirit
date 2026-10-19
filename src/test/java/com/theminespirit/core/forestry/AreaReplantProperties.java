@@ -22,12 +22,13 @@ class AreaReplantProperties {
         for (BlockCoord cell : cells) {
             int dx = cell.x() - center.x();
             int dz = cell.z() - center.z();
-            assertTrue(dx % data.areaStep() == 0 && dz % data.areaStep() == 0,
+            assertTrue(
+                    dx % data.areaStep() == 0 && dz % data.areaStep() == 0,
                     "Клетка " + cell + " смещена от центра " + center + " не на шаг сетки " + data.areaStep());
-            assertTrue(Math.abs(dx) <= data.areaRadius() && Math.abs(dz) <= data.areaRadius(),
+            assertTrue(
+                    Math.abs(dx) <= data.areaRadius() && Math.abs(dz) <= data.areaRadius(),
                     "Клетка " + cell + " вышла за радиус досадки " + data.areaRadius());
-            assertTrue(!cell.equals(center),
-                    "Клетка ствола " + center + " не может попасть в досадку");
+            assertTrue(!cell.equals(center), "Клетка ствола " + center + " не может попасть в досадку");
         }
     }
 
@@ -47,9 +48,10 @@ class AreaReplantProperties {
 
         List<BlockCoord> cells = AreaReplant.plan(center, List.of(center), data, view);
 
-        assertTrue(cells.size() == expected,
-                "На ровной почве без построек в план входят все клетки сетки кроме клетки ствола: ожидалось "
-                        + expected + ", получено " + cells.size());
+        assertTrue(
+                cells.size() == expected,
+                "На ровной почве без построек в план входят все клетки сетки кроме клетки ствола: ожидалось " + expected
+                        + ", получено " + cells.size());
     }
 
     private static TreeView flatSoilView(int soilY) {
@@ -83,7 +85,10 @@ class AreaReplantProperties {
 
     @Provide
     Arbitrary<BlockCoord> center() {
-        return Combinators.combine(Arbitraries.integers().between(-30, 30), Arbitraries.integers().between(0, 100),
-                Arbitraries.integers().between(-30, 30)).as(BlockCoord::new);
+        return Combinators.combine(
+                        Arbitraries.integers().between(-30, 30),
+                        Arbitraries.integers().between(0, 100),
+                        Arbitraries.integers().between(-30, 30))
+                .as(BlockCoord::new);
     }
 }

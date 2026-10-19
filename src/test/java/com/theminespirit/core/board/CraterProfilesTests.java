@@ -34,9 +34,11 @@ class CraterProfilesTests {
 
         Set<String> live = profiles.retainLive(holes::contains);
 
-        assertEquals(Set.of("crater:1:64:1"), live,
-                "Живая причина — только воронка с оставшейся пустой клеткой: " + live);
-        assertEquals(Set.of("crater:1:64:1"), profiles.causes(),
+        assertEquals(
+                Set.of("crater:1:64:1"), live, "Живая причина — только воронка с оставшейся пустой клеткой: " + live);
+        assertEquals(
+                Set.of("crater:1:64:1"),
+                profiles.causes(),
                 "Засыпанная воронка уходит из кольца, живая остаётся: " + profiles.causes());
     }
 
@@ -47,7 +49,9 @@ class CraterProfilesTests {
         profiles.remember("crater:1:64:1", List.of(at(2, 64, 2)));
 
         assertEquals(1, profiles.size(), "Повторный взрыв той же точки не плодит вторую причину");
-        assertEquals(List.of(at(2, 64, 2)), profiles.profile("crater:1:64:1"),
+        assertEquals(
+                List.of(at(2, 64, 2)),
+                profiles.profile("crater:1:64:1"),
                 "Профиль той же воронки заменяется последним снимком");
     }
 
@@ -58,7 +62,9 @@ class CraterProfilesTests {
         profiles.remember("crater:2:64:2", List.of(at(2, 64, 2)));
         profiles.remember("crater:3:64:3", List.of(at(3, 64, 3)));
 
-        assertEquals(Set.of("crater:2:64:2", "crater:3:64:3"), profiles.causes(),
+        assertEquals(
+                Set.of("crater:2:64:2", "crater:3:64:3"),
+                profiles.causes(),
                 "Кольцо ограничено: старейшая воронка вытесняется, память не растёт от числа взрывов");
     }
 
@@ -67,7 +73,8 @@ class CraterProfilesTests {
         CraterProfiles profiles = new CraterProfiles(4, 3);
         profiles.remember("crater:5:64:5", List.of(at(5, 65, 5), at(5, 64, 5), at(5, 63, 5), at(5, 62, 5)));
 
-        assertEquals(List.of(at(5, 62, 5), at(5, 63, 5), at(5, 64, 5)),
+        assertEquals(
+                List.of(at(5, 62, 5), at(5, 63, 5), at(5, 64, 5)),
                 profiles.profile("crater:5:64:5"),
                 "Профиль обрезается пределом и идёт по координатам: проверка воронки стоит не больше "
                         + CraterProfiles.MAX_CELLS + " чтений блоков");

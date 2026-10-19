@@ -23,7 +23,8 @@ public final class LocalSurroundings implements SafetyView {
         this.nearestWater = nearestWater;
     }
 
-    public static LocalSurroundings read(BlockCoord feet, SafetyView view, BodyFlags flags, Optional<BlockCoord> nearestWater) {
+    public static LocalSurroundings read(
+            BlockCoord feet, SafetyView view, BodyFlags flags, Optional<BlockCoord> nearestWater) {
         Objects.requireNonNull(feet, "Клетка ног не может быть null: вокруг неё читается снимок 3×3×3");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему читаются 27 клеток снимка");
         Objects.requireNonNull(flags, "Флаги тела не могут быть null: по ним рефлексы яруса 0 решают, гореть ли духу");
@@ -43,7 +44,8 @@ public final class LocalSurroundings implements SafetyView {
 
     public Cell cellAt(int dx, int dy, int dz) {
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(dz) > 1) {
-            throw new IllegalArgumentException("Смещение (" + dx + ", " + dy + ", " + dz + ") вне снимка 3×3×3: допустимы значения от -1 до 1");
+            throw new IllegalArgumentException(
+                    "Смещение (" + dx + ", " + dy + ", " + dz + ") вне снимка 3×3×3: допустимы значения от -1 до 1");
         }
         return cells[index(dx, dy, dz)];
     }

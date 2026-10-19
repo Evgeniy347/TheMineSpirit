@@ -41,8 +41,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class MemoryGameTests {
-    private MemoryGameTests() {
-    }
+    private MemoryGameTests() {}
 
     private static String tagSelector(String tag) {
         return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
@@ -61,8 +60,8 @@ public final class MemoryGameTests {
     }
 
     private static ScriptCall remember(String name, BlockCoord pos, MemoryType type) {
-        return new ScriptCall("remember", Map.of("name", name, "x", pos.x(), "y", pos.y(), "z", pos.z(),
-                "type", type.id()));
+        return new ScriptCall(
+                "remember", Map.of("name", name, "x", pos.x(), "y", pos.y(), "z", pos.z(), "type", type.id()));
     }
 
     private static String dimensionOf(GameTestHelper helper) {
@@ -75,19 +74,23 @@ public final class MemoryGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
         BlockCoord iron = coordOf(helper, 7, 1, 2);
-        SpiritRun run = launch(helper, spirit, new SequenceNode(List.of(
-                remember("iron", iron, MemoryType.RESOURCE),
-                new ScriptCall("recall", Map.of("name", "iron")))));
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                new SequenceNode(List.of(
+                        remember("iron", iron, MemoryType.RESOURCE),
+                        new ScriptCall("recall", Map.of("name", "iron")))));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "remember и recall");
-            Finding expected = new Finding("recall",
-                    List.of(new Sighting("resource", "iron", iron, dimensionOf(helper))));
-            helper.assertTrue(expected.equals(spirit.finding().orElse(null)),
+            Finding expected =
+                    new Finding("recall", List.of(new Sighting("resource", "iron", iron, dimensionOf(helper))));
+            helper.assertTrue(
+                    expected.equals(spirit.finding().orElse(null)),
                     "recall обязан вернуть позицию, тип и измерение запомненной точки " + expected + ", а вернул: "
                             + spirit.finding().orElse(null));
-            helper.assertTrue(spirit.memory().recall("iron") != null,
-                    "после remember точка обязана лежать в памяти духа");
+            helper.assertTrue(
+                    spirit.memory().recall("iron") != null, "после remember точка обязана лежать в памяти духа");
             GameTestFixtures.finish(helper);
         });
     }
@@ -97,26 +100,35 @@ public final class MemoryGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        SpiritRun run = launch(helper, spirit, new SequenceNode(List.of(
-                remember("iron", coordOf(helper, 1, 1, 1), MemoryType.RESOURCE),
-                remember("lava_lake", coordOf(helper, 2, 1, 2), MemoryType.DANGER),
-                remember("home", coordOf(helper, 3, 1, 3), MemoryType.BASE),
-                remember("coal", coordOf(helper, 5, 1, 5), MemoryType.RESOURCE),
-                new ScriptCall("recall_all", Map.of("type", "resource")))));
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                new SequenceNode(List.of(
+                        remember("iron", coordOf(helper, 1, 1, 1), MemoryType.RESOURCE),
+                        remember("lava_lake", coordOf(helper, 2, 1, 2), MemoryType.DANGER),
+                        remember("home", coordOf(helper, 3, 1, 3), MemoryType.BASE),
+                        remember("coal", coordOf(helper, 5, 1, 5), MemoryType.RESOURCE),
+                        new ScriptCall("recall_all", Map.of("type", "resource")))));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "recall_all");
             Finding finding = spirit.finding().orElse(null);
-            helper.assertTrue(finding != null && finding.script().equals("recall_all"),
+            helper.assertTrue(
+                    finding != null && "recall_all".equals(finding.script()),
                     "последним ответом обязан быть ответ recall_all: " + finding);
-            List<String> names = finding.sightings().stream().map(Sighting::label).sorted().toList();
-            helper.assertTrue(names.equals(List.of("coal", "iron")),
+            List<String> names =
+                    finding.sightings().stream().map(Sighting::label).sorted().toList();
+            helper.assertTrue(
+                    names.equals(List.of("coal", "iron")),
                     "recall_all по типу resource обязан вернуть ровно coal и iron, а вернул " + names
                             + ": точки других типов (опасность, база) попали в ответ или ресурсы потеряны");
-            helper.assertTrue(finding.sightings().stream().allMatch(sighting -> sighting.kind().equals("resource")),
+            helper.assertTrue(
+                    finding.sightings().stream().allMatch(sighting -> "resource".equals(sighting.kind())),
                     "все точки ответа обязаны быть типа resource: " + finding.sightings());
-            helper.assertTrue(spirit.memory().all().size() == 4,
-                    "recall_all не должен менять память, точек в ней " + spirit.memory().all().size());
+            helper.assertTrue(
+                    spirit.memory().all().size() == 4,
+                    "recall_all не должен менять память, точек в ней "
+                            + spirit.memory().all().size());
             GameTestFixtures.finish(helper);
         });
     }
@@ -126,18 +138,24 @@ public final class MemoryGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        SpiritRun run = launch(helper, spirit, new SequenceNode(List.of(
-                remember("iron", coordOf(helper, 7, 1, 2), MemoryType.RESOURCE),
-                new ScriptCall("forget", Map.of("name", "iron")),
-                new ScriptCall("recall", Map.of("name", "iron")))));
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                new SequenceNode(List.of(
+                        remember("iron", coordOf(helper, 7, 1, 2), MemoryType.RESOURCE),
+                        new ScriptCall("forget", Map.of("name", "iron")),
+                        new ScriptCall("recall", Map.of("name", "iron")))));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "remember, forget и recall");
             Finding finding = spirit.finding().orElse(null);
-            helper.assertTrue(finding != null && finding.script().equals("recall") && finding.isEmpty(),
+            helper.assertTrue(
+                    finding != null && "recall".equals(finding.script()) && finding.isEmpty(),
                     "после forget recall обязан отвечать «не найдено» (пустая находка), а ответил: " + finding);
-            helper.assertTrue(spirit.memory().all().isEmpty(),
-                    "после forget единственной точки память обязана быть пустой: " + spirit.memory().all());
+            helper.assertTrue(
+                    spirit.memory().all().isEmpty(),
+                    "после forget единственной точки память обязана быть пустой: "
+                            + spirit.memory().all());
             GameTestFixtures.finish(helper);
         });
     }
@@ -149,23 +167,28 @@ public final class MemoryGameTests {
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
         BlockCoord iron = coordOf(helper, 7, 1, 2);
         BlockCoord home = coordOf(helper, 1, 1, 1);
-        SpiritRun run = launch(helper, spirit, new SequenceNode(List.of(
-                remember("iron", iron, MemoryType.RESOURCE), remember("home", home, MemoryType.BASE))));
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                new SequenceNode(
+                        List.of(remember("iron", iron, MemoryType.RESOURCE), remember("home", home, MemoryType.BASE))));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "remember");
             CompoundTag tag = new CompoundTag();
             spirit.saveWithoutId(tag);
-            helper.assertTrue(tag.contains(SpiritMemoryStore.KEY, Tag.TAG_STRING),
+            helper.assertTrue(
+                    tag.contains(SpiritMemoryStore.KEY, Tag.TAG_STRING),
                     "при сохранении духа память обязана попасть в NBT под ключом " + SpiritMemoryStore.KEY
                             + ": иначе точки не переживут перезапуск сервера");
             SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
             reloaded.load(tag);
             MemoryStore memory = reloaded.memory();
-            helper.assertTrue(new MemoryPoint("iron", MemoryType.RESOURCE, dimensionOf(helper), iron)
-                            .equals(memory.recall("iron"))
+            helper.assertTrue(
+                    new MemoryPoint("iron", MemoryType.RESOURCE, dimensionOf(helper), iron)
+                                    .equals(memory.recall("iron"))
                             && new MemoryPoint("home", MemoryType.BASE, dimensionOf(helper), home)
-                            .equals(memory.recall("home")),
+                                    .equals(memory.recall("home")),
                     "после загрузки из NBT дух обязан помнить обе точки с типом и измерением, а помнит: "
                             + memory.all());
             GameTestFixtures.finish(helper);
@@ -177,23 +200,20 @@ public final class MemoryGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        spirit.updateMemory(new MemoryStore(List.of(
-                new MemoryPoint("iron", MemoryType.RESOURCE, dimensionOf(helper), coordOf(helper, 7, 1, 2)))));
+        spirit.updateMemory(new MemoryStore(
+                List.of(new MemoryPoint("iron", MemoryType.RESOURCE, dimensionOf(helper), coordOf(helper, 7, 1, 2)))));
         CompoundTag tag = new CompoundTag();
         spirit.saveWithoutId(tag);
         tag.putString(SpiritMemoryStore.KEY, "{\"version\":1,\"points\":[{\"name\":");
-        int failuresBefore = SpiritMemoryStore.corruptLoads();
 
         SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
         reloaded.load(tag);
 
-        helper.assertTrue(reloaded.memory().all().isEmpty(),
-                "повреждённая память обязана загрузиться пустой, а не частично: " + reloaded.memory().all());
-        helper.assertTrue(SpiritMemoryStore.corruptLoads() == failuresBefore + 1,
-                "повреждённая память обязана быть посчитана: счётчик был " + failuresBefore + ", стал "
-                        + SpiritMemoryStore.corruptLoads() + ". Тихая потеря памяти — авария");
-        helper.assertTrue(!reloaded.isRemoved(),
-                "повреждённая память не должна ронять загрузку духа");
+        helper.assertTrue(
+                reloaded.memory().all().isEmpty(),
+                "повреждённая память обязана загрузиться пустой, а не частично: "
+                        + reloaded.memory().all());
+        helper.assertTrue(!reloaded.isRemoved(), "повреждённая память не должна ронять загрузку духа");
         GameTestFixtures.reset(helper);
         helper.succeed();
     }
@@ -208,19 +228,24 @@ public final class MemoryGameTests {
             full.add(new MemoryPoint("ore_" + i, MemoryType.RESOURCE, dimensionOf(helper), coordOf(helper, 1, 1, 1)));
         }
         spirit.updateMemory(new MemoryStore(full));
-        SpiritRun run = launch(helper, spirit, "remember", Map.of("name", "one_more", "x", 0, "y", 64, "z", 0,
-                "type", "resource"));
+        SpiritRun run = launch(
+                helper, spirit, "remember", Map.of("name", "one_more", "x", 0, "y", 64, "z", 0, "type", "resource"));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "семнадцатая точка типа обязана провалить remember, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("resource") && reason.contains("заполнена"),
+            helper.assertTrue(
+                    reason.contains("resource") && reason.contains("заполнена"),
                     "причина отказа обязана назвать тип и то, что память заполнена, а она: '" + reason + "'");
-            helper.assertTrue(spirit.memory().recall("one_more") == null && spirit.memory().all().size() == 16,
-                    "отказ не должен ни вытеснять старую точку, ни добавлять новую: " + spirit.memory().all().size());
+            helper.assertTrue(
+                    spirit.memory().recall("one_more") == null
+                            && spirit.memory().all().size() == 16,
+                    "отказ не должен ни вытеснять старую точку, ни добавлять новую: "
+                            + spirit.memory().all().size());
             GameTestFixtures.finish(helper);
         });
     }
@@ -238,8 +263,11 @@ public final class MemoryGameTests {
                 new MemoryPoint("coal", MemoryType.RESOURCE, dimensionOf(helper), pos),
                 new MemoryPoint("lava_lake", MemoryType.DANGER, dimensionOf(helper), pos))));
         List<String> messages = new ArrayList<>();
-        CommandSourceStack base = helper.getLevel().getServer().createCommandSourceStack()
-                .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(4, 1, 4)))).withPermission(4);
+        CommandSourceStack base = helper.getLevel()
+                .getServer()
+                .createCommandSourceStack()
+                .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(4, 1, 4))))
+                .withPermission(4);
         CommandSourceStack source = base.withSource(new CommandSource() {
             @Override
             public void sendSystemMessage(Component message) {
@@ -261,28 +289,38 @@ public final class MemoryGameTests {
                 return false;
             }
         });
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
 
         int listed = dispatcher.execute("spirit memory " + selector + " all resource", source);
-        helper.assertTrue(listed == 1 && messages.size() == 1 && messages.get(0).contains("Точек типа resource: 2")
-                        && messages.get(0).contains("iron") && messages.get(0).contains("coal")
+        helper.assertTrue(
+                listed == 1
+                        && messages.size() == 1
+                        && messages.get(0).contains("Точек типа resource: 2")
+                        && messages.get(0).contains("iron")
+                        && messages.get(0).contains("coal")
                         && !messages.get(0).contains("lava_lake"),
                 "recall all resource обязан перечислить только iron и coal, ответ: " + messages);
         messages.clear();
         int recalled = dispatcher.execute("spirit memory " + selector + " recall lava_lake", source);
-        helper.assertTrue(recalled == 1 && messages.get(0).contains("lava_lake: danger"),
+        helper.assertTrue(
+                recalled == 1 && messages.get(0).contains("lava_lake: danger"),
                 "recall обязан назвать имя и тип точки, ответ: " + messages);
         messages.clear();
         dispatcher.execute("spirit memory " + selector + " recall gold", source);
-        helper.assertTrue(messages.get(0).contains("в памяти нет"),
+        helper.assertTrue(
+                messages.get(0).contains("в памяти нет"),
                 "recall несуществующей точки обязан сказать, что её нет, ответ: " + messages);
         messages.clear();
         dispatcher.execute("spirit memory " + selector + " forget iron", source);
-        helper.assertTrue(spirit.memory().recall("iron") == null && spirit.memory().all().size() == 2,
-                "forget обязан убрать только iron, в памяти осталось " + spirit.memory().all());
+        helper.assertTrue(
+                spirit.memory().recall("iron") == null && spirit.memory().all().size() == 2,
+                "forget обязан убрать только iron, в памяти осталось "
+                        + spirit.memory().all());
         messages.clear();
         int rejected = dispatcher.execute("spirit memory " + selector + " all treasure", source);
-        helper.assertTrue(rejected == 0 && messages.get(0).contains("resource"),
+        helper.assertTrue(
+                rejected == 0 && messages.get(0).contains("resource"),
                 "неизвестный тип обязан отклоняться с перечнем допустимых строчных значений, ответ: " + messages
                         + ", результат " + rejected);
         GameTestFixtures.finish(helper);

@@ -22,10 +22,14 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, COBBLE);
 
-        assertInstanceOf(ContainerChoice.Chosen.class, choice,
+        assertInstanceOf(
+                ContainerChoice.Chosen.class,
+                choice,
                 "сундук с неполной стопкой булыжника обязан быть выбран, даже если он дальше пустого: "
                         + "иначе дух рассыпал бы стак по чужим сундукам");
-        assertEquals(1, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                1,
+                ((ContainerChoice.Chosen) choice).index(),
                 "выбран обязан быть дальний сундук (индекс 1) с неполной стопкой булыжника, а не ближний пустой");
     }
 
@@ -37,7 +41,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, COBBLE);
 
-        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                0,
+                ((ContainerChoice.Chosen) choice).index(),
                 "из двух неполных стопок того же предмета выбирается ближайший сундук: иначе дух ходил бы дальше");
     }
 
@@ -49,7 +55,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, COBBLE);
 
-        assertEquals(1, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                1,
+                ((ContainerChoice.Chosen) choice).index(),
                 "сундук с полными стопками булыжника и свободным слотом обязан предпочитаться пустому ближнему: "
                         + "предметы одного типа лежат вместе");
     }
@@ -62,7 +70,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, COBBLE);
 
-        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                0,
+                ((ContainerChoice.Chosen) choice).index(),
                 "если предмета нигде нет, выбирается ближайший контейнер со свободным слотом");
     }
 
@@ -74,9 +84,12 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, COBBLE);
 
-        ContainerChoice.Refused refused = assertInstanceOf(ContainerChoice.Refused.class, choice,
+        ContainerChoice.Refused refused = assertInstanceOf(
+                ContainerChoice.Refused.class,
+                choice,
                 "когда нигде нет места, выбор обязан быть понятным отказом, а не молчаливым первым контейнером");
-        assertTrue(refused.reason().contains("2") && refused.reason().contains("minecraft:cobblestone"),
+        assertTrue(
+                refused.reason().contains("2") && refused.reason().contains("minecraft:cobblestone"),
                 "отказ обязан называть число контейнеров (2) и предмет, для которого нет места, фактически: "
                         + refused.reason());
     }
@@ -85,7 +98,9 @@ class ContainerPickerTests {
     void choose_EmptyList_Refuses() {
         ContainerChoice choice = ContainerPicker.choose(List.of(), ORIGIN, COBBLE);
 
-        assertInstanceOf(ContainerChoice.Refused.class, choice,
+        assertInstanceOf(
+                ContainerChoice.Refused.class,
+                choice,
                 "без контейнеров в радиусе выбор обязан быть отказом с причиной");
     }
 
@@ -97,7 +112,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, PICKAXE);
 
-        assertEquals(1, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                1,
+                ((ContainerChoice.Chosen) choice).index(),
                 "нестакующийся инструмент кладут в сундук, где уже лежит такой же, а не в ближайший пустой: "
                         + "иначе одинаковые кирки разъедутся по разным сундукам");
     }
@@ -110,7 +127,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, PICKAXE);
 
-        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                0,
+                ((ContainerChoice.Chosen) choice).index(),
                 "если такого инструмента нигде нет, берётся ближайший контейнер со свободным слотом");
     }
 
@@ -123,7 +142,9 @@ class ContainerPickerTests {
 
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, damaged);
 
-        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                0,
+                ((ContainerChoice.Chosen) choice).index(),
                 "повреждённая кирка — другой вариант: её нельзя класть к целой, берётся ближайший свободный сундук");
     }
 
@@ -133,10 +154,11 @@ class ContainerPickerTests {
         ContainerSnapshot farOre = snapshotWithCategory(0, 64, 8, "руда");
         List<ContainerSnapshot> containers = List.of(nearFood, farOre);
 
-        ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN,
-                new Stack("minecraft:raw_iron", 0, 1, 64));
+        ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, new Stack("minecraft:raw_iron", 0, 1, 64));
 
-        assertEquals(1, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                1,
+                ((ContainerChoice.Chosen) choice).index(),
                 "Сундук с табличкой «руда» обязан получить руду, даже если сундук «еда» ближе: "
                         + "иначе раскладка по категориям не работает");
     }
@@ -146,10 +168,12 @@ class ContainerPickerTests {
         ContainerSnapshot nearOre = snapshotWithCategory(0, 64, 2, "руда");
         ContainerSnapshot farOre = snapshotWithCategory(0, 64, 8, "руда");
 
-        ContainerChoice choice = ContainerPicker.choose(List.of(nearOre, farOre), ORIGIN,
-                new Stack("minecraft:raw_iron", 0, 1, 64));
+        ContainerChoice choice =
+                ContainerPicker.choose(List.of(nearOre, farOre), ORIGIN, new Stack("minecraft:raw_iron", 0, 1, 64));
 
-        assertEquals(0, ((ContainerChoice.Chosen) choice).index(),
+        assertEquals(
+                0,
+                ((ContainerChoice.Chosen) choice).index(),
                 "Из двух сундуков одной категории выбирается ближайший: иначе дух ходил бы лишний путь");
     }
 
@@ -164,10 +188,12 @@ class ContainerPickerTests {
         }
         ContainerSnapshot nearlyFull = new ContainerSnapshot(ORIGIN, slots);
 
-        ContainerChoice choice = ContainerPicker.choose(List.of(nearlyFull), ORIGIN, COBBLE,
-                WarehouseSpace.MIN_FREE_PERCENT);
+        ContainerChoice choice =
+                ContainerPicker.choose(List.of(nearlyFull), ORIGIN, COBBLE, WarehouseSpace.MIN_FREE_PERCENT);
 
-        assertInstanceOf(ContainerChoice.Refused.class, choice,
+        assertInstanceOf(
+                ContainerChoice.Refused.class,
+                choice,
                 "Сундук, где после новой стопки свободного места останется меньше 20%, считается полным: "
                         + "склад не обязан забиваться под завязку, иначе его нечем расширять");
     }
@@ -183,10 +209,12 @@ class ContainerPickerTests {
         }
         ContainerSnapshot withReserve = new ContainerSnapshot(ORIGIN, slots);
 
-        ContainerChoice choice = ContainerPicker.choose(List.of(withReserve), ORIGIN, COBBLE,
-                WarehouseSpace.MIN_FREE_PERCENT);
+        ContainerChoice choice =
+                ContainerPicker.choose(List.of(withReserve), ORIGIN, COBBLE, WarehouseSpace.MIN_FREE_PERCENT);
 
-        assertInstanceOf(ContainerChoice.Chosen.class, choice,
+        assertInstanceOf(
+                ContainerChoice.Chosen.class,
+                choice,
                 "Сундук, где после новой стопки останется 22% свободного места, обязан принять сдачу: "
                         + "иначе дух отказывался бы от работы при живом складе");
     }

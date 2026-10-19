@@ -1,0 +1,13 @@
+# house — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+size: 3x2x3   # Ш×В×Д
+legend:
+  'C': cobblestone
+layers:
+  - y0: |
+      CCC
+      CCC
+      CCC
+  - y1: |
+      CCC
+      C.C
+      CCC

@@ -12,10 +12,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class PlanValidator {
-    private PlanValidator() {
-    }
+    private PlanValidator() {}
 
     public static TaskNode validate(TaskNode root, ScriptCatalog scripts, ConditionCatalog conditions) {
         Objects.requireNonNull(root, "План не может быть null: валидировать нечего");
@@ -29,14 +29,15 @@ public final class PlanValidator {
             case ScriptCall call -> validateScript(call, scripts);
             case SequenceNode sequence -> new SequenceNode(validateSteps(sequence.steps(), scripts, conditions));
             case FallbackNode fallback -> new FallbackNode(validateSteps(fallback.steps(), scripts, conditions));
-            case ParallelNode parallel -> new ParallelNode(parallel.mode(),
-                    validateSteps(parallel.steps(), scripts, conditions));
+            case ParallelNode parallel ->
+                new ParallelNode(parallel.mode(), validateSteps(parallel.steps(), scripts, conditions));
             case RepeatNode repeat -> validateRepeat(repeat, scripts, conditions);
             case ConditionNode condition -> validateCondition(condition, scripts, conditions);
         };
     }
 
-    private static List<TaskNode> validateSteps(List<TaskNode> steps, ScriptCatalog scripts, ConditionCatalog conditions) {
+    private static List<TaskNode> validateSteps(
+            List<TaskNode> steps, ScriptCatalog scripts, ConditionCatalog conditions) {
         List<TaskNode> validated = new ArrayList<>(steps.size());
         for (TaskNode step : steps) {
             validated.add(validateNode(step, scripts, conditions));
@@ -56,22 +57,29 @@ public final class PlanValidator {
     }
 
     private static TaskNode validateScript(ScriptCall call, ScriptCatalog scripts) {
-        ScriptSpec spec = scripts.find(call.script()).orElseThrow(() -> new PlanValidationException(
-                "Неизвестный скрипт '" + call.script() + "': выберите скрипт из каталога /v1/capabilities"));
-        return new ScriptCall(call.script(), validateParams("скрипта '" + call.script() + "'", call.params(), spec.params()));
+        ScriptSpec spec = scripts.find(call.script())
+                .orElseThrow(() -> new PlanValidationException(
+                        "Неизвестный скрипт '" + call.script() + "': выберите скрипт из каталога /v1/capabilities"));
+        return new ScriptCall(
+                call.script(), validateParams("скрипта '" + call.script() + "'", call.params(), spec.params()));
     }
 
-    private static TaskNode validateCondition(ConditionNode condition, ScriptCatalog scripts, ConditionCatalog conditions) {
-        ConditionSpec spec = conditions.find(condition.check()).orElseThrow(() -> new PlanValidationException(
-                "Неизвестная проверка '" + condition.check() + "': проверка не зарегистрирована в каталоге условий"));
-        Map<String, Object> params = validateParams("проверки '" + condition.check() + "'", condition.params(),
-                spec.params());
+    private static TaskNode validateCondition(
+            ConditionNode condition, ScriptCatalog scripts, ConditionCatalog conditions) {
+        ConditionSpec spec = conditions
+                .find(condition.check())
+                .orElseThrow(() -> new PlanValidationException("Неизвестная проверка '" + condition.check()
+                        + "': проверка не зарегистрирована в каталоге условий"));
+        Map<String, Object> params =
+                validateParams("проверки '" + condition.check() + "'", condition.params(), spec.params());
         TaskNode thenStep = validateNode(condition.thenStep(), scripts, conditions);
-        TaskNode elseStep = condition.elseStep() == null ? null : validateNode(condition.elseStep(), scripts, conditions);
+        TaskNode elseStep =
+                condition.elseStep() == null ? null : validateNode(condition.elseStep(), scripts, conditions);
         return new ConditionNode(condition.check(), params, thenStep, elseStep);
     }
 
-    private static Map<String, Object> validateParams(String owner, Map<String, Object> provided, List<ParamSpec> schema) {
+    private static Map<String, Object> validateParams(
+            String owner, Map<String, Object> provided, List<ParamSpec> schema) {
         Map<String, ParamSpec> byName = new LinkedHashMap<>();
         for (ParamSpec param : schema) {
             byName.put(param.name(), param);
@@ -87,8 +95,8 @@ public final class PlanValidator {
         }
         for (ParamSpec param : schema) {
             if (param.required() && !result.containsKey(param.name())) {
-                throw new PlanValidationException("У " + owner + " не задан обязательный параметр '"
-                        + param.name() + "' (" + param.type() + ")");
+                throw new PlanValidationException(
+                        "У " + owner + " не задан обязательный параметр '" + param.name() + "' (" + param.type() + ")");
             }
         }
         for (ParamSpec param : schema) {
@@ -101,8 +109,8 @@ public final class PlanValidator {
 
     private static Object normalize(String owner, ParamSpec param, Object value) {
         if (value == null) {
-            throw new PlanValidationException("Параметр '" + param.name() + "' у " + owner
-                    + " равен null: null-значение недопустимо в плане");
+            throw new PlanValidationException(
+                    "Параметр '" + param.name() + "' у " + owner + " равен null: null-значение недопустимо в плане");
         }
         return switch (param.type()) {
             case INT -> normalizeInt(owner, param, value);
@@ -121,8 +129,9 @@ public final class PlanValidator {
         }
         if (value instanceof Long longValue) {
             if (longValue < Integer.MIN_VALUE || longValue > Integer.MAX_VALUE) {
-                throw new PlanValidationException("Параметр '" + param.name() + "' у " + owner + " равен " + longValue
-                        + " и не помещается в int: тип INT допускает только 32-битные целые, сверьте план с /v1/capabilities");
+                throw new PlanValidationException(
+                        "Параметр '" + param.name() + "' у " + owner + " равен " + longValue
+                                + " и не помещается в int: тип INT допускает только 32-битные целые, сверьте план с /v1/capabilities");
             }
             int integer = longValue.intValue();
             checkRange(owner, param, (double) integer, integer);
@@ -215,7 +224,7 @@ public final class PlanValidator {
                 + ", а получено " + describe(actual) + ": сверьте тип со схемой параметров в /v1/capabilities");
     }
 
-    private static String describe(Object value) {
+    private static String describe(@Nullable Object value) {
         if (value == null) {
             return "null";
         }

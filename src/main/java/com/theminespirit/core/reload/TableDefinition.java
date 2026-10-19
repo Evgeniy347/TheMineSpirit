@@ -13,6 +13,7 @@ import java.util.Optional;
  * составной таблицы парсер получает содержимое всех файлов, а сама таблица в реестре — одна строка.
  */
 public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T> parser, Expander expander) {
+    @FunctionalInterface
     public interface Parser<T> {
         T parse(List<LoadedContent> contents);
     }
@@ -22,6 +23,7 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
      * индекс перечисляет файлы тел, и они читаются тем же источником, что и сам индекс, — тогда /reload
      * и датапак мира переопределяют и индекс, и любое тело.
      */
+    @FunctionalInterface
     public interface Expander {
         List<String> extraPaths(LoadedContent index);
 
@@ -32,10 +34,11 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
 
     public TableDefinition {
         Objects.requireNonNull(id, "id таблицы не может быть null: по нему ведётся список /spirit tables");
-        Objects.requireNonNull(resourcePaths, "Пути ресурсов не могут быть null: по ним файлы ищутся в ресурс-менеджере");
+        Objects.requireNonNull(
+                resourcePaths, "Пути ресурсов не могут быть null: по ним файлы ищутся в ресурс-менеджере");
         if (resourcePaths.isEmpty()) {
-            throw new IllegalArgumentException("У таблицы '" + id
-                    + "' пустой список файлов: по пустому пути таблицу не найти");
+            throw new IllegalArgumentException(
+                    "У таблицы '" + id + "' пустой список файлов: по пустому пути таблицу не найти");
         }
         resourcePaths = List.copyOf(resourcePaths);
         Objects.requireNonNull(parser, "Парсер не может быть null: таблицу нечем превратить в данные");
@@ -44,30 +47,29 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
 
     public static <T> TableDefinition<T> single(String id, String resourcePath, SingleParser<T> parser) {
         Objects.requireNonNull(parser, "Парсер не может быть null: таблицу нечем превратить в данные");
-        return new TableDefinition<>(id, List.of(resourcePath), contents -> {
-            LoadedContent first = contents.get(0);
-            return parser.parse(first.json(), first.origin());
-        }, Expander.none());
+        return new TableDefinition<>(
+                id,
+                List.of(resourcePath),
+                contents -> {
+                    LoadedContent first = contents.get(0);
+                    return parser.parse(first.json(), first.origin());
+                },
+                Expander.none());
     }
 
     public static <T> TableDefinition<T> composite(String id, List<String> resourcePaths, Parser<T> parser) {
         return new TableDefinition<>(id, resourcePaths, parser, Expander.none());
     }
 
-    /** Таблица-индекс: после основного файла дочитывает пути, названные {@code expander}. */
     public static <T> TableDefinition<T> indexed(String id, String resourcePath, Expander expander, Parser<T> parser) {
         return new TableDefinition<>(id, List.of(resourcePath), parser, expander);
     }
 
+    @FunctionalInterface
     public interface SingleParser<T> {
         T parse(String json, String origin);
     }
 
-    /**
-     * Читает все файлы таблицы из источника, затем дочитывает пути из {@link #expander}. Пустой Optional у файла —
-     * файла нет: это не ошибка переопределения, поэтому такой файл просто не попадает в список (парсер сам решает,
-     * что делать с неполным набором).
-     */
     Optional<List<LoadedContent>> read(ContentSource source) {
         List<LoadedContent> contents = new ArrayList<>(resourcePaths.size());
         for (String path : resourcePaths) {

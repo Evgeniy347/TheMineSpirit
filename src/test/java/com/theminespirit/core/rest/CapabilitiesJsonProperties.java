@@ -36,15 +36,23 @@ class CapabilitiesJsonProperties {
         JsonNode properties = script.get("params").get("properties");
         List<String> required = new ArrayList<>();
         script.get("params").get("required").forEach(name -> required.add(name.textValue()));
-        List<String> expectedRequired = spec.params().stream().filter(ParamSpec::required).map(ParamSpec::name).toList();
-        assertEquals(spec.params().size(), properties.size(),
+        List<String> expectedRequired = spec.params().stream()
+                .filter(ParamSpec::required)
+                .map(ParamSpec::name)
+                .toList();
+        assertEquals(
+                spec.params().size(),
+                properties.size(),
                 "Каждый параметр скрипта '" + spec.id() + "' обязан попасть в properties: потерянный параметр ИИ "
                         + "не сможет передать");
         for (ParamSpec param : spec.params()) {
-            assertTrue(properties.has(param.name()),
+            assertTrue(
+                    properties.has(param.name()),
                     "Параметр '" + param.name() + "' скрипта '" + spec.id() + "' отсутствует в JSON-схеме");
         }
-        assertEquals(expectedRequired, required,
+        assertEquals(
+                expectedRequired,
+                required,
                 "required скрипта '" + spec.id() + "' обязан совпадать с ParamSpec.required() и порядком параметров");
         assertEquals(spec.id(), script.get("id").textValue(), "id скрипта в JSON обязан совпадать с каталогом");
     }

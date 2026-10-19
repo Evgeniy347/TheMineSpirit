@@ -3,10 +3,11 @@ package com.theminespirit.core.perception;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class NearestTracker {
     private final BlockCoord origin;
-    private BlockCoord best;
+    private @Nullable BlockCoord best;
     private long bestDistance;
 
     public NearestTracker(BlockCoord origin) {

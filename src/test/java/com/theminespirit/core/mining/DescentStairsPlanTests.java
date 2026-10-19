@@ -22,24 +22,32 @@ class DescentStairsPlanTests {
 
         DescentStairsPlan plan = DescentStairsPlan.from(world, level1(world), WIDTH, STAIR_WIDTH);
 
-        assertEquals(3, plan.steps().size(),
+        assertEquals(
+                3,
+                plan.steps().size(),
                 "Ступеньки обязаны пройти все шаги уровня 1: по всей длине существующего спуска");
         assertEquals(DescentStop.TARGET_Y, plan.stop(), "Безопасные ступеньки заканчиваются достижением цели");
         for (DescentStairStep step : plan.steps()) {
-            assertEquals(STAIR_WIDTH, step.stairCells().size(),
+            assertEquals(
+                    STAIR_WIDTH,
+                    step.stairCells().size(),
                     "Ступеньки обязаны стоять на " + STAIR_WIDTH + " полосах ширины");
-            assertEquals(WIDTH - STAIR_WIDTH, step.railCells().size(),
+            assertEquals(
+                    WIDTH - STAIR_WIDTH,
+                    step.railCells().size(),
                     "Третья полоса обязана остаться свободной под будущие рельсы (уровень 4)");
             Set<BlockCoord> all = new HashSet<>(step.stairCells());
             all.addAll(step.railCells());
-            assertEquals(WIDTH, all.size(),
+            assertEquals(
+                    WIDTH,
+                    all.size(),
                     "Ступеньки и рельсовый проход обязаны вместе покрывать все полосы ширины без пересечений");
             for (BlockCoord cell : all) {
-                assertEquals(step.floor() + 1, cell.y(),
-                        "Ступенька ставится в нижнюю клетку прохода, на пол: " + cell);
+                assertEquals(step.floor() + 1, cell.y(), "Ступенька ставится в нижнюю клетку прохода, на пол: " + cell);
             }
             for (BlockCoord stair : step.stairCells()) {
-                assertFalse(step.railCells().contains(stair),
+                assertFalse(
+                        step.railCells().contains(stair),
                         "Полоса рельсов не может быть ступенькой: рельсы прокладывают по свободной полосе");
             }
         }
@@ -60,14 +68,18 @@ class DescentStairsPlanTests {
 
     @Test
     void from_LavaInStairCellOfLaterStep_StopsBeforeIt() {
-        CellWorld world = DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH).set(1, 3, 1, Cell.LAVA);
+        CellWorld world =
+                DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH).set(1, 3, 1, Cell.LAVA);
 
         DescentStairsPlan plan = DescentStairsPlan.from(world, level1(world), WIDTH, STAIR_WIDTH);
 
-        assertEquals(1, plan.steps().size(),
+        assertEquals(
+                1,
+                plan.steps().size(),
                 "Перед лавой в клетке ступеньки план ступенек обязан обрезаться: шаг с лавой не выполняется");
         assertEquals(DescentStop.DANGER, plan.stop(), "Лава — остановка по опасности, а не достижение цели");
-        assertTrue(plan.dangerReason().startsWith("опасность: "),
+        assertTrue(
+                plan.dangerReason().startsWith("опасность: "),
                 "Причина обязана начинаться с 'опасность: ': по формату её узнают отчёт и игрок");
         assertTrue(plan.dangerReason().contains("лава"), "Причина обязана называть лаву");
         assertTrue(plan.dangerReason().contains("(1, 3, 1)"), "Причина обязана называть клетку с лавой");
@@ -75,12 +87,13 @@ class DescentStairsPlanTests {
 
     @Test
     void from_VoidBelowStair_StopsWithVoidReason() {
-        CellWorld world = DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH).set(0, 3, 1, Cell.PASSABLE);
+        CellWorld world =
+                DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH).set(0, 3, 1, Cell.PASSABLE);
 
         DescentStairsPlan plan = DescentStairsPlan.from(world, level1(world), WIDTH, STAIR_WIDTH);
 
-        assertTrue(plan.steps().isEmpty(),
-                "Нетвёрдый пол под ступенькой первого шага обязан остановить план до укладки");
+        assertTrue(
+                plan.steps().isEmpty(), "Нетвёрдый пол под ступенькой первого шага обязан остановить план до укладки");
         assertEquals(DescentStop.DANGER, plan.stop(), "Пустота вместо пола — остановка по опасности");
         assertTrue(plan.dangerReason().contains("пустота"), "Причина обязана называть пустоту");
     }
@@ -89,24 +102,24 @@ class DescentStairsPlanTests {
     void from_StairWidthNotLessThanWidenWidth_Throws() {
         CellWorld world = DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH);
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentStairsPlan.from(world, level1(world), WIDTH, WIDTH),
                 "Ступеньки на всех полосах обязаны отклоняться: третью оставляют под рельсы");
 
-        assertTrue(error.getMessage().contains("Ширина ступенек"),
-                "Отказ обязан называть ширину ступенек");
+        assertTrue(error.getMessage().contains("Ширина ступенек"), "Отказ обязан называть ширину ступенек");
     }
 
     @Test
     void from_EvenWidenWidth_Throws() {
         CellWorld world = DescentWidenPlanTests.widenWorld(0, 0, EAST, 3, 1, WIDTH);
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DescentStairsPlan.from(world, level1(world), 4, 2),
                 "Чётная ширина расширения обязана отклоняться: проход симметричен центральной колонке");
 
-        assertTrue(error.getMessage().contains("Ширина расширения"),
-                "Отказ обязан называть ширину расширения");
+        assertTrue(error.getMessage().contains("Ширина расширения"), "Отказ обязан называть ширину расширения");
     }
 
     private static DescentPlan level1(CellWorld world) {

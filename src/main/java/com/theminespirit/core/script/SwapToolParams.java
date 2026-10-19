@@ -6,7 +6,8 @@ import java.util.Objects;
 public record SwapToolParams(String block) {
     public SwapToolParams {
         if (block == null || block.isBlank()) {
-            throw new IllegalArgumentException("Не задан блок swap_tool: без него неизвестно, для чего выбирать инструмент");
+            throw new IllegalArgumentException(
+                    "Не задан блок swap_tool: без него неизвестно, для чего выбирать инструмент");
         }
     }
 

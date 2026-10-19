@@ -31,8 +31,7 @@ public final class HungerGameTests {
     private static final double SAVED_SATURATION = 3.5;
     private static final double SAVED_EXHAUSTION = 1.25;
 
-    private HungerGameTests() {
-    }
+    private HungerGameTests() {}
 
     private static int bread(SpiritEntity spirit) {
         return GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD);
@@ -47,11 +46,14 @@ public final class HungerGameTests {
         int threshold = spirit.hunger().rules().eatFoodThreshold();
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.hunger().foodLevel() > threshold,
+            helper.assertTrue(
+                    spirit.hunger().foodLevel() > threshold,
                     "голодный дух с хлебом обязан поесть до сытости выше порога " + threshold + ", фактически "
-                            + spirit.hunger().foodLevel() + ", вердикт " + spirit.policies().verdict()
+                            + spirit.hunger().foodLevel() + ", вердикт "
+                            + spirit.policies().verdict()
                             + ", владелец " + spirit.policies().owner());
-            helper.assertTrue(bread(spirit) < BREAD_STOCK,
+            helper.assertTrue(
+                    bread(spirit) < BREAD_STOCK,
                     "поедание обязано потратить хлеб из инвентаря: было " + BREAD_STOCK + ", стало " + bread(spirit));
             TacticsScene.finish(helper, spirit);
         });
@@ -65,12 +67,14 @@ public final class HungerGameTests {
         int threshold = spirit.hunger().rules().eatFoodThreshold();
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.tickCount >= PEACEFUL_OBSERVE_TICKS,
-                    "наблюдение ещё идёт: тик духа " + spirit.tickCount);
-            helper.assertTrue(spirit.hunger().foodLevel() > threshold,
+            helper.assertTrue(
+                    spirit.tickCount >= PEACEFUL_OBSERVE_TICKS, "наблюдение ещё идёт: тик духа " + spirit.tickCount);
+            helper.assertTrue(
+                    spirit.hunger().foodLevel() > threshold,
                     "дух на старте обязан быть сыт выше порога " + threshold + ", фактически "
                             + spirit.hunger().foodLevel());
-            helper.assertTrue(bread(spirit) == BREAD_STOCK,
+            helper.assertTrue(
+                    bread(spirit) == BREAD_STOCK,
                     "сытый дух не ест: хлеб обязан остаться весь, было " + BREAD_STOCK + ", стало " + bread(spirit));
             TacticsScene.finish(helper, spirit);
         });
@@ -110,16 +114,24 @@ public final class HungerGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(foughtTicks[0] >= FIGHT_OBSERVE_TICKS,
+            helper.assertTrue(
+                    foughtTicks[0] >= FIGHT_OBSERVE_TICKS,
                     "бой обязан идти под управлением тактики не меньше " + FIGHT_OBSERVE_TICKS + " тиков: "
-                            + foughtTicks[0] + ", хочет управления " + spirit.tactics().wantsControl());
-            helper.assertTrue(!ateDuringFight[0],
-                    "во время боя дух не ест: хлеб при начале боя " + breadAtFightStart[0] + ", стало " + bread(spirit));
-            helper.assertTrue(!spirit.tactics().wantsControl(),
-                    "после устранения врага тактика обязана отпустить управление: " + spirit.tactics().wantsControl());
-            helper.assertTrue(spirit.hunger().foodLevel() > spirit.hunger().rules().eatFoodThreshold(),
+                            + foughtTicks[0] + ", хочет управления "
+                            + spirit.tactics().wantsControl());
+            helper.assertTrue(
+                    !ateDuringFight[0],
+                    "во время боя дух не ест: хлеб при начале боя " + breadAtFightStart[0] + ", стало "
+                            + bread(spirit));
+            helper.assertTrue(
+                    !spirit.tactics().wantsControl(),
+                    "после устранения врага тактика обязана отпустить управление: "
+                            + spirit.tactics().wantsControl());
+            helper.assertTrue(
+                    spirit.hunger().foodLevel() > spirit.hunger().rules().eatFoodThreshold(),
                     "после боя голодный дух обязан поесть до сытости выше порога "
-                            + spirit.hunger().rules().eatFoodThreshold() + ", фактически " + spirit.hunger().foodLevel());
+                            + spirit.hunger().rules().eatFoodThreshold() + ", фактически "
+                            + spirit.hunger().foodLevel());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -137,8 +149,10 @@ public final class HungerGameTests {
         reloaded.load(tag);
         helper.getLevel().addFreshEntity(reloaded);
 
-        helper.assertTrue(reloaded.hunger().state().equals(before),
-                "сытость духа обязана пережить сохранение: до " + before + ", после " + reloaded.hunger().state());
+        helper.assertTrue(
+                reloaded.hunger().state().equals(before),
+                "сытость духа обязана пережить сохранение: до " + before + ", после "
+                        + reloaded.hunger().state());
         TacticsScene.finish(helper, spirit);
         helper.succeed();
     }

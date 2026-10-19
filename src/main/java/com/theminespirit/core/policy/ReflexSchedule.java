@@ -6,8 +6,7 @@ import java.util.UUID;
 public final class ReflexSchedule {
     public static final int PERIOD_TICKS = 10;
 
-    private ReflexSchedule() {
-    }
+    private ReflexSchedule() {}
 
     public static int offsetOf(UUID spirit) {
         Objects.requireNonNull(spirit, "UUID духа не может быть null: по нему расписание разносит духов по тикам");

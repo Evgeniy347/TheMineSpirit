@@ -11,8 +11,7 @@ public final class SseWriter {
         INTERRUPTED
     }
 
-    private SseWriter() {
-    }
+    private SseWriter() {}
 
     public static Outcome pump(SseStream stream, OutputStream out) {
         try (stream) {

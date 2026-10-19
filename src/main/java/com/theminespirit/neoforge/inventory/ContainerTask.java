@@ -4,15 +4,13 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.ContainerTarget;
-import com.theminespirit.neoforge.Approach;
+import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
-import net.minecraft.world.phys.Vec3;
 
 abstract class ContainerTask implements ScriptInstance {
-    private static final double ARRIVAL = 2.5;
 
     private enum Phase {
         FIND,
@@ -22,14 +20,13 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     // Один шаг раскладки "auto": выбранный контейнер и готовый перенос в него.
-    protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {
-    }
+    protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {}
 
     protected final SpiritEntity spirit;
 
     private final ContainerFinder finder;
     private final AutoContainerScan scan;
-    private final Approach approach;
+    private final ReachApproach approach;
     private Phase phase = Phase.FIND;
     private Container container;
     private AutoMove current;
@@ -50,7 +47,7 @@ abstract class ContainerTask implements ScriptInstance {
             this.finder = new ContainerFinder(spirit.level(), spirit.blockPosition(), target, radius);
             this.scan = null;
         }
-        this.approach = new Approach(spirit);
+        this.approach = new ReachApproach(spirit);
     }
 
     protected abstract TransferRunner beginTransfer(Container container);
@@ -188,7 +185,7 @@ abstract class ContainerTask implements ScriptInstance {
         switch (ContainerAccess.open(finder.level(), pos)) {
             case ContainerAccess.Opened opened -> {
                 container = opened.container();
-                approach.begin(new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), ARRIVAL);
+                approach.begin(pos);
                 phase = Phase.APPROACH;
             }
             case ContainerAccess.Refused refused -> fail(refused.reason());
@@ -208,14 +205,13 @@ abstract class ContainerTask implements ScriptInstance {
         }
         current = move;
         container = move.container();
-        approach.begin(new Vec3(move.pos().x() + 0.5, move.pos().y() + 0.5, move.pos().z() + 0.5), ARRIVAL);
+        approach.begin(new BlockPos(move.pos().x(), move.pos().y(), move.pos().z()));
         phase = Phase.APPROACH;
     }
 
     private void approach() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
                 runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
@@ -230,8 +226,7 @@ abstract class ContainerTask implements ScriptInstance {
             return;
         }
         switch (runner.tick()) {
-            case RUNNING -> {
-            }
+            case RUNNING -> {}
             case DONE -> {
                 lastShortage = runner.shortage();
                 if (isAuto()) {

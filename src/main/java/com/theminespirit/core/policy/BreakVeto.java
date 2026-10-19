@@ -7,8 +7,7 @@ import java.util.Objects;
 import java.util.OptionalInt;
 
 public final class BreakVeto {
-    private BreakVeto() {
-    }
+    private BreakVeto() {}
 
     public static BreakSafety checkBelowFeet(BlockCoord target, BlockCoord feet, SafetyView view) {
         Objects.requireNonNull(target, "Цель ломки не может быть null: без неё неизвестно, что проверять под ногами");
@@ -21,7 +20,8 @@ public final class BreakVeto {
         OptionalInt below = DropPolicy.fallBelow(target, view);
         if (below.isEmpty() || 1 + below.getAsInt() > DropPolicy.MAX_DROP) {
             return new BreakSafety.Unsafe("под блоком " + target.x() + " " + target.y() + " " + target.z()
-                    + " пустота глубже " + DropPolicy.MAX_DROP + " блоков или жидкость, огонь, опасный блок: дух упадёт, сначала положите опору");
+                    + " пустота глубже " + DropPolicy.MAX_DROP
+                    + " блоков или жидкость, огонь, опасный блок: дух упадёт, сначала положите опору");
         }
         return new BreakSafety.Safe();
     }

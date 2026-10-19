@@ -34,7 +34,9 @@ class AssertionMessageGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Проверка без сообщения при падении показывает только «expected X but was Y»: не видно, какой "
                         + "контракт сломан, что от этого ломается в игре и что перепроверить. Каждая проверка несёт "
                         + "последним аргументом сообщение на русском — какой контракт защищается и почему. "
@@ -47,7 +49,9 @@ class AssertionMessageGuardTests {
     void assertionParser_CallWithoutMessage_IsReported() {
         String sample = "        assert" + "Equals(List.of(1, 2), values);\n";
 
-        assertEquals(List.of("1 assertEquals"), callsWithoutMessage(sample),
+        assertEquals(
+                List.of("1 assertEquals"),
+                callsWithoutMessage(sample),
                 "Сторож ослеп: assertEquals с двумя аргументами (запятые внутри List.of не в счёт) — нарушение");
     }
 
@@ -56,15 +60,20 @@ class AssertionMessageGuardTests {
         String sample = "        assert" + "True(map.containsKey(key(1, 2)),\n"
                 + "                \"ключ (1, 2) обязан быть: иначе \\\"скан\\\" не найдёт блок, а план упадёт\");\n";
 
-        assertEquals(List.of(), callsWithoutMessage(sample),
+        assertEquals(
+                List.of(),
+                callsWithoutMessage(sample),
                 "Сторож ложно срабатывает: сообщение есть, запятые и скобки внутри строки и вложенных вызовов не в счёт");
     }
 
     @Test
     void assertionParser_LambdaArgumentWithMessage_IsAccepted() {
-        String sample = "        assert" + "Throws(IllegalStateException.class, () -> run(a, b), \"повтор обязан падать\");\n";
+        String sample =
+                "        assert" + "Throws(IllegalStateException.class, () -> run(a, b), \"повтор обязан падать\");\n";
 
-        assertEquals(List.of(), callsWithoutMessage(sample),
+        assertEquals(
+                List.of(),
+                callsWithoutMessage(sample),
                 "Сторож ложно срабатывает: лямбда с запятыми внутри скобок — один аргумент");
     }
 

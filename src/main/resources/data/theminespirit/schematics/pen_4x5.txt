@@ -1,0 +1,22 @@
+# pen_4x5 — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+name: "Загон 4×5 (забор 1 блок, калитка)"
+type: farm
+stage: 1
+level: 1
+size: 4x1x5   # Ш×В×Д
+entrance: 2,0,0
+exemptions:
+  - rule: roof
+    reason: "загон открыт сверху по замыслу: животным нужен свет и воздух"
+  - rule: inner_height
+    reason: "загон — периметр забора без пола и потолка: внутренней высоты нет"
+legend:
+  'F': oak_fence
+  'G': oak_fence_gate
+layers:
+  - y0: |
+      FFGF
+      F..F
+      F..F
+      F..F
+      FFFF

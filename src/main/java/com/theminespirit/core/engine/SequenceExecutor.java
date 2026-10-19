@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 final class SequenceExecutor extends StepExecutor {
     private final List<TaskNode> steps;
@@ -13,6 +14,7 @@ final class SequenceExecutor extends StepExecutor {
     }
 
     @Override
+    @Nullable
     TaskNode stepAt(int index) {
         return index < steps.size() ? steps.get(index) : null;
     }
@@ -30,16 +32,16 @@ final class SequenceExecutor extends StepExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.SequenceAt(index(), current() == null ? null : current().snapshot());
+        return new TaskProgress.SequenceAt(index(), childProgress());
     }
 
     @Override
     void applyRestore(TaskProgress progress) {
         TaskProgress.SequenceAt at = (TaskProgress.SequenceAt) progress;
         index(at.index());
-        if (at.child() != null) {
-            current(spawn(stepAt(at.index())));
-            current().restore(at.child());
+        TaskProgress child = at.child();
+        if (child != null) {
+            restoreChild(stepAt(at.index()), child);
         }
     }
 }

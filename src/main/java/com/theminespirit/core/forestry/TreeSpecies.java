@@ -14,16 +14,17 @@ public record TreeSpecies(String id, String logId, String leavesId, String sapli
             new TreeSpecies("birch", "minecraft:birch_log", "minecraft:birch_leaves", "minecraft:birch_sapling"),
             new TreeSpecies("jungle", "minecraft:jungle_log", "minecraft:jungle_leaves", "minecraft:jungle_sapling"),
             new TreeSpecies("acacia", "minecraft:acacia_log", "minecraft:acacia_leaves", "minecraft:acacia_sapling"),
-            new TreeSpecies("dark_oak", "minecraft:dark_oak_log", "minecraft:dark_oak_leaves",
-                    "minecraft:dark_oak_sapling"),
-            new TreeSpecies("mangrove", "minecraft:mangrove_log", "minecraft:mangrove_leaves",
-                    "minecraft:mangrove_propagule"),
+            new TreeSpecies(
+                    "dark_oak", "minecraft:dark_oak_log", "minecraft:dark_oak_leaves", "minecraft:dark_oak_sapling"),
+            new TreeSpecies(
+                    "mangrove", "minecraft:mangrove_log", "minecraft:mangrove_leaves", "minecraft:mangrove_propagule"),
             new TreeSpecies("cherry", "minecraft:cherry_log", "minecraft:cherry_leaves", "minecraft:cherry_sapling"));
 
     public TreeSpecies {
         Objects.requireNonNull(id, "id породы не может быть null: по нему имя приходит из плана");
         Objects.requireNonNull(logId, "logId породы не может быть null: по нему ищутся брёвна дерева");
-        Objects.requireNonNull(leavesId, "leavesId породы не может быть null: по листьям дерево отличается от постройки");
+        Objects.requireNonNull(
+                leavesId, "leavesId породы не может быть null: по листьям дерево отличается от постройки");
         Objects.requireNonNull(saplingId, "saplingId породы не может быть null: саженцем порода восстанавливается");
     }
 

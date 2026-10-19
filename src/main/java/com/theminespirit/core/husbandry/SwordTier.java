@@ -1,13 +1,12 @@
 package com.theminespirit.core.husbandry;
 
-import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -84,12 +83,12 @@ public enum SwordTier {
         try {
             root = MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: "
-                    + error.getOriginalMessage() + ". Исправьте синтаксис файла");
+            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: " + error.getOriginalMessage()
+                    + ". Исправьте синтаксис файла");
         }
         if (root == null || !root.isObject()) {
-            throw new IllegalStateException("Таблица '" + origin + "' — не объект: ожидается объект "
-                    + "«id предмета → тир»");
+            throw new IllegalStateException(
+                    "Таблица '" + origin + "' — не объект: ожидается объект " + "«id предмета → тир»");
         }
         Map<String, String> raw = new LinkedHashMap<>();
         Iterator<Map.Entry<String, JsonNode>> fields = root.fields();

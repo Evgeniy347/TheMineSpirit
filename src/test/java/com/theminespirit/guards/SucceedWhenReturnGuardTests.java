@@ -21,7 +21,9 @@ class SucceedWhenReturnGuardTests {
         List<String> offenders = new ArrayList<>();
         collect(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "В лямбде succeedWhen стоит голый return: GameTestHelper.succeedWhen считает тест пройденным, как только "
                         + "лямбда завершилась без исключения, поэтому «if (ещё RUNNING) return;» засчитывает успех на первом "
                         + "же тике, и остальные проверки не выполняются никогда — тест зелёный при любом поведении. "
@@ -32,29 +34,37 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void bareReturnPattern_ReturnInsideSucceedWhenLambda_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(3), bareReturnLines(sample),
+        assertEquals(
+                List.of(3),
+                bareReturnLines(sample),
                 "Сторож ослеп: голый return внутри лямбды succeedWhen должен находиться");
     }
 
     @Test
     void bareReturnPattern_ReturnOutsideSucceedWhen_IsIgnored() {
-        String sample = "helper.onEachTick(() -> {\n"
-                + "    if (session == null) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "});\n"
-                + "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.onEachTick(() -> {
+                            if (session == null) {
+                                return;
+                            }
+                        });
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(), bareReturnLines(sample),
+        assertEquals(
+                List.of(),
+                bareReturnLines(sample),
                 "Сторож ложно срабатывает: return в onEachTick и лямбда succeedWhen без return — не нарушение");
     }
 
@@ -67,7 +77,9 @@ class SucceedWhenReturnGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "В succeedWhen передана ссылка на метод: тело условия спрятано в другом методе, и голый return "
                         + "внутри него засчитывает успех на первом же тике так же, как return в лямбде, — сторож "
                         + "тела метода-цели не видит, тест зелёный при любом поведении. Как надо: распиши условие "
@@ -78,10 +90,14 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void methodRef_ThisAndStaticRefsInSucceedWhen_AreReported() {
-        String sample = "helper.succeedWhen(this::checkReady);\n"
-                + "helper.succeedWhen(Checks::isReady);\n";
+        String sample = """
+                        helper.succeedWhen(this::checkReady);
+                        helper.succeedWhen(Checks::isReady);
+                        """;
 
-        assertEquals(List.of(1, 2), methodRefLines(sample),
+        assertEquals(
+                List.of(1, 2),
+                methodRefLines(sample),
                 "Сторож ослеп: ссылка на метод в succeedWhen (this::check, Class::check) должна находиться — "
                         + "тело метода-цели сторож не проверяет, голый return внутри него даст ложный успех. "
                         + "Если ожидание поменяли осознанно, перепроверь, что условие осталось лямбдой с assertTrue");
@@ -89,24 +105,32 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void methodRef_OutsideSucceedWhen_IsIgnored() {
-        String sample = "pending.add(this::checkReady);\n"
-                + "stream.map(Foo::bar).toList();\n";
+        String sample = """
+                        pending.add(this::checkReady);
+                        stream.map(Foo::bar).toList();
+                        """;
 
-        assertEquals(List.of(), methodRefLines(sample),
+        assertEquals(
+                List.of(),
+                methodRefLines(sample),
                 "Сторож ложно срабатывает: ссылка на метод вне succeedWhen — не нарушение, условие там не прячется");
     }
 
     @Test
     void bracesAndEscapedQuoteInString_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    String hint = \"нажми (A), скажи \\\"готово } жди\\\"\";\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            String hint = "нажми (A), скажи \\"готово } жди\\"";
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(4), bareReturnLines(sample),
+        assertEquals(
+                List.of(4),
+                bareReturnLines(sample),
                 "Сторож ослеп: скобка } внутри строкового литерала закрыла тело лямбды раньше времени, "
                         + "и настоящий return после неё не найден — тест с ложным успехом пройдёт мимо сторожа. "
                         + "Если разбор меняли осознанно, перепроверь его на строке с экранированной кавычкой");
@@ -114,27 +138,35 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void returnWordInStringLiteral_InsideMessage_IsIgnored() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"без return; не засчитает\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "без return; не засчитает");
+                        });
+                        """;
 
-        assertEquals(List.of(), bareReturnLines(sample),
+        assertEquals(
+                List.of(),
+                bareReturnLines(sample),
                 "Сторож ложно срабатывает: слово return; внутри строкового литерала — текст сообщения, "
                         + "а не выход из лямбды");
     }
 
     @Test
     void bracesInComments_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    // ждём } пока не готово\n"
-                + "    /* { проверка */\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            // ждём } пока не готово
+                            /* { проверка */
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(5), bareReturnLines(sample),
+        assertEquals(
+                List.of(5),
+                bareReturnLines(sample),
                 "Сторож ослеп: скобка в комментарии закрыла тело лямбды раньше времени, и настоящий return "
                         + "после неё не найден. Если разбор меняли осознанно, перепроверь его на комментариях "
                         + "со скобками");
@@ -142,29 +174,36 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void commentedOutSucceedWhen_InLineComments_IsIgnored() {
-        String sample = "// helper.succeedWhen(() -> {\n"
-                + "//     return;\n"
-                + "// });\n"
-                + "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        // helper.succeedWhen(() -> {
+                        //     return;
+                        // });
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(), bareReturnLines(sample),
-                "Сторож ложно срабатывает: закомментированный succeedWhen с return — мёртвый код, "
-                        + "а не нарушение");
+        assertEquals(
+                List.of(),
+                bareReturnLines(sample),
+                "Сторож ложно срабатывает: закомментированный succeedWhen с return — мёртвый код, " + "а не нарушение");
     }
 
     @Test
     void braceInCharLiteral_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    char closing = '}';\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            char closing = '}';
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
-        assertEquals(List.of(4), bareReturnLines(sample),
+        assertEquals(
+                List.of(4),
+                bareReturnLines(sample),
                 "Сторож ослеп: скобка в символьном литерале '}' закрыла тело лямбды раньше времени, "
                         + "и настоящий return после неё не найден");
     }
@@ -181,7 +220,9 @@ class SucceedWhenReturnGuardTests {
                 + "    helper.assertTrue(done, \"готово\");\n"
                 + "});\n";
 
-        assertEquals(List.of(6), bareReturnLines(sample),
+        assertEquals(
+                List.of(6),
+                bareReturnLines(sample),
                 "Сторож ослеп: скобка в текстовом блоке закрыла тело лямбды раньше времени, "
                         + "и настоящий return после неё не найден");
     }
@@ -246,7 +287,8 @@ class SucceedWhenReturnGuardTests {
         return clean.toString();
     }
 
-    private static int blankUntil(StringBuilder clean, String text, int i, char end, boolean block) {
+    private static int blankUntil(StringBuilder clean, String text, int from, char end, boolean block) {
+        int i = from;
         while (i < text.length()) {
             char c = text.charAt(i);
             if (block && end == '*' && c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '/') {
@@ -264,7 +306,8 @@ class SucceedWhenReturnGuardTests {
         return i;
     }
 
-    private static int blankQuoted(StringBuilder clean, String text, int i, char quote) {
+    private static int blankQuoted(StringBuilder clean, String text, int from, char quote) {
+        int i = from;
         while (i < text.length()) {
             char c = text.charAt(i);
             if (c == '\n') {

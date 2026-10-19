@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -78,13 +79,14 @@ final class RestFixture {
         private final CompletableFuture<Integer> status = new CompletableFuture<>();
         private final CompletableFuture<Void> finished = new CompletableFuture<>();
         private volatile String contentType;
+        private volatile CompletableFuture<?> connection = CompletableFuture.completedFuture(null);
 
         CompletableFuture<Integer> status() {
             return status;
         }
 
         boolean finished() {
-            return finished.isDone();
+            return finished.isDone() || connection.isCompletedExceptionally();
         }
 
         CompletableFuture<Void> whenFinished() {
@@ -124,10 +126,7 @@ final class RestFixture {
         }
 
         void cancel() {
-            Stream<String> open = body.get();
-            if (open != null) {
-                open.close();
-            }
+            Optional.ofNullable(body.get()).ifPresent(Stream::close);
         }
 
         private void read(HttpResponse<Stream<String>> response) {
@@ -161,7 +160,8 @@ final class RestFixture {
     private final SpiritIndex index;
     private final SpiritBotGateway gateway;
     private final RestServer server;
-    private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+    private final HttpClient client =
+            HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final List<ServerPlayer> players = new ArrayList<>();
     private int playerCounter;
@@ -173,8 +173,8 @@ final class RestFixture {
         return thread;
     });
 
-    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server,
-            SseSlots slots) {
+    private RestFixture(
+            MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server, SseSlots slots) {
         this.minecraft = minecraft;
         this.slots = slots;
         this.index = index;
@@ -183,7 +183,7 @@ final class RestFixture {
     }
 
     static InetAddress loopback() throws UnknownHostException {
-        return InetAddress.getByName("127.0.0.1");
+        return InetAddress.getByAddress(new byte[] {127, 0, 0, 1});
     }
 
     static RestFixture start(MinecraftServer minecraft) throws IOException {
@@ -196,13 +196,13 @@ final class RestFixture {
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
-        await(helper, rest, scenario, () -> { });
+        await(helper, rest, scenario, () -> {});
     }
 
-    static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario,
-            Runnable worldChecks) {
-        CompletableFuture<List<String>> outcome = scenario.exceptionally(
-                error -> List.of("сценарий завершился исключением: " + error));
+    static void await(
+            GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario, Runnable worldChecks) {
+        CompletableFuture<List<String>> outcome =
+                scenario.exceptionally(error -> List.of("сценарий завершился исключением: " + error));
         long started = System.nanoTime();
         helper.onEachTick(() -> {
             if (outcome.isDone() && !outcome.join().isEmpty()) {
@@ -216,12 +216,13 @@ final class RestFixture {
             }
         });
         helper.succeedWhen(() -> {
-            helper.assertTrue(outcome.isDone(),
+            helper.assertTrue(
+                    outcome.isDone(),
                     "REST-сценарий не завершился: ответ моста не пришёл, серверный поток не отвечает или запрос завис");
             worldChecks.run();
             rest.close();
-            helper.assertTrue(outcome.join().isEmpty(),
-                    "REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
+            helper.assertTrue(
+                    outcome.join().isEmpty(), "REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
         });
     }
 
@@ -242,7 +243,9 @@ final class RestFixture {
     }
 
     CompletableFuture<Reply> post(String path, byte[] body) {
-        return send(HttpRequest.newBuilder(uri(path)).POST(HttpRequest.BodyPublishers.ofByteArray(body)).build());
+        return send(HttpRequest.newBuilder(uri(path))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                .build());
     }
 
     CompletableFuture<Reply> post(String path, String json) {
@@ -261,14 +264,15 @@ final class RestFixture {
         HttpRequest.Builder request = HttpRequest.newBuilder(uri(path)).GET();
         headers.forEach(request::header);
         SseCapture capture = new SseCapture();
-        client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofLines()).whenComplete((response, error) -> {
-            if (error != null) {
-                capture.status.completeExceptionally(error);
-                capture.finished.completeExceptionally(error);
-                return;
-            }
-            readers.execute(() -> capture.read(response));
-        });
+        capture.connection = client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofLines())
+                .whenComplete((response, error) -> {
+                    if (error != null) {
+                        capture.status.completeExceptionally(error);
+                        capture.finished.completeExceptionally(error);
+                        return;
+                    }
+                    readers.execute(() -> capture.read(response));
+                });
         return capture;
     }
 

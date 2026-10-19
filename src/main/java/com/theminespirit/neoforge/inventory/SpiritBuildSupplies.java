@@ -20,7 +20,8 @@ public final class SpiritBuildSupplies implements BuildSupplies {
     private final SpiritEntity spirit;
 
     public SpiritBuildSupplies(SpiritEntity spirit) {
-        this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чей инвентарь считать");
+        this.spirit =
+                Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чей инвентарь считать");
     }
 
     @Override
@@ -38,13 +39,14 @@ public final class SpiritBuildSupplies implements BuildSupplies {
         if (maxCount == 0) {
             return List.of();
         }
-        BlockLocator.Search search = BlockLocator.search(spirit.level(), spirit.blockPosition(), CHEST_RADIUS,
-                ContainerAccess.allowedBlocks());
+        BlockLocator.Search search = BlockLocator.search(
+                spirit.level(), spirit.blockPosition(), CHEST_RADIUS, ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();
         while (!search.done()) {
             found.addAll(search.step(4));
         }
-        found.sort(Comparator.comparingDouble(spirit.blockPosition()::distSqr).thenComparing(Comparator.naturalOrder()));
+        found.sort(
+                Comparator.comparingDouble(spirit.blockPosition()::distSqr).thenComparing(Comparator.naturalOrder()));
         List<ScriptCall> steps = new ArrayList<>();
         int rest = maxCount;
         for (BlockPos pos : found) {
@@ -59,8 +61,17 @@ public final class SpiritBuildSupplies implements BuildSupplies {
                 continue;
             }
             int take = Math.min(rest, have);
-            steps.add(new ScriptCall("withdraw", Map.of("container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
-                    "item", block, "count", take, "radius", CHEST_RADIUS)));
+            steps.add(new ScriptCall(
+                    "withdraw",
+                    Map.of(
+                            "container",
+                            pos.getX() + "," + pos.getY() + "," + pos.getZ(),
+                            "item",
+                            block,
+                            "count",
+                            take,
+                            "radius",
+                            CHEST_RADIUS)));
             rest -= take;
         }
         return List.copyOf(steps);

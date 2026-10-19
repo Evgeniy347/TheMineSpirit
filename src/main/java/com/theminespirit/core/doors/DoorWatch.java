@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class DoorWatch {
     private final DoorTuning.DoorRules rules;
 
     public DoorWatch(DoorTuning.DoorRules rules) {
-        this.rules = Objects.requireNonNull(rules,
-                "Решение без правил не принимается: числа живут в doors.json, код их не дублирует");
+        this.rules = Objects.requireNonNull(
+                rules, "Решение без правил не принимается: числа живут в doors.json, код их не дублирует");
     }
 
     public static DoorWatch withDefaultRules() {
@@ -52,8 +53,7 @@ public final class DoorWatch {
 
     public boolean isEvening(double dayFraction) {
         if (Double.isNaN(dayFraction) || dayFraction < 0.0 || dayFraction > 1.0) {
-            throw new IllegalArgumentException(
-                    "Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
+            throw new IllegalArgumentException("Доля суток = " + dayFraction + ": время суток обязано лежать в 0..1");
         }
         return dayFraction >= rules.eveningDayFraction();
     }
@@ -82,7 +82,7 @@ public final class DoorWatch {
         return false;
     }
 
-    private static SpiritRef nearestFreeSpirit(BlockCoord door, List<SpiritRef> spirits, Set<UUID> busy) {
+    private static @Nullable SpiritRef nearestFreeSpirit(BlockCoord door, List<SpiritRef> spirits, Set<UUID> busy) {
         SpiritRef best = null;
         double bestDistance = Double.POSITIVE_INFINITY;
         for (SpiritRef spirit : spirits) {
@@ -90,8 +90,8 @@ public final class DoorWatch {
                 continue;
             }
             double distance = distance(door, spirit.position());
-            if (distance < bestDistance || (distance == bestDistance && best != null
-                    && spirit.id().compareTo(best.id()) < 0)) {
+            if (distance < bestDistance
+                    || (distance == bestDistance && best != null && spirit.id().compareTo(best.id()) < 0)) {
                 best = spirit;
                 bestDistance = distance;
             }

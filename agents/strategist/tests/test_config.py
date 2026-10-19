@@ -70,8 +70,8 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(from_env({"STRATEGIST_CONFIRM_LIVE": "0"}).confirm_live)
 
     def test_module_ExposesRepoRootWithApiDoc(self):
-        self.assertTrue((config.REPO_ROOT / "docs" / "API.md").is_file(),
-                        "промпт вырезает «Формат плана» из docs/API.md")
+        self.assertTrue((config.REPO_ROOT / "docs" / "api" / "plan.md").is_file(),
+                        "промпт вырезает «Формат плана» из docs/api/plan.md")
 
 
 if __name__ == "__main__":

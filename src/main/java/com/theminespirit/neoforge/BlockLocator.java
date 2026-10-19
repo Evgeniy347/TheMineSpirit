@@ -16,8 +16,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
 public final class BlockLocator {
-    private BlockLocator() {
-    }
+    private BlockLocator() {}
 
     public static Search search(Level level, BlockPos center, int radius, Set<Block> blocks) {
         return new Search(level, center, radius, blocks);
@@ -96,7 +95,9 @@ public final class BlockLocator {
             }
             for (int x = slice.bounds().min().x(); x <= slice.bounds().max().x(); x++) {
                 for (int y = slice.bounds().min().y(); y <= slice.bounds().max().y(); y++) {
-                    for (int z = slice.bounds().min().z(); z <= slice.bounds().max().z(); z++) {
+                    for (int z = slice.bounds().min().z();
+                            z <= slice.bounds().max().z();
+                            z++) {
                         examinedPositions++;
                         BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
                         if (blocks.contains(state.getBlock())) {

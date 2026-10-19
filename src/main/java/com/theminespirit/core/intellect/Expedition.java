@@ -12,8 +12,8 @@ public record Expedition(List<UUID> team, Point target, long startedAt) {
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();
         if (team.size() < tuning.teamMin() || team.size() > tuning.teamMax()) {
-            throw new IllegalArgumentException("Команда экспедиции = " + team.size()
-                    + ": ходят командой 2–3 духа, иначе либо опасно, либо толпа");
+            throw new IllegalArgumentException(
+                    "Команда экспедиции = " + team.size() + ": ходят командой 2–3 духа, иначе либо опасно, либо толпа");
         }
         if (new HashSet<>(team).size() != team.size() || team.stream().anyMatch(member -> member == null)) {
             throw new IllegalArgumentException(

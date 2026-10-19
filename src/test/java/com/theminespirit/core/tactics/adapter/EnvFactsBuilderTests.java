@@ -15,7 +15,8 @@ class EnvFactsBuilderTests {
 
     @Test
     void build_HomeEightBlocksAway_HomeReachableWithDistance() {
-        EnvFacts facts = EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.of(new Point(8, 1, 0)));
+        EnvFacts facts =
+                EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.of(new Point(8, 1, 0)));
 
         assertTrue(facts.homeReachable(), "Дом в памяти духа — путь к нему доступен ядру отхода HOME");
         assertEquals(8.0, facts.homeDistance(), 1e-9, "Расстояние до дома считается от духа до точки дома");
@@ -31,9 +32,12 @@ class EnvFactsBuilderTests {
 
     @Test
     void build_HomeBeyondFar_DistanceClampedToFar() {
-        EnvFacts facts = EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.of(new Point(5000, 1, 0)));
+        EnvFacts facts =
+                EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.of(new Point(5000, 1, 0)));
 
-        assertEquals(EnvFacts.FAR_DISTANCE, facts.homeDistance(),
+        assertEquals(
+                EnvFacts.FAR_DISTANCE,
+                facts.homeDistance(),
                 "Дом дальше FAR не должен ломать EnvFacts: расстояние зажимается до FAR");
     }
 

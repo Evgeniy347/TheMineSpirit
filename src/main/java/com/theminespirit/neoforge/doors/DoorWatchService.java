@@ -41,15 +41,16 @@ public final class DoorWatchService {
     private final Map<ServerLevel, Tracked> tracked = new HashMap<>();
     private final Map<UUID, SpiritEntity> spirits = new HashMap<>();
 
-    private DoorWatchService() {
-    }
+    private DoorWatchService() {}
 
     public static void register() {
         if (instance != null) {
-            throw new IllegalStateException("DoorWatchService уже зарегистрирован: второй экземпляр удвоил бы задачи духам");
+            throw new IllegalStateException(
+                    "DoorWatchService уже зарегистрирован: второй экземпляр удвоил бы задачи духам");
         }
-        instance = new DoorWatchService();
-        NeoForge.EVENT_BUS.register(instance);
+        DoorWatchService service = new DoorWatchService();
+        NeoForge.EVENT_BUS.register(service);
+        instance = service;
     }
 
     static DoorWatchService instance() {
@@ -264,7 +265,6 @@ public final class DoorWatchService {
             assigned.entrySet().removeIf(entry -> entry.getKey().equals(blockCoord(pos)));
         }
 
-        private record DoorInfo(boolean open, long openedSinceTick) {
-        }
+        private record DoorInfo(boolean open, long openedSinceTick) {}
     }
 }

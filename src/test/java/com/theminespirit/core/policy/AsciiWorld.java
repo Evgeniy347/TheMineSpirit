@@ -19,7 +19,7 @@ final class AsciiWorld implements SafetyView {
     static AsciiWorld of(BlockCoord corner, Cell outside, String... layers) {
         AsciiWorld world = new AsciiWorld(outside);
         for (int layer = 0; layer < layers.length; layer++) {
-            String[] rows = layers[layer].split("/");
+            String[] rows = layers[layer].split("/", -1);
             for (int row = 0; row < rows.length; row++) {
                 for (int column = 0; column < rows[row].length(); column++) {
                     BlockCoord at = new BlockCoord(corner.x() + column, corner.y() + layer, corner.z() + row);

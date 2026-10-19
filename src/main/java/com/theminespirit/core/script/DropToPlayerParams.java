@@ -9,7 +9,8 @@ public record DropToPlayerParams(String item, int count, String to) {
             throw new IllegalArgumentException("Не задан предмет drop_to_player: без него нечего бросать");
         }
         if (to == null || to.isBlank()) {
-            throw new IllegalArgumentException("Не задан адресат drop_to_player: пустую строку не сопоставить ни с кем");
+            throw new IllegalArgumentException(
+                    "Не задан адресат drop_to_player: пустую строку не сопоставить ни с кем");
         }
         PersonSelector.requirePerson(to, "to");
         if (count < CatalogLimits.COUNT_MIN || count > CatalogLimits.COUNT_MAX) {

@@ -10,8 +10,7 @@ import java.util.Objects;
  * внутри доли порядок остаётся снизу вверх. Доли не пересекаются и вместе покрывают весь список.
  */
 public final class CellPartition {
-    private CellPartition() {
-    }
+    private CellPartition() {}
 
     public static <T> List<List<T>> split(List<T> ordered, int parts) {
         Objects.requireNonNull(ordered, "Список клеток не может быть null: пустое разбиение задают пустым списком");

@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Objects;
 
 public final class ChestSorter {
-    private ChestSorter() {
-    }
+    private ChestSorter() {}
 
     public static List<Stack> sort(List<Stack> slots, ValueTable values) {
         Objects.requireNonNull(slots, "Слоты контейнера не могут быть null: сортировать нечего");
-        Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
-                + "по ней сортёр расставляет группы предметов");
+        Objects.requireNonNull(
+                values, "Таблица ценностей не может быть null: " + "по ней сортёр расставляет группы предметов");
         List<Ranked> ranked = new ArrayList<>(slots.size());
         for (Stack stack : slots) {
             if (stack != null) {
@@ -22,7 +21,8 @@ public final class ChestSorter {
         ranked.sort(Comparator.comparingInt((Ranked slot) -> slot.rank)
                 .thenComparing(slot -> slot.stack.item())
                 .thenComparingInt(slot -> slot.stack.variant())
-                .thenComparing(Comparator.comparingInt((Ranked slot) -> slot.stack.count()).reversed()));
+                .thenComparing(Comparator.comparingInt((Ranked slot) -> slot.stack.count())
+                        .reversed()));
         return merge(ranked);
     }
 
@@ -49,6 +49,5 @@ public final class ChestSorter {
         return layout;
     }
 
-    private record Ranked(Stack stack, int rank) {
-    }
+    private record Ranked(Stack stack, int rank) {}
 }

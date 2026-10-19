@@ -13,17 +13,22 @@ import net.jqwik.api.Provide;
 class CampProperties {
     @Provide
     Arbitrary<Camp> camps() {
-        return Combinators.combine(Arbitraries.integers().between(-100, 100),
-                Arbitraries.integers().between(-64, 320), Arbitraries.integers().between(-100, 100),
-                Arbitraries.doubles().between(0.5, 64), Arbitraries.integers().between(0, 100),
-                Arbitraries.longs().between(0, 100000))
+        return Combinators.combine(
+                        Arbitraries.integers().between(-100, 100),
+                        Arbitraries.integers().between(-64, 320),
+                        Arbitraries.integers().between(-100, 100),
+                        Arbitraries.doubles().between(0.5, 64),
+                        Arbitraries.integers().between(0, 100),
+                        Arbitraries.longs().between(0, 100000))
                 .as((x, y, z, radius, owner, setAt) -> new Camp(new Point(x, y, z), radius, owner, setAt));
     }
 
     @Provide
     Arbitrary<Point> points() {
-        return Combinators.combine(Arbitraries.integers().between(-120, 120),
-                Arbitraries.integers().between(-64, 320), Arbitraries.integers().between(-120, 120))
+        return Combinators.combine(
+                        Arbitraries.integers().between(-120, 120),
+                        Arbitraries.integers().between(-64, 320),
+                        Arbitraries.integers().between(-120, 120))
                 .as((x, y, z) -> new Point(x, y, z));
     }
 
@@ -34,14 +39,18 @@ class CampProperties {
         double dz = camp.center().z() - point.z();
         boolean expected = Math.sqrt(dx * dx + dy * dy + dz * dz) <= camp.radius();
 
-        assertEquals(expected, camp.contains(point),
+        assertEquals(
+                expected,
+                camp.contains(point),
                 "contains обязан совпадать с проверкой границы по координатам: иначе спокойная зона "
                         + "расходится с заявленным радиусом и оборона кроет не ту точку");
     }
 
     @Property
     void contains_SameInput_TwiceSameResult(@ForAll("camps") Camp camp, @ForAll("points") Point point) {
-        assertEquals(camp.contains(point), camp.contains(point),
+        assertEquals(
+                camp.contains(point),
+                camp.contains(point),
                 "Тот же вход даёт тот же ответ: иначе граница лагеря мигает между тиками");
     }
 }

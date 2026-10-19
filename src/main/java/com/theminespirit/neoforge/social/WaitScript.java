@@ -37,12 +37,10 @@ public final class WaitScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
-    public void suspend() {
-    }
+    public void suspend() {}
 
     @Override
     public Map<String, Object> saveState() {

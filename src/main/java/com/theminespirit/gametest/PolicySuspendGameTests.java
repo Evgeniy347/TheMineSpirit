@@ -26,8 +26,7 @@ public final class PolicySuspendGameTests {
     private static final BlockPos TARGET = new BlockPos(8, 1, 4);
     private static final BlockPos DIRT = new BlockPos(6, 1, 4);
 
-    private PolicySuspendGameTests() {
-    }
+    private PolicySuspendGameTests() {}
 
     @GameTest(template = "arena", batch = "suspend_goto", timeoutTicks = 400)
     public static void suspend_GotoMidWalk_SpiritStandsStillThenResumeArrives(GameTestHelper helper) {
@@ -35,8 +34,11 @@ public final class PolicySuspendGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), START);
         BlockPos absolute = helper.absolutePos(TARGET);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())), 1);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
+                1);
         int[] suspendedAt = {-1};
         Vec3[] held = {null};
         helper.onEachTick(() -> {
@@ -52,10 +54,14 @@ public final class PolicySuspendGameTests {
                 held[0] = spirit.position();
             }
             if (held[0] != null && spirit.tickCount < suspendedAt[0] + HOLD_TICKS) {
-                helper.assertTrue(spirit.position().distanceTo(held[0]) < MAX_DRIFT,
-                        "приостановленный дух обязан стоять: ушёл на " + spirit.position().distanceTo(held[0]));
-                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING && brain.isSuspended(),
-                        "приостановка не отменяет и не завершает задачу: статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
+                helper.assertTrue(
+                        spirit.position().distanceTo(held[0]) < MAX_DRIFT,
+                        "приостановленный дух обязан стоять: ушёл на "
+                                + spirit.position().distanceTo(held[0]));
+                helper.assertTrue(
+                        spirit.taskStatus().orElse(null) == RunStatus.RUNNING && brain.isSuspended(),
+                        "приостановка не отменяет и не завершает задачу: статус "
+                                + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
             }
             if (suspendedAt[0] >= 0 && spirit.tickCount == suspendedAt[0] + HOLD_TICKS) {
                 brain.resume();
@@ -64,11 +70,14 @@ public final class PolicySuspendGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(suspendedAt[0] >= 0 && spirit.tickCount > suspendedAt[0] + HOLD_TICKS,
+            helper.assertTrue(
+                    suspendedAt[0] >= 0 && spirit.tickCount > suspendedAt[0] + HOLD_TICKS,
                     "приостановка ещё не отработала: тик духа " + spirit.tickCount);
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "после возобновления дух обязан дойти до цели: статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет")
-                            + ", причина " + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "после возобновления дух обязан дойти до цели: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
             GameTestFixtures.finish(helper);
         });
     }
@@ -91,15 +100,19 @@ public final class PolicySuspendGameTests {
                 case 0 -> {
                     session.tick();
                     if (session.crackStage() >= 2) {
-                        helper.assertTrue(helper.getBlockState(DIRT).is(Blocks.DIRT), "блок в начале ломки обязан быть цел");
+                        helper.assertTrue(
+                                helper.getBlockState(DIRT).is(Blocks.DIRT), "блок в начале ломки обязан быть цел");
                         session.suspend();
-                        helper.assertTrue(session.crackStage() == -1, "приостановка обязана снять трещины, стадия " + session.crackStage());
+                        helper.assertTrue(
+                                session.crackStage() == -1,
+                                "приостановка обязана снять трещины, стадия " + session.crackStage());
                         heldSince[0] = spirit.tickCount;
                         phase[0] = 1;
                     }
                 }
                 case 1 -> {
-                    helper.assertTrue(helper.getBlockState(DIRT).is(Blocks.DIRT),
+                    helper.assertTrue(
+                            helper.getBlockState(DIRT).is(Blocks.DIRT),
                             "пока ломка приостановлена, блок обязан стоять целым");
                     helper.assertTrue(session.crackStage() == -1, "трещин на приостановленной ломке быть не должно");
                     if (spirit.tickCount >= heldSince[0] + HOLD_TICKS) {
@@ -112,9 +125,12 @@ public final class PolicySuspendGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(phase[0] == 2, "приостановка ещё не отработала, фаза " + phase[0]);
-            helper.assertTrue(session.outcome() == HarvestSession.Outcome.SUCCEEDED,
-                    "после возобновления ломка обязана завершиться: итог " + session.outcome() + ", причина " + session.failureReason());
-            helper.assertTrue(helper.getBlockState(DIRT).isAir() && session.mined() == 1,
+            helper.assertTrue(
+                    session.outcome() == HarvestSession.Outcome.SUCCEEDED,
+                    "после возобновления ломка обязана завершиться: итог " + session.outcome() + ", причина "
+                            + session.failureReason());
+            helper.assertTrue(
+                    helper.getBlockState(DIRT).isAir() && session.mined() == 1,
                     "после возобновления блок обязан быть сломан ровно один раз, добыто " + session.mined());
             GameTestFixtures.finish(helper);
         });

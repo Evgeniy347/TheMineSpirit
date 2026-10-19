@@ -40,8 +40,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SmeltGameTests {
     private static final BlockPos FURNACE_CELL = new BlockPos(3, 1, 1);
 
-    private SmeltGameTests() {
-    }
+    private SmeltGameTests() {}
 
     @GameTest(template = FIELD, batch = "smelt_basic", timeoutTicks = TIMEOUT)
     public static void smelt_ThreeRawIronTwoCoal_ThreeIngotsOneCoalLeftFurnaceEmpty(GameTestHelper helper) {
@@ -55,8 +54,12 @@ public final class SmeltGameTests {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 3, "слитки железа");
             assertCount(helper, spirit, Items.RAW_IRON, 0, "сырое железо после плавки");
-            assertCount(helper, spirit, Items.COAL, 1, "уголь после плавки: на 3 предмета хватает одного, "
-                    + "лишний обязан остаться");
+            assertCount(
+                    helper,
+                    spirit,
+                    Items.COAL,
+                    1,
+                    "уголь после плавки: на 3 предмета хватает одного, " + "лишний обязан остаться");
             assertFurnaceEmpty(helper);
             cleanup(helper, spirit);
         });
@@ -74,8 +77,13 @@ public final class SmeltGameTests {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 3, "слитки железа при плавке досками");
             assertCount(helper, spirit, Items.RAW_IRON, 0, "сырое железо после плавки досками");
-            assertCount(helper, spirit, Items.OAK_PLANKS, 0, "три плавки по 200 тиков требуют 600 тиков горения, "
-                    + "доска горит 300 — израсходованы обе, остаток досок");
+            assertCount(
+                    helper,
+                    spirit,
+                    Items.OAK_PLANKS,
+                    0,
+                    "три плавки по 200 тиков требуют 600 тиков горения, "
+                            + "доска горит 300 — израсходованы обе, остаток досок");
             assertFurnaceEmpty(helper);
             cleanup(helper, spirit);
         });
@@ -84,8 +92,7 @@ public final class SmeltGameTests {
     @GameTest(template = FIELD, batch = "smelt_furnace_in_inventory", timeoutTicks = TIMEOUT)
     public static void smelt_FurnaceOnlyInInventory_PlacedAndUsed(GameTestHelper helper) {
         field(helper);
-        SpiritEntity spirit = prepare(helper, stack(Items.FURNACE, 1), stack(Items.RAW_IRON, 1),
-                stack(Items.COAL, 1));
+        SpiritEntity spirit = prepare(helper, stack(Items.FURNACE, 1), stack(Items.RAW_IRON, 1), stack(Items.COAL, 1));
         speedUpFurnaces(helper);
         SpiritRun run = launch(helper, spirit, "smelt", "iron_ingot", 1);
 
@@ -93,7 +100,8 @@ public final class SmeltGameTests {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 1, "слиток железа из поставленной печи");
             assertCount(helper, spirit, Items.FURNACE, 0, "печь в инвентаре после установки");
-            helper.assertTrue(furnaceCount(helper) == 1,
+            helper.assertTrue(
+                    furnaceCount(helper) == 1,
                     "дух обязан поставить ровно одну печь из инвентаря, на поле их " + furnaceCount(helper));
             cleanup(helper, spirit);
         });
@@ -154,7 +162,7 @@ public final class SmeltGameTests {
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
         SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 8), stack(Items.COAL, 3));
         speedUpFurnaces(helper);
-        SpiritRun run = launch(helper, spirit, "smelt", "iron_ingot", 8);
+        launch(helper, spirit, "smelt", "iron_ingot", 8);
         boolean[] cancelled = {false};
         helper.onEachTick(() -> {
             if (!cancelled[0] && firstIngotReady(helper)) {
@@ -167,9 +175,11 @@ public final class SmeltGameTests {
             helper.assertTrue(cancelled[0], "отмена ещё не выдана");
             int raw = GameTestFixtures.countInInventory(spirit.getInventory(), Items.RAW_IRON);
             int ingots = GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT);
-            helper.assertTrue(ingots > 0 && ingots < 8,
+            helper.assertTrue(
+                    ingots > 0 && ingots < 8,
                     "к моменту отмены часть слитков уже готова, но не все: слитков " + ingots);
-            helper.assertTrue(raw + ingots == 8,
+            helper.assertTrue(
+                    raw + ingots == 8,
                     "после отмены вход и продукты обязаны вернуться духу без потерь: сырого " + raw + " + слитков "
                             + ingots + " должно быть 8");
             assertFurnaceEmpty(helper);
@@ -196,11 +206,17 @@ public final class SmeltGameTests {
         helper.succeedWhen(() -> {
             helper.assertTrue(reloaded[0], "перезагрузка духа ещё не выполнена");
             SpiritEntity now = current[0];
-            helper.assertTrue(now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "восстановленная плавка обязана завершиться успехом, статус: " + now.taskStatus().orElse(null)
-                            + ", причина: " + now.taskFailureReason().orElse("нет"));
-            assertCount(helper, now, Items.IRON_INGOT, 8, "слитки после перезапуска: готовое из печи забрано, "
-                    + "новый вход не положен поверх");
+            helper.assertTrue(
+                    now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленная плавка обязана завершиться успехом, статус: "
+                            + now.taskStatus().orElse(null) + ", причина: "
+                            + now.taskFailureReason().orElse("нет"));
+            assertCount(
+                    helper,
+                    now,
+                    Items.IRON_INGOT,
+                    8,
+                    "слитки после перезапуска: готовое из печи забрано, " + "новый вход не положен поверх");
             assertCount(helper, now, Items.RAW_IRON, 0, "сырое железо после перезапуска");
             assertFurnaceEmpty(helper);
             cleanup(helper, now);
@@ -259,8 +275,8 @@ public final class SmeltGameTests {
     @GameTest(template = FIELD, batch = "smelt_campfire_materials", timeoutTicks = TIMEOUT)
     public static void smelt_NoCampfireWithMaterials_BuildsItAndCooks(GameTestHelper helper) {
         field(helper);
-        SpiritEntity spirit = prepare(helper, stack(Items.BEEF, 2), stack(Items.STICK, 3), stack(Items.COAL, 1),
-                stack(Items.OAK_LOG, 3));
+        SpiritEntity spirit = prepare(
+                helper, stack(Items.BEEF, 2), stack(Items.STICK, 3), stack(Items.COAL, 1), stack(Items.OAK_LOG, 3));
         speedUpCampfires(helper);
         SpiritRun run = launch(helper, spirit, "smelt", "cooked_beef", 2);
 
@@ -271,7 +287,8 @@ public final class SmeltGameTests {
             assertCount(helper, spirit, Items.STICK, 0, "палки, ушедшие на костёр");
             assertCount(helper, spirit, Items.COAL, 0, "уголь, ушедший на костёр");
             assertCount(helper, spirit, Items.OAK_LOG, 0, "брёвна, ушедшие на костёр");
-            helper.assertTrue(campfireCount(helper) == 1,
+            helper.assertTrue(
+                    campfireCount(helper) == 1,
                     "дух обязан поставить ровно один костёр из материалов, на поле их " + campfireCount(helper));
             cleanup(helper, spirit);
         });
@@ -329,7 +346,8 @@ public final class SmeltGameTests {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
             assertReason(helper, spirit, "исчезла");
             int total = totalOf(helper, spirit, Items.RAW_IRON) + totalOf(helper, spirit, Items.IRON_INGOT);
-            helper.assertTrue(total == 8,
+            helper.assertTrue(
+                    total == 8,
                     "после разрушения печи вход и продукты не должны пропасть (в инвентаре и выпавшие в мир): "
                             + "сырого и слитков вместе " + total + " из 8");
             cleanup(helper, spirit);
@@ -352,33 +370,35 @@ public final class SmeltGameTests {
             assertCount(helper, spirit, Items.IRON_INGOT, 4, "слитки железа");
             assertFurnaceEmpty(helper);
             assertRecipesCleared(helper);
-            helper.assertTrue(player.totalExperience > 0,
+            helper.assertTrue(
+                    player.totalExperience > 0,
                     "опыт, накопленный печью за плавку, обязан достаться реальному игроку, а его опыт "
                             + player.totalExperience);
             int orbs = orbsNear(helper).size();
-            helper.assertTrue(orbs == 0,
-                    "опыт плавки уходит игроку напрямую, а не сферами на землю: на земле сфер " + orbs);
+            helper.assertTrue(
+                    orbs == 0, "опыт плавки уходит игроку напрямую, а не сферами на землю: на земле сфер " + orbs);
             cleanup(helper, spirit);
         });
     }
 
     private static List<ExperienceOrb> orbsNear(GameTestHelper helper) {
         Vec3 first = helper.absoluteVec(new Vec3(-2, 0, -2));
-        Vec3 second = helper.absoluteVec(
-                new Vec3(GameTestFixtures.FLOOR_SIZE + 2, 8, GameTestFixtures.FLOOR_SIZE + 2));
+        Vec3 second = helper.absoluteVec(new Vec3(GameTestFixtures.FLOOR_SIZE + 2, 8, GameTestFixtures.FLOOR_SIZE + 2));
         return helper.getLevel().getEntitiesOfClass(ExperienceOrb.class, new AABB(first, second));
     }
 
     private static void assertRecipesCleared(GameTestHelper helper) {
         BlockEntity entity = helper.getBlockEntity(FURNACE_CELL);
-        helper.assertTrue(entity instanceof AbstractFurnaceBlockEntity furnace && furnace.recipesUsed.isEmpty(),
+        helper.assertTrue(
+                entity instanceof AbstractFurnaceBlockEntity furnace && furnace.recipesUsed.isEmpty(),
                 "после выноса результата счётчик рецептов печи обязан обнулиться, как в ванили: иначе следующий "
                         + "забор результата выдаст тот же опыт повторно");
     }
 
     private static boolean firstIngotReady(GameTestHelper helper) {
         BlockEntity entity = helper.getBlockEntity(FURNACE_CELL);
-        return entity instanceof AbstractFurnaceBlockEntity furnace && !furnace.getItem(2).isEmpty();
+        return entity instanceof AbstractFurnaceBlockEntity furnace
+                && !furnace.getItem(2).isEmpty();
     }
 
     private static int totalOf(GameTestHelper helper, SpiritEntity spirit, Item item) {
@@ -416,8 +436,8 @@ public final class SmeltGameTests {
         CampfireBlockEntity campfire = (CampfireBlockEntity) entity;
         for (int slot = 0; slot < campfire.getItems().size(); slot++) {
             ItemStack stack = campfire.getItems().get(slot);
-            helper.assertTrue(stack.isEmpty(),
-                    "костёр обязан быть пуст после готовки, в слоте " + slot + " лежит " + stack);
+            helper.assertTrue(
+                    stack.isEmpty(), "костёр обязан быть пуст после готовки, в слоте " + slot + " лежит " + stack);
         }
     }
 
@@ -427,8 +447,8 @@ public final class SmeltGameTests {
         AbstractFurnaceBlockEntity furnace = (AbstractFurnaceBlockEntity) entity;
         for (int slot = 0; slot < furnace.getContainerSize(); slot++) {
             ItemStack stack = furnace.getItem(slot);
-            helper.assertTrue(stack.isEmpty(),
-                    "печь обязана быть пуста после работы, в слоте " + slot + " лежит " + stack);
+            helper.assertTrue(
+                    stack.isEmpty(), "печь обязана быть пуста после работы, в слоте " + slot + " лежит " + stack);
         }
     }
 }

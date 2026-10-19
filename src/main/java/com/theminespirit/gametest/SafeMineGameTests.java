@@ -21,8 +21,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SafeMineGameTests {
     private static final int SETTLE_TICKS = 5;
 
-    private SafeMineGameTests() {
-    }
+    private SafeMineGameTests() {}
 
     private static SpiritEntity spawnWithKit(GameTestHelper helper, BlockPos relative) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
@@ -33,9 +32,12 @@ public final class SafeMineGameTests {
     }
 
     private static Map<String, Object> dataOf(GameTestHelper helper, SpiritEntity spirit, String what) {
-        helper.assertTrue(spirit.taskResult().orElse(null) instanceof ScriptResult.Data,
+        helper.assertTrue(
+                spirit.taskResult().orElse(null) instanceof ScriptResult.Data,
                 what + " обязан нести Data-итог общим каналом, фактически "
-                        + spirit.taskResult().map(result -> result.getClass().getSimpleName()).orElse("пусто"));
+                        + spirit.taskResult()
+                                .map(result -> result.getClass().getSimpleName())
+                                .orElse("пусто"));
         return ((ScriptResult.Data) spirit.taskResult().orElseThrow()).fields();
     }
 
@@ -61,9 +63,10 @@ public final class SafeMineGameTests {
         for (int x = x1; x <= x2; x++) {
             for (int height = 1; height <= 2; height++) {
                 BlockPos cell = new BlockPos(x, floor + height, z);
-                helper.assertTrue(helper.getBlockState(cell).isAir() || helper.getBlockState(cell).is(Blocks.TORCH),
-                        "клетка прохода " + cell + " обязана быть выкопана, фактически "
-                                + helper.getBlockState(cell));
+                helper.assertTrue(
+                        helper.getBlockState(cell).isAir()
+                                || helper.getBlockState(cell).is(Blocks.TORCH),
+                        "клетка прохода " + cell + " обязана быть выкопана, фактически " + helper.getBlockState(cell));
             }
         }
     }
@@ -78,22 +81,27 @@ public final class SafeMineGameTests {
         helper.setBlock(new BlockPos(3, 10, 4), Blocks.AIR);
         SpiritEntity spirit = spawnWithKit(helper, new BlockPos(3, 8, 4));
         int targetY = spirit.blockPosition().getY() - 8;
-        SpiritRun run = launch(helper, spirit,
-                Map.of("mode", "staircase", "direction", "east", "y", targetY, "torchInterval", 4));
+        SpiritRun run = launch(
+                helper, spirit, Map.of("mode", "staircase", "direction", "east", "y", targetY, "torchInterval", 4));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(cleared(spirit), "спуск лесенкой обязан завершиться успехом, статус "
-                    + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                    + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    cleared(spirit),
+                    "спуск лесенкой обязан завершиться успехом, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
             Map<String, Object> data = dataOf(helper, spirit, "успешный safe_mine staircase");
-            helper.assertTrue(Boolean.TRUE.equals(data.get("reached"))
+            helper.assertTrue(
+                    Boolean.TRUE.equals(data.get("reached"))
                             && Integer.valueOf(targetY).equals(data.get("y"))
                             && Integer.valueOf(7).equals(data.get("depth")),
                     "лесенка обязана дойти до этажа " + targetY + " с глубиной 7, фактически " + data);
-            helper.assertTrue(Integer.valueOf(2).equals(data.get("torches")),
+            helper.assertTrue(
+                    Integer.valueOf(2).equals(data.get("torches")),
                     "на восьми ступенях с интервалом 4 обязано быть два факела (шаги 0 и 4), фактически " + data);
-            helper.assertTrue(spirit.blockPosition().getY() == targetY + 1,
+            helper.assertTrue(
+                    spirit.blockPosition().getY() == targetY + 1,
                     "дух обязан встать на последнюю ступень (y=" + (targetY + 1) + "), фактически y="
                             + spirit.blockPosition().getY());
             assertStairsClear(helper, 3, targetY);
@@ -107,7 +115,9 @@ public final class SafeMineGameTests {
             int floor = entryFloor - index;
             for (int height = 1; height <= 3; height++) {
                 BlockPos cell = new BlockPos(x1 + index, floor + height, 4);
-                helper.assertTrue(helper.getBlockState(cell).isAir() || helper.getBlockState(cell).is(Blocks.TORCH),
+                helper.assertTrue(
+                        helper.getBlockState(cell).isAir()
+                                || helper.getBlockState(cell).is(Blocks.TORCH),
                         "ступень " + cell + " обязана быть выкопана, фактически " + helper.getBlockState(cell));
             }
         }
@@ -122,21 +132,23 @@ public final class SafeMineGameTests {
         helper.setBlock(new BlockPos(1, 2, 4), Blocks.AIR);
         helper.setBlock(new BlockPos(5, 1, 3), Blocks.LAVA);
         SpiritEntity spirit = spawnWithKit(helper, new BlockPos(1, 1, 4));
-        SpiritRun run = launch(helper, spirit,
-                Map.of("mode", "tunnel", "direction", "east", "length", 10, "torchInterval", 4));
+        SpiritRun run =
+                launch(helper, spirit, Map.of("mode", "tunnel", "direction", "east", "length", 10, "torchInterval", 4));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(cleared(spirit), "штольня обязана завершиться успехом, статус "
-                    + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                    + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    cleared(spirit),
+                    "штольня обязана завершиться успехом, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
             Map<String, Object> data = dataOf(helper, spirit, "успешный safe_mine tunnel с лавой");
             helper.assertTrue(Boolean.TRUE.equals(data.get("reached")), "штольня обязана быть пройдена, " + data);
-            helper.assertTrue(!helper.getBlockState(new BlockPos(5, 1, 3)).is(Blocks.LAVA),
+            helper.assertTrue(
+                    !helper.getBlockState(new BlockPos(5, 1, 3)).is(Blocks.LAVA),
                     "лава сбоку обязана быть заложена блоком, фактически "
                             + helper.getBlockState(new BlockPos(5, 1, 3)));
-            helper.assertTrue(spirit.isAlive(),
-                    "дух обязан выжить: лава заложена до копания прохода");
+            helper.assertTrue(spirit.isAlive(), "дух обязан выжить: лава заложена до копания прохода");
             assertPassageClear(helper, 1, 10, 0, 4);
             GameTestFixtures.finish(helper);
         });
@@ -153,20 +165,24 @@ public final class SafeMineGameTests {
             helper.setBlock(new BlockPos(x, 3, 4), Blocks.GRAVEL);
         }
         SpiritEntity spirit = spawnWithKit(helper, new BlockPos(1, 1, 4));
-        SpiritRun run = launch(helper, spirit,
-                Map.of("mode", "tunnel", "direction", "east", "length", 6, "torchInterval", 4));
+        SpiritRun run =
+                launch(helper, spirit, Map.of("mode", "tunnel", "direction", "east", "length", 6, "torchInterval", 4));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(cleared(spirit), "штольня под гравием обязана завершиться успехом, статус "
-                    + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                    + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(spirit.isAlive() && spirit.getHealth() == spirit.getMaxHealth(),
-                    "падающий гравий не должен ранить духа: здоровье " + spirit.getHealth()
-                            + " из " + spirit.getMaxHealth());
+            helper.assertTrue(
+                    cleared(spirit),
+                    "штольня под гравием обязана завершиться успехом, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    spirit.isAlive() && spirit.getHealth() == spirit.getMaxHealth(),
+                    "падающий гравий не должен ранить духа: здоровье " + spirit.getHealth() + " из "
+                            + spirit.getMaxHealth());
             assertPassageClear(helper, 1, 6, 0, 4);
             for (int x = 3; x <= 6; x++) {
-                helper.assertTrue(!helper.getBlockState(new BlockPos(x, 1, 4)).is(Blocks.GRAVEL)
+                helper.assertTrue(
+                        !helper.getBlockState(new BlockPos(x, 1, 4)).is(Blocks.GRAVEL)
                                 && !helper.getBlockState(new BlockPos(x, 1, 4)).is(Blocks.SAND),
                         "осыпавшийся гравий обязан быть выкопан из прохода (" + x + ",1,4), фактически "
                                 + helper.getBlockState(new BlockPos(x, 1, 4)));

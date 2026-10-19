@@ -6,14 +6,11 @@ import com.theminespirit.core.tactics.Point;
 import java.util.Optional;
 
 public final class OrdersBuilder {
-    public record Zone(Point center, double radius) {
-    }
+    public record Zone(Point center, double radius) {}
 
-    public record Ward(Point pos, boolean threatened) {
-    }
+    public record Ward(Point pos, boolean threatened) {}
 
-    private OrdersBuilder() {
-    }
+    private OrdersBuilder() {}
 
     public static Orders build(CombatMode mode, Optional<Zone> zone, Optional<Ward> ward, boolean helpAvailable) {
         if (mode == null || zone == null || ward == null) {
@@ -22,7 +19,8 @@ public final class OrdersBuilder {
         }
         Optional<Zone> usable = zone.filter(candidate -> candidate.radius() > 0);
         Point center = usable.map(Zone::center).orElse(null);
-        double radius = usable.map(candidate -> Math.min(candidate.radius(), Orders.MAX_ZONE_RADIUS)).orElse(0.0);
+        double radius = usable.map(candidate -> Math.min(candidate.radius(), Orders.MAX_ZONE_RADIUS))
+                .orElse(0.0);
         Point wardPos = ward.map(Ward::pos).orElse(null);
         boolean threatened = ward.map(Ward::threatened).orElse(false);
         return new Orders(mode, center, radius, wardPos, threatened, helpAvailable);

@@ -18,13 +18,19 @@ class TargetBufferTests {
 
         buffer.offer(line(100));
 
-        assertEquals(TargetBuffer.CAPACITY, buffer.activeSize(),
+        assertEquals(
+                TargetBuffer.CAPACITY,
+                buffer.targets(ORIGIN).size(),
                 "в работе обязано быть не больше " + TargetBuffer.CAPACITY + " цели: список плана ограничен, "
                         + "иначе планировщик читает сотни клеток за вызов");
-        assertEquals(36, buffer.surplusSize(),
+        assertEquals(
+                36,
+                (buffer.size() - buffer.targets(ORIGIN).size()),
                 "найденное сверх " + TargetBuffer.CAPACITY + " обязано ждать в избытке, а не пропадать: "
                         + "иначе дальние блоки не вернутся никогда и у края радиуса будет ложное «не осталось»");
-        assertEquals(100, buffer.size(),
+        assertEquals(
+                100,
+                buffer.size(),
                 "буфер обязан помнить все сто найденных целей вместе: ни одна не теряется при переполнении");
     }
 
@@ -35,13 +41,17 @@ class TargetBufferTests {
 
         buffer.remove(buffer.targets(ORIGIN).get(0));
 
-        assertEquals(TargetBuffer.CAPACITY, buffer.activeSize(),
+        assertEquals(
+                TargetBuffer.CAPACITY,
+                buffer.targets(ORIGIN).size(),
                 "после одного изъятия рабочее множество обязано снова заполниться из избытка до "
                         + TargetBuffer.CAPACITY + ": простаивающая ёмкость замедляет работу на ровном месте");
-        assertEquals(35, buffer.surplusSize(),
+        assertEquals(
+                35,
+                (buffer.size() - buffer.targets(ORIGIN).size()),
                 "избыток обязан уменьшиться ровно на одну цель, отданную в работу");
-        assertEquals(99, buffer.size(),
-                "общее число целей обязано уменьшиться ровно на одну: изъятая цель не считается");
+        assertEquals(
+                99, buffer.size(), "общее число целей обязано уменьшиться ровно на одну: изъятая цель не считается");
     }
 
     @Test
@@ -53,11 +63,16 @@ class TargetBufferTests {
             buffer.remove(buffer.targets(ORIGIN).get(0));
         }
 
-        assertEquals(36, buffer.activeSize(),
+        assertEquals(
+                36,
+                buffer.targets(ORIGIN).size(),
                 "после разбора первых " + TargetBuffer.CAPACITY + " целей избыток обязан перейти в работу");
-        assertEquals(0, buffer.surplusSize(),
+        assertEquals(
+                0,
+                (buffer.size() - buffer.targets(ORIGIN).size()),
                 "после разбора " + TargetBuffer.CAPACITY + " из ста избытка остаться не должно");
-        assertFalse(buffer.isEmpty(),
+        assertFalse(
+                buffer.isEmpty(),
                 "тридцать шесть целей обязаны остаться доступными: иначе дальние блоки потеряны навсегда");
     }
 
@@ -66,14 +81,14 @@ class TargetBufferTests {
         TargetBuffer buffer = new TargetBuffer();
         buffer.offer(line(7));
 
-        assertTrue(buffer.needsRefill(),
+        assertTrue(
+                buffer.needsRefill(),
                 "при семи целях в работе (< " + TargetBuffer.REFILL_THRESHOLD + ") обязан требоваться досбор: "
                         + "иначе поиск не повторяется и правило «осталось меньше восьми — искать ещё» мёртвое");
 
         buffer.offer(line(1));
 
-        assertFalse(buffer.needsRefill(),
-                "при восьми целях в работе досбор не нужен: достаточно материала впереди");
+        assertFalse(buffer.needsRefill(), "при восьми целях в работе досбор не нужен: достаточно материала впереди");
     }
 
     @Test
@@ -83,7 +98,9 @@ class TargetBufferTests {
 
         List<BlockCoord> ordered = buffer.targets(ORIGIN);
 
-        assertEquals(List.of(new BlockCoord(1, 0, 0), new BlockCoord(5, 0, 0), new BlockCoord(10, 0, 0)), ordered,
+        assertEquals(
+                List.of(new BlockCoord(1, 0, 0), new BlockCoord(5, 0, 0), new BlockCoord(10, 0, 0)),
+                ordered,
                 "буфер обязан отдавать ближайшие цели первыми: планировщик выбирает стойку для дальней цели "
                         + "раньше, чем для ближней, и тратит чтения впустую");
     }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Журнал заданий на диске: append-only JSONL, одна запись на строку. Запись идёт через
@@ -25,8 +26,7 @@ public final class BoardJournal {
     private int written;
 
     public BoardJournal(Path path) {
-        this.path = Objects.requireNonNull(path,
-                "Путь журнала не может быть null: без него запись некуда класть");
+        this.path = Objects.requireNonNull(path, "Путь журнала не может быть null: без него запись некуда класть");
     }
 
     public Path path() {
@@ -42,24 +42,21 @@ public final class BoardJournal {
         return pending.size();
     }
 
-    /** Сколько записей поставлено в журнал: каждая запись — один переход статуса задания. */
     public int enqueued() {
         return enqueued;
     }
 
-    /** Сколько записей уже на диске: тест масштаба сверяет число строк с переходами. */
     public int written() {
         return written;
     }
 
-    /** Сбрасывает не больше {@code maxLines} строк: остальное дочитается следующим тиком. */
     public int flush(int maxLines) {
         if (pending.isEmpty()) {
             return 0;
         }
         if (maxLines < 1) {
-            throw new IllegalArgumentException("Бюджет сброса " + maxLines + " меньше 1: "
-                    + "журнал не продвинется и память будет расти");
+            throw new IllegalArgumentException(
+                    "Бюджет сброса " + maxLines + " меньше 1: " + "журнал не продвинется и память будет расти");
         }
         createParent();
         int flushed = 0;
@@ -69,11 +66,10 @@ public final class BoardJournal {
                 block.append(pending.removeFirst()).append('\n');
                 flushed++;
             }
-            Files.writeString(path, block, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
+            Files.writeString(
+                    path, block, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException error) {
-            throw new IllegalStateException("Журнал заданий не записан в '" + path + "': "
-                    + error.getMessage(), error);
+            throw new IllegalStateException("Журнал заданий не записан в '" + path + "': " + error.getMessage(), error);
         }
         written += flushed;
         return flushed;
@@ -83,11 +79,6 @@ public final class BoardJournal {
         return flush(pending.size());
     }
 
-    /**
-     * Один проход по журналу при старте: каждое {@code DONE} возвращает отметку
-     * «постройка стоит». Оборванная последняя строка обрезается, ошибка возвращается
-     * вызывающему — адаптер пишет её в лог с причиной.
-     */
     public LoadResult load(BoardLedger ledger) {
         Objects.requireNonNull(ledger, "Ledger не может быть null: восстанавливать некуда");
         if (!Files.exists(path)) {
@@ -97,8 +88,7 @@ public final class BoardJournal {
         try {
             lines = Files.readAllLines(path, StandardCharsets.UTF_8);
         } catch (IOException error) {
-            throw new IllegalStateException("Журнал заданий '" + path + "' не прочитан: "
-                    + error.getMessage(), error);
+            throw new IllegalStateException("Журнал заданий '" + path + "' не прочитан: " + error.getMessage(), error);
         }
         int restored = 0;
         int lastLine = -1;
@@ -128,11 +118,9 @@ public final class BoardJournal {
         return new LoadResult(lines.size(), restored, lastLine, error, truncated);
     }
 
-    /** Последние {@code limit} записей от свежих к старым: для GET /v1/board/log. */
     public List<BoardLogEntry> last(int limit) {
         if (limit < 1) {
-            throw new IllegalArgumentException("limit журнала " + limit + " меньше 1: "
-                    + "пустой ответ не отдаётся");
+            throw new IllegalArgumentException("limit журнала " + limit + " меньше 1: " + "пустой ответ не отдаётся");
         }
         if (!Files.exists(path)) {
             return List.of();
@@ -177,8 +165,7 @@ public final class BoardJournal {
             }
             return lines;
         } catch (IOException error) {
-            throw new IllegalStateException("Хвост журнала '" + path + "' не прочитан: "
-                    + error.getMessage(), error);
+            throw new IllegalStateException("Хвост журнала '" + path + "' не прочитан: " + error.getMessage(), error);
         }
     }
 
@@ -195,8 +182,8 @@ public final class BoardJournal {
             }
             Files.writeString(path, kept, StandardCharsets.UTF_8);
         } catch (IOException error) {
-            throw new IllegalStateException("Оборванный хвост журнала '" + path + "' не отрезан: "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Оборванный хвост журнала '" + path + "' не отрезан: " + error.getMessage(), error);
         }
     }
 
@@ -208,16 +195,20 @@ public final class BoardJournal {
         try {
             Files.createDirectories(parent);
         } catch (IOException error) {
-            throw new IllegalStateException("Каталог журнала '" + parent + "' не создан: "
-                    + error.getMessage(), error);
+            throw new IllegalStateException("Каталог журнала '" + parent + "' не создан: " + error.getMessage(), error);
         }
     }
 
-    public record LoadResult(int lines, int restored, int failedLine, String error, boolean truncated) {
+    public record LoadResult(
+            int lines,
+            int restored,
+            int failedLine,
+            @Nullable String error,
+            boolean truncated) {
         public LoadResult {
             if (lines < 0 || restored < 0) {
-                throw new IllegalArgumentException("Счётчики загрузки не бывают отрицательными: lines="
-                        + lines + ", restored=" + restored);
+                throw new IllegalArgumentException(
+                        "Счётчики загрузки не бывают отрицательными: lines=" + lines + ", restored=" + restored);
             }
         }
 

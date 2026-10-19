@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.PriorityContext;
-import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.husbandry.Species;
@@ -27,8 +27,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class PenBuild {
     private static final String[] SCHEMES = {"", "pen_4x5", "pen_7x7", "pen_9x9"};
 
-    private PenBuild() {
-    }
+    private PenBuild() {}
 
     public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -48,9 +47,18 @@ public final class PenBuild {
             String id = species.name().toLowerCase(Locale.ROOT) + "_pen_" + next;
             Map<String, Integer> materials = materials(SCHEMES[next]);
             TicketTarget target = TicketTarget.at(home).withSpecies(species);
-            service.submit(new BoardTicket(id, BoardCase.BUILD_PEN, Optional.empty(),
-                    BoardPriorities.effective(BoardCase.BUILD_PEN, PriorityContext.none()), now,
-                    next, causeOf(service, species), List.of(), materials), target);
+            service.submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.BUILD_PEN,
+                            Optional.empty(),
+                            BoardPriorities.effective(BoardCase.BUILD_PEN, PriorityContext.none()),
+                            now,
+                            next,
+                            causeOf(service, species),
+                            List.of(),
+                            materials),
+                    target);
         }
     }
 
@@ -70,8 +78,10 @@ public final class PenBuild {
 
     private static boolean active(BoardService service, Species species, int level) {
         String id = species.name().toLowerCase(Locale.ROOT) + "_pen_" + level;
-        return service.board().statusOf(id)
-                .map(status -> status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return service.board()
+                .statusOf(id)
+                .map(status -> status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.ASSIGNED)
                 .orElse(false);
     }
@@ -82,8 +92,7 @@ public final class PenBuild {
             return Map.of();
         }
         Map<String, Integer> materials = new LinkedHashMap<>();
-        preset.orElseThrow().materials().forEach((item, count) ->
-                materials.merge(shortId(item), count, Integer::sum));
+        preset.orElseThrow().materials().forEach((item, count) -> materials.merge(shortId(item), count, Integer::sum));
         return Map.copyOf(materials);
     }
 

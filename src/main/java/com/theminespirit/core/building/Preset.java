@@ -13,8 +13,16 @@ import java.util.Optional;
  * {@code requires} называет пресет предыдущего уровня: без него следующий уровень не строят. Постройка
  * без уровней несёт {@link #LEVEL_NONE} и пустой {@code requires}.
  */
-public record Preset(String id, String name, int stage, BuildingType type, int level, Optional<String> requires,
-        Schematic schematic, BlockCoord entry, Map<String, Integer> materials) {
+public record Preset(
+        String id,
+        String name,
+        int stage,
+        BuildingType type,
+        int level,
+        Optional<String> requires,
+        Schematic schematic,
+        BlockCoord entry,
+        Map<String, Integer> materials) {
     public static final int STAGE_MIN = 0;
     public static final int STAGE_MAX = 4;
     public static final int LEVEL_NONE = 0;
@@ -36,8 +44,8 @@ public record Preset(String id, String name, int stage, BuildingType type, int l
             throw new IllegalArgumentException("Уровень пресета " + level + " меньше " + LEVEL_NONE
                     + ": уровни начинаются с 1, а постройка без уровней несёт " + LEVEL_NONE);
         }
-        Objects.requireNonNull(requires, "Поле requires не может быть null: постройку без требования задают "
-                + "Optional.empty()");
+        Objects.requireNonNull(
+                requires, "Поле requires не может быть null: постройку без требования задают " + "Optional.empty()");
         if (requires.isPresent() && requires.get().isBlank()) {
             throw new IllegalArgumentException("Требование requires пусто: пустой id не найдёт предыдущий уровень");
         }

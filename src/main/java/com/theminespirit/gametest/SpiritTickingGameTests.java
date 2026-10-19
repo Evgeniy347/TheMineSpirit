@@ -21,8 +21,7 @@ public final class SpiritTickingGameTests {
     private static final int DISTANCE_BEYOND_STRUCTURE = 24;
     private static final int PATH_HALF_WIDTH = 1;
 
-    private SpiritTickingGameTests() {
-    }
+    private SpiritTickingGameTests() {}
 
     // [флак] дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
     @GameTest(template = "arena", batch = "ticking_beyond", timeoutTicks = 600)
@@ -37,18 +36,24 @@ public final class SpiritTickingGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), EDGE_START);
         BlockPos target = helper.absolutePos(new BlockPos(targetX, 1, EDGE_START.getZ()));
         Vec3 start = helper.absoluteVec(Vec3.atBottomCenterOf(EDGE_START));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())), 1);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())),
+                1);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "дух, ушедший за габариты структуры, обязан продолжать тикать и дойти: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", тиков духа " + run.spiritTicks()
                             + ", ушёл на " + spirit.position().distanceTo(start));
-            helper.assertTrue(spirit.position().distanceTo(start) >= DISTANCE_BEYOND_STRUCTURE - 2,
-                    "дух обязан оказаться за пределами площадки, ушёл на " + spirit.position().distanceTo(start));
+            helper.assertTrue(
+                    spirit.position().distanceTo(start) >= DISTANCE_BEYOND_STRUCTURE - 2,
+                    "дух обязан оказаться за пределами площадки, ушёл на "
+                            + spirit.position().distanceTo(start));
             GameTestFixtures.finish(helper);
         });
     }

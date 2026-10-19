@@ -11,8 +11,8 @@ public final class ProgressWatchdog {
 
     public ProgressWatchdog(int limitTicks) {
         if (limitTicks < 1) {
-            throw new IllegalArgumentException("Предел застоя " + limitTicks
-                    + " меньше единицы: сторож сработал бы до первого наблюдения");
+            throw new IllegalArgumentException(
+                    "Предел застоя " + limitTicks + " меньше единицы: сторож сработал бы до первого наблюдения");
         }
         this.limitTicks = limitTicks;
     }

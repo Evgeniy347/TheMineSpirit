@@ -21,8 +21,7 @@ public final class MovementComeGameTests {
     private static final int NO_TARGET_LIMIT_TICKS = 2;
     private static final double STANDS_STILL = 0.1;
 
-    private MovementComeGameTests() {
-    }
+    private MovementComeGameTests() {}
 
     @GameTest(template = "arena", batch = "move_come_player", timeoutTicks = 300)
     public static void comeToPlayer_NoNameAndMockPlayerSixBlocksAway_ArrivesWithinToleranceNoLaterThan200Ticks(
@@ -30,20 +29,23 @@ public final class MovementComeGameTests {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
         ServerPlayer player = MovementScene.mockPlayer(helper, PLAYER_AT);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("come_to_player", Map.of()),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.call("come_to_player", Map.of()), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "игрок в 6 блоках достижим: come_to_player без имени обязан дойти до ближайшего игрока, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = spirit.position().distanceTo(player.position());
-            helper.assertTrue(distance <= MovementScene.ARRIVAL,
+            helper.assertTrue(
+                    distance <= MovementScene.ARRIVAL,
                     "дух обязан стоять рядом с игроком в пределах " + MovementScene.ARRIVAL + ", расстояние "
                             + distance);
-            helper.assertTrue(run.spiritTicks() <= COME_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= COME_LIMIT_TICKS,
                     "шесть блоков до игрока обязаны пройтись за " + COME_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
             MovementScene.removePlayer(helper, player);
@@ -55,8 +57,11 @@ public final class MovementComeGameTests {
     public static void comeToPlayer_UnknownPlayerName_FailsBeforeFirstStepAndStands(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                MovementScene.call("come_to_player", Map.of("player", "НетТакогоИгрока")), MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                MovementScene.call("come_to_player", Map.of("player", "НетТакогоИгрока")),
+                MovementScene.SETTLE_TICKS);
         Vec3[] startAt = new Vec3[1];
         helper.onEachTick(() -> {
             if (startAt[0] == null && spirit.tickCount >= MovementScene.SETTLE_TICKS) {
@@ -66,18 +71,23 @@ public final class MovementComeGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "игрока с таким именем нет: come_to_player обязан провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("НетТакогоИгрока"),
-                    "причина обязана называть искомое имя, фактически: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(run.spiritTicks() <= NO_TARGET_LIMIT_TICKS,
+            helper.assertTrue(
+                    spirit.taskFailureReason().orElse("").contains("НетТакогоИгрока"),
+                    "причина обязана называть искомое имя, фактически: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    run.spiritTicks() <= NO_TARGET_LIMIT_TICKS,
                     "отказ без игрока идёт до первого шага: за " + NO_TARGET_LIMIT_TICKS + " тика, прошло "
                             + run.spiritTicks());
-            helper.assertTrue(spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
+            helper.assertTrue(
+                    spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
                     "без цели дух стоит, а он сдвинулся на " + spirit.position().distanceTo(startAt[0]));
-            helper.assertTrue(spirit.pathBuilds() == 0,
-                    "до первого шага путь не строится, а построено " + spirit.pathBuilds());
+            helper.assertTrue(
+                    spirit.pathBuilds() == 0, "до первого шага путь не строится, а построено " + spirit.pathBuilds());
             MovementScene.finish(helper);
         });
     }

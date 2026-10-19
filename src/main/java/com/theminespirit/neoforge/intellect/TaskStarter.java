@@ -11,8 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class TaskStarter {
-    private record Issued(String script, long generation) {
-    }
+    private record Issued(String script, long generation) {}
 
     private final TaskBackoff backoff = new TaskBackoff();
     private final Map<UUID, Issued> issued = new HashMap<>();
@@ -48,9 +47,13 @@ public final class TaskStarter {
         Issued own = issued.get(id);
         // Запущенная задача (в т.ч. чужая, ещё не назвавшая скрипт) не перебивается: иначе занятие,
         // выданное в том же серверном тике, затирает задачу и её итог (флак GameTest 16.10).
-        var admission = TaskAdmission.decide(current, status.orElse(null),
+        var admission = TaskAdmission.decide(
+                current,
+                status.orElse(null),
                 own == null ? null : own.script(),
-                own == null ? SpiritReading.UNKNOWN_GENERATION : own.generation(), generation, script);
+                own == null ? SpiritReading.UNKNOWN_GENERATION : own.generation(),
+                generation,
+                script);
         switch (admission) {
             case SKIP_SAME, SKIP_BUSY -> {
                 return false;
@@ -79,7 +82,6 @@ public final class TaskStarter {
                     }
                 }
             }
-            default -> throw new IllegalStateException("Неизвестный вердикт допуска задачи: " + admission);
         }
         spirit.startTask(task);
         issued.put(id, new Issued(script, spirit.taskGeneration()));

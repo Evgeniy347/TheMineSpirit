@@ -2,15 +2,16 @@ package com.theminespirit.core.script;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record ParamSpec(
         String name,
         ParamType type,
         boolean required,
-        Double min,
-        Double max,
-        List<String> values,
-        Object defaultValue) {
+        @Nullable Double min,
+        @Nullable Double max,
+        @Nullable List<String> values,
+        @Nullable Object defaultValue) {
 
     public ParamSpec {
         if (name == null || name.isBlank()) {
@@ -35,7 +36,9 @@ public record ParamSpec(
             throw new IllegalArgumentException("У параметра '" + name + "' типа " + type
                     + " заданы min/max: границы допустимы только для числовых типов");
         }
-        if (defaultValue != null && type == ParamType.ENUM && !values.contains(defaultValue.toString())) {
+        if (defaultValue != null
+                && type == ParamType.ENUM
+                && (values == null || !values.contains(defaultValue.toString()))) {
             throw new IllegalArgumentException("Значение по умолчанию '" + defaultValue + "' параметра '" + name
                     + "' отсутствует в списке допустимых " + values);
         }

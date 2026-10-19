@@ -1,6 +1,7 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.neoforge.SpiritConfig;
+import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,6 +23,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforgespi.language.ModFileScanData;
@@ -33,8 +35,7 @@ public final class GameTestFilter {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String FILTER_PROPERTY = "theminespirit.gametest.filter";
 
-    private GameTestFilter() {
-    }
+    private GameTestFilter() {}
 
     @SubscribeEvent
     public static void onServerAboutToStart(ServerAboutToStartEvent event) {
@@ -44,8 +45,8 @@ public final class GameTestFilter {
         // Доска и координатор тикают глобально и раздают задачи/приказы любому свободному духу,
         // включая духов чужих сцен: пачка chop_tree_* стояла в RUNNING с чужой задачей (флак 17.10).
         // По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
-        SpiritConfig.setBoardEnabled(false);
-        SpiritConfig.setCoordinatorEnabled(false);
+        setBoardEnabled(false);
+        setCoordinatorEnabled(false);
         installSettlementBatches();
         List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         if (filters.isEmpty()) {
@@ -58,12 +59,6 @@ public final class GameTestFilter {
         }
     }
 
-    /**
-     * Вешает на размеченные пачки включение доски/координатора и выключение после.
-     * Хуки пачек лежат в приватных картах реестра (их читает {@link GameTestBatch});
-     * добавляем в карты сами, потому что одна пара методов на пачку — это тот же бойлерплейт,
-     * от которого уходим. Существующий хук пачки (например, выключение мобов-целей) сохраняется.
-     */
     private static void installSettlementBatches() {
         Map<String, Settlement> batches = settlementBatches();
         if (batches.isEmpty()) {
@@ -106,19 +101,45 @@ public final class GameTestFilter {
                 batches.merge(batch, new Settlement(selected.board(), selected.coordinator()), Settlement::combined);
             }
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("GameTest-класс " + className + " из сканирования не загрузился: "
-                    + "размеченная пачка осталась бы без доски/координатора", e);
+            throw new IllegalStateException(
+                    "GameTest-класс " + className + " из сканирования не загрузился: "
+                            + "размеченная пачка осталась бы без доски/координатора",
+                    e);
         }
     }
 
     private static void enableSettlement(Settlement settlement) {
-        SpiritConfig.setBoardEnabled(settlement.board());
-        SpiritConfig.setCoordinatorEnabled(settlement.coordinator());
+        setBoardEnabled(settlement.board());
+        setCoordinatorEnabled(settlement.coordinator());
     }
 
     private static void disableSettlement() {
-        SpiritConfig.setBoardEnabled(false);
-        SpiritConfig.setCoordinatorEnabled(false);
+        setBoardEnabled(false);
+        setCoordinatorEnabled(false);
+    }
+
+    public static void setBoardEnabled(boolean value) {
+        setSpiritValue("spirit.boardEnabled", value);
+    }
+
+    public static void setCoordinatorEnabled(boolean value) {
+        setSpiritValue("spirit.coordinatorEnabled", value);
+    }
+
+    public static void setMobsTargetSpirits(boolean value) {
+        setSpiritValue("spirit.mobsTargetSpirits", value);
+    }
+
+    public static void setProtectedZones(List<String> lines) {
+        ModConfigSpec.ConfigValue<List<String>> value =
+                PolicyConfig.spec().getValues().get(List.of("policy", "protectedZones"));
+        value.set(List.copyOf(lines));
+    }
+
+    private static void setSpiritValue(String path, boolean value) {
+        ModConfigSpec.ConfigValue<Boolean> configValue =
+                SpiritConfig.spec().getValues().get(path);
+        configValue.set(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -128,8 +149,10 @@ public final class GameTestFilter {
             field.setAccessible(true);
             return (Map<String, Consumer<ServerLevel>>) field.get(null);
         } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Не удалось получить хуки пачек GameTest (" + fieldName
-                    + "): размеченные пачки остались бы без доски/координатора", e);
+            throw new IllegalStateException(
+                    "Не удалось получить хуки пачек GameTest (" + fieldName
+                            + "): размеченные пачки остались бы без доски/координатора",
+                    e);
         }
     }
 
@@ -141,7 +164,7 @@ public final class GameTestFilter {
 
     private static List<String> parseFilters(String raw) {
         List<String> filters = new ArrayList<>();
-        for (String part : raw.split(",")) {
+        for (String part : raw.split(",", -1)) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {
                 filters.add(trimmed.toLowerCase(Locale.ROOT));
@@ -163,7 +186,8 @@ public final class GameTestFilter {
             throw new IllegalStateException("Фильтр GameTest " + filters + " не совпал ни с одной пачкой, "
                     + "классом или тестом — проверьте имя: прогон не состоится");
         }
-        LOGGER.info("GameTest filter {}: удалено {} тестов из {}, осталось {}", filters, removed, before, functions.size());
+        LOGGER.info(
+                "GameTest filter {}: удалено {} тестов из {}, осталось {}", filters, removed, before, functions.size());
     }
 
     private static boolean matches(TestFunction function, String filter, Map<String, Set<String>> classTests) {
@@ -175,7 +199,9 @@ public final class GameTestFilter {
         int dot = filter.indexOf('.');
         if (dot >= 0) {
             return filter.substring(dot + 1).equals(test)
-                    && classTests.getOrDefault(filter.substring(0, dot), Set.of()).contains(test);
+                    && classTests
+                            .getOrDefault(filter.substring(0, dot), Set.of())
+                            .contains(test);
         }
         return classTests.getOrDefault(filter, Set.of()).contains(test);
     }
@@ -195,7 +221,8 @@ public final class GameTestFilter {
             for (Method method : testClass.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(GameTest.class)) {
                     String simpleName = testClass.getSimpleName().toLowerCase(Locale.ROOT);
-                    classTests.computeIfAbsent(simpleName, key -> new HashSet<>())
+                    classTests
+                            .computeIfAbsent(simpleName, key -> new HashSet<>())
                             .add(method.getName().toLowerCase(Locale.ROOT));
                 }
             }

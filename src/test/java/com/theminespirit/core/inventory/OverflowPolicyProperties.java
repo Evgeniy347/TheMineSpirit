@@ -18,22 +18,41 @@ class OverflowPolicyProperties {
 
     @Provide
     Arbitrary<List<Stack>> inventories() {
-        return stacks(
-                Arbitraries.of("cobblestone", "dirt", "iron_ingot", "iron_nugget", "bread",
-                        "diamond", "oak_log", "torch", "iron_pickaxe", "crafting_table", "bucket"))
-                .list().ofMaxSize(36).ofMinSize(36);
+        return stacks(Arbitraries.of(
+                        "cobblestone",
+                        "dirt",
+                        "iron_ingot",
+                        "iron_nugget",
+                        "bread",
+                        "diamond",
+                        "oak_log",
+                        "torch",
+                        "iron_pickaxe",
+                        "crafting_table",
+                        "bucket"))
+                .list()
+                .ofMaxSize(36)
+                .ofMinSize(36);
     }
 
     @Provide
     Arbitrary<Stack> incoming() {
-        return stacks(
-                Arbitraries.of("cobblestone", "dirt", "iron_ingot", "bread", "diamond",
-                        "oak_log", "torch", "iron_pickaxe", "gold_ingot"));
+        return stacks(Arbitraries.of(
+                "cobblestone",
+                "dirt",
+                "iron_ingot",
+                "bread",
+                "diamond",
+                "oak_log",
+                "torch",
+                "iron_pickaxe",
+                "gold_ingot"));
     }
 
     private static Arbitrary<Stack> stacks(Arbitrary<String> items) {
         return Combinators.combine(items, Arbitraries.integers().between(0, 1))
-                .flatAs((item, variant) -> Arbitraries.integers().between(1, maxStackOf(item))
+                .flatAs((item, variant) -> Arbitraries.integers()
+                        .between(1, maxStackOf(item))
                         .map(count -> new Stack(item, variant, count, maxStackOf(item))));
     }
 
@@ -49,12 +68,14 @@ class OverflowPolicyProperties {
     }
 
     private static int maxStackOf(String item) {
-        return item.equals("iron_pickaxe") ? 1 : 64;
+        return "iron_pickaxe".equals(item) ? 1 : 64;
     }
 
     @Property
-    void decide_DroppedSlot_HasGiveAway(@ForAll("inventories") List<Stack> inventory,
-            @ForAll("incoming") Stack incoming, @ForAll("protections") List<String> patterns) {
+    void decide_DroppedSlot_HasGiveAway(
+            @ForAll("inventories") List<Stack> inventory,
+            @ForAll("incoming") Stack incoming,
+            @ForAll("protections") List<String> patterns) {
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT);
 
         if (decision.action() != OverflowPolicy.Action.DROP) {
@@ -62,22 +83,30 @@ class OverflowPolicyProperties {
         }
         Stack dropped = inventory.get(decision.slot());
         int give = Protected.of(patterns, inventory, KIT, VALUES).giveAway(decision.slot());
-        assertTrue(give > 0,
+        assertTrue(
+                give > 0,
                 "Выброшен слот " + decision.slot() + " инвентаря " + inventory + " не имеет излишка: "
                         + "политика отдала бы в контейнер то, что базовый набор придержал. Излишек " + give
                         + ", решено отдать " + decision.count());
-        assertEquals(dropped.count(), decision.count(),
+        assertEquals(
+                dropped.count(),
+                decision.count(),
                 "Выбрасывается слот целиком (" + decision.count() + " из " + dropped.count() + "): "
                         + "частичный выброс оставляет слот занятым, и подобранной кучке некуда деться");
-        assertEquals(dropped.count(), give,
+        assertEquals(
+                dropped.count(),
+                give,
                 "Слот выбирается, только когда весь он излишек: в слоте " + decision.slot() + " лежит "
                         + dropped.count() + ", излишек " + give);
     }
 
     @Property
-    void decide_SameInputs_GiveSameDecision(@ForAll("inventories") List<Stack> inventory,
-            @ForAll("incoming") Stack incoming, @ForAll("protections") List<String> patterns) {
-        assertEquals(OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT),
+    void decide_SameInputs_GiveSameDecision(
+            @ForAll("inventories") List<Stack> inventory,
+            @ForAll("incoming") Stack incoming,
+            @ForAll("protections") List<String> patterns) {
+        assertEquals(
+                OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT),
                 OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT),
                 "Решение политики детерминировано: на одном и том же инвентаре дух должен принимать "
                         + "одно и то же решение, иначе подбор дропа зависит от порядка вызовов. "
@@ -85,8 +114,10 @@ class OverflowPolicyProperties {
     }
 
     @Property
-    void decide_AfterDropAndTake_EveryKitRuleKeepsItsQuotaAndValueGrows(@ForAll("inventories") List<Stack> inventory,
-            @ForAll("incoming") Stack incoming, @ForAll("protections") List<String> patterns) {
+    void decide_AfterDropAndTake_EveryKitRuleKeepsItsQuotaAndValueGrows(
+            @ForAll("inventories") List<Stack> inventory,
+            @ForAll("incoming") Stack incoming,
+            @ForAll("protections") List<String> patterns) {
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT);
         if (decision.action() != OverflowPolicy.Action.DROP) {
             return;
@@ -95,14 +126,16 @@ class OverflowPolicyProperties {
         for (KitRule rule : KIT.rules()) {
             int before = countOfRule(inventory, rule);
             int left = countOfRule(after, rule);
-            assertTrue(left >= Math.min(before, rule.keep()),
+            assertTrue(
+                    left >= Math.min(before, rule.keep()),
                     "Правило набора " + rule.match() + rule.category() + " с квотой " + rule.keep()
                             + " до обмена имело " + before + " предметов, после — " + left
                             + ": набор обязан придержать своё, а не отдавать его вместе с лишком. "
                             + "Инвентарь " + inventory + ", кучка " + incoming);
         }
         int incomingValue = VALUES.stackValue(incoming);
-        assertTrue(totalValue(after) + incomingValue > totalValue(inventory),
+        assertTrue(
+                totalValue(after) + incomingValue > totalValue(inventory),
                 "Ценность того, что осталось, плюс ценность кучки выше прежней: было "
                         + totalValue(inventory) + ", осталось " + totalValue(after) + " и пришло "
                         + incomingValue + ". Обмен, делающий духа беднее, — дефект политики. "
@@ -110,18 +143,23 @@ class OverflowPolicyProperties {
     }
 
     @Property
-    void decide_AfterDrop_FreedSlotHostsIncoming(@ForAll("inventories") List<Stack> inventory,
-            @ForAll("incoming") Stack incoming, @ForAll("protections") List<String> patterns) {
+    void decide_AfterDrop_FreedSlotHostsIncoming(
+            @ForAll("inventories") List<Stack> inventory,
+            @ForAll("incoming") Stack incoming,
+            @ForAll("protections") List<String> patterns) {
         OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT);
         if (decision.action() != OverflowPolicy.Action.DROP) {
             return;
         }
 
-        assertEquals(null, dropGivenAway(inventory, decision).get(decision.slot()),
+        assertEquals(
+                null,
+                dropGivenAway(inventory, decision).get(decision.slot()),
                 "После DROP слот " + decision.slot() + " пуст: кучка '" + incoming.item() + "' должна "
                         + "занять его место, иначе обмен не освобождает место и перенос некуда делать. "
                         + "Инвентарь " + inventory + ", кучка " + incoming);
-        assertTrue(incoming.count() <= incoming.maxStack(),
+        assertTrue(
+                incoming.count() <= incoming.maxStack(),
                 "Кучка '" + incoming.item() + "' × " + incoming.count() + " обязана влезать в свой максимум "
                         + incoming.maxStack() + ": пустой слот принимает любую корректную стопку, и обмен "
                         + "освобождает место именно под неё. Инвентарь " + inventory);

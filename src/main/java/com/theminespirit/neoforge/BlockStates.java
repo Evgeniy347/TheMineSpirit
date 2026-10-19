@@ -12,8 +12,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 public final class BlockStates {
     private static final String DEFAULT_NAMESPACE = "minecraft";
 
-    private BlockStates() {
-    }
+    private BlockStates() {}
 
     public static Block blockFor(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что ставить");
@@ -22,8 +21,10 @@ public final class BlockStates {
         }
         String qualified = blockId.indexOf(':') < 0 ? DEFAULT_NAMESPACE + ":" + blockId : blockId;
         ResourceLocation location = ResourceLocation.tryParse(qualified);
-        Block block = location == null ? null : BuiltInRegistries.BLOCK.getOptional(location).orElse(null);
-        if (block == null || block == Blocks.AIR) {
+        Block block = location == null
+                ? null
+                : BuiltInRegistries.BLOCK.getOptional(location).orElse(null);
+        if (block == null || Blocks.AIR.equals(block)) {
             throw new IllegalArgumentException("Неизвестный блок '" + blockId + "': такого id нет в реестре блоков");
         }
         return block;

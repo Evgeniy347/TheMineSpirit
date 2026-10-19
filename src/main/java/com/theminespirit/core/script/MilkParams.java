@@ -19,8 +19,6 @@ public record MilkParams(int radius, int count) {
 
     public static MilkParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new MilkParams(
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireInt(params, "count"));
+        return new MilkParams(ScriptArgs.requireInt(params, "radius"), ScriptArgs.requireInt(params, "count"));
     }
 }

@@ -5,8 +5,7 @@ import java.util.Optional;
 public final class SafePointChoice {
     public static final Optional<Point> NO_CAMP = Optional.empty();
 
-    private SafePointChoice() {
-    }
+    private SafePointChoice() {}
 
     public static Optional<Point> nearest(Point self, Optional<Point> home, Optional<Point> camp) {
         if (self == null) {

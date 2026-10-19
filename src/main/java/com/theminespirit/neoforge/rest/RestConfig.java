@@ -17,21 +17,18 @@ public final class RestConfig {
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("rest");
-        ENABLED = builder
-                .comment("Запускать ли REST-мост для внешнего ИИ-агента при старте выделенного сервера.")
+        ENABLED = builder.comment("Запускать ли REST-мост для внешнего ИИ-агента при старте выделенного сервера.")
                 .define("enabled", true);
-        PORT = builder
-                .comment("TCP-порт REST-моста. Авторизации нет: порт открыт всем, кто достигает адрес привязки.")
+        PORT = builder.comment("TCP-порт REST-моста. Авторизации нет: порт открыт всем, кто достигает адрес привязки.")
                 .defineInRange("port", DEFAULT_PORT, MIN_PORT, MAX_PORT);
-        BIND_ADDRESS = builder
-                .comment("Адрес привязки. 0.0.0.0 — вся локальная сеть, 127.0.0.1 — только этот компьютер.")
+        BIND_ADDRESS = builder.comment(
+                        "Адрес привязки. 0.0.0.0 — вся локальная сеть, 127.0.0.1 — только этот компьютер.")
                 .define("bindAddress", DEFAULT_BIND_ADDRESS);
         builder.pop();
         SPEC = builder.build();
     }
 
-    private RestConfig() {
-    }
+    private RestConfig() {}
 
     public static ModConfigSpec spec() {
         return SPEC;

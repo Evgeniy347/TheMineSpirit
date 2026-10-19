@@ -8,8 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class DemoRegistry {
     private static final Map<ServerLevel, DemoService> BY_LEVEL = new ConcurrentHashMap<>();
 
-    private DemoRegistry() {
-    }
+    private DemoRegistry() {}
 
     public static DemoService get(ServerLevel level) {
         if (level == null) {

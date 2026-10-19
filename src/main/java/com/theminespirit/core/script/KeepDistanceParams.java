@@ -19,7 +19,6 @@ public record KeepDistanceParams(String target, int distance) {
     public static KeepDistanceParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new KeepDistanceParams(
-                ScriptArgs.requireString(params, "target"),
-                ScriptArgs.requireInt(params, "distance"));
+                ScriptArgs.requireString(params, "target"), ScriptArgs.requireInt(params, "distance"));
     }
 }

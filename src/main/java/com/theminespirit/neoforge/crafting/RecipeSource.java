@@ -23,8 +23,7 @@ import org.slf4j.Logger;
 public final class RecipeSource {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private RecipeSource() {
-    }
+    private RecipeSource() {}
 
     public static List<RecipeSpec> read(RecipeManager manager, HolderLookup.Provider registries) {
         List<RecipeSpec> specs = new ArrayList<>();
@@ -49,7 +48,8 @@ public final class RecipeSource {
         LOGGER.warn("Рецепт {} пропущен: не укладывается в модель крафта духа ({})", id, e.getMessage());
     }
 
-    private static Optional<RecipeSpec> crafting(RecipeHolder<CraftingRecipe> holder, HolderLookup.Provider registries) {
+    private static Optional<RecipeSpec> crafting(
+            RecipeHolder<CraftingRecipe> holder, HolderLookup.Provider registries) {
         CraftingRecipe recipe = holder.value();
         ItemStack result = recipe.getResultItem(registries);
         if (recipe.isSpecial() || result.isEmpty()) {
@@ -62,8 +62,8 @@ public final class RecipeSource {
         String id = holder.id().toString();
         String output = ItemIds.of(result.getItem());
         if (recipe instanceof ShapedRecipe shaped) {
-            return Optional.of(RecipeSpec.shaped(id, output, result.getCount(), shaped.getWidth(), shaped.getHeight(),
-                    ingredients));
+            return Optional.of(RecipeSpec.shaped(
+                    id, output, result.getCount(), shaped.getWidth(), shaped.getHeight(), ingredients));
         }
         if (recipe instanceof ShapelessRecipe) {
             return Optional.of(RecipeSpec.shapeless(id, output, result.getCount(), ingredients));
@@ -71,15 +71,20 @@ public final class RecipeSource {
         return Optional.empty();
     }
 
-    private static Optional<RecipeSpec> smelting(RecipeHolder<SmeltingRecipe> holder, HolderLookup.Provider registries) {
+    private static Optional<RecipeSpec> smelting(
+            RecipeHolder<SmeltingRecipe> holder, HolderLookup.Provider registries) {
         SmeltingRecipe recipe = holder.value();
         ItemStack result = recipe.getResultItem(registries);
         List<IngredientSpec> ingredients = ingredients(recipe.getIngredients());
         if (result.isEmpty() || ingredients.size() != 1) {
             return Optional.empty();
         }
-        return Optional.of(RecipeSpec.smelting(holder.id().toString(), ItemIds.of(result.getItem()),
-                result.getCount(), ingredients.get(0), recipe.getCookingTime()));
+        return Optional.of(RecipeSpec.smelting(
+                holder.id().toString(),
+                ItemIds.of(result.getItem()),
+                result.getCount(),
+                ingredients.get(0),
+                recipe.getCookingTime()));
     }
 
     private static List<IngredientSpec> ingredients(List<Ingredient> source) {

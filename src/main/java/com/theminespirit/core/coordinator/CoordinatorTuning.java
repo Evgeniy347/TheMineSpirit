@@ -10,6 +10,5 @@ public final class CoordinatorTuning {
     public static final int SNAPSHOT_GROUP_QUERIES = 1;
     public static final int SNAPSHOT_SPIRIT_QUERIES = 1;
 
-    private CoordinatorTuning() {
-    }
+    private CoordinatorTuning() {}
 }

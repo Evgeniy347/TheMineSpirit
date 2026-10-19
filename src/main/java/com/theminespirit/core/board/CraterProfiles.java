@@ -31,12 +31,12 @@ public final class CraterProfiles {
 
     public CraterProfiles(int capacity, int maxCells) {
         if (capacity < 1) {
-            throw new IllegalArgumentException("Ёмкость кольца воронок " + capacity
-                    + " меньше 1: кольцо без памяти не проверяет актуальность");
+            throw new IllegalArgumentException(
+                    "Ёмкость кольца воронок " + capacity + " меньше 1: кольцо без памяти не проверяет актуальность");
         }
         if (maxCells < 1) {
-            throw new IllegalArgumentException("Предел клеток профиля " + maxCells
-                    + " меньше 1: пустой профиль считался бы засыпанным");
+            throw new IllegalArgumentException(
+                    "Предел клеток профиля " + maxCells + " меньше 1: пустой профиль считался бы засыпанным");
         }
         this.capacity = capacity;
         this.maxCells = maxCells;
@@ -47,10 +47,6 @@ public final class CraterProfiles {
         return "crater:" + center.x() + ":" + center.y() + ":" + center.z();
     }
 
-    /**
-     * Запоминает профиль воронки: клетки сортируются и обрезаются пределом, повторный
-     * взрыв той же точки заменяет профиль, а не плодит вторую причину.
-     */
     public void remember(String cause, List<BlockCoord> cells) {
         if (cause == null || cause.isBlank()) {
             throw new IllegalArgumentException("Причина воронки пуста: без неё задание не с чем сверить");
@@ -69,7 +65,6 @@ public final class CraterProfiles {
         }
     }
 
-    /** Живые причины: профиль, в котором есть пустая клетка. Засыпанные уходят из кольца. */
     public Set<String> retainLive(Predicate<BlockCoord> empty) {
         Objects.requireNonNull(empty, "Проверка клетки не может быть null: без неё не понять, засыпана ли воронка");
         Set<String> live = new LinkedHashSet<>();

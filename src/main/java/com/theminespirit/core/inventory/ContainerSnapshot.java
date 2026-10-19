@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record ContainerSnapshot(BlockCoord pos, List<Stack> slots, String category) {
+public record ContainerSnapshot(
+        BlockCoord pos, List<Stack> slots, @Nullable String category) {
     public ContainerSnapshot {
         Objects.requireNonNull(pos, "Позиция контейнера не может быть null: по ней выбирают ближайший");
-        Objects.requireNonNull(slots, "Содержимое контейнера не может быть null: пустой контейнер — список null-слотов");
+        Objects.requireNonNull(
+                slots, "Содержимое контейнера не может быть null: пустой контейнер — список null-слотов");
         // Пустой слот — это null, поэтому List.copyOf (он запрещает null) здесь не подходит.
         slots = Collections.unmodifiableList(new ArrayList<>(slots));
         category = category == null ? "" : category;

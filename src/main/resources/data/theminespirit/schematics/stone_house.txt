@@ -1,0 +1,81 @@
+# Простой каменный дом — первый дом поселения (этап 2).
+# Цоколь и углы из булыжника, стены из каменного кирпича, окна-панели,
+# двускатная крыша из булыжных ступенек на подкладке из каменного кирпича,
+# конёк — булыжник. Внутри: 2 кровати у задней стены, сундук между ними,
+# печь и столешница (верхняя плита) у входа, скамья из ступеньки.
+name: "Простой каменный дом"
+type: housing
+stage: 2
+size: 7x7x7
+entrance: front
+legend:
+  'c': cobblestone
+  '#': stone_bricks
+  'G': glass_pane
+  'D': oak_door[facing=south,hinge=left]
+  'B': white_bed[facing=south]
+  'C': chest[facing=north]
+  'F': furnace[facing=south]
+  '_': cobblestone_slab[type=top]
+  'h': stone_brick_stairs[facing=east,half=bottom]
+  'e': cobblestone_stairs[facing=east,half=bottom]
+  'w': cobblestone_stairs[facing=west,half=bottom]
+  'S': wall_torch[facing=south]
+  'N': wall_torch[facing=north]
+layers:
+  - y0 цоколь и пол: |
+      ccccccc
+      c#####c
+      c#####c
+      c#####c
+      c#####c
+      c#####c
+      ccccccc
+  - y1 стены, мебель: |
+      c##D##c
+      #F_...#
+      #....h#
+      #.....#
+      #B...B#
+      #B.C.B#
+      c#####c
+  - y2 окна, факелы: |
+      cG#D#Gc
+      #.S.S.#
+      #.....#
+      G.....G
+      #.....#
+      #..N..#
+      c#G#G#c
+  - y3 верх стен: |
+      c#####c
+      #.....#
+      #.....#
+      #.....#
+      #.....#
+      #.....#
+      c#####c
+  - y4 карниз крыши: |
+      e##G##w
+      e#...#w
+      e#...#w
+      e#...#w
+      e#...#w
+      e#...#w
+      e##G##w
+  - y5 скат: |
+       e###w
+       e#.#w
+       e#.#w
+       e#.#w
+       e#.#w
+       e#.#w
+       e###w
+  - y6 конёк: |
+        ecw
+        ecw
+        ecw
+        ecw
+        ecw
+        ecw
+        ecw

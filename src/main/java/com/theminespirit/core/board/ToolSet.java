@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Набор инструментов первых шагов: деревянные кирка, топор и лопата, затем каменные
@@ -19,8 +20,8 @@ public final class ToolSet {
     public static final String PER_SPIRIT_KEY = "perSpirit";
     public static final String MIN_SETS_KEY = "minSets";
 
-    private static final List<BoardCase> WOODEN = List.of(
-            BoardCase.CRAFT_WOODEN_PICKAXE, BoardCase.CRAFT_WOODEN_AXE, BoardCase.CRAFT_WOODEN_SHOVEL);
+    private static final List<BoardCase> WOODEN =
+            List.of(BoardCase.CRAFT_WOODEN_PICKAXE, BoardCase.CRAFT_WOODEN_AXE, BoardCase.CRAFT_WOODEN_SHOVEL);
     private static final List<BoardCase> STONE = List.of(
             BoardCase.CRAFT_STONE_PICKAXE, BoardCase.CRAFT_STONE_AXE,
             BoardCase.CRAFT_STONE_SHOVEL, BoardCase.CRAFT_STONE_SWORD);
@@ -30,8 +31,7 @@ public final class ToolSet {
     private static final int DEFAULT_MIN_SETS = 1;
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
-    private ToolSet() {
-    }
+    private ToolSet() {}
 
     public static List<BoardCase> chain() {
         return CHAIN;
@@ -45,15 +45,15 @@ public final class ToolSet {
         return STONE;
     }
 
-    public static boolean isTool(BoardCase boardCase) {
+    public static boolean isTool(@Nullable BoardCase boardCase) {
         return boardCase != null && ITEMS.containsKey(boardCase);
     }
 
     public static String itemId(BoardCase boardCase) {
         String item = ITEMS.get(boardCase);
         if (item == null) {
-            throw new IllegalArgumentException("Кейс " + boardCase + " не из набора инструментов: "
-                    + "у него нет предмета крафта");
+            throw new IllegalArgumentException(
+                    "Кейс " + boardCase + " не из набора инструментов: " + "у него нет предмета крафта");
         }
         return item;
     }
@@ -63,13 +63,9 @@ public final class ToolSet {
         return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
     }
 
-    /**
-     * Первый недостающий инструмент цепочки: деревянный набор обязан быть собран раньше
-     * каменного, поэтому наличие каменной кирки без деревянной не продвигает цепочку.
-     */
     public static Optional<BoardCase> nextMissing(Set<String> present) {
-        Objects.requireNonNull(present, "present не может быть null: без запасов не понять, "
-                + "какого инструмента не хватает");
+        Objects.requireNonNull(
+                present, "present не может быть null: без запасов не понять, " + "какого инструмента не хватает");
         for (BoardCase boardCase : CHAIN) {
             if (!present.contains(stockKey(boardCase))) {
                 return Optional.of(boardCase);
@@ -78,10 +74,11 @@ public final class ToolSet {
         return Optional.empty();
     }
 
-    /** Комплектов на поселение: не меньше фиксированного минимума и не меньше числа духов. */
     public static int count(Map<String, Integer> tools, int spirits) {
-        Objects.requireNonNull(tools, "tools не может быть null: число комплектов читается из таблицы, "
-                + "пустую таблицу задают пустой картой");
+        Objects.requireNonNull(
+                tools,
+                "tools не может быть null: число комплектов читается из таблицы, "
+                        + "пустую таблицу задают пустой картой");
         if (spirits < 0) {
             throw new IllegalArgumentException("Духов " + spirits + ": число не может быть отрицательным");
         }

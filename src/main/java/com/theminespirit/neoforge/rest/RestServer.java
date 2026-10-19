@@ -24,8 +24,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -50,24 +50,23 @@ public final class RestServer {
     private final ClientRateLimit rateLimit = new ClientRateLimit();
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private RestServer(HttpServer httpServer, ExecutorService pool, Router router, Runnable onStop) {
+    private RestServer(HttpServer httpServer, Router router, Runnable onStop) {
         this.httpServer = httpServer;
-        this.pool = pool;
+        this.pool = Executors.newFixedThreadPool(RestTuning.HTTP_THREADS, new RestThreadFactory());
         this.router = router;
         this.onStop = onStop;
     }
 
     public static RestServer start(InetAddress address, int port, Router router, Runnable onStop) throws IOException {
-        ExecutorService pool = Executors.newFixedThreadPool(RestTuning.HTTP_THREADS, new RestThreadFactory());
+        HttpServer httpServer = HttpServer.create(new InetSocketAddress(address, port), 0);
+        RestServer server = new RestServer(httpServer, router, onStop);
         try {
-            HttpServer httpServer = HttpServer.create(new InetSocketAddress(address, port), 0);
-            RestServer server = new RestServer(httpServer, pool, router, onStop);
-            httpServer.setExecutor(pool);
+            httpServer.setExecutor(server.pool);
             httpServer.createContext("/", server::handle);
             httpServer.start();
             return server;
-        } catch (IOException | RuntimeException e) {
-            pool.shutdownNow();
+        } catch (RuntimeException e) {
+            server.pool.shutdownNow();
             throw e;
         }
     }
@@ -85,7 +84,8 @@ public final class RestServer {
         pool.shutdown();
         try {
             if (!pool.awaitTermination(POOL_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
-                LOGGER.warn("REST-мост: потоки обработчиков не завершились за {} с, прерываю", POOL_TERMINATION_SECONDS);
+                LOGGER.warn(
+                        "REST-мост: потоки обработчиков не завершились за {} с, прерываю", POOL_TERMINATION_SECONDS);
                 pool.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -95,17 +95,16 @@ public final class RestServer {
     }
 
     private void handle(HttpExchange exchange) throws IOException {
-        try {
+        try (exchange) {
             write(exchange, answer(exchange));
         } catch (IOException e) {
             LOGGER.warn("REST-мост: ответ клиенту не отправлен (клиент закрыл соединение?): {}", e.toString());
-        } finally {
-            exchange.close();
         }
     }
 
     private RestResponse answer(HttpExchange exchange) {
-        String description = exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath();
+        String description =
+                exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath();
         try {
             Optional<RestResponse> limited = rateLimit.reject(clientKey(exchange), System.nanoTime());
             if (limited.isPresent()) {
@@ -117,8 +116,8 @@ public final class RestServer {
             return ErrorJson.response(e);
         } catch (IOException | RuntimeException e) {
             LOGGER.error("REST-мост: необработанная ошибка при обработке {}", description, e);
-            return ErrorJson.response(ApiError.of(ErrorCode.INTERNAL,
-                    "Внутренняя ошибка моста при обработке запроса: подробности в логе сервера"));
+            return ErrorJson.response(ApiError.of(
+                    ErrorCode.INTERNAL, "Внутренняя ошибка моста при обработке запроса: подробности в логе сервера"));
         }
     }
 
@@ -146,8 +145,12 @@ public final class RestServer {
                 discardRest(in);
             }
         }
-        return new RestRequest(exchange.getRequestMethod(), exchange.getRequestURI().getRawPath(),
-                QueryString.parse(exchange.getRequestURI().getRawQuery()), headers, body);
+        return new RestRequest(
+                exchange.getRequestMethod(),
+                exchange.getRequestURI().getRawPath(),
+                QueryString.parse(exchange.getRequestURI().getRawQuery()),
+                headers,
+                body);
     }
 
     private static void discardRest(InputStream in) throws IOException {
@@ -176,8 +179,8 @@ public final class RestServer {
     }
 
     private static void writeStream(HttpExchange exchange, RestResponse response) {
-        SseStream stream = response.stream();
-        try (OutputStream out = exchange.getResponseBody()) {
+        try (SseStream stream = response.stream();
+                OutputStream out = exchange.getResponseBody()) {
             Headers headers = exchange.getResponseHeaders();
             headers.set("Content-Type", EVENT_STREAM_CONTENT_TYPE);
             headers.set("Cache-Control", "no-store");
@@ -185,8 +188,6 @@ public final class RestServer {
             LOGGER.debug("REST-мост: поток событий закрыт: {}", SseWriter.pump(stream, out));
         } catch (IOException e) {
             LOGGER.debug("REST-мост: поток событий не открыт или закрыт клиентом: {}", e.toString());
-        } finally {
-            stream.close();
         }
     }
 

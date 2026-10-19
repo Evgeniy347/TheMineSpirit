@@ -22,16 +22,16 @@ public final class GotoScript implements ScriptInstance {
         this(spirit, params, PathMode.NORMAL);
     }
 
-    public static GotoScript careful(SpiritEntity spirit, WalkCarefulParams params) {
-        return new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()), PathMode.CAREFUL);
-    }
-
     private GotoScript(SpiritEntity spirit, GotoParams params, PathMode mode) {
         this.spirit = spirit;
         this.mode = mode;
         this.target = new Vec3(params.x() + 0.5, params.y(), params.z() + 0.5);
         this.approach = new Approach(spirit);
         this.approach.begin(target, ARRIVAL_TOLERANCE, mode);
+    }
+
+    public static GotoScript careful(SpiritEntity spirit, WalkCarefulParams params) {
+        return new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()), PathMode.CAREFUL);
     }
 
     @Override
@@ -43,7 +43,8 @@ public final class GotoScript implements ScriptInstance {
         }
         if (!zoneChecked) {
             zoneChecked = true;
-            BlockCoord goal = new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
+            BlockCoord goal =
+                    new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
             String refusal = TravelCheck.refusal(spirit, goal);
             if (refusal != null) {
                 approach.cancel();
@@ -81,8 +82,8 @@ public final class GotoScript implements ScriptInstance {
     }
 
     private String failedToArriveReason() {
-        return "не дошёл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за "
-                + approach.timeoutTicks() + " тиков";
+        return "не дошёл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за " + approach.timeoutTicks()
+                + " тиков";
     }
 
     private String stuckReason() {

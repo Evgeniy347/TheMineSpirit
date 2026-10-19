@@ -31,8 +31,7 @@ public final class CraterGameTests {
     private static final int RADIUS = 2;
     private static final int PLATFORM_Y = 1;
 
-    private CraterGameTests() {
-    }
+    private CraterGameTests() {}
 
     private static void buildPlatform(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -47,8 +46,8 @@ public final class CraterGameTests {
     private static Crater addCrater(GameTestHelper helper, int radius) {
         ServerLevel level = helper.getLevel();
         int groundLevel = helper.absolutePos(CENTER).getY();
-        Crater crater = new Crater(UUID.randomUUID(), toAbsolute(helper, CENTER), radius, groundLevel,
-                level.getGameTime());
+        Crater crater =
+                new Crater(UUID.randomUUID(), toAbsolute(helper, CENTER), radius, groundLevel, level.getGameTime());
         CraterStore.get(level).add(crater);
         return crater;
     }
@@ -62,20 +61,29 @@ public final class CraterGameTests {
     public static void explosion_CreeperNearHome_RecordsCrater(GameTestHelper helper) {
         buildPlatform(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 2, 2));
-        spirit.setHome(new BlockCoord(helper.absolutePos(CENTER).getX(), helper.absolutePos(CENTER).getY(),
+        spirit.setHome(new BlockCoord(
+                helper.absolutePos(CENTER).getX(),
+                helper.absolutePos(CENTER).getY(),
                 helper.absolutePos(CENTER).getZ()));
         int before = CraterStore.get(helper.getLevel()).size();
 
         Creeper creeper = helper.spawn(EntityType.CREEPER, CENTER);
         BlockPos absolute = helper.absolutePos(CENTER);
-        helper.getLevel().explode(creeper, absolute.getX() + 0.5, absolute.getY() + 0.5, absolute.getZ() + 0.5,
-                2.0f, Level.ExplosionInteraction.TNT);
+        helper.getLevel()
+                .explode(
+                        creeper,
+                        absolute.getX() + 0.5,
+                        absolute.getY() + 0.5,
+                        absolute.getZ() + 0.5,
+                        2.0f,
+                        Level.ExplosionInteraction.TNT);
 
         helper.succeedWhen(() -> {
             int after = CraterStore.get(helper.getLevel()).size();
-            helper.assertTrue(after == before + 1,
-                    "Взрыв крипера рядом с домом обязан запомнить ровно одну воронку, было " + before
-                            + ", стало " + after);
+            helper.assertTrue(
+                    after == before + 1,
+                    "Взрыв крипера рядом с домом обязан запомнить ровно одну воронку, было " + before + ", стало "
+                            + after);
             GameTestFixtures.reset(helper);
         });
     }
@@ -93,13 +101,13 @@ public final class CraterGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "С 30 землёй воронка из 3 клеток обязана засыпаться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             int holes = countAirAtPlatform(helper);
-            helper.assertTrue(holes == 0,
-                    "После засыпки на уровне земли не должно остаться пустот, осталось " + holes);
+            helper.assertTrue(holes == 0, "После засыпки на уровне земли не должно остаться пустот, осталось " + holes);
             GameTestFixtures.reset(helper);
         });
     }
@@ -122,18 +130,18 @@ public final class CraterGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Нехватка земли не роняет задачу: частичная засыпка обязана завершиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            String result = String.valueOf(spirit.taskResult().map(r -> r.jsonValue()).orElse("нет итога"));
-            helper.assertTrue(result.contains("placed=2"),
-                    "Итог обязан назвать 2 засыпанные клетки, фактически: " + result);
-            helper.assertTrue(result.contains("missing="),
-                    "Итог обязан назвать нехватку земли, фактически: " + result);
+            String result =
+                    String.valueOf(spirit.taskResult().map(r -> r.jsonValue()).orElse("нет итога"));
+            helper.assertTrue(
+                    result.contains("placed=2"), "Итог обязан назвать 2 засыпанные клетки, фактически: " + result);
+            helper.assertTrue(result.contains("missing="), "Итог обязан назвать нехватку земли, фактически: " + result);
             int holes = countAirAtPlatform(helper);
-            helper.assertTrue(holes > 0,
-                    "Земли мало: часть ямы обязана остаться незасыпанной, пустот " + holes);
+            helper.assertTrue(holes > 0, "Земли мало: часть ямы обязана остаться незасыпанной, пустот " + holes);
             GameTestFixtures.reset(helper);
         });
     }

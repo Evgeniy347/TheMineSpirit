@@ -80,8 +80,8 @@ final class FarmActions {
         if (seeds.isEmpty() || !(seeds.getItem() instanceof BlockItem placing)) {
             return false;
         }
-        BlockPlaceContext context = new BlockPlaceContext(level, null, InteractionHand.MAIN_HAND, seeds,
-                topFace(ground));
+        BlockPlaceContext context =
+                new BlockPlaceContext(level, null, InteractionHand.MAIN_HAND, seeds, topFace(ground));
         return placing.place(context).consumesAction();
     }
 
@@ -121,8 +121,14 @@ final class FarmActions {
     }
 
     void rescueDrops(BlockPos broken) {
-        AABB area = new AABB(broken.getX(), broken.getY(), broken.getZ(),
-                broken.getX() + 1.0, broken.getY() + 1.0, broken.getZ() + 1.0).inflate(1.0);
+        AABB area = new AABB(
+                        broken.getX(),
+                        broken.getY(),
+                        broken.getZ(),
+                        broken.getX() + 1.0,
+                        broken.getY() + 1.0,
+                        broken.getZ() + 1.0)
+                .inflate(1.0);
         for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, area)) {
             drop.setPos(spirit.getX(), spirit.getY(), spirit.getZ());
             drop.setDeltaMovement(Vec3.ZERO);
@@ -137,8 +143,8 @@ final class FarmActions {
                 continue;
             }
             if (stack.isDamageableItem()
-                    && reserve.spent(stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage(),
-                            stack.isEnchanted())) {
+                    && reserve.spent(
+                            stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage(), stack.isEnchanted())) {
                 continue;
             }
             return slot;

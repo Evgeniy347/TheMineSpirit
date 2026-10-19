@@ -1,0 +1,82 @@
+# Чеклист 46. Строгие статические анализаторы (владелец 19.10)
+
+Статус: все пункты выполнены в ветке `opus/work`, ждёт приёмки.
+
+Решение владельца: анализаторы роняют сборку; все ошибки и предупреждения — техдолг до нуля; временный список
+нарушений — только на время разбора и сокращается до пустого. Неуместные для проекта правила выключаются в
+конфигурации набора с причиной (не точечным подавлением). Версии выбрал главный агент (поручение владельца):
+последние стабильные не свежее 2 недель, совместимые с Gradle 9.2.1 / Java 21 / ModDevGradle 2.0.148 — проверено замером.
+
+## Версии (в gradle.properties, через DependencyVersionGuardTests)
+
+Error Prone 2.50.0 + плагин `net.ltgt.errorprone` 5.1.1; NullAway 0.14.2 + JSpecify 1.0.1 (compileOnly);
+Checkstyle 14.3.0; PMD 7.28.0; SpotBugs 4.10.4 + плагин `com.github.spotbugs` 6.5.12; ArchUnit 1.5.1;
+Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас; google-java-format отвергнут — отступ 2).
+
+## Замер (19.10, загруженная машина; база compileJava 19–24 с)
+
+| Инструмент | Время | Нарушений main / test |
+|---|---|---|
+| Spotless + palantir | 4–21 с | 1688 файлов меняются (автоматически) |
+| Error Prone | compileJava ×3,5 (68–96 с) | 161 / 96 |
+| NullAway (`core`, main) | 33 с | 291 в 99 файлах |
+| Checkstyle, минимальный набор | 35 с | 261 / 25 (после настройки 206 / 0) |
+| PMD (после выключения неуместных) | ~59 с | ~925 / ~235 (после настройки 481 / 193) |
+| SpotBugs (после выключения EI/MS_EXPOSE_REP) | 81 с | ~71 (стало 296 / 78 без исключений) |
+
+## Выключить в конфигурации (с причиной)
+
+- Checkstyle: не `google_checks`, а минимальный набор — DeclarationOrder, ParameterNumber (max 7), MethodLength (80),
+  EqualsHashCode. Indentation/LineLength/ImportOrder — работа форматтера; MissingJavadoc
+  противоречит правилу «без Javadoc»; имена тестов `subject_Condition_Expected` — наше правило. MissingSwitchDefault
+  выключен: все 48 switch-операторов — по enum, их полноту держит Error Prone MissingCasesInEnumSwitch (проверено
+  удалением case), а default отключил бы её. ParameterNumber — только main и без конструкторов record (как
+  MethodShapeGuardTests); MethodLength в тестах не считает источники строк `static Stream …` (таблицы данных).
+- PMD (наборы errorprone + bestpractices, `config/pmd/main.xml`, `test.xml`; причина — у каждого правила в файле):
+  AvoidFieldNameMatchingMethodName (стиль аксессоров record), TestClassWithoutTestCases (GameTest в main),
+  UnitTestContainsTooManyAsserts, GuardLogStatement (slf4j `{}`), AvoidLiteralsInIfCondition, AvoidDuplicateLiterals
+  для тестов, сцен GameTest и русского текста сообщений, NullAssignment (это NullAway), CompareObjectsWithEquals (это
+  Error Prone ReferenceEquality); после замера ещё: AvoidCatchingGenericException (граница отказа тика/REST/таблиц),
+  PreserveStackTrace (ошибка ввода → 400), AvoidBranchingStatementAsLastInLoop (охранные continue), UseVarargs
+  (массив — держатель результата), AvoidUsingHardCodedIP (0.0.0.0 по умолчанию, петля в сценах), UseProperClassLoader
+  (загрузчик мода NeoForge), NonSerializableClass (Java-сериализации нет), ReturnEmptyCollectionRatherThanNull (null
+  с @Nullable = «нет»). Настроены: CloseResource (мир и сервер Minecraft закрывает игра), AssignmentInOperand (`i++`,
+  цикл чтения), LooseCoupling (ListTag/NonNullList/Headers/IdentityHashMap), EmptyCatchBlock (с комментарием),
+  AvoidAccessibilityAlteration (кроме обвязки GameTest); в тестах — двойники потоков и коллекций, помощник
+  `rejected`, слушатель JUnit, сканеры сторожей, вывод TestCostReporter.
+- Error Prone: UnnecessaryLambda — EventBus NeoForge снимает слушателя только по тому же экземпляру;
+  ImmutableEnumChecker — неизменяемость доказывает только Guava/@Immutable, а Block/Item — синглтоны реестра Minecraft.
+- NullAway — только main, `AnnotatedPackages=com.theminespirit.core` (тесты намеренно передают null).
+- SpotBugs (`config/spotbugs/exclude.xml`, `exclude-test.xml`): EI_EXPOSE_REP/REP2/MS_EXPOSE_REP/EI_EXPOSE_STATIC_REP2 —
+  выборка 22 мест: неизменяемые копии и намеренные ссылки на сущности/шину Minecraft; NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE
+  — повторный вызов аксессора после проверки на null (null держит NullAway); VA_FORMAT_STRING_USES_NEWLINE — `
+` в
+  JSON/CSV, `%n` дал бы CRLF; в тестах — Random с зерном, значение в assertThrows, однопоточные двойники.
+
+## Порядок (каждый пункт — блок, сборка падает только на НОВЫХ нарушениях, временный список → 0)
+
+1. [x] Spotless: один механический коммит `spotlessApply` + `.git-blame-ignore-revs`, `spotlessCheck` в `check`.
+   Только после слияния параллельных веток (иначе конфликты в 1688 файлах).
+2. [x] Error Prone: подключить; патч `-XepPatchChecks` всех найденных, кроме UnnecessaryLambda и StringSplitter (Guava),
+   с ревью диффа (~200); руками — ReferenceEquality через `stack.is(item)`/`state.is(block)`, StringSplitter через
+   `split(regex, -1)`, EnumOrdinal, ReturnValueIgnored (`BoardConfig.java:256`) и прочие (~60). Временный список —
+   `-Xep:<Check>:OFF` по ещё не исправленным, до пустого.
+3. [x] NullAway в `core`: `@Nullable` (JSpecify) там, где null реально бывает, иначе убрать null; 3–4 блока по подпакетам
+   (engine+script; task+board; observation+tactics+intellect; rest и прочее).
+4. [x] Checkstyle минимальный: DeclarationOrder 197 → 0 (устойчивая перестановка членов, порядок инициализации
+   статических полей сохранён), MethodLength (порог 80 по замеру: >40 — 266, >60 — 70, >80 — 19 в main) 19 → 0,
+   ParameterNumber 8 → 0 (все — конструкторы record), MissingSwitchDefault — выключен (см. выше).
+5. [x] PMD: свои наборы `config/pmd/`; после настройки 481 main + 193 test → 0: LiteralsFirstInComparisons 209
+   (скрипт), AvoidDuplicateLiterals 86 ключей → константы, LooseCoupling 23, UnusedFormalParameter 19 (`ignored…` у
+   обработчиков по ссылке), ImplicitFunctionalInterface 15, ресурсы (try-with-resources), мелочь вручную.
+6. [x] SpotBugs: 296 main + 78 test; после исключений из списка выше 16 + 4 → 0. Настоящий баг: use_block на
+   закрытой калитке падал NPE (игрок null) — fix с GameTest. Прочее: замок вместо static synchronized, volatile
+   generation, Double.compare для ничьей, публикация DoorWatchService после регистрации, entrySet, awaitNanos.
+7. [x] ArchUnit: `guards/ArchitectureGuardTests` — core без Minecraft/NeoForge, core/rest без HTTP JDK, клиентские
+   классы только в neoforge/client (новое), проверка самого правила на образце; `CoreIsolationTests` и
+   `RestCoreHttpGuardTests` удалены.
+8. [x] Заменённое удалено: часть «8+ параметров» `MethodShapeGuardTests` (Checkstyle ParameterNumber; осталось 3+
+   boolean), `CoreIsolationTests`, `RestCoreHttpGuardTests`; раздел «Сборка» `docs/CONVENTIONS.md` — до ссылок.
+
+Время сборки: Error Prone — главная цена (×3,5 компиляции); если мешает исполнителям — измерить с `workers.max`
+и решить с владельцем (например, Error Prone только в `check`, а не в каждой компиляции).

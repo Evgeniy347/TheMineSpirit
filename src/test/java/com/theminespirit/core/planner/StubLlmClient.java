@@ -6,6 +6,10 @@ final class StubLlmClient implements LlmClient {
     private final Supplier<String> behavior;
     private String lastPrompt;
 
+    private StubLlmClient(Supplier<String> behavior) {
+        this.behavior = behavior;
+    }
+
     static StubLlmClient responding(String response) {
         return new StubLlmClient(() -> response);
     }
@@ -14,10 +18,6 @@ final class StubLlmClient implements LlmClient {
         return new StubLlmClient(() -> {
             throw error;
         });
-    }
-
-    private StubLlmClient(Supplier<String> behavior) {
-        this.behavior = behavior;
     }
 
     @Override

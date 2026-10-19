@@ -9,11 +9,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class AssistPolicy {
-    AssistPolicy() {
-    }
+    AssistPolicy() {}
 
-    public List<UUID> assist(UUID attacked, List<SpiritSnapshot> spirits, List<DefenseAssignment> posts,
-            int maxHelpers) {
+    public List<UUID> assist(
+            UUID attacked, List<SpiritSnapshot> spirits, List<DefenseAssignment> posts, int maxHelpers) {
         if (attacked == null) {
             throw new IllegalArgumentException("attacked не может быть null: помощь неизвестному духу не нужна");
         }
@@ -43,7 +42,8 @@ public final class AssistPolicy {
                 .filter(spirit -> onDuty.contains(spirit.id()))
                 .filter(spirit -> !spirit.id().equals(attacked))
                 .filter(spirit -> !spirit.attacked())
-                .sorted(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(ward.pos()))
+                .sorted(Comparator.comparingDouble(
+                                (SpiritSnapshot spirit) -> spirit.pos().distanceTo(ward.pos()))
                         .thenComparing(spirit -> spirit.id()))
                 .limit(maxHelpers)
                 .map(SpiritSnapshot::id)

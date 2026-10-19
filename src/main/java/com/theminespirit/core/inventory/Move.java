@@ -1,7 +1,5 @@
 package com.theminespirit.core.inventory;
 
-import java.util.Objects;
-
 public record Move(int fromSlot, int toSlot, int count) {
     public Move {
         if (fromSlot < 0) {
@@ -9,8 +7,8 @@ public record Move(int fromSlot, int toSlot, int count) {
                     + " отрицательный: слоты нумеруются с нуля, отрицательного слота не существует");
         }
         if (toSlot < 0) {
-            throw new IllegalArgumentException("Слот приёмника " + toSlot
-                    + " отрицательный: слоты контейнера нумеруются с нуля");
+            throw new IllegalArgumentException(
+                    "Слот приёмника " + toSlot + " отрицательный: слоты контейнера нумеруются с нуля");
         }
         if (count <= 0) {
             throw new IllegalArgumentException("Перемещение из слота " + fromSlot + " в слот " + toSlot + " несёт "

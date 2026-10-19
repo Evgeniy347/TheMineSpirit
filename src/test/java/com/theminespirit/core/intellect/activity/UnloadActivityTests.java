@@ -26,13 +26,17 @@ class UnloadActivityTests {
 
     @Test
     void demand_EmptyView_IsZero() {
-        assertEquals(0.0, new UnloadActivity().demand(SettlementViews.empty()), 1e-9,
+        assertEquals(
+                0.0,
+                new UnloadActivity().demand(SettlementViews.empty()),
+                1e-9,
                 "Пустое поселение не создаёт спроса на разгрузку: нечего освобождать");
     }
 
     @Test
     void demand_LoadedInventory_IsPositive() {
-        assertTrue(new UnloadActivity().demand(viewWith(SPIRIT, LOADED)) > 0,
+        assertTrue(
+                new UnloadActivity().demand(viewWith(SPIRIT, LOADED)) > 0,
                 "Загруженный инвентарь рождает спрос освободить его: иначе дух копит и перестаёт работать");
     }
 
@@ -42,13 +46,17 @@ class UnloadActivityTests {
                 List.of(SettlementViews.spirit(SPIRIT), SettlementViews.spirit(OTHER)),
                 Map.of(SPIRIT, LOADED, OTHER, InventoryFill.EMPTY));
 
-        assertEquals(new UnloadActivity().demand(viewWith(SPIRIT, LOADED)), new UnloadActivity().demand(view), 1e-9,
+        assertEquals(
+                new UnloadActivity().demand(viewWith(SPIRIT, LOADED)),
+                new UnloadActivity().demand(view),
+                1e-9,
                 "Спрос разгрузки берёт самое забитое хранилище: иначе полный дух ждёт, пока разгрузится пустой");
     }
 
     @Test
     void eligible_WorkerWithPressure_IsTrue() {
-        assertTrue(new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), viewWith(SPIRIT, LOADED)),
+        assertTrue(
+                new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), viewWith(SPIRIT, LOADED)),
                 "Работник с забитым инвентарём берёт разгрузку: иначе ему некуда складывать добычу");
     }
 
@@ -57,13 +65,15 @@ class UnloadActivityTests {
         SettlementView view = SettlementViews.withFills(
                 List.of(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER)), Map.of(SPIRIT, LOADED));
 
-        assertFalse(new UnloadActivity().eligible(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER), view),
+        assertFalse(
+                new UnloadActivity().eligible(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER), view),
                 "Защитник пост не бросает ради разгрузки: на посту он нужнее");
     }
 
     @Test
     void eligible_NoFill_IsFalse() {
-        assertFalse(new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), SettlementViews.empty()),
+        assertFalse(
+                new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), SettlementViews.empty()),
                 "Без данных о заполнении дух разгрузку не берёт: неизвестное давление не гоняет его на базу");
     }
 
@@ -73,7 +83,8 @@ class UnloadActivityTests {
         SettlementView view = SettlementViews.withFills(
                 List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN)), Map.of(SPIRIT, pressured));
 
-        assertFalse(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
+        assertFalse(
+                new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
                 "Шахтёр держит задачу до последней свободной ячейки: разгрузку он не берёт, пока есть куда складывать");
     }
 
@@ -83,7 +94,8 @@ class UnloadActivityTests {
         SettlementView view = SettlementViews.withFills(
                 List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN)), Map.of(SPIRIT, full));
 
-        assertTrue(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
+        assertTrue(
+                new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.VEIN), view),
                 "На последней ячейке шахтёр бросает задачу ради разгрузки: дальше добыча некуда ляжет");
     }
 
@@ -93,14 +105,18 @@ class UnloadActivityTests {
         SettlementView view = SettlementViews.withFills(
                 List.of(SettlementViews.busySpirit(SPIRIT, WorkKind.CELL)), Map.of(SPIRIT, tight));
 
-        assertTrue(new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.CELL), view),
+        assertTrue(
+                new UnloadActivity().eligible(SettlementViews.busySpirit(SPIRIT, WorkKind.CELL), view),
                 "Ферма бросает задачу раньше шахтёра (порог 2): при двух свободных ячейках она идёт разгружаться");
     }
 
     @Test
     void order_AnySpirit_UsesUnloadScript() {
-        assertEquals(Optional.of(UnloadActivity.SCRIPT),
-                new UnloadActivity().order(SettlementViews.spirit(SPIRIT), SettlementViews.empty()).script(),
+        assertEquals(
+                Optional.of(UnloadActivity.SCRIPT),
+                new UnloadActivity()
+                        .order(SettlementViews.spirit(SPIRIT), SettlementViews.empty())
+                        .script(),
                 "Разгрузка зовёт скрипт unload: без него задача не исполнится");
     }
 }

@@ -27,10 +27,17 @@ class V1RoutesTests {
             new BotInfo(IDLE_ID, "spirit", BotState.IDLE, 10, 64, -3, "minecraft:overworld", null, 0.5),
             new BotInfo(BUSY_ID, "Дух-2", BotState.BUSY, 0, 70, 5, "minecraft:the_nether", null, 1.0),
             new BotInfo(DEAD_ID, "spirit", BotState.DEAD, 1, 2, 3, "minecraft:overworld", null, 0.0));
-    private static final ScriptCatalog CATALOG = ScriptCatalog.of(List.of(
-            new ScriptSpec("scan", "просканировать", List.of(), List.of(), List.of())));
-    private static final WorldObservation OBSERVATION = new WorldObservation(IDLE_ID, 100, new BlockCoord(10, 64, -3),
-            List.of(), List.of(new ItemCount("minecraft:stone", 5)), List.of(), List.of(), 8);
+    private static final ScriptCatalog CATALOG =
+            ScriptCatalog.of(List.of(new ScriptSpec("scan", "просканировать", List.of(), List.of(), List.of())));
+    private static final WorldObservation OBSERVATION = new WorldObservation(
+            IDLE_ID,
+            100,
+            new BlockCoord(10, 64, -3),
+            List.of(),
+            List.of(new ItemCount("minecraft:stone", 5)),
+            List.of(),
+            List.of(),
+            8);
 
     private static FakeBotGateway gateway() {
         return new FakeBotGateway(BOTS).observing(OBSERVATION);
@@ -72,13 +79,17 @@ class V1RoutesTests {
 
     @ParameterizedTest(name = "{0} {1} {2} -> {3}")
     @MethodSource("table")
-    void route_TableCase_ReturnsExpectedStatusAndBodyFragment(String method, String path, String body, int status,
-            String fragment) {
+    void route_TableCase_ReturnsExpectedStatusAndBodyFragment(
+            String method, String path, String body, int status, String fragment) {
         RestResponse response = send(gateway(), method, path, body);
 
-        assertEquals(status, response.status(),
-                "Обработчик v1 для " + method + " " + path + " обязан дать статус " + status + ": тело " + response.body());
-        assertTrue(response.body().contains(fragment),
+        assertEquals(
+                status,
+                response.status(),
+                "Обработчик v1 для " + method + " " + path + " обязан дать статус " + status + ": тело "
+                        + response.body());
+        assertTrue(
+                response.body().contains(fragment),
                 "Тело ответа на " + method + " " + path + " обязано содержать '" + fragment + "': " + response.body());
     }
 
@@ -86,7 +97,8 @@ class V1RoutesTests {
     void bots_ThreeSpirits_ListEqualsReferenceJson() {
         RestResponse response = send(gateway(), "GET", "/v1/bots", "");
 
-        assertEquals("{\"bots\":["
+        assertEquals(
+                "{\"bots\":["
                         + "{\"id\":\"" + IDLE_ID + "\",\"name\":\"spirit\",\"state\":\"idle\",\"position\":[10,64,-3],"
                         + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"food\":0.5},"
                         + "{\"id\":\"" + BUSY_ID + "\",\"name\":\"Дух-2\",\"state\":\"busy\",\"position\":[0,70,5],"
@@ -109,10 +121,15 @@ class V1RoutesTests {
     void observe_FullBody_PassesParsedRequestToGateway() {
         FakeBotGateway gateway = gateway();
 
-        send(gateway, "POST", "/v1/bots/" + IDLE_ID + "/observe",
+        send(
+                gateway,
+                "POST",
+                "/v1/bots/" + IDLE_ID + "/observe",
                 "{\"radius\":16,\"filter\":[\"*_ore\"],\"include_entities\":false}");
 
-        assertEquals(List.of(new ObserveRequest(ScanRadius.of(16), List.of("*_ore"), false)), gateway.observeRequests(),
+        assertEquals(
+                List.of(new ObserveRequest(ScanRadius.of(16), List.of("*_ore"), false)),
+                gateway.observeRequests(),
                 "Шлюз обязан получить разобранный запрос целиком: радиус, фильтр и include_entities");
     }
 
@@ -120,8 +137,10 @@ class V1RoutesTests {
     void observe_ValidRequest_ResponseIsObservationJson() {
         RestResponse response = send(gateway(), "POST", "/v1/bots/" + IDLE_ID + "/observe", "{}");
 
-        assertEquals(OBSERVATION.toJson(), response.body(),
-                "Ответ observe — наблюдение в формате docs/API.md без обёрток: так его читает ИИ-планировщик");
+        assertEquals(
+                OBSERVATION.toJson(),
+                response.body(),
+                "Ответ observe — наблюдение в формате docs/api/README.md без обёрток: так его читает ИИ-планировщик");
     }
 
     @Test
@@ -130,13 +149,16 @@ class V1RoutesTests {
 
         send(gateway, "POST", "/v1/bots/" + IDLE_ID + "/observe", "{\"radius\":99}");
 
-        assertEquals(List.of(), gateway.observeRequests(),
+        assertEquals(
+                List.of(),
+                gateway.observeRequests(),
                 "Неверный запрос отклоняется до обращения к серверному потоку: ошибка клиента не должна нагружать тик");
     }
 
     @Test
     void route_GatewayThrowsInternal_Returns500WithSameErrorObject() {
-        ApiException failure = new ApiException(ErrorCode.INTERNAL, "Сервер не ответил за 5 с", Map.of("timeout_ms", 5000));
+        ApiException failure =
+                new ApiException(ErrorCode.INTERNAL, "Сервер не ответил за 5 с", Map.of("timeout_ms", 5000));
         FakeBotGateway gateway = gateway().failingWith(failure);
 
         RestResponse bots = send(gateway, "GET", "/v1/bots", "");
@@ -156,10 +178,12 @@ class V1RoutesTests {
         List<Route> all = new ArrayList<>(V1Routes.routes(gateway(), CATALOG));
         all.add(extra);
 
-        RestResponse response = Router.of(all).handle(new RestRequest("GET", "/v1/tasks/t-1", Map.of(), Map.of(),
-                new byte[0]));
+        RestResponse response =
+                Router.of(all).handle(new RestRequest("GET", "/v1/tasks/t-1", Map.of(), Map.of(), new byte[0]));
 
-        assertEquals("{\"task\":true}", response.body(),
+        assertEquals(
+                "{\"task\":true}",
+                response.body(),
                 "Чеклист 15 обязан добавлять маршруты списком к V1Routes без правки существующих классов");
     }
 }

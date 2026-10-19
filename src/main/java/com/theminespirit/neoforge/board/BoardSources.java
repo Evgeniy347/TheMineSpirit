@@ -21,8 +21,7 @@ public final class BoardSources {
     private long lastEnchantCheck = -1;
     private int herdScans;
 
-    private BoardSources() {
-    }
+    private BoardSources() {}
 
     public static BoardSources create() {
         return new BoardSources();
@@ -32,8 +31,8 @@ public final class BoardSources {
         return herdScans;
     }
 
-    public Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
-            StockView stock, long now) {
+    public Set<String> tick(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (now < 0) {
             return Set.of();
         }

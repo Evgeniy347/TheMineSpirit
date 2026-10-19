@@ -30,7 +30,6 @@ public record DescentLevels(int widenWidth, int widenHeight, int stairWidth) {
         return DEFAULTS;
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static DescentLevels loadDefault() {
         return DataTables.INSTANCE.descentLevels().current();
     }

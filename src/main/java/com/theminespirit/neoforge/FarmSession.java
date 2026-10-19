@@ -1,11 +1,12 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.farming.Above;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
-import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmPlanner;
+import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmTally;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.FarmTuning;
@@ -25,6 +26,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 public final class FarmSession {
+    // Дух на пашне (высота 15/16) стоит в клетке самой пашни: земля грядки — блок под точкой чуть ниже ног.
+    private static final double GROUND_PROBE = 0.2;
+
     public enum Outcome {
         RUNNING,
         SUCCEEDED,
@@ -46,9 +50,11 @@ public final class FarmSession {
 
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 3;
-    private static final PickupTuning PICK_PICKUP =
-            new PickupTuning(PickupTuning.REFRESH_TICKS, FarmTuning.REACH, PickupTuning.TOTAL_TIMEOUT_TICKS,
-                    PickupTuning.MAX_DELAY_WAIT_TICKS);
+    private static final PickupTuning PICK_PICKUP = new PickupTuning(
+            PickupTuning.REFRESH_TICKS,
+            FarmTuning.REACH,
+            PickupTuning.TOTAL_TIMEOUT_TICKS,
+            PickupTuning.MAX_DELAY_WAIT_TICKS);
     private static final int UNLIMITED = Integer.MAX_VALUE;
     private static final String DONE_KEY = "done";
     private static final String REPLANT_X_KEY = "replantX";
@@ -97,7 +103,13 @@ public final class FarmSession {
     private UnloadScript deposit;
     private boolean depositTried;
 
-    private FarmSession(SpiritEntity spirit, FarmJob job, CropKind crop, int count, int radius, boolean replant,
+    private FarmSession(
+            SpiritEntity spirit,
+            FarmJob job,
+            CropKind crop,
+            int count,
+            int radius,
+            boolean replant,
             HarvestTargets targets) {
         this.spirit = spirit;
         this.job = job;
@@ -114,37 +126,81 @@ public final class FarmSession {
     }
 
     public static FarmSession till(SpiritEntity spirit, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.TILL, CropKind.ANY, count, radius, false,
+        return new FarmSession(
+                spirit,
+                FarmJob.TILL,
+                CropKind.ANY,
+                count,
+                radius,
+                false,
                 new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.TILL, CropKind.ANY));
     }
 
     public static FarmSession plantCrop(SpiritEntity spirit, CropKind crop, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.PLANT, crop, count, radius, false,
+        return new FarmSession(
+                spirit,
+                FarmJob.PLANT,
+                crop,
+                count,
+                radius,
+                false,
                 new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.PLANT, crop));
     }
 
     public static FarmSession harvestCrop(SpiritEntity spirit, CropKind crop, int radius, boolean replant) {
-        return new FarmSession(spirit, FarmJob.HARVEST, crop, UNLIMITED, radius, replant,
+        return new FarmSession(
+                spirit,
+                FarmJob.HARVEST,
+                crop,
+                UNLIMITED,
+                radius,
+                replant,
                 new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.HARVEST, crop));
     }
 
     public static FarmSession boneMeal(SpiritEntity spirit, CropKind crop, int radius, int count) {
-        return new FarmSession(spirit, FarmJob.BONE_MEAL, crop, count, radius, false,
+        return new FarmSession(
+                spirit,
+                FarmJob.BONE_MEAL,
+                crop,
+                count,
+                radius,
+                false,
                 new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.BONE_MEAL, crop));
     }
 
     public static FarmSession tillPlot(SpiritEntity spirit, FarmPlot plot) {
         int groundY = plotGroundY(spirit);
-        return new FarmSession(spirit, FarmJob.TILL, CropKind.ANY, plot.cells(), plot.searchRadius(groundY), false,
-                new FarmTargets(spirit.level(), plotPos(plot, groundY), plot.searchRadius(groundY),
-                        plot.grounds(groundY), FarmJob.TILL));
+        return new FarmSession(
+                spirit,
+                FarmJob.TILL,
+                CropKind.ANY,
+                plot.cells(),
+                plot.searchRadius(groundY),
+                false,
+                new FarmTargets(
+                        spirit.level(),
+                        plotPos(plot, groundY),
+                        plot.searchRadius(groundY),
+                        plot.grounds(groundY),
+                        FarmJob.TILL));
     }
 
     public static FarmSession plantPlot(SpiritEntity spirit, CropKind crop, FarmPlot plot) {
         int groundY = plotGroundY(spirit);
-        return new FarmSession(spirit, FarmJob.PLANT, crop, plot.cells(), plot.searchRadius(groundY), false,
-                new FarmTargets(spirit.level(), plotPos(plot, groundY), plot.searchRadius(groundY),
-                        plot.grounds(groundY), FarmJob.PLANT));
+        return new FarmSession(
+                spirit,
+                FarmJob.PLANT,
+                crop,
+                plot.cells(),
+                plot.searchRadius(groundY),
+                false,
+                new FarmTargets(
+                        spirit.level(),
+                        plotPos(plot, groundY),
+                        plot.searchRadius(groundY),
+                        plot.grounds(groundY),
+                        FarmJob.PLANT));
     }
 
     public Outcome tick() {
@@ -203,22 +259,36 @@ public final class FarmSession {
     }
 
     public Map<String, Object> saveState() {
-        boolean replantPending = replant && currentGround != null && currentKind != null
-                && currentKind.harvestMethod() == HarvestMethod.BREAK && !currentKind.hasSupport()
+        boolean replantPending = replant
+                && currentGround != null
+                && currentKind != null
+                && currentKind.harvestMethod() == HarvestMethod.BREAK
+                && !currentKind.hasSupport()
                 && (state == State.COLLECT || state == State.REPLANT);
         if (!replantPending) {
             return Map.of(DONE_KEY, done);
         }
-        return Map.of(DONE_KEY, done, REPLANT_X_KEY, currentGround.x(), REPLANT_Y_KEY, currentGround.y(),
-                REPLANT_Z_KEY, currentGround.z(), REPLANT_KIND_KEY, currentKind.name());
+        return Map.of(
+                DONE_KEY,
+                done,
+                REPLANT_X_KEY,
+                currentGround.x(),
+                REPLANT_Y_KEY,
+                currentGround.y(),
+                REPLANT_Z_KEY,
+                currentGround.z(),
+                REPLANT_KIND_KEY,
+                currentKind.name());
     }
 
     public void restoreState(Map<String, Object> saved) {
         if (saved.get(DONE_KEY) instanceof Number number) {
             done = Math.max(done, number.intValue());
         }
-        if (saved.get(REPLANT_KIND_KEY) instanceof String kind && saved.get(REPLANT_X_KEY) instanceof Number x
-                && saved.get(REPLANT_Y_KEY) instanceof Number y && saved.get(REPLANT_Z_KEY) instanceof Number z) {
+        if (saved.get(REPLANT_KIND_KEY) instanceof String kind
+                && saved.get(REPLANT_X_KEY) instanceof Number x
+                && saved.get(REPLANT_Y_KEY) instanceof Number y
+                && saved.get(REPLANT_Z_KEY) instanceof Number z) {
             currentGround = new BlockCoord(x.intValue(), y.intValue(), z.intValue());
             currentKind = CropKind.parse(kind);
             startCollect();
@@ -227,14 +297,6 @@ public final class FarmSession {
 
     public int planCalls() {
         return planCalls;
-    }
-
-    public int viewReads() {
-        return view.reads();
-    }
-
-    public int safetyReads() {
-        return safety.reads();
     }
 
     public int slicesUsed() {
@@ -259,10 +321,6 @@ public final class FarmSession {
 
     public int collectRuns() {
         return collectRuns;
-    }
-
-    public int totalTicks() {
-        return ticks;
     }
 
     private void find() {
@@ -294,8 +352,8 @@ public final class FarmSession {
         }
         planCalls++;
         BlockCoord origin = coordOf(spirit.blockPosition());
-        FarmPlanner.Outcome result = FarmPlanner.next(job, crop, origin, buffer.targets(origin), view, safety,
-                targets.hydration());
+        FarmPlanner.Outcome result =
+                FarmPlanner.next(job, crop, origin, buffer.targets(origin), view, safety, targets.hydration());
         if (result instanceof FarmPlanner.Exhausted exhausted) {
             ineligible += exhausted.ineligible();
             dry += exhausted.dry();
@@ -307,15 +365,18 @@ public final class FarmSession {
         FarmPlanner.Next next = (FarmPlanner.Next) result;
         buffer.remove(next.target());
         currentGround = next.target();
-        approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
-                APPROACH_ARRIVAL);
+        if (SpiritReach.reachable(origin, currentGround)) {
+            state = State.ACT;
+            return;
+        }
+        approach.begin(
+                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.ACT;
             case STUCK, TIMEOUT -> {
                 if (inReachOfTarget()) {
@@ -329,7 +390,7 @@ public final class FarmSession {
     }
 
     private boolean inReachOfTarget() {
-        return spirit.getEyePosition().distanceTo(Vec3.atCenterOf(posOf(currentGround))) <= FarmTuning.REACH;
+        return SpiritReach.reachable(coordOf(spirit.blockPosition()), currentGround);
     }
 
     private void act() {
@@ -420,7 +481,8 @@ public final class FarmSession {
         if (spot.isEmpty()) {
             return false;
         }
-        Direction side = Direction.fromDelta(spot.get().x() - ground.getX(), 0, spot.get().z() - ground.getZ());
+        Direction side = Direction.fromDelta(
+                spot.get().x() - ground.getX(), 0, spot.get().z() - ground.getZ());
         if (side == null) {
             throw new IllegalStateException("Клетка посадки " + spot.get() + " не сосед опоры " + ground
                     + ": какао растёт только на боку ствола");
@@ -442,7 +504,7 @@ public final class FarmSession {
     }
 
     private void beginBreak(BlockPos target) {
-        if (breaker.begin(target, true) instanceof BlockBreaker.Started) {
+        if (breaker.beginAnyDistance(target, true) instanceof BlockBreaker.Started) {
             state = State.BREAK;
         } else {
             noStand++;
@@ -464,8 +526,7 @@ public final class FarmSession {
     private void breakTick() {
         recordAction();
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> afterBroken();
             case GONE -> {
                 if (job == FarmJob.HARVEST) {
@@ -499,11 +560,11 @@ public final class FarmSession {
         collectRuns++;
         IdFilter harvested = IdFilter.of(List.of(currentKind.produceItem(), currentKind.plantItem()));
         boolean column = currentKind.harvestMethod() == HarvestMethod.BREAK_COLUMN;
-        PickupTuning tuning = currentKind.harvestMethod() == HarvestMethod.PICK || column
-                ? PICK_PICKUP : PickupTuning.DEFAULT;
+        PickupTuning tuning =
+                currentKind.harvestMethod() == HarvestMethod.PICK || column ? PICK_PICKUP : PickupTuning.DEFAULT;
         BlockCoord center = column ? coordOf(spirit.blockPosition()) : cropPos != null ? cropPos : currentGround;
-        collector = new DropCollector(spirit, harvested, center, COLLECT_RADIUS, tuning,
-                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
+        collector = new DropCollector(
+                spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         state = State.COLLECT;
     }
 
@@ -555,7 +616,7 @@ public final class FarmSession {
         maxActionsPerTick = Math.max(maxActionsPerTick, actionsThisTick);
     }
 
-private Outcome refuseWithoutSupplies() {
+    private Outcome refuseWithoutSupplies() {
         FarmTally.Outcome refusal = new FarmTally(0, 0, 0, 0, 0, 1, 0, 0, 0).outcome(job);
         return fail(((FarmTally.Failed) refusal).text());
     }
@@ -570,7 +631,8 @@ private Outcome refuseWithoutSupplies() {
     private void concludeExhausted() {
         int eligibleAndBlocking = done + noStand + noSeeds + rejected + unreachable;
         int requested = Math.min(count, eligibleAndBlocking);
-        FarmTally tally = new FarmTally(done, requested, ineligible + rejected, noStand, noSeeds, 0, dry, unreachable, radius);
+        FarmTally tally =
+                new FarmTally(done, requested, ineligible + rejected, noStand, noSeeds, 0, dry, unreachable, radius);
         if (tally.outcome(job) instanceof FarmTally.Failed failed) {
             fail(failed.text());
         } else if (job == FarmJob.HARVEST && done > 0 && !depositTried) {
@@ -609,7 +671,7 @@ private Outcome refuseWithoutSupplies() {
     }
 
     private static int plotGroundY(SpiritEntity spirit) {
-        return spirit.blockPosition().getY() - 1;
+        return (int) Math.floor(spirit.getY() - GROUND_PROBE);
     }
 
     private static BlockPos plotPos(FarmPlot plot, int groundY) {

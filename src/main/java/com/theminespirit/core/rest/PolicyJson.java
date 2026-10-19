@@ -9,8 +9,7 @@ import java.util.Map;
 
 /** JSON-представление разрешений /v1/policy/unprotect: имена полей — контракт v1. */
 public final class PolicyJson {
-    private PolicyJson() {
-    }
+    private PolicyJson() {}
 
     public static String listJson(List<UnprotectArea> areas) {
         List<Object> items = new ArrayList<>(areas.size());

@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class TaskEventStreamTests {
-    private static final TaskRecord RUNNING = new TaskRecord("t-1", "bot", TaskState.RUNNING, "цель",
-            new RunProgress(2, 3, "goto", null, null), null, null);
+    private static final TaskRecord RUNNING = new TaskRecord(
+            "t-1", "bot", TaskState.RUNNING, "цель", new RunProgress(2, 3, "goto", null, null), null, null);
     private static final Duration NO_WAIT = Duration.ofMillis(60);
 
     private static List<TaskEvent> events(String type, int count) {
@@ -31,8 +31,8 @@ class TaskEventStreamTests {
     }
 
     private static TaskEventStream fresh(TaskRecord record, TaskEventLog log, long lastEventId, AtomicInteger closes) {
-        TaskRegistry.Snapshot snapshot = new TaskRegistry.Snapshot(record, log, log.since(lastEventId), log.lastId(),
-                lastEventId);
+        TaskRegistry.Snapshot snapshot =
+                new TaskRegistry.Snapshot(record, log, log.since(lastEventId), log.lastId(), lastEventId);
         return new TaskEventStream(snapshot, NO_WAIT, closes::incrementAndGet);
     }
 
@@ -41,17 +41,15 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String frame = stream.nextFrame();
 
             assertTrue(frame.startsWith("id: 2\n"), "Свежий кадр обязан стоять на позиции журнала: " + frame);
             assertTrue(frame.contains("event: state"), "Первый кадр свежего подключения обязан быть state: " + frame);
             assertTrue(frame.contains("\"state\":\"running\""), "Кадр обязан нести текущее состояние: " + frame);
-            assertTrue(frame.contains("\"current_script\":\"goto\""),
+            assertTrue(
+                    frame.contains("\"current_script\":\"goto\""),
                     "Кадр state обязан нести текущий прогресс: " + frame);
-        } finally {
-            stream.close();
         }
     }
 
@@ -61,14 +59,10 @@ class TaskEventStreamTests {
         log.append(events(TaskEvent.TYPE_PROGRESS, 3));
         log.close();
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.contains("event: state"),
-                    "Свежий поток обязан начинаться с кадром state: " + state);
+            assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с кадром state: " + state);
             assertNull(stream.nextFrame(), "Закрытый журнал обязан завершать поток сразу после state");
-        } finally {
-            stream.close();
         }
     }
 
@@ -77,15 +71,13 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger())) {
             String frame = stream.nextFrame();
-            assertTrue(frame.startsWith("id: 2\n"),
+            assertTrue(
+                    frame.startsWith("id: 2\n"),
                     "После Last-Event-ID=1 обязана прийти только более поздняя запись: " + frame);
             log.close();
             assertNull(stream.nextFrame(), "Догнав журнал, поток обязан завершиться");
-        } finally {
-            stream.close();
         }
     }
 
@@ -94,20 +86,19 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 50, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 50, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.startsWith("id: 2\n") && state.contains("event: state"),
+            assertTrue(
+                    state.startsWith("id: 2\n") && state.contains("event: state"),
                     "Клиент с Last-Event-ID впереди журнала обязан получить текущий state на позиции журнала (id 2), "
                             + "а не ждать события с несуществующим id: " + state);
 
             log.append(events(TaskEvent.TYPE_PROGRESS, 1));
             String next = stream.nextFrame();
-            assertTrue(next.startsWith("id: 3\n") && next.contains("event: progress"),
+            assertTrue(
+                    next.startsWith("id: 3\n") && next.contains("event: progress"),
                     "После state поток обязан продолжаться с позиции журнала и отдать новое событие id 3, а не "
                             + "ждать id > 50 и слать одни кипалайвы: " + next);
-        } finally {
-            stream.close();
         }
     }
 
@@ -121,23 +112,19 @@ class TaskEventStreamTests {
         log.append(bulk);
         long newest = log.lastId();
 
-        TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.contains("event: state"),
-                    "При потере окна обязана прийти текущая state: " + state);
+            assertTrue(state.contains("event: state"), "При потере окна обязана прийти текущая state: " + state);
             long stateId = Long.parseLong(state.split("\n", 2)[0].substring(4));
             String later = stream.nextFrame();
-            assertTrue(later.startsWith("id: "),
-                    "После state обязаны идти оставшиеся события журнала: " + later);
+            assertTrue(later.startsWith("id: "), "После state обязаны идти оставшиеся события журнала: " + later);
             long id = Long.parseLong(later.split("\n", 2)[0].substring(4));
             assertTrue(id <= newest, "Догоняющие события не могут быть новее позиции журнала: " + id);
             assertTrue(id > 1, "Догонять обязаны записи новее Last-Event-ID: " + id);
-            assertTrue(stateId < id,
+            assertTrue(
+                    stateId < id,
                     "id кадров обязаны расти и после state при потере окна: клиент, запомнивший id кадра state, "
                             + "не должен получить меньший id следом: state " + stateId + ", затем " + id);
-        } finally {
-            stream.close();
         }
     }
 
@@ -145,15 +132,14 @@ class TaskEventStreamTests {
     void nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment() throws Exception {
         TaskEventLog log = new TaskEventLog();
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
             assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с state: " + state);
             String keepalive = stream.nextFrame();
-            assertEquals(": keepalive\n\n", keepalive,
+            assertEquals(
+                    ": keepalive\n\n",
+                    keepalive,
                     "Тишина обязана отбиваться кипалайв-комментарием, а не рвать соединение");
-        } finally {
-            stream.close();
         }
     }
 
@@ -177,8 +163,7 @@ class TaskEventStreamTests {
         String queued = stream.nextFrame();
         stream.close();
 
-        assertTrue(queued.contains("event: state"),
-                "Кадр, взятый до закрытия, обязана доставляться: " + queued);
+        assertTrue(queued.contains("event: state"), "Кадр, взятый до закрытия, обязана доставляться: " + queued);
         assertNull(stream.nextFrame(), "После close поток обязан отдавать null без ожидания");
     }
 }

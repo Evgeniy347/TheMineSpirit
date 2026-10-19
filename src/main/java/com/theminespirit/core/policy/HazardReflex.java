@@ -10,8 +10,7 @@ public final class HazardReflex {
     private static final int[][] SIDE_STEPS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final Set<Cell> BURNING = Set.of(Cell.LAVA, Cell.FIRE);
 
-    private HazardReflex() {
-    }
+    private HazardReflex() {}
 
     public static PolicyVerdict evaluate(LocalSurroundings surroundings, PolicyExemptions exemptions) {
         BodyFlags flags = surroundings.flags();
@@ -19,7 +18,9 @@ public final class HazardReflex {
             return escape(surroundings, "дух в лаве или огне");
         }
         if (flags.onFire() && !flags.inWater() && surroundings.nearestWater().isPresent()) {
-            return new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(surroundings.nearestWater().get()),
+            return new PolicyVerdict.Reflex(
+                    PolicyId.LAVA_FIRE,
+                    new ReflexAction.Flee(surroundings.nearestWater().get()),
                     "дух горит: цель — вода");
         }
         if (burningBeside(surroundings)) {
@@ -45,7 +46,8 @@ public final class HazardReflex {
 
     private static boolean burningBeside(LocalSurroundings surroundings) {
         for (int[] step : SIDE_STEPS) {
-            if (BURNING.contains(surroundings.cellAt(step[0], 0, step[1])) || BURNING.contains(surroundings.cellAt(step[0], -1, step[1]))) {
+            if (BURNING.contains(surroundings.cellAt(step[0], 0, step[1]))
+                    || BURNING.contains(surroundings.cellAt(step[0], -1, step[1]))) {
                 return true;
             }
         }
@@ -75,7 +77,8 @@ public final class HazardReflex {
         if (cell.isPresent()) {
             return new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(cell.get()), reason);
         }
-        return new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.StopMoving(), reason + ", безопасной клетки рядом нет");
+        return new PolicyVerdict.Reflex(
+                PolicyId.LAVA_FIRE, new ReflexAction.StopMoving(), reason + ", безопасной клетки рядом нет");
     }
 
     private static PolicyVerdict exitWater(LocalSurroundings surroundings) {

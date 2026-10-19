@@ -18,8 +18,8 @@ public final class DropRetries {
 
     public DropRetries(int radius) {
         if (radius < 1) {
-            throw new IllegalArgumentException("Радиус повтора сбора " + radius
-                    + " меньше единицы: повтор не накрыл бы даже клетку провала");
+            throw new IllegalArgumentException(
+                    "Радиус повтора сбора " + radius + " меньше единицы: повтор не накрыл бы даже клетку провала");
         }
         this.radius = radius;
     }

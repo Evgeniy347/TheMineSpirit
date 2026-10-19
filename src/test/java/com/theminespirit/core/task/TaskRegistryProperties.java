@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
+import net.jqwik.api.Combinators;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
-import net.jqwik.api.Combinators;
 import org.junit.jupiter.api.Test;
 
 class TaskRegistryProperties {
@@ -36,13 +36,17 @@ class TaskRegistryProperties {
             registry.observe(taskId, TaskState.FAILED, null, "провал");
         }
 
-        assertTrue(registry.completedCount() <= TaskRegistry.MAX_COMPLETED,
-                "Завершённых обязано остаться не больше " + TaskRegistry.MAX_COMPLETED
-                        + ", фактически " + registry.completedCount());
-        assertTrue(registry.size() <= TaskRegistry.MAX_COMPLETED + ACTIVE_KEEPERS,
+        assertTrue(
+                registry.completedCount() <= TaskRegistry.MAX_COMPLETED,
+                "Завершённых обязано остаться не больше " + TaskRegistry.MAX_COMPLETED + ", фактически "
+                        + registry.completedCount());
+        assertTrue(
+                registry.size() <= TaskRegistry.MAX_COMPLETED + ACTIVE_KEEPERS,
                 "Размер реестра ограничен лимитом завершённых плюс активные: " + registry.size());
         for (String activeId : activeIds) {
-            assertEquals(TaskState.RUNNING, registry.get(activeId).orElseThrow().state(),
+            assertEquals(
+                    TaskState.RUNNING,
+                    registry.get(activeId).orElseThrow().state(),
                     "Активная задача " + activeId + " не должна вытесняться ни при каком порядке завершений");
         }
     }
@@ -55,8 +59,8 @@ class TaskRegistryProperties {
         long previous = 0;
         for (int i = 0; i < tasks; i++) {
             String bot = "bot-" + (i % 3);
-            registry.activeForBot(bot).ifPresent(active -> registry.observe(active.taskId(), TaskState.SUCCEEDED,
-                    null, null));
+            registry.activeForBot(bot)
+                    .ifPresent(active -> registry.observe(active.taskId(), TaskState.SUCCEEDED, null, null));
             String taskId = registry.reserve(bot, null);
             assertTrue(seen.add(taskId), "id обязан быть уникальным, повтор " + taskId);
             long numeric = Long.parseLong(taskId.substring(2));
@@ -77,16 +81,20 @@ class TaskRegistryProperties {
             registry.observe(taskId, TaskState.SUCCEEDED, null, null);
         }
 
-        assertEquals(256, registry.completedCount(),
+        assertEquals(
+                256,
+                registry.completedCount(),
                 "После 10 000 завершённых в реестре обязано остаться ровно 256 завершённых: память реестра не растёт");
-        assertEquals(266, registry.size(), "Десять активных задач вытесняться не должны: 256 завершённых + 10 активных");
+        assertEquals(
+                266, registry.size(), "Десять активных задач вытесняться не должны: 256 завершённых + 10 активных");
     }
 
     @Provide
     Arbitrary<Scenario> scenarios() {
         return Combinators.combine(
-                Arbitraries.integers().between(250, 400),
-                Arbitraries.integers().between(0, 50)).as(Scenario::new);
+                        Arbitraries.integers().between(250, 400),
+                        Arbitraries.integers().between(0, 50))
+                .as(Scenario::new);
     }
 
     @Provide
@@ -94,6 +102,5 @@ class TaskRegistryProperties {
         return Arbitraries.integers().between(0, 10_000);
     }
 
-    record Scenario(int completions, int extraCompletions) {
-    }
+    record Scenario(int completions, int extraCompletions) {}
 }

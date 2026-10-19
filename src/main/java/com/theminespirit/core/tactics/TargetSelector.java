@@ -4,10 +4,16 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class TargetSelector {
     public enum Kind {
-        HOSTILE, ANIMAL, PLAYER, SPIRIT, NEAREST, ANY
+        HOSTILE,
+        ANIMAL,
+        PLAYER,
+        SPIRIT,
+        NEAREST,
+        ANY
     }
 
     public record Target(Kind kind, Optional<String> name) {
@@ -37,16 +43,18 @@ public final class TargetSelector {
         if (colon >= 0) {
             String prefix = text.substring(0, colon).toLowerCase(Locale.ROOT);
             String value = text.substring(colon + 1);
-            if (prefix.equals("player")) {
+            if ("player".equals(prefix)) {
                 return new Target(Kind.PLAYER, Optional.of(namedValue("player", value)));
             }
-            if (prefix.equals("spirit")) {
+            if ("spirit".equals(prefix)) {
                 String uuid = namedValue("spirit", value);
                 try {
                     UUID.fromString(uuid);
                 } catch (IllegalArgumentException error) {
-                    throw new IllegalArgumentException("Сpirit-цель '" + raw + "' не разобрана: '" + uuid
-                            + "' не является UUID, а дух ищется только по своему UUID", error);
+                    throw new IllegalArgumentException(
+                            "Сpirit-цель '" + raw + "' не разобрана: '" + uuid
+                                    + "' не является UUID, а дух ищется только по своему UUID",
+                            error);
                 }
                 return new Target(Kind.SPIRIT, Optional.of(uuid));
             }
@@ -55,7 +63,7 @@ public final class TargetSelector {
                 + "nearest, player:<имя>, spirit:<uuid>");
     }
 
-    private static Kind keywordOf(String text) {
+    private static @Nullable Kind keywordOf(String text) {
         return switch (text.toLowerCase(Locale.ROOT)) {
             case "hostile" -> Kind.HOSTILE;
             case "animal" -> Kind.ANIMAL;

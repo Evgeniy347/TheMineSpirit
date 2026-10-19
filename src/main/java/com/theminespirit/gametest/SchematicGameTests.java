@@ -22,18 +22,17 @@ public final class SchematicGameTests {
     private static final BlockPos ANCHOR = new BlockPos(3, 1, 3);
 
     private static final int[][] HOUSE_FLOOR = {
-            {0, 0, 0}, {1, 0, 0}, {2, 0, 0},
-            {0, 0, 1}, {1, 0, 1}, {2, 0, 1},
-            {0, 0, 2}, {1, 0, 2}, {2, 0, 2},
+        {0, 0, 0}, {1, 0, 0}, {2, 0, 0},
+        {0, 0, 1}, {1, 0, 1}, {2, 0, 1},
+        {0, 0, 2}, {1, 0, 2}, {2, 0, 2},
     };
     private static final int[][] HOUSE_WALLS = {
-            {0, 1, 0}, {1, 1, 0}, {2, 1, 0},
-            {0, 1, 2}, {1, 1, 2}, {2, 1, 2},
-            {0, 1, 1}, {2, 1, 1},
+        {0, 1, 0}, {1, 1, 0}, {2, 1, 0},
+        {0, 1, 2}, {1, 1, 2}, {2, 1, 2},
+        {0, 1, 1}, {2, 1, 1},
     };
 
-    private SchematicGameTests() {
-    }
+    private SchematicGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -50,8 +49,9 @@ public final class SchematicGameTests {
 
     private static ScriptCall schematicCall(GameTestHelper helper, BlockPos anchor) {
         BlockPos absolute = helper.absolutePos(anchor);
-        return new ScriptCall("build_schematic", Map.of("file", "house", "x", absolute.getX(), "y", absolute.getY(),
-                "z", absolute.getZ()));
+        return new ScriptCall(
+                "build_schematic",
+                Map.of("file", "fixture_plate", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
     private static void buildHouseByHand(GameTestHelper helper, BlockPos anchor) {
@@ -89,16 +89,19 @@ public final class SchematicGameTests {
         helper.succeedWhen(() -> {
             firstRun.assertStarted();
             secondRun.assertStarted();
-            helper.assertTrue(finished(firstSpirit) && finished(secondSpirit),
+            helper.assertTrue(
+                    finished(firstSpirit) && finished(secondSpirit),
                     "обе стройки обязаны завершиться успехом: первая "
                             + firstSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", вторая "
                             + secondSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+            helper.assertTrue(
+                    countHouse(helper, ANCHOR) == 17,
                     "домик по схеме обязан встать целиком: двое строителей делят клетки, вместе 17, фактически "
                             + countHouse(helper, ANCHOR));
             int remaining = GameTestFixtures.countInInventory(firstSpirit.getInventory(), Items.COBBLESTONE)
                     + GameTestFixtures.countInInventory(secondSpirit.getInventory(), Items.COBBLESTONE);
-            helper.assertTrue(34 - remaining == 17,
+            helper.assertTrue(
+                    34 - remaining == 17,
                     "потрачено обязано быть ровно 17 блоков: двойной постановки и двойного расхода нет, потрачено "
                             + (34 - remaining));
             GameTestFixtures.finish(helper);
@@ -117,15 +120,19 @@ public final class SchematicGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "домик по схеме обязан построиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+            helper.assertTrue(
+                    countHouse(helper, ANCHOR) == 17,
                     "все 17 блоков схемы обязаны стоять на месте, фактически " + countHouse(helper, ANCHOR));
-            helper.assertTrue(helper.getBlockState(ANCHOR.offset(1, 1, 1)).isAir(),
+            helper.assertTrue(
+                    helper.getBlockState(ANCHOR.offset(1, 1, 1)).isAir(),
                     "дверной проём схемы обязан остаться пустым: лишних блоков нет");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "материалы списываются по видам: 17 блоков — 17 булыжников, в инвентаре "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
@@ -141,13 +148,16 @@ public final class SchematicGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "повтор на готовом домике обязан завершиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(countHouse(helper, ANCHOR) == 17,
+            helper.assertTrue(
+                    countHouse(helper, ANCHOR) == 17,
                     "домик обязан остаться целым, блоков " + countHouse(helper, ANCHOR));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 17,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 17,
                     "уже стоящие блоки ставятся повторно: двойного расхода нет, в инвентаре обязано остаться 17, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
@@ -162,14 +172,18 @@ public final class SchematicGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "нехватка материала обязана провалить стройку по схеме, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("17") && reason.contains("5"),
+            helper.assertTrue(
+                    reason.contains("17") && reason.contains("5"),
                     "причина обязана называть числа 17 и 5 (нужно и поставлено), фактически: " + reason);
-            helper.assertTrue(countHouse(helper, ANCHOR) == 5,
-                    "в мире обязано стоять ровно 5 блоков: что было, то поставили, стоит " + countHouse(helper, ANCHOR));
+            helper.assertTrue(
+                    countHouse(helper, ANCHOR) == 5,
+                    "в мире обязано стоять ровно 5 блоков: что было, то поставили, стоит "
+                            + countHouse(helper, ANCHOR));
             GameTestFixtures.finish(helper);
         });
     }

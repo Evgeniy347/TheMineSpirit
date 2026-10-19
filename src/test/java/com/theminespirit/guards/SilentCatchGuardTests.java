@@ -24,7 +24,9 @@ class SilentCatchGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Пустой catch прячет сбой: дух молча не выполняет задачу, а в логе нет ни строки, почему. "
                         + "Тихий fallback — авария, а не защита. Сделай одно из двух: пробрось исключение дальше "
                         + "с контекстом (что делали и с какими данными) или переведи задачу в FAILED с причиной "
@@ -41,7 +43,9 @@ class SilentCatchGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "catch, который только пробрасывает то же исключение (catch (X e) { throw e; }), ничего не делает: "
                         + "исключение и так ушло бы дальше. Он только создаёт впечатление обработки и прячет, что "
                         + "обработки нет. Удали try/catch целиком или добавь в catch контекст: "
@@ -50,27 +54,38 @@ class SilentCatchGuardTests {
 
     @Test
     void rethrowOnlyPattern_SameVariableRethrown_IsDetected() {
-        assertTrue(RETHROW_ONLY_CATCH.matcher(
-                "} catch (PlanValidationException error) {\n    throw error;\n}").find(),
+        assertTrue(
+                RETHROW_ONLY_CATCH
+                        .matcher("} catch (PlanValidationException error) {\n    throw error;\n}")
+                        .find(),
                 "Сторож ослеп: catch, пробрасывающий ту же переменную, должен находиться");
     }
 
     @Test
     void rethrowOnlyPattern_WrappedWithContext_IsIgnored() {
-        assertTrue(!RETHROW_ONLY_CATCH.matcher(
-                "} catch (IOException error) {\n    throw new UncheckedIOException(\"чтение плана\", error);\n}").find(),
+        assertTrue(
+                !RETHROW_ONLY_CATCH
+                        .matcher(
+                                "} catch (IOException error) {\n    throw new UncheckedIOException(\"чтение плана\", error);\n}")
+                        .find(),
                 "Сторож ложно срабатывает: обёртка с контекстом — это обработка");
     }
 
     @Test
     void emptyCatchPattern_EmptyBlockAcrossLines_IsDetected() {
-        assertTrue(EMPTY_CATCH.matcher("try {\n    run();\n} catch (IllegalStateException ignored) {\n}\n").find(),
+        assertTrue(
+                EMPTY_CATCH
+                        .matcher("try {\n    run();\n} catch (IllegalStateException ignored) {\n}\n")
+                        .find(),
                 "Сторож ослеп: пустой catch, разнесённый по строкам, должен находиться");
     }
 
     @Test
     void emptyCatchPattern_BlockWithStatement_IsIgnored() {
-        assertTrue(!EMPTY_CATCH.matcher("} catch (IOException e) {\n    throw new UncheckedIOException(e);\n}").find(),
+        assertTrue(
+                !EMPTY_CATCH
+                        .matcher("} catch (IOException e) {\n    throw new UncheckedIOException(e);\n}")
+                        .find(),
                 "Сторож ложно срабатывает: catch с обработкой не нарушение");
     }
 }

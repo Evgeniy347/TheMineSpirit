@@ -2,8 +2,13 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'jacoco'
-    id 'net.neoforged.moddev' version '2.0.148'
+    id 'net.neoforged.moddev'
     id 'idea'
+    id 'com.diffplug.spotless'
+    id 'net.ltgt.errorprone'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -158,6 +163,14 @@ dependencies {
     testImplementation "org.junit.platform:junit-platform-launcher"
 
     testImplementation "net.jqwik:jqwik:${jqwik_version}"
+    // Архитектурные правила зависимостей пакетов (tasks/46 п.7)
+    testImplementation "com.tngtech.archunit:archunit:${archunit_version}"
+
+    errorprone "com.google.errorprone:error_prone_core:${errorprone_version}"
+    errorprone "com.uber.nullaway:nullaway:${nullaway_version}"
+    // Аннотации null — только на компиляции: в игре они не нужны (tasks/46 п.3)
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
+    testCompileOnly "org.jspecify:jspecify:${jspecify_version}"
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -224,6 +237,88 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
     // Предупреждения компилятора — ошибки сборки (правило проекта: docs/CONVENTIONS.md)
     options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
+    // Error Prone (tasks/46): его предупреждения тоже ошибки через -Werror. Выключенные проверки — с причиной.
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
+        // EventBus NeoForge снимает слушателя только по тому же экземпляру: лямбда в поле — намеренно.
+        disable('UnnecessaryLambda')
+        // Неизменяемость enum-полей EP доказывает только для Guava/@Immutable: в core Guava нет, а Block/Item —
+        // неизменяемые синглтоны реестра Minecraft без аннотаций; проверка давала бы только ложные срабатывания.
+        disable('ImmutableEnumChecker')
+    }
+}
+
+// NullAway (tasks/46 п.3) — только production-ядро: тесты намеренно передают null, а адаптеры к Minecraft
+// живут в чужой модели null. В core тип без @Nullable (JSpecify) — не null.
+tasks.named('compileJava', JavaCompile) {
+    options.errorprone {
+        check('NullAway', net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+        option('NullAway:AnnotatedPackages', 'com.theminespirit.core')
+    }
+}
+
+tasks.named('compileTestJava', JavaCompile) {
+    options.errorprone.disable('NullAway')
+}
+
+// Строгие анализаторы (tasks/46-static-analyzers.md): нарушение роняет сборку, временных списков нет.
+// staticAnalysis — все проверки, кроме компилятора; входит в check и в полный scripts/test.sh unit (хук pre-commit).
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        // Отступ 4, как в проекте; google-java-format отвергнут (отступ 2). Исправление — ./gradlew spotlessApply.
+        palantirJavaFormat(palantir_java_format_version)
+    }
+}
+
+// Checkstyle — минимальный набор config/checkstyle/checkstyle.xml (что в него не входит и почему — там же).
+checkstyle {
+    toolVersion = checkstyle_version
+    maxWarnings = 0
+    ignoreFailures = false
+}
+
+// PMD — свои наборы config/pmd/main.xml и test.xml (выключенные правила и причины — там же).
+pmd {
+    toolVersion = pmd_version
+    consoleOutput = false
+    ignoreFailures = false
+    ruleSets = []
+}
+tasks.named('pmdMain', Pmd) {
+    ruleSetFiles = files('config/pmd/main.xml')
+}
+tasks.named('pmdTest', Pmd) {
+    ruleSetFiles = files('config/pmd/test.xml')
+}
+
+// SpotBugs — байткод-анализ; исключения правил целиком и причины — config/spotbugs/exclude.xml.
+spotbugs {
+    toolVersion = spotbugs_version
+    ignoreFailures = false
+    excludeFilter = file('config/spotbugs/exclude.xml')
+}
+tasks.named('spotbugsTest') {
+    excludeFilter = file('config/spotbugs/exclude-test.xml')
+}
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        xml.required = true
+        html.required = false
+    }
+}
+
+tasks.register('staticAnalysis') {
+    group = 'verification'
+    description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
+    dependsOn tasks.named('spotlessCheck')
+    dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
+    dependsOn tasks.named('pmdMain'), tasks.named('pmdTest')
+    dependsOn tasks.named('spotbugsMain'), tasks.named('spotbugsTest')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('staticAnalysis')
 }
 
 // Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).
@@ -388,4 +483,15 @@ tasks.named('runGameTestServer') {
             throw new GradleException("runGameTestServer: токен замка не совпадает (${markerToken ? 'устаревший или чужой замок' : 'замок отсутствует'}). Прямой запуск запрещён: scripts/test.sh gametest (docs/TESTING.md).")
         }
     }
+}
+
+// Инструмент текстовых построек (scripts/schematic.sh): тот же разбор и те же сторожа, что в моде, без запуска игры.
+tasks.register('schematicTool', JavaExec) {
+    group = 'theminespirit'
+    description = 'Постройки в текстовом формате: show <файл|id> [поворот], check [файл|id…]'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.theminespirit.core.building.SchematicTool'
+    jvmArgs '-Dstdout.encoding=UTF-8', '-Dfile.encoding=UTF-8'
+    workingDir = projectDir
+    args((System.getProperty('theminespirit.schematic.args') ?: '').split('\u0001').findAll { !it.isEmpty() })
 }

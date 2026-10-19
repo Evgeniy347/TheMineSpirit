@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
 import com.theminespirit.core.intellect.Activity;
@@ -7,7 +8,6 @@ import com.theminespirit.core.intellect.ActivityCatalog;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.ActivityLedger;
-import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrategicQueue;
@@ -23,13 +23,11 @@ import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
 import com.theminespirit.core.intellect.activity.SmeltActivity;
 import com.theminespirit.core.intellect.activity.UnloadActivity;
-import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.ArmorModel;
 import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
-import com.mojang.logging.LogUtils;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,16 +60,27 @@ public final class SettlementIntellect {
     private int entityQueries;
 
     public SettlementIntellect() {
-        this.catalog = ActivityCatalog.adultsOnly(
-                List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
-                        new RestActivity(), new DefendActivity(), new UnloadActivity(),
-                        new SmeltActivity(), new CraftActivity()));
+        this.catalog = ActivityCatalog.adultsOnly(List.of(
+                new ChopActivity(),
+                new FarmActivity(),
+                new ForageActivity(),
+                new MineActivity(),
+                new RestActivity(),
+                new DefendActivity(),
+                new UnloadActivity(),
+                new SmeltActivity(),
+                new CraftActivity()));
         ArmorModel armor = TacticsConfig.loadDefault().weights().scales().armor();
         this.intellect = new TacticalIntellect(catalog, profiles, armor);
     }
 
-    public void tick(ServerLevel level, List<SpiritEntity> members, List<SpiritSnapshot> snapshots,
-            Optional<Point> home, WorkReservations reservations, long tick) {
+    public void tick(
+            ServerLevel level,
+            List<SpiritEntity> members,
+            List<SpiritSnapshot> snapshots,
+            Optional<Point> home,
+            WorkReservations reservations,
+            long tick) {
         if (level == null || members == null || snapshots == null || home == null || reservations == null) {
             throw new IllegalArgumentException(
                     "Интеллект без уровня, духов, снимков, дома или броней не тикает: решение зависит от всех сразу");
@@ -88,16 +97,16 @@ public final class SettlementIntellect {
         StockReader.Stocks stocks = StockReader.read(level, members, home);
         stockReads += stocks.reads();
         stockContainers += stocks.containers();
-        SettlementScanner.Scan scan =
-                SettlementScanner.scan(level, members, snapshots, home, stocks.containerFood());
+        SettlementScanner.Scan scan = SettlementScanner.scan(level, members, snapshots, home, stocks.containerFood());
         entityQueries++;
-        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, scan.enemies(),
-                scan.forage(), level, tick);
+        SettlementView view = SettlementViewBuilder.build(new SettlementViewBuilder.Input(
+                snapshots, members, stocks.lots(), home, scan.enemies(), scan.forage(), level, tick));
         lastView = view;
         intellect.trackEnemies(scan.enemies());
         intellect.trackWeaponStock(stocks.lots().weapons() > 0);
         intellect.trackVein(veinBelow(home, view));
-        intellect.trackPlayerEscort(playerEscort(level, home, intellect.outsideGate().escortRadius()));
+        intellect.trackPlayerEscort(
+                playerEscort(level, home, intellect.outsideGate().escortRadius()));
         TacticalDecision decision = intellect.decide(view, ledger, reservations, queue, tick);
         lastDecision = decision;
         logRefusals(decision.refusals());
@@ -181,8 +190,8 @@ public final class SettlementIntellect {
         return new Point(point.x(), Math.max(-60, point.y() - 10), point.z());
     }
 
-    private void applyStrengths(List<SpiritEntity> members, TacticalDecision decision,
-            Optional<Point> home, long tick) {
+    private void applyStrengths(
+            List<SpiritEntity> members, TacticalDecision decision, Optional<Point> home, long tick) {
         Map<String, SpiritEntity> byId = new HashMap<>();
         for (SpiritEntity spirit : members) {
             if (!spirit.isRemoved()) {
@@ -198,8 +207,13 @@ public final class SettlementIntellect {
         }
     }
 
-    private void applyActivities(List<SpiritEntity> members, List<SpiritSnapshot> snapshots,
-            TacticalDecision decision, SettlementView view, Optional<Point> home, long tick) {
+    private void applyActivities(
+            List<SpiritEntity> members,
+            List<SpiritSnapshot> snapshots,
+            TacticalDecision decision,
+            SettlementView view,
+            Optional<Point> home,
+            long tick) {
         if (home.isEmpty()) {
             return;
         }

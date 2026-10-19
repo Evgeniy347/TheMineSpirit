@@ -41,13 +41,18 @@ class ClientRateLimitTests {
         RestResponse response = limit.reject(CLIENT, 0).orElseThrow();
 
         assertEquals(429, response.status(), "Отказ лимитера обязан быть HTTP 429");
-        assertEquals("1", response.headers().get("Retry-After"),
+        assertEquals(
+                "1",
+                response.headers().get("Retry-After"),
                 "Заголовок Retry-After обязан сообщать целые секунды ожидания (минимум 1): клиент решает, когда повторить");
         JsonNode error = MAPPER.readTree(response.body()).path("error");
         assertEquals("rate_limited", error.path("code").asText(), "Код ошибки обязан быть rate_limited");
-        assertEquals(1, error.path("details").path("retry_after_seconds").asInt(),
+        assertEquals(
+                1,
+                error.path("details").path("retry_after_seconds").asInt(),
                 "details обязан дублировать время ожидания для клиентов, не читающих заголовки");
-        assertTrue(error.path("message").asText().contains("40"),
+        assertTrue(
+                error.path("message").asText().contains("40"),
                 "Сообщение обязано называть лимит, чтобы клиент понял, что превышено: " + response.body());
     }
 
@@ -65,7 +70,9 @@ class ClientRateLimitTests {
             }
         }
 
-        assertEquals(10, allowed,
+        assertEquals(
+                10,
+                allowed,
                 "За полсекунды ведро пополняется на 10 запросов (20 в секунду): ровно столько обязано пройти");
     }
 
@@ -76,7 +83,8 @@ class ClientRateLimitTests {
             limit.reject(CLIENT, 0);
         }
 
-        assertFalse(limit.reject("192.168.0.11", 0).isPresent(),
+        assertFalse(
+                limit.reject("192.168.0.11", 0).isPresent(),
                 "Исчерпанное ведро одного адреса не должно блокировать соседний адрес");
     }
 }

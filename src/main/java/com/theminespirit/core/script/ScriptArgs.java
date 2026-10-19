@@ -6,8 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 final class ScriptArgs {
-    private ScriptArgs() {
-    }
+    private ScriptArgs() {}
 
     static int requireInt(Map<String, Object> params, String name) {
         Object value = require(params, name);

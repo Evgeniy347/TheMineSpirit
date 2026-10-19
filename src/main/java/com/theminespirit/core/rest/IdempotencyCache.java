@@ -10,22 +10,20 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class IdempotencyCache {
     public static final int CAPACITY = 1024;
 
-    private static final ObjectMapper CANONICAL = new ObjectMapper()
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+    private static final ObjectMapper CANONICAL =
+            new ObjectMapper().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
     public sealed interface Result {
-        record New() implements Result {
-        }
+        record New() implements Result {}
 
-        record Replay(String storedResponse) implements Result {
-        }
+        record Replay(String storedResponse) implements Result {}
 
-        record Conflict() implements Result {
-        }
+        record Conflict() implements Result {}
     }
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
@@ -46,7 +44,8 @@ public final class IdempotencyCache {
                 wait();
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
-                throw new ApiException(ErrorCode.INTERNAL,
+                throw new ApiException(
+                        ErrorCode.INTERNAL,
                         "Ожидание идемпотентного повтора request_id " + requestId + " прервано: мост останавливается",
                         Map.of("request_id", requestId));
             }
@@ -59,7 +58,7 @@ public final class IdempotencyCache {
                 return new Result.Conflict();
             }
         }
-        return new Result.Replay(entry.response);
+        return new Result.Replay(entry.stored());
     }
 
     public synchronized void remember(String requestId, String fingerprint, String response) {
@@ -90,7 +89,8 @@ public final class IdempotencyCache {
         return entries.size();
     }
 
-    public static String fingerprint(String bot, String goal, String planJson, Map<String, Object> params) {
+    public static String fingerprint(
+            String bot, @Nullable String goal, @Nullable String planJson, Map<String, Object> params) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("bot", bot);
         body.put("goal", goal);
@@ -105,11 +105,13 @@ public final class IdempotencyCache {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(canonical.getBytes(StandardCharsets.UTF_8)));
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Тело запроса не сериализуется в канонический JSON для отпечатка: "
-                    + "проверьте типы значений params", e);
+            throw new IllegalStateException(
+                    "Тело запроса не сериализуется в канонический JSON для отпечатка: "
+                            + "проверьте типы значений params",
+                    e);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 недоступен в этой JVM: идемпотентность REST не может "
-                    + "сравнивать тела запросов", e);
+            throw new IllegalStateException(
+                    "SHA-256 недоступен в этой JVM: идемпотентность REST не может " + "сравнивать тела запросов", e);
         }
     }
 
@@ -123,9 +125,9 @@ public final class IdempotencyCache {
 
     private static final class Entry {
         private final String fingerprint;
-        private String response;
+        private @Nullable String response;
 
-        Entry(String fingerprint, String response) {
+        Entry(String fingerprint, @Nullable String response) {
             this.fingerprint = fingerprint;
             this.response = response;
         }
@@ -136,6 +138,15 @@ public final class IdempotencyCache {
 
         boolean inProgress() {
             return response == null;
+        }
+
+        String stored() {
+            String value = response;
+            if (value == null) {
+                throw new IllegalStateException("Повтор запроса читает ответ, которого ещё нет: ждать надо, пока "
+                        + "первый запрос не сохранит ответ (inProgress)");
+            }
+            return value;
         }
 
         void complete(String stored) {

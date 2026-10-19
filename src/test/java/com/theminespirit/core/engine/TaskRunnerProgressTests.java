@@ -26,32 +26,32 @@ class TaskRunnerProgressTests {
 
     @Test
     void progress_SequenceOnSecondStep_ReportsTwoOfThree() {
-        TaskRunner runner = TaskRunner.start(sequence(
-                new ScriptCall(FAST, Map.of()),
-                new ScriptCall(SLOW, Map.of()),
-                new ScriptCall(FAST, Map.of())),
+        TaskRunner runner = TaskRunner.start(
+                sequence(
+                        new ScriptCall(FAST, Map.of()), new ScriptCall(SLOW, Map.of()), new ScriptCall(FAST, Map.of())),
                 ScriptRegistry.of(Map.of(FAST, TestScripts.succeeding(1), SLOW, TestScripts.succeeding(3))),
                 TestScripts.condition("yes", true));
 
         assertEquals(RunStatus.RUNNING, runner.tick(), "первый тик закрывает первый шаг sequence");
 
         RunProgress between = runner.progress().orElseThrow();
-        assertEquals(2, between.step(),
+        assertEquals(
+                2,
+                between.step(),
                 "на втором шаге sequence прогресс обязан показывать шаг 2: по номеру шага клиент видит, сколько осталось");
-        assertEquals(3, between.totalSteps(),
-                "число шагов sequence равно числу узлов плана: 3 шага — 3 всего");
+        assertEquals(3, between.totalSteps(), "число шагов sequence равно числу узлов плана: 3 шага — 3 всего");
 
         assertEquals(RunStatus.RUNNING, runner.tick(), "второй тик поднимает второй шаг sequence");
 
         RunProgress progress = runner.progress().orElseThrow();
         assertEquals(2, progress.step(), "второй шаг ещё выполняется — номер шага не сдвигается");
-        assertEquals(SLOW, progress.currentScript(),
-                "текущий скрипт обязан называть исполняемый второй шаг");
+        assertEquals(SLOW, progress.currentScript(), "текущий скрипт обязан называть исполняемый второй шаг");
     }
 
     @Test
     void progress_NonSequenceRoot_ReportsSingleStep() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(SLOW, Map.of()),
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall(SLOW, Map.of()),
                 TestScripts.singleRegistry(SLOW, TestScripts.succeeding(5)),
                 TestScripts.condition("yes", true));
 
@@ -65,51 +65,55 @@ class TaskRunnerProgressTests {
 
     @Test
     void progress_CountingScript_ReportsDoneAndTarget() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(COUNTED, Map.of()),
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall(COUNTED, Map.of()),
                 TestScripts.singleRegistry(COUNTED, TestScripts.counting(5)),
                 TestScripts.condition("yes", true));
 
         runner.tick();
 
         RunProgress progress = runner.progress().orElseThrow();
-        assertEquals(1, progress.done(),
-                "после первого тика счётный скрипт обязан отчитаться о выполненном куске работы");
-        assertEquals(5, progress.target(),
-                "цель счётного скрипта равна заявленному числу шагов работы");
+        assertEquals(
+                1, progress.done(), "после первого тика счётный скрипт обязан отчитаться о выполненном куске работы");
+        assertEquals(5, progress.target(), "цель счётного скрипта равна заявленному числу шагов работы");
     }
 
     @Test
     void progress_AfterTerminal_NoProgressLeft() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(FAST, Map.of()),
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall(FAST, Map.of()),
                 TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)),
                 TestScripts.condition("yes", true));
         runner.tick();
 
         assertEquals(RunStatus.SUCCEEDED, runner.status(), "однотиковый скрипт завершает задачу");
-        assertTrue(runner.progress().isEmpty(),
+        assertTrue(
+                runner.progress().isEmpty(),
                 "после терминального статуса прогресса нет: замороженные цифры выглядели бы как работающая задача");
     }
 
     @Test
     void failedAt_ScriptFailsOnFirstTick_NamesFailedScript() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(FAST, Map.of()),
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall(FAST, Map.of()),
                 TestScripts.singleRegistry(FAST, TestScripts.failing(1)),
                 TestScripts.condition("yes", true));
 
         assertEquals(RunStatus.FAILED, runner.tick(), "скрипт, провалившийся на первом тике, закрывает задачу");
 
         RunProgress failedAt = runner.failedAt().orElseThrow();
-        assertEquals(FAST, failedAt.currentScript(),
+        assertEquals(
+                FAST,
+                failedAt.currentScript(),
                 "script_failed обязан назвать скрипт даже при провале на первом тике, пока наблюдатель не успел его увидеть");
         assertTrue(runner.progress().isEmpty(), "у завершённой задачи текущего прогресса нет: он только в failedAt");
     }
 
     @Test
     void failedAt_SequenceFailsOnSecondStep_ReportsStepTwoOfThreeAndItsScript() {
-        TaskRunner runner = TaskRunner.start(sequence(
-                new ScriptCall(FAST, Map.of()),
-                new ScriptCall(SLOW, Map.of()),
-                new ScriptCall(FAST, Map.of())),
+        TaskRunner runner = TaskRunner.start(
+                sequence(
+                        new ScriptCall(FAST, Map.of()), new ScriptCall(SLOW, Map.of()), new ScriptCall(FAST, Map.of())),
                 ScriptRegistry.of(Map.of(FAST, TestScripts.succeeding(1), SLOW, TestScripts.failing(2))),
                 TestScripts.condition("yes", true));
 
@@ -127,23 +131,30 @@ class TaskRunnerProgressTests {
 
     @Test
     void failedAt_UnknownScript_NamesRequestedScript() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall("missing", Map.of()),
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall("missing", Map.of()),
                 TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)),
                 TestScripts.condition("yes", true));
 
         runner.tick();
 
-        assertEquals("missing", runner.failedAt().orElseThrow().currentScript(),
+        assertEquals(
+                "missing",
+                runner.failedAt().orElseThrow().currentScript(),
                 "незарегистрированный скрипт провалил задачу: его имя обязано попасть в failedAt");
     }
 
     @Test
     void failedAt_RunningOrSucceeded_IsEmpty() {
-        TaskRunner running = TaskRunner.start(new ScriptCall(SLOW, Map.of()),
-                TestScripts.singleRegistry(SLOW, TestScripts.succeeding(5)), TestScripts.condition("yes", true));
+        TaskRunner running = TaskRunner.start(
+                new ScriptCall(SLOW, Map.of()),
+                TestScripts.singleRegistry(SLOW, TestScripts.succeeding(5)),
+                TestScripts.condition("yes", true));
         running.tick();
-        TaskRunner done = TaskRunner.start(new ScriptCall(FAST, Map.of()),
-                TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)), TestScripts.condition("yes", true));
+        TaskRunner done = TaskRunner.start(
+                new ScriptCall(FAST, Map.of()),
+                TestScripts.singleRegistry(FAST, TestScripts.succeeding(1)),
+                TestScripts.condition("yes", true));
         done.tick();
 
         assertTrue(running.failedAt().isEmpty(), "идущая задача не провалена");
@@ -152,13 +163,13 @@ class TaskRunnerProgressTests {
 
     @Property(tries = 200)
     void progress_WhileRunning_StepWithinBoundsAndNonDecreasing(
-            @ForAll @IntRange(min = 1, max = 8) int steps,
-            @ForAll @IntRange(min = 1, max = 4) int ticksEach) {
+            @ForAll @IntRange(min = 1, max = 8) int steps, @ForAll @IntRange(min = 1, max = 4) int ticksEach) {
         List<TaskNode> nodes = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
             nodes.add(new ScriptCall(SLOW, Map.of()));
         }
-        TaskRunner runner = TaskRunner.start(new SequenceNode(nodes),
+        TaskRunner runner = TaskRunner.start(
+                new SequenceNode(nodes),
                 TestScripts.singleRegistry(SLOW, TestScripts.succeeding(ticksEach)),
                 TestScripts.condition("yes", true));
 
@@ -168,17 +179,20 @@ class TaskRunnerProgressTests {
             Optional<RunProgress> progress = runner.progress();
             if (progress.isPresent()) {
                 RunProgress current = progress.get();
-                assertTrue(current.step() >= 1 && current.step() <= current.totalSteps(),
-                        "шаг обязан жить в границах 1..totalSteps: шаг=" + current.step()
-                                + ", total=" + current.totalSteps() + ", steps=" + steps);
-                assertTrue(current.step() >= previousStep,
+                assertTrue(
+                        current.step() >= 1 && current.step() <= current.totalSteps(),
+                        "шаг обязан жить в границах 1..totalSteps: шаг=" + current.step() + ", total="
+                                + current.totalSteps() + ", steps=" + steps);
+                assertTrue(
+                        current.step() >= previousStep,
                         "номер шага не убывает за время выполнения: был " + previousStep + ", стал " + current.step());
                 previousStep = current.step();
             }
             runner.tick();
             ticks++;
         }
-        assertTrue(ticks <= steps * ticksEach + 2,
+        assertTrue(
+                ticks <= steps * ticksEach + 2,
                 "выполнение обязано завершиться за steps×ticksEach тиков, получили " + ticks);
     }
 }

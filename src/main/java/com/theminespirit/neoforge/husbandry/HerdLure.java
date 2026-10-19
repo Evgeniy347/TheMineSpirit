@@ -25,8 +25,8 @@ final class HerdLure {
             nextEscapee();
             return;
         }
-        Optional<String> danger = HerdSafety.dangerReason(session.lureTarget.isInLava(),
-                session.lureTarget.isOnFire(), session.lureTarget.isInWater());
+        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(
+                session.lureTarget.isInLava(), session.lureTarget.isOnFire(), session.lureTarget.isInWater()));
         if (danger.isPresent()) {
             session.skipped++;
             session.lureSkipped.add(session.lureId);
@@ -35,8 +35,10 @@ final class HerdLure {
             session.state = HerdSession.State.PICK;
             return;
         }
-        BlockCoord escapeePos = new BlockCoord(session.lureTarget.blockPosition().getX(),
-                session.lureTarget.blockPosition().getY(), session.lureTarget.blockPosition().getZ());
+        BlockCoord escapeePos = new BlockCoord(
+                session.lureTarget.blockPosition().getX(),
+                session.lureTarget.blockPosition().getY(),
+                session.lureTarget.blockPosition().getZ());
         if (session.pen.inside(escapeePos)) {
             session.actions.stopLeading(session.lureTarget);
             session.lureTarget = null;

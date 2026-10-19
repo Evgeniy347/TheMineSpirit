@@ -11,8 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class DecisionJson {
-    private DecisionJson() {
-    }
+    private DecisionJson() {}
 
     public static String toJson(String bot, DecisionsQuery query, List<DecisionRecord> records) {
         Map<String, Object> root = new LinkedHashMap<>();

@@ -2,32 +2,43 @@ package com.theminespirit.core.board;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Запись журнала заданий: событие доски и состояние задания на момент перехода.
  * Неизменяема: строка журнала пишется один раз и читается после перезапуска без правок.
  * {@code configHash} обязателен — по нему отличают правила, по которым задание жило.
  */
-public record BoardLogEntry(BoardLog.Event event, long tick, String ticketId, BoardCase boardCase,
-        int level, String cause, int basePriority, int effectivePriority, List<String> modifiers,
-        String spirit, String configHash, long worldTime) {
+public record BoardLogEntry(
+        BoardLog.Event event,
+        long tick,
+        String ticketId,
+        BoardCase boardCase,
+        int level,
+        String cause,
+        int basePriority,
+        int effectivePriority,
+        List<String> modifiers,
+        @Nullable String spirit,
+        String configHash,
+        long worldTime) {
 
     public BoardLogEntry {
-        Objects.requireNonNull(event, "Событие журнала не может быть null: без него непонятно, "
-                + "что случилось с заданием");
+        Objects.requireNonNull(
+                event, "Событие журнала не может быть null: без него непонятно, " + "что случилось с заданием");
         if (tick < 0 || worldTime < 0) {
             throw new IllegalArgumentException("Тик " + tick + " и мировое время " + worldTime
                     + " не бывают отрицательными: журнал идёт вперёд, а не назад");
         }
         if (ticketId == null || ticketId.isBlank()) {
-            throw new IllegalArgumentException("id задания в журнале пуст: по id запись связывают "
-                    + "с заданием на доске");
+            throw new IllegalArgumentException(
+                    "id задания в журнале пуст: по id запись связывают " + "с заданием на доске");
         }
-        Objects.requireNonNull(boardCase, "Кейс журнала не может быть null: без него запись "
-                + "не говорит, какое задание закрыто");
+        Objects.requireNonNull(
+                boardCase, "Кейс журнала не может быть null: без него запись " + "не говорит, какое задание закрыто");
         if (level < 1) {
-            throw new IllegalArgumentException("Уровень " + level + " меньше 1: первая постройка "
-                    + "ставится уровнем 1");
+            throw new IllegalArgumentException(
+                    "Уровень " + level + " меньше 1: первая постройка " + "ставится уровнем 1");
         }
         if (cause == null || cause.isBlank()) {
             throw new IllegalArgumentException("Причина в журнале пуста: по ней пересборка проверяет "
@@ -41,12 +52,12 @@ public record BoardLogEntry(BoardLog.Event event, long tick, String ticketId, Bo
             throw new IllegalArgumentException("Эффективный приоритет " + effectivePriority + " вне [0, "
                     + BoardTuning.MAX_PRIORITY + "]: журнал хранит число, а не произвольную строку");
         }
-        modifiers = List.copyOf(Objects.requireNonNull(modifiers,
-                "Модификаторы не могут быть null: пустой список задают пустым списком"));
+        modifiers = List.copyOf(Objects.requireNonNull(
+                modifiers, "Модификаторы не могут быть null: пустой список задают пустым списком"));
         for (String modifier : modifiers) {
             if (modifier == null || modifier.isBlank()) {
-                throw new IllegalArgumentException("Сработавший модификатор назван пустой строкой: "
-                        + "журнал называет ключи, а не пустоту");
+                throw new IllegalArgumentException(
+                        "Сработавший модификатор назван пустой строкой: " + "журнал называет ключи, а не пустоту");
             }
         }
         if (configHash == null || configHash.isBlank()) {

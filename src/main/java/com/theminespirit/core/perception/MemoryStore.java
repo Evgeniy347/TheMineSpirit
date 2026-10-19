@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public record MemoryStore(List<MemoryPoint> points) {
     public static final int MAX_PER_TYPE = 16;
@@ -33,7 +34,7 @@ public record MemoryStore(List<MemoryPoint> points) {
         return new MemoryStore(updated);
     }
 
-    public MemoryPoint recall(String name) {
+    public @Nullable MemoryPoint recall(String name) {
         int index = indexOf(Objects.requireNonNull(name, "name не может быть null: точку вспоминают по имени"));
         return index < 0 ? null : points.get(index);
     }

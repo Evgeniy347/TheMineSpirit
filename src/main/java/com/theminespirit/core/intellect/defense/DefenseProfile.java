@@ -1,17 +1,23 @@
 package com.theminespirit.core.intellect.defense;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.InvalidFieldException;
 import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
-public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallback,
-        Map<DefenderRole, List<TargetClass>> priority, Map<DefenderRole, List<TargetClass>> priorityWithoutArcher) {
+public record DefenseProfile(
+        Map<String, TargetClass> classes,
+        TargetClass fallback,
+        Map<DefenderRole, List<TargetClass>> priority,
+        Map<DefenderRole, List<TargetClass>> priorityWithoutArcher) {
     public static final String DEFAULT_KEY = "default";
     public static final String RESOURCE = "data/theminespirit/tactics/priorities.json";
 
@@ -21,7 +27,8 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
                     "classes не может быть null: без явной карты типов каждый враг упадёт в молчаливый fallback");
         }
         if (classes.isEmpty()) {
-            throw new InvalidFieldException("DefenseProfile.classes",
+            throw new InvalidFieldException(
+                    "DefenseProfile.classes",
                     "DefenseProfile.classes пуста: таблица классов целей не может быть пустой");
         }
         if (fallback == null) {
@@ -41,12 +48,10 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
         priorityWithoutArcher = checkedOrders("DefenseProfile.priorityWithoutArcher", priorityWithoutArcher, false);
     }
 
-    /** Начальная версия для держателя: читается с classpath один раз за процесс. */
     public static DefenseProfile readFromClasspath() {
         return DefenseProfileParser.fromJson(JsonResource.readClasspath(RESOURCE));
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет приоритеты на лету. */
     public static DefenseProfile loadDefault() {
         return DataTables.INSTANCE.priorities().current();
     }
@@ -59,7 +64,7 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
         return classes.getOrDefault(type, fallback);
     }
 
-    public TargetClass classify(String type, EnemyProfile profile) {
+    public TargetClass classify(String type, @Nullable EnemyProfile profile) {
         if (type == null) {
             throw new IllegalArgumentException(
                     "type не может быть null: класс цели считается по типу врага, без него только fallback");
@@ -85,43 +90,44 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
 
     public List<TargetClass> orderFor(DefenderRole role, boolean archerPresent) {
         if (role == null) {
-            throw new IllegalArgumentException(
-                    "role не может быть null: порядок целей разный у лучника и мечника");
+            throw new IllegalArgumentException("role не может быть null: порядок целей разный у лучника и мечника");
         }
         if (role == DefenderRole.MELEE && !archerPresent) {
-            return priorityWithoutArcher.get(DefenderRole.MELEE);
+            return present(priorityWithoutArcher, DefenderRole.MELEE, "Порядок целей без лучника");
         }
-        return priority.get(role);
+        return present(priority, role, "Порядок целей защитника");
     }
 
-    private static Map<DefenderRole, List<TargetClass>> checkedOrders(String field,
-            Map<DefenderRole, List<TargetClass>> orders, boolean full) {
+    private static Map<DefenderRole, List<TargetClass>> checkedOrders(
+            String field, Map<DefenderRole, List<TargetClass>> orders, boolean full) {
         Map<DefenderRole, List<TargetClass>> checked = new EnumMap<>(DefenderRole.class);
         for (Map.Entry<DefenderRole, List<TargetClass>> entry : orders.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null) {
-                throw new InvalidFieldException(field,
-                        field + " содержит null: роль и список классов обязаны быть заданы");
+                throw new InvalidFieldException(
+                        field, field + " содержит null: роль и список классов обязаны быть заданы");
             }
             if (entry.getValue().isEmpty()) {
-                throw new InvalidFieldException(field,
-                        field + " для " + entry.getKey() + " пуст: отряд без порядка целей бьёт кого попало");
+                throw new InvalidFieldException(
+                        field, field + " для " + entry.getKey() + " пуст: отряд без порядка целей бьёт кого попало");
             }
-            Set<TargetClass> seen = new HashSet<>();
+            Set<TargetClass> seen = EnumSet.noneOf(TargetClass.class);
             for (TargetClass cls : entry.getValue()) {
                 if (cls == null || !seen.add(cls)) {
-                    throw new InvalidFieldException(field, field + " для " + entry.getKey()
-                            + " содержит дубль или null: повтор ломает тай-брейк целей");
+                    throw new InvalidFieldException(
+                            field,
+                            field + " для " + entry.getKey()
+                                    + " содержит дубль или null: повтор ломает тай-брейк целей");
                 }
             }
             checked.put(entry.getKey(), List.copyOf(entry.getValue()));
         }
         if (full && (!checked.containsKey(DefenderRole.ARCHER) || !checked.containsKey(DefenderRole.MELEE))) {
-            throw new InvalidFieldException(field,
-                    field + " без ARCHER или MELEE: порядок целей обязан быть у обеих специализаций");
+            throw new InvalidFieldException(
+                    field, field + " без ARCHER или MELEE: порядок целей обязан быть у обеих специализаций");
         }
         if (!full && !checked.containsKey(DefenderRole.MELEE)) {
-            throw new InvalidFieldException(field,
-                    field + " без MELEE: мечник без лучника обязан знать свой порядок целей");
+            throw new InvalidFieldException(
+                    field, field + " без MELEE: мечник без лучника обязан знать свой порядок целей");
         }
         return Map.copyOf(checked);
     }

@@ -1,0 +1,3 @@
+# Механические коммиты форматирования: git blame их пропускает (git config blame.ignoreRevsFile — scripts/install-git-hooks.sh)
+# chore: spotlessApply — palantir-java-format (tasks/46 п.1)
+4029041c2007861b8f28f2a48453d03d7e81ebfe

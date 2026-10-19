@@ -19,8 +19,6 @@ public record TillParams(int radius, int count) {
 
     public static TillParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new TillParams(
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireInt(params, "count"));
+        return new TillParams(ScriptArgs.requireInt(params, "radius"), ScriptArgs.requireInt(params, "count"));
     }
 }

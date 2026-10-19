@@ -13,8 +13,7 @@ import net.minecraft.world.level.block.Block;
 public final class CropRegistry {
     private static final String DEFAULT_NAMESPACE = "minecraft:";
 
-    private CropRegistry() {
-    }
+    private CropRegistry() {}
 
     public static Block block(CropKind kind) {
         return lookup(BuiltInRegistries.BLOCK, kind.blockId(), kind, "блок посева");
@@ -44,8 +43,8 @@ public final class CropRegistry {
     }
 
     private static <T> T lookup(Registry<T> registry, String id, CropKind kind, String what) {
-        return registry.getOptional(ResourceLocation.parse(id)).orElseThrow(() -> new IllegalStateException(
-                "В реестре нет " + what + " " + id + " для вида " + kind + ": id в CropKind неверен для версии игры, "
-                        + "сверь его с реестром"));
+        return registry.getOptional(ResourceLocation.parse(id))
+                .orElseThrow(() -> new IllegalStateException("В реестре нет " + what + " " + id + " для вида " + kind
+                        + ": id в CropKind неверен для версии игры, " + "сверь его с реестром"));
     }
 }

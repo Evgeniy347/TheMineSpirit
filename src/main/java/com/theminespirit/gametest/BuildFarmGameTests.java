@@ -24,8 +24,7 @@ public final class BuildFarmGameTests {
     private static final int PLOT_SIDE = 3;
     private static final int PLOT_CELLS = PLOT_SIDE * PLOT_SIDE;
 
-    private BuildFarmGameTests() {
-    }
+    private BuildFarmGameTests() {}
 
     @GameTest(template = "arena", batch = "build_farm_script", timeoutTicks = 400)
     public static void buildFarm_PlotNearWater_TillsAndPlantsEveryCell(GameTestHelper helper) {
@@ -42,30 +41,51 @@ public final class BuildFarmGameTests {
         spirit.getInventory().setItem(1, new ItemStack(Items.WHEAT_SEEDS, PLOT_CELLS));
         BlockPos first = helper.absolutePos(new BlockPos(4, FEET_Y, 4));
         BlockPos second = helper.absolutePos(new BlockPos(6, FEET_Y, 6));
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_farm", Map.of(
-                "crop", "wheat", "x1", first.getX(), "z1", first.getZ(),
-                "x2", second.getX(), "z2", second.getZ())), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "build_farm",
+                        Map.of(
+                                "crop",
+                                "wheat",
+                                "x1",
+                                first.getX(),
+                                "z1",
+                                first.getZ(),
+                                "x2",
+                                second.getX(),
+                                "z2",
+                                second.getZ())),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "грядка у воды обязана вспахаться и засеяться целиком: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
             for (int x = 4; x <= 6; x++) {
                 for (int z = 4; z <= 6; z++) {
-                    helper.assertTrue(helper.getBlockState(new BlockPos(x, GROUND_Y, z)).is(Blocks.FARMLAND),
+                    helper.assertTrue(
+                            helper.getBlockState(new BlockPos(x, GROUND_Y, z)).is(Blocks.FARMLAND),
                             "клетка " + x + "," + z + " обязана быть пашней, а там "
-                                    + helper.getBlockState(new BlockPos(x, GROUND_Y, z)).getBlock());
-                    helper.assertTrue(helper.getBlockState(new BlockPos(x, FEET_Y, z)).is(Blocks.WHEAT),
+                                    + helper.getBlockState(new BlockPos(x, GROUND_Y, z))
+                                            .getBlock());
+                    helper.assertTrue(
+                            helper.getBlockState(new BlockPos(x, FEET_Y, z)).is(Blocks.WHEAT),
                             "над пашней " + x + "," + z + " обязана расти пшеница, а там "
-                                    + helper.getBlockState(new BlockPos(x, FEET_Y, z)).getBlock());
+                                    + helper.getBlockState(new BlockPos(x, FEET_Y, z))
+                                            .getBlock());
                 }
             }
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 0,
                     "девять семян обязаны израсходоваться ровно, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS));
-            helper.assertTrue(spirit.getInventory().getItem(0).getDamageValue() == PLOT_CELLS,
+            helper.assertTrue(
+                    spirit.getInventory().getItem(0).getDamageValue() == PLOT_CELLS,
                     "износ мотыги обязан быть " + PLOT_CELLS + ", фактически "
                             + spirit.getInventory().getItem(0).getDamageValue());
             GameTestFixtures.finish(helper);

@@ -1,0 +1,6 @@
+{
+  "waitMinTicks": 100,
+  "waitMaxTicks": 600,
+  "hookedMinTicks": 20,
+  "hookedMaxTicks": 80
+}

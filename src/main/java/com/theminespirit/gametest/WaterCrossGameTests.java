@@ -28,8 +28,7 @@ public final class WaterCrossGameTests {
     private static final BlockPos SWIM_BANK = new BlockPos(7, 3, 4);
     private static final double ARRIVAL = 1.5;
 
-    private WaterCrossGameTests() {
-    }
+    private WaterCrossGameTests() {}
 
     private static void carveChannel(GameTestHelper helper, int minX, int maxX, int topY, boolean water) {
         for (int x = minX; x <= maxX; x++) {
@@ -46,23 +45,42 @@ public final class WaterCrossGameTests {
     }
 
     private static void assertCrossed(GameTestHelper helper, SpiritEntity spirit) {
-        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                 "дух обязан переправиться к дальней стороне, статус "
                         + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
-                        + spirit.taskFailureReason().orElse("нет"));
+                        + spirit.taskFailureReason().orElse("нет") + ", дух в "
+                        + helper.relativePos(spirit.blockPosition())
+                        + (spirit.isInWater() ? " в воде" : ""));
         double distance = MovementScene.distanceTo(helper, spirit, FAR_SHORE);
-        helper.assertTrue(distance <= ARRIVAL,
+        helper.assertTrue(
+                distance <= ARRIVAL,
                 "дух обязан дойти до (8, 1, 4) на дальней стороне, а он в " + distance + " блоках от неё");
     }
 
-    // [флак] мост из пяти блоков плюс переход: под нагрузкой полного прогона подход и кладка тянутся
-    @GameTest(template = "arena", batch = "water_cross_bridge", timeoutTicks = 600)
-    public static void crossWater_FiveBlockChannelWithDirt_BridgesAcross(GameTestHelper helper) {
+    // [флак] заплыв через канал в пять блоков плюс переход: под нагрузкой полного прогона заплыв тянется
+    @GameTest(template = "arena", batch = "water_cross_swim", timeoutTicks = 600)
+    public static void crossWater_FiveBlockChannelWithDirt_SwimsWithoutBridge(GameTestHelper helper) {
         MovementScene.prepare(helper);
-        carveChannel(helper, CHANNEL_MIN_X, CHANNEL_MAX_X, 0, true);
+        // Канал глубиной 2 в каменной чаше: вода не растекается за арену, а переправа идёт вплавь.
+        for (int x = CHANNEL_MIN_X - 1; x <= CHANNEL_MAX_X + 1; x++) {
+            for (int z = -1; z <= 9; z++) {
+                helper.setBlock(x, -2, z, Blocks.STONE);
+                helper.setBlock(x, -1, z, Blocks.STONE);
+                helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
+        for (int x = CHANNEL_MIN_X; x <= CHANNEL_MAX_X; x++) {
+            for (int z = 0; z <= 8; z++) {
+                helper.setBlock(x, -1, z, Blocks.WATER);
+                helper.setBlock(x, 0, z, Blocks.WATER);
+            }
+        }
         SpiritEntity spirit = MovementScene.spirit(helper, START);
         stock(spirit, DIRT_STOCK);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 MovementScene.call("cross_water", MovementScene.pointParams(helper, FAR_SHORE)),
                 MovementScene.SETTLE_TICKS);
 
@@ -70,10 +88,16 @@ public final class WaterCrossGameTests {
             run.assertStarted();
             assertCrossed(helper, spirit);
             for (int x = CHANNEL_MIN_X; x <= CHANNEL_MAX_X; x++) {
-                helper.assertTrue(helper.getBlockState(new BlockPos(x, 0, 4)).is(Blocks.DIRT),
-                        "шириной 5 блоков вода не переплывается: cross_water обязан настелить мост, а клетка ("
-                                + x + ", 0, 4) не из досок духа");
+                helper.assertTrue(
+                        !helper.getBlockState(new BlockPos(x, 0, 4)).is(Blocks.DIRT),
+                        "переправа только вплавь (упрощение 44.7): мост из земли не кладётся, а клетка (" + x
+                                + ", 0, 4) застелена");
             }
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == DIRT_STOCK,
+                    "переправа вплавь не тратит блоки: в инвентаре "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) + " из "
+                            + DIRT_STOCK);
             MovementScene.finish(helper);
         });
     }
@@ -87,18 +111,20 @@ public final class WaterCrossGameTests {
         stock(spirit, DIRT_STOCK);
         Map<String, Object> params = new HashMap<>(MovementScene.pointParams(helper, FAR_SHORE));
         params.put("length", PIT_MAX_X - PIT_MIN_X + 1);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("bridge", params),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.call("bridge", params), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             assertCrossed(helper, spirit);
             for (int x = PIT_MIN_X; x <= PIT_MAX_X; x++) {
-                helper.assertTrue(helper.getBlockState(new BlockPos(x, 0, 4)).is(Blocks.DIRT),
-                        "мост через четырёхблочный провал обязан лечь ровно из блоков инвентаря, а клетка ("
-                                + x + ", 0, 4) пуста");
+                helper.assertTrue(
+                        helper.getBlockState(new BlockPos(x, 0, 4)).is(Blocks.DIRT),
+                        "мост через четырёхблочный провал обязан лечь ровно из блоков инвентаря, а клетка (" + x
+                                + ", 0, 4) пуста");
             }
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT)
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT)
                             == DIRT_STOCK - (PIT_MAX_X - PIT_MIN_X + 1),
                     "мост тратит ровно длину из инвентаря: остаток "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT)
@@ -114,12 +140,13 @@ public final class WaterCrossGameTests {
         stock(spirit, DIRT_STOCK);
         Map<String, Object> params = new HashMap<>(MovementScene.pointParams(helper, new BlockPos(4, 1, 4)));
         params.put("length", 2);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("bridge", params),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.call("bridge", params), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "сплошной пол — моста не нужно: bridge обязан дойти до цели без ошибки, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -139,21 +166,25 @@ public final class WaterCrossGameTests {
             lowestAir[0] = Math.min(lowestAir[0], spirit.getAirSupply());
             lowestHealth[0] = Math.min(lowestHealth[0], spirit.getHealth());
         });
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 MovementScene.call("swim", MovementScene.pointParams(helper, SWIM_BANK)),
                 MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "дух в глубоком пруду обязан доплыть до цели, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(!spirit.isUnderWater(),
+            helper.assertTrue(
+                    !spirit.isUnderWater(),
                     "у цели у поверхности дух не должен оставаться под водой: плыть и выныривать — условие задачи");
-            helper.assertTrue(lowestAir[0] > 0,
-                    "запас воздуха нигде не должен падать до 0, минимум " + lowestAir[0]);
-            helper.assertTrue(lowestHealth[0] >= spirit.getMaxHealth(),
+            helper.assertTrue(lowestAir[0] > 0, "запас воздуха нигде не должен падать до 0, минимум " + lowestAir[0]);
+            helper.assertTrue(
+                    lowestHealth[0] >= spirit.getMaxHealth(),
                     "утопления нет: здоровье не должно падать, минимум " + lowestHealth[0]);
             MovementScene.finish(helper);
         });

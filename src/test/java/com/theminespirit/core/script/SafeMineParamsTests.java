@@ -17,17 +17,24 @@ class SafeMineParamsTests {
 
         assertEquals(SafeMineMode.STAIRCASE, params.mode(), "Форма обязана читаться из обязательного параметра");
         assertEquals(DescentDirection.EAST, params.direction(), "Направление обязано читаться из параметра");
-        assertEquals(DescentData.loadDefault().targetY(), params.y(),
+        assertEquals(
+                DescentData.loadDefault().targetY(),
+                params.y(),
                 "Целевой этаж по умолчанию — из данных: числа не дублируются в коде");
-        assertEquals(CatalogLimits.MINE_LENGTH_DEFAULT, params.length(),
+        assertEquals(
+                CatalogLimits.MINE_LENGTH_DEFAULT,
+                params.length(),
                 "Длина штольни по умолчанию — из каталога, а не из шаблона fallback");
-        assertEquals(DescentData.loadDefault().torchInterval(), params.torchInterval(),
+        assertEquals(
+                DescentData.loadDefault().torchInterval(),
+                params.torchInterval(),
                 "Интервал факелов по умолчанию — из данных шахты: шахта освещается по таблице, а не константой");
     }
 
     @Test
     void from_WithoutMode_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMineParams.from(Map.of("direction", "east")),
                 "Без формы шахты параметры обязаны отклоняться: неизвестно, копать вниз или вбок");
 
@@ -36,7 +43,8 @@ class SafeMineParamsTests {
 
     @Test
     void from_UnknownMode_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMineParams.from(Map.of("mode", "spiral", "direction", "east")),
                 "Неизвестная форма шахты обязана отклоняться до старта");
 
@@ -45,7 +53,8 @@ class SafeMineParamsTests {
 
     @Test
     void from_LengthOutOfRange_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMineParams.from(Map.of("mode", "tunnel", "direction", "east", "length", 0)),
                 "Длина штольни вне диапазона обязана отклоняться до чтения мира");
 
@@ -54,8 +63,8 @@ class SafeMineParamsTests {
 
     @Test
     void from_ExplicitValues_OverrideDefaults() {
-        SafeMineParams params = SafeMineParams.from(Map.of(
-                "mode", "tunnel", "direction", "north", "y", -59, "length", 10, "torchInterval", 5));
+        SafeMineParams params = SafeMineParams.from(
+                Map.of("mode", "tunnel", "direction", "north", "y", -59, "length", 10, "torchInterval", 5));
 
         assertEquals(SafeMineMode.TUNNEL, params.mode(), "Явная форма обязана победить умолчание");
         assertEquals(10, params.length(), "Явная длина обязана победить умолчание каталога");
@@ -65,7 +74,8 @@ class SafeMineParamsTests {
 
     @Test
     void from_TorchIntervalOutOfRange_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMineParams.from(Map.of("mode", "tunnel", "direction", "east", "torchInterval", 100)),
                 "Интервал факелов вне диапазона обязан отклоняться до чтения мира");
 

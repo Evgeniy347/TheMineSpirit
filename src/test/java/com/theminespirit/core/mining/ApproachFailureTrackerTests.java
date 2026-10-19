@@ -18,7 +18,8 @@ class ApproachFailureTrackerTests {
         ApproachFailureTracker tracker = new ApproachFailureTracker();
 
         for (int attempt = 1; attempt < MiningTuning.MAX_APPROACH_FAILURES; attempt++) {
-            assertFalse(tracker.recordFailure(STAND, TARGET),
+            assertFalse(
+                    tracker.recordFailure(STAND, TARGET),
                     "Попытка " + attempt + " из " + MiningTuning.MAX_APPROACH_FAILURES
                             + " обязана просить повтор: один-два срыва под нагрузкой — шум навигации, "
                             + "а не недостижимость. ИначеTransient-сбои будут терять достижимые цели");
@@ -34,7 +35,8 @@ class ApproachFailureTrackerTests {
             dropped = tracker.recordFailure(STAND, TARGET);
         }
 
-        assertTrue(dropped,
+        assertTrue(
+                dropped,
                 "После " + MiningTuning.MAX_APPROACH_FAILURES
                         + " неудачных подходов цель обязана бросаться: иначе дух сотнями тиков идёт "
                         + "в заведомо глухое место");
@@ -48,7 +50,9 @@ class ApproachFailureTrackerTests {
             tracker.recordFailure(STAND, TARGET);
         }
 
-        assertEquals(Set.of(STAND), tracker.excludedStands(),
+        assertEquals(
+                Set.of(STAND),
+                tracker.excludedStands(),
                 "Стоянка с " + MiningTuning.MAX_APPROACH_FAILURES
                         + " неудачными подходами обязана исключаться: планировщик иначе снова выберет "
                         + "то же глухое место для следующей цели");
@@ -62,9 +66,11 @@ class ApproachFailureTrackerTests {
         tracker.recordFailure(STAND, TARGET);
         tracker.recordFailure(other, TARGET);
 
-        assertTrue(tracker.excludedStands().isEmpty(),
+        assertTrue(
+                tracker.excludedStands().isEmpty(),
                 "По одному срыву на разных стоянках — шум, а не глухое место: исключение обязано требовать "
-                        + MiningTuning.MAX_APPROACH_FAILURES + " неудач на одной стоянке, иначе потеряются хорошие места");
+                        + MiningTuning.MAX_APPROACH_FAILURES
+                        + " неудач на одной стоянке, иначе потеряются хорошие места");
     }
 
     @Test
@@ -76,10 +82,12 @@ class ApproachFailureTrackerTests {
             tracker.recordFailure(STAND, TARGET);
         }
 
-        assertTrue(tracker.excludedStands().contains(STAND),
+        assertTrue(
+                tracker.excludedStands().contains(STAND),
                 "Общая глухая стоянка обязана остаться исключённой и для соседней цели: иначе каждая цель "
                         + "потратит полный предел попыток на то же место");
-        assertFalse(tracker.recordFailure(new BlockCoord(6, 1, 4), neighbour),
+        assertFalse(
+                tracker.recordFailure(new BlockCoord(6, 1, 4), neighbour),
                 "Соседняя цель с первой попытки обязана просить повтор: её собственный счётчик независим "
                         + "от чужой брошенной цели");
     }
@@ -88,7 +96,9 @@ class ApproachFailureTrackerTests {
     void recordFailure_NullStand_Throws() {
         ApproachFailureTracker tracker = new ApproachFailureTracker();
 
-        assertThrows(NullPointerException.class, () -> tracker.recordFailure(null, TARGET),
+        assertThrows(
+                NullPointerException.class,
+                () -> tracker.recordFailure(null, TARGET),
                 "Null-стоянка обязана ронять вызов сразу: молчаливое ведение счёта без места исключит не то");
     }
 
@@ -96,7 +106,9 @@ class ApproachFailureTrackerTests {
     void recordFailure_NullTarget_Throws() {
         ApproachFailureTracker tracker = new ApproachFailureTracker();
 
-        assertThrows(NullPointerException.class, () -> tracker.recordFailure(STAND, null),
+        assertThrows(
+                NullPointerException.class,
+                () -> tracker.recordFailure(STAND, null),
                 "Null-цель обязана ронять вызов сразу: молчаливый счёт попыток в никуда скроет зацикливание");
     }
 }

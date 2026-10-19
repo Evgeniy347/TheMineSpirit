@@ -16,12 +16,12 @@ import net.minecraft.world.phys.AABB;
 final class ThreatScanner {
     static final double RADIUS = ExplosionAvoidance.SCAN_RADIUS;
 
-    private ThreatScanner() {
-    }
+    private ThreatScanner() {}
 
     static List<ThreatFact> scan(SpiritEntity spirit) {
         AABB area = spirit.getBoundingBox().inflate(RADIUS);
-        List<Entity> found = spirit.level().getEntities(spirit, area, entity -> entity instanceof Creeper || entity instanceof PrimedTnt);
+        List<Entity> found = spirit.level()
+                .getEntities(spirit, area, entity -> entity instanceof Creeper || entity instanceof PrimedTnt);
         List<ThreatFact> facts = new ArrayList<>(found.size());
         for (Entity entity : found) {
             BlockPos at = entity.blockPosition();

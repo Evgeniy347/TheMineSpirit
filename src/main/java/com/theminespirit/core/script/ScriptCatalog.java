@@ -14,8 +14,8 @@ public final class ScriptCatalog {
 
     public static ScriptCatalog of(List<ScriptSpec> scripts) {
         Objects.requireNonNull(scripts, "scripts не может быть null: пустой каталог задают пустым списком");
-        return new ScriptCatalog(SpecCatalog.of(scripts, ScriptSpec::id,
-                "Дублирующийся id скрипта '{id}': каталог должен находить скрипт однозначно"));
+        return new ScriptCatalog(SpecCatalog.of(
+                scripts, ScriptSpec::id, "Дублирующийся id скрипта '{id}': каталог должен находить скрипт однозначно"));
     }
 
     public Optional<ScriptSpec> find(String id) {
@@ -28,7 +28,7 @@ public final class ScriptCatalog {
 
     public ScriptCatalog restrictedTo(Set<String> ids) {
         Objects.requireNonNull(ids, "ids не может быть null: для отбора нужен набор ключей");
-        return new ScriptCatalog(delegate.restrictedTo(ids,
-                "Скрипт '{id}' вызывается адаптером, но не описан в каталоге: сверьте наличие описания"));
+        return new ScriptCatalog(delegate.restrictedTo(
+                ids, "Скрипт '{id}' вызывается адаптером, но не описан в каталоге: сверьте наличие описания"));
     }
 }

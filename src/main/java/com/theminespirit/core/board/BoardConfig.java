@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
@@ -10,8 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Consumer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Живые числа доски: приоритеты кейсов, модификаторы приоритета и интервалы. Читается из
@@ -21,62 +20,74 @@ import java.util.function.Function;
  * ключи интервалов — {@link BoardTuning#INTERVAL_KEYS}. Пустые карты допустимы: недостающее
  * добирают значения по умолчанию из {@code BoardRules}, {@code BoardPriorities} и {@code BoardTuning}.
  */
-public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
-        Map<String, Long> intervals, Map<String, Integer> levels, Map<String, Integer> herd,
-        List<String> immovable, Map<String, Integer> supplies,
-        Map<String, Map<String, Integer>> products, Map<String, Integer> tools,
-        Map<String, Integer> wool, Map<String, Integer> hive) {
+public record BoardConfig(
+        Map<String, Integer> priorities,
+        Map<String, Integer> modifiers,
+        Map<String, Long> intervals,
+        Map<String, Integer> levels,
+        Map<String, Integer> herd,
+        List<String> immovable,
+        Map<String, Integer> supplies,
+        Map<String, Map<String, Integer>> products,
+        Map<String, Integer> tools,
+        Map<String, Integer> wool,
+        Map<String, Integer> hive) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     public BoardConfig {
-        Objects.requireNonNull(priorities,
-                "Приоритеты не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(
+                priorities, "Приоритеты не могут быть null: пустую таблицу задают пустой картой, а не null");
         priorities = Map.copyOf(priorities);
-        Objects.requireNonNull(modifiers,
-                "Модификаторы не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(
+                modifiers, "Модификаторы не могут быть null: пустую таблицу задают пустой картой, а не null");
         modifiers = Map.copyOf(modifiers);
-        Objects.requireNonNull(intervals,
-                "Интервалы не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(
+                intervals, "Интервалы не могут быть null: пустую таблицу задают пустой картой, а не null");
         intervals = Map.copyOf(intervals);
-        Objects.requireNonNull(levels,
-                "Уровни не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(levels, "Уровни не могут быть null: пустую таблицу задают пустой картой, а не null");
         levels = Map.copyOf(levels);
-        Objects.requireNonNull(herd,
-                "Данные стада не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(herd, "Данные стада не могут быть null: пустую таблицу задают пустой картой, а не null");
         herd = Map.copyOf(herd);
-        Objects.requireNonNull(immovable,
-                "Неподвижные постройки не могут быть null: пустой список задают пустым списком, а не null");
+        Objects.requireNonNull(
+                immovable, "Неподвижные постройки не могут быть null: пустой список задают пустым списком, а не null");
         immovable = List.copyOf(immovable);
-        Objects.requireNonNull(supplies,
-                "Запасы не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(supplies, "Запасы не могут быть null: пустую таблицу задают пустой картой, а не null");
         supplies = Map.copyOf(supplies);
-        Objects.requireNonNull(products,
-                "Продукты не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(products, "Продукты не могут быть null: пустую таблицу задают пустой картой, а не null");
         Map<String, Map<String, Integer>> checkedProducts = new LinkedHashMap<>();
         for (Map.Entry<String, Map<String, Integer>> entry : products.entrySet()) {
-            checkedProducts.put(entry.getKey(),
-                    Map.copyOf(Objects.requireNonNull(entry.getValue(),
+            checkedProducts.put(
+                    entry.getKey(),
+                    Map.copyOf(Objects.requireNonNull(
+                            entry.getValue(),
                             "Продукты вида '" + entry.getKey() + "' не могут быть null: пустую "
                                     + "таблицу задают пустой картой")));
         }
         products = Map.copyOf(checkedProducts);
-        Objects.requireNonNull(tools,
+        Objects.requireNonNull(
+                tools,
                 "Число комплектов инструментов не может быть null: пустую таблицу задают пустой картой, а не null");
         tools = Map.copyOf(tools);
-        Objects.requireNonNull(wool,
-                "Данные шерсти не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(
+                wool, "Данные шерсти не могут быть null: пустую таблицу задают пустой картой, а не null");
         wool = Map.copyOf(wool);
-        Objects.requireNonNull(hive,
-                "Данные пчёл не могут быть null: пустую таблицу задают пустой картой, а не null");
+        Objects.requireNonNull(hive, "Данные пчёл не могут быть null: пустую таблицу задают пустой картой, а не null");
         hive = Map.copyOf(hive);
     }
 
-    public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers,
-            Map<String, Long> intervals) {
-        this(priorities, modifiers, intervals, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of(),
-                Map.of(), Map.of());
+    public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers, Map<String, Long> intervals) {
+        this(
+                priorities,
+                modifiers,
+                intervals,
+                Map.of(),
+                Map.of(),
+                List.of(),
+                Map.of(),
+                Map.of(),
+                Map.of(),
+                Map.of(),
+                Map.of());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -87,37 +98,37 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             throw new IllegalStateException("Таблица '" + origin + "' — не объект: на верхнем уровне ожидается "
                     + "объект «priorities → modifiers → intervals»");
         }
-        Map<String, Integer> priorities = integers(root.get("priorities"), origin, "priorities",
-                BoardCase::valueOf, false);
-        Map<String, Integer> modifiers = integers(root.get("modifiers"), origin, "modifiers",
-                BoardPriorities::modifierKey, true);
+        Map<String, Integer> priorities =
+                integers(root.get("priorities"), origin, "priorities", BoardCase::valueOf, false);
+        Map<String, Integer> modifiers =
+                integers(root.get("modifiers"), origin, "modifiers", BoardPriorities::modifierKey, true);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
         Map<String, Integer> levels = integers(root.get("levels"), origin, "levels", BoardCase::valueOf, false);
-        Map<String, Integer> supplies = integers(root.get("supplies"), origin, "supplies",
-                BoardConfig::supplyKey, false);
+        Map<String, Integer> supplies =
+                integers(root.get("supplies"), origin, "supplies", BoardConfig::supplyKey, false);
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
         Map<String, Integer> tools = integers(root.get("tools"), origin, "tools", ToolSet::toolKey, false);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
-        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, supplies, products,
-                tools, wool, hive);
+        return new BoardConfig(
+                priorities, modifiers, intervals, levels, herd, immovable, supplies, products, tools, wool, hive);
     }
 
     public static BoardConfig readFromClasspath() {
         return fromJson(JsonResource.readClasspath(RESOURCE), RESOURCE);
     }
 
-    private static Map<String, Integer> integers(JsonNode node, String origin, String field,
-            Function<String, ?> known, boolean allowNegative) {
+    private static Map<String, Integer> integers(
+            @Nullable JsonNode node, String origin, String field, Consumer<String> known, boolean allowNegative) {
         Map<String, Integer> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
         }
         if (!node.isObject()) {
-            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "' — не объект: ожидается "
-                    + "карта «имя → число»");
+            throw new IllegalStateException(
+                    "Поле '" + field + "' в '" + origin + "' — не объект: ожидается " + "карта «имя → число»");
         }
         Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
         while (entries.hasNext()) {
@@ -141,15 +152,15 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         return values;
     }
 
-    private static Map<String, Long> longs(JsonNode node, String origin, String field,
-            Function<String, ?> known) {
+    private static Map<String, Long> longs(
+            @Nullable JsonNode node, String origin, String field, Consumer<String> known) {
         Map<String, Long> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
         }
         if (!node.isObject()) {
-            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "' — не объект: ожидается "
-                    + "карта «имя → число»");
+            throw new IllegalStateException(
+                    "Поле '" + field + "' в '" + origin + "' — не объект: ожидается " + "карта «имя → число»");
         }
         Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
         while (entries.hasNext()) {
@@ -172,14 +183,14 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         return values;
     }
 
-    private static List<String> caseList(JsonNode node, String origin, String field) {
+    private static List<String> caseList(@Nullable JsonNode node, String origin, String field) {
         List<String> values = new ArrayList<>();
         if (node == null || node.isNull()) {
             return values;
         }
         if (!node.isArray()) {
-            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "' — не массив: ожидается "
-                    + "список имён кейсов");
+            throw new IllegalStateException(
+                    "Поле '" + field + "' в '" + origin + "' — не массив: ожидается " + "список имён кейсов");
         }
         for (JsonNode item : node) {
             if (!item.isTextual() || item.textValue().isBlank()) {
@@ -190,15 +201,17 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             try {
                 BoardCase.valueOf(key);
             } catch (IllegalArgumentException unknown) {
-                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': кейс '" + key
-                        + "' неизвестен: опечатка в имени молча потеряла бы строку таблицы", unknown);
+                throw new IllegalStateException(
+                        "Поле '" + field + "' в '" + origin + "': кейс '" + key
+                                + "' неизвестен: опечатка в имени молча потеряла бы строку таблицы",
+                        unknown);
             }
             values.add(key);
         }
         return List.copyOf(values);
     }
 
-    private static Map<String, Map<String, Integer>> productMap(JsonNode node, String origin, String field) {
+    private static Map<String, Map<String, Integer>> productMap(@Nullable JsonNode node, String origin, String field) {
         Map<String, Map<String, Integer>> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -214,8 +227,10 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             try {
                 Species.parse(speciesName);
             } catch (IllegalArgumentException unknown) {
-                throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': вид '" + speciesName
-                        + "' неизвестен: опечатка в имени молча потеряла бы норму продуктов", unknown);
+                throw new IllegalStateException(
+                        "Поле '" + field + "' в '" + origin + "': вид '" + speciesName
+                                + "' неизвестен: опечатка в имени молча потеряла бы норму продуктов",
+                        unknown);
             }
             JsonNode items = entry.getValue();
             if (!items.isObject()) {
@@ -227,8 +242,8 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
             while (productFields.hasNext()) {
                 Map.Entry<String, JsonNode> product = productFields.next();
                 if (product.getKey().isBlank()) {
-                    throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': у вида '"
-                            + speciesName + "' пустое имя предмета");
+                    throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': у вида '" + speciesName
+                            + "' пустое имя предмета");
                 }
                 JsonNode value = product.getValue();
                 if (!value.isIntegralNumber() || value.intValue() < 0) {
@@ -250,13 +265,14 @@ public record BoardConfig(Map<String, Integer> priorities, Map<String, Integer> 
         return key;
     }
 
-    private static void checkKey(Function<String, ?> known, String key, String origin,
-            String field) {
+    private static void checkKey(Consumer<String> known, String key, String origin, String field) {
         try {
-            known.apply(key);
+            known.accept(key);
         } catch (IllegalArgumentException unknown) {
-            throw new IllegalStateException("Поле '" + field + "' в '" + origin + "': ключ '" + key
-                    + "' неизвестен: опечатка в имени молча потеряла бы строку таблицы", unknown);
+            throw new IllegalStateException(
+                    "Поле '" + field + "' в '" + origin + "': ключ '" + key
+                            + "' неизвестен: опечатка в имени молча потеряла бы строку таблицы",
+                    unknown);
         }
     }
 }

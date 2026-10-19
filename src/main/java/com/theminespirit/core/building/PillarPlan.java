@@ -6,8 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class PillarPlan {
-    private PillarPlan() {
-    }
+    private PillarPlan() {}
 
     public static List<BlockCoord> plan(int height) {
         if (height < 1) {

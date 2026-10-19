@@ -12,8 +12,8 @@ public record TransferOrder(Optional<UUID> from, UUID to, String item, int count
             throw new IllegalArgumentException("Предмет передачи пуст: по нему ищут излишек и везут груз");
         }
         if (count <= 0) {
-            throw new IllegalArgumentException("Передать предметов " + count + " <= 0: пустая передача "
-                    + "не создаёт задачи");
+            throw new IllegalArgumentException(
+                    "Передать предметов " + count + " <= 0: пустая передача " + "не создаёт задачи");
         }
         if (Double.isNaN(distance) || Double.isInfinite(distance) || distance < 0) {
             throw new IllegalArgumentException("Расстояние передачи " + distance + " обязано быть конечным и >= 0");

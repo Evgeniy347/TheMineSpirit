@@ -1,5 +1,7 @@
 package com.theminespirit.core.pickup;
 
+import org.jspecify.annotations.Nullable;
+
 public enum OverflowMode {
     FAIL,
     BY_VALUE,
@@ -9,7 +11,7 @@ public enum OverflowMode {
         return followsPlayer ? BY_VALUE : RETURN_TO_BASE;
     }
 
-    public static OverflowMode parse(String text) {
+    public static OverflowMode parse(@Nullable String text) {
         if (text == null) {
             return BY_VALUE;
         }
@@ -17,10 +19,11 @@ public enum OverflowMode {
             case "fail" -> FAIL;
             case "by_value" -> BY_VALUE;
             case "return_to_base" -> RETURN_TO_BASE;
-            default -> throw new IllegalArgumentException("Режим переполнения '" + text + "' неизвестен: "
-                    + "допустимы 'fail' (отказ при полном инвентаре), 'by_value' "
-                    + "(взять ценное, выбросив дешёвое) и 'return_to_base' "
-                    + "(сдать лишнее на склад и продолжить)");
+            default ->
+                throw new IllegalArgumentException("Режим переполнения '" + text + "' неизвестен: "
+                        + "допустимы 'fail' (отказ при полном инвентаре), 'by_value' "
+                        + "(взять ценное, выбросив дешёвое) и 'return_to_base' "
+                        + "(сдать лишнее на склад и продолжить)");
         };
     }
 }

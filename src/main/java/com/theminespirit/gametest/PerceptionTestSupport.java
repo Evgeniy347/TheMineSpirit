@@ -14,8 +14,7 @@ final class PerceptionTestSupport {
     static final int SETTLE_TICKS = 1;
     static final int TEST_TIMEOUT_TICKS = 200;
 
-    private PerceptionTestSupport() {
-    }
+    private PerceptionTestSupport() {}
 
     static SpiritEntity spawnSpirit(GameTestHelper helper, int x, int y, int z) {
         return helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(x, y, z));
@@ -36,9 +35,11 @@ final class PerceptionTestSupport {
 
     static void assertSucceeded(GameTestHelper helper, SpiritEntity spirit, SpiritRun run, String script) {
         run.assertStarted();
-        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                 script + " обязан завершиться успехом, статус: "
                         + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", тиков духа "
-                        + run.spiritTicks() + ", причина: " + spirit.taskFailureReason().orElse("нет"));
+                        + run.spiritTicks() + ", причина: "
+                        + spirit.taskFailureReason().orElse("нет"));
     }
 }

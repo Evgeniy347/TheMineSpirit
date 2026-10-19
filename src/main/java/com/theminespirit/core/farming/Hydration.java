@@ -25,8 +25,7 @@ public final class Hydration {
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
             for (int dy = 0; dy <= 1; dy++) {
                 for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-                    if (waterCells.contains(
-                            new BlockCoord(ground.x() + dx, ground.y() + dy, ground.z() + dz))) {
+                    if (waterCells.contains(new BlockCoord(ground.x() + dx, ground.y() + dy, ground.z() + dz))) {
                         return true;
                     }
                 }

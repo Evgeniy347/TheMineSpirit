@@ -32,24 +32,31 @@ class DescentStairsPlanProperties {
 
         DescentStairsPlan plan = DescentStairsPlan.from(world, level1, widenWidth, stairWidth);
 
-        assertEquals(depth, plan.steps().size(),
+        assertEquals(
+                depth,
+                plan.steps().size(),
                 "Ступеньки обязаны пройти весь спуск уровня 1: по всей длине существующего спуска");
         for (DescentStairStep step : plan.steps()) {
-            assertEquals(stairWidth, step.stairCells().size(),
+            assertEquals(
+                    stairWidth,
+                    step.stairCells().size(),
                     "Ступеньки обязаны стоять ровно на " + stairWidth + " полосах ширины");
-            assertEquals(widenWidth - stairWidth, step.railCells().size(),
-                    "Рельсовых полос обязано остаться " + (widenWidth - stairWidth)
-                            + ": их не занимают ступеньками");
+            assertEquals(
+                    widenWidth - stairWidth,
+                    step.railCells().size(),
+                    "Рельсовых полос обязано остаться " + (widenWidth - stairWidth) + ": их не занимают ступеньками");
             Set<BlockCoord> all = new HashSet<>(step.stairCells());
             all.addAll(step.railCells());
-            assertEquals(widenWidth, all.size(),
+            assertEquals(
+                    widenWidth,
+                    all.size(),
                     "Ступеньки и рельсовый проход обязаны вместе покрывать все полосы ширины без пересечений");
             for (BlockCoord rail : step.railCells()) {
-                assertFalse(step.stairCells().contains(rail),
-                        "Полоса рельсов обязана остаться свободной от ступенек");
+                assertFalse(step.stairCells().contains(rail), "Полоса рельсов обязана остаться свободной от ступенек");
             }
             for (BlockCoord cell : all) {
-                assertTrue(cell.y() == step.floor() + 1,
+                assertTrue(
+                        cell.y() == step.floor() + 1,
                         "Клетка ступеньки или рельса " + cell + " обязана быть на высоте пола плюс один");
             }
         }
@@ -72,10 +79,13 @@ class DescentStairsPlanProperties {
 
         DescentStairsPlan plan = DescentStairsPlan.from(world, level1, 3, 2);
 
-        assertEquals(stepIndex, plan.steps().size(),
+        assertEquals(
+                stepIndex,
+                plan.steps().size(),
                 "Лава в полосе ступеньки шага k обязана обрезать план ровно перед шагом k: ступеньки не кладут в лаву");
         assertEquals(DescentStop.DANGER, plan.stop(), "Лава — остановка по опасности");
-        assertTrue(plan.dangerReason().contains("лава"),
+        assertTrue(
+                plan.dangerReason().contains("лава"),
                 "Причина остановки обязана называть лаву, чтобы игрок понял причину");
     }
 }

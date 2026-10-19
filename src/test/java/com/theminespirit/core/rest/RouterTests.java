@@ -22,8 +22,11 @@ class RouterTests {
             route("POST", "/v1/bots/{id}/observe", "observe")));
 
     static Route route(String method, String pattern, String name) {
-        return new Route(method, pattern, (request, params) -> RestResponse.ok(
-                "{\"handled\":\"" + name + "\",\"id\":\"" + params.values().getOrDefault("id", "") + "\"}"));
+        return new Route(
+                method,
+                pattern,
+                (request, params) -> RestResponse.ok("{\"handled\":\"" + name + "\",\"id\":\""
+                        + params.values().getOrDefault("id", "") + "\"}"));
     }
 
     static RestRequest request(String method, String path, byte[] body) {
@@ -66,23 +69,31 @@ class RouterTests {
 
     @ParameterizedTest(name = "{0} {1} -> {2}")
     @MethodSource("table")
-    void handle_TableCase_ProducesDocumentedStatusBodyAndAllow(String method, String path, int status,
-            String expected, String allow) {
+    void handle_TableCase_ProducesDocumentedStatusBodyAndAllow(
+            String method, String path, int status, String expected, String allow) {
         RestResponse response = ROUTER.handle(request(method, path, new byte[0]));
 
-        assertEquals(status, response.status(),
+        assertEquals(
+                status,
+                response.status(),
                 "Маршрутизация " + method + " " + path + " обязана дать статус " + status + ": неизвестный путь — 404, "
                         + "чужой метод — 405, иначе клиент получит чужой обработчик. Тело: " + response.body());
         if (status == 200) {
-            assertEquals(expected, response.body(),
+            assertEquals(
+                    expected,
+                    response.body(),
                     "Обработчик и параметр пути для " + method + " " + path + " определены неверно");
         } else {
-            assertTrue(response.body().startsWith("{\"error\":{\"code\":\"" + expected + "\""),
+            assertTrue(
+                    response.body().startsWith("{\"error\":{\"code\":\"" + expected + "\""),
                     "Ошибка маршрутизации " + method + " " + path + " обязана нести код " + expected
                             + " в объекте ошибки, а не пустой ответ. Тело: " + response.body());
         }
-        assertEquals(allow, response.headers().get("Allow"),
-                "Заголовок Allow при 405 перечисляет допустимые методы пути (и отсутствует иначе): " + method + " " + path);
+        assertEquals(
+                allow,
+                response.headers().get("Allow"),
+                "Заголовок Allow при 405 перечисляет допустимые методы пути (и отсутствует иначе): " + method + " "
+                        + path);
     }
 
     @Test
@@ -91,26 +102,31 @@ class RouterTests {
 
         RestResponse response = router.handle(request("DELETE", "/v1/x", new byte[0]));
 
-        assertEquals("GET, POST", response.headers().get("Allow"),
+        assertEquals(
+                "GET, POST",
+                response.headers().get("Allow"),
                 "Allow обязан перечислять все методы пути по алфавиту: клиент выбирает по нему допустимый метод");
     }
 
     @Test
     void handle_BodyOfExactLimit_ReachesHandler() {
-        RestResponse response = ROUTER.handle(request("POST", "/v1/bots/abc/observe",
-                new byte[RestTuning.MAX_BODY_BYTES]));
+        RestResponse response =
+                ROUTER.handle(request("POST", "/v1/bots/abc/observe", new byte[RestTuning.MAX_BODY_BYTES]));
 
-        assertEquals(200, response.status(),
+        assertEquals(
+                200,
+                response.status(),
                 "Тело ровно в лимит MAX_BODY_BYTES допустимо: отказ на границе ломает честные запросы");
     }
 
     @Test
     void handle_BodyOverLimit_Returns400InvalidRequestBeforeHandler() {
-        RestResponse response = ROUTER.handle(request("POST", "/v1/bots/abc/observe",
-                new byte[RestTuning.MAX_BODY_BYTES + 1]));
+        RestResponse response =
+                ROUTER.handle(request("POST", "/v1/bots/abc/observe", new byte[RestTuning.MAX_BODY_BYTES + 1]));
 
         assertEquals(400, response.status(), "Тело больше лимита обязано давать 400, а не доходить до обработчика");
-        assertTrue(response.body().contains("\"code\":\"invalid_request\"")
+        assertTrue(
+                response.body().contains("\"code\":\"invalid_request\"")
                         && response.body().contains(String.valueOf(RestTuning.MAX_BODY_BYTES)),
                 "Ошибка называет код invalid_request и лимит в байтах, чтобы клиент знал, что сократить: "
                         + response.body());
@@ -125,7 +141,9 @@ class RouterTests {
         RestResponse response = router.handle(request("GET", "/v1/x", new byte[0]));
 
         assertEquals(409, response.status(), "ApiException обработчика обязан стать ответом со статусом его кода");
-        assertEquals("{\"error\":{\"code\":\"conflict\",\"message\":\"занято\",\"details\":{}}}", response.body(),
+        assertEquals(
+                "{\"error\":{\"code\":\"conflict\",\"message\":\"занято\",\"details\":{}}}",
+                response.body(),
                 "Тело ответа — объект ошибки исключения");
     }
 
@@ -133,16 +151,21 @@ class RouterTests {
     void of_DuplicateMethodAndPattern_Rejected() {
         List<Route> duplicates = List.of(route("GET", "/v1/x", "a"), route("GET", "/v1/x", "b"));
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> Router.of(duplicates),
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> Router.of(duplicates),
                 "Два обработчика одного запроса — ошибка сборки маршрутов: победитель определялся бы порядком списка");
-        assertTrue(error.getMessage().contains("GET /v1/x"),
+        assertTrue(
+                error.getMessage().contains("GET /v1/x"),
                 "Сообщение называет дублирующийся маршрут: " + error.getMessage());
     }
 
     @ParameterizedTest
     @MethodSource("badPatterns")
     void route_MalformedPattern_Rejected(String pattern) {
-        assertThrows(IllegalArgumentException.class, () -> route("GET", pattern, "x"),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> route("GET", pattern, "x"),
                 "Шаблон '" + pattern + "' неверен и обязан отклоняться при сборке маршрута, а не молча не совпадать");
     }
 
@@ -152,19 +175,23 @@ class RouterTests {
 
     @Test
     void route_LowerCaseMethod_Rejected() {
-        assertThrows(IllegalArgumentException.class, () -> route("get", "/v1/x", "x"),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> route("get", "/v1/x", "x"),
                 "Метод маршрута задаётся в верхнем регистре: методы запроса сравниваются точно");
     }
 
     @Test
     void handle_Utf8BodyBytes_PassedToHandlerUnchanged() {
         byte[] body = "{\"a\":\"я\"}".getBytes(StandardCharsets.UTF_8);
-        Router router = Router.of(List.of(new Route("POST", "/v1/x",
-                (request, params) -> RestResponse.ok(String.valueOf(request.body().length)))));
+        Router router = Router.of(List.of(new Route(
+                "POST", "/v1/x", (request, params) -> RestResponse.ok(String.valueOf(request.body().length)))));
 
         RestResponse response = router.handle(request("POST", "/v1/x", body));
 
-        assertEquals(String.valueOf(body.length), response.body(),
+        assertEquals(
+                String.valueOf(body.length),
+                response.body(),
                 "Обработчик получает байты тела как есть: раскодирование UTF-8 делает он сам");
     }
 }

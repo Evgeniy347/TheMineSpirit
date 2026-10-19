@@ -20,7 +20,9 @@ class RecipeCuratorProperties {
     void curate_AnyRecipes_IsIdempotent(@ForAll @Size(max = MAX_RECIPES) List<Integer> seeds) {
         List<RecipeSpec> once = RecipeCurator.curate(recipes(seeds));
 
-        assertEquals(once, RecipeCurator.curate(once),
+        assertEquals(
+                once,
+                RecipeCurator.curate(once),
                 "Куратор обязан быть идемпотентным: повторный отбор отфильтрованного списка не вправе убирать "
                         + "ещё рецепты, иначе результат зависит от числа проходов. Вход: " + seeds);
     }
@@ -33,14 +35,16 @@ class RecipeCuratorProperties {
 
         List<RecipeSpec> expectedOrder = new ArrayList<>(input);
         expectedOrder.retainAll(curated);
-        assertEquals(expectedOrder, curated,
+        assertEquals(
+                expectedOrder,
+                curated,
                 "Куратор обязан только убирать рецепты, не добавляя и не переставляя: иначе в индекс попадёт "
                         + "рецепт, которого нет на сервере. Вход: " + seeds);
     }
 
     @Property
-    void curate_ShuffledInput_KeepsSameSet(@ForAll @Size(max = MAX_RECIPES) List<Integer> seeds,
-            @ForAll long shuffleSeed) {
+    void curate_ShuffledInput_KeepsSameSet(
+            @ForAll @Size(max = MAX_RECIPES) List<Integer> seeds, @ForAll long shuffleSeed) {
         List<RecipeSpec> input = recipes(seeds);
         List<RecipeSpec> shuffled = new ArrayList<>(input);
         Collections.shuffle(shuffled, new Random(shuffleSeed));
@@ -48,7 +52,9 @@ class RecipeCuratorProperties {
         Set<RecipeSpec> straight = new HashSet<>(RecipeCurator.curate(input));
         Set<RecipeSpec> mixed = new HashSet<>(RecipeCurator.curate(shuffled));
 
-        assertEquals(straight, mixed,
+        assertEquals(
+                straight,
+                mixed,
                 "Порядок рецептов на входе не должен влиять на состав отобранных: порядок загрузки датапаков "
                         + "случаен. Вход: " + seeds + ", прямо: " + straight.size() + ", вперемешку: " + mixed.size());
     }
@@ -75,8 +81,8 @@ class RecipeCuratorProperties {
         List<IngredientSpec> ingredients = new ArrayList<>();
         ingredients.add(IngredientSpec.of(item(first)));
         if (kind == 2) {
-            ingredients.add(first == second ? IngredientSpec.of(item(first)) : IngredientSpec.of(item(second),
-                    item(first)));
+            ingredients.add(
+                    first == second ? IngredientSpec.of(item(first)) : IngredientSpec.of(item(second), item(first)));
         }
         return RecipeSpec.shapeless(id, output, outputCount, ingredients);
     }

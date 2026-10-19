@@ -10,13 +10,12 @@ import net.minecraft.world.item.ItemStack;
 public final class ContainerSort {
     public static final int MAX_SLOTS = 90;
 
-    private ContainerSort() {
-    }
+    private ContainerSort() {}
 
     public static void apply(Container container, ValueTable values) {
         if (container.getContainerSize() > MAX_SLOTS) {
-            throw new IllegalArgumentException("Контейнер на " + container.getContainerSize()
-                    + " слотов больше " + MAX_SLOTS + ": раскладка сортёра рассчитана на сундуки до двойного");
+            throw new IllegalArgumentException("Контейнер на " + container.getContainerSize() + " слотов больше "
+                    + MAX_SLOTS + ": раскладка сортёра рассчитана на сундуки до двойного");
         }
         StackMapper mapper = new StackMapper();
         List<Stack> layout = ChestSorter.sort(mapper.map(container), values);

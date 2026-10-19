@@ -1,5 +1,7 @@
 package com.theminespirit.core.husbandry;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +27,7 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public FeedTable {
         Objects.requireNonNull(feeds, "Таблица кормов не может быть null: без неё неизвестно, чем кормить стадо");
-        EnumMap<Species, List<String>> checked = new EnumMap<>(Species.class);
+        Map<Species, List<String>> checked = new EnumMap<>(Species.class);
         for (Species species : Species.all()) {
             List<String> foods = feeds.get(species);
             if (foods == null || foods.isEmpty()) {
@@ -80,8 +82,8 @@ public record FeedTable(Map<Species, List<String>> feeds) {
         try {
             root = MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: "
-                    + error.getOriginalMessage() + ". Исправьте синтаксис файла");
+            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: " + error.getOriginalMessage()
+                    + ". Исправьте синтаксис файла");
         }
         if (root == null || !root.isObject()) {
             throw new IllegalStateException("Таблица '" + origin + "' — не объект: на верхнем уровне ожидается "
@@ -102,7 +104,7 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public List<String> feedForInstance(Species species) {
         Objects.requireNonNull(species, "Вид животного не может быть null: без него неизвестно, чем кормить стадо");
-        return feeds().get(species);
+        return present(feeds(), species, "Таблица кормов");
     }
 
     private static String canonicalId(String food) {

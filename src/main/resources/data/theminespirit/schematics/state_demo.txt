@@ -1,0 +1,18 @@
+# state_demo — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+size: 4x3x2   # Ш×В×Д
+legend:
+  'D': oak_door[facing=north,hinge=left]
+  'B': white_bed[facing=south]
+  'F': oak_fence
+  'P': glass_pane
+  '#': oak_planks
+layers:
+  - y0: |
+      D.BF
+      P#BF
+  - y1: |
+      D...
+      ....
+  - y2: |
+      ....
+      ....

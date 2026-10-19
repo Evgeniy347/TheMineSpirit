@@ -84,8 +84,8 @@ public final class PillarDownScript implements ScriptInstance {
         if (outcome != ScriptStatus.SUCCEEDED || dismantler == null) {
             return Optional.empty();
         }
-        String text = "разобрано блоков: " + dismantler.returned() + ", возвращено в инвентарь: "
-                + dismantler.returned();
+        String text =
+                "разобрано блоков: " + dismantler.returned() + ", возвращено в инвентарь: " + dismantler.returned();
         if (dismantler.dropped() > 0) {
             text += ", выпало из-за полного инвентаря: " + dismantler.dropped();
         }
@@ -103,6 +103,5 @@ public final class PillarDownScript implements ScriptInstance {
     }
 
     @Override
-    public void restoreState(Map<String, Object> state) {
-    }
+    public void restoreState(Map<String, Object> state) {}
 }

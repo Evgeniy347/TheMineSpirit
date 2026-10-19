@@ -2,6 +2,7 @@ package com.theminespirit.core.building;
 
 import java.util.Locale;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Тип строения поселения (жильё, склад, ферма, оборона, инфраструктура…). Идентификатор в json — строчными буквами
@@ -28,7 +29,7 @@ public enum BuildingType {
         return label;
     }
 
-    public static Optional<BuildingType> byId(String id) {
+    public static Optional<BuildingType> byId(@Nullable String id) {
         if (id == null) {
             return Optional.empty();
         }

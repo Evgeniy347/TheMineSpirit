@@ -20,15 +20,44 @@ import net.jqwik.api.Arbitrary;
  */
 final class JsonTrees {
     private static final List<String> KEYS = List.of(
-            "type", "script", "params", "steps", "times", "mode", "check", "then", "else",
-            "children", "condition", "count", "species", "ticks", "radius", "x", "y", "z", "id", "name");
+            "type",
+            "script",
+            "params",
+            "steps",
+            "times",
+            "mode",
+            "check",
+            "then",
+            "else",
+            "children",
+            "condition",
+            "count",
+            "species",
+            "ticks",
+            "radius",
+            "x",
+            "y",
+            "z",
+            "id",
+            "name");
     private static final List<String> TEXTS = List.of(
-            "script", "sequence", "repeat", "fallback", "parallel", "condition",
-            "wait", "goto", "follow", "return_home", "chop_tree", "all", "any", "");
+            "script",
+            "sequence",
+            "repeat",
+            "fallback",
+            "parallel",
+            "condition",
+            "wait",
+            "goto",
+            "follow",
+            "return_home",
+            "chop_tree",
+            "all",
+            "any",
+            "");
     private static final int MAX_DEPTH = 4;
 
-    private JsonTrees() {
-    }
+    private JsonTrees() {}
 
     static Arbitrary<JsonNode> any() {
         return Arbitraries.randomValue(random -> build(random, 0));
@@ -65,9 +94,7 @@ final class JsonTrees {
         int size = 1 + random.nextInt(4);
         for (int i = 0; i < size; i++) {
             String key = KEYS.get(random.nextInt(KEYS.size()));
-            JsonNode value = random.nextBoolean()
-                    ? build(random, depth + 1)
-                    : factory.arrayNode();
+            JsonNode value = random.nextBoolean() ? build(random, depth + 1) : factory.arrayNode();
             object.set(key, value);
         }
         return object;

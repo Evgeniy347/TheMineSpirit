@@ -31,8 +31,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BuildRestartGameTests {
-    private BuildRestartGameTests() {
-    }
+    private BuildRestartGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -73,12 +72,31 @@ public final class BuildRestartGameTests {
         AtomicReference<SpiritEntity> holder = new AtomicReference<>(spirit);
         AtomicBoolean saved = new AtomicBoolean(false);
         AtomicBoolean snapshotChecked = new AtomicBoolean(false);
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("fill",
-                Map.of("block", "cobblestone", "x1", from.getX(), "y1", from.getY(), "z1", from.getZ(),
-                        "x2", to.getX(), "y2", to.getY(), "z2", to.getZ())), 5);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "fill",
+                        Map.of(
+                                "block",
+                                "cobblestone",
+                                "x1",
+                                from.getX(),
+                                "y1",
+                                from.getY(),
+                                "z1",
+                                from.getZ(),
+                                "x2",
+                                to.getX(),
+                                "y2",
+                                to.getY(),
+                                "z2",
+                                to.getZ())),
+                5);
         helper.onEachTick(() -> {
             SpiritEntity current = holder.get();
-            if (!saved.get() && current.taskStatus().orElse(null) == RunStatus.RUNNING
+            if (!saved.get()
+                    && current.taskStatus().orElse(null) == RunStatus.RUNNING
                     && countCobble(helper, first, second) >= 1) {
                 saved.set(true);
                 run.assertStarted();
@@ -87,10 +105,11 @@ public final class BuildRestartGameTests {
                 holder.set(reload(helper, current, tag));
             } else if (saved.get() && !snapshotChecked.get() && holder.get().tickCount >= 3) {
                 snapshotChecked.set(true);
-                Optional<String> json = holder.get().taskSnapshot();
+                Optional<String> json = GameTestFixtures.taskSnapshot(holder.get());
                 helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
                 TaskSnapshot snapshot = TaskSnapshotCodec.decode(json.get());
-                helper.assertTrue(snapshot.status() == RunStatus.RUNNING,
+                helper.assertTrue(
+                        snapshot.status() == RunStatus.RUNNING,
                         "снимок обязан хранить RUNNING-задачу: иначе продолжение нечем кормить, статус "
                                 + snapshot.status());
             }
@@ -99,19 +118,25 @@ public final class BuildRestartGameTests {
         helper.succeedWhen(() -> {
             SpiritEntity current = holder.get();
             run.assertStarted();
-            helper.assertTrue(current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    current.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "заливка после перезагрузки обязана дойти до успеха, статус "
                             + current.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + current.taskFailureReason().orElse("нет"));
-            helper.assertTrue(countCobble(helper, first, second) == 4,
+            helper.assertTrue(
+                    countCobble(helper, first, second) == 4,
                     "все 4 клетки обязаны стоять, фактически " + countCobble(helper, first, second));
-            helper.assertTrue(GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE) == 0,
                     "материалы не тратятся дважды: 4 блока — 4 булыжника, в инвентаре "
                             + GameTestFixtures.countInInventory(current.getInventory(), Items.COBBLESTONE));
-            helper.assertTrue(current.taskResult().orElse(null) instanceof ScriptResult.Data data
-                    && Integer.valueOf(4).equals(data.fields().get("placed")),
+            helper.assertTrue(
+                    current.taskResult().orElse(null) instanceof ScriptResult.Data data
+                            && Integer.valueOf(4).equals(data.fields().get("placed")),
                     "счётчики переживают перезапуск: итог обязан назвать placed=4, фактически "
-                            + current.taskResult().map(result -> result.toString()).orElse("пусто"));
+                            + current.taskResult()
+                                    .map(result -> result.toString())
+                                    .orElse("пусто"));
             GameTestFixtures.finish(helper);
         });
     }
@@ -123,8 +148,11 @@ public final class BuildRestartGameTests {
     }
 
     private static String taskBody(String script, Map<String, Object> params) {
-        StringBuilder body = new StringBuilder("{\"request_id\":\"").append(UUID.randomUUID())
-                .append("\",\"plan\":{\"type\":\"script\",\"script\":\"").append(script).append("\",\"params\":{");
+        StringBuilder body = new StringBuilder("{\"request_id\":\"")
+                .append(UUID.randomUUID())
+                .append("\",\"plan\":{\"type\":\"script\",\"script\":\"")
+                .append(script)
+                .append("\",\"params\":{");
         boolean first = true;
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             if (!first) {
@@ -152,25 +180,45 @@ public final class BuildRestartGameTests {
         BlockPos to = helper.absolutePos(new BlockPos(5, 1, 4));
         TaskPoller poller = TaskPoller.start(helper, rest);
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        taskBody("fill", Map.of("block", "cobblestone", "x1", from.getX(), "y1", from.getY(),
-                                "z1", from.getZ(), "x2", to.getX(), "y2", to.getY(), "z2", to.getZ())))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                        taskBody(
+                                "fill",
+                                Map.of(
+                                        "block",
+                                        "cobblestone",
+                                        "x1",
+                                        from.getX(),
+                                        "y1",
+                                        from.getY(),
+                                        "z1",
+                                        from.getZ(),
+                                        "x2",
+                                        to.getX(),
+                                        "y2",
+                                        to.getY(),
+                                        "z2",
+                                        to.getZ())))
                 .thenApply(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
                     poller.follow(accepted.json().path("task_id").asText());
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue("succeeded".equals(poller.latest()),
+            helper.assertTrue(
+                    "succeeded".equals(poller.latest()),
                     "заливка двух клеток обязана завершить задачу успехом; последнее состояние " + poller.latest()
                             + ", тело " + poller.lastJson());
             JsonNode progress = poller.lastJson().path("progress");
-            helper.assertTrue(progress.path("done").asInt() == 2 && progress.path("target").asInt() == 2,
+            helper.assertTrue(
+                    progress.path("done").asInt() == 2
+                            && progress.path("target").asInt() == 2,
                     "счётная задача обязана отдать прогресс done=2 target=2, фактически " + progress);
             JsonNode result = poller.lastJson().path("result");
-            helper.assertTrue(result.isObject() && result.path("placed").asInt() == 2
-                    && result.path("missing").asInt() == 0,
+            helper.assertTrue(
+                    result.isObject()
+                            && result.path("placed").asInt() == 2
+                            && result.path("missing").asInt() == 0,
                     "итог fill в GET задачи обязан нести placed=2 missing=0, получено " + result);
         });
     }
@@ -179,7 +227,8 @@ public final class BuildRestartGameTests {
         private final AtomicReference<String> path = new AtomicReference<>();
         private final AtomicReference<String> latest = new AtomicReference<>();
         private final AtomicReference<JsonNode> lastJson = new AtomicReference<>(MissingNode.getInstance());
-        private final AtomicBoolean inFlight = new AtomicBoolean();
+        private final AtomicReference<CompletableFuture<Void>> inFlight =
+                new AtomicReference<>(CompletableFuture.completedFuture(null));
 
         static TaskPoller start(GameTestHelper helper, RestFixture rest) {
             TaskPoller poller = new TaskPoller();
@@ -201,19 +250,18 @@ public final class BuildRestartGameTests {
 
         private void poll(RestFixture rest) {
             String target = path.get();
-            if (target == null || !inFlight.compareAndSet(false, true)) {
+            CompletableFuture<Void> previous = inFlight.get();
+            if (target == null || !previous.isDone()) {
                 return;
             }
-            rest.get(target).whenComplete((reply, error) -> {
-                try {
-                    if (reply != null && reply.status() == 200) {
-                        latest.set(reply.json().path("state").asText());
-                        lastJson.set(reply.json());
-                    }
-                } finally {
-                    inFlight.set(false);
+            previous.join();
+            inFlight.set(rest.get(target).handle((reply, error) -> {
+                if (reply != null && reply.status() == 200) {
+                    latest.set(reply.json().path("state").asText());
+                    lastJson.set(reply.json());
                 }
-            });
+                return null;
+            }));
         }
     }
 }

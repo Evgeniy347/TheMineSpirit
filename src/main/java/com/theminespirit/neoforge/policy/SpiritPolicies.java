@@ -141,7 +141,9 @@ public final class SpiritPolicies {
     }
 
     private void refreshExemptions() {
-        exemptions = spirit.brainIfPresent().map(SpiritBrain::policyExemptions).orElse(PolicyExemptions.empty())
+        exemptions = spirit.brainIfPresent()
+                .map(SpiritBrain::policyExemptions)
+                .orElse(PolicyExemptions.empty())
                 .union(spirit.tactics().exemptions());
         if (!exemptions.equals(configured)) {
             PathingConfigurator.apply(spirit, exemptions);
@@ -150,12 +152,17 @@ public final class SpiritPolicies {
     }
 
     private BodyFlags bodyFlags() {
-        boolean swimmingAllowed = hasRunningTask() || spirit.tactics().exemptions().has(PolicyId.WATER);
-        return new BodyFlags(spirit.isInLava(), spirit.isOnFire(), spirit.isInWater() && !swimmingAllowed, spirit.hurtTime > 0);
+        boolean swimmingAllowed =
+                hasRunningTask() || spirit.tactics().exemptions().has(PolicyId.WATER);
+        return new BodyFlags(
+                spirit.isInLava(), spirit.isOnFire(), spirit.isInWater() && !swimmingAllowed, spirit.hurtTime > 0);
     }
 
     private boolean hasRunningTask() {
-        return spirit.brainIfPresent().flatMap(SpiritBrain::status).map(status -> status == RunStatus.RUNNING).orElse(false);
+        return spirit.brainIfPresent()
+                .flatMap(SpiritBrain::status)
+                .map(status -> status == RunStatus.RUNNING)
+                .orElse(false);
     }
 
     private void readTierOne(long now, BodyFlags flags) {
@@ -215,8 +222,11 @@ public final class SpiritPolicies {
                 return zone;
             }
         }
-        return HungerPolicy.evaluate(spirit.hunger().foodLevel(), spirit.hunger().rules(),
-                spirit.hunger().hasFood(), spirit.tactics().wantsControl());
+        return HungerPolicy.evaluate(
+                spirit.hunger().foodLevel(),
+                spirit.hunger().rules(),
+                spirit.hunger().hasFood(),
+                spirit.tactics().wantsControl());
     }
 
     private PolicyVerdict guardTimeout(PolicyVerdict candidate, long now) {
@@ -230,22 +240,31 @@ public final class SpiritPolicies {
         }
         String key = reflex.policy() + ":" + reflex.action().getClass().getSimpleName();
         reflexTicks = key.equals(reflexKey) ? reflexTicks + 1 : 1;
-        reflexKey = key;
         if (reflexTicks < REFLEX_TIMEOUT_TICKS) {
+            reflexKey = key;
             return candidate;
         }
-        LOGGER.warn("Дух {} не завершил рефлекс {} за {} тиков и остановлен: {}", spirit.getUUID(), key, REFLEX_TIMEOUT_TICKS, reflex.reason());
+        LOGGER.warn(
+                "Дух {} не завершил рефлекс {} за {} тиков и остановлен: {}",
+                spirit.getUUID(),
+                key,
+                REFLEX_TIMEOUT_TICKS,
+                reflex.reason());
         suppressedUntil = now + REFLEX_TIMEOUT_TICKS;
         reflexKey = null;
         reflexTicks = 0;
-        return new PolicyVerdict.Reflex(reflex.policy(), new ReflexAction.StopMoving(),
+        return new PolicyVerdict.Reflex(
+                reflex.policy(),
+                new ReflexAction.StopMoving(),
                 "рефлекс не завершился за " + REFLEX_TIMEOUT_TICKS + " тиков: " + reflex.reason());
     }
 
     private void updateSuspension(Layer owner) {
         Layer controller = owner == Layer.POLICY || owner == Layer.TACTICS ? owner : null;
-        if (controller == Layer.TACTICS && spirit.brainIfPresent()
-                .map(SpiritBrain::observesWhileTacticsOwns).orElse(false)) {
+        if (controller == Layer.TACTICS
+                && spirit.brainIfPresent()
+                        .map(SpiritBrain::observesWhileTacticsOwns)
+                        .orElse(false)) {
             controller = null;
         }
         if (controller != null && controller != suspendedBy) {
@@ -261,7 +280,9 @@ public final class SpiritPolicies {
         if (owner == Layer.TACTICS) {
             return "тактика: бой или отход";
         }
-        return verdict instanceof PolicyVerdict.Reflex reflex ? reflex.policy() + ": " + reflex.reason() : "политика безопасности";
+        return verdict instanceof PolicyVerdict.Reflex reflex
+                ? reflex.policy() + ": " + reflex.reason()
+                : "политика безопасности";
     }
 
     private BlockCoord feetCoord() {

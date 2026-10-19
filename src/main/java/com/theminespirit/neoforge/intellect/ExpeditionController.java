@@ -25,6 +25,11 @@ import net.minecraft.server.level.ServerPlayer;
 public final class ExpeditionController {
     public static final double AGREE_RADIUS = 4.0;
 
+    private static final String FOLLOW = "follow";
+    private static final String RETURN_HOME = "return_home";
+    private static final int PARTNER_RADIUS = 3;
+    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
+
     private final TaskStarter starter;
     private final Invitation invitation = new Invitation();
     private Dispatch lastDispatch;
@@ -36,9 +41,6 @@ public final class ExpeditionController {
     private List<UUID> missionTeam = List.of();
     private UUID missionLeader;
     private String refusal;
-
-    private static final int PARTNER_RADIUS = 3;
-    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
     public ExpeditionController(TaskStarter starter) {
         if (starter == null) {
@@ -56,8 +58,7 @@ public final class ExpeditionController {
         return expeditionId;
     }
 
-    public record Dispatch(String script, List<UUID> team, long tick) {
-    }
+    public record Dispatch(String script, List<UUID> team, long tick) {}
 
     public Optional<Dispatch> lastDispatch() {
         return Optional.ofNullable(lastDispatch);
@@ -69,8 +70,7 @@ public final class ExpeditionController {
 
     public boolean onAnswer(String expedition, InvitationAnswer answer, long now) {
         if (expedition == null || answer == null) {
-            throw new IllegalArgumentException(
-                    "Ответ без похода не принять: кнопки зовут конкретную команду");
+            throw new IllegalArgumentException("Ответ без похода не принять: кнопки зовут конкретную команду");
         }
         if (active == null || expeditionId == null || !expeditionId.toString().equals(expedition)) {
             return false;
@@ -84,14 +84,15 @@ public final class ExpeditionController {
         return true;
     }
 
-    public void update(ServerLevel level, Optional<Expedition> planned, List<SpiritEntity> members,
-            long now) {
+    public void update(ServerLevel level, Optional<Expedition> planned, List<SpiritEntity> members, long now) {
         if (level == null || planned == null || members == null) {
             throw new IllegalArgumentException(
                     "Поход без уровня, плана или духов не ведётся: команда идёт конкретным составом");
         }
         monitorMission(members, now);
-        if (active == null && planned.isPresent() && !dispatched
+        if (active == null
+                && planned.isPresent()
+                && !dispatched
                 && (closedAt == Long.MIN_VALUE
                         || now - closedAt >= IntellectTuning.loadDefault().inviteTtlTicks())) {
             active = planned.get();
@@ -116,7 +117,8 @@ public final class ExpeditionController {
             }
             return;
         }
-        if (inviter != null && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
+        if (inviter != null
+                && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
                 && !state.goWithout()) {
             ChatInvitation.send(level, inviter, expeditionId, active.team().size());
             lastRepeatTick = now;
@@ -138,16 +140,15 @@ public final class ExpeditionController {
         }
     }
 
-    private boolean dispatchFollow(List<SpiritEntity> members, Expedition expedition, ServerPlayer guide,
-            long now) {
+    private boolean dispatchFollow(List<SpiritEntity> members, Expedition expedition, ServerPlayer guide, long now) {
         String guideName = guide.getGameProfile().getName();
         boolean launched = false;
         for (SpiritEntity spirit : team(members, expedition)) {
-            launched |= starter.start(spirit, "follow", new ScriptCall("follow",
-                    Map.of("target", guideName, "radius", 3)), now);
+            launched |= starter.start(
+                    spirit, FOLLOW, new ScriptCall(FOLLOW, Map.of("target", guideName, "radius", 3)), now);
         }
         if (launched) {
-            lastDispatch = new Dispatch("follow", List.copyOf(expedition.team()), now);
+            lastDispatch = new Dispatch(FOLLOW, List.copyOf(expedition.team()), now);
         }
         return launched;
     }
@@ -160,17 +161,25 @@ public final class ExpeditionController {
             return false;
         }
         UUID leaderId = expedition.team().get(0);
-        SpiritEntity leader = team.stream().filter(spirit -> spirit.getUUID().equals(leaderId))
-                .findFirst().orElse(team.get(0));
+        SpiritEntity leader = team.stream()
+                .filter(spirit -> spirit.getUUID().equals(leaderId))
+                .findFirst()
+                .orElse(team.get(0));
         boolean launched = false;
         for (SpiritEntity spirit : team) {
             if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= starter.start(spirit, "mine_vein", new SequenceNode(List.of(
-                        new ScriptCall("mine_vein", MINE_PARAMS),
-                        new ScriptCall("return_home", Map.of()))), now);
+                launched |= starter.start(
+                        spirit,
+                        "mine_vein",
+                        new SequenceNode(List.of(
+                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of()))),
+                        now);
             } else {
-                launched |= starter.start(spirit, "follow", new ScriptCall("follow",
-                        Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)), now);
+                launched |= starter.start(
+                        spirit,
+                        FOLLOW,
+                        new ScriptCall(FOLLOW, Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
+                        now);
             }
         }
         if (launched) {
@@ -216,10 +225,10 @@ public final class ExpeditionController {
             if (spirit == null) {
                 continue;
             }
-            if (spirit.currentTaskScript().map("return_home"::equals).orElse(false)) {
+            if (spirit.currentTaskScript().map(RETURN_HOME::equals).orElse(false)) {
                 continue;
             }
-            allReturning &= starter.start(spirit, "return_home", new ScriptCall("return_home", Map.of()), now);
+            allReturning &= starter.start(spirit, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
         }
         if (allReturning) {
             missionTeam = List.of();

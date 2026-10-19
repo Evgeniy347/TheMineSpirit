@@ -19,16 +19,18 @@ class InventoryNormProperties {
     @Provide
     Arbitrary<List<Stack>> neededInventories() {
         return Arbitraries.of(NEEDS)
-                .flatMap(item -> Arbitraries.integers().between(1, 64)
-                        .map(count -> new Stack(item, 0, count, 64)))
-                .list().ofMaxSize(6);
+                .flatMap(item -> Arbitraries.integers().between(1, 64).map(count -> new Stack(item, 0, count, 64)))
+                .list()
+                .ofMaxSize(6);
     }
 
     @Property
     void extra_EverythingNeeded_IsEmpty(@ForAll("neededInventories") List<Stack> inventory) {
         List<Slice> extra = InventoryNorm.extra(inventory, KIT, NEEDS, VALUES);
 
-        assertEquals(List.of(), extra,
+        assertEquals(
+                List.of(),
+                extra,
                 "Предметы, заявленные задачей как нужные, не бывают лишними: иначе дух выбросит материал "
                         + "будущего крафта. Инвентарь: " + inventory);
     }
@@ -37,9 +39,11 @@ class InventoryNormProperties {
     void fill_AnyInventory_ExtraNotAboveStored(@ForAll("neededInventories") List<Stack> inventory) {
         InventoryFill fill = InventoryNorm.fill(inventory, KIT, List.of("bread"), VALUES);
 
-        assertTrue(fill.extraItems() <= fill.storedItems(),
+        assertTrue(
+                fill.extraItems() <= fill.storedItems(),
                 "Лишнего не больше, чем лежит: доля лишнего иначе превысит единицу. Инвентарь: " + inventory);
-        assertTrue(fill.occupiedSlots() <= fill.capacity(),
+        assertTrue(
+                fill.occupiedSlots() <= fill.capacity(),
                 "Занятых ячеек не больше вместимости: иначе доля занятости превысит единицу");
     }
 
@@ -52,7 +56,9 @@ class InventoryNormProperties {
 
         InventoryFill fill = InventoryNorm.fill(padded, KIT, List.of(), VALUES);
 
-        assertEquals(inventory.size(), fill.occupiedSlots(),
+        assertEquals(
+                inventory.size(),
+                fill.occupiedSlots(),
                 "Заняты ровно непустые стопки: иначе заполнение инвентаря считается неверно");
     }
 }

@@ -35,37 +35,29 @@ public final class StockScan {
             Objects.requireNonNull(containers, "containers не может быть null: пустой список задают пустым");
             containers = List.copyOf(containers);
             if (blockReads < 0) {
-                throw new IllegalArgumentException("blockReads равен " + blockReads
-                        + " и отрицателен: счётчик чтений не бывает меньше нуля");
+                throw new IllegalArgumentException(
+                        "blockReads равен " + blockReads + " и отрицателен: счётчик чтений не бывает меньше нуля");
             }
         }
     }
 
-    private StockScan() {
-    }
+    private StockScan() {}
 
-    /**
-     * Обходит куб вокруг каждого центра в переданном порядке и возвращает найденные
-     * контейнеры, не прочитав больше {@code blockBudget} блоков и не выйдя за
-     * {@code heightBlocks} вверх и вниз. Порядок обхода центров задаёт вызывающий (адаптер
-     * крутит их между пересборками, чтобы бюджет видел разные сундуки); найденные контейнеры
-     * отсортированы по близости к центру, затем по координате — ближайшие читаются первыми.
-     */
-    public static Result containers(List<BlockCoord> centers, int radiusBlocks, int heightBlocks,
-            int blockBudget, Blocks blocks) {
+    public static Result containers(
+            List<BlockCoord> centers, int radiusBlocks, int heightBlocks, int blockBudget, Blocks blocks) {
         Objects.requireNonNull(centers, "centers не может быть null: обход идёт вокруг центров заявок");
         Objects.requireNonNull(blocks, "blocks не может быть null: без источника блоков обход бессмыслен");
         if (radiusBlocks < 0) {
-            throw new IllegalArgumentException("radiusBlocks равен " + radiusBlocks
-                    + " и отрицателен: радиус обхода не бывает отрицательным");
+            throw new IllegalArgumentException(
+                    "radiusBlocks равен " + radiusBlocks + " и отрицателен: радиус обхода не бывает отрицательным");
         }
         if (heightBlocks < 0) {
-            throw new IllegalArgumentException("heightBlocks равен " + heightBlocks
-                    + " и отрицателен: высота обхода не бывает отрицательной");
+            throw new IllegalArgumentException(
+                    "heightBlocks равен " + heightBlocks + " и отрицателен: высота обхода не бывает отрицательной");
         }
         if (blockBudget <= 0) {
-            throw new IllegalArgumentException("blockBudget равен " + blockBudget
-                    + " и не положителен: снимок без бюджета читает мир целиком");
+            throw new IllegalArgumentException(
+                    "blockBudget равен " + blockBudget + " и не положителен: снимок без бюджета читает мир целиком");
         }
         List<BlockCoord> ordered = new ArrayList<>(new LinkedHashSet<>(centers));
         Set<BlockCoord> found = new HashSet<>();
@@ -94,8 +86,7 @@ public final class StockScan {
 
     private static List<BlockCoord> order(Set<BlockCoord> found, List<BlockCoord> centers) {
         List<BlockCoord> ordered = new ArrayList<>(found);
-        ordered.sort(Comparator
-                .comparingLong((BlockCoord pos) -> nearestDistance(pos, centers))
+        ordered.sort(Comparator.comparingLong((BlockCoord pos) -> nearestDistance(pos, centers))
                 .thenComparing(Comparator.naturalOrder()));
         return ordered;
     }
@@ -103,9 +94,9 @@ public final class StockScan {
     private static long nearestDistance(BlockCoord pos, List<BlockCoord> centers) {
         long best = Long.MAX_VALUE;
         for (BlockCoord center : centers) {
-            long dx = pos.x() - center.x();
-            long dy = pos.y() - center.y();
-            long dz = pos.z() - center.z();
+            long dx = (long) pos.x() - center.x();
+            long dy = (long) pos.y() - center.y();
+            long dz = (long) pos.z() - center.z();
             best = Math.min(best, dx * dx + dy * dy + dz * dz);
         }
         return best;

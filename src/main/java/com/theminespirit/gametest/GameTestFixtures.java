@@ -6,11 +6,13 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -18,6 +20,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestInfo;
 import net.minecraft.gametest.framework.GameTestListener;
 import net.minecraft.gametest.framework.GameTestRunner;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
@@ -38,6 +41,7 @@ import net.minecraft.world.phys.Vec3;
 
 final class GameTestFixtures {
     static final int FLOOR_SIZE = 9;
+
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
     private static final int SWEEP_MARGIN = 48;
@@ -48,7 +52,12 @@ final class GameTestFixtures {
     private static final Map<GameTestInfo, AABB> ACTIVE_SCENES = new ConcurrentHashMap<>();
     private static final Map<GameTestInfo, TimeRestore> TIME_HOLDS = new ConcurrentHashMap<>();
 
-    private GameTestFixtures() {
+    private GameTestFixtures() {}
+
+    static Optional<String> taskSnapshot(SpiritEntity spirit) {
+        CompoundTag tag = new CompoundTag();
+        spirit.saveWithoutId(tag);
+        return SpiritTaskStore.read(tag);
     }
 
     static void reset(GameTestHelper helper) {
@@ -82,8 +91,11 @@ final class GameTestFixtures {
     }
 
     private static void clearEntities(GameTestHelper helper, int clearHeight) {
-        for (Entity entity : helper.getLevel().getEntities((Entity) null, area(helper, clearHeight),
-                e -> !(e instanceof Player) && clearable(helper, e))) {
+        for (Entity entity : helper.getLevel()
+                .getEntities(
+                        (Entity) null,
+                        area(helper, clearHeight),
+                        e -> !(e instanceof Player) && clearable(helper, e))) {
             entity.discard();
         }
     }
@@ -94,29 +106,21 @@ final class GameTestFixtures {
         // сцены пачки дополнительно прикрыты реестром границ: чужой дух, моб и дроп
         // внутри активной структуры не трогаются в любом возрасте.
         registerScene(helper);
-        for (Entity entity : helper.getLevel().getEntities((Entity) null, sweepArea(helper),
-                e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS && clearable(helper, e))) {
+        for (Entity entity : helper.getLevel()
+                .getEntities(
+                        (Entity) null,
+                        sweepArea(helper),
+                        e -> !(e instanceof Player) && e.tickCount > SWEEP_MIN_AGE_TICKS && clearable(helper, e))) {
             entity.discard();
         }
         sweepSpiritLeftovers(helper);
         clearSettlementBoardTickets(helper);
     }
 
-    /**
-     * Духи-остатки прошлых пачек живут в чужих структурах, куда локальная зачистка (запас 48)
-     * не достаёт, но службы поселения видят их целиком: {@code BoardService.census},
-     * {@code CoordinatorLifecycle.census} и {@code FirstStepsRunner} обходят всех духов уровня.
-     * Чужой дух с домом уводит общий билет или плодит задания первых шагов — сцена получает чужую
-     * работу (флак 17.10: forage, firststeps, supply). Здесь доводим зачистку духов до всего уровня:
-     * дух вне активной сцены и старше сетапа пачки — остаток. Мобы остаются локальной зачистке: их
-     * радиус восприятия той же сцены не превышает запаса. Живая сцена пачки не тронута — реестр
-     * границ и возраст берегут её.
-     */
     private static void sweepSpiritLeftovers(GameTestHelper helper) {
         List<Entity> leftovers = new ArrayList<>();
         for (Entity entity : helper.getLevel().getAllEntities()) {
-            if (entity instanceof SpiritEntity && entity.tickCount > SWEEP_MIN_AGE_TICKS
-                    && clearable(helper, entity)) {
+            if (entity instanceof SpiritEntity && entity.tickCount > SWEEP_MIN_AGE_TICKS && clearable(helper, entity)) {
                 leftovers.add(entity);
             }
         }
@@ -125,14 +129,6 @@ final class GameTestFixtures {
         }
     }
 
-    /**
-     * Задания поселения ({@code first:*}, {@code gather:*}) — работа своей сцены, и жить они должны
-     * ровно на время сцены: доска уровня билеты не забывает, а свободного духа чужой сцены он забирает
-     * раньше, чем та поставит свой (флак 17.10: духу combat/portal/REST доставался чужой
-     * {@code first:stock_chests} или {@code gather:oak_planks}, и он уходил его проваливать). Сцена
-     * свою цепочку ставит уже после зачистки, поэтому снятие чужих first:/gather: её не трогает;
-     * тест цепочки чужие шаги и так закрывает, а сцены первых шагов работают на своей доске.
-     */
     private static void clearSettlementBoardTickets(GameTestHelper helper) {
         Board board = BoardRegistry.get(helper.getLevel()).board();
         for (BoardTicket ticket : new ArrayList<>(board.all())) {
@@ -163,7 +159,7 @@ final class GameTestFixtures {
     private static boolean clearable(GameTestHelper helper, Entity entity) {
         Vec3 at = entity.position();
         for (Map.Entry<GameTestInfo, AABB> scene : ACTIVE_SCENES.entrySet()) {
-            if (scene.getKey() != helper.testInfo && scene.getValue().contains(at)) {
+            if (!scene.getKey().equals(helper.testInfo) && scene.getValue().contains(at)) {
                 return false;
             }
         }
@@ -195,7 +191,8 @@ final class GameTestFixtures {
 
     static ItemEntity dropAt(GameTestHelper helper, Item item, int count, double x, double y, double z) {
         Vec3 absolute = helper.absoluteVec(new Vec3(x, y, z));
-        ItemEntity drop = new ItemEntity(helper.getLevel(), absolute.x, absolute.y, absolute.z, new ItemStack(item, count));
+        ItemEntity drop =
+                new ItemEntity(helper.getLevel(), absolute.x, absolute.y, absolute.z, new ItemStack(item, count));
         drop.setDeltaMovement(Vec3.ZERO);
         drop.setNoPickUpDelay();
         helper.getLevel().addFreshEntity(drop);
@@ -203,8 +200,11 @@ final class GameTestFixtures {
     }
 
     static List<ItemEntity> dropsInArea(GameTestHelper helper, Item item) {
-        return helper.getLevel().getEntitiesOfClass(ItemEntity.class, area(helper),
-                drop -> !drop.isRemoved() && drop.getItem().is(item));
+        return helper.getLevel()
+                .getEntitiesOfClass(
+                        ItemEntity.class,
+                        area(helper),
+                        drop -> !drop.isRemoved() && drop.getItem().is(item));
     }
 
     static int countInInventory(Container inventory, Item item) {
@@ -219,18 +219,24 @@ final class GameTestFixtures {
     }
 
     static int countInWorld(GameTestHelper helper, Item item) {
-        return dropsInArea(helper, item).stream().mapToInt(drop -> drop.getItem().getCount()).sum();
+        return dropsInArea(helper, item).stream()
+                .mapToInt(drop -> drop.getItem().getCount())
+                .sum();
     }
 
     static int blockCount(WorldObservation observation, String blockId) {
-        return observation.blocks().stream().filter(entry -> entry.item().equals(blockId))
-                .mapToInt(ItemCount::count).sum();
+        return observation.blocks().stream()
+                .filter(entry -> entry.item().equals(blockId))
+                .mapToInt(ItemCount::count)
+                .sum();
     }
 
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative, String name) {
         MinecraftServer server = helper.getLevel().getServer();
-        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
-        ServerPlayer player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
+        CommonListenerCookie cookie =
+                CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
+        ServerPlayer player =
+                new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
         new EmbeddedChannel(connection);
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
@@ -240,16 +246,18 @@ final class GameTestFixtures {
         return player;
     }
 
-    static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative, String name,
-            List<Component> capturedMessages) {
+    static ServerPlayer mockPlayer(
+            GameTestHelper helper, BlockPos relative, String name, List<Component> capturedMessages) {
         MinecraftServer server = helper.getLevel().getServer();
-        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
-        ServerPlayer player = new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation()) {
-            @Override
-            public void sendSystemMessage(Component message) {
-                capturedMessages.add(message);
-            }
-        };
+        CommonListenerCookie cookie =
+                CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
+        ServerPlayer player =
+                new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation()) {
+                    @Override
+                    public void sendSystemMessage(Component message) {
+                        capturedMessages.add(message);
+                    }
+                };
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
         new EmbeddedChannel(connection);
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
@@ -276,8 +284,7 @@ final class GameTestFixtures {
 
     private record PlayerCleanup(MinecraftServer server, ServerPlayer player) implements GameTestListener {
         @Override
-        public void testStructureLoaded(GameTestInfo testInfo) {
-        }
+        public void testStructureLoaded(GameTestInfo testInfo) {}
 
         @Override
         public void testPassed(GameTestInfo test, GameTestRunner runner) {
@@ -290,21 +297,18 @@ final class GameTestFixtures {
         }
 
         @Override
-        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {
-        }
+        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {}
     }
 
     private static AABB sweepArea(GameTestHelper helper) {
         Vec3 first = helper.absoluteVec(new Vec3(-SWEEP_MARGIN, -SWEEP_BELOW, -SWEEP_MARGIN));
-        Vec3 second = helper.absoluteVec(
-                new Vec3(FLOOR_SIZE + SWEEP_MARGIN, SWEEP_ABOVE, FLOOR_SIZE + SWEEP_MARGIN));
+        Vec3 second = helper.absoluteVec(new Vec3(FLOOR_SIZE + SWEEP_MARGIN, SWEEP_ABOVE, FLOOR_SIZE + SWEEP_MARGIN));
         return new AABB(first, second);
     }
 
     private record TimeRestore(ServerLevel level, long savedDayTime) implements GameTestListener {
         @Override
-        public void testStructureLoaded(GameTestInfo testInfo) {
-        }
+        public void testStructureLoaded(GameTestInfo testInfo) {}
 
         @Override
         public void testPassed(GameTestInfo test, GameTestRunner runner) {
@@ -319,8 +323,7 @@ final class GameTestFixtures {
         }
 
         @Override
-        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {
-        }
+        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {}
     }
 
     private static AABB area(GameTestHelper helper, int clearHeight) {

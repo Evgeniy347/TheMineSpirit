@@ -19,8 +19,6 @@ public record HarvestHiveParams(int radius, int count) {
 
     public static HarvestHiveParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new HarvestHiveParams(
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireInt(params, "count"));
+        return new HarvestHiveParams(ScriptArgs.requireInt(params, "radius"), ScriptArgs.requireInt(params, "count"));
     }
 }

@@ -23,19 +23,19 @@ public final class BlockLocatorGameTests {
     private static final int POSITIONS_PER_SECTION = 4096;
     private static final int SLICES_PER_STEP = 4;
 
-    private BlockLocatorGameTests() {
-    }
+    private BlockLocatorGameTests() {}
 
     @GameTest(template = "empty", batch = "locator_air", timeoutTicks = 40)
     public static void blockLocator_AirOnlyArea_ReadsNoPositions(GameTestHelper helper) {
         BlockPos center = helper.absolutePos(new BlockPos(1, SKY_HEIGHT, 1));
-        BlockLocator.Search search = BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS,
-                Set.of(Blocks.DIAMOND_ORE));
+        BlockLocator.Search search =
+                BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS, Set.of(Blocks.DIAMOND_ORE));
 
         List<BlockPos> found = drain(search);
 
         helper.assertTrue(found.isEmpty(), "в воздухе не должно найтись алмазной руды: найдено " + found);
-        helper.assertTrue(search.examinedPositions() == 0,
+        helper.assertTrue(
+                search.examinedPositions() == 0,
                 "секции из одного воздуха обязаны пропускаться целиком, а прочитано " + search.examinedPositions()
                         + " позиций: поиск по пустоте иначе стоит дороже скана");
         helper.succeed();
@@ -46,17 +46,20 @@ public final class BlockLocatorGameTests {
         BlockPos center = helper.absolutePos(new BlockPos(1, SKY_HEIGHT, 1));
         helper.getLevel().setBlock(center, Blocks.DIAMOND_ORE.defaultBlockState(), 2);
         try {
-            BlockLocator.Search search = BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS,
-                    Set.of(Blocks.DIAMOND_ORE));
+            BlockLocator.Search search =
+                    BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS, Set.of(Blocks.DIAMOND_ORE));
 
             List<BlockPos> found = drain(search);
 
-            helper.assertTrue(found.equals(List.of(center)),
+            helper.assertTrue(
+                    found.equals(List.of(center)),
                     "поиск обязан найти единственный блок в " + center + ", найдено " + found);
-            helper.assertTrue(search.examinedPositions() <= POSITIONS_PER_SECTION,
+            helper.assertTrue(
+                    search.examinedPositions() <= POSITIONS_PER_SECTION,
                     "блок лежит в одной секции: читать допустимо не более " + POSITIONS_PER_SECTION
                             + " позиций, прочитано " + search.examinedPositions());
-            helper.assertTrue(search.examinedPositions() > 0,
+            helper.assertTrue(
+                    search.examinedPositions() > 0,
                     "секцию с искомым блоком обязано прочитать хоть частично, иначе блок найден случайно");
         } finally {
             helper.getLevel().setBlock(center, Blocks.AIR.defaultBlockState(), 2);
@@ -69,13 +72,14 @@ public final class BlockLocatorGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         BlockPos center = helper.absolutePos(new BlockPos(4, 1, 4));
-        BlockLocator.Search search = BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS,
-                Set.of(Blocks.LODESTONE));
+        BlockLocator.Search search =
+                BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS, Set.of(Blocks.LODESTONE));
 
         List<BlockPos> found = drain(search);
 
         helper.assertTrue(found.isEmpty(), "в каменном полу нет магнетита: найдено " + found);
-        helper.assertTrue(search.examinedPositions() == 0,
+        helper.assertTrue(
+                search.examinedPositions() == 0,
                 "секция с камнем, но без искомого блока, обязана пропускаться по палитре, а прочитано "
                         + search.examinedPositions() + " позиций");
         GameTestFixtures.finish(helper);
@@ -91,15 +95,16 @@ public final class BlockLocatorGameTests {
         helper.getLevel().setBlock(near, Blocks.GOLD_ORE.defaultBlockState(), 2);
         helper.getLevel().setBlock(far, Blocks.GOLD_ORE.defaultBlockState(), 2);
         try {
-            BlockLocator.Search search = BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS,
-                    Set.of(Blocks.GOLD_ORE));
+            BlockLocator.Search search =
+                    BlockLocator.search(helper.getLevel(), center, SEARCH_RADIUS, Set.of(Blocks.GOLD_ORE));
 
             List<BlockPos> found = drain(search);
 
-            helper.assertTrue(found.contains(near) && found.contains(far) && found.size() == 2,
+            helper.assertTrue(
+                    found.contains(near) && found.contains(far) && found.size() == 2,
                     "оба блока в радиусе обязаны быть найдены, найдено " + found);
-            helper.assertTrue(found.indexOf(near) < found.indexOf(far),
-                    "ближний блок обязан идти раньше дальнего: " + found);
+            helper.assertTrue(
+                    found.indexOf(near) < found.indexOf(far), "ближний блок обязан идти раньше дальнего: " + found);
         } finally {
             helper.getLevel().setBlock(near, Blocks.AIR.defaultBlockState(), 2);
             helper.getLevel().setBlock(far, Blocks.AIR.defaultBlockState(), 2);
@@ -112,11 +117,13 @@ public final class BlockLocatorGameTests {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.of("*_ore")));
         Set<Block> exact = BlockSets.resolve(IdFilter.of(List.of("minecraft:oak_log")));
 
-        helper.assertTrue(ores.contains(Blocks.IRON_ORE) && ores.contains(Blocks.DEEPSLATE_COAL_ORE)
+        helper.assertTrue(
+                ores.contains(Blocks.IRON_ORE)
+                        && ores.contains(Blocks.DEEPSLATE_COAL_ORE)
                         && !ores.contains(Blocks.STONE),
                 "фильтр *_ore обязан включать обычные и глубинные руды и не включать камень");
-        helper.assertTrue(exact.equals(Set.of(Blocks.OAK_LOG)),
-                "точный id обязан давать ровно один блок, получено " + exact);
+        helper.assertTrue(
+                exact.equals(Set.of(Blocks.OAK_LOG)), "точный id обязан давать ровно один блок, получено " + exact);
         helper.succeed();
     }
 

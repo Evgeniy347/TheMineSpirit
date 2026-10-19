@@ -28,7 +28,8 @@ public record CullParams(Species species, int keep, int radius) {
     }
 
     static int defaultKeep(Species species) {
-        return species == Species.CHICKEN ? CatalogLimits.HERD_KEEP_DEFAULT_CHICKEN
+        return species == Species.CHICKEN
+                ? CatalogLimits.HERD_KEEP_DEFAULT_CHICKEN
                 : CatalogLimits.HERD_KEEP_DEFAULT_CATTLE;
     }
 }

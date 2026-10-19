@@ -21,18 +21,20 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RestLifecycleGameTests {
     private static final String LOOPBACK = "127.0.0.1";
 
-    private RestLifecycleGameTests() {
-    }
+    private RestLifecycleGameTests() {}
 
     @GameTest(batch = "rest_config_defaults", template = "empty", timeoutTicks = 100)
     public static void config_Defaults_MatchDocumentedValues(GameTestHelper helper) {
-        helper.assertTrue(Boolean.TRUE.equals(defaultOf("enabled")),
+        helper.assertTrue(
+                Boolean.TRUE.equals(defaultOf("enabled")),
                 "REST-мост по умолчанию включён (enabled=true): иначе внешний агент не достучится до свежего сервера, "
                         + "получено " + defaultOf("enabled"));
-        helper.assertTrue(Integer.valueOf(8765).equals(defaultOf("port")),
+        helper.assertTrue(
+                Integer.valueOf(8765).equals(defaultOf("port")),
                 "Порт REST-моста по умолчанию 8765 (8099 занят раздачей клиента, 25565 — игра), получен "
                         + defaultOf("port"));
-        helper.assertTrue("0.0.0.0".equals(defaultOf("bindAddress")),
+        helper.assertTrue(
+                "0.0.0.0".equals(defaultOf("bindAddress")),
                 "Адрес привязки по умолчанию 0.0.0.0 (вся локальная сеть), получен " + defaultOf("bindAddress"));
         helper.succeed();
     }
@@ -47,10 +49,11 @@ public final class RestLifecycleGameTests {
             throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
         try (ServerSocket occupied = new ServerSocket(0, 1, RestFixture.loopback())) {
-            Optional<RestServer> started = RestLifecycle.tryStart(minecraft, new SpiritIndex(minecraft), LOOPBACK,
-                    occupied.getLocalPort());
+            Optional<RestServer> started =
+                    RestLifecycle.tryStart(minecraft, new SpiritIndex(minecraft), LOOPBACK, occupied.getLocalPort());
 
-            helper.assertTrue(started.isEmpty(),
+            helper.assertTrue(
+                    started.isEmpty(),
                     "Занятый порт " + occupied.getLocalPort() + " не должен ронять сервер Minecraft: запуск моста "
                             + "возвращает пустой результат и пишет ERROR в лог");
         }
@@ -61,10 +64,11 @@ public final class RestLifecycleGameTests {
     public static void tryStart_UnresolvableAddress_ReturnsEmptyAndServerKeepsRunning(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
 
-        Optional<RestServer> started = RestLifecycle.tryStart(minecraft, new SpiritIndex(minecraft),
-                "no-such-host.invalid", 0);
+        Optional<RestServer> started =
+                RestLifecycle.tryStart(minecraft, new SpiritIndex(minecraft), "no-such-host.invalid", 0);
 
-        helper.assertTrue(started.isEmpty(),
+        helper.assertTrue(
+                started.isEmpty(),
                 "Неразбираемый bindAddress не должен ронять сервер Minecraft: запуск моста возвращает пустой "
                         + "результат и пишет ERROR в лог");
         helper.succeed();
@@ -76,7 +80,8 @@ public final class RestLifecycleGameTests {
 
         Optional<RestServer> started = RestLifecycle.tryStart(minecraft, new SpiritIndex(minecraft), LOOPBACK, 0);
 
-        helper.assertTrue(started.isPresent() && started.get().port() > 0,
+        helper.assertTrue(
+                started.isPresent() && started.get().port() > 0,
                 "Свободный порт обязан давать запущенный мост с известным портом");
         started.ifPresent(RestServer::stop);
         helper.succeed();

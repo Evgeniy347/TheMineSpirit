@@ -19,18 +19,18 @@ public final class RelocatePlan {
             BoardCase.ENCHANT_ROOM,
             BoardCase.BUILD_FENCE);
 
-    private RelocatePlan() {
-    }
+    private RelocatePlan() {}
 
     public static boolean buildingCase(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс постройки не может быть null: без него неизвестно, "
-                + "строение ли переносят");
+        Objects.requireNonNull(
+                boardCase, "Кейс постройки не может быть null: без него неизвестно, " + "строение ли переносят");
         return BUILDING_CASES.contains(boardCase);
     }
 
     public static boolean immovable(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс неподвижности не может быть null: без него неизвестно, "
-                + "можно ли переносить постройку");
+        Objects.requireNonNull(
+                boardCase,
+                "Кейс неподвижности не может быть null: без него неизвестно, " + "можно ли переносить постройку");
         return DataTables.INSTANCE.board().current().immovable().contains(boardCase.name());
     }
 
@@ -38,13 +38,13 @@ public final class RelocatePlan {
         assertMovable(boardCase);
         return switch (boardCase) {
             case BUILD_PEN -> "pen_7x7";
-            case BUILD_HOUSE -> "house";
+            case BUILD_HOUSE -> "stone_house";
             case BUILD_WAREHOUSE -> WarehouseRules.scheme(WarehouseRules.LAST_LEVEL);
             case ENCHANT_ROOM -> "enchant_room_v1";
             case BUILD_FENCE -> "fence";
             case BUILD_MINE -> "mine_entrance_v1";
-            default -> throw new IllegalArgumentException("Кейс " + boardCase + " не постройка: "
-                    + "схемы для переноса нет");
+            default ->
+                throw new IllegalArgumentException("Кейс " + boardCase + " не постройка: " + "схемы для переноса нет");
         };
     }
 
@@ -53,8 +53,7 @@ public final class RelocatePlan {
     }
 
     public static void assertMovable(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс переноса не может быть null: без него непонятно, "
-                + "что проверяем");
+        Objects.requireNonNull(boardCase, "Кейс переноса не может быть null: без него непонятно, " + "что проверяем");
         if (!buildingCase(boardCase)) {
             throw new IllegalArgumentException("Кейс " + boardCase + " не постройка: переносить можно "
                     + "только строения " + BUILDING_CASES + ", иначе доска переносила бы работу");

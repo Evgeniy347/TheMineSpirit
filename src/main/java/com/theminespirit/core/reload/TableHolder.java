@@ -24,7 +24,8 @@ public final class TableHolder<T> {
 
     public TableHolder(String id, T initial, TableStatus.Source source, String origin, String hash, Clock clock) {
         Objects.requireNonNull(id, "id держателя не может быть null: по нему /spirit tables находит таблицу");
-        Objects.requireNonNull(initial, "Начальная версия таблицы не может быть null: читатели не должны видеть пустоту");
+        Objects.requireNonNull(
+                initial, "Начальная версия таблицы не может быть null: читатели не должны видеть пустоту");
         this.id = id;
         this.current = new AtomicReference<>(
                 new Entry<>(initial, new TableStatus(id, source, origin, Instant.now(clock), hash, null)));
@@ -34,29 +35,40 @@ public final class TableHolder<T> {
         return id;
     }
 
+    private Entry<T> entry() {
+        Entry<T> entry = current.get();
+        if (entry == null) {
+            throw new IllegalStateException("Таблица " + id + " без текущей версии: держатель создаётся с начальной");
+        }
+        return entry;
+    }
+
     public T current() {
-        return current.get().value();
+        return entry().value();
     }
 
     public TableStatus status() {
-        return current.get().status();
+        return entry().status();
     }
 
-    /** Атомарная замена версии: читатель либо видит старую, либо новую, промежуточного состояния нет. */
     public void replace(T next, TableStatus.Source source, String origin, String hash, Clock clock) {
         Objects.requireNonNull(next, "Новая версия таблицы не может быть null: пустая подмена запрещена, ошибку видно");
         current.set(new Entry<>(next, new TableStatus(id, source, origin, Instant.now(clock), hash, null)));
     }
 
-    /**
-     * Неудачная загрузка: прежняя версия остаётся в силе, статус получает текст ошибки. Возвращает статус,
-     * чтобы вызывающий показал его в логе и в ответе команды.
-     */
     public TableStatus failed(String message) {
-        Objects.requireNonNull(message, "Текст ошибки не может быть null: ошибка обязана быть видимой, а не молчаливой");
-        return current.updateAndGet(entry -> new Entry<>(entry.value(),
-                new TableStatus(id, entry.status().source(), entry.status().origin(), entry.status().loadedAt(),
-                        entry.status().hash(), message))).status();
+        Objects.requireNonNull(
+                message, "Текст ошибки не может быть null: ошибка обязана быть видимой, а не молчаливой");
+        return current.updateAndGet(entry -> new Entry<>(
+                        entry.value(),
+                        new TableStatus(
+                                id,
+                                entry.status().source(),
+                                entry.status().origin(),
+                                entry.status().loadedAt(),
+                                entry.status().hash(),
+                                message)))
+                .status();
     }
 
     static String hashOf(String content) {
@@ -69,10 +81,10 @@ public final class TableHolder<T> {
             }
             return text.substring(0, 12);
         } catch (NoSuchAlgorithmException error) {
-            throw new IllegalStateException("SHA-256 недоступен в JVM: без хэша нельзя показать, что таблица поменялась", error);
+            throw new IllegalStateException(
+                    "SHA-256 недоступен в JVM: без хэша нельзя показать, что таблица поменялась", error);
         }
     }
 
-    private record Entry<T>(T value, TableStatus status) {
-    }
+    private record Entry<T>(T value, TableStatus status) {}
 }

@@ -9,8 +9,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 @EventBusSubscriber(modid = ModIdentity.MOD_ID, value = Dist.CLIENT)
 public final class SpiritClientRenderers {
-    private SpiritClientRenderers() {
-    }
+    private SpiritClientRenderers() {}
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

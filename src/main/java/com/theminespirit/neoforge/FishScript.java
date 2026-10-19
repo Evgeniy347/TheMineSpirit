@@ -1,16 +1,17 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.inventory.InventorySpace;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingSpots;
-import com.theminespirit.core.fishing.FishingTuning;
+import com.theminespirit.core.fishing.FishingWait;
+import com.theminespirit.core.inventory.InventorySpace;
+import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.FishingParams;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -86,7 +87,8 @@ public final class FishScript implements ScriptInstance {
             return totalCaught > 0 ? ScriptStatus.SUCCEEDED : fail("удочка сломалась до первой рыбы");
         }
         if (elapsed >= params.durationTicks()) {
-            return totalCaught > 0 ? ScriptStatus.SUCCEEDED
+            return totalCaught > 0
+                    ? ScriptStatus.SUCCEEDED
                     : fail("за " + params.durationTicks() + " тиков не поймано ни одной рыбы: " + waterText());
         }
         elapsed++;
@@ -165,18 +167,18 @@ public final class FishScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> startWait();
-            case STUCK, TIMEOUT -> fail("не дошёл до берега " + spot.stand()
-                    + (approach.refusal() == null ? "" : ": " + approach.refusal()));
+            case STUCK, TIMEOUT ->
+                fail("не дошёл до берега " + spot.stand()
+                        + (approach.refusal() == null ? "" : ": " + approach.refusal()));
         };
     }
 
     private ScriptStatus startWait() {
         ItemStack rod = spirit.getInventory().getItem(rodSlot);
         int lureSpeed = (int) (EnchantmentHelper.getFishingTimeReduction(level, rod, spirit) * 20.0F);
-        int base = Mth.nextInt(spirit.getRandom(), FishingTuning.WAIT_MIN_TICKS, FishingTuning.WAIT_MAX_TICKS)
-                - lureSpeed;
-        int hooked = Mth.nextInt(spirit.getRandom(), FishingTuning.HOOKED_MIN_TICKS,
-                FishingTuning.HOOKED_MAX_TICKS);
+        FishingWait wait = DataTables.INSTANCE.fishingWait().current();
+        int base = Mth.nextInt(spirit.getRandom(), wait.waitMinTicks(), wait.waitMaxTicks()) - lureSpeed;
+        int hooked = Mth.nextInt(spirit.getRandom(), wait.hookedMinTicks(), wait.hookedMaxTicks());
         waitTicks = Math.max(1, Math.max(0, base) + hooked);
         phase = Phase.WAIT;
         return ScriptStatus.RUNNING;

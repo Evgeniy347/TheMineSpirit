@@ -1,5 +1,7 @@
 package com.theminespirit.core.task;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.engine.RunProgress;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskRegistry {
     public static final int MAX_COMPLETED = 256;
@@ -14,13 +17,14 @@ public final class TaskRegistry {
     private final Map<String, Entry> tasks = new LinkedHashMap<>();
     private long nextId;
 
-    public synchronized String reserve(String bot, String goal) {
+    public synchronized String reserve(String bot, @Nullable String goal) {
         Objects.requireNonNull(bot, "bot не может быть null: задача всегда привязана к духу");
         TaskRecord active = activeForBot(bot).orElse(null);
         if (active != null) {
             throw new BusyException(bot, active.taskId());
         }
-        String taskId = "t-" + (++nextId);
+        nextId++;
+        String taskId = "t-" + nextId;
         tasks.put(taskId, new Entry(new TaskRecord(taskId, bot, TaskState.ACCEPTED, goal, null, null, null)));
         ensureCompletedCap();
         return taskId;
@@ -48,7 +52,8 @@ public final class TaskRegistry {
     public synchronized void markStarted(String taskId, long generation) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
-            throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
+            throw new IllegalArgumentException(
+                    "Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
         }
         entry.started = true;
         entry.generation = generation;
@@ -78,39 +83,34 @@ public final class TaskRegistry {
         return Optional.empty();
     }
 
-    public synchronized List<TaskRecord> activeRecords() {
-        List<TaskRecord> active = new ArrayList<>();
-        for (Entry entry : tasks.values()) {
-            if (entry.record.active()) {
-                active.add(entry.record);
-            }
-        }
-        return List.copyOf(active);
-    }
-
     public synchronized TaskEventLog log(String taskId) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
-            throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: журнал событий есть "
-                    + "только у известной задачи");
+            throw new IllegalArgumentException(
+                    "Задача '" + taskId + "' не найдена в реестре: журнал событий есть " + "только у известной задачи");
         }
         return entry.log;
     }
 
-    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress,
-            String error) {
+    public synchronized List<TaskEvent> observe(
+            String taskId, TaskState state, @Nullable RunProgress progress, @Nullable String error) {
         return observe(taskId, state, progress, null, error);
     }
 
-    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress, Object result,
-            String error) {
+    public synchronized List<TaskEvent> observe(
+            String taskId,
+            TaskState state,
+            @Nullable RunProgress progress,
+            @Nullable Object result,
+            @Nullable String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
             throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: обновлять нечего");
         }
         TaskRecord previous = entry.record;
         if (!previous.state().canTransitionTo(state)) {
-            throw new IllegalStateException("Недопустимый переход задачи " + taskId + ": " + previous.state().wire()
+            throw new IllegalStateException("Недопустимый переход задачи " + taskId + ": "
+                    + previous.state().wire()
                     + " → " + state.wire() + ". Разрешены accepted → running/succeeded/failed/cancelled и "
                     + "running → succeeded/failed/cancelled");
         }
@@ -126,12 +126,17 @@ public final class TaskRegistry {
         return events;
     }
 
-    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, String error) {
+    public synchronized boolean observeIfActive(
+            String taskId, TaskState state, @Nullable RunProgress progress, @Nullable String error) {
         return observeIfActive(taskId, state, progress, null, error);
     }
 
-    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, Object result,
-            String error) {
+    public synchronized boolean observeIfActive(
+            String taskId,
+            TaskState state,
+            @Nullable RunProgress progress,
+            @Nullable Object result,
+            @Nullable String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null || !entry.record.active()) {
             return false;
@@ -154,13 +159,12 @@ public final class TaskRegistry {
         if (entry == null) {
             return Optional.empty();
         }
-        return Optional.of(new Snapshot(entry.record, entry.log, entry.log.since(lastEventId), entry.log.lastId(),
-                lastEventId));
+        return Optional.of(
+                new Snapshot(entry.record, entry.log, entry.log.since(lastEventId), entry.log.lastId(), lastEventId));
     }
 
-    public record Snapshot(TaskRecord record, TaskEventLog log, TaskEventLog.Catchup catchup, long position,
-            long lastEventId) {
-    }
+    public record Snapshot(
+            TaskRecord record, TaskEventLog log, TaskEventLog.Catchup catchup, long position, long lastEventId) {}
 
     public synchronized void closeAll() {
         for (Entry entry : tasks.values()) {
@@ -182,11 +186,6 @@ public final class TaskRegistry {
         return completed;
     }
 
-    public synchronized long appendedEventCount(String taskId) {
-        Entry entry = tasks.get(taskId);
-        return entry == null ? 0 : entry.log.appendedCount();
-    }
-
     private void ensureCompletedCap() {
         int completed = completedCount();
         if (completed <= MAX_COMPLETED) {
@@ -200,7 +199,8 @@ public final class TaskRegistry {
         }
         int excess = completed - MAX_COMPLETED;
         for (int i = 0; i < excess; i++) {
-            Entry removed = tasks.remove(finished.get(i));
+            Entry removed = present(tasks, finished.get(i), "Задачи реестра");
+            tasks.remove(finished.get(i));
             removed.log.close();
         }
     }

@@ -14,13 +14,11 @@ import java.util.Map;
 public final class BoardRules {
     private static final Map<BoardCase, Integer> PRIORITIES = buildPriorities();
 
-    private BoardRules() {
-    }
+    private BoardRules() {}
 
     public static int priorityOf(BoardCase boardCase) {
         if (boardCase == null) {
-            throw new IllegalArgumentException(
-                    "Приоритет кейса не задан: доска не решит, что важнее, без кейса");
+            throw new IllegalArgumentException("Приоритет кейса не задан: доска не решит, что важнее, без кейса");
         }
         Integer priority = DataTables.INSTANCE.board().current().priorities().get(boardCase.name());
         if (priority != null) {

@@ -12,7 +12,8 @@ class ScanTuningTests {
     void slicesPerTick_FullSections_StayWithinReadBudgetPerTick() {
         long worstCaseReads = (long) ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SECTION;
 
-        assertTrue(worstCaseReads <= READS_PER_TICK_BUDGET,
+        assertTrue(
+                worstCaseReads <= READS_PER_TICK_BUDGET,
                 "Порция скана из " + ScanTuning.SLICES_PER_TICK + " срезов читает до " + worstCaseReads
                         + " блоков за тик при бюджете " + READS_PER_TICK_BUDGET
                         + ": больший размер порции кладёт серверный тик на радиусе 32; "
@@ -24,7 +25,8 @@ class ScanTuningTests {
         int radiusCubeSections = 5 * 5 * 5;
         int ticks = (radiusCubeSections + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK;
 
-        assertTrue(ticks <= 40,
+        assertTrue(
+                ticks <= 40,
                 "Скан радиуса 32 (до 125 срезов) обязан укладываться в ~32 тика, а получилось " + ticks
                         + ": слишком малая порция делает ответ scan неприемлемо медленным для планировщика");
     }

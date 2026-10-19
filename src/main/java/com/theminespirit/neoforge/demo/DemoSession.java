@@ -3,11 +3,11 @@ package com.theminespirit.neoforge.demo;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -160,15 +160,16 @@ final class DemoSession {
 
     private void flattenFloor(DemoPlan plan) {
         for (var cell : plan.placement().floorBox().cells()) {
-            level.setBlock(new BlockPos(cell.x(), cell.y(), cell.z()), Blocks.STONE.defaultBlockState(),
-                    Block.UPDATE_ALL);
+            level.setBlock(
+                    new BlockPos(cell.x(), cell.y(), cell.z()), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
         }
     }
 
     private void placeWithoutItem(DemoPlan plan) {
         Rotation rotation = mcRotation(plan.placement().rotation());
         for (DemoPlan.Placement placement : plan.preplaced()) {
-            BlockPos pos = new BlockPos(placement.pos().x(), placement.pos().y(), placement.pos().z());
+            BlockPos pos = new BlockPos(
+                    placement.pos().x(), placement.pos().y(), placement.pos().z());
             BlockState state = BlockStates.stateFor(placement.block()).rotate(level, pos, rotation);
             level.setBlock(pos, state, Block.UPDATE_ALL);
         }

@@ -2,19 +2,19 @@ package com.theminespirit.core.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.task.TaskEvent;
 import com.theminespirit.core.task.TaskEventLog;
 import com.theminespirit.core.task.TaskRecord;
 import com.theminespirit.core.task.TaskRegistry;
 import java.time.Duration;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskEventStream implements SseStream {
     public static final Duration KEEPALIVE = Duration.ofSeconds(15);
@@ -29,9 +29,11 @@ public final class TaskEventStream implements SseStream {
     private long lastId;
 
     public TaskEventStream(TaskRegistry.Snapshot snapshot, Duration keepalive, Runnable onClose) {
-        this.keepalive = Objects.requireNonNull(keepalive, "keepalive не может быть null: интервал кипалайва задают явно");
+        this.keepalive =
+                Objects.requireNonNull(keepalive, "keepalive не может быть null: интервал кипалайва задают явно");
         this.onClose = Objects.requireNonNull(onClose, "onClose не может быть null: закрытие обязано освобождать слот");
-        Objects.requireNonNull(snapshot, "snapshot не может быть null: первый кадр несёт согласованное состояние задачи");
+        Objects.requireNonNull(
+                snapshot, "snapshot не может быть null: первый кадр несёт согласованное состояние задачи");
         this.log = snapshot.log();
         long lastEventId = snapshot.lastEventId();
         long position = snapshot.position();
@@ -53,7 +55,7 @@ public final class TaskEventStream implements SseStream {
     }
 
     @Override
-    public String nextFrame() throws InterruptedException {
+    public @Nullable String nextFrame() throws InterruptedException {
         String queued = pending.pollFirst();
         if (queued != null) {
             return queued;
@@ -64,6 +66,10 @@ public final class TaskEventStream implements SseStream {
         TaskEventLog.ReadResult result = log.awaitAfter(lastId, keepalive);
         if (result.kind() == TaskEventLog.Kind.EVENT) {
             TaskEvent event = result.event();
+            if (event == null) {
+                throw new IllegalStateException(
+                        "Журнал задачи вернул EVENT без события: ReadResult.kind и event рассогласованы");
+            }
             lastId = event.id();
             return frame(event.id(), event.type(), event.data());
         }
@@ -86,19 +92,20 @@ public final class TaskEventStream implements SseStream {
         data.put("bot", record.bot());
         data.put("state", record.state().wire());
         data.put("goal", record.goal());
-        data.put("progress", record.progress() == null ? null : progressData(record));
+        RunProgress progress = record.progress();
+        data.put("progress", progress == null ? null : progressData(progress));
         data.put("result", record.result());
         data.put("error", record.error());
         return data;
     }
 
-    private static Map<String, Object> progressData(TaskRecord record) {
+    private static Map<String, Object> progressData(RunProgress step) {
         Map<String, Object> progress = new LinkedHashMap<>();
-        progress.put("step", record.progress().step());
-        progress.put("total_steps", record.progress().totalSteps());
-        progress.put("current_script", record.progress().currentScript());
-        progress.put("done", record.progress().done());
-        progress.put("target", record.progress().target());
+        progress.put("step", step.step());
+        progress.put("total_steps", step.totalSteps());
+        progress.put("current_script", step.currentScript());
+        progress.put("done", step.done());
+        progress.put("target", step.target());
         return progress;
     }
 

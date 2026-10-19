@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Единственный реестр держателей таблиц: одно место регистрации (адаптер добавляет определения один раз),
@@ -35,8 +36,8 @@ public final class TableRegistry {
         return registerLazy(definition, seed, TableStatus.Source.MOD, "classpath (мод)");
     }
 
-    private <T> TableHolder<T> registerLazy(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source source,
-            String origin) {
+    private <T> TableHolder<T> registerLazy(
+            TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source source, String origin) {
         Objects.requireNonNull(definition, "Определение таблицы не может быть null: регистрировать нечего");
         Objects.requireNonNull(seed, "Источник начальной версии не может быть null: читатель не должен видеть пустоту");
         if (byId.containsKey(definition.id())) {
@@ -69,10 +70,6 @@ public final class TableRegistry {
         return List.copyOf(definitions);
     }
 
-    /**
-     * Перезагружает все таблицы из источника. Возвращает отчёты по каждой: успех (заменена) или ошибка
-     * (прежняя версия в силе). Ни одна ошибка не прерывает загрузку остальных таблиц.
-     */
     public List<Report> reload(ContentSource source) {
         Objects.requireNonNull(source, "Источник содержимого не может быть null: перезагружать не из чего");
         List<Report> reports = new ArrayList<>(byId.size());
@@ -88,9 +85,13 @@ public final class TableRegistry {
         private final TableStatus.Source seedSource;
         private final String seedOrigin;
         private final Clock clock;
-        private volatile TableHolder<T> holder;
+        private volatile @Nullable TableHolder<T> holder;
 
-        Registered(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source seedSource, String seedOrigin,
+        Registered(
+                TableDefinition<T> definition,
+                Supplier<T> seed,
+                TableStatus.Source seedSource,
+                String seedOrigin,
                 Clock clock) {
             this.definition = definition;
             this.seed = seed;
@@ -106,8 +107,13 @@ public final class TableRegistry {
         synchronized TableHolder<T> holder() {
             if (holder == null) {
                 T value = seed.get();
-                holder = new TableHolder<>(definition.id(), value, seedSource, seedOrigin,
-                        TableHolder.hashOf(String.valueOf(value)), clock);
+                holder = new TableHolder<>(
+                        definition.id(),
+                        value,
+                        seedSource,
+                        seedOrigin,
+                        TableHolder.hashOf(String.valueOf(value)),
+                        clock);
             }
             return holder;
         }
@@ -151,7 +157,8 @@ public final class TableRegistry {
     }
 
     /** Итог перезагрузки одной таблицы: обновлена ли версия и текст ошибки, если загрузка не удалась. */
-    public record Report(String id, boolean updated, String error) {
+    public record Report(
+            String id, boolean updated, @Nullable String error) {
         public boolean failed() {
             return error != null;
         }

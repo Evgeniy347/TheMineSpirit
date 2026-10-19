@@ -2,6 +2,7 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmPlot;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ public record BuildFarmParams(CropKind crop, FarmPlot plot) {
                     "Вид культуры не может быть any: грядку засевают конкретным видом, «что-нибудь» дух не посадит");
         }
         if (crop.hasSupport()) {
-            throw new IllegalArgumentException("Культура " + crop.name().toLowerCase()
+            throw new IllegalArgumentException("Культура " + crop.name().toLowerCase(Locale.ROOT)
                     + " растёт на опоре, а build_farm готовит грядку из пашни: для неё нужен plant_crop");
         }
     }
@@ -29,7 +30,7 @@ public record BuildFarmParams(CropKind crop, FarmPlot plot) {
         BuildingCoords.checkZ(z1);
         BuildingCoords.checkX(x2);
         BuildingCoords.checkZ(z2);
-        return new BuildFarmParams(CropKind.parse(ScriptArgs.requireString(params, "crop")),
-                FarmPlot.of(x1, z1, x2, z2));
+        return new BuildFarmParams(
+                CropKind.parse(ScriptArgs.requireString(params, "crop")), FarmPlot.of(x1, z1, x2, z2));
     }
 }

@@ -20,8 +20,7 @@ public final class BlockSupport {
         boolean sturdy(int x, int y, int z, Face face);
     }
 
-    private BlockSupport() {
-    }
+    private BlockSupport() {}
 
     public static boolean hasSupport(World world, int x, int y, int z) {
         Objects.requireNonNull(world, "Мир не может быть null: без него неизвестно, на что опирается блок");

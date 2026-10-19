@@ -37,12 +37,16 @@ public final class ExpeditionPlanner {
                 suitable.add(candidate);
             }
         }
-        suitable.sort(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(target))
+        suitable.sort(Comparator.comparingDouble(
+                        (SpiritSnapshot spirit) -> spirit.pos().distanceTo(target))
                 .thenComparing(SpiritSnapshot::id));
         if (suitable.size() < tuning.teamMin()) {
             return Optional.empty();
         }
-        List<UUID> team = suitable.stream().limit(tuning.teamMax()).map(SpiritSnapshot::id).toList();
+        List<UUID> team = suitable.stream()
+                .limit(tuning.teamMax())
+                .map(SpiritSnapshot::id)
+                .toList();
         return Optional.of(new Expedition(team, target, view.tick()));
     }
 }

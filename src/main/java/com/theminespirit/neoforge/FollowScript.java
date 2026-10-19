@@ -63,7 +63,8 @@ final class FollowScript implements ScriptInstance {
         Vec3 targetPos = target.position();
         boolean pathFinished = spirit.getNavigation().isDone();
         if (pathRefresh.shouldRefresh(targetPos.x, targetPos.y, targetPos.z, pathFinished)) {
-            if (spirit.protectionGate().checkPortalTarget(new BlockCoord(targetCell.getX(), targetCell.getY(), targetCell.getZ()))
+            if (spirit.protectionGate()
+                            .checkPortalTarget(new BlockCoord(targetCell.getX(), targetCell.getY(), targetCell.getZ()))
                     instanceof BlockProtection.Refused refused) {
                 stopNavigation();
                 failureReason = refused.reason();
@@ -103,17 +104,23 @@ final class FollowScript implements ScriptInstance {
             return;
         }
         BlockPos pos = spirit.blockPosition();
-        if (pickup != null && pickupCenter != null
+        if (pickup != null
+                && pickupCenter != null
                 && (long) (pos.getX() - pickupCenter.x()) * (pos.getX() - pickupCenter.x())
-                + (long) (pos.getZ() - pickupCenter.z()) * (pos.getZ() - pickupCenter.z())
-                > PICKUP_RADIUS * PICKUP_RADIUS) {
+                                + (long) (pos.getZ() - pickupCenter.z()) * (pos.getZ() - pickupCenter.z())
+                        > PICKUP_RADIUS * PICKUP_RADIUS) {
             pickup.cancel();
             pickup = null;
         }
         if (pickup == null) {
             pickupCenter = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            pickup = new DropCollector(spirit, IdFilter.matchAll(), pickupCenter, PICKUP_RADIUS,
-                    PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+            pickup = new DropCollector(
+                    spirit,
+                    IdFilter.matchAll(),
+                    pickupCenter,
+                    PICKUP_RADIUS,
+                    PickupTuning.DEFAULT,
+                    OverflowMode.BY_VALUE);
         }
         if (pickup.tick() != DropCollector.State.RUNNING) {
             pickup.cancel();
@@ -135,11 +142,13 @@ final class FollowScript implements ScriptInstance {
             if (!(spirit.level() instanceof ServerLevel serverLevel)) {
                 return null;
             }
-            List<SpiritEntity> nearby = serverLevel.getEntitiesOfClass(SpiritEntity.class,
-                    spirit.getBoundingBox().inflate(COMPANION_SEARCH_RADIUS));
+            List<SpiritEntity> nearby = serverLevel.getEntitiesOfClass(
+                    SpiritEntity.class, spirit.getBoundingBox().inflate(COMPANION_SEARCH_RADIUS));
             companion = nearby.stream()
-                    .filter(other -> other != spirit && other.getStringUUID().equals(params.target()))
-                    .findFirst().orElse(null);
+                    .filter(other ->
+                            !other.equals(spirit) && other.getStringUUID().equals(params.target()))
+                    .findFirst()
+                    .orElse(null);
         }
         return companion;
     }

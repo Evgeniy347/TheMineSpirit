@@ -10,8 +10,8 @@ public record PathParams(Map<String, String> values) {
     public String get(String name) {
         String value = values.get(name);
         if (value == null) {
-            throw new IllegalArgumentException("Параметр пути '" + name + "' не объявлен в шаблоне маршрута: "
-                    + "доступны " + values.keySet());
+            throw new IllegalArgumentException(
+                    "Параметр пути '" + name + "' не объявлен в шаблоне маршрута: " + "доступны " + values.keySet());
         }
         return value;
     }

@@ -9,8 +9,7 @@ public final class TokenBucket {
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
     private static final int MAX_KEYS = 256;
 
-    private record Bucket(double tokens, long updatedAtNanos) {
-    }
+    private record Bucket(double tokens, long updatedAtNanos) {}
 
     private final Map<String, Bucket> buckets = new LinkedHashMap<>();
 
@@ -23,8 +22,10 @@ public final class TokenBucket {
             }
             current = new Bucket(CAPACITY, nowNanos);
         }
-        double refilled = Math.min(CAPACITY,
-                current.tokens() + (nowNanos - current.updatedAtNanos()) / (double) NANOS_PER_SECOND * REFILL_PER_SECOND);
+        double refilled = Math.min(
+                CAPACITY,
+                current.tokens()
+                        + (nowNanos - current.updatedAtNanos()) / (double) NANOS_PER_SECOND * REFILL_PER_SECOND);
         if (refilled < 1) {
             buckets.put(key, new Bucket(refilled, nowNanos));
             return false;
@@ -38,17 +39,15 @@ public final class TokenBucket {
         if (current == null) {
             return 0;
         }
-        double refilled = Math.min(CAPACITY,
-                current.tokens() + (nowNanos - current.updatedAtNanos()) / (double) NANOS_PER_SECOND * REFILL_PER_SECOND);
+        double refilled = Math.min(
+                CAPACITY,
+                current.tokens()
+                        + (nowNanos - current.updatedAtNanos()) / (double) NANOS_PER_SECOND * REFILL_PER_SECOND);
         if (refilled >= 1) {
             return 0;
         }
         double missing = 1 - refilled;
         long seconds = (long) Math.ceil(missing / REFILL_PER_SECOND);
         return Math.max(seconds, 1);
-    }
-
-    public synchronized int trackedKeys() {
-        return buckets.size();
     }
 }

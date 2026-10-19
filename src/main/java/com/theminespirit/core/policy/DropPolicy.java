@@ -9,8 +9,7 @@ import java.util.OptionalInt;
 public final class DropPolicy {
     public static final int MAX_DROP = 2;
 
-    private DropPolicy() {
-    }
+    private DropPolicy() {}
 
     public static OptionalInt fallBelow(BlockCoord from, SafetyView view) {
         Objects.requireNonNull(from, "Клетка падения не может быть null: от неё считается глубина");

@@ -10,19 +10,18 @@ import java.util.OptionalInt;
  * Следующий уровень — первый неотмеченный, поэтому уровень не прыгает через непостроенный.
  */
 public final class BuildingLevels {
-    private BuildingLevels() {
-    }
+    private BuildingLevels() {}
 
     public static int maxLevel(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс уровня не может быть null: без него неизвестно, "
-                + "сколько уровней у постройки");
+        Objects.requireNonNull(
+                boardCase, "Кейс уровня не может быть null: без него неизвестно, " + "сколько уровней у постройки");
         Integer max = DataTables.INSTANCE.board().current().levels().get(boardCase.name());
         return max == null ? 1 : max;
     }
 
     public static boolean hasLevels(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс уровня не может быть null: без него неизвестно, "
-                + "есть ли у постройки уровни");
+        Objects.requireNonNull(
+                boardCase, "Кейс уровня не может быть null: без него неизвестно, " + "есть ли у постройки уровни");
         return DataTables.INSTANCE.board().current().levels().containsKey(boardCase.name());
     }
 

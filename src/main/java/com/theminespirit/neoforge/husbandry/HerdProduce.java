@@ -87,8 +87,7 @@ final class HerdProduce {
         session.done++;
         session.handledIds.add(session.currentId);
         String woolId = "minecraft:" + sheep.getColor().getName() + "_wool";
-        session.startCollect(IdFilter.of(List.of(woolId)),
-                session.current.blockPosition(), HerdSession.COLLECT_RADIUS);
+        session.startCollect(IdFilter.of(List.of(woolId)), session.current.blockPosition(), HerdSession.COLLECT_RADIUS);
     }
 
     void milkOne() {

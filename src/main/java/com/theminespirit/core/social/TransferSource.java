@@ -9,8 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public record TransferSource(UUID spirit, BlockCoord at, List<Stack> inventory, BaseKit kit,
-        List<String> taskNeeds) {
+public record TransferSource(UUID spirit, BlockCoord at, List<Stack> inventory, BaseKit kit, List<String> taskNeeds) {
     public TransferSource {
         Objects.requireNonNull(spirit, "Дух-источник не может быть null: передача идёт от конкретного духа");
         Objects.requireNonNull(at, "Точка источника не может быть null: по ней считается близость к получателю");

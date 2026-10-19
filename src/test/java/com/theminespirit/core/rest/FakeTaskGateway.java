@@ -68,8 +68,8 @@ final class FakeTaskGateway implements TaskGateway {
             throw observationFailure;
         }
         if (observation == null) {
-            throw new ApiException(ErrorCode.NOT_FOUND, "Дух '" + bot + "' не найден: наблюдение недоступно",
-                    Map.of("id", bot));
+            throw new ApiException(
+                    ErrorCode.NOT_FOUND, "Дух '" + bot + "' не найден: наблюдение недоступно", Map.of("id", bot));
         }
         return observation;
     }
@@ -94,8 +94,8 @@ final class FakeTaskGateway implements TaskGateway {
             throw observationFailure;
         }
         if (observation == null) {
-            throw new ApiException(ErrorCode.NOT_FOUND, "Дух '" + bot + "' не найден: наблюдение недоступно",
-                    Map.of("id", bot));
+            throw new ApiException(
+                    ErrorCode.NOT_FOUND, "Дух '" + bot + "' не найден: наблюдение недоступно", Map.of("id", bot));
         }
         if (planner != null) {
             planner.planGoal(goal, params, observation);

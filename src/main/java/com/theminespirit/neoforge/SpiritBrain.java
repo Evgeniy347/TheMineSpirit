@@ -27,7 +27,7 @@ public final class SpiritBrain {
     private String suspendReason;
     private RunProgress lastFailedAt;
     private ScriptResult lastResult;
-    private long generation = SpiritReading.UNKNOWN_GENERATION;
+    private volatile long generation = SpiritReading.UNKNOWN_GENERATION;
 
     public SpiritBrain(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -97,7 +97,7 @@ public final class SpiritBrain {
     }
 
     public Optional<TaskNode> plan() {
-        return runner == null ? Optional.empty() : Optional.of(runner.plan());
+        return runner == null ? Optional.empty() : runner.plan();
     }
 
     public Optional<String> failureReason() {

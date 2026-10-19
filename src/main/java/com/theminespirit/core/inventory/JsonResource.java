@@ -12,16 +12,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class JsonResource {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private JsonResource() {
-    }
+    private JsonResource() {}
 
     public static String readClasspath(String resourcePath) {
-        Objects.requireNonNull(resourcePath,
-                "Путь к файлу данных не может быть null: по нему файл ищется на classpath");
+        Objects.requireNonNull(
+                resourcePath, "Путь к файлу данных не может быть null: по нему файл ищется на classpath");
         try (InputStream stream = JsonResource.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (stream == null) {
                 throw new IllegalStateException("Файл '" + resourcePath
@@ -30,8 +30,8 @@ public final class JsonResource {
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException error) {
-            throw new UncheckedIOException("Файл '" + resourcePath
-                    + "' не прочитан: проверьте права и кодировку файла", error);
+            throw new UncheckedIOException(
+                    "Файл '" + resourcePath + "' не прочитан: проверьте права и кодировку файла", error);
         }
     }
 
@@ -42,15 +42,15 @@ public final class JsonResource {
         try {
             root = MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Файл '" + origin + "' — не разобран JSON: "
-                    + error.getOriginalMessage() + ". Исправьте синтаксис файла");
+            throw new IllegalStateException("Файл '" + origin + "' — не разобран JSON: " + error.getOriginalMessage()
+                    + ". Исправьте синтаксис файла");
         }
         if (root == null) {
             throw new IllegalStateException("Файл '" + origin + "' пуст: в нём нет ни одного правила");
         }
         if (!root.isObject()) {
-            throw new IllegalStateException("Файл '" + origin + "' — не объект: "
-                    + "на верхнем уровне ожидается JSON-объект с полями");
+            throw new IllegalStateException(
+                    "Файл '" + origin + "' — не объект: " + "на верхнем уровне ожидается JSON-объект с полями");
         }
         return root;
     }
@@ -72,15 +72,15 @@ public final class JsonResource {
         List<String> values = new ArrayList<>();
         for (JsonNode item : array(node, origin, what)) {
             if (!item.isTextual()) {
-                throw new IllegalStateException("Файл '" + origin + "': у " + what
-                        + " элемент не строка: шаблоны и имена задаются текстом");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': у " + what + " элемент не строка: шаблоны и имена задаются текстом");
             }
             values.add(item.asText());
         }
         return values;
     }
 
-    public static List<String> optionalStrings(JsonNode node, String origin, String what) {
+    public static List<String> optionalStrings(@Nullable JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return List.of();
         }
@@ -89,8 +89,8 @@ public final class JsonResource {
 
     public static String text(JsonNode node, String origin, String what) {
         if (node == null || !node.isTextual() || node.asText().isBlank()) {
-            throw new IllegalStateException("Файл '" + origin + "': у " + what
-                    + " ожидается непустая строка: значение задаётся текстом");
+            throw new IllegalStateException(
+                    "Файл '" + origin + "': у " + what + " ожидается непустая строка: значение задаётся текстом");
         }
         return node.asText();
     }
@@ -128,8 +128,8 @@ public final class JsonResource {
         }
         for (String field : fields) {
             if (!allowed.contains(field)) {
-                throw new IllegalStateException("Файл '" + origin + "': неизвестное поле '" + field + "' у "
-                        + what + ": допустимы " + allowed + ", опечатка в имени поля сделала бы правило мёртвым");
+                throw new IllegalStateException("Файл '" + origin + "': неизвестное поле '" + field + "' у " + what
+                        + ": допустимы " + allowed + ", опечатка в имени поля сделала бы правило мёртвым");
             }
         }
     }

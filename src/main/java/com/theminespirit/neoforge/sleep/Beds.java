@@ -18,8 +18,7 @@ final class Beds {
     private static final int UNLIMITED_SLICES = Integer.MAX_VALUE;
     private static final Set<Block> BED_BLOCKS = BlockSets.resolve(IdFilter.of(List.of("*_bed")));
 
-    private Beds() {
-    }
+    private Beds() {}
 
     static List<BlockCoord> find(Level level, BlockPos center, int radius) {
         BlockLocator.Search search = BlockLocator.search(level, center, radius, BED_BLOCKS);

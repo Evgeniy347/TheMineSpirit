@@ -8,8 +8,7 @@ final class Scales {
             + " \"leashMargin\": 2, \"speedRatioCap\": 10}";
     private static final FactorScales DEFAULTS = FactorScalesParser.parse(ConfigNode.root("weights.json", JSON));
 
-    private Scales() {
-    }
+    private Scales() {}
 
     static FactorScales defaults() {
         return DEFAULTS;

@@ -4,8 +4,7 @@ import com.theminespirit.core.hunger.HungerRules;
 import java.util.Objects;
 
 public final class HungerPolicy {
-    private HungerPolicy() {
-    }
+    private HungerPolicy() {}
 
     public static PolicyVerdict evaluate(int foodLevel, HungerRules rules, boolean hasFood, boolean inCombat) {
         Objects.requireNonNull(rules, "Правила голода не могут быть null: порог обеда — данные, а не константа кода");
@@ -18,7 +17,9 @@ public final class HungerPolicy {
         if (!hasFood) {
             return new PolicyVerdict.Clear();
         }
-        return new PolicyVerdict.Reflex(PolicyId.HUNGER, new ReflexAction.Eat(),
+        return new PolicyVerdict.Reflex(
+                PolicyId.HUNGER,
+                new ReflexAction.Eat(),
                 "сытость " + foodLevel + " не выше порога " + rules.eatFoodThreshold() + ": дух ест");
     }
 }

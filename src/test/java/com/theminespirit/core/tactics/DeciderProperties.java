@@ -24,8 +24,10 @@ class DeciderProperties {
 
     @Provide
     Arbitrary<List<Double>> weightCells() {
-        return Arbitraries.doubles().between(-ScoreWeights.MAX_WEIGHT, ScoreWeights.MAX_WEIGHT)
-                .list().ofSize(Factor.values().length * TacticalOption.values().length);
+        return Arbitraries.doubles()
+                .between(-ScoreWeights.MAX_WEIGHT, ScoreWeights.MAX_WEIGHT)
+                .list()
+                .ofSize(Factor.values().length * TacticalOption.values().length);
     }
 
     private static ScoreWeights randomWeights(List<Double> cells) {
@@ -39,21 +41,29 @@ class DeciderProperties {
             matrix.put(factor, row);
         }
         ScoreWeights shipped = CONFIG.weights();
-        return new ScoreWeights(matrix, shipped.tieBreak(), shipped.stickiness(), shipped.holdTicks(),
-                shipped.hpDropRelease(), shipped.scales());
+        return new ScoreWeights(
+                matrix,
+                shipped.tieBreak(),
+                shipped.stickiness(),
+                shipped.holdTicks(),
+                shipped.hpDropRelease(),
+                shipped.scales());
     }
 
     @Property
-    void decide_NoRouteOrScore_NeverPicksExcludedOption(@ForAll("situations") Situation situation,
-            @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
+    void decide_NoRouteOrScore_NeverPicksExcludedOption(
+            @ForAll("situations") Situation situation,
+            @ForAll("weightCells") List<Double> cells,
+            @ForAll boolean cornered,
+            @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
         Assessment assessment = Assessments.withRoutes(situation, cornered ? 0 : 2);
         FactMap facts = FactMap.from(situation, assessment);
         Scores scores = new Scorer().score(situation, assessment, weights);
         HardRules hardRules = new HardRules(CONFIG.rules().hard(), new RuleCounter());
 
-        Decision decision = new Decider(hardRules, weights).decide(facts, scores, assessment.escapeRoutes(),
-                Memories.holding(situation, previous, 0), 1);
+        Decision decision = new Decider(hardRules, weights)
+                .decide(facts, scores, assessment.escapeRoutes(), Memories.holding(situation, previous, 0), 1);
 
         Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
         Set<String> mayOverride = new HashSet<>(Set.of(Decision.ALL_EXCLUDED));
@@ -64,7 +74,9 @@ class DeciderProperties {
                 excluded.addAll(rule.excludes());
             }
         }
-        assertEquals(false, excluded.contains(decision.option()) && !mayOverride.contains(decision.rule()),
+        assertEquals(
+                false,
+                excluded.contains(decision.option()) && !mayOverride.contains(decision.rule()),
                 "Вычёркнутый вариант " + decision.option() + " выбран правилом " + decision.rule() + " (вычеркнуто "
                         + excluded + "): вычёркивание не обходит ни оценка, ни удержание, ни подмена RETREAT при "
                         + "отсутствии пути; исключения — решающие жёсткие правила и all_excluded");
@@ -72,29 +84,46 @@ class DeciderProperties {
 
     private static boolean isNoRoute(String ruleId) {
         return CONFIG.rules().hard().stream()
-                .anyMatch(rule -> rule.id().equals(ruleId) && rule.noRouteOption().isPresent());
+                .anyMatch(
+                        rule -> rule.id().equals(ruleId) && rule.noRouteOption().isPresent());
     }
 
     @Property
-    void decide_DecisiveHardRule_CannotBeOutbidByAnyWeights(@ForAll("situations") Situation situation,
-            @ForAll("weightCells") List<Double> cells, @ForAll boolean cornered, @ForAll TacticalOption previous) {
+    void decide_DecisiveHardRule_CannotBeOutbidByAnyWeights(
+            @ForAll("situations") Situation situation,
+            @ForAll("weightCells") List<Double> cells,
+            @ForAll boolean cornered,
+            @ForAll TacticalOption previous) {
         ScoreWeights weights = randomWeights(cells);
         Assessment assessment = Assessments.withRoutes(situation, cornered ? 0 : 2);
         FactMap facts = FactMap.from(situation, assessment);
         Scores scores = new Scorer().score(situation, assessment, weights);
         HardRules hardRules = new HardRules(CONFIG.rules().hard(), new RuleCounter());
 
-        Decision decision = new Decider(hardRules, weights).decide(facts, scores, assessment.escapeRoutes(), Memories.holding(situation, previous, 0), 1);
+        Decision decision = new Decider(hardRules, weights)
+                .decide(facts, scores, assessment.escapeRoutes(), Memories.holding(situation, previous, 0), 1);
 
         HardVerdict verdict = hardRules.evaluate(facts);
-        verdict.decisive().ifPresent(rule -> assertEquals(
-                rule.decision().get() == TacticalOption.RETREAT && cornered ? "заменено правилом noRoute" : rule.id(),
-                rule.decision().get() == TacticalOption.RETREAT && cornered && isNoRoute(decision.rule())
-                        ? "заменено правилом noRoute" : decision.rule(),
-                "Жёсткое правило " + rule.id() + " с решением не может быть перебито весами: иначе правила безопасности "
-                        + "(критическое HP, крипер вплотную) перестанут быть жёсткими. Проверьте порядок в Decider (единственное исключение — RETREAT без способа отхода, его подменяют правила noRoute)"));
-        verdict.excluded().forEach(excluded -> assertEquals(false,
-                decision.option() == excluded && verdict.decisive().isEmpty() && decision.rule().equals(Decision.BY_SCORE),
-                "Вычеркнутый вариант " + excluded + " не может победить по счёту ни при каких весах"));
+        verdict.decisive()
+                .ifPresent(
+                        rule -> assertEquals(
+                                rule.decision().get() == TacticalOption.RETREAT && cornered
+                                        ? "заменено правилом noRoute"
+                                        : rule.id(),
+                                rule.decision().get() == TacticalOption.RETREAT
+                                                && cornered
+                                                && isNoRoute(decision.rule())
+                                        ? "заменено правилом noRoute"
+                                        : decision.rule(),
+                                "Жёсткое правило " + rule.id()
+                                        + " с решением не может быть перебито весами: иначе правила безопасности "
+                                        + "(критическое HP, крипер вплотную) перестанут быть жёсткими. Проверьте порядок в Decider (единственное исключение — RETREAT без способа отхода, его подменяют правила noRoute)"));
+        verdict.excluded()
+                .forEach(excluded -> assertEquals(
+                        false,
+                        decision.option() == excluded
+                                && verdict.decisive().isEmpty()
+                                && Decision.BY_SCORE.equals(decision.rule()),
+                        "Вычеркнутый вариант " + excluded + " не может победить по счёту ни при каких весах"));
     }
 }

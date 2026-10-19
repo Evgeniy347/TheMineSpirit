@@ -62,7 +62,7 @@ public final class FillSession {
     private int protectedSkipped;
     private int foreignSkipped;
     private int blockReads;
-    private int slices;
+
     private final BuildResult tally = new BuildResult();
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
@@ -145,10 +145,6 @@ public final class FillSession {
         return blockReads;
     }
 
-    public int safetyReads() {
-        return safety.reads();
-    }
-
     public Map<String, Object> saveState() {
         return new BuildState(placed, 0, skipped, failed, outcome == Outcome.RUNNING).toMap();
     }
@@ -180,8 +176,7 @@ public final class FillSession {
             approach.begin(new Vec3(exit.x() + 0.5, exit.y(), exit.z() + 0.5), BuildTuning.STAND_ARRIVAL);
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.PICK;
             case STUCK, TIMEOUT -> state = State.PICK;
         }
@@ -214,7 +209,7 @@ public final class FillSession {
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
-            slices++;
+
             if (stands.isEmpty()) {
                 noStand++;
                 skipped++;
@@ -234,8 +229,7 @@ public final class FillSession {
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> placeCurrent();
             case STUCK, TIMEOUT -> {
                 noStand++;

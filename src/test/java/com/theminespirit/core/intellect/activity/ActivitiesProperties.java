@@ -16,8 +16,13 @@ import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 
 class ActivitiesProperties {
-    private static final List<Activity> ALL = List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(),
-            new MineActivity(), new RestActivity(), new DefendActivity());
+    private static final List<Activity> ALL = List.of(
+            new ChopActivity(),
+            new FarmActivity(),
+            new ForageActivity(),
+            new MineActivity(),
+            new RestActivity(),
+            new DefendActivity());
 
     @Provide
     Arbitrary<SettlementView> views() {
@@ -34,10 +39,11 @@ class ActivitiesProperties {
         Map<String, Double> second = demandsInOrder(backward, view);
         Map<String, Double> third = demandsInOrder(forward, view);
 
-        assertEquals(first, second,
+        assertEquals(
+                first,
+                second,
                 "Спрос не зависит от порядка вычисления других деятельностей: иначе итог зависит от обхода каталога");
-        assertEquals(first, third,
-                "Повторный расчёт даёт тот же спрос: иначе спрос мигает между пересборками");
+        assertEquals(first, third, "Повторный расчёт даёт тот же спрос: иначе спрос мигает между пересборками");
     }
 
     private static Map<String, Double> demandsInOrder(List<Activity> order, SettlementView view) {

@@ -5,6 +5,7 @@ import com.theminespirit.core.pickup.OverflowMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record CollectDropsParams(int radius, IdFilter items, OverflowMode overflow) {
     public CollectDropsParams {
@@ -24,13 +25,14 @@ public record CollectDropsParams(int radius, IdFilter items, OverflowMode overfl
                 overflowOf(params.get("overflow")));
     }
 
-    private static OverflowMode overflowOf(Object value) {
+    private static OverflowMode overflowOf(@Nullable Object value) {
         if (value == null) {
             return OverflowMode.BY_VALUE;
         }
         if (!(value instanceof String text)) {
             throw new IllegalArgumentException("Параметр 'overflow' скрипта должен быть строкой 'fail', "
-                    + "'by_value' или 'return_to_base', а получено " + value.getClass().getSimpleName()
+                    + "'by_value' или 'return_to_base', а получено "
+                    + value.getClass().getSimpleName()
                     + ": тип параметра обеспечивает валидатор плана до запуска");
         }
         return OverflowMode.parse(text);

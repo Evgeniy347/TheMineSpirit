@@ -11,35 +11,36 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class GameTestIsolationGuardTests {
-    private static final Pattern GAMETEST_ANNOTATION = Pattern.compile(
-            "@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern GAMETEST_ANNOTATION =
+            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final String[] SPAWN_MARKERS = {
-            ".spawn(",
-            "ModEntities.SPIRIT",
-            "mockPlayer",
-            "makeMockServerPlayer",
-            "spawnSpirit",
-            "Scene.spirit(",
-            "spawnWith(",
+        ".spawn(",
+        "ModEntities.SPIRIT",
+        "mockPlayer",
+        "makeMockServerPlayer",
+        "spawnSpirit",
+        "Scene.spirit(",
+        "spawnWith(",
     };
     private static final String[] CLEANUP_MARKERS = {
-            "GameTestFixtures.reset",
-            "GameTestFixtures.sweepEntities",
-            "GameTestFixtures.begin",
-            "GameTestFixtures.finish",
-            "TacticsScene.prepare",
-            "MovementScene.prepare",
+        "GameTestFixtures.reset",
+        "GameTestFixtures.sweepEntities",
+        "GameTestFixtures.begin",
+        "GameTestFixtures.finish",
+        "TacticsScene.prepare",
+        "MovementScene.prepare",
     };
     private static final Pattern HELPER_DEFINITION = Pattern.compile(
-            "static\\s+[\\w<>,\\[\\] ?.]+\\s+(\\w+)\\s*\\([^)]*GameTestHelper[^)]*\\)[^{]*\\{",
-            Pattern.MULTILINE);
+            "static\\s+[\\w<>,\\[\\] ?.]+\\s+(\\w+)\\s*\\([^)]*GameTestHelper[^)]*\\)[^{]*\\{", Pattern.MULTILINE);
 
     @Test
     void gameTestSpawn_WithoutStartCleanup_IsReported() {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "GameTest со спавном обязан начинать сцену с общей зачистки: фреймворк не чистит мир между "
                         + "пачками (clearOnBatch=false), сущности прошлых сцен живут дальше, а тактика духа видит "
                         + "врагов в радиусе 32 блоков — чужой моб замораживает духа (tactics.wantsControl → "
@@ -52,116 +53,142 @@ class GameTestIsolationGuardTests {
 
     @Test
     void sceneAlias_CleanHelperBeforeSpawn_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    private static void arenaFloor(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "    }\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {\n"
-                + "        arenaFloor(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static void arenaFloor(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                            }
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {
+                                arenaFloor(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: локальный помощник с зачисткой — законное начало сцены");
     }
 
     @Test
     void sceneAlias_DirtyHelperBeforeSpawn_IsReported() {
-        String sample = "class Sample {\n"
-                + "    private static void arenaFloor(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.buildFloor(helper, Blocks.STONE);\n"
-                + "    }\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {\n"
-                + "        arenaFloor(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static void arenaFloor(GameTestHelper helper) {
+                                GameTestFixtures.buildFloor(helper, Blocks.STONE);
+                            }
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {
+                                arenaFloor(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("till_WithoutHoe_FailsFast"), offendersOf(sample),
+        assertEquals(
+                List.of("till_WithoutHoe_FailsFast"),
+                offendersOf(sample),
                 "Сторож ослеп: помощник без зачистки не изолирует сцену, даже если вызван до спавна");
     }
 
     @Test
     void gameTestSpawnPattern_SpawnWithoutCleanup_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("zombie_NearSpirit_TakesTarget"), offendersOf(sample),
+        assertEquals(
+                List.of("zombie_NearSpirit_TakesTarget"),
+                offendersOf(sample),
                 "Сторож ослеп: спавн без стартовой зачистки должен попадать в нарушители");
     }
 
     @Test
     void gameTestSpawnPattern_CleanupAfterSpawn_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                GameTestFixtures.reset(helper);
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("zombie_NearSpirit_TakesTarget"), offendersOf(sample),
+        assertEquals(
+                List.of("zombie_NearSpirit_TakesTarget"),
+                offendersOf(sample),
                 "Сторож ослеп: зачистка после спавна не защищает от чужих сущностей — она обязана быть до спавна");
     }
 
     @Test
     void gameTestSpawnPattern_CleanupBeforeSpawn_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.sweepEntities(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                GameTestFixtures.sweepEntities(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), offendersOf(sample),
-                "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
+        assertEquals(
+                List.of(), offendersOf(sample), "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
     }
 
     @Test
     void gameTestBody_SecondResetCall_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeedWhen(() -> {\n"
-                + "            GameTestFixtures.reset(helper);\n"
-                + "        });\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeedWhen(() -> {
+                                    GameTestFixtures.reset(helper);
+                                });
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"), finishOffendersOf(sample),
+        assertEquals(
+                List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"),
+                finishOffendersOf(sample),
                 "Сторож ослеп: поздний reset в лямбде убивает давно бегущих соседей по пачке — там обязан "
                         + "быть узкий finish");
     }
 
     @Test
     void gameTestBody_ResetAndFinish_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeedWhen(() -> {\n"
-                + "            GameTestFixtures.finish(helper);\n"
-                + "        });\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeedWhen(() -> {
+                                    GameTestFixtures.finish(helper);
+                                });
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), finishOffendersOf(sample),
+        assertEquals(
+                List.of(),
+                finishOffendersOf(sample),
                 "Сторож ложно срабатывает: стартовый reset плюс узкий finish в лямбде — законная сцена");
     }
 
@@ -170,7 +197,9 @@ class GameTestIsolationGuardTests {
         List<String> offenders = new ArrayList<>();
         collectFinishOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Поздняя зачистка (внутри лямбды succeedWhen/runAfterDelay) обязана быть узкой "
                         + "GameTestFixtures.finish: широкая убивает давно бегущих соседей по пачке — тесты "
                         + "пачки идут одновременно, что доказал красный прогон after1 (20 падений, 5 тиков 0 "
@@ -182,8 +211,8 @@ class GameTestIsolationGuardTests {
         sources.forEach((file, text) -> {
             for (Method method : gameTestMethods(text)) {
                 if (countOccurrences(method.body(), "GameTestFixtures.reset(") > 1) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -214,8 +243,8 @@ class GameTestIsolationGuardTests {
             List<String> cleanHelpers = cleanHelpers(text);
             for (Method method : gameTestMethods(text)) {
                 if (spawns(method.body()) && !cleanedBeforeSpawn(method.body(), cleanHelpers)) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -319,6 +348,5 @@ class GameTestIsolationGuardTests {
         return first;
     }
 
-    private record Method(String name, int annotationStart, String body) {
-    }
+    private record Method(String name, int annotationStart, String body) {}
 }

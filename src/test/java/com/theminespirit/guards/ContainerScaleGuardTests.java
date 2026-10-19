@@ -20,7 +20,9 @@ class ContainerScaleGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Адаптер инвентаря сканирует сущности мира (getEntities): поиск контейнера идёт по срезам блоков "
                         + "порциями, а перенос — по слотам, обход сущностей в серверном тике на каждого духа "
                         + "нагружает сервер зря. Сущности подбирает только DropCollector. Нарушители");
@@ -30,7 +32,9 @@ class ContainerScaleGuardTests {
     void entityScanPattern_CallInAdapter_IsReported() {
         String sample = "nearby = level.getEntitiesOfClass(ItemEntity.class, area, drop -> true);\n";
 
-        assertEquals(List.of("sample"), scanned(List.of(Map.entry(Path.of("sample"), sample))),
+        assertEquals(
+                List.of("sample"),
+                scanned(List.of(Map.entry(Path.of("sample"), sample))),
                 "Сторож ослеп: вызов getEntities в адаптере инвентаря обязан находиться");
     }
 
@@ -38,7 +42,9 @@ class ContainerScaleGuardTests {
     void entityScanPattern_CleanAdapter_IsAccepted() {
         String sample = "candidates.addAll(search.step(SLICES_PER_TICK));\n";
 
-        assertEquals(List.of(), scanned(List.of(Map.entry(Path.of("sample"), sample))),
+        assertEquals(
+                List.of(),
+                scanned(List.of(Map.entry(Path.of("sample"), sample))),
                 "Сторож ложно срабатывает: поиск по срезам блоков — не скан сущностей");
     }
 

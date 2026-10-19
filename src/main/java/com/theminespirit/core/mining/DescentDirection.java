@@ -32,8 +32,8 @@ public enum DescentDirection {
         try {
             return valueOf(id.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException error) {
-            throw new IllegalArgumentException("Неизвестное направление спуска '" + id + "': допустимы " + NAMES,
-                    error);
+            throw new IllegalArgumentException(
+                    "Неизвестное направление спуска '" + id + "': допустимы " + NAMES, error);
         }
     }
 }

@@ -34,7 +34,8 @@ public final class BuildFarmSession {
 
     public BuildFarmSession(SpiritEntity spirit, FarmPlot plot, CropKind crop) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него некому работать на грядке");
-        this.plot = Objects.requireNonNull(plot, "Прямоугольник грядки не может быть null: без него неизвестно, где копать");
+        this.plot = Objects.requireNonNull(
+                plot, "Прямоугольник грядки не может быть null: без него неизвестно, где копать");
         this.crop = Objects.requireNonNull(crop, "Культура не может быть null: без неё неизвестно, что сажать");
         this.till = FarmSession.tillPlot(spirit, plot);
     }

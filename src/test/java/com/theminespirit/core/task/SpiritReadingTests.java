@@ -27,7 +27,8 @@ class SpiritReadingTests {
     void living_WithoutResult_HasNullResult() {
         SpiritReading reading = SpiritReading.living(RunStatus.RUNNING, PROGRESS, null);
 
-        assertNull(reading.result(),
+        assertNull(
+                reading.result(),
                 "перегрузка без итога обязана давать null: прежний вызов не должен внезапно получать мусор");
     }
 
@@ -35,8 +36,8 @@ class SpiritReadingTests {
     void failed_WithReason_HasNullResult() {
         SpiritReading reading = SpiritReading.failed("споткнулся", PROGRESS);
 
-        assertNull(reading.result(),
-                "провал не несёт итога успеха: null отличает 'итога нет' от 'итог — пустая строка'");
+        assertNull(
+                reading.result(), "провал не несёт итога успеха: null отличает 'итога нет' от 'итог — пустая строка'");
         assertEquals(RunStatus.FAILED, reading.status(), "провал обязан нести статус FAILED");
     }
 
@@ -53,7 +54,9 @@ class SpiritReadingTests {
         SpiritReading tagged = reading.withGeneration(7);
 
         assertEquals(7, tagged.generation(), "withGeneration обязан проставить поколение");
-        assertEquals(RESULT, tagged.result(),
+        assertEquals(
+                RESULT,
+                tagged.result(),
                 "withGeneration обязан сохранять итог: иначе reconciler потеряет его при проверке поколения");
     }
 }

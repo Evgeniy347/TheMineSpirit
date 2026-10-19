@@ -9,8 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 final class CraftInventory {
-    private CraftInventory() {
-    }
+    private CraftInventory() {}
 
     static Map<String, Integer> counts(Container container) {
         Map<String, Integer> counts = new HashMap<>();

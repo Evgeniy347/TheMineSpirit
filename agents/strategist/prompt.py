@@ -1,4 +1,4 @@
-"""Сборка промпта стратега: системная часть из prompt/system.md, каталог, «Формат плана» из docs/API.md, наблюдение и история."""
+"""Сборка промпта стратега: системная часть из prompt/system.md, каталог, «Формат плана» из docs/api/plan.md, наблюдение и история."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class Prompt:
 def extract_plan_format(api_text: str) -> str:
     start = api_text.find(PLAN_FORMAT_HEADING)
     if start == -1:
-        raise PromptError(f"В docs/API.md нет раздела «{PLAN_FORMAT_HEADING[3:]}»: промпт берёт формат плана оттуда; "
+        raise PromptError(f"В docs/api/plan.md нет раздела «{PLAN_FORMAT_HEADING[3:]}»: промпт берёт формат плана оттуда; "
                           "проверьте заголовок раздела или поправьте PLAN_FORMAT_HEADING в prompt.py")
     end = api_text.find("\n## ", start + len(PLAN_FORMAT_HEADING))
     section = api_text[start:end] if end != -1 else api_text[start:]

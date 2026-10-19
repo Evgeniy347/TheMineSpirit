@@ -13,11 +13,10 @@ import java.util.Objects;
 
 public final class MemoryCodec {
     public static final int VERSION = 1;
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+    private static final ObjectMapper MAPPER =
+            new ObjectMapper().enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
-    private MemoryCodec() {
-    }
+    private MemoryCodec() {}
 
     public static String encode(MemoryStore store) {
         Objects.requireNonNull(store, "store не может быть null: сохранять нечего");
@@ -67,16 +66,18 @@ public final class MemoryCodec {
         try {
             return MAPPER.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new MemoryFormatException("Память духа не разобрана как JSON: проверьте синтаксис значения "
-                    + "ключа SpiritMemory, файл не правьте вручную", e);
+            throw new MemoryFormatException(
+                    "Память духа не разобрана как JSON: проверьте синтаксис значения "
+                            + "ключа SpiritMemory, файл не правьте вручную",
+                    e);
         }
     }
 
     private static void requireVersion(JsonNode root) {
         JsonNode versionNode = root.get("version");
         if (versionNode == null || !versionNode.isIntegralNumber() || !versionNode.canConvertToInt()) {
-            throw new MemoryFormatException("У памяти духа нет целого поля version: без версии читатель "
-                    + "не выберет разбор формата");
+            throw new MemoryFormatException(
+                    "У памяти духа нет целого поля version: без версии читатель " + "не выберет разбор формата");
         }
         int version = versionNode.intValue();
         if (version > VERSION) {
@@ -94,8 +95,8 @@ public final class MemoryCodec {
         }
         String name = requireText(node, "name");
         MemoryType type = parseType(requireText(node, "type"), name);
-        BlockCoord pos = new BlockCoord(requireInt(node, "x", name), requireInt(node, "y", name),
-                requireInt(node, "z", name));
+        BlockCoord pos =
+                new BlockCoord(requireInt(node, "x", name), requireInt(node, "y", name), requireInt(node, "z", name));
         try {
             return new MemoryPoint(name, type, requireText(node, "dimension"), pos);
         } catch (IllegalArgumentException e) {

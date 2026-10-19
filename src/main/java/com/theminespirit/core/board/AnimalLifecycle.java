@@ -9,10 +9,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Жизненный цикл животного одного вида на доске: отлов → загон → приманка → разбор укрытия.
- * Переходы — чистые функции состояния адаптер вызывает: captured (capture выполнен),
- * penBuilt (загон стоит), lured (животное в загоне), animalDied (гибель: «приманить»
- * снимается, появляется «разобрать укрытие»). Повторные вызовы не плодят дублей.
+ * Жизненный цикл животного одного вида на доске: отлов приманкой → загон → привести в загон. Укрытия из блоков
+ * нет (упрощение 44.4, решение владельца 18.10), разбирать после отлова нечего. Переходы — чистые функции
+ * состояния, адаптер вызывает: captured (capture выполнен), penBuilt (загон стоит), lured (животное в загоне),
+ * animalDied (гибель: «приманить» снимается). Повторные вызовы не плодят дублей.
  * Префикс id делает цикл независимым: реестр {@link HerdCycles} держит по циклу на вид.
  */
 public final class AnimalLifecycle {
@@ -29,19 +29,18 @@ public final class AnimalLifecycle {
     }
 
     public AnimalLifecycle(Board board, Species species) {
-        this(board, species.name().toLowerCase(Locale.ROOT), shortId(FeedTable.feedFor(species).get(0)));
-    }
-
-    private static String shortId(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+        this(
+                board,
+                species.name().toLowerCase(Locale.ROOT),
+                shortId(FeedTable.feedFor(species).get(0)));
     }
 
     private AnimalLifecycle(Board board, String prefix, String lureItem) {
-        this.board = Objects.requireNonNull(board, "board не может быть null: доска — "
-                + "канал постановки и снятия заданий цикла");
+        this.board = Objects.requireNonNull(
+                board, "board не может быть null: доска — " + "канал постановки и снятия заданий цикла");
         if (prefix == null || prefix.isBlank()) {
-            throw new IllegalArgumentException("prefix цикла пуст: по нему различают циклы видов, "
-                    + "без префикса два вида писали бы в одни id");
+            throw new IllegalArgumentException(
+                    "prefix цикла пуст: по нему различают циклы видов, " + "без префикса два вида писали бы в одни id");
         }
         if (lureItem == null || lureItem.isBlank()) {
             throw new IllegalArgumentException("lureItem пустое: приманка — гейт задания "
@@ -51,39 +50,54 @@ public final class AnimalLifecycle {
         this.lureItem = lureItem;
     }
 
+    private static String shortId(String item) {
+        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+    }
+
     public void captured(String captureId) {
-        Objects.requireNonNull(captureId, "captureId не может быть null: загон зависит от "
-                + "задания отлова по id, без связи доска выдаст «приманить» без загона");
+        Objects.requireNonNull(
+                captureId,
+                "captureId не может быть null: загон зависит от "
+                        + "задания отлова по id, без связи доска выдаст «приманить» без загона");
         if (stage != Stage.NONE || hasActive(penId())) {
             return;
         }
         cause = "animal:" + captureId;
-        board.submit(new BoardTicket(penId(), BoardCase.BUILD_PEN, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_PEN), board.now(), 1, cause,
-                List.of(), Map.of()));
+        board.submit(new BoardTicket(
+                penId(),
+                BoardCase.BUILD_PEN,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_PEN),
+                board.now(),
+                1,
+                cause,
+                List.of(),
+                Map.of()));
         stage = Stage.CAPTURED;
     }
 
     public void penBuilt(String captureId) {
-        Objects.requireNonNull(captureId, "captureId не может быть null: «приманить» зависит "
-                + "от отлова по id");
+        Objects.requireNonNull(captureId, "captureId не может быть null: «приманить» зависит " + "от отлова по id");
         if (stage != Stage.CAPTURED || hasActive(lureId())) {
             return;
         }
-        board.submit(new BoardTicket(lureId(), BoardCase.LURE_ANIMAL, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.LURE_ANIMAL), board.now(), 1, cause,
-                List.of(captureId), Map.of(lureItem, 1)));
+        board.submit(new BoardTicket(
+                lureId(),
+                BoardCase.LURE_ANIMAL,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.LURE_ANIMAL),
+                board.now(),
+                1,
+                cause,
+                List.of(captureId),
+                Map.of(lureItem, 1)));
         stage = Stage.PEN_BUILT;
     }
 
     public void lured() {
-        if (stage != Stage.PEN_BUILT || hasActive(dismantleId())) {
-            return;
+        if (stage == Stage.PEN_BUILT) {
+            stage = Stage.LURED;
         }
-        board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(), 1, cause,
-                List.of(), Map.of()));
-        stage = Stage.LURED;
     }
 
     public void animalDied() {
@@ -91,12 +105,7 @@ public final class AnimalLifecycle {
             return;
         }
         board.cancel(lureId());
-        if (!hasActive(dismantleId())) {
-            board.submit(new BoardTicket(dismantleId(), BoardCase.DISMANTLE_SHELTER, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER), board.now(),
-                    1, cause, List.of(), Map.of()));
-        }
-        stage = Stage.DISMANTLED;
+        stage = Stage.GONE;
     }
 
     private boolean hasActive(String ticketId) {
@@ -115,15 +124,11 @@ public final class AnimalLifecycle {
         return prefix + "_lure";
     }
 
-    private String dismantleId() {
-        return prefix + "_dismantle";
-    }
-
     private enum Stage {
         NONE,
         CAPTURED,
         PEN_BUILT,
         LURED,
-        DISMANTLED
+        GONE
     }
 }

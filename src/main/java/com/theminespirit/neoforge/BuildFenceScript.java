@@ -52,8 +52,7 @@ final class BuildFenceScript implements ScriptInstance {
             }
         }
         if (gateScript == null) {
-            gateScript = new PlaceBlockScript(spirit,
-                    new PlaceBlockParams(gateBlock, gate.x(), gate.y(), gate.z()));
+            gateScript = new PlaceBlockScript(spirit, new PlaceBlockParams(gateBlock, gate.x(), gate.y(), gate.z()));
         }
         ScriptStatus gateStatus = gateScript.tick();
         if (gateStatus == ScriptStatus.FAILED) {

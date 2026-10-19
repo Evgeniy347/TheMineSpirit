@@ -52,14 +52,6 @@ public final class TargetBuffer {
         return active.isEmpty() && surplus.isEmpty();
     }
 
-    public int activeSize() {
-        return active.size();
-    }
-
-    public int surplusSize() {
-        return surplus.size();
-    }
-
     public int size() {
         return active.size() + surplus.size();
     }

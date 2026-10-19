@@ -3,8 +3,7 @@ package com.theminespirit.core.social;
 public final class SaySpacing {
     public static final long NEVER = Long.MIN_VALUE;
 
-    private SaySpacing() {
-    }
+    private SaySpacing() {}
 
     public static boolean due(long lastTick, long now, int minInterval) {
         if (minInterval < 0) {

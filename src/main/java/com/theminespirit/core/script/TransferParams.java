@@ -7,8 +7,8 @@ public record TransferParams(ContainerTarget container, String item, int count, 
     public TransferParams {
         Objects.requireNonNull(container, "Контейнер не может быть null: 'nearest' или координаты x,y,z");
         if (item == null || item.isBlank()) {
-            throw new IllegalArgumentException("Не задан предмет переноса: без id или шаблона ('*_ingot') "
-                    + "не понять, что класть в контейнер");
+            throw new IllegalArgumentException(
+                    "Не задан предмет переноса: без id или шаблона ('*_ingot') " + "не понять, что класть в контейнер");
         }
         if (count < CatalogLimits.COUNT_MIN || count > CatalogLimits.COUNT_MAX) {
             throw new IllegalArgumentException("Число предметов " + count + " вне диапазона ["

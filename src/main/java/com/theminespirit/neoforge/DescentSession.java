@@ -77,8 +77,8 @@ public final class DescentSession {
         this.reservations = BuildReservationHub.forLevel(level);
         BlockPos feet = spirit.blockPosition();
         this.entry = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        this.direction = Objects.requireNonNull(direction,
-                "Направление спуска не может быть null: без него неизвестно, куда копать");
+        this.direction = Objects.requireNonNull(
+                direction, "Направление спуска не может быть null: без него неизвестно, куда копать");
         this.targetY = targetY;
         this.torchInterval = DescentData.loadDefault().torchInterval();
         this.plan = DescentPlan.from(safety, entry, direction, targetY, torchInterval);
@@ -132,7 +132,9 @@ public final class DescentSession {
 
     public Map<String, Object> resultData() {
         int floorUnderFeet = entry.y() - 1;
-        int y = stepIndex == 0 ? floorUnderFeet : plan.steps().get(stepIndex - 1).floor();
+        int y = stepIndex == 0
+                ? floorUnderFeet
+                : plan.steps().get(stepIndex - 1).floor();
         int depth = floorUnderFeet - y;
         return Map.of(
                 "reached", stopReason == null,
@@ -230,8 +232,7 @@ public final class DescentSession {
 
     private void breakTick() {
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
                 cellCursor++;
@@ -265,11 +266,15 @@ public final class DescentSession {
             approachBegun = true;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
-                collector = new DropCollector(spirit, IdFilter.matchAll(), step.stand(), COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                collector = new DropCollector(
+                        spirit,
+                        IdFilter.matchAll(),
+                        step.stand(),
+                        COLLECT_RADIUS,
+                        PickupTuning.DEFAULT,
+                        OverflowMode.BY_VALUE);
                 state = State.COLLECT;
             }
             case STUCK, TIMEOUT -> {
@@ -334,10 +339,6 @@ public final class DescentSession {
         return plan.steps().get(stepIndex);
     }
 
-    private BlockCoord currentCell() {
-        return currentStep().passage().get(cellCursor);
-    }
-
     private static BlockPos toPos(BlockCoord coord) {
         return new BlockPos(coord.x(), coord.y(), coord.z());
     }
@@ -348,7 +349,8 @@ public final class DescentSession {
             throw new IllegalArgumentException("Поле снимка '" + key + "' отсутствует: без него спуск не восстановить");
         }
         if (!(value instanceof Number number)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть числом: иначе спуск не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть числом: иначе спуск не восстановить");
         }
         return number.intValue();
     }
@@ -356,7 +358,8 @@ public final class DescentSession {
     private static String text(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (!(value instanceof String text)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть строкой: иначе спуск не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть строкой: иначе спуск не восстановить");
         }
         return text;
     }

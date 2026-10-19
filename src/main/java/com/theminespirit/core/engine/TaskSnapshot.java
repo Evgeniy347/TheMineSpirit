@@ -2,8 +2,14 @@ package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record TaskSnapshot(int version, RunStatus status, String reason, TaskNode plan, TaskProgress progress) {
+public record TaskSnapshot(
+        int version,
+        RunStatus status,
+        @Nullable String reason,
+        @Nullable TaskNode plan,
+        @Nullable TaskProgress progress) {
     public static final int VERSION = 1;
 
     public TaskSnapshot {
@@ -13,10 +19,8 @@ public record TaskSnapshot(int version, RunStatus status, String reason, TaskNod
         }
         Objects.requireNonNull(status, "status не может быть null: по нему читатель решает, продолжать задачу или нет");
         if (status == RunStatus.RUNNING) {
-            Objects.requireNonNull(plan,
-                    "RUNNING-снимок без плана: продолжать нечего, восстановление упрётся в null");
-            Objects.requireNonNull(progress,
-                    "RUNNING-снимок без прогресса: движок не знает, с какого шага продолжать");
+            Objects.requireNonNull(plan, "RUNNING-снимок без плана: продолжать нечего, восстановление упрётся в null");
+            Objects.requireNonNull(progress, "RUNNING-снимок без прогресса: движок не знает, с какого шага продолжать");
         } else if (plan != null || progress != null) {
             throw new IllegalArgumentException("Завершённый снимок (" + status
                     + ") не несёт план и прогресс: восстановление обязано ничего не запускать, а лишние поля "
@@ -26,5 +30,20 @@ public record TaskSnapshot(int version, RunStatus status, String reason, TaskNod
 
     public boolean running() {
         return status == RunStatus.RUNNING;
+    }
+
+    public TaskNode runningPlan() {
+        if (plan == null) {
+            throw new IllegalStateException("Снимок " + status + " без плана: план есть только у RUNNING-снимка");
+        }
+        return plan;
+    }
+
+    public TaskProgress runningProgress() {
+        if (progress == null) {
+            throw new IllegalStateException(
+                    "Снимок " + status + " без прогресса: прогресс есть только у RUNNING-снимка");
+        }
+        return progress;
     }
 }

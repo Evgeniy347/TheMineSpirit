@@ -29,12 +29,14 @@ class DropTableTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("brokenFiles")
     void parse_BrokenFile_ThrowsNamingFileAndProblem(String name, String content, String expectedPart) {
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> DropTable.parse(content, ORIGIN),
                 "Файл «" + name + "» обязан отклоняться при загрузке: тихая подмена таблицы оставила бы "
                         + "дропы без блоков-источников, и acquire не смог бы добыть руду");
 
-        assertTrue(error.getMessage().contains(ORIGIN) && error.getMessage().contains(expectedPart),
+        assertTrue(
+                error.getMessage().contains(ORIGIN) && error.getMessage().contains(expectedPart),
                 "Ошибка файла «" + name + "» называет файл и проблему «" + expectedPart + "». Фактическое: "
                         + error.getMessage());
     }
@@ -43,14 +45,22 @@ class DropTableTests {
     void load_ShippedFile_CoversOverworldOresAndCobblestone() {
         DropTable table = DropTable.load();
 
-        assertEquals(Optional.of(List.of("iron_ore", "deepslate_iron_ore")), table.blocksFor("raw_iron"),
+        assertEquals(
+                Optional.of(List.of("iron_ore", "deepslate_iron_ore")),
+                table.blocksFor("raw_iron"),
                 "Поставляемый drops.json обязан описывать raw_iron через железную и глубинную руду: без этого "
                         + "acquire iron_ingot с нуля не резолвится");
-        assertEquals(Optional.of(List.of("stone")), table.blocksFor("cobblestone"),
+        assertEquals(
+                Optional.of(List.of("stone")),
+                table.blocksFor("cobblestone"),
                 "Поставляемый drops.json обязан описывать cobblestone через камень: булыжник — это ломаный камень");
-        assertEquals(Optional.of(List.of("coal_ore", "deepslate_coal_ore")), table.blocksFor("coal"),
+        assertEquals(
+                Optional.of(List.of("coal_ore", "deepslate_coal_ore")),
+                table.blocksFor("coal"),
                 "Поставляемый drops.json обязан описывать уголь через оба слоя руды");
-        assertEquals(Optional.of(List.of("diamond_ore", "deepslate_diamond_ore")), table.blocksFor("diamond"),
+        assertEquals(
+                Optional.of(List.of("diamond_ore", "deepslate_diamond_ore")),
+                table.blocksFor("diamond"),
                 "Поставляемый drops.json обязан описывать алмаз через оба слоя руды");
     }
 
@@ -58,7 +68,9 @@ class DropTableTests {
     void blocksFor_MinecraftPrefixedDrop_ReturnsSameBlocks() {
         DropTable table = DropTable.parse("{\"raw_iron\": [\"iron_ore\"]}", ORIGIN);
 
-        assertEquals(Optional.of(List.of("iron_ore")), table.blocksFor("minecraft:raw_iron"),
+        assertEquals(
+                Optional.of(List.of("iron_ore")),
+                table.blocksFor("minecraft:raw_iron"),
                 "Полный id предмета обязан находить те же источники, что и короткий: резолвер работает "
                         + "с обоими написаниями");
     }
@@ -67,7 +79,9 @@ class DropTableTests {
     void blocksFor_UnknownDrop_ReturnsEmpty() {
         DropTable table = DropTable.parse("{\"raw_iron\": [\"iron_ore\"]}", ORIGIN);
 
-        assertEquals(Optional.empty(), table.blocksFor("stick"),
+        assertEquals(
+                Optional.empty(),
+                table.blocksFor("stick"),
                 "Неизвестный предмет обязан получить пустой ответ: резолвер тогда честно решит, что способа нет");
     }
 }

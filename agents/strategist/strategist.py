@@ -107,7 +107,7 @@ def build(config: Config, brain, clock=None, client=None, out=print, strict: boo
     config.home.mkdir(parents=True, exist_ok=True)
     policy = load_policy(config.policy_path)
     limits = PlanLimits(max_nodes=config.max_nodes, max_root_steps=config.max_root_steps)
-    prompter = Prompter(APP_DIR, config.repo_root / "docs" / "API.md", policy, limits)
+    prompter = Prompter(APP_DIR, config.repo_root / "docs" / "api" / "plan.md", policy, limits)
     journal = Journal(config.journal_path, clock, config.journal_max_bytes, config.journal_files)
     store = StateStore(config.state_path, clock)
     loaded = store.load(journal)

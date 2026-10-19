@@ -22,8 +22,7 @@ public final class RestPlanGameTests {
     private static final int OVERSIZED_PLAN_STEPS = 300;
     private static final int NODE_LIMIT = 256;
 
-    private RestPlanGameTests() {
-    }
+    private RestPlanGameTests() {}
 
     @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_GoalsWithoutImplementedScriptOrTarget_Rejects422WithReasonAndChopAndFollowAccept202(
@@ -35,27 +34,43 @@ public final class RestPlanGameTests {
         String path = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
         String followerPath = "/v1/bots/" + follower.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(path, goalBody("атакуй зомби", ",\"params\":{\"target\":123}"))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        path, goalBody("атакуй зомби", ",\"params\":{\"target\":123}"))
                 .thenCompose(home -> {
-                    expectInvalidPlan(problems, home, "attack", "цель «атакуй зомби» с target=123: неверный тип параметра attack");
+                    expectInvalidPlan(
+                            problems,
+                            home,
+                            "attack",
+                            "цель «атакуй зомби» с target=123: неверный тип параметра attack");
                     return rest.post(path, goalBody("абракадабра", ""));
-                }).thenCompose(nonsense -> {
+                })
+                .thenCompose(nonsense -> {
                     expectInvalidPlan(problems, nonsense, "абракадабра", "бессмысленная цель");
                     return rest.post(path, goalBody("следуй за мной", ""));
-                }).thenCompose(follow -> {
+                })
+                .thenCompose(follow -> {
                     expectInvalidPlan(problems, follow, "target", "цель «следуй за мной» без params.target");
-                    problems.expect(rest.gateway().taskRegistry().size() == 0,
+                    problems.expect(
+                            rest.gateway().taskRegistry().size() == 0,
                             "Отказанные цели не должны оставлять записей в реестре, записей "
                                     + rest.gateway().taskRegistry().size());
                     return rest.post(path, goalBody("срубить дерево", ""));
-                }).thenCompose(chop -> {
-                    problems.expect(chop.status() == 202,
+                })
+                .thenCompose(chop -> {
+                    problems.expect(
+                            chop.status() == 202,
                             "Цель «срубить дерево» (chop_tree реализован) обязана приниматься (202), получен "
                                     + chop.status() + ": " + chop.body());
-                    return rest.post(followerPath, goalBody("следуй за мной",
-                            ",\"params\":{\"target\":\"" + player.getName().getString() + "\"}"));
-                }).thenApply(accepted -> {
-                    problems.expect(accepted.status() == 202,
+                    return rest.post(
+                            followerPath,
+                            goalBody(
+                                    "следуй за мной",
+                                    ",\"params\":{\"target\":\""
+                                            + player.getName().getString() + "\"}"));
+                })
+                .thenApply(accepted -> {
+                    problems.expect(
+                            accepted.status() == 202,
                             "Цель «следуй за мной» с params.target и игроком обязана приниматься (202), получен "
                                     + accepted.status() + ": " + accepted.body());
                     return problems.found();
@@ -71,46 +86,74 @@ public final class RestPlanGameTests {
         String taskPath = "/v1/bots/" + spirit.getStringUUID() + "/tasks";
         RestFixture.Problems problems = new RestFixture.Problems();
         int hopsBefore = rest.gateway().serverCall().submittedCount();
-        String extraParam = "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":1,\"speed\":9}}";
+        String extraParam =
+                "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":1,\"speed\":9}}";
         CompletableFuture<List<String>> scenario = rest.post(taskPath, planBody(extraParam))
                 .thenCompose(extra -> {
                     expectInvalidPlan(problems, extra, "speed", "план с лишним параметром speed у goto");
                     return rest.post(taskPath, planBody(oversizedPlan()));
-                }).thenCompose(oversized -> {
-                    expectInvalidPlan(problems, oversized, String.valueOf(NODE_LIMIT),
+                })
+                .thenCompose(oversized -> {
+                    expectInvalidPlan(
+                            problems,
+                            oversized,
+                            String.valueOf(NODE_LIMIT),
                             "план из " + OVERSIZED_PLAN_STEPS + " узлов");
-                    return rest.post("/v1/plan", "{\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":"
-                            + "{\"x\":1,\"y\":64,\"z\":1}}}");
-                }).thenCompose(valid -> {
-                    problems.expect(valid.status() == 200 && valid.json().path("valid").asBoolean(),
+                    return rest.post(
+                            "/v1/plan",
+                            "{\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":"
+                                    + "{\"x\":1,\"y\":64,\"z\":1}}}");
+                })
+                .thenCompose(valid -> {
+                    problems.expect(
+                            valid.status() == 200 && valid.json().path("valid").asBoolean(),
                             "POST /v1/plan с валидным планом обязан отвечать 200 {\"valid\":true}: " + valid.status()
                                     + " " + valid.body());
                     return rest.post("/v1/plan", "{\"plan\":" + extraParam + "}");
-                }).thenCompose(invalid -> {
+                })
+                .thenCompose(invalid -> {
                     expectInvalidPlan(problems, invalid, "speed", "POST /v1/plan с лишним параметром");
                     return rest.post("/v1/plan", "{}");
-                }).thenApply(missing -> {
-                    problems.expect(missing.status() == 400
-                            && missing.json().path("error").path("code").asText().equals("invalid_request"),
-                            "POST /v1/plan без поля plan обязан отвечать 400 invalid_request: " + missing.status()
-                                    + " " + missing.body());
+                })
+                .thenApply(missing -> {
+                    problems.expect(
+                            missing.status() == 400
+                                    && "invalid_request"
+                                            .equals(missing.json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()),
+                            "POST /v1/plan без поля plan обязан отвечать 400 invalid_request: " + missing.status() + " "
+                                    + missing.body());
                     int hops = rest.gateway().serverCall().submittedCount() - hopsBefore;
-                    problems.expect(hops == 0,
+                    problems.expect(
+                            hops == 0,
                             "Проверка плана и отказы 422 не обращаются к серверному потоку: лишних переходов " + hops);
-                    problems.expect(rest.gateway().taskRegistry().size() == 0,
-                            "Сухой прогон и отказы не создают задач, записей " + rest.gateway().taskRegistry().size());
+                    problems.expect(
+                            rest.gateway().taskRegistry().size() == 0,
+                            "Сухой прогон и отказы не создают задач, записей "
+                                    + rest.gateway().taskRegistry().size());
                     return problems.found();
                 });
-        RestFixture.await(helper, rest, scenario, () -> helper.assertTrue(spirit.taskStatus().isEmpty(),
-                "Сухой прогон и отказы не должны запускать духа: у него есть задача "
-                        + spirit.taskStatus().orElse(null)));
+        RestFixture.await(
+                helper,
+                rest,
+                scenario,
+                () -> helper.assertTrue(
+                        spirit.taskStatus().isEmpty(),
+                        "Сухой прогон и отказы не должны запускать духа: у него есть задача "
+                                + spirit.taskStatus().orElse(null)));
     }
 
-    private static void expectInvalidPlan(RestFixture.Problems problems, RestFixture.Reply reply, String mention,
-            String scenario) {
-        problems.expect(reply.status() == 422 && reply.json().path("error").path("code").asText().equals("invalid_plan"),
+    private static void expectInvalidPlan(
+            RestFixture.Problems problems, RestFixture.Reply reply, String mention, String scenario) {
+        problems.expect(
+                reply.status() == 422
+                        && "invalid_plan"
+                                .equals(reply.json().path("error").path("code").asText()),
                 scenario + ": ожидался 422 invalid_plan, получено " + reply.status() + " " + reply.body());
-        problems.expect(reply.json().path("error").path("message").asText().contains(mention),
+        problems.expect(
+                reply.json().path("error").path("message").asText().contains(mention),
                 scenario + ": причина обязана называть '" + mention + "', получено " + reply.body());
     }
 

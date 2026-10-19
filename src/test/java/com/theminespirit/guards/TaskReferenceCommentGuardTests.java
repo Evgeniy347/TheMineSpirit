@@ -21,8 +21,11 @@ class TaskReferenceCommentGuardTests {
         List<String> offenders = new ArrayList<>();
         collect(SourceFiles.javaUnder(SourceFiles.MAIN), offenders);
 
-        assertEquals(List.of(), offenders,
-                "Комментарий в production-коде ссылается на чеклист или todo.md (\"// " + "чеклист 11: radius 1..32\"). "
+        assertEquals(
+                List.of(),
+                offenders,
+                "Комментарий в production-коде ссылается на чеклист или todo.md (\"// "
+                        + "чеклист 11: radius 1..32\"). "
                         + "Чеклисты удаляются после приёмки — ссылка протухает, а пересказ числа дублирует константу. "
                         + "Как надо: удалить комментарий; смысл несёт имя константы, причина числа — сообщение теста "
                         + "(docs/CONVENTIONS.md → «Комментарии»). Нарушители (файл:строка)");
@@ -34,7 +37,9 @@ class TaskReferenceCommentGuardTests {
                 + "    int a = 1; /* " + "tasks" + "/12: radius */\n"
                 + "    // см. " + "todo" + ".md\n";
 
-        assertEquals(List.of(1, 2, 3), taskReferenceLines(sample),
+        assertEquals(
+                List.of(1, 2, 3),
+                taskReferenceLines(sample),
                 "Сторож ослеп: ссылка на чеклист, tasks/ и todo.md в комментарии должна находиться");
     }
 
@@ -43,7 +48,9 @@ class TaskReferenceCommentGuardTests {
         String sample = "    String path = \"" + "tasks" + "/12.md\";\n"
                 + "    // Ванильные жилы меньше, крупные медные — около 20 блоков\n";
 
-        assertEquals(List.of(), taskReferenceLines(sample),
+        assertEquals(
+                List.of(),
+                taskReferenceLines(sample),
                 "Сторож ложно срабатывает: строковый литерал и обычный комментарий без ссылки на задачу — не нарушение");
     }
 

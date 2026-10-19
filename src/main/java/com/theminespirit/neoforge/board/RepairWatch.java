@@ -30,8 +30,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
  * и снимается, когда изношенного инструмента больше нет.
  */
 final class RepairWatch {
-    private RepairWatch() {
-    }
+    private RepairWatch() {}
 
     static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -42,9 +41,17 @@ final class RepairWatch {
             Optional<BlockCoord> home = spirit.home();
             Optional<String> item = home.isEmpty() ? Optional.empty() : repairableTool(spirit);
             if (item.isPresent()) {
-                service.submit(new BoardTicket(id, BoardCase.REPAIR_TOOL, Optional.of(spirit.getUUID()),
-                        BoardRules.priorityOf(BoardCase.REPAIR_TOOL), now, 1, BoardTicket.ALWAYS_CAUSE,
-                        List.of(), Map.of()),
+                service.submit(
+                        new BoardTicket(
+                                id,
+                                BoardCase.REPAIR_TOOL,
+                                Optional.of(spirit.getUUID()),
+                                BoardRules.priorityOf(BoardCase.REPAIR_TOOL),
+                                now,
+                                1,
+                                BoardTicket.ALWAYS_CAUSE,
+                                List.of(),
+                                Map.of()),
                         TicketTarget.at(home.orElseThrow()).withCraft(item.orElseThrow(), 0));
                 continue;
             }
@@ -52,7 +59,6 @@ final class RepairWatch {
         }
     }
 
-    /** Наиболее изношенный предмет, который дух может починить имеющимися средствами. */
     private static Optional<String> repairableTool(SpiritEntity spirit) {
         SpiritInventory inventory = spirit.getInventory();
         int percent = RepairData.loadDefault().maxDurabilityPercent();
@@ -71,8 +77,9 @@ final class RepairWatch {
             Optional<String> material = RepairMaterials.materialFor(itemId);
             boolean materialAvailable = material.isPresent() && countMaterial(inventory, material.orElseThrow()) > 0;
             boolean secondAvailable = hasSecondDamaged(inventory, itemId, slot);
-            RepairMethod method = RepairCalculator.chooseMethod(costs, materialAvailable, secondAvailable,
-                    isEnchanted(stack), true);
+            RepairMethod method = RepairCalculator.chooseMethod(
+                    costs,
+                    new RepairCalculator.Availability(materialAvailable, secondAvailable, isEnchanted(stack), true));
             if (method != RepairMethod.NONE) {
                 return Optional.of(itemId);
             }
@@ -100,7 +107,9 @@ final class RepairWatch {
         int total = 0;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty() && materialItem.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString())) {
+            if (!stack.isEmpty()
+                    && materialItem.equals(
+                            BuiltInRegistries.ITEM.getKey(stack.getItem()).toString())) {
                 total += stack.getCount();
             }
         }

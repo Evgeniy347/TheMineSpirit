@@ -1,7 +1,5 @@
 package com.theminespirit.core.husbandry;
 
-import java.util.Objects;
-
 public enum HerdJob {
     BREED,
     FEED,

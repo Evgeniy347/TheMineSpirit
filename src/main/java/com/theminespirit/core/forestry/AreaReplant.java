@@ -10,11 +10,10 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class AreaReplant {
-    private AreaReplant() {
-    }
+    private AreaReplant() {}
 
-    public static List<BlockCoord> plan(BlockCoord center, Collection<BlockCoord> excluded, ReplantData data,
-            TreeView view) {
+    public static List<BlockCoord> plan(
+            BlockCoord center, Collection<BlockCoord> excluded, ReplantData data, TreeView view) {
         Objects.requireNonNull(center, "center не может быть null: сетка досадки отсчитывается от основания дерева");
         Objects.requireNonNull(excluded, "excluded не может быть null: клетки ствола исключаются из досадки");
         Objects.requireNonNull(data, "data не может быть null: шаг, радиус и зазор приходят данными");

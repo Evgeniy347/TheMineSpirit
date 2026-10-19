@@ -4,17 +4,17 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.Terrain;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public final class CellCache {
     public static final int TTL_TICKS = 100;
     public static final int MAX_ENTRIES = 4096;
 
-    private record Entry(Terrain terrain, long readAt) {
-    }
+    private record Entry(Terrain terrain, long readAt) {}
 
     private final Map<BlockCoord, Entry> entries = new HashMap<>();
 
-    public Terrain fresh(BlockCoord coord, long now) {
+    public @Nullable Terrain fresh(BlockCoord coord, long now) {
         Entry entry = entries.get(coord);
         return entry != null && now - entry.readAt() < TTL_TICKS ? entry.terrain() : null;
     }

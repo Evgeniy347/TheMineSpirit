@@ -1,17 +1,16 @@
 package com.theminespirit.core.armor;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class ArmorChoice {
-    private ArmorChoice() {
-    }
+    private ArmorChoice() {}
 
-    public static Map<ArmorSlot, ArmorPiece> decide(List<ArmorPiece> inventory, Map<ArmorSlot, ArmorPiece> worn,
-            ArmorTable table) {
+    public static Map<ArmorSlot, ArmorPiece> decide(
+            List<ArmorPiece> inventory, Map<ArmorSlot, ArmorPiece> worn, ArmorTable table) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: выбор идёт по его содержимому");
         Objects.requireNonNull(worn, "Надетое не может быть null: пустое надевание задаётся пустой картой");
         Objects.requireNonNull(table, "Таблица материалов не может быть null: по ней разрешается ничья");
@@ -27,7 +26,7 @@ public final class ArmorChoice {
         return best;
     }
 
-    public static boolean isStrictlyBetter(ArmorPiece candidate, ArmorPiece worn, ArmorTable table) {
+    public static boolean isStrictlyBetter(ArmorPiece candidate, @Nullable ArmorPiece worn, ArmorTable table) {
         Objects.requireNonNull(candidate, "Кандидат не может быть null: сравнение идёт с надетым предметом");
         Objects.requireNonNull(table, "Таблица материалов не может быть null: по ней разрешается ничья");
         if (worn == null) {
@@ -72,7 +71,8 @@ public final class ArmorChoice {
         return left.item().compareTo(right.item());
     }
 
-    private static ArmorPiece pick(ArmorPiece worn, ArmorPiece candidate, ArmorTable table) {
+    private static @Nullable ArmorPiece pick(
+            @Nullable ArmorPiece worn, @Nullable ArmorPiece candidate, ArmorTable table) {
         if (candidate == null) {
             return worn;
         }
@@ -82,7 +82,7 @@ public final class ArmorChoice {
         return worn;
     }
 
-    private static ArmorPiece bestInSlot(List<ArmorPiece> inventory, ArmorSlot slot, ArmorTable table) {
+    private static @Nullable ArmorPiece bestInSlot(List<ArmorPiece> inventory, ArmorSlot slot, ArmorTable table) {
         ArmorPiece best = null;
         for (ArmorPiece piece : inventory) {
             if (piece == null || piece.slot() != slot) {
@@ -97,15 +97,5 @@ public final class ArmorChoice {
 
     private static boolean isNearlyBroken(ArmorPiece piece, ArmorTable table) {
         return piece.durabilityFraction() < table.wornFraction();
-    }
-
-    public static List<ArmorPiece> inventoryOf(List<ArmorPiece> pieces, ArmorSlot slot) {
-        List<ArmorPiece> result = new ArrayList<>();
-        for (ArmorPiece piece : pieces) {
-            if (piece != null && piece.slot() == slot) {
-                result.add(piece);
-            }
-        }
-        return result;
     }
 }

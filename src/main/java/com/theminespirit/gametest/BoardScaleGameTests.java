@@ -38,12 +38,10 @@ public final class BoardScaleGameTests {
     // [флак] наблюдение 1000 тиков (откат провала 200 + период пересборки 100): запас 2×
     private static final int TIMEOUT_TICKS = 2000;
 
-    private BoardScaleGameTests() {
-    }
+    private BoardScaleGameTests() {}
 
     @GameTest(template = "arena", batch = "board_scale", timeoutTicks = TIMEOUT_TICKS)
-    public static void scale_TwentySpiritsSixTickets_WorkPerThousandTicksStaysWithinLimits(
-            GameTestHelper helper) {
+    public static void scale_TwentySpiritsSixTickets_WorkPerThousandTicksStaysWithinLimits(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         ServerLevel level = helper.getLevel();
@@ -59,8 +57,8 @@ public final class BoardScaleGameTests {
                 homes.add(home);
             }
         }
-        helper.assertTrue(spirits.size() == SPIRITS,
-                "в тесте на масштаб " + SPIRITS + " духов, создано " + spirits.size());
+        helper.assertTrue(
+                spirits.size() == SPIRITS, "в тесте на масштаб " + SPIRITS + " духов, создано " + spirits.size());
         BoardService board = BoardRegistry.get(level);
         int baseRebuilds = board.rebuilds();
         int baseClaims = board.claims();
@@ -68,14 +66,23 @@ public final class BoardScaleGameTests {
         long baseContainers = board.stockContainers();
         for (int ticket = 0; ticket < TICKETS; ticket++) {
             SpiritEntity owner = spirits.get(ticket);
-            board.submit(new BoardTicket("scale_build_" + ticket, BoardCase.BUILD_HOUSE,
-                    Optional.of(owner.getUUID()), 50, level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE,
-                    List.of(), Map.of("dirt", REQUIRED_DIRT)),
+            board.submit(
+                    new BoardTicket(
+                            "scale_build_" + ticket,
+                            BoardCase.BUILD_HOUSE,
+                            Optional.of(owner.getUUID()),
+                            50,
+                            level.getGameTime(),
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of("dirt", REQUIRED_DIRT)),
                     TicketTarget.at(homes.get(ticket)));
         }
         helper.succeedWhen(() -> {
             for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(spirit.tickCount >= OBSERVED_TICKS,
+                helper.assertTrue(
+                        spirit.tickCount >= OBSERVED_TICKS,
                         "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
             }
             int rebuilds = board.rebuilds() - baseRebuilds;
@@ -86,21 +93,26 @@ public final class BoardScaleGameTests {
             long maxReads = (long) BoardTuning.stockBlockBudget() * maxRebuilds;
             long maxContainers = (long) BoardTuning.stockReadBudget() * maxRebuilds;
             long maxClaims = (long) maxRebuilds * SPIRITS * BoardTuning.maxActivePerSpirit();
-            helper.assertTrue(rebuilds > 0 && reads > 0 && claims > 0,
-                    "доска обязана работать, иначе предел ничего не доказывает: пересборок "
-                            + rebuilds + ", чтений " + reads + ", выдач " + claims);
-            helper.assertTrue(rebuilds <= maxRebuilds,
+            helper.assertTrue(
+                    rebuilds > 0 && reads > 0 && claims > 0,
+                    "доска обязана работать, иначе предел ничего не доказывает: пересборок " + rebuilds + ", чтений "
+                            + reads + ", выдач " + claims);
+            helper.assertTrue(
+                    rebuilds <= maxRebuilds,
                     "пересборок за " + OBSERVED_TICKS + " тиков не больше " + maxRebuilds
                             + " (раз в период " + BoardTuning.boardIntervalTicks() + " тиков), было "
                             + rebuilds + ": доска не делает работу каждый тик");
-            helper.assertTrue(reads <= maxReads,
+            helper.assertTrue(
+                    reads <= maxReads,
                     "чтений блоков складом не больше " + maxReads + " (бюджет "
                             + BoardTuning.stockBlockBudget() + " × " + maxRebuilds + " пересборок), было "
                             + reads + ": снимок запасов обязан укладываться в бюджет");
-            helper.assertTrue(containers <= maxContainers,
-                    "прочитанных контейнеров не больше " + maxContainers + " (бюджет "
-                            + BoardTuning.stockReadBudget() + " × " + maxRebuilds + "), было " + containers);
-            helper.assertTrue(claims <= maxClaims,
+            helper.assertTrue(
+                    containers <= maxContainers,
+                    "прочитанных контейнеров не больше " + maxContainers + " (бюджет " + BoardTuning.stockReadBudget()
+                            + " × " + maxRebuilds + "), было " + containers);
+            helper.assertTrue(
+                    claims <= maxClaims,
                     "выдач не больше " + maxClaims + " (свободные духи × пересборки), было " + claims
                             + ": доска не выдаёт задания занятым");
             for (SpiritEntity spirit : spirits) {

@@ -9,19 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * План освещения территории факелами: по карте блочного света выбирает клетки под факелы так, чтобы на земле
  * не осталось тёмных клеток (блочный свет не выше порога спавна враждебных мобов).
  */
 public final class LightPlan {
-    /** Враждебные мобы в 1.21 спавнятся при блочном свете 0: клетка с таким светом считается тёмной. */
     public static final int MOB_SPAWN_LIGHT = 0;
-    /** Факел освещает свою клетку уровнем 14. */
     public static final int TORCH_LIGHT_LEVEL = 14;
-    /** За блок пути факел теряет 1 света: дальше этого расстояния света не остаётся. */
     public static final int TORCH_REACH = TORCH_LIGHT_LEVEL - 1;
-    /** Шаг простой сетки: реже этого клетка между линиями осталась бы вне досягаемости факела. */
     public static final int GRID_STEP = TORCH_REACH / 2;
 
     public record Plan(List<BlockCoord> torches, int darkRemaining, int darkTotal) {
@@ -34,8 +31,7 @@ public final class LightPlan {
         }
     }
 
-    private LightPlan() {
-    }
+    private LightPlan() {}
 
     public static Plan plan(int centerX, int centerZ, int radius, List<LightCell> cells) {
         Objects.requireNonNull(cells, "Карта света не может быть null: по ней ставится план");
@@ -73,7 +69,6 @@ public final class LightPlan {
         return new Plan(torches, uncovered.size(), dark.size());
     }
 
-    /** Простая сетка кандидатов: факел в клетке сетки, а если она занята — в ближайшей размещаемой рядом. */
     public static List<BlockCoord> grid(int centerX, int centerZ, int radius, List<LightCell> cells) {
         Objects.requireNonNull(cells, "Карта света не может быть null: по ней строится сетка");
         checkRadius(radius);
@@ -106,7 +101,7 @@ public final class LightPlan {
         return hit;
     }
 
-    private static LightCell placeableFor(int gx, int gz, Map<Long, LightCell> byColumn) {
+    private static @Nullable LightCell placeableFor(int gx, int gz, Map<Long, LightCell> byColumn) {
         LightCell exact = byColumn.get(key(gx, gz));
         if (exact != null && exact.placeable()) {
             return exact;
@@ -132,7 +127,7 @@ public final class LightPlan {
         return best;
     }
 
-    private static boolean isEarlier(BlockCoord candidate, LightCell current) {
+    private static boolean isEarlier(BlockCoord candidate, @Nullable LightCell current) {
         return current == null || candidate.compareTo(current.coord()) < 0;
     }
 

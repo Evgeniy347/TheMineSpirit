@@ -26,10 +26,13 @@ class VeinWalkerProperties {
 
         Vein vein = VeinWalker.collect(start, view, NO_LIMIT);
 
-        assertEquals(view.component(start), new HashSet<>(vein.blocks()),
+        assertEquals(
+                view.component(start),
+                new HashSet<>(vein.blocks()),
                 "Обход обязан вернуть ровно связную компоненту старта: пропуск или лишний блок искажает жилу "
                         + "и сбивает счёт добытой руды");
-        assertFalse(vein.truncated(),
+        assertFalse(
+                vein.truncated(),
                 "Пока блоков меньше предела, жила не помечается усечённой: иначе адаптер преждевременно ищет новую");
     }
 
@@ -44,7 +47,8 @@ class VeinWalkerProperties {
         Vein vein = VeinWalker.collect(start, view, NO_LIMIT);
         int size = vein.blocks().size();
 
-        assertTrue(view.reads() <= 27 * size + 27,
+        assertTrue(
+                view.reads() <= 27 * size + 27,
                 "Число чтений OreView обязано быть линейным по размеру жилы (27 × размер + 27): иначе обход "
                         + "большой жилы многократно перечитывает клетки и кладёт серверный тик. Чтений: "
                         + view.reads() + ", блоков: " + size);

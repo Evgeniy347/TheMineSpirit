@@ -9,8 +9,7 @@ import java.util.Objects;
  * Не хватает — задание висит в очереди, а наблюдателю видно, чего и сколько не хватает.
  */
 public final class ResourceGate {
-    private ResourceGate() {
-    }
+    private ResourceGate() {}
 
     public static GateOutcome gate(StockNeed need, StockView stock) {
         return missing(need, stock).isEmpty() ? GateOutcome.READY : GateOutcome.WAITING;

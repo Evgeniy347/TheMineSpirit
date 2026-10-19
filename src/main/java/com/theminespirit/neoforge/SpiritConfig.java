@@ -18,34 +18,36 @@ public final class SpiritConfig {
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("spirit");
-        CHUNK_LOADING_RADIUS = builder
-                .comment("Радиус квадрата принудительно загружаемых чанков вокруг духа, в чанках.",
+        CHUNK_LOADING_RADIUS = builder.comment(
+                        "Радиус квадрата принудительно загружаемых чанков вокруг духа, в чанках.",
                         "-1 — как simulation distance сервера: дух держит столько же, сколько игрок.")
-                .defineInRange("chunkLoadingRadius", AUTO_CHUNK_LOADING_RADIUS, AUTO_CHUNK_LOADING_RADIUS,
+                .defineInRange(
+                        "chunkLoadingRadius",
+                        AUTO_CHUNK_LOADING_RADIUS,
+                        AUTO_CHUNK_LOADING_RADIUS,
                         MAX_CHUNK_LOADING_RADIUS);
-        MOBS_TARGET_SPIRITS = builder
-                .comment("Добавлять враждебным мобам цель «дух», чтобы они сами нападали на духов.",
+        MOBS_TARGET_SPIRITS = builder.comment(
+                        "Добавлять враждебным мобам цель «дух», чтобы они сами нападали на духов.",
                         "false — мобы смотрят только на игроков, как в ванили.")
                 .define("mobsTargetSpirits", true);
-        COORDINATOR_ENABLED = builder
-                .comment("Координатор поселений раздаёт духам с общим домом оборону, помощь и работы.",
+        COORDINATOR_ENABLED = builder.comment(
+                        "Координатор поселений раздаёт духам с общим домом оборону, помощь и работы.",
                         "false — аварийный рубильник: координатор не тикает, духи живут без его приказов.")
                 .define("coordinatorEnabled", true);
-        BOARD_ENABLED = builder
-                .comment("Доска заданий поселения ставит задачи от событий мира и стратега, выдаёт их "
-                        + "свободным духам через гейт по ресурсам.",
+        BOARD_ENABLED = builder.comment(
+                        "Доска заданий поселения ставит задачи от событий мира и стратега, выдаёт их "
+                                + "свободным духам через гейт по ресурсам.",
                         "false — аварийный рубильник: доска не тикает, задания не ставятся и не выдаются.")
                 .define("boardEnabled", true);
-        CRATER_HOME_RADIUS = builder
-                .comment("Радиус вокруг дома духа, в котором взрыв крипера запоминается как воронка поселения.",
+        CRATER_HOME_RADIUS = builder.comment(
+                        "Радиус вокруг дома духа, в котором взрыв крипера запоминается как воронка поселения.",
                         "Вне радиуса взрывы не запоминаются: дух заделывает только воронки своего поселения.")
                 .defineInRange("craterHomeRadius", 64, 1, 512);
         builder.pop();
         SPEC = builder.build();
     }
 
-    private SpiritConfig() {
-    }
+    private SpiritConfig() {}
 
     public static ModConfigSpec spec() {
         return SPEC;
@@ -55,24 +57,12 @@ public final class SpiritConfig {
         return MOBS_TARGET_SPIRITS.get();
     }
 
-    public static void setMobsTargetSpirits(boolean value) {
-        MOBS_TARGET_SPIRITS.set(value);
-    }
-
     public static boolean coordinatorEnabled() {
         return COORDINATOR_ENABLED.get();
     }
 
-    public static void setCoordinatorEnabled(boolean value) {
-        COORDINATOR_ENABLED.set(value);
-    }
-
     public static boolean boardEnabled() {
         return BOARD_ENABLED.get();
-    }
-
-    public static void setBoardEnabled(boolean value) {
-        BOARD_ENABLED.set(value);
     }
 
     public static int craterHomeRadius() {

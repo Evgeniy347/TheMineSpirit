@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record DescentWidenPlan(
         BlockCoord entry,
@@ -29,8 +30,9 @@ public record DescentWidenPlan(
             throw new IllegalArgumentException("Высота расширения " + height + " меньше единицы: расширять нечем");
         }
         if (targetY < DescentPlan.WORLD_MIN_Y || targetY > DescentPlan.WORLD_MAX_Y) {
-            throw new IllegalArgumentException("Целевой этаж " + targetY + " вне мира [" + DescentPlan.WORLD_MIN_Y + ", "
-                    + DescentPlan.WORLD_MAX_Y + "]: под дном мира копать некуда, а выше потолка сверлиться некуда");
+            throw new IllegalArgumentException(
+                    "Целевой этаж " + targetY + " вне мира [" + DescentPlan.WORLD_MIN_Y + ", " + DescentPlan.WORLD_MAX_Y
+                            + "]: под дном мира копать некуда, а выше потолка сверлиться некуда");
         }
         steps = List.copyOf(steps);
         if (stop == DescentStop.DANGER && dangerReason.isBlank()) {
@@ -68,28 +70,35 @@ public record DescentWidenPlan(
                     cells.add(new BlockCoord(columnX, base.floor() + above, columnZ));
                 }
             }
-            String danger = widenDangerAt(view, base, width, height, sideX, sideZ, cells);
+            String danger = widenDangerAt(view, base, width, sideX, sideZ, cells);
             if (danger != null) {
                 dangerReason = danger;
                 break;
             }
-            steps.add(new DescentWidenStep(base.index(), base.floor(), width, height, base.stand(),
-                    List.copyOf(cells)));
+            steps.add(
+                    new DescentWidenStep(base.index(), base.floor(), width, height, base.stand(), List.copyOf(cells)));
         }
         if (dangerReason == null && level1.stop() == DescentStop.DANGER) {
             dangerReason = level1.dangerReason();
         }
         DescentStop stop = dangerReason == null ? DescentStop.TARGET_Y : DescentStop.DANGER;
-        return new DescentWidenPlan(level1.entry(), direction, level1.targetY(), width, height, steps, stop,
+        return new DescentWidenPlan(
+                level1.entry(),
+                direction,
+                level1.targetY(),
+                width,
+                height,
+                steps,
+                stop,
                 dangerReason == null ? "" : dangerReason);
     }
 
-    private static String widenDangerAt(SafetyView view, DescentStep base, int width, int height, int sideX,
-            int sideZ, List<BlockCoord> cells) {
+    private static @Nullable String widenDangerAt(
+            SafetyView view, DescentStep base, int width, int sideX, int sideZ, List<BlockCoord> cells) {
         int half = width / 2;
         for (int lane = -half; lane <= half; lane++) {
-            BlockCoord floor = new BlockCoord(base.stand().x() + sideX * lane, base.floor(),
-                    base.stand().z() + sideZ * lane);
+            BlockCoord floor = new BlockCoord(
+                    base.stand().x() + sideX * lane, base.floor(), base.stand().z() + sideZ * lane);
             String reason = DescentDanger.solidFloor(view, floor, "пол", base.index());
             if (reason != null) {
                 return reason;

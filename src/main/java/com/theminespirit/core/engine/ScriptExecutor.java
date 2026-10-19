@@ -4,12 +4,13 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class ScriptExecutor extends NodeExecutor {
     private final String scriptId;
     private final Map<String, Object> params;
     private final ScriptRegistry registry;
-    private ScriptInstance instance;
+    private @Nullable ScriptInstance instance;
     private boolean failed;
     private Optional<ScriptResult> collectedResult = Optional.empty();
 
@@ -34,9 +35,10 @@ final class ScriptExecutor extends NodeExecutor {
             if (result == ScriptStatus.FAILED) {
                 failed = true;
                 String scriptReason = live.failureReason();
-                fail(scriptReason == null || scriptReason.isBlank()
-                        ? "скрипт '" + scriptId + "' завершился с ошибкой"
-                        : scriptReason);
+                fail(
+                        scriptReason == null || scriptReason.isBlank()
+                                ? "скрипт '" + scriptId + "' завершился с ошибкой"
+                                : scriptReason);
             }
             return result;
         } catch (UnknownScriptException error) {
@@ -66,12 +68,14 @@ final class ScriptExecutor extends NodeExecutor {
     }
 
     private ScriptInstance createInstance() {
-        ScriptFactory factory = registry.find(scriptId).orElseThrow(() -> new UnknownScriptException(
-                "Неизвестный скрипт '" + scriptId + "': он не зарегистрирован в реестре исполнения"));
+        ScriptFactory factory = registry.find(scriptId)
+                .orElseThrow(() -> new UnknownScriptException(
+                        "Неизвестный скрипт '" + scriptId + "': он не зарегистрирован в реестре исполнения"));
         return factory.create(params);
     }
 
     @Override
+    @Nullable
     String currentScript() {
         return instance == null && !failed ? null : scriptId;
     }

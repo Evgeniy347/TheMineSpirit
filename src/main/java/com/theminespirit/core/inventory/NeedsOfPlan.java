@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class NeedsOfPlan {
     public static final int MAX_DEPTH = 8;
@@ -23,22 +24,21 @@ public final class NeedsOfPlan {
     private static final String ITEM_PARAM = "item";
     private static final String BLOCK_PARAM = "block";
 
-    private NeedsOfPlan() {
-    }
+    private NeedsOfPlan() {}
 
     public static List<String> collect(TaskNode plan, ResourceKnowledge knowledge) {
         Objects.requireNonNull(plan, "План не может быть null: нужное считают по шагам плана");
-        Objects.requireNonNull(knowledge, "Знания о рецептах не могут быть null: "
-                + "без них не раскрыть ингредиенты предстоящего крафта");
+        Objects.requireNonNull(
+                knowledge,
+                "Знания о рецептах не могут быть null: " + "без них не раскрыть ингредиенты предстоящего крафта");
         List<String> needs = new ArrayList<>();
         collectFrom(plan, knowledge, new HashSet<>(), needs);
         return needs;
     }
 
-    private static void collectFrom(TaskNode node, ResourceKnowledge knowledge, Set<String> path,
-            List<String> needs) {
+    private static void collectFrom(TaskNode node, ResourceKnowledge knowledge, Set<String> path, List<String> needs) {
         switch (node) {
-            case ScriptCall call -> collectFromScript(call, knowledge, path, needs);
+            case ScriptCall call -> collectFromScript(call, knowledge, needs);
             case SequenceNode sequence -> collectFromSteps(sequence.steps(), knowledge, path, needs);
             case FallbackNode fallback -> collectFromSteps(fallback.steps(), knowledge, path, needs);
             case ParallelNode parallel -> collectFromSteps(parallel.steps(), knowledge, path, needs);
@@ -52,15 +52,14 @@ public final class NeedsOfPlan {
         }
     }
 
-    private static void collectFromSteps(List<TaskNode> steps, ResourceKnowledge knowledge, Set<String> path,
-            List<String> needs) {
+    private static void collectFromSteps(
+            List<TaskNode> steps, ResourceKnowledge knowledge, Set<String> path, List<String> needs) {
         for (TaskNode step : steps) {
             collectFrom(step, knowledge, path, needs);
         }
     }
 
-    private static void collectFromScript(ScriptCall call, ResourceKnowledge knowledge, Set<String> path,
-            List<String> needs) {
+    private static void collectFromScript(ScriptCall call, ResourceKnowledge knowledge, List<String> needs) {
         if (ITEM_SCRIPTS.contains(call.script())) {
             String item = text(call, ITEM_PARAM);
             if (item != null) {
@@ -76,8 +75,8 @@ public final class NeedsOfPlan {
         }
     }
 
-    private static void collectWithIngredients(String item, ResourceKnowledge knowledge, int depth,
-            Set<String> path, List<String> needs) {
+    private static void collectWithIngredients(
+            String item, ResourceKnowledge knowledge, int depth, Set<String> path, List<String> needs) {
         if (depth > MAX_DEPTH || !path.add(item)) {
             return;
         }
@@ -88,7 +87,7 @@ public final class NeedsOfPlan {
         path.remove(item);
     }
 
-    private static String text(ScriptCall call, String name) {
+    private static @Nullable String text(ScriptCall call, String name) {
         Object value = call.params().get(name);
         return value instanceof String text ? text : null;
     }

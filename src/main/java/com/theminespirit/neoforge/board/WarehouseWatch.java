@@ -26,8 +26,7 @@ import net.minecraft.server.level.ServerLevel;
  * уровня — правило {@link WarehouseRules}; последний уровень не ограничен.
  */
 public final class WarehouseWatch {
-    private WarehouseWatch() {
-    }
+    private WarehouseWatch() {}
 
     public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -47,9 +46,17 @@ public final class WarehouseWatch {
         if (service.board().find(id).isPresent() || active(service, id)) {
             return;
         }
-        service.submit(new BoardTicket(id, BoardCase.BUILD_WAREHOUSE, Optional.empty(),
-                BoardPriorities.effective(BoardCase.BUILD_WAREHOUSE, PriorityContext.none()), now, next,
-                BoardTicket.ALWAYS_CAUSE, List.of(), materials(WarehouseRules.scheme(next))),
+        service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.BUILD_WAREHOUSE,
+                        Optional.empty(),
+                        BoardPriorities.effective(BoardCase.BUILD_WAREHOUSE, PriorityContext.none()),
+                        now,
+                        next,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        materials(WarehouseRules.scheme(next))),
                 TicketTarget.at(WarehouseRules.site(home, next)));
     }
 
@@ -63,9 +70,17 @@ public final class WarehouseWatch {
             if (service.board().find(id).isPresent() || active(service, id)) {
                 continue;
             }
-            service.submit(new BoardTicket(id, BoardCase.RELOCATE_BUILDING, Optional.empty(),
-                    BoardPriorities.effective(BoardCase.RELOCATE_BUILDING, PriorityContext.none()), now, 1,
-                    "warehouse:level:" + old, List.of(), Map.of()),
+            service.submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.RELOCATE_BUILDING,
+                            Optional.empty(),
+                            BoardPriorities.effective(BoardCase.RELOCATE_BUILDING, PriorityContext.none()),
+                            now,
+                            1,
+                            "warehouse:level:" + old,
+                            List.of(),
+                            Map.of()),
                     TicketTarget.at(WarehouseRules.site(home, highest))
                             .withRelocate(WarehouseRules.site(home, old), WarehouseRules.site(home, highest))
                             .withScheme(WarehouseRules.scheme(highest)));
@@ -97,7 +112,8 @@ public final class WarehouseWatch {
 
     private static boolean active(BoardService service, String id) {
         BoardStatus status = service.board().statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
     }
 
@@ -107,8 +123,7 @@ public final class WarehouseWatch {
             return Map.of();
         }
         Map<String, Integer> materials = new LinkedHashMap<>();
-        preset.orElseThrow().materials().forEach((item, count) ->
-                materials.merge(shortId(item), count, Integer::sum));
+        preset.orElseThrow().materials().forEach((item, count) -> materials.merge(shortId(item), count, Integer::sum));
         return Map.copyOf(materials);
     }
 

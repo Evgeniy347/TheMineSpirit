@@ -4,8 +4,8 @@ import com.theminespirit.core.coordinator.WorkKind;
 import java.util.Map;
 import java.util.Optional;
 
-public record ActivityIntent(ActivityId id, Optional<String> script, Map<String, Object> params,
-        Optional<WorkKind> workKind) {
+public record ActivityIntent(
+        ActivityId id, Optional<String> script, Map<String, Object> params, Optional<WorkKind> workKind) {
     public ActivityIntent {
         if (id == null) {
             throw new IllegalArgumentException("Намерение без деятельности не исполнить: id входит в план духа");

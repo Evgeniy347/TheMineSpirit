@@ -106,15 +106,16 @@ public final class BridgeScript implements ScriptInstance {
         if (cells == null) {
             return Optional.of(new ScriptResult.Text("переправа по сплошному полу: мост не потребовался"));
         }
-        return Optional.of(new ScriptResult.Text("мост длиной " + cells.size() + " поставлен, израсходовано "
-                + used + " блоков"));
+        return Optional.of(
+                new ScriptResult.Text("мост длиной " + cells.size() + " поставлен, израсходовано " + used + " блоков"));
     }
 
     private boolean initialize() {
         BlockPos feet = spirit.blockPosition();
         int dx = target.x() - feet.getX();
         int dz = target.z() - feet.getZ();
-        step = Math.abs(dx) >= Math.abs(dz) ? new BlockCoord(Integer.signum(dx), 0, 0)
+        step = Math.abs(dx) >= Math.abs(dz)
+                ? new BlockCoord(Integer.signum(dx), 0, 0)
                 : new BlockCoord(0, 0, Integer.signum(dz));
         BlockCoord base = new BlockCoord(feet.getX(), feet.getY() - 1, feet.getZ());
         int span = Math.max(Math.abs(dx), Math.abs(dz));
@@ -131,8 +132,10 @@ public final class BridgeScript implements ScriptInstance {
             cells.add(cell);
             cell = new BlockCoord(cell.x() + step.x(), cell.y(), cell.z() + step.z());
         }
-        String resolved = requestedBlock != null ? requestedBlock
-                : WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit)).orElse(null);
+        String resolved = requestedBlock != null
+                ? requestedBlock
+                : WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit))
+                        .orElse(null);
         if (resolved == null) {
             fail("нет материала для моста: нужны земля, булыжник или доски, есть 0");
             return false;
@@ -140,8 +143,7 @@ public final class BridgeScript implements ScriptInstance {
         blockId = resolved;
         wanted = BlockStates.stateFor(blockId);
         if (CheapBlocks.count(spirit, blockId) < length) {
-            fail("нет материала '" + blockId + "': нужно " + length + ", есть "
-                    + CheapBlocks.count(spirit, blockId));
+            fail("нет материала '" + blockId + "': нужно " + length + ", есть " + CheapBlocks.count(spirit, blockId));
             return false;
         }
         initialized = true;
@@ -149,7 +151,8 @@ public final class BridgeScript implements ScriptInstance {
     }
 
     private void beginFinalWalk() {
-        approach.begin(Vec3.atBottomCenterOf(new BlockPos(target.x(), target.y(), target.z())),
+        approach.begin(
+                Vec3.atBottomCenterOf(new BlockPos(target.x(), target.y(), target.z())),
                 CatalogLimits.NAV_ARRIVAL_TOLERANCE);
     }
 
@@ -224,10 +227,12 @@ public final class BridgeScript implements ScriptInstance {
                 yield outcome;
             }
             case MOVING -> ScriptStatus.RUNNING;
-            case TIMEOUT -> fail("не перешёл мост к (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
-                    + ") за " + approach.timeoutTicks() + " тиков");
-            case STUCK -> fail("не перешёл мост к (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
-                    + "): путь перекрыт");
+            case TIMEOUT ->
+                fail("не перешёл мост к (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z() + ") за "
+                        + approach.timeoutTicks() + " тиков");
+            case STUCK ->
+                fail("не перешёл мост к (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
+                        + "): путь перекрыт");
         };
     }
 

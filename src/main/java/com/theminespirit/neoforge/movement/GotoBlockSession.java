@@ -56,8 +56,8 @@ public final class GotoBlockSession {
         this.block = block;
         this.radius = radius;
         this.count = count;
-        this.search = BlockLocator.search(spirit.level(), spirit.blockPosition(), radius,
-                BlockSets.resolve(IdFilter.of(List.of(block))));
+        this.search = BlockLocator.search(
+                spirit.level(), spirit.blockPosition(), radius, BlockSets.resolve(IdFilter.of(List.of(block))));
         this.approach = new Approach(spirit);
     }
 
@@ -95,10 +95,6 @@ public final class GotoBlockSession {
         return search.maxSlicesPerTick();
     }
 
-    public int foundBlocks() {
-        return found.size();
-    }
-
     private void find() {
         for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {
             slices++;
@@ -120,7 +116,9 @@ public final class GotoBlockSession {
                         .thenComparing(Comparator.naturalOrder()))
                 .limit(count)
                 .toList();
-        goal = new GoalComposite(ordered.stream().<Goal>map(candidate -> new GoalNear(candidate, NEAR_RADIUS)).toList());
+        goal = new GoalComposite(ordered.stream()
+                .<Goal>map(candidate -> new GoalNear(candidate, NEAR_RADIUS))
+                .toList());
         state = State.WALK;
     }
 
@@ -133,8 +131,7 @@ public final class GotoBlockSession {
             return;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
                 if (reachedAny()) {
                     succeed();
@@ -161,8 +158,8 @@ public final class GotoBlockSession {
             current = candidate;
             return true;
         }
-        fail("к блокам вида " + block + " не подойти: ближайших взято " + ordered.size()
-                + ", отказано зоной: " + refused + ", не дошёл: " + notReached);
+        fail("к блокам вида " + block + " не подойти: ближайших взято " + ordered.size() + ", отказано зоной: "
+                + refused + ", не дошёл: " + notReached);
         return false;
     }
 

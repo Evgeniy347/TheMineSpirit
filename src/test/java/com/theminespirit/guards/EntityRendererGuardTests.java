@@ -23,7 +23,9 @@ class EntityRendererGuardTests {
     void modEntityType_WithoutClientRenderer_IsReported() {
         Map<Path, String> sources = SourceFiles.javaUnder(SourceFiles.MAIN);
 
-        assertEquals(List.of(), missingRenderers(entityTypes(sources.values()), renderers(sources.values())),
+        assertEquals(
+                List.of(),
+                missingRenderers(entityTypes(sources.values()), renderers(sources.values())),
                 "Тип сущности мода зарегистрирован (ModEntities), но клиенту не дан EntityRenderer: "
                         + "EntityRenderDispatcher.shouldRender берёт рендерер по типу и падает NPE, как только "
                         + "такая сущность попадает в дальность прорисовки — клиент игрока вылетает "
@@ -34,13 +36,17 @@ class EntityRendererGuardTests {
     @Test
     void rendererRegistration_OutsideClientOnlySubscriber_IsReported() {
         List<String> offenders = new ArrayList<>();
-        for (Map.Entry<Path, String> source : SourceFiles.javaUnder(SourceFiles.MAIN).entrySet()) {
-            if (!renderers(List.of(source.getValue())).isEmpty() && !source.getValue().contains(CLIENT_ONLY_SUBSCRIBER)) {
+        for (Map.Entry<Path, String> source :
+                SourceFiles.javaUnder(SourceFiles.MAIN).entrySet()) {
+            if (!renderers(List.of(source.getValue())).isEmpty()
+                    && !source.getValue().contains(CLIENT_ONLY_SUBSCRIBER)) {
                 offenders.add(source.getKey().toString());
             }
         }
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Регистрация EntityRenderer живёт только в подписчике @EventBusSubscriber(value = Dist.CLIENT): "
                         + "классы net.minecraft.client на выделенном сервере отсутствуют, и сервер упадёт при загрузке "
                         + "такого класса. Перенесите регистрацию в SpiritClientRenderers. Нарушители");
@@ -51,7 +57,9 @@ class EntityRendererGuardTests {
         String source = "public static final DeferredHolder<EntityType<?>, EntityType<SpiritEntity>> SPIRIT =\n"
                 + "        REGISTRY.register(\"spirit\", () -> null);";
 
-        assertEquals(Set.of("SPIRIT"), entityTypes(List.of(source)),
+        assertEquals(
+                Set.of("SPIRIT"),
+                entityTypes(List.of(source)),
                 "Сторож ослеп: поле DeferredHolder<EntityType<?>, EntityType<…>> обязано находиться как тип сущности");
     }
 
@@ -59,13 +67,17 @@ class EntityRendererGuardTests {
     void renderers_RegisterEntityRendererCall_IsFound() {
         String source = "event.registerEntityRenderer(ModEntities.SPIRIT.get(), SpiritRenderer::new);";
 
-        assertEquals(Set.of("SPIRIT"), renderers(List.of(source)),
+        assertEquals(
+                Set.of("SPIRIT"),
+                renderers(List.of(source)),
                 "Сторож ослеп: вызов registerEntityRenderer(ModEntities.X.get(), …) обязан находиться как рендерер X");
     }
 
     @Test
     void missingRenderers_TypeWithoutRenderer_IsReported() {
-        assertEquals(List.of("GOLEM"), missingRenderers(Set.of("SPIRIT", "GOLEM"), Set.of("SPIRIT")),
+        assertEquals(
+                List.of("GOLEM"),
+                missingRenderers(Set.of("SPIRIT", "GOLEM"), Set.of("SPIRIT")),
                 "Сторож ослеп: тип сущности без зарегистрированного рендерера обязан попасть в отчёт");
     }
 

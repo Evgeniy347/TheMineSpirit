@@ -15,26 +15,29 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 
 final class SpiritDecisionsCommand {
-    private SpiritDecisionsCommand() {
-    }
+    private SpiritDecisionsCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("decisions")
-                .then(argument("spirits", EntityArgument.entities())
-                        .executes(SpiritDecisionsCommand::decisions)));
+                .then(argument("spirits", EntityArgument.entities()).executes(SpiritDecisionsCommand::decisions)));
     }
 
     private static int decisions(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Журнал решений некому показать: среди выбранных сущностей нет духа"));
+            context.getSource()
+                    .sendFailure(
+                            Component.literal("Журнал решений некому показать: среди выбранных сущностей нет духа"));
             return 0;
         }
         for (SpiritEntity spirit : spirits) {
             List<DecisionRecord> records = spirit.tactics().decisions(TacticsService.DECISIONS_IN_CHAT);
             if (records.isEmpty()) {
-                context.getSource().sendSuccess(() -> Component.literal("Дух " + spirit.displayName()
-                        + " ещё не менял решение: записей в журнале нет"), false);
+                context.getSource()
+                        .sendSuccess(
+                                () -> Component.literal(
+                                        "Дух " + spirit.displayName() + " ещё не менял решение: записей в журнале нет"),
+                                false);
                 continue;
             }
             for (DecisionRecord record : records) {

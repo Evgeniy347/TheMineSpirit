@@ -23,7 +23,9 @@ class RecipeIndexTests {
         RecipeSpec second = craft("stick_b", "stick");
         RecipeIndex index = RecipeIndex.of(List.of(first, craft("other", "bowl"), second));
 
-        assertEquals(List.of(first, second), index.craftsFor("stick"),
+        assertEquals(
+                List.of(first, second),
+                index.craftsFor("stick"),
                 "Индекс обязан отдавать все рецепты предмета: выбор лучшего делает RecipeChooser, и без второго "
                         + "рецепта палки из бамбука недоступны");
     }
@@ -32,7 +34,9 @@ class RecipeIndexTests {
     void craftsFor_UnknownItem_ReturnsEmpty() {
         RecipeIndex index = RecipeIndex.of(List.of(craft("stick", "stick")));
 
-        assertEquals(List.of(), index.craftsFor("bowl"),
+        assertEquals(
+                List.of(),
+                index.craftsFor("bowl"),
                 "Для предмета без рецептов индекс обязан вернуть пустой список, а не null: резолвер сверяет по нему "
                         + "isCraftable");
     }
@@ -44,9 +48,13 @@ class RecipeIndexTests {
         RecipeSpec craftRecipe = craft("iron_block_craft", "iron_ingot");
         RecipeIndex index = RecipeIndex.of(List.of(smelt, craftRecipe, otherSmelt));
 
-        assertEquals(List.of(smelt, otherSmelt), index.smeltingFor("iron_ingot"),
+        assertEquals(
+                List.of(smelt, otherSmelt),
+                index.smeltingFor("iron_ingot"),
                 "Рецепты плавки обязаны лежать отдельно от крафта: иначе слиток 'крафтится' и резолвер не идёт в печь");
-        assertEquals(List.of(craftRecipe), index.craftsFor("iron_ingot"),
+        assertEquals(
+                List.of(craftRecipe),
+                index.craftsFor("iron_ingot"),
                 "Крафт предмета не должен смешиваться с рецептами плавки");
     }
 
@@ -54,7 +62,8 @@ class RecipeIndexTests {
     void build_ManyRecipes_VisitsEachRecipeOnce() {
         RecipeIndex index = RecipeIndex.of(synthetic());
 
-        assertTrue(index.buildSteps() <= MAX_BUILD_STEPS,
+        assertTrue(
+                index.buildSteps() <= MAX_BUILD_STEPS,
                 "Построение индекса обязано быть линейным: не больше " + MAX_BUILD_STEPS + " шагов на " + RECIPES
                         + " рецептов, фактически " + index.buildSteps() + ". Квадратичное построение на 1–2 тысячах "
                         + "рецептов игры стоит секунд при каждой перезагрузке датапаков");
@@ -68,7 +77,8 @@ class RecipeIndexTests {
             index.craftsFor("item_" + (i * 7 % RECIPES));
         }
 
-        assertTrue(index.lookupProbes() <= LOOKUPS * MAX_PROBES_PER_LOOKUP,
+        assertTrue(
+                index.lookupProbes() <= LOOKUPS * MAX_PROBES_PER_LOOKUP,
                 "Поиск рецепта обязан быть O(1): не больше " + MAX_PROBES_PER_LOOKUP + " обращения к карте на запрос, "
                         + "фактически " + index.lookupProbes() + " на " + LOOKUPS + " запросов. Перебор списка "
                         + "рецептов на каждый запрос резолвера съест тик");

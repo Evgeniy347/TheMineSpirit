@@ -16,8 +16,6 @@ public record StepOverParams(int dx, int dz) {
 
     public static StepOverParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new StepOverParams(
-                ScriptArgs.requireInt(params, "dx"),
-                ScriptArgs.requireInt(params, "dz"));
+        return new StepOverParams(ScriptArgs.requireInt(params, "dx"), ScriptArgs.requireInt(params, "dz"));
     }
 }

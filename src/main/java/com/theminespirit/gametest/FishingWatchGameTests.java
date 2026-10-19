@@ -38,8 +38,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class FishingWatchGameTests {
     private static final String BATCH = "fishing_watch";
 
-    private FishingWatchGameTests() {
-    }
+    private FishingWatchGameTests() {}
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
     public static void fishingWatch_FishAtThreshold_PostsSmokerCraft(GameTestHelper helper) {
@@ -52,17 +51,24 @@ public final class FishingWatchGameTests {
         BoardService service = isolatedBoard(level, sources, "gametest-fishing-watch.jsonl");
         long now = level.getGameTime();
 
-        sources.tick(level, service, List.of(spirit),
-                new StockView(Map.of("cod", 16, "furnace", 1, "oak_planks", 4)), now);
-        helper.assertTrue(service.board().statusOf("fish:smoker").isPresent(),
+        sources.tick(
+                level, service, List.of(spirit), new StockView(Map.of("cod", 16, "furnace", 1, "oak_planks", 4)), now);
+        helper.assertTrue(
+                service.board().statusOf("fish:smoker").isPresent(),
                 "С 16 трески на складе доска обязана заказать коптильню, статус "
                         + service.board().statusOf("fish:smoker"));
 
-        sources.tick(level, service, List.of(spirit),
-                new StockView(Map.of("cod", 4, "furnace", 1, "oak_planks", 4)), now + 1);
-        helper.assertTrue(service.board().statusOf("fish:smoker").isEmpty()
+        sources.tick(
+                level,
+                service,
+                List.of(spirit),
+                new StockView(Map.of("cod", 4, "furnace", 1, "oak_planks", 4)),
+                now + 1);
+        helper.assertTrue(
+                service.board().statusOf("fish:smoker").isEmpty()
                         || service.board().statusOf("fish:smoker").orElseThrow() == BoardStatus.CANCELLED,
-                "Ниже порога коптильня с доски снимается, статус " + service.board().statusOf("fish:smoker"));
+                "Ниже порога коптильня с доски снимается, статус "
+                        + service.board().statusOf("fish:smoker"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -78,9 +84,9 @@ public final class FishingWatchGameTests {
         BoardSources sources = BoardSources.create();
         BoardService service = isolatedBoard(level, sources, "gametest-fishing-work.jsonl");
 
-        sources.tick(level, service, List.of(spirit),
-                new StockView(Map.of("furnace", 1)), level.getGameTime());
-        helper.assertTrue(service.board().statusOf("fish:work").isPresent(),
+        sources.tick(level, service, List.of(spirit), new StockView(Map.of("furnace", 1)), level.getGameTime());
+        helper.assertTrue(
+                service.board().statusOf("fish:work").isPresent(),
                 "Без еды у открытой воды доска обязана заказать рыбалку, статус "
                         + service.board().statusOf("fish:work"));
         GameTestFixtures.finish(helper);
@@ -110,8 +116,11 @@ public final class FishingWatchGameTests {
             throw new UncheckedIOException(error);
         }
         JournalService journal = new JournalService(journalPath);
-        return new BoardService(board, new HerdCycles(board),
+        return new BoardService(
+                board,
+                new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
-                sources, journal);
+                sources,
+                journal);
     }
 }

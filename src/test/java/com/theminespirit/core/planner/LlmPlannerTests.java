@@ -27,17 +27,25 @@ class LlmPlannerTests {
 
         PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(new ScriptCall("wait", Map.of("ticks", 5)), result.plan(),
+        assertEquals(
+                new ScriptCall("wait", Map.of("ticks", 5)),
+                result.plan(),
                 "Валидный JSON-план от клиента обязан исполняться, а не заменяться шаблоном: иначе качество "
                         + "решения ИИ выбрасывается и дух всегда делает одно и то же");
-        assertEquals(PlanSource.LLM, result.source(),
+        assertEquals(
+                PlanSource.LLM,
+                result.source(),
                 "План от ИИ обязан помечаться источником 'llm': иначе не отличить решение ИИ от шаблона");
-        assertTrue(result.fallbackReason().isEmpty(),
+        assertTrue(
+                result.fallbackReason().isEmpty(),
                 "Успешный план ИИ не несёт причины fallback: причина появляется только при сбое");
-        assertTrue(fallback.isEmpty(),
+        assertTrue(
+                fallback.isEmpty(),
                 "Валидный план не должен передаваться в fallback: вызов запасного планировщика при рабочем "
                         + "ответе ИИ удваивает работу и может украсть сценарий");
-        assertEquals(planner.buildPrompt(GOAL, OBSERVATION), client.lastPrompt(),
+        assertEquals(
+                planner.buildPrompt(GOAL, OBSERVATION),
+                client.lastPrompt(),
                 "Клиент обязан получить ровно тот промпт, что строит buildPrompt: рассогласование промптов "
                         + "делает ответ ИИ непредсказуемым");
     }
@@ -50,19 +58,28 @@ class LlmPlannerTests {
 
         PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(FALLBACK_PLAN, result.plan(),
+        assertEquals(
+                FALLBACK_PLAN,
+                result.plan(),
                 "Невалидный план ИИ обязан уходить в fallback: иначе неизвестный скрипт дойдёт до движка "
                         + "и задача сорвётся в тике вместо аккуратного плана по шаблону");
-        assertEquals(PlanSource.FALLBACK, result.source(),
+        assertEquals(
+                PlanSource.FALLBACK,
+                result.source(),
                 "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
                         + "останется незамеченным");
-        assertTrue(result.fallbackReason().orElseThrow().contains("no_such_script"),
+        assertTrue(
+                result.fallbackReason().orElseThrow().contains("no_such_script"),
                 "Причина fallback обязана содержать текст ошибки валидации с именем скрипта: по ней игрок "
                         + "видит, почему ИИ не справился. Фактическое: " + result.fallbackReason());
-        assertEquals(GOAL, fallback.lastGoal(),
+        assertEquals(
+                GOAL,
+                fallback.lastGoal(),
                 "Fallback обязан получать исходную цель: несовпадение цели превратит довыполнение "
                         + "в исполнение чужой задачи");
-        assertEquals(OBSERVATION, fallback.lastObservation(),
+        assertEquals(
+                OBSERVATION,
+                fallback.lastObservation(),
                 "Fallback обязан получать исходное наблюдение: другое наблюдение даст план для другого мира");
     }
 
@@ -74,16 +91,23 @@ class LlmPlannerTests {
 
         PlanResult result = planner.plan(GOAL, OBSERVATION);
 
-        assertEquals(FALLBACK_PLAN, result.plan(),
+        assertEquals(
+                FALLBACK_PLAN,
+                result.plan(),
                 "Сбой клиента ИИ обязан уходить в fallback: иначе дух останется без плана при недоступном "
                         + "сервисе и простоит тик за тиком");
-        assertEquals(PlanSource.FALLBACK, result.source(),
+        assertEquals(
+                PlanSource.FALLBACK,
+                result.source(),
                 "План запасного планировщика обязан помечаться источником 'fallback': иначе сбой ИИ "
                         + "останется незамеченным");
-        assertTrue(result.fallbackReason().orElseThrow().contains("сеть недоступна"),
+        assertTrue(
+                result.fallbackReason().orElseThrow().contains("сеть недоступна"),
                 "Причина fallback обязана содержать сообщение сбоя клиента: по ней видно, что сервис ИИ "
                         + "недоступен. Фактическое: " + result.fallbackReason());
-        assertEquals(GOAL, fallback.lastGoal(),
+        assertEquals(
+                GOAL,
+                fallback.lastGoal(),
                 "При сбое клиента fallback обязан получить исходную цель: подмена цели исказит довыполнение");
     }
 
@@ -96,33 +120,39 @@ class LlmPlannerTests {
         };
         LlmPlanner planner = new LlmPlanner(client, CATALOG, fallback);
 
-        UnplannableGoalException thrown = assertThrows(UnplannableGoalException.class,
+        UnplannableGoalException thrown = assertThrows(
+                UnplannableGoalException.class,
                 () -> planner.plan(GOAL, OBSERVATION),
                 "Отказ обоих планировщиков обязан выбросить ошибку fallback: молчание скрыло бы, что ни ИИ, "
                         + "ни шаблон не справились");
 
-        assertTrue(thrown.getSuppressed().length == 1 && thrown.getSuppressed()[0] == llmError,
+        assertTrue(
+                thrown.getSuppressed().length == 1 && thrown.getSuppressed()[0] == llmError,
                 "Ошибка ИИ обязана сохраниться в подавленных: без неё причина отказа ИИ теряется и по журналу "
                         + "видно только невнятный отказ шаблона");
-        assertTrue(thrown.getMessage().contains("не распознана"),
+        assertTrue(
+                thrown.getMessage().contains("не распознана"),
                 "Сообщение обязано оставаться от fallback, а причина ИИ — в suppressed. Фактическое: "
                         + thrown.getMessage());
     }
 
     @Test
     void buildPrompt_WithGoalAndObservation_ContainsGoalTextHashAndScriptIds() {
-        LlmPlanner planner = new LlmPlanner(StubLlmClient.responding(VALID_PLAN_JSON),
-                CATALOG, RecordingPlanner.returning(FALLBACK_PLAN));
+        LlmPlanner planner = new LlmPlanner(
+                StubLlmClient.responding(VALID_PLAN_JSON), CATALOG, RecordingPlanner.returning(FALLBACK_PLAN));
 
         String prompt = planner.buildPrompt(GOAL, OBSERVATION);
 
-        assertTrue(prompt.contains(GOAL.text()),
+        assertTrue(
+                prompt.contains(GOAL.text()),
                 "Промпт обязан содержать текст цели: без него ИИ решает задачу, которую ему не назвали");
-        assertTrue(prompt.contains(OBSERVATION.hash()),
+        assertTrue(
+                prompt.contains(OBSERVATION.hash()),
                 "Промпт обязан содержать hash наблюдения: без него ИИ не заметит изменения мира "
                         + "и план устареет к моменту исполнения");
         for (ScriptSpec spec : CATALOG.all()) {
-            assertTrue(prompt.contains(spec.id()),
+            assertTrue(
+                    prompt.contains(spec.id()),
                     "Промпт обязан содержать id скрипта '" + spec.id() + "': без каталога ИИ выдумает "
                             + "скрипт вне whitelist, и валидатор отвергнет весь план");
         }

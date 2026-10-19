@@ -12,11 +12,14 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
 public final class UseBlockScript implements ScriptInstance {
     private final SpiritEntity spirit;
@@ -57,7 +60,7 @@ public final class UseBlockScript implements ScriptInstance {
                     ? fail("к блоку " + pos.toShortString() + " не подойти: " + reach.refusal())
                     : ScriptStatus.RUNNING;
         }
-        InteractionResult response = state.useWithoutItem(level, null, hit(pos));
+        InteractionResult response = state.useWithoutItem(level, presser(), hit(pos));
         if (!response.consumesAction()) {
             return fail("блок " + blockId(state) + " в клетке " + pos.toShortString() + " не отозвался на нажатие");
         }
@@ -72,6 +75,13 @@ public final class UseBlockScript implements ScriptInstance {
 
     private static String blockId(BlockState state) {
         return BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+    }
+
+    // mc: блок нажимает игрок — калитка открывается по его взгляду; нажимает подставной игрок на месте духа.
+    private Player presser() {
+        Player presser = FakePlayerFactory.getMinecraft((ServerLevel) level);
+        presser.moveTo(spirit.getX(), spirit.getY(), spirit.getZ(), spirit.getYRot(), spirit.getXRot());
+        return presser;
     }
 
     private ScriptStatus fail(String reason) {

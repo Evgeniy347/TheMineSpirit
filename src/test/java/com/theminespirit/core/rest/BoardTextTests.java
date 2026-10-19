@@ -10,8 +10,18 @@ import org.junit.jupiter.api.Test;
 class BoardTextTests {
 
     private static BoardTask task(Map<String, Integer> missing, List<String> dependsOn, String assignee) {
-        return new BoardTask("board-1", "SUPPLY_SITE", 20, assignee, "WAITING_RESOURCES",
-                Map.of("oak_log", 16), missing, dependsOn, 7, 1, "always");
+        return new BoardTask(
+                "board-1",
+                "SUPPLY_SITE",
+                20,
+                assignee,
+                "WAITING_RESOURCES",
+                Map.of("oak_log", 16),
+                missing,
+                dependsOn,
+                7,
+                1,
+                "always");
     }
 
     @Test
@@ -38,44 +48,72 @@ class BoardTextTests {
 
     @Test
     void line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers() {
-        BoardTask task = new BoardTask("board-2", "BUILD_PEN", 65, null, "PENDING",
-                Map.of(), Map.of(), List.of(), 7, 2, "always", 80, List.of("pen_caught_animal"), false);
+        BoardTask task = new BoardTask(
+                "board-2",
+                "BUILD_PEN",
+                65,
+                null,
+                "PENDING",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                7,
+                2,
+                "always",
+                80,
+                List.of("pen_caught_animal"),
+                false);
 
         String line = BoardText.line(task);
 
         assertTrue(line.contains("уровень 2"), "Строка обязана называть уровень постройки: " + line);
-        assertTrue(line.contains("приоритет 80"),
-                "Строка обязана показывать эффективный приоритет, а не базу: " + line);
-        assertTrue(line.contains("pen_caught_animal"),
-                "Строка обязана называть сработавшие модификаторы: " + line);
+        assertTrue(
+                line.contains("приоритет 80"), "Строка обязана показывать эффективный приоритет, а не базу: " + line);
+        assertTrue(line.contains("pen_caught_animal"), "Строка обязана называть сработавшие модификаторы: " + line);
     }
 
     @Test
     void line_DoneBuilding_MarksDone() {
-        BoardTask task = new BoardTask("board-3", "BUILD_MINE", 50, null, "DONE",
-                Map.of(), Map.of(), List.of(), 7, 1, "always", 50, List.of(), true);
+        BoardTask task = new BoardTask(
+                "board-3",
+                "BUILD_MINE",
+                50,
+                null,
+                "DONE",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                7,
+                1,
+                "always",
+                50,
+                List.of(),
+                true);
 
-        assertTrue(BoardText.line(task).contains("выполнено"),
+        assertTrue(
+                BoardText.line(task).contains("выполнено"),
                 "Отметка выполненной постройки обязана быть видна в чате: " + BoardText.line(task));
     }
 
     @Test
     void missing_MultipleItems_SortedByNameForStableChat() {
-        assertEquals("dirt ×4, oak_log ×10", BoardText.missing(Map.of("oak_log", 10, "dirt", 4)),
+        assertEquals(
+                "dirt ×4, oak_log ×10",
+                BoardText.missing(Map.of("oak_log", 10, "dirt", 4)),
                 "Нехватка в чате обязана идти по алфавиту: порядок карты непостоянен, а чат читает человек");
     }
 
     @Test
     void statusRu_KnownStatuses_Translated() {
-        assertEquals("выдано", BoardText.statusRu("ASSIGNED"),
-                "Известный статус обязан переводиться на русский");
-        assertEquals("выполнено", BoardText.statusRu("DONE"),
-                "Известный статус обязан переводиться на русский");
+        assertEquals("выдано", BoardText.statusRu("ASSIGNED"), "Известный статус обязан переводиться на русский");
+        assertEquals("выполнено", BoardText.statusRu("DONE"), "Известный статус обязан переводиться на русский");
     }
 
     @Test
     void statusRu_UnknownWireValue_ReturnedAsIs() {
-        assertEquals("САМОПАЛ", BoardText.statusRu("САМОПАЛ"),
+        assertEquals(
+                "САМОПАЛ",
+                BoardText.statusRu("САМОПАЛ"),
                 "Неизвестный статус не подменяется: наблюдатель видит то, что пришло");
     }
 }

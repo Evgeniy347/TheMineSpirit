@@ -16,19 +16,31 @@ import org.junit.jupiter.api.Test;
 
 class TacticsTraceTests {
     private static TacticalOutcome outcome() {
-        TacticalOutcome base = AdapterFixtures.outcome(TacticalOption.RETREAT, TacticalAction.RETREAT, RetreatMethod.COVER);
-        return new TacticalOutcome(base.decision(), base.action(), base.retreatMethod(), true, TacticalState.RETREATING,
-                CombatMode.GUARD_AREA, Optional.of(new Point(1.5, 64, -3)), base.trace(), base.memory());
+        TacticalOutcome base =
+                AdapterFixtures.outcome(TacticalOption.RETREAT, TacticalAction.RETREAT, RetreatMethod.COVER);
+        return new TacticalOutcome(
+                base.decision(),
+                base.action(),
+                base.retreatMethod(),
+                true,
+                TacticalState.RETREATING,
+                CombatMode.GUARD_AREA,
+                Optional.of(new Point(1.5, 64, -3)),
+                base.trace(),
+                base.memory());
     }
 
     @Test
     void format_Outcome_NamesEveryValue() {
         String text = TacticsTrace.format(outcome());
 
-        for (String expected : new String[] {"RETREAT", "COVER", "RETREATING", "GUARD_AREA", "(1.5, 64.0, -3.0)", "true",
-                "решение по правилу score"}) {
-            assertTrue(text.contains(expected), "Запись решения в лог обязана содержать «" + expected
-                    + "»: по ней разбирают, почему дух поступил так; получили: " + text);
+        for (String expected : new String[] {
+            "RETREAT", "COVER", "RETREATING", "GUARD_AREA", "(1.5, 64.0, -3.0)", "true", "решение по правилу score"
+        }) {
+            assertTrue(
+                    text.contains(expected),
+                    "Запись решения в лог обязана содержать «" + expected
+                            + "»: по ней разбирают, почему дух поступил так; получили: " + text);
         }
     }
 
@@ -36,21 +48,28 @@ class TacticsTraceTests {
     void format_EveryRecordComponent_HasLabel() {
         int components = TacticalOutcome.class.getRecordComponents().length;
 
-        assertEquals(components, TacticsTrace.LABELS.size(),
+        assertEquals(
+                components,
+                TacticsTrace.LABELS.size(),
                 "У TacticalOutcome " + components + " полей, а подписей в записи " + TacticsTrace.LABELS.size()
                         + ": новое поле решения обязано попасть в лог, иначе его причину не разобрать");
     }
 
     @Test
     void format_OutcomeWithoutReturnTarget_SaysNone() {
-        String text = TacticsTrace.format(AdapterFixtures.outcome(TacticalOption.FIGHT, TacticalAction.ENGAGE, RetreatMethod.NONE));
+        String text = TacticsTrace.format(
+                AdapterFixtures.outcome(TacticalOption.FIGHT, TacticalAction.ENGAGE, RetreatMethod.NONE));
 
-        assertTrue(text.contains("вернуться к=нет"), "Без цели возврата запись говорит «нет», а не падает на пустом Optional: " + text);
+        assertTrue(
+                text.contains("вернуться к=нет"),
+                "Без цели возврата запись говорит «нет», а не падает на пустом Optional: " + text);
     }
 
     @Test
     void format_Null_Rejected() {
-        assertThrows(IllegalArgumentException.class, () -> TacticsTrace.format(null),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> TacticsTrace.format(null),
                 "Форматировать пустое решение — ошибка вызова, а не пустая строка");
     }
 }

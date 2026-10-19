@@ -6,26 +6,38 @@ import java.util.Set;
 
 public final class GatherPolicy {
     private static final Set<String> FORBIDDEN_EXACT = Set.of(
-            "bedrock", "barrier",
-            "command_block", "chain_command_block", "repeating_command_block",
-            "structure_block", "jigsaw",
-            "spawner", "trial_spawner", "vault",
-            "end_portal", "end_portal_frame", "nether_portal",
-            "hopper", "dispenser", "dropper",
-            "furnace", "blast_furnace", "smoker",
-            "brewing_stand", "enchanting_table",
-            "chest", "trapped_chest", "ender_chest", "barrel", "shulker_box");
+            "bedrock",
+            "barrier",
+            "command_block",
+            "chain_command_block",
+            "repeating_command_block",
+            "structure_block",
+            "jigsaw",
+            "spawner",
+            "trial_spawner",
+            "vault",
+            "end_portal",
+            "end_portal_frame",
+            "nether_portal",
+            "hopper",
+            "dispenser",
+            "dropper",
+            "furnace",
+            "blast_furnace",
+            "smoker",
+            "brewing_stand",
+            "enchanting_table",
+            "chest",
+            "trapped_chest",
+            "ender_chest",
+            "barrel",
+            "shulker_box");
     private static final List<String> FORBIDDEN_SUFFIXES = List.of("_chest", "_shulker_box", "_bed");
 
-    private GatherPolicy() {
-    }
+    private GatherPolicy() {}
 
     public static Set<String> forbiddenExactIds() {
         return FORBIDDEN_EXACT;
-    }
-
-    public static List<String> forbiddenSuffixes() {
-        return FORBIDDEN_SUFFIXES;
     }
 
     public static Decision check(String blockId) {
@@ -49,11 +61,9 @@ public final class GatherPolicy {
         return colon < 0 ? blockId : blockId.substring(colon + 1);
     }
 
-    public sealed interface Decision permits Allowed, Refused {
-    }
+    public sealed interface Decision permits Allowed, Refused {}
 
-    public record Allowed() implements Decision {
-    }
+    public record Allowed() implements Decision {}
 
     public record Refused(String reason) implements Decision {
         public Refused {

@@ -14,19 +14,22 @@ import net.minecraft.server.level.ServerLevel;
  * места — чистая функция; точки чужих построек приходят списком и лишь сужают выбор.
  */
 public final class FishingWorkPointPicker {
-    private FishingWorkPointPicker() {
-    }
+    private FishingWorkPointPicker() {}
 
-    public static Optional<FishingSpots.Spot> pick(ServerLevel level, BlockCoord origin, FishingData data,
-            int radius, List<BlockCoord> avoid, double avoidRadius) {
+    public static Optional<FishingSpots.Spot> pick(
+            ServerLevel level,
+            BlockCoord origin,
+            FishingData data,
+            int radius,
+            List<BlockCoord> avoid,
+            double avoidRadius) {
         Objects.requireNonNull(level, "Мир не может быть null: рабочая точка выбирается по блокам воды");
         Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них размер рабочей точки");
         FishingWaterView view = new FishingWaterView(level, origin, radius);
         while (!view.done()) {
             view.advance();
         }
-        return FishingSpots.findWorkPoint(origin, view, data,
-                (stand, water) -> allowed(stand, avoid, avoidRadius));
+        return FishingSpots.findWorkPoint(origin, view, data, (stand, water) -> allowed(stand, avoid, avoidRadius));
     }
 
     private static boolean allowed(BlockCoord stand, List<BlockCoord> avoid, double avoidRadius) {

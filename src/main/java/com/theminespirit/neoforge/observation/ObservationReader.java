@@ -38,22 +38,34 @@ import net.minecraft.world.phys.AABB;
  * (блоки, сущности, контейнеры, инвентарь) собирает {@link WorldScanner}.
  */
 public final class ObservationReader {
-    private ObservationReader() {
-    }
+    private ObservationReader() {}
 
     public static WorldObservation read(SpiritEntity spirit, WorldObservation base) {
         ObservationLimits limits = ObservationLimits.loadDefault();
         Level level = spirit.level();
-        return new WorldObservation(base.botId(), base.tick(), base.position(), base.inventory(), base.blocks(),
-                base.entities(), base.containers(), base.radius(), status(spirit),
+        return new WorldObservation(
+                base.botId(),
+                base.tick(),
+                base.position(),
+                base.inventory(),
+                base.blocks(),
+                base.entities(),
+                base.containers(),
+                base.radius(),
+                status(spirit),
                 groundItems(level, base.position(), base.radius(), limits.maxGroundItems()),
                 containerContents(level, base.containers(), limits),
-                new WorldTime(level.getDayTime(), level.isDay()), base.openBlocks());
+                new WorldTime(level.getDayTime(), level.isDay()),
+                base.openBlocks());
     }
 
     private static SpiritStatus status(SpiritEntity spirit) {
-        return SpiritStatus.of(held(spirit.getMainHandItem()), spirit.getHealth(), spirit.getMaxHealth(),
-                spirit.hunger().satietyFraction(), boardTask(spirit));
+        return SpiritStatus.of(
+                held(spirit.getMainHandItem()),
+                spirit.getHealth(),
+                spirit.getMaxHealth(),
+                spirit.hunger().satietyFraction(),
+                boardTask(spirit));
     }
 
     private static HeldItem held(ItemStack stack) {
@@ -83,8 +95,13 @@ public final class ObservationReader {
     }
 
     private static List<GroundItem> groundItems(Level level, BlockCoord center, int radius, int cap) {
-        AABB bounds = new AABB(center.x() - radius, center.y() - (double) radius, center.z() - radius,
-                center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
+        AABB bounds = new AABB(
+                center.x() - radius,
+                center.y() - (double) radius,
+                center.z() - radius,
+                center.x() + radius + 1.0,
+                center.y() + radius + 1.0,
+                center.z() + radius + 1.0);
         Map<String, Integer> counts = new TreeMap<>();
         for (ItemEntity dropped : level.getEntitiesOfClass(ItemEntity.class, bounds, entity -> !entity.isRemoved())) {
             ItemStack stack = dropped.getItem();
@@ -103,8 +120,8 @@ public final class ObservationReader {
         return result;
     }
 
-    private static List<ContainerContents> containerContents(Level level, List<ContainerRef> containers,
-            ObservationLimits limits) {
+    private static List<ContainerContents> containerContents(
+            Level level, List<ContainerRef> containers, ObservationLimits limits) {
         List<ContainerContents> result = new ArrayList<>();
         for (ContainerRef ref : containers) {
             if (result.size() >= limits.maxContainers()) {
@@ -112,8 +129,8 @@ public final class ObservationReader {
             }
             BlockPos pos = new BlockPos(ref.pos().x(), ref.pos().y(), ref.pos().z());
             if (ContainerAccess.open(level, pos) instanceof ContainerAccess.Opened opened) {
-                List<ItemCount> items = ItemCounts.aggregate(WorldScanner.inventoryEntries(opened.container()),
-                        "containerItems");
+                List<ItemCount> items =
+                        ItemCounts.aggregate(WorldScanner.inventoryEntries(opened.container()), "containerItems");
                 result.add(new ContainerContents(ref.pos(), capItems(items, limits.maxContainerItems())));
             }
         }

@@ -10,11 +10,17 @@ class SituationCanonicalTests {
     @Test
     void enemies_GivenUnordered_AreSortedByDistanceThenType() {
         Situation situation = SituationBuilder.create()
-                .enemy("skeleton", 9).enemy("zombie", 3).enemy("creeper", 3).enemy("spider", 1).build();
+                .enemy("skeleton", 9)
+                .enemy("zombie", 3)
+                .enemy("creeper", 3)
+                .enemy("spider", 1)
+                .build();
 
         List<String> order = situation.enemies().stream().map(EnemyFact::type).toList();
 
-        assertEquals(List.of("minecraft:spider", "minecraft:creeper", "minecraft:zombie", "minecraft:skeleton"), order,
+        assertEquals(
+                List.of("minecraft:spider", "minecraft:creeper", "minecraft:zombie", "minecraft:skeleton"),
+                order,
                 "Порядок врагов в Situation каноничен (дистанция, потом тип): иначе то же поле боя давало бы разные решения");
     }
 
@@ -24,9 +30,15 @@ class SituationCanonicalTests {
         EnemyFact healthyA = new EnemyFact("minecraft:zombie", "a", new Point(4, 0, 0), 1, 0, true, true);
         EnemyFact healthyB = new EnemyFact("minecraft:zombie", "c", new Point(4, 0, 0), 1, 0, true, true);
 
-        Situation situation = SituationBuilder.create().enemy(healthyB).enemy(healthyA).enemy(hurt).build();
+        Situation situation = SituationBuilder.create()
+                .enemy(healthyB)
+                .enemy(healthyA)
+                .enemy(hurt)
+                .build();
 
-        assertEquals(List.of("b", "a", "c"), situation.enemies().stream().map(EnemyFact::id).toList(),
+        assertEquals(
+                List.of("b", "a", "c"),
+                situation.enemies().stream().map(EnemyFact::id).toList(),
                 "При равной дистанции и типе раньше идёт раненый, затем по id: тай-брейк обязан быть полным");
     }
 
@@ -40,10 +52,14 @@ class SituationCanonicalTests {
 
         List<EnemyFact> enemies = builder.build().enemies();
 
-        assertEquals(Situation.MAX_ENEMIES + 2, enemies.size(),
+        assertEquals(
+                Situation.MAX_ENEMIES + 2,
+                enemies.size(),
                 "Хвост сверх MAX_ENEMIES сворачивается в по одной записи на тип (здесь зомби и скелет)");
         EnemyFact zombieTail = enemies.get(Situation.MAX_ENEMIES);
-        assertEquals(List.of("minecraft:zombie", 3), List.of(zombieTail.type(), zombieTail.count()),
+        assertEquals(
+                List.of("minecraft:zombie", 3),
+                List.of(zombieTail.type(), zombieTail.count()),
                 "Агрегат «ещё n зомби» хранит число свёрнутых врагов, иначе суммарный урон потеряется");
     }
 
@@ -58,9 +74,15 @@ class SituationCanonicalTests {
 
         EnemyFact aggregate = builder.build().enemies().get(Situation.MAX_ENEMIES);
 
-        assertEquals(List.of(4, 0.625, 10.0, true, false, "h1"),
-                List.of(aggregate.count(), aggregate.hpFraction(), aggregate.armor(), aggregate.visible(),
-                        aggregate.targetingSelf(), aggregate.id()),
+        assertEquals(
+                List.of(4, 0.625, 10.0, true, false, "h1"),
+                List.of(
+                        aggregate.count(),
+                        aggregate.hpFraction(),
+                        aggregate.armor(),
+                        aggregate.visible(),
+                        aggregate.targetingSelf(),
+                        aggregate.id()),
                 "Агрегат: число складывается, HP — средневзвешенное по числу, броня — наибольшая (орда не слабеет от сворачивания), видимость — «хоть один», "
                         + "id и позиция — ближайшего из свёрнутых");
     }
@@ -74,7 +96,9 @@ class SituationCanonicalTests {
 
         source.clear();
 
-        assertEquals(1, situation.enemies().size(),
+        assertEquals(
+                1,
+                situation.enemies().size(),
                 "Situation неизменяема: список врагов копируется, иначе адаптер мог бы поменять факты задним числом");
     }
 }

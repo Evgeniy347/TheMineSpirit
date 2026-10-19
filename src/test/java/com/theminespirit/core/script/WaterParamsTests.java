@@ -19,24 +19,20 @@ class WaterParamsTests {
 
     @Test
     void swim_MissingZ_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> SwimParams.from(Map.of("x", 1, "y", 63)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SwimParams.from(Map.of("x", 1, "y", 63)),
                 "Без z заплыв не задан: молчаливое умолчание увело бы духа по чужой координате");
     }
 
     @Test
-    void crossWater_BlockOmitted_IsNull() {
+    void crossWater_PointOnly_ParsesCoordinates() {
         CrossWaterParams params = CrossWaterParams.from(Map.of("x", 1, "y", 63, "z", 2));
 
-        assertNull(params.block(),
-                "Без block переправу строят из дешёвых блоков инвентаря: null значит «выбрать материал самому»");
-    }
-
-    @Test
-    void crossWater_BlockGiven_IsKept() {
-        CrossWaterParams params = CrossWaterParams.from(Map.of("x", 1, "y", 63, "z", 2, "block", "minecraft:oak_planks"));
-
-        assertEquals("minecraft:oak_planks", params.block(),
-                "Явно заданный block обязан доходить до моста: иначе просьба игрока ставить конкретный блок теряется");
+        assertEquals(
+                new CrossWaterParams(1, 63, 2),
+                params,
+                "Переправа — только точка: мост в переправе убран (упрощение 44.7), материала она не берёт");
     }
 
     @Test
@@ -49,33 +45,37 @@ class WaterParamsTests {
 
     @Test
     void bridge_LengthBelowMinimum_Throws() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> BridgeParams.from(Map.of("x", 1, "y", 63, "z", 2, "length", 0)),
                 "Нулевая длина моста бессмысленна: мост не из чего строить, план обязан отклоняться");
     }
 
     @Test
     void bridge_LengthAboveMaximum_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> BridgeParams.from(Map.of("x", 1, "y", 63, "z", 2, "length",
-                        CatalogLimits.BRIDGE_LENGTH_MAX + 1)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BridgeParams.from(Map.of("x", 1, "y", 63, "z", 2, "length", CatalogLimits.BRIDGE_LENGTH_MAX + 1)),
                 "Длина моста сверх предела обязана отклоняться: бесконечный мост съел бы инвентарь и время");
     }
 
     @Test
     void bridge_LengthAtMaximum_IsAccepted() {
-        BridgeParams params = BridgeParams.from(Map.of("x", 1, "y", 63, "z", 2, "length",
-                CatalogLimits.BRIDGE_LENGTH_MAX));
+        BridgeParams params =
+                BridgeParams.from(Map.of("x", 1, "y", 63, "z", 2, "length", CatalogLimits.BRIDGE_LENGTH_MAX));
 
-        assertEquals(CatalogLimits.BRIDGE_LENGTH_MAX, params.length(),
+        assertEquals(
+                CatalogLimits.BRIDGE_LENGTH_MAX,
+                params.length(),
                 "Длина ровно на верхней границе обязана приниматься: граница включена в допустимый мост");
     }
 
     @Test
     void bridge_XOutOfWorldRange_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> BridgeParams.from(Map.of("x", CatalogLimits.WORLD_HORIZONTAL_LIMIT + 1, "y", 63, "z", 2,
-                        "length", 4)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BridgeParams.from(
+                        Map.of("x", CatalogLimits.WORLD_HORIZONTAL_LIMIT + 1, "y", 63, "z", 2, "length", 4)),
                 "Точка моста вне мира обязана отклоняться: там нечего строить");
     }
 }

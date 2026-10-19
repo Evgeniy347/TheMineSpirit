@@ -7,6 +7,7 @@ import com.theminespirit.core.tactics.TacticalAction;
 import com.theminespirit.core.tactics.TacticalOutcome;
 import java.util.Comparator;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public final class IntentActionExecutor implements ActionExecutor {
     @Override
@@ -30,9 +31,7 @@ public final class IntentActionExecutor implements ActionExecutor {
         if (method == RetreatMethod.NONE) {
             return ExecutionResult.idle();
         }
-        return method == RetreatMethod.BARRICADE || method == RetreatMethod.PILLAR
-                ? new ExecutionResult.Building(method)
-                : new ExecutionResult.Moving(method);
+        return new ExecutionResult.Moving(method);
     }
 
     private static ExecutionResult fight(TacticalOutcome outcome, SituationContext context) {
@@ -45,9 +44,11 @@ public final class IntentActionExecutor implements ActionExecutor {
                 : new ExecutionResult.Attacking(target);
     }
 
-    private static EnemyFact primaryTarget(List<EnemyFact> enemies, Point self) {
+    private static @Nullable EnemyFact primaryTarget(List<EnemyFact> enemies, Point self) {
         Comparator<EnemyFact> preference = Comparator.comparing((EnemyFact enemy) -> !enemy.visible())
-                .thenComparing(enemy -> !enemy.targetingSelf()).thenComparingDouble(enemy -> enemy.pos().distanceTo(self)).thenComparing(EnemyFact::type)
+                .thenComparing(enemy -> !enemy.targetingSelf())
+                .thenComparingDouble(enemy -> enemy.pos().distanceTo(self))
+                .thenComparing(EnemyFact::type)
                 .thenComparing(EnemyFact::id);
         return enemies.stream().min(preference).orElse(null);
     }

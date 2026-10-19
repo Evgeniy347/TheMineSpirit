@@ -17,15 +17,20 @@ class LocateParamsTests {
 
         assertEquals(LocateType.BLOCK, query.type(), "locate_block обязан строить поиск блока");
         assertEquals(9, query.radius().value(), "радиус поиска обязан совпасть с параметром плана");
-        assertEquals(List.of("minecraft:*_ore"), query.filter().patterns(),
+        assertEquals(
+                List.of("minecraft:*_ore"),
+                query.filter().patterns(),
                 "фильтр поиска обязан совпасть с параметром плана: иначе вернётся не тот блок");
     }
 
     @Test
     void block_EmptyOrWildcardFilter_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> LocateParams.block(Map.of("filter", List.of(), "radius", 8)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> LocateParams.block(Map.of("filter", List.of(), "radius", 8)),
                 "поиск блока без фильтра обязан отклоняться: ближайший блок «любого вида» — клетка под духом");
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> LocateParams.block(Map.of("filter", List.of("*"), "radius", 8)),
                 "фильтр со звёздочкой равен «всё» и обязан отклоняться так же, как пустой");
     }
@@ -36,7 +41,9 @@ class LocateParamsTests {
 
         assertEquals(LocateType.TREE, query.type(), "locate_tree обязан строить поиск дерева");
         assertEquals("birch", query.species(), "порода обязана совпасть с параметром плана");
-        assertEquals(List.of("birch"), LocateParams.speciesOf(query).stream().map(TreeSpecies::id).toList(),
+        assertEquals(
+                List.of("birch"),
+                LocateParams.speciesOf(query).stream().map(TreeSpecies::id).toList(),
                 "порода birch обязана давать только берёзу, иначе поиск вернёт чужое дерево");
     }
 
@@ -44,17 +51,22 @@ class LocateParamsTests {
     void tree_AnySpecies_CoversEveryKnownSpecies() {
         LocateQuery query = LocateParams.tree(Map.of("species", "any", "radius", 6));
 
-        assertEquals(TreeSpecies.ALL, LocateParams.speciesOf(query),
+        assertEquals(
+                TreeSpecies.ALL,
+                LocateParams.speciesOf(query),
                 "порода any обязана охватывать все известные породы: иначе дерево редкой породы не найдётся");
     }
 
     @Test
     void tree_UnknownSpecies_IsRejectedWithKnownNames() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> LocateParams.tree(Map.of("species", "baobab", "radius", 6)),
                 "неизвестная порода обязана отклоняться до запуска поиска");
 
-        assertEquals(true, error.getMessage().contains("oak"),
+        assertEquals(
+                true,
+                error.getMessage().contains("oak"),
                 "сообщение обязано перечислить допустимые породы, сейчас: " + error.getMessage());
     }
 

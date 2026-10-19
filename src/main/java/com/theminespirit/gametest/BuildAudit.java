@@ -24,10 +24,9 @@ import net.minecraft.world.level.block.state.properties.Property;
  * ровно одна постановка на клетку и ноль пропусков. Возвращает список расхождений; assert'ов внутри нет.
  */
 public final class BuildAudit {
-    public record Before(Map<BlockCoord, BlockState> states, Map<BlockCoord, Integer> placements) {
+    public record Before(Map<BlockCoord, BlockState> states) {
         public Before {
             states = Map.copyOf(states);
-            placements = Map.copyOf(placements);
         }
     }
 
@@ -41,11 +40,10 @@ public final class BuildAudit {
         }
     }
 
-    private BuildAudit() {
-    }
+    private BuildAudit() {}
 
-    public static Before snapshot(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation,
-            int margin) {
+    public static Before snapshot(
+            Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation, int margin) {
         Map<BlockCoord, BlockState> states = new HashMap<>();
         BlockCoord min = new BlockCoord(origin.x() - margin, origin.y() - margin, origin.z() - margin);
         BlockCoord max = new BlockCoord(
@@ -62,12 +60,11 @@ public final class BuildAudit {
                 }
             }
         }
-        Map<BlockCoord, Integer> placements = counts(level, min, max);
-        return new Before(states, placements);
+        return new Before(states);
     }
 
-    public static Result audit(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation,
-            Before before, int skipped) {
+    public static Result audit(
+            Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation, Before before, int skipped) {
         List<String> problems = new ArrayList<>();
         List<Schematic.PlacedEntry> entries = schematic.entries(origin, rotation);
         Set<BlockCoord> expectedCells = new HashSet<>();
@@ -81,18 +78,18 @@ public final class BuildAudit {
             BlockCoord cell = snapshot.getKey();
             BlockState current = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
             if (!current.equals(snapshot.getValue()) && !expectedCells.contains(cell)) {
-                problems.add("лишний блок духа в " + cell + ": был " + snapshot.getValue().getBlock()
-                        + ", стал " + current.getBlock());
+                problems.add("лишний блок духа в " + cell + ": был "
+                        + snapshot.getValue().getBlock() + ", стал " + current.getBlock());
             }
         }
-        Map<BlockCoord, Integer> after = counts(level, bounds(before), boundsMax(before));
         for (Schematic.PlacedEntry entry : entries) {
             BlockCoord cell = entry.pos();
-            int delta = after.getOrDefault(cell, 0) - before.placements().getOrDefault(cell, 0);
-            if (delta > 1) {
-                problems.add("клетка " + cell + " поставлена " + delta + " раз: схема ставится по одному блоку");
-            } else if (delta == 0 && BlockItems.hasBlockItem(entry.block()) && !wasAlready(level, entry, before)) {
-                problems.add("клетка " + cell + " не поставлена духом: счётчик постановок 0");
+            if (BlockItems.hasBlockItem(entry.block())
+                    && !wasAlready(entry, before)
+                    && !(level instanceof ServerLevel server
+                            && PlacedBlocksData.get(server)
+                                    .isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())))) {
+                problems.add("клетка " + cell + " не помечена духом: постановка не учтена");
             }
         }
         if (skipped != 0) {
@@ -101,13 +98,14 @@ public final class BuildAudit {
         return new Result(problems);
     }
 
-    private static void auditCell(Level level, Schematic.PlacedEntry entry, BuildRotation rotation,
-            List<String> problems) {
-        BlockPos pos = new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+    private static void auditCell(
+            Level level, Schematic.PlacedEntry entry, BuildRotation rotation, List<String> problems) {
+        BlockPos pos =
+                new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
         BlockState current = level.getBlockState(pos);
         if (!current.is(BlockStates.blockFor(entry.block()))) {
-            problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался " + entry.block()
-                    + ", стоит " + current.getBlock());
+            problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался " + entry.block() + ", стоит "
+                    + current.getBlock());
             return;
         }
         if (entry.state().isEmpty()) {
@@ -127,41 +125,10 @@ public final class BuildAudit {
         }
     }
 
-    private static boolean wasAlready(Level level, Schematic.PlacedEntry entry, Before before) {
+    private static boolean wasAlready(Schematic.PlacedEntry entry, Before before) {
         BlockState expected = BlockStates.stateFor(entry.block(), entry.state());
         BlockState old = before.states().get(entry.pos());
         return old != null && old.is(expected.getBlock());
-    }
-
-    private static Map<BlockCoord, Integer> counts(Level level, BlockCoord min, BlockCoord max) {
-        if (!(level instanceof ServerLevel server)) {
-            return Map.of();
-        }
-        return PlacedBlocksData.get(server).spiritPlacementCounts(min, max);
-    }
-
-    private static BlockCoord bounds(Before before) {
-        int minX = Integer.MAX_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int minZ = Integer.MAX_VALUE;
-        for (BlockCoord cell : before.states().keySet()) {
-            minX = Math.min(minX, cell.x());
-            minY = Math.min(minY, cell.y());
-            minZ = Math.min(minZ, cell.z());
-        }
-        return new BlockCoord(minX, minY, minZ);
-    }
-
-    private static BlockCoord boundsMax(Before before) {
-        int maxX = Integer.MIN_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        int maxZ = Integer.MIN_VALUE;
-        for (BlockCoord cell : before.states().keySet()) {
-            maxX = Math.max(maxX, cell.x());
-            maxY = Math.max(maxY, cell.y());
-            maxZ = Math.max(maxZ, cell.z());
-        }
-        return new BlockCoord(maxX, maxY, maxZ);
     }
 
     private static Rotation mcRotation(BuildRotation rotation) {

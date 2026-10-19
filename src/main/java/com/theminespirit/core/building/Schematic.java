@@ -6,9 +6,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
-    public record Entry(int dx, int dy, int dz, String block, Map<String, String> state, String text) {
+public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, List<Cell> air) {
+    public record Cell(int dx, int dy, int dz) {}
+
+    public record Entry(
+            int dx,
+            int dy,
+            int dz,
+            String block,
+            Map<String, String> state,
+            @Nullable String text) {
         public Entry(int dx, int dy, int dz, String block) {
             this(dx, dy, dz, block, Map.of(), "");
         }
@@ -33,8 +42,28 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
     }
 
     public Schematic {
-        Objects.requireNonNull(blocks, "Список блоков схемы не может быть null: пустую схему задают пустым списком только через парсер с ошибкой");
+        Objects.requireNonNull(
+                blocks,
+                "Список блоков схемы не может быть null: пустую схему задают пустым списком только через парсер с ошибкой");
+        Objects.requireNonNull(
+                air, "Список клеток воздуха не может быть null: схему без обязательного воздуха задают пустым списком");
         blocks = List.copyOf(blocks);
+        air = List.copyOf(air);
+    }
+
+    public Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
+        this(sizeX, sizeY, sizeZ, blocks, List.of());
+    }
+
+    public List<BlockCoord> airCells(BlockCoord origin, BuildRotation rotation) {
+        Objects.requireNonNull(origin, "Якорь схемы не может быть null: без него неизвестно, где очищать");
+        Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него очистится не та клетка");
+        List<BlockCoord> cells = new ArrayList<>(air.size());
+        for (Cell cell : air) {
+            BuildRotation.Cell rotated = rotation.rotate(cell.dx(), cell.dz(), sizeX, sizeZ);
+            cells.add(new BlockCoord(origin.x() + rotated.x(), origin.y() + cell.dy(), origin.z() + rotated.z()));
+        }
+        return List.copyOf(cells);
     }
 
     public List<PlacedEntry> entries(BlockCoord origin) {
@@ -49,7 +78,9 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
             BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
             placed.add(new PlacedEntry(
                     new BlockCoord(origin.x() + cell.x(), origin.y() + entry.dy(), origin.z() + cell.z()),
-                    entry.block(), entry.state(), entry.text()));
+                    entry.block(),
+                    entry.state(),
+                    entry.text()));
         }
         placed.sort(Comparator.comparingInt((PlacedEntry e) -> e.pos().y())
                 .thenComparingInt(e -> placementRank(e.block()))
@@ -63,10 +94,14 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks) {
         if (path.endsWith("_sign")) {
             return 2;
         }
-        return path.equals("chest") || path.equals("trapped_chest") || path.endsWith("_chest") ? 1 : 0;
+        return "chest".equals(path) || "trapped_chest".equals(path) || path.endsWith("_chest") ? 1 : 0;
     }
 
-    public record PlacedEntry(BlockCoord pos, String block, Map<String, String> state, String text) {
+    public record PlacedEntry(
+            BlockCoord pos,
+            String block,
+            Map<String, String> state,
+            @Nullable String text) {
         public PlacedEntry(BlockCoord pos, String block) {
             this(pos, block, Map.of(), "");
         }

@@ -9,8 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class BoardRegistry {
     private static final Map<ServerLevel, BoardService> BY_LEVEL = new ConcurrentHashMap<>();
 
-    private BoardRegistry() {
-    }
+    private BoardRegistry() {}
 
     public static BoardService get(ServerLevel level) {
         if (level == null) {
@@ -19,7 +18,6 @@ public final class BoardRegistry {
         return BY_LEVEL.computeIfAbsent(level, BoardService::create);
     }
 
-    /** Доска, если она уже создана: наблюдатель не создаёт доску ради чтения задания. */
     public static Optional<BoardService> peek(ServerLevel level) {
         return level == null ? Optional.empty() : Optional.ofNullable(BY_LEVEL.get(level));
     }

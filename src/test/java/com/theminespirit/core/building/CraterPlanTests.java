@@ -27,10 +27,11 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertEquals(List.of(new BlockCoord(CENTER.x(), 64, CENTER.z())), plan.cells(),
+        assertEquals(
+                List.of(new BlockCoord(CENTER.x(), 64, CENTER.z())),
+                plan.cells(),
                 "Яма глубиной 1 обязана засыпаться одним блоком на уровне земли");
-        assertEquals(1, plan.blockCount(),
-                "Число блоков обязано совпасть с числом пустых клеток плана");
+        assertEquals(1, plan.blockCount(), "Число блоков обязано совпасть с числом пустых клеток плана");
     }
 
     @Test
@@ -40,7 +41,8 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertEquals(List.of(
+        assertEquals(
+                List.of(
                         new BlockCoord(CENTER.x(), 61, CENTER.z()),
                         new BlockCoord(CENTER.x(), 62, CENTER.z()),
                         new BlockCoord(CENTER.x(), 63, CENTER.z()),
@@ -55,10 +57,8 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertTrue(plan.cells().isEmpty(),
-                "Столбец без ямы не засыпают: над уровнем земли нет пустых клеток");
-        assertEquals(0, plan.blockCount(),
-                "Пустой план не тратит блоки");
+        assertTrue(plan.cells().isEmpty(), "Столбец без ямы не засыпают: над уровнем земли нет пустых клеток");
+        assertEquals(0, plan.blockCount(), "Пустой план не тратит блоки");
     }
 
     @Test
@@ -70,9 +70,11 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertTrue(!plan.cells().contains(water),
+        assertTrue(
+                !plan.cells().contains(water),
                 "Воду в яме не засыпают: жидкость остаётся, иначе дух тратит блоки и заливает источник");
-        assertEquals(List.of(
+        assertEquals(
+                List.of(
                         new BlockCoord(CENTER.x(), 62, CENTER.z()),
                         new BlockCoord(CENTER.x(), 63, CENTER.z()),
                         new BlockCoord(CENTER.x(), 64, CENTER.z())),
@@ -89,11 +91,11 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertTrue(!plan.cells().contains(protectedCell),
+        assertTrue(
+                !plan.cells().contains(protectedCell),
                 "Защищённую (чужую) клетку не засыпают: политика защиты блоков выше ремонта");
-        assertEquals(List.of(
-                        new BlockCoord(CENTER.x(), 62, CENTER.z()),
-                        new BlockCoord(CENTER.x(), 64, CENTER.z())),
+        assertEquals(
+                List.of(new BlockCoord(CENTER.x(), 62, CENTER.z()), new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
                 "Незащищённые пустоты вокруг защищённой клетки засыпают, а саму защищённую пропускают");
     }
@@ -106,7 +108,9 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertEquals(3, plan.blockCount(),
+        assertEquals(
+                3,
+                plan.blockCount(),
                 "Две ямы глубиной 1 и 2 внутри диска радиуса 1 дают 3 клетки; клетки вне диска не берутся");
     }
 }

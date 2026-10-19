@@ -31,8 +31,8 @@ public record RetreatTracker(RetreatMethod method, long sinceTick) {
             return 0;
         }
         if (nowTick < sinceTick) {
-            throw new IllegalArgumentException("progressTicks: nowTick = " + nowTick + " меньше sinceTick = " + sinceTick
-                    + ": время не откатывается, проверьте порядок вызовов");
+            throw new IllegalArgumentException("progressTicks: nowTick = " + nowTick + " меньше sinceTick = "
+                    + sinceTick + ": время не откатывается, проверьте порядок вызовов");
         }
         return nowTick - sinceTick;
     }
@@ -50,8 +50,7 @@ public record RetreatTracker(RetreatMethod method, long sinceTick) {
             throw new IllegalArgumentException("RetreatTracker.advance: nowTick = " + nowTick + " меньше sinceTick = "
                     + sinceTick + ": время не откатывается, проверьте порядок вызовов");
         }
-        boolean wants = outcome.decision() == TacticalOption.RETREAT
-                && outcome.retreatMethod() != RetreatMethod.NONE;
+        boolean wants = outcome.decision() == TacticalOption.RETREAT && outcome.retreatMethod() != RetreatMethod.NONE;
         if (!retreating()) {
             return wants ? new RetreatTracker(outcome.retreatMethod(), nowTick) : IDLE;
         }

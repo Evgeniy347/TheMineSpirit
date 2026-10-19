@@ -9,8 +9,8 @@ public record DisengageParams(String target, int distance) {
 
     public DisengageParams {
         if (target == null || target.isBlank()) {
-            throw new IllegalArgumentException("Не задана цель disengage: без цели дух не знает, от кого отходить "
-                    + "и чей бой прекращать");
+            throw new IllegalArgumentException(
+                    "Не задана цель disengage: без цели дух не знает, от кого отходить " + "и чей бой прекращать");
         }
         if (distance < CatalogLimits.DISENGAGE_DISTANCE_MIN || distance > CatalogLimits.DISENGAGE_DISTANCE_MAX) {
             throw new IllegalArgumentException("Дистанция выхода из боя " + distance + " вне диапазона ["

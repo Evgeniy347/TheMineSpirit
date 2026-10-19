@@ -9,8 +9,7 @@ import java.util.Map;
 
 /** JSON-представление заданий доски для GET/POST/DELETE /v1/board: имена полей — контракт v1. */
 public final class BoardJson {
-    private BoardJson() {
-    }
+    private BoardJson() {}
 
     public static String logJson(List<BoardLogEntry> entries) {
         List<Object> lines = new ArrayList<>(entries.size());

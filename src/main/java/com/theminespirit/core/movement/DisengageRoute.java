@@ -9,8 +9,7 @@ public final class DisengageRoute {
     public static final double ARRIVAL_SLACK = 0.5;
     public static final double MIN_STEP = 1.0;
 
-    private DisengageRoute() {
-    }
+    private DisengageRoute() {}
 
     public static Point away(Point self, Point threat, int distance) {
         Objects.requireNonNull(self, "self не может быть null: точка отхода считается от позиции духа");

@@ -19,11 +19,10 @@ import java.util.Optional;
 public final class TacticsStateCodec {
     public static final int VERSION = 1;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+    private static final ObjectMapper MAPPER =
+            new ObjectMapper().enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
-    private TacticsStateCodec() {
-    }
+    private TacticsStateCodec() {}
 
     public static String encode(StoredTactics stored) {
         Objects.requireNonNull(stored, "stored не может быть null: сохранять нечего");
@@ -48,23 +47,29 @@ public final class TacticsStateCodec {
     }
 
     public static StoredTactics decode(String json) {
-        Objects.requireNonNull(json, "json не может быть null: состояние тактики приходит текстом из ключа SpiritTactics");
+        Objects.requireNonNull(
+                json, "json не может быть null: состояние тактики приходит текстом из ключа SpiritTactics");
         JsonNode root = readTree(json);
         requireObject(root, "состояние тактики");
         requireVersion(root);
         try {
             CombatMode ordered = enumField(CombatMode.class, root, "ordered");
-            Optional<OrdersBuilder.Zone> zone = Optional.ofNullable(root.get("zone")).map(TacticsStateCodec::zone);
+            Optional<OrdersBuilder.Zone> zone =
+                    Optional.ofNullable(root.get("zone")).map(TacticsStateCodec::zone);
             Optional<String> ward = Optional.ofNullable(root.get("ward")).map(node -> text(node, "ward"));
-            Optional<TacticsMemory> memory = Optional.ofNullable(root.get("memory")).map(TacticsStateCodec::memory);
+            Optional<TacticsMemory> memory =
+                    Optional.ofNullable(root.get("memory")).map(TacticsStateCodec::memory);
             JsonNode retreatNode = required(root, "retreat");
             requireObject(retreatNode, "retreat");
-            RetreatTracker retreat = new RetreatTracker(enumField(RetreatMethod.class, retreatNode, "method"),
+            RetreatTracker retreat = new RetreatTracker(
+                    enumField(RetreatMethod.class, retreatNode, "method"),
                     longOf(required(retreatNode, "since"), "retreat.since"));
             return new StoredTactics(ordered, zone, ward, memory, retreat);
         } catch (IllegalArgumentException e) {
-            throw new TacticsFormatException("Состояние тактики недопустимо: " + e.getMessage()
-                    + ". Проверьте ключ SpiritTactics, файл не правьте вручную", e);
+            throw new TacticsFormatException(
+                    "Состояние тактики недопустимо: " + e.getMessage()
+                            + ". Проверьте ключ SpiritTactics, файл не правьте вручную",
+                    e);
         }
     }
 
@@ -85,10 +90,14 @@ public final class TacticsStateCodec {
     private static TacticsMemory memory(JsonNode node) {
         requireObject(node, "memory");
         return new TacticsMemory(
-                Optional.ofNullable(node.get("previous")).map(value -> enumValue(TacticalOption.class, value, "memory.previous")),
-                enumField(DecisionSource.class, node, "previousSource"), longOf(required(node, "decidedAt"), "memory.decidedAt"),
-                enumField(TacticalState.class, node, "state"), longOf(required(node, "stateSince"), "memory.stateSince"),
-                enumField(CombatMode.class, node, "mode"), enumField(CombatMode.class, node, "orderedMode"),
+                Optional.ofNullable(node.get("previous"))
+                        .map(value -> enumValue(TacticalOption.class, value, "memory.previous")),
+                enumField(DecisionSource.class, node, "previousSource"),
+                longOf(required(node, "decidedAt"), "memory.decidedAt"),
+                enumField(TacticalState.class, node, "state"),
+                longOf(required(node, "stateSince"), "memory.stateSince"),
+                enumField(CombatMode.class, node, "mode"),
+                enumField(CombatMode.class, node, "orderedMode"),
                 Optional.ofNullable(node.get("anchor")).map(TacticsStateCodec::point),
                 longOf(required(node, "lastSeenTick"), "memory.lastSeenTick"),
                 number(required(node, "hpWindowRef"), "memory.hpWindowRef"),
@@ -108,24 +117,26 @@ public final class TacticsStateCodec {
 
     private static Point point(JsonNode node) {
         requireObject(node, "точка");
-        return new Point(number(required(node, "x"), "x"), number(required(node, "y"), "y"),
-                number(required(node, "z"), "z"));
+        return new Point(
+                number(required(node, "x"), "x"), number(required(node, "y"), "y"), number(required(node, "z"), "z"));
     }
 
     private static JsonNode readTree(String json) {
         try {
             return MAPPER.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new TacticsFormatException("Состояние тактики не разобрано как JSON: проверьте значение ключа "
-                    + "SpiritTactics, файл не правьте вручную", e);
+            throw new TacticsFormatException(
+                    "Состояние тактики не разобрано как JSON: проверьте значение ключа "
+                            + "SpiritTactics, файл не правьте вручную",
+                    e);
         }
     }
 
     private static void requireVersion(JsonNode root) {
         JsonNode node = root.get("version");
         if (node == null || !node.isIntegralNumber() || !node.canConvertToInt()) {
-            throw new TacticsFormatException("У состояния тактики нет целого поля version: без версии читатель "
-                    + "не выберет разбор формата");
+            throw new TacticsFormatException(
+                    "У состояния тактики нет целого поля version: без версии читатель " + "не выберет разбор формата");
         }
         int version = node.intValue();
         if (version > VERSION) {
@@ -133,7 +144,8 @@ public final class TacticsStateCodec {
                     + ": обновите мод или добавьте читателя новой версии");
         }
         if (version < 1) {
-            throw new TacticsFormatException("Версия состояния тактики " + version + " меньше 1: версии начинаются с 1");
+            throw new TacticsFormatException(
+                    "Версия состояния тактики " + version + " меньше 1: версии начинаются с 1");
         }
     }
 
@@ -181,8 +193,10 @@ public final class TacticsStateCodec {
         try {
             return Enum.valueOf(type, name);
         } catch (IllegalArgumentException e) {
-            throw new TacticsFormatException("Поле '" + field + "' = '" + name + "': неизвестное значение "
-                    + type.getSimpleName() + ", допустимы " + Arrays.toString(type.getEnumConstants()), e);
+            throw new TacticsFormatException(
+                    "Поле '" + field + "' = '" + name + "': неизвестное значение " + type.getSimpleName()
+                            + ", допустимы " + Arrays.toString(type.getEnumConstants()),
+                    e);
         }
     }
 }

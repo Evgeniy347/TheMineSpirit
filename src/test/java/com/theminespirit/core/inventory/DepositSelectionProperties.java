@@ -19,11 +19,25 @@ class DepositSelectionProperties {
     @Provide
     Arbitrary<List<Stack>> inventories() {
         Arbitrary<Stack> stack = Combinators.combine(
-                Arbitraries.of("wooden_pickaxe", "iron_pickaxe", "diamond_pickaxe", "iron_shovel", "stone_axe",
-                        "iron_sword", "bread", "cooked_beef", "apple", "torch", "cobblestone", "dirt", "oak_log",
-                        "iron_ingot", "crafting_table", "bucket"),
-                Arbitraries.integers().between(0, 3),
-                Arbitraries.integers().between(1, 64))
+                        Arbitraries.of(
+                                "wooden_pickaxe",
+                                "iron_pickaxe",
+                                "diamond_pickaxe",
+                                "iron_shovel",
+                                "stone_axe",
+                                "iron_sword",
+                                "bread",
+                                "cooked_beef",
+                                "apple",
+                                "torch",
+                                "cobblestone",
+                                "dirt",
+                                "oak_log",
+                                "iron_ingot",
+                                "crafting_table",
+                                "bucket"),
+                        Arbitraries.integers().between(0, 3),
+                        Arbitraries.integers().between(1, 64))
                 .as((item, variant, count) -> new Stack(item, variant, count, 64));
         return stack.list().ofMaxSize(12);
     }
@@ -32,7 +46,8 @@ class DepositSelectionProperties {
     void surplus_WithoutProtectedSlot_KitIsNeverGivenAway(@ForAll("inventories") List<Stack> inventory) {
         List<Stack> left = remove(inventory, DepositSelection.surplus(inventory, KIT, VALUES, -1));
 
-        assertTrue(KIT.isSatisfiedBy(left, VALUES),
+        assertTrue(
+                KIT.isSatisfiedBy(left, VALUES),
                 "Без защищённого инструмента после сдачи инвентарь обязан удовлетворять набору: набор "
                         + "(инструменты, еда, броня) не сдаётся никогда. Было " + inventory + ", осталось " + left);
     }
@@ -49,7 +64,9 @@ class DepositSelectionProperties {
             }
         }
 
-        assertEquals(expected, protectedSlices,
+        assertEquals(
+                expected,
+                protectedSlices,
                 "Защита текущего инструмента обязана убирать из сдачи только его слот, не меняя решение "
                         + "по остальным: иначе дух сдал бы часть набора или оставил лишнее. Инвентарь "
                         + inventory + ", слот " + protectedSlot);
@@ -59,7 +76,9 @@ class DepositSelectionProperties {
     void surplus_GivenTwiceWithoutProtection_GivesNothingMore(@ForAll("inventories") List<Stack> inventory) {
         List<Stack> left = remove(inventory, DepositSelection.surplus(inventory, KIT, VALUES, -1));
 
-        assertEquals(List.of(), DepositSelection.surplus(left, KIT, VALUES, -1),
+        assertEquals(
+                List.of(),
+                DepositSelection.surplus(left, KIT, VALUES, -1),
                 "Повторная сдача того же инвентаря без защиты обязана быть пустой: иначе два вызова подряд "
                         + "сдали бы разное количество. Инвентарь " + inventory + ", осталось " + left);
     }

@@ -37,8 +37,7 @@ public final class HusbandryGameTests {
     private static final int FEED_GROWTH_FLOOR = 1000;
     private static final BlockPos START = new BlockPos(1, 1, 1);
 
-    private HusbandryGameTests() {
-    }
+    private HusbandryGameTests() {}
 
     @GameTest(template = "arena", batch = "husbandry_breed", timeoutTicks = 400)
     public static void breed_TwoCowsWithWheat_GivesCalfWithin200Ticks(GameTestHelper helper) {
@@ -48,21 +47,25 @@ public final class HusbandryGameTests {
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
         helper.spawn(EntityType.COW, new BlockPos(4, 1, 3));
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(run.spiritTicks() <= 200,
-                    "телёнок обязан родиться за 200 тиков духа, заняло " + run.spiritTicks());
+            helper.assertTrue(
+                    run.spiritTicks() <= 200, "телёнок обязан родиться за 200 тиков духа, заняло " + run.spiritTicks());
             assertSucceeded(helper, spirit, "пара коров с пшеницей обязана свестись");
             List<Cow> cows = alive(helper, Cow.class);
-            helper.assertTrue(cows.size() == 3,
+            helper.assertTrue(
+                    cows.size() == 3,
                     "после сведения пары коров обязано стать 3 (две матери и телёнок), фактически " + cows.size());
             long calves = cows.stream().filter(Cow::isBaby).count();
-            helper.assertTrue(calves == 1,
-                    "телёнок обязан быть ровно 1 (сведено пар: 1), фактически " + calves);
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 2,
+            helper.assertTrue(calves == 1, "телёнок обязан быть ровно 1 (сведено пар: 1), фактически " + calves);
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 2,
                     "на пару уходит ровно 2 пшеницы из 4, фактически осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
             GameTestFixtures.finish(helper);
@@ -79,22 +82,28 @@ public final class HusbandryGameTests {
         spawnBaby(helper, EntityType.CHICKEN, new BlockPos(6, 1, 6), true);
         spawnBaby(helper, EntityType.CHICKEN, new BlockPos(7, 1, 6), true);
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT_SEEDS, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("feed",
-                        Map.of("species", "chicken", "radius", 8, "count", 2, "babiesFirst", true)),
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("feed", Map.of("species", "chicken", "radius", 8, "count", 2, "babiesFirst", true)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             assertSucceeded(helper, spirit, "два цыплёнка обязаны покормиться первыми");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 2,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS) == 2,
                     "на двоих уходит ровно 2 семени из 4, фактически осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT_SEEDS));
-            List<Chicken> grown = alive(helper, Chicken.class).stream().filter(Chicken::isBaby).toList();
-            helper.assertTrue(grown.size() == 2,
+            List<Chicken> grown = alive(helper, Chicken.class).stream()
+                    .filter(Chicken::isBaby)
+                    .toList();
+            helper.assertTrue(
+                    grown.size() == 2,
                     "цыплят обязано остаться 2 (кормление растит, а не убивает), фактически " + grown.size());
             for (Chicken chick : grown) {
-                helper.assertTrue(chick.getAge() > BABY_AGE + FEED_GROWTH_FLOOR,
+                helper.assertTrue(
+                        chick.getAge() > BABY_AGE + FEED_GROWTH_FLOOR,
                         "цыплёнок обязан подрасти после корма больше чем на " + FEED_GROWTH_FLOOR
                                 + " тиков (естественный рост за тест меньше): иначе кормили ближних кур, "
                                 + "а не дальних цыплят, возраст " + chick.getAge());
@@ -116,20 +125,24 @@ public final class HusbandryGameTests {
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 2));
         SpiritEntity spirit = spawnWith(helper, new BlockPos(2, 1, 4), new ItemStack(Items.WHEAT, 2));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("feed",
-                        Map.of("species", "cow", "radius", 8, "count", 2, "babiesFirst", false)),
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("feed", Map.of("species", "cow", "radius", 8, "count", 2, "babiesFirst", false)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(run.spiritTicks() <= 300,
+            helper.assertTrue(
+                    run.spiritTicks() <= 300,
                     "две живые коровы обязаны покормиться за 300 тиков духа, заняло " + run.spiritTicks());
             assertSucceeded(helper, spirit, "две живые коровы в загоне обязаны покормиться");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 0,
                     "на двух коров уходят обе пшеницы, фактически осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
-            helper.assertTrue(alive(helper, Cow.class).size() == 2,
+            helper.assertTrue(
+                    alive(helper, Cow.class).size() == 2,
                     "кормление не убивает: живых коров обязано остаться 2, фактически "
                             + alive(helper, Cow.class).size());
             GameTestFixtures.finish(helper);
@@ -144,14 +157,18 @@ public final class HusbandryGameTests {
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
         helper.spawn(EntityType.COW, new BlockPos(4, 1, 3));
         SpiritEntity spirit = spawnWith(helper, START);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             assertFailedWith(helper, spirit, "нет корма: нужен minecraft:wheat");
             List<Cow> cows = alive(helper, Cow.class);
-            helper.assertTrue(cows.size() == 2 && cows.stream().noneMatch(Cow::isBaby),
+            helper.assertTrue(
+                    cows.size() == 2 && cows.stream().noneMatch(Cow::isBaby),
                     "без корма стадо обязано остаться нетронутым (2 взрослые, без телят), фактически " + cows.size());
             GameTestFixtures.finish(helper);
         });
@@ -165,17 +182,21 @@ public final class HusbandryGameTests {
         helper.spawn(EntityType.COW, new BlockPos(3, 1, 3));
         spawnBaby(helper, EntityType.COW, new BlockPos(4, 1, 3));
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("breed", Map.of("species", "cow", "radius", 8, "pairs", 1)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             assertFailedWith(helper, spirit, "готово к разведению 1 из 2");
             List<Cow> cows = alive(helper, Cow.class);
-            helper.assertTrue(cows.size() == 2,
-                    "телёнок в пару не сводится: новых телят нет, коров обязано остаться 2, фактически "
-                            + cows.size());
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
+            helper.assertTrue(
+                    cows.size() == 2,
+                    "телёнок в пару не сводится: новых телят нет, коров обязано остаться 2, фактически " + cows.size());
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
                     "несостоявшаяся пара корм не тратит: пшеницы обязано остаться 4");
             GameTestFixtures.finish(helper);
         });
@@ -189,15 +210,19 @@ public final class HusbandryGameTests {
         helper.spawn(EntityType.PIG, new BlockPos(3, 1, 3));
         helper.spawn(EntityType.PIG, new BlockPos(4, 1, 3));
         SpiritEntity spirit = spawnWith(helper, START, new ItemStack(Items.WHEAT, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("breed", Map.of("species", "pig", "radius", 8, "pairs", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("breed", Map.of("species", "pig", "radius", 8, "pairs", 1)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             assertFailedWith(helper, spirit, "нужен minecraft:carrot");
-            helper.assertTrue(alive(helper, Pig.class).size() == 2,
-                    "чужим кормом свиней не кормят: обе обязаны остаться целы");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
+            helper.assertTrue(
+                    alive(helper, Pig.class).size() == 2, "чужим кормом свиней не кормят: обе обязаны остаться целы");
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 4,
                     "пшеница свиньям не подходит: все 4 обязаны остаться");
             GameTestFixtures.finish(helper);
         });
@@ -245,22 +270,29 @@ public final class HusbandryGameTests {
 
         helper.succeedWhen(() -> {
             HerdSession first = session.get();
-            helper.assertTrue(first != null && first.done() >= 1,
+            helper.assertTrue(
+                    first != null && first.done() >= 1,
                     "первая сессия обязана свести первую пару до сохранения: иначе нечего восстанавливать");
             helper.assertTrue(saved.get() != null, "состояние обязано сохраниться после первой пары");
             Object done = saved.get().get("done");
-            helper.assertTrue(done instanceof Number && ((Number) done).intValue() >= 1,
+            helper.assertTrue(
+                    done instanceof Number number && number.intValue() >= 1,
                     "прогресс done обязан пережить saveState/restoreState (не меньше 1 пары), а там " + done);
             HerdSession again = restored.get();
-            helper.assertTrue(again != null && again.outcome() == HerdSession.Outcome.SUCCEEDED,
+            helper.assertTrue(
+                    again != null && again.outcome() == HerdSession.Outcome.SUCCEEDED,
                     "восстановленная сессия обязана довести разведение до конца: "
-                            + (again == null ? "сессия не создана"
+                            + (again == null
+                                    ? "сессия не создана"
                                     : again.outcome() + ", причина " + again.failureReason()));
-            helper.assertTrue(again.done() == 2,
+            helper.assertTrue(
+                    again.done() == 2,
                     "восстановленная сессия обязана свести обе пары (done = 2 с учётом сохранённого), фактически "
                             + again.done());
-            helper.assertTrue(alive(helper, Cow.class).size() == 6,
-                    "после двух пар коров обязано стать 6, фактически " + alive(helper, Cow.class).size());
+            helper.assertTrue(
+                    alive(helper, Cow.class).size() == 6,
+                    "после двух пар коров обязано стать 6, фактически "
+                            + alive(helper, Cow.class).size());
             GameTestFixtures.finish(helper);
         });
     }
@@ -292,9 +324,9 @@ public final class HusbandryGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(suspended.get(),
-                    "дух обязан начать идти к корове: иначе приостанавливать нечего");
-            helper.assertTrue(stoppedAtOnce.get(),
+            helper.assertTrue(suspended.get(), "дух обязан начать идти к корове: иначе приостанавливать нечего");
+            helper.assertTrue(
+                    stoppedAtOnce.get(),
                     "после suspend навигация духа обязана остановиться в тот же тик: иначе рефлекс политики не "
                             + "перехватит движение к стаду");
             GameTestFixtures.finish(helper);
@@ -302,16 +334,21 @@ public final class HusbandryGameTests {
     }
 
     static void assertSucceeded(GameTestHelper helper, SpiritEntity spirit, String expectation) {
-        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                expectation + ": статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
-                        + ", причина " + spirit.taskFailureReason().orElse("нет"));
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                expectation + ": статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
     }
 
     static void assertFailedWith(GameTestHelper helper, SpiritEntity spirit, String fragment) {
-        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                "задача обязана провалиться, а статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                "задача обязана провалиться, а статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
         String reason = spirit.taskFailureReason().orElse("");
-        helper.assertTrue(reason.contains(fragment),
+        helper.assertTrue(
+                reason.contains(fragment),
                 "причина провала обязана содержать «" + fragment + "», фактически: " + reason);
     }
 
@@ -323,12 +360,11 @@ public final class HusbandryGameTests {
         return spirit;
     }
 
-    static <T extends Entity> List<T> alive(GameTestHelper helper,
-            Class<T> type) {
+    static <T extends Entity> List<T> alive(GameTestHelper helper, Class<T> type) {
         Vec3 first = helper.absoluteVec(new Vec3(-2, 0, -2));
         Vec3 second = helper.absoluteVec(new Vec3(11, 8, 11));
-        return helper.getLevel().getEntitiesOfClass(type, new AABB(first, second),
-                entity -> !entity.isRemoved() && entity.isAlive());
+        return helper.getLevel()
+                .getEntitiesOfClass(type, new AABB(first, second), entity -> !entity.isRemoved() && entity.isAlive());
     }
 
     static <T extends Mob> T spawnStill(GameTestHelper helper, EntityType<T> type, BlockPos relative) {
@@ -337,13 +373,12 @@ public final class HusbandryGameTests {
         return mob;
     }
 
-    static void spawnBaby(GameTestHelper helper, EntityType<? extends AgeableMob> type,
-            BlockPos relative) {
+    static void spawnBaby(GameTestHelper helper, EntityType<? extends AgeableMob> type, BlockPos relative) {
         spawnBaby(helper, type, relative, false);
     }
 
-    static void spawnBaby(GameTestHelper helper, EntityType<? extends AgeableMob> type,
-            BlockPos relative, boolean still) {
+    static void spawnBaby(
+            GameTestHelper helper, EntityType<? extends AgeableMob> type, BlockPos relative, boolean still) {
         AgeableMob baby = type.create(helper.getLevel());
         baby.setAge(BABY_AGE);
         baby.setNoAi(still);

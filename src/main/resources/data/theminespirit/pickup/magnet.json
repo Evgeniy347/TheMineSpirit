@@ -1,0 +1,5 @@
+{
+  "radius": 5.0,
+  "intervalTicks": 10,
+  "playerDropDelayTicks": 100
+}

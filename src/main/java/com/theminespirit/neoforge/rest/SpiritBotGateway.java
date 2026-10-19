@@ -86,14 +86,13 @@ public final class SpiritBotGateway implements BotGateway {
 
     @Override
     public List<BotInfo> bots() {
-        return serverCall.call(() -> index.snapshot().stream().map(this::info).toList(),
-                RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(
+                () -> index.snapshot().stream().map(this::info).toList(), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
     public Optional<BotInfo> bot(String id) {
-        return serverCall.call(() -> parse(id).flatMap(index::find).map(this::info),
-                RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(() -> parse(id).flatMap(index::find).map(this::info), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
@@ -105,18 +104,28 @@ public final class SpiritBotGateway implements BotGateway {
 
     @Override
     public List<DecisionRecord> decisions(String id, int limit) {
-        return serverCall.call(() -> parse(id).flatMap(index::find)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                        "Дух '" + id + "' не найден: список живых духов — GET /v1/bots",
-                        Map.of("id", id)))
-                .tactics().decisions(limit), RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(
+                () -> parse(id)
+                        .flatMap(index::find)
+                        .orElseThrow(() -> new ApiException(
+                                ErrorCode.NOT_FOUND,
+                                "Дух '" + id + "' не найден: список живых духов — GET /v1/bots",
+                                Map.of("id", id)))
+                        .tactics()
+                        .decisions(limit),
+                RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     private CompletableFuture<WorldObservation> startObserve(String id, ObserveRequest request) {
-        SpiritEntity spirit = parse(id).flatMap(index::find).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Дух '" + id + "' не найден: список живых духов — GET /v1/bots", Map.of("id", id)));
+        SpiritEntity spirit = parse(id)
+                .flatMap(index::find)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Дух '" + id + "' не найден: список живых духов — GET /v1/bots",
+                        Map.of("id", id)));
         if (!spirit.isAlive()) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "Дух '" + id + "' мёртв: наблюдение недоступно, проверьте state в GET /v1/bots/" + id,
                     Map.of("id", id));
         }
@@ -135,8 +144,15 @@ public final class SpiritBotGateway implements BotGateway {
         BlockPos position = spirit.blockPosition();
         String id = spirit.getUUID().toString();
         String currentTask = tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null);
-        return new BotInfo(id, spirit.displayName(), state(spirit), position.getX(), position.getY(),
-                position.getZ(), spirit.level().dimension().location().toString(), currentTask,
+        return new BotInfo(
+                id,
+                spirit.displayName(),
+                state(spirit),
+                position.getX(),
+                position.getY(),
+                position.getZ(),
+                spirit.level().dimension().location().toString(),
+                currentTask,
                 spirit.hunger().satietyFraction());
     }
 
@@ -145,6 +161,7 @@ public final class SpiritBotGateway implements BotGateway {
             return BotState.DEAD;
         }
         return spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
-                ? BotState.BUSY : BotState.IDLE;
+                ? BotState.BUSY
+                : BotState.IDLE;
     }
 }

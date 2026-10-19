@@ -33,7 +33,8 @@ public final class RetreatScript implements ScriptInstance {
         }
         if (!applied) {
             Point self = new Point(spirit.getX(), spirit.getY(), spirit.getZ());
-            Optional<Point> retreatPoint = SafePointChoice.nearest(self,
+            Optional<Point> retreatPoint = SafePointChoice.nearest(
+                    self,
                     spirit.home().map(home -> new Point(home.x() + 0.5, home.y(), home.z() + 0.5)),
                     spirit.camp().map(Camp::center));
             if (retreatPoint.isEmpty()) {
@@ -49,8 +50,8 @@ public final class RetreatScript implements ScriptInstance {
             return succeed();
         }
         if (ticks >= CatalogLimits.RETREAT_TIMEOUT_TICKS) {
-            return fail("не дошёл до точки за " + ticks + " тиков (тайм-аут "
-                    + CatalogLimits.RETREAT_TIMEOUT_TICKS + "), осталось: " + distance);
+            return fail("не дошёл до точки за " + ticks + " тиков (тайм-аут " + CatalogLimits.RETREAT_TIMEOUT_TICKS
+                    + "), осталось: " + distance);
         }
         return ScriptStatus.RUNNING;
     }
@@ -72,10 +73,14 @@ public final class RetreatScript implements ScriptInstance {
 
     private ScriptStatus succeed() {
         result = new ScriptResult.Data(Map.of(
-                "mode", CombatDirective.retreat(destination).mode().name(),
-                "target", destination.toString(),
-                "ticks", ticks,
-                "outcome", "arrived"));
+                "mode",
+                CombatDirective.retreat(destination).mode().name(),
+                "target",
+                destination.toString(),
+                "ticks",
+                ticks,
+                "outcome",
+                "arrived"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

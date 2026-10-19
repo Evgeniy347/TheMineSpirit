@@ -8,11 +8,15 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class BedChoice {
-    private BedChoice() {
-    }
+    private BedChoice() {}
 
-    public static Optional<BlockCoord> choose(Optional<BlockCoord> ownBed, Collection<BlockCoord> beds,
-            Set<BlockCoord> taken, BlockCoord from, BlockCoord home, int settlementRadius) {
+    public static Optional<BlockCoord> choose(
+            Optional<BlockCoord> ownBed,
+            Collection<BlockCoord> beds,
+            Set<BlockCoord> taken,
+            BlockCoord from,
+            BlockCoord home,
+            int settlementRadius) {
         Objects.requireNonNull(ownBed, "Своя кровать не может быть null: отсутствие задают Optional.empty()");
         Objects.requireNonNull(beds, "Список кроватей не может быть null: пустой список — нет кроватей");
         Objects.requireNonNull(taken, "Занятые кровати не могут быть null: пустое множество — все свободны");
@@ -28,11 +32,10 @@ public final class BedChoice {
                 return ownBed;
             }
         }
-        Comparator<BlockCoord> nearest =
-                Comparator.comparingDouble((BlockCoord bed) -> distanceSquared(bed, from))
-                        .thenComparingInt(BlockCoord::x)
-                        .thenComparingInt(BlockCoord::y)
-                        .thenComparingInt(BlockCoord::z);
+        Comparator<BlockCoord> nearest = Comparator.comparingDouble((BlockCoord bed) -> distanceSquared(bed, from))
+                .thenComparingInt(BlockCoord::x)
+                .thenComparingInt(BlockCoord::y)
+                .thenComparingInt(BlockCoord::z);
         return beds.stream()
                 .filter(bed -> bed != null && !taken.contains(bed) && inside(bed, home, settlementRadius))
                 .min(nearest);

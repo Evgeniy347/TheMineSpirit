@@ -13,7 +13,9 @@ class WaterCellsTests {
 
     @Test
     void maxCells_Constant_IsTwentyThousand() {
-        assertEquals(LIMIT, WaterCells.MAX_CELLS,
+        assertEquals(
+                LIMIT,
+                WaterCells.MAX_CELLS,
                 "Предел воды 20 000 клеток задан в задаче 21 п. 10: он защищает тик от разбора озера; "
                         + "меняя число осознанно, поправь и ожидание здесь");
     }
@@ -57,13 +59,16 @@ class WaterCellsTests {
             water.add(new BlockCoord(i, 0, 0));
         }
 
-        assertThrows(IllegalStateException.class, water::cells,
+        assertThrows(
+                IllegalStateException.class,
+                water::cells,
                 "Неполное множество воды дало бы тихий ложный «сухо»: после превышения чтение обязано падать");
     }
 
     @Test
     void refusal_Text_NamesRadiusAdvice() {
-        assertTrue(WaterCells.REFUSAL.contains("воды слишком много") && WaterCells.REFUSAL.contains("radius"),
+        assertTrue(
+                WaterCells.REFUSAL.contains("воды слишком много") && WaterCells.REFUSAL.contains("radius"),
                 "Отказ обязан сказать стратегу, что именно уменьшать: параметр radius");
     }
 }

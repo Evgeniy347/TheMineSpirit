@@ -13,14 +13,12 @@ import org.junit.jupiter.api.Test;
 class BoardEventsTests {
     private static final UUID SPIRIT = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
-    private record Seen(BoardLog.Event event, String ticketId, UUID holder) {
-    }
+    private record Seen(BoardLog.Event event, String ticketId, UUID holder) {}
 
     private final List<Seen> seen = new ArrayList<>();
 
     private Board board() {
-        return new Board(() -> 7, (event, ticket, holder, tick) ->
-                seen.add(new Seen(event, ticket.id(), holder)));
+        return new Board(() -> 7, (event, ticket, holder, tick) -> seen.add(new Seen(event, ticket.id(), holder)));
     }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, String cause, List<String> dependsOn) {
@@ -33,7 +31,9 @@ class BoardEventsTests {
         board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
         board.submit(ticket("t", BoardCase.BUILD_PEN, "always", List.of()));
 
-        assertEquals(List.of(new Seen(BoardLog.Event.SUBMITTED, "t", null)), seen,
+        assertEquals(
+                List.of(new Seen(BoardLog.Event.SUBMITTED, "t", null)),
+                seen,
                 "Постановка задания пишет ровно одну строку SUBMITTED без духа: по ней журнал помнит, "
                         + "откуда взялось задание, а повторная заявка того же id не плодит строк");
     }
@@ -47,7 +47,9 @@ class BoardEventsTests {
         board.claim("t", SPIRIT, 7);
         board.claim("t", SPIRIT, 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.ASSIGNED, "t", SPIRIT)), seen,
+        assertEquals(
+                List.of(new Seen(BoardLog.Event.ASSIGNED, "t", SPIRIT)),
+                seen,
                 "Выдача пишет ровно одну строку ASSIGNED с держателем: повторный claim того же духа "
                         + "не второй переход");
     }
@@ -64,8 +66,9 @@ class BoardEventsTests {
         board.complete("done");
         board.fail("fail");
 
-        assertEquals(List.of(new Seen(BoardLog.Event.DONE, "done", SPIRIT),
-                        new Seen(BoardLog.Event.FAILED, "fail", SPIRIT)), seen,
+        assertEquals(
+                List.of(new Seen(BoardLog.Event.DONE, "done", SPIRIT), new Seen(BoardLog.Event.FAILED, "fail", SPIRIT)),
+                seen,
                 "Завершение и провал пишут по одной строке с держателем: журнал видит, чем кончилось дело");
     }
 
@@ -78,7 +81,9 @@ class BoardEventsTests {
 
         board.retain(Set.of(), 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.DETACHED, "crater", null)), seen,
+        assertEquals(
+                List.of(new Seen(BoardLog.Event.DETACHED, "crater", null)),
+                seen,
                 "Снятие по актуальности пишет DETACHED, а постоянное задание с причиной always "
                         + "не снимается вовсе");
     }
@@ -92,8 +97,11 @@ class BoardEventsTests {
 
         board.retain(Set.of(), 7);
 
-        assertEquals(List.of(new Seen(BoardLog.Event.DETACHED, "lure", null),
-                        new Seen(BoardLog.Event.CANCELLED, "dismantle", null)), seen,
+        assertEquals(
+                List.of(
+                        new Seen(BoardLog.Event.DETACHED, "lure", null),
+                        new Seen(BoardLog.Event.CANCELLED, "dismantle", null)),
+                seen,
                 "Каскад снимает зависимое задание отдельной строкой CANCELLED: журнал различает "
                         + "потерянную причину и снятого зависимого");
     }

@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
+import org.jspecify.annotations.Nullable;
 
 abstract class StepExecutor extends SingleChildExecutor {
     private int index;
@@ -18,9 +19,9 @@ abstract class StepExecutor extends SingleChildExecutor {
             }
             current(spawn(next));
         }
-        ScriptStatus child = current().tick();
+        ScriptStatus child = running().tick();
         if (child == ScriptStatus.FAILED) {
-            failFrom(current());
+            failFrom(running());
             return ScriptStatus.FAILED;
         }
         if (child == ScriptStatus.CANCELLED) {
@@ -37,7 +38,7 @@ abstract class StepExecutor extends SingleChildExecutor {
         return ScriptStatus.RUNNING;
     }
 
-    abstract TaskNode stepAt(int index);
+    abstract @Nullable TaskNode stepAt(int index);
 
     final int index() {
         return index;

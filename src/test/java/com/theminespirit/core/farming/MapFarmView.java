@@ -74,7 +74,8 @@ final class MapFarmView implements FarmView {
                     continue;
                 }
                 FarmTile neighbor = peek(new BlockCoord(ground.x() + dx, ground.y(), ground.z() + dz));
-                boolean soil = neighbor.ground() == Ground.DIRT || neighbor.ground() == Ground.GRASS
+                boolean soil = neighbor.ground() == Ground.DIRT
+                        || neighbor.ground() == Ground.GRASS
                         || neighbor.ground() == Ground.FARMLAND;
                 if (soil && neighbor.above() == Above.AIR) {
                     return true;

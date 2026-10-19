@@ -11,8 +11,7 @@ import java.util.Map;
 public final class DecisionReasons {
     public static final int TOP_FACTORS = 3;
 
-    private DecisionReasons() {
-    }
+    private DecisionReasons() {}
 
     public static List<ReasonFactor> topFactors(Trace trace, TacticalOption chosen) {
         Map<TacticalOption, Double> totals = trace.totals();
@@ -24,16 +23,19 @@ public final class DecisionReasons {
                 factors.add(new ReasonFactor(share.factor().name(), share.value(), weight));
             }
         }
-        factors.sort(Comparator.comparingDouble(ReasonFactor::weight).reversed()
-                .thenComparingInt(factor -> Factor.valueOf(factor.factor()).ordinal()));
+        factors.sort(Comparator.comparingDouble(ReasonFactor::weight)
+                .reversed()
+                .thenComparing(factor -> Factor.valueOf(factor.factor())));
         return List.copyOf(factors.subList(0, Math.min(TOP_FACTORS, factors.size())));
     }
 
     private static TacticalOption rivalOf(Map<TacticalOption, Double> totals, TacticalOption chosen) {
-        return totals.entrySet().stream().filter(entry -> entry.getKey() != chosen)
+        return totals.entrySet().stream()
+                .filter(entry -> entry.getKey() != chosen)
                 .max(Comparator.<Map.Entry<TacticalOption, Double>>comparingDouble(Map.Entry::getValue)
-                        .thenComparingInt(entry -> entry.getKey().ordinal()))
-                .map(Map.Entry::getKey).orElse(chosen);
+                        .thenComparing(Map.Entry::getKey))
+                .map(Map.Entry::getKey)
+                .orElse(chosen);
     }
 
     private static double share(TacticalOption option, Trace.FactorShare factor) {

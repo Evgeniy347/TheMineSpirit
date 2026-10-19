@@ -1,8 +1,9 @@
 package com.theminespirit.core.observation;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record HeldItem(String item, Integer durability) {
+public record HeldItem(String item, @Nullable Integer durability) {
     public HeldItem {
         Objects.requireNonNull(item, "item не может быть null: предмет в руке называет свой id");
         if (durability != null && durability < 0) {

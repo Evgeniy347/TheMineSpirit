@@ -9,8 +9,7 @@ import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Sheep;
 
 public final class HerdSpecies {
-    private HerdSpecies() {
-    }
+    private HerdSpecies() {}
 
     public static Optional<Species> of(Entity entity) {
         if (entity instanceof Cow) {

@@ -6,8 +6,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.NightLeashGate;
 
 public final class TravelCheck {
-    private TravelCheck() {
-    }
+    private TravelCheck() {}
 
     public static String refusal(SpiritEntity spirit, BlockCoord goal) {
         if (spirit.protectionGate().checkTravel(goal) instanceof BlockProtection.Refused refused) {

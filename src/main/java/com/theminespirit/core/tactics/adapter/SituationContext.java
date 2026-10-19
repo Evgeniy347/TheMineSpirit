@@ -7,8 +7,8 @@ import com.theminespirit.core.tactics.SelfFacts;
 import com.theminespirit.core.tactics.Situation;
 import java.util.List;
 
-public record SituationContext(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit,
-        int ticksSinceStrike) {
+public record SituationContext(
+        SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit, int ticksSinceStrike) {
     public SituationContext {
         required("SituationContext.self", self);
         required("SituationContext.enemies", enemies);

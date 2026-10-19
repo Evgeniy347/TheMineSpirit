@@ -18,7 +18,9 @@ public final class ConditionCatalog {
 
     public static ConditionCatalog of(List<ConditionSpec> conditions) {
         Objects.requireNonNull(conditions, "conditions не может быть null: пустой каталог задают пустым списком");
-        return new ConditionCatalog(SpecCatalog.of(conditions, ConditionSpec::id,
+        return new ConditionCatalog(SpecCatalog.of(
+                conditions,
+                ConditionSpec::id,
                 "Дублирующийся id проверки '{id}': каталог должен находить проверку однозначно"));
     }
 
@@ -32,7 +34,7 @@ public final class ConditionCatalog {
 
     public ConditionCatalog restrictedTo(Set<String> ids) {
         Objects.requireNonNull(ids, "ids не может быть null: для отбора нужен набор ключей");
-        return new ConditionCatalog(delegate.restrictedTo(ids,
-                "Проверка '{id}' вызывается адаптером, но не описана в каталоге: сверьте наличие описания"));
+        return new ConditionCatalog(delegate.restrictedTo(
+                ids, "Проверка '{id}' вызывается адаптером, но не описана в каталоге: сверьте наличие описания"));
     }
 }

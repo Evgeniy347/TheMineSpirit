@@ -21,9 +21,12 @@ class SpiritHomeTests {
 
     @Test
     void none_NoPoint_IsNotSet() {
-        assertFalse(SpiritHome.none().isSet(), "Дом без точки обязан считаться незаданным: иначе дух пойдёт "
-                + "в точку, которой нет");
-        assertEquals(Optional.empty(), SpiritHome.none().point(),
+        assertFalse(
+                SpiritHome.none().isSet(),
+                "Дом без точки обязан считаться незаданным: иначе дух пойдёт " + "в точку, которой нет");
+        assertEquals(
+                Optional.empty(),
+                SpiritHome.none().point(),
                 "Дом без точки обязан отдавать пустой Optional: null вместо него сломал бы return_home");
     }
 
@@ -31,13 +34,17 @@ class SpiritHomeTests {
     void at_Point_IsSetAndKeepsCoordinates() {
         SpiritHome home = SpiritHome.at(NEAR);
         assertTrue(home.isSet(), "Дом с точкой обязан считаться заданным: иначе return_home откажется идти");
-        assertEquals(NEAR, home.point().orElseThrow(),
+        assertEquals(
+                NEAR,
+                home.point().orElseThrow(),
                 "Дом обязан сохранить координаты без подмены: иначе дух уйдёт не туда, куда его поставили");
     }
 
     @Test
     void at_NullPoint_Throws() {
-        assertThrows(NullPointerException.class, () -> SpiritHome.at(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> SpiritHome.at(null),
                 "Дом без координаты не ставится: null вместо точки увёл бы духа в никуда");
     }
 
@@ -47,7 +54,9 @@ class SpiritHomeTests {
 
         SpiritHome resolved = SpiritHome.resolve(Optional.of(SpiritHome.at(FAR)), List.of(legacy), OVERWORLD, SELF);
 
-        assertEquals(FAR, resolved.point().orElseThrow(),
+        assertEquals(
+                FAR,
+                resolved.point().orElseThrow(),
                 "Сохранённый дом — источник правды: легаси-память BASE не имеет права его перебить");
     }
 
@@ -57,7 +66,8 @@ class SpiritHomeTests {
 
         SpiritHome resolved = SpiritHome.resolve(Optional.of(SpiritHome.none()), List.of(legacy), OVERWORLD, SELF);
 
-        assertFalse(resolved.isSet(),
+        assertFalse(
+                resolved.isSet(),
                 "Снятый дом не воскресает из легаси-памяти: иначе /spirit home clear отменялся бы при перезагрузке");
     }
 
@@ -68,7 +78,9 @@ class SpiritHomeTests {
 
         SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(far, near), OVERWORLD, SELF);
 
-        assertEquals(NEAR, resolved.point().orElseThrow(),
+        assertEquals(
+                NEAR,
+                resolved.point().orElseThrow(),
                 "Старое сохранение без SpiritHome читается: домом становится ближайшая база, как выбирал прежний "
                         + "WorldFactCollector");
     }
@@ -79,7 +91,8 @@ class SpiritHomeTests {
 
         SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(nether), OVERWORLD, SELF);
 
-        assertFalse(resolved.isSet(),
+        assertFalse(
+                resolved.isSet(),
                 "База чужого измерения домом не становится: иначе дух в Верхнем мире шёл бы к точке Нижнего");
     }
 
@@ -89,7 +102,8 @@ class SpiritHomeTests {
 
         SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(resource), OVERWORLD, SELF);
 
-        assertFalse(resolved.isSet(),
+        assertFalse(
+                resolved.isSet(),
                 "Домом становится только легаси-база (BASE): ресурс с именем home домом не считается");
     }
 
@@ -97,8 +111,9 @@ class SpiritHomeTests {
     void resolve_NoLegacyBase_GivesNoHome() {
         SpiritHome resolved = SpiritHome.resolve(Optional.empty(), List.of(), OVERWORLD, SELF);
 
-        assertFalse(resolved.isSet(), "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home "
-                + "нашёл бы точку из воздуха");
+        assertFalse(
+                resolved.isSet(),
+                "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home " + "нашёл бы точку из воздуха");
     }
 
     private static MemoryPoint memory(String name, BlockCoord pos, MemoryType type, String dimension) {

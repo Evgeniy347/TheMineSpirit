@@ -1,5 +1,7 @@
 package com.theminespirit.core.intellect;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
@@ -11,13 +13,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, List<CurvePoint> extraCurve,
+public record InventoryNormTable(
+        String origin,
+        List<CurvePoint> occupiedCurve,
+        List<CurvePoint> extraCurve,
         Map<ActivityId, Integer> releaseFreeSlots) {
 
     public static final String RESOURCE = "data/theminespirit/inventory/inventory_norm.json";
 
+    private static final String OCCUPIED_CURVE = "occupied_curve";
+    private static final String EXTRA_CURVE = "extra_curve";
     private static final Set<String> ROOT_FIELDS = Set.of("demand", "release_free_slots");
-    private static final Set<String> DEMAND_FIELDS = Set.of("occupied_curve", "extra_curve");
+    private static final Set<String> DEMAND_FIELDS = Set.of(OCCUPIED_CURVE, EXTRA_CURVE);
     private static final Set<String> POINT_FIELDS = Set.of("at", "value");
 
     public record CurvePoint(double at, double value) {
@@ -35,10 +42,11 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
 
     public InventoryNormTable {
         Objects.requireNonNull(origin, "Источник таблицы не может быть null: сообщение называет файл");
-        occupiedCurve = checkCurve(occupiedCurve, "occupied_curve");
-        extraCurve = checkCurve(extraCurve, "extra_curve");
-        Objects.requireNonNull(releaseFreeSlots, "Пороги освобождения не могут быть null: "
-                + "по ним решают, когда дух бросает задачу");
+        occupiedCurve = checkCurve(occupiedCurve, OCCUPIED_CURVE);
+        extraCurve = checkCurve(extraCurve, EXTRA_CURVE);
+        Objects.requireNonNull(
+                releaseFreeSlots,
+                "Пороги освобождения не могут быть null: " + "по ним решают, когда дух бросает задачу");
         Map<ActivityId, Integer> checked = new EnumMap<>(ActivityId.class);
         for (ActivityId id : ActivityId.values()) {
             Integer threshold = releaseFreeSlots.get(id);
@@ -75,8 +83,8 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
             throw new IllegalStateException("Файл '" + origin + "': у demand ожидается объект с кривыми спроса");
         }
         JsonResource.checkFields(demand, DEMAND_FIELDS, origin, "блока demand");
-        List<CurvePoint> occupied = parseCurve(demand.get("occupied_curve"), origin, "occupied_curve");
-        List<CurvePoint> extra = parseCurve(demand.get("extra_curve"), origin, "extra_curve");
+        List<CurvePoint> occupied = parseCurve(demand.get(OCCUPIED_CURVE), origin, OCCUPIED_CURVE);
+        List<CurvePoint> extra = parseCurve(demand.get(EXTRA_CURVE), origin, EXTRA_CURVE);
         Map<ActivityId, Integer> release = parseRelease(root.get("release_free_slots"), origin);
         try {
             return new InventoryNormTable(origin, occupied, extra, release);
@@ -87,7 +95,7 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
 
     public int releaseFreeSlots(ActivityId activity) {
         Objects.requireNonNull(activity, "Деятельность не может быть null: порог ищут по id");
-        return releaseFreeSlots.get(activity);
+        return present(releaseFreeSlots, activity, "Пороги свободных слотов");
     }
 
     private static List<CurvePoint> parseCurve(JsonNode node, String origin, String what) {
@@ -95,11 +103,12 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
         List<CurvePoint> parsed = new ArrayList<>(points.size());
         for (JsonNode point : points) {
             if (!point.isObject()) {
-                throw new IllegalStateException("Файл '" + origin + "': точка кривой " + what
-                        + " — не объект с полями at и value");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': точка кривой " + what + " — не объект с полями at и value");
             }
             JsonResource.checkFields(point, POINT_FIELDS, origin, "точки кривой " + what);
-            parsed.add(new CurvePoint(JsonResource.decimal(point.get("at"), origin, "поля at кривой " + what),
+            parsed.add(new CurvePoint(
+                    JsonResource.decimal(point.get("at"), origin, "поля at кривой " + what),
                     JsonResource.decimal(point.get("value"), origin, "поля value кривой " + what)));
         }
         return parsed;
@@ -132,8 +141,8 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
         }
         List<CurvePoint> checked = List.copyOf(curve);
         if (checked.get(0).at() != 0.0 || checked.get(0).value() != 0.0) {
-            throw new IllegalArgumentException("Кривая " + what
-                    + " обязана начинаться точкой (0, 0): пустой инвентарь не создаёт спроса");
+            throw new IllegalArgumentException(
+                    "Кривая " + what + " обязана начинаться точкой (0, 0): пустой инвентарь не создаёт спроса");
         }
         if (checked.get(checked.size() - 1).at() != 1.0) {
             throw new IllegalArgumentException("Кривая " + what + " обязана заканчиваться при at = 1: "
@@ -143,8 +152,8 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
             CurvePoint previous = checked.get(index - 1);
             CurvePoint current = checked.get(index);
             if (current.at() <= previous.at()) {
-                throw new IllegalArgumentException("Кривая " + what + ": доли точек не растут ("
-                        + previous.at() + " -> " + current.at() + "): кривая обязана быть упорядочена");
+                throw new IllegalArgumentException("Кривая " + what + ": доли точек не растут (" + previous.at()
+                        + " -> " + current.at() + "): кривая обязана быть упорядочена");
             }
             if (current.value() < previous.value()) {
                 throw new IllegalArgumentException("Кривая " + what + ": спрос падает ("

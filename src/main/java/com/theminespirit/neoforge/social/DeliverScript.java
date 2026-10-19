@@ -8,16 +8,16 @@ import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.DropCollector;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -27,7 +27,7 @@ public final class DeliverScript implements ScriptInstance {
     private final Approach approach;
     private Item item;
     private LivingEntity target;
-    private int ticks;
+
     private int delivered;
     private boolean started;
     private String failureReason;
@@ -49,9 +49,8 @@ public final class DeliverScript implements ScriptInstance {
             return succeed();
         }
         if (!started) {
-            Optional<Item> found = BuiltInRegistries.ITEM
-                    .getOptional(ResourceLocation.parse(
-                            params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
+            Optional<Item> found = BuiltInRegistries.ITEM.getOptional(
+                    ResourceLocation.parse(params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
             if (found.isEmpty()) {
                 return fail("предмет '" + params.item() + "' не зарегистрирован: доставлять нечего");
             }
@@ -64,13 +63,13 @@ public final class DeliverScript implements ScriptInstance {
             int remaining = params.count() - delivered;
             int available = countInInventory();
             if (available < remaining) {
-                return fail("не хватает предмета '" + params.item() + "': нужно " + remaining
-                        + ", в инвентаре " + available + ", передано " + delivered);
+                return fail("не хватает предмета '" + params.item() + "': нужно " + remaining + ", в инвентаре "
+                        + available + ", передано " + delivered);
             }
             approach.begin(target, SocialTuning.DELIVER_ARRIVAL);
             started = true;
         }
-        ticks++;
+
         if (target.isRemoved() || !target.isAlive()) {
             approach.cancel();
             return fail("адресат '" + params.to() + "' ушёл по дороге: доставка сорвана");
@@ -78,10 +77,11 @@ public final class DeliverScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> transfer();
-            case TIMEOUT -> fail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks()
-                    + " тиков");
-            case STUCK -> fail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX()
-                    + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")");
+            case TIMEOUT ->
+                fail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks() + " тиков");
+            case STUCK ->
+                fail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX() + ", y=" + spirit.getY()
+                        + ", z=" + spirit.getZ() + ")");
         };
     }
 

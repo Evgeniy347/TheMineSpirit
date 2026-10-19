@@ -25,8 +25,7 @@ public final class MineLevelsGameTests {
     private static final int ENTRY_Z = 4;
     private static final int CLEAR_HEIGHT = 16;
 
-    private MineLevelsGameTests() {
-    }
+    private MineLevelsGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper, CLEAR_HEIGHT);
@@ -77,7 +76,8 @@ public final class MineLevelsGameTests {
         }
         RunStatus status = spirit.taskStatus().orElse(null);
         if (status == RunStatus.FAILED) {
-            helper.fail("фаза " + state[0] + " провалена: " + spirit.taskFailureReason().orElse("нет"));
+            helper.fail("фаза " + state[0] + " провалена: "
+                    + spirit.taskFailureReason().orElse("нет"));
             return;
         }
         if (status != RunStatus.SUCCEEDED) {
@@ -99,8 +99,7 @@ public final class MineLevelsGameTests {
                 GameTestFixtures.finish(helper, CLEAR_HEIGHT);
                 helper.succeed();
             }
-            default -> {
-            }
+            default -> {}
         }
     }
 
@@ -111,17 +110,21 @@ public final class MineLevelsGameTests {
             for (int lane = 0; lane <= 1; lane++) {
                 int z = lane == 0 ? ENTRY_Z - 1 : ENTRY_Z + 1;
                 BlockPos stair = new BlockPos(columnX, floor + 1, z);
-                helper.assertTrue(helper.getBlockState(stair).is(Blocks.STONE_STAIRS),
+                helper.assertTrue(
+                        helper.getBlockState(stair).is(Blocks.STONE_STAIRS),
                         "на шаге " + step + " боковая полоса z=" + z + " обязана нести ступеньку, фактически "
                                 + helper.getBlockState(stair));
                 for (int above = 2; above <= 6; above++) {
                     BlockPos cell = new BlockPos(columnX, floor + above, z);
-                    helper.assertTrue(helper.getBlockState(cell).isAir(),
+                    helper.assertTrue(
+                            helper.getBlockState(cell).isAir(),
                             "боковая полоса z=" + z + " шага " + step + " на высоте floor+" + above
                                     + " обязана быть выкопана под 3×6, фактически " + helper.getBlockState(cell));
                 }
             }
-            helper.assertTrue(!helper.getBlockState(new BlockPos(columnX, floor + 1, ENTRY_Z)).is(Blocks.STONE_STAIRS),
+            helper.assertTrue(
+                    !helper.getBlockState(new BlockPos(columnX, floor + 1, ENTRY_Z))
+                            .is(Blocks.STONE_STAIRS),
                     "центральная полоса шага " + step + " обязана остаться свободной под будущие рельсы");
         }
     }

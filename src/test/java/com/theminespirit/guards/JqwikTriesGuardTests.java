@@ -22,7 +22,9 @@ class JqwikTriesGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Свойство с tries > 200 обязано нести jqwik-тег @Tag(\"slow\") (net.jqwik.api.Tag): "
                         + "иначе оно гоняется быстрым тиром с заявленной глубиной и ломает бюджет. "
                         + "Правило: docs/TESTING.md → «Property-based тесты». Нарушители");
@@ -30,51 +32,67 @@ class JqwikTriesGuardTests {
 
     @Test
     void propertyTriesPattern_Tries1000_NoSlowTag() {
-        String sample = "class Sample {\n"
-                + "    @Property(tries = 1000)\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property(tries = 1000)
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("tries=1000"), triesOf(sample),
+        assertEquals(
+                List.of("tries=1000"),
+                triesOf(sample),
                 "Сторож ослеп: tries = 1000 без @Tag(\"slow\") должно попадать в нарушители");
     }
 
     @Test
     void propertyTriesPattern_Tries1000_WithSlowTag() {
-        String sample = "import net.jqwik.api.Tag;\n"
-                + "class Sample {\n"
-                + "    @Property(tries = 1000)\n"
-                + "    @Tag(\"slow\")\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        import net.jqwik.api.Tag;
+                        class Sample {
+                            @Property(tries = 1000)
+                            @Tag("slow")
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), triesOf(sample),
+        assertEquals(
+                List.of(),
+                triesOf(sample),
                 "Сторож ложно срабатывает: tries = 1000 с @Tag(\"slow\") — законное исключение");
     }
 
     @Test
     void propertyTriesPattern_Tries200_NoSlowTag() {
-        String sample = "class Sample {\n"
-                + "    @Property\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of(), triesOf(sample),
+        assertEquals(
+                List.of(),
+                triesOf(sample),
                 "Сторож ложно срабатывает: tries = 200 — граница быстрого тира, тег не нужен");
     }
 
     @Test
     void propertyTriesPattern_TriesNotFirstArgument_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @Property(seed = \"abc\", tries = 1000)\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property(seed = "abc", tries = 1000)
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
-        assertEquals(List.of("tries=1000"), triesOf(sample),
+        assertEquals(
+                List.of("tries=1000"),
+                triesOf(sample),
                 "Сторож ослеп: tries = 1000 не первым аргументом должно попадать в нарушители");
     }
 

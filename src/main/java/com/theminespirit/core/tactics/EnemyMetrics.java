@@ -1,8 +1,21 @@
 package com.theminespirit.core.tactics;
 
-public record EnemyMetrics(int count, int visibleCount, double nearest, double nearestExplosive,
-        double nearestRanged, int rangedCount, double totalHp, double effectiveHp, double totalDps, double fastest,
-        boolean anyRanged, boolean anyExplosive, boolean anySwims, boolean anyFlies, boolean targetingSelf) {
+public record EnemyMetrics(
+        int count,
+        int visibleCount,
+        double nearest,
+        double nearestExplosive,
+        double nearestRanged,
+        int rangedCount,
+        double totalHp,
+        double effectiveHp,
+        double totalDps,
+        double fastest,
+        boolean anyRanged,
+        boolean anyExplosive,
+        boolean anySwims,
+        boolean anyFlies,
+        boolean targetingSelf) {
     public static EnemyMetrics of(Situation situation, EnemyProfiles profiles, ArmorModel armor) {
         Accumulator sum = new Accumulator();
         for (EnemyFact enemy : situation.enemies()) {
@@ -55,8 +68,22 @@ public record EnemyMetrics(int count, int visibleCount, double nearest, double n
         }
 
         EnemyMetrics result() {
-            return new EnemyMetrics(count, visible, nearest, nearestExplosive, nearestRanged, ranged, hp, effective,
-                    dps, fastest, ranged > 0, anyExplosive, anySwims, anyFlies, targeting);
+            return new EnemyMetrics(
+                    count,
+                    visible,
+                    nearest,
+                    nearestExplosive,
+                    nearestRanged,
+                    ranged,
+                    hp,
+                    effective,
+                    dps,
+                    fastest,
+                    ranged > 0,
+                    anyExplosive,
+                    anySwims,
+                    anyFlies,
+                    targeting);
         }
     }
 }

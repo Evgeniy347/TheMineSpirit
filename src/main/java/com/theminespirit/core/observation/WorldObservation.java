@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record WorldObservation(
         String botId,
@@ -16,10 +17,10 @@ public record WorldObservation(
         List<EntityRef> entities,
         List<ContainerRef> containers,
         int radius,
-        SpiritStatus spirit,
+        @Nullable SpiritStatus spirit,
         List<GroundItem> groundItems,
         List<ContainerContents> containerItems,
-        WorldTime time,
+        @Nullable WorldTime time,
         List<OpenBlock> openBlocks) {
 
     public WorldObservation {
@@ -34,20 +35,58 @@ public record WorldObservation(
         openBlocks = sortOpenBlocks(openBlocks);
     }
 
-    /** Наблюдение без открытых блоков, данных о самом духе, выпавших предметах, контейнерах и времени суток. */
-    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
-            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius) {
-        this(botId, tick, position, inventory, blocks, entities, containers, radius,
-                null, List.of(), List.of(), null, List.of());
+    public WorldObservation(
+            String botId,
+            long tick,
+            BlockCoord position,
+            List<ItemCount> inventory,
+            List<ItemCount> blocks,
+            List<EntityRef> entities,
+            List<ContainerRef> containers,
+            int radius) {
+        this(
+                botId,
+                tick,
+                position,
+                inventory,
+                blocks,
+                entities,
+                containers,
+                radius,
+                null,
+                List.of(),
+                List.of(),
+                null,
+                List.of());
     }
 
-    /** Наблюдение без открытых блоков: путям, которым позиции важных блоков не нужны. */
-    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
-            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius,
-            SpiritStatus spirit, List<GroundItem> groundItems, List<ContainerContents> containerItems,
+    public WorldObservation(
+            String botId,
+            long tick,
+            BlockCoord position,
+            List<ItemCount> inventory,
+            List<ItemCount> blocks,
+            List<EntityRef> entities,
+            List<ContainerRef> containers,
+            int radius,
+            SpiritStatus spirit,
+            List<GroundItem> groundItems,
+            List<ContainerContents> containerItems,
             WorldTime time) {
-        this(botId, tick, position, inventory, blocks, entities, containers, radius, spirit, groundItems,
-                containerItems, time, List.of());
+        this(
+                botId,
+                tick,
+                position,
+                inventory,
+                blocks,
+                entities,
+                containers,
+                radius,
+                spirit,
+                groundItems,
+                containerItems,
+                time,
+                List.of());
     }
 
     public String hash() {
@@ -103,9 +142,11 @@ public record WorldObservation(
     }
 
     private static <T> List<T> requireList(List<T> entries, String field) {
-        Objects.requireNonNull(entries, field + " не может быть null: пустой список передаётся как список без элементов");
+        Objects.requireNonNull(
+                entries, field + " не может быть null: пустой список передаётся как список без элементов");
         for (T entry : entries) {
-            Objects.requireNonNull(entry, field + " не может содержать null: список описывает только существующие объекты");
+            Objects.requireNonNull(
+                    entry, field + " не может содержать null: список описывает только существующие объекты");
         }
         return entries;
     }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskReconciler {
     public static final int ABSENT_GRACE_TICKS = 100;
@@ -50,8 +51,12 @@ public final class TaskReconciler {
             case RUNNING -> running(record, reading.progress());
             case SUCCEEDED -> finish(record, TaskState.SUCCEEDED, null, reading.result());
             case CANCELLED -> finish(record, TaskState.CANCELLED, null, null);
-            case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
-                    reading.failureReason() == null ? NO_REASON : reading.failureReason(), null);
+            case FAILED ->
+                finish(
+                        record.withProgress(reading.failedAt()),
+                        TaskState.FAILED,
+                        reading.failureReason() == null ? NO_REASON : reading.failureReason(),
+                        null);
         }
     }
 
@@ -63,17 +68,14 @@ public final class TaskReconciler {
         absentTicks.keySet().retainAll(observedIds);
     }
 
-    public int trackedAbsences() {
-        return absentTicks.size();
-    }
-
     private boolean displaced(TaskRecord record, SpiritReading reading) {
         long expected = registry.startedGeneration(record.taskId());
-        return expected != SpiritReading.UNKNOWN_GENERATION && reading.generation() != SpiritReading.UNKNOWN_GENERATION
+        return expected != SpiritReading.UNKNOWN_GENERATION
+                && reading.generation() != SpiritReading.UNKNOWN_GENERATION
                 && reading.generation() != expected;
     }
 
-    private void running(TaskRecord record, RunProgress progress) {
+    private void running(TaskRecord record, @Nullable RunProgress progress) {
         boolean namesScript = progress != null && progress.currentScript() != null;
         RunProgress next = namesScript ? progress : record.progress();
         if (record.state() == TaskState.RUNNING && Objects.equals(next, record.progress())) {
@@ -82,7 +84,7 @@ public final class TaskReconciler {
         registry.observeIfActive(record.taskId(), TaskState.RUNNING, next, null);
     }
 
-    private void finish(TaskRecord record, TaskState state, String error, Object result) {
+    private void finish(TaskRecord record, TaskState state, @Nullable String error, @Nullable Object result) {
         absentTicks.remove(record.taskId());
         registry.observeIfActive(record.taskId(), state, record.progress(), result, error);
     }

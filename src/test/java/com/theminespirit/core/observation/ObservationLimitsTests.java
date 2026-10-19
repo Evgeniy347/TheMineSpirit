@@ -15,12 +15,18 @@ class ObservationLimitsTests {
     void defaults_DefaultLimits_HaveExpectedNumbers() {
         ObservationLimits limits = ObservationLimits.defaults();
 
-        assertEquals(16, limits.maxGroundItems(),
+        assertEquals(
+                16,
+                limits.maxGroundItems(),
                 "Число выпавших предметов в наблюдении — геймдизайн: если его меняют осознанно, правят и тест, "
                         + "иначе ответ стратегу разрастётся незаметно");
-        assertEquals(8, limits.maxContainers(),
+        assertEquals(
+                8,
+                limits.maxContainers(),
                 "Число контейнеров в наблюдении — геймдизайн: правка числа меняет объём ответа и нагрузку на скан");
-        assertEquals(27, limits.maxContainerItems(),
+        assertEquals(
+                27,
+                limits.maxContainerItems(),
                 "Записей на контейнер не больше полного одиночного сундука (27 слотов) — иначе содержимое двойного "
                         + "сундука раздувает ответ");
     }
@@ -30,26 +36,40 @@ class ObservationLimitsTests {
         ObservationLimits limits = ObservationLimits.parse(
                 "{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "test");
 
-        assertEquals(new ObservationLimits(4, 2, 10, 6), limits,
+        assertEquals(
+                new ObservationLimits(4, 2, 10, 6),
+                limits,
                 "Парсер обязан читать все три предела из данных, иначе /reload не меняет размер ответа");
     }
 
     static Stream<Arguments> invalidNumbers() {
         return Stream.of(
-                Arguments.of("{\"maxGroundItems\":0,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxGroundItems"),
-                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":0,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxContainers"),
-                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":0,\"maxOpenBlocks\":6}", "maxContainerItems"),
-                Arguments.of("{\"maxGroundItems\":9999,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}", "maxGroundItems"),
-                Arguments.of("{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":0}", "maxOpenBlocks"));
+                Arguments.of(
+                        "{\"maxGroundItems\":0,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}",
+                        "maxGroundItems"),
+                Arguments.of(
+                        "{\"maxGroundItems\":4,\"maxContainers\":0,\"maxContainerItems\":10,\"maxOpenBlocks\":6}",
+                        "maxContainers"),
+                Arguments.of(
+                        "{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":0,\"maxOpenBlocks\":6}",
+                        "maxContainerItems"),
+                Arguments.of(
+                        "{\"maxGroundItems\":9999,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":6}",
+                        "maxGroundItems"),
+                Arguments.of(
+                        "{\"maxGroundItems\":4,\"maxContainers\":2,\"maxContainerItems\":10,\"maxOpenBlocks\":0}",
+                        "maxOpenBlocks"));
     }
 
     @ParameterizedTest(name = "{1}")
     @MethodSource("invalidNumbers")
     void parse_NonPositiveOrHugeLimit_RejectedWithFieldName(String json, String field) {
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> ObservationLimits.parse(json, "test"),
                 "Предел вне [1, 512] обязан отвергаться на загрузке: иначе наблюдение либо пустое, либо огромное");
-        assertTrue(error.getMessage().contains(field),
+        assertTrue(
+                error.getMessage().contains(field),
                 "Отказ называет поле данных, которое надо поправить: " + error.getMessage());
     }
 }

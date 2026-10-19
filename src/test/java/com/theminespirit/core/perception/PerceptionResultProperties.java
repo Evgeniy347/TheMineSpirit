@@ -16,9 +16,15 @@ import net.jqwik.api.constraints.IntRange;
 class PerceptionResultProperties {
     @Provide
     Arbitrary<HazardRef> hazard() {
-        Arbitrary<BlockCoord> pos = Combinators.combine(Arbitraries.integers().between(-100, 100),
-                Arbitraries.integers().between(-64, 320), Arbitraries.integers().between(-100, 100)).as(BlockCoord::new);
-        return Combinators.combine(Arbitraries.of(HazardType.class), pos, Arbitraries.doubles().between(0, 64))
+        Arbitrary<BlockCoord> pos = Combinators.combine(
+                        Arbitraries.integers().between(-100, 100),
+                        Arbitraries.integers().between(-64, 320),
+                        Arbitraries.integers().between(-100, 100))
+                .as(BlockCoord::new);
+        return Combinators.combine(
+                        Arbitraries.of(HazardType.class),
+                        pos,
+                        Arbitraries.doubles().between(0, 64))
                 .as(HazardRef::new);
     }
 
@@ -28,7 +34,8 @@ class PerceptionResultProperties {
     }
 
     @Property
-    void hazardsResult_AnyHazards_KeepsThemInOrder(@ForAll("hazards") List<HazardRef> hazards,
+    void hazardsResult_AnyHazards_KeepsThemInOrder(
+            @ForAll("hazards") List<HazardRef> hazards,
             @ForAll @IntRange(min = ScanRadius.MIN, max = ScanRadius.MAX) int radius) {
         PerceptionResult result = PerceptionResult.hazards(ScanRadius.of(radius), hazards);
 

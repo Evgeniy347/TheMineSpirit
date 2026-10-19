@@ -12,7 +12,8 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public enum StationType {
-    CRAFTING_TABLE(Stations.CRAFTING_TABLE, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE, false, "верстак", "нужен верстак"),
+    CRAFTING_TABLE(
+            Stations.CRAFTING_TABLE, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE, false, "верстак", "нужен верстак"),
     FURNACE(Stations.FURNACE, Blocks.FURNACE, Items.FURNACE, true, "печь", "нужна печь"),
     SMOKER(Stations.SMOKER, Blocks.SMOKER, Items.SMOKER, true, "коптильня", "нужна коптильня"),
     CAMPFIRE(Stations.CAMPFIRE, Blocks.CAMPFIRE, Items.CAMPFIRE, false, "костёр", "нужен костёр");
@@ -34,11 +35,15 @@ public enum StationType {
     }
 
     public static Optional<StationType> byId(String id) {
-        return Arrays.stream(values()).filter(type -> type.id.equals(ItemIds.normalize(id))).findFirst();
+        return Arrays.stream(values())
+                .filter(type -> type.id.equals(ItemIds.normalize(id)))
+                .findFirst();
     }
 
     public static Optional<StationType> byBlock(Block block) {
-        return Arrays.stream(values()).filter(type -> type.block() == block).findFirst();
+        return Arrays.stream(values())
+                .filter(type -> type.block().equals(block))
+                .findFirst();
     }
 
     public String id() {

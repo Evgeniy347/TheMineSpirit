@@ -12,8 +12,14 @@ final class ContainerLocateSource implements LocateSource {
     private final WorldScanner.Session session;
 
     ContainerLocateSource(SpiritEntity spirit, BlockCoord center, ScanRadius radius) {
-        this.session = new WorldScanner.Session(spirit.level(), spirit.getUUID().toString(), center, radius,
-                IdFilter.matchAll(), spirit.getInventory(), ScanFocus.CONTAINERS);
+        this.session = new WorldScanner.Session(
+                spirit.level(),
+                spirit.getUUID().toString(),
+                center,
+                radius,
+                IdFilter.matchAll(),
+                spirit.getInventory(),
+                ScanFocus.CONTAINERS);
     }
 
     @Override
@@ -22,7 +28,9 @@ final class ContainerLocateSource implements LocateSource {
         if (!session.done()) {
             return List.of();
         }
-        return session.result().observation().containers().stream().map(ContainerRef::pos).toList();
+        return session.result().observation().containers().stream()
+                .map(ContainerRef::pos)
+                .toList();
     }
 
     @Override

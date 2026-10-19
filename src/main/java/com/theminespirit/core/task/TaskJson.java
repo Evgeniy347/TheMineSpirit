@@ -9,8 +9,7 @@ import java.util.Map;
 public final class TaskJson {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private TaskJson() {
-    }
+    private TaskJson() {}
 
     public static String toJson(TaskRecord task) {
         try {

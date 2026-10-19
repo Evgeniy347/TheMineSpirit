@@ -4,46 +4,46 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Preset;
-import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockItems;
-import com.theminespirit.neoforge.SchematicResources;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import net.minecraft.core.BlockPos;
 
 /** Сборка демо-постройки из библиотеки пресетов: раскладка, материалы сундука и блоки без предмета. */
 final class DemoPlanner {
-    private DemoPlanner() {
-    }
+    private DemoPlanner() {}
 
-    static DemoPlan plan(DemoBuildings.Building building, int level, BlockPos anchor, int lookDx, int lookDz,
+    static DemoPlan plan(
+            DemoBuildings.Building building,
+            int level,
+            BlockPos anchor,
+            int lookDx,
+            int lookDz,
             BuildRotation rotation) {
         DemoBuildings.Level chosen = building.level(level);
-        Optional<Preset> found = DataTables.INSTANCE.presets().current().byId(chosen.scheme());
-        Schematic schematic;
-        BlockCoord entry;
-        String name;
-        Map<String, Integer> materials;
-        if (found.isPresent()) {
-            Preset preset = found.orElseThrow();
-            schematic = preset.schematic();
-            entry = preset.entry();
-            name = preset.name();
-            materials = preset.materials();
-        } else {
-            schematic = SchematicResources.load(chosen.scheme());
-            entry = new BlockCoord(schematic.sizeX() / 2, 0, 0);
-            name = building.name();
-            materials = PresetLibrary.countMaterials(schematic);
-        }
-        DemoPlacement placement = DemoPlacement.compute(anchor.getX(), anchor.getY(), anchor.getZ(), lookDx, lookDz,
-                entry.x(), entry.z(), schematic.sizeX(), schematic.sizeY(), schematic.sizeZ(), rotation);
+        Preset preset = DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(chosen.scheme())
+                .orElseThrow(() -> new IllegalArgumentException("Постройка '" + chosen.scheme()
+                        + "' не найдена в библиотеке пресетов: проверьте presets.json и файл "
+                        + chosen.scheme() + ".txt (/spirit tables)"));
+        Schematic schematic = preset.schematic();
+        BlockCoord entry = preset.entry();
+        String name = preset.name();
+        Map<String, Integer> materials = preset.materials();
+        DemoPlacement placement = DemoPlacement.compute(
+                new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
+                new DemoPlacement.Look(lookDx, lookDz),
+                entry.x(),
+                entry.z(),
+                new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
+                rotation);
         List<DemoPlan.Placement> preplaced = new ArrayList<>();
         for (Schematic.PlacedEntry placed : schematic.entries(placement.origin(), placement.rotation())) {
             if (!BlockItems.hasBlockItem(placed.block())) {

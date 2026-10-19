@@ -19,17 +19,13 @@ public final class ContainerAccess {
     private static final IdFilter ALLOWED = IdFilter.of(
             List.of("minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:*shulker_box"));
 
-    private ContainerAccess() {
-    }
+    private ContainerAccess() {}
 
-    public sealed interface Open permits Opened, Refused {
-    }
+    public sealed interface Open permits Opened, Refused {}
 
-    public record Opened(Container container) implements Open {
-    }
+    public record Opened(Container container) implements Open {}
 
-    public record Refused(String reason) implements Open {
-    }
+    public record Refused(String reason) implements Open {}
 
     public static Open open(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
@@ -56,8 +52,8 @@ public final class ContainerAccess {
         if (entity instanceof BaseContainerBlockEntity base) {
             return new Opened(base);
         }
-        return new Refused("блок " + id + " в " + pos.toShortString()
-                + " без блочной сущности контейнера: открыть нечего");
+        return new Refused(
+                "блок " + id + " в " + pos.toShortString() + " без блочной сущности контейнера: открыть нечего");
     }
 
     public static Set<Block> allowedBlocks() {

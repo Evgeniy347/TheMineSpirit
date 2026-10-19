@@ -20,8 +20,7 @@ class HazardReflexTests {
     private static final BodyFlags IN_WATER = new BodyFlags(false, false, true, false);
     private static final BodyFlags BURNING_IN_WATER = new BodyFlags(false, true, true, false);
 
-    record Expected(PolicyId policy, Class<? extends ReflexAction> type, Optional<BlockCoord> cell) {
-    }
+    record Expected(PolicyId policy, Class<? extends ReflexAction> type, Optional<BlockCoord> cell) {}
 
     private static Expected clear() {
         return new Expected(null, null, Optional.empty());
@@ -39,7 +38,8 @@ class HazardReflexTests {
         return new Expected(PolicyId.WATER, ReflexAction.ExitWater.class, Optional.of(Pictures.at(dx, dy, dz)));
     }
 
-    private static Arguments row(String name, String floor, String feet, String head, BodyFlags flags, Expected expected) {
+    private static Arguments row(
+            String name, String floor, String feet, String head, BodyFlags flags, Expected expected) {
         return Arguments.of(name, floor, feet, head, flags, expected);
     }
 
@@ -48,7 +48,13 @@ class HazardReflexTests {
                 row("всё безопасно", S, O, O, BodyFlags.CALM, clear()),
                 row("лава сбоку вплотную на востоке", S, ".../..L/...", O, BodyFlags.CALM, flee(-1, 0, 0)),
                 row("лава на западе", S, ".../L../...", O, BodyFlags.CALM, flee(1, 0, 0)),
-                row("лава на севере: на запад нельзя, лава в кольце соседа", S, ".L./.../...", O, BodyFlags.CALM, flee(0, 0, 1)),
+                row(
+                        "лава на севере: на запад нельзя, лава в кольце соседа",
+                        S,
+                        ".L./.../...",
+                        O,
+                        BodyFlags.CALM,
+                        flee(0, 0, 1)),
                 row("лава на юге", S, ".../.../.L.", O, BodyFlags.CALM, flee(0, 0, -1)),
                 row("лава на уровне пола сбоку", "###/##L/###", O, O, BodyFlags.CALM, flee(-1, 0, 0)),
                 row("лава под ногами", "###/#L#/###", O, O, BodyFlags.CALM, flee(-1, 0, 0)),
@@ -74,26 +80,45 @@ class HazardReflexTests {
                 row("озеро без берега", S, "WWW/WWW/WWW", O, IN_WATER, stop(PolicyId.WATER)),
                 row("бассейн с бортом выше: выход прыжком", S, "###/#W#/###", O, IN_WATER, exitWater(-1, 1, 0)),
                 row("лава у берега важнее воды", S, ".../LW./...", O, IN_WATER, flee(1, 0, 0)),
-                row("горящий дух в воде выходит из воды, а не бежит к воде", S, ".../.W./...", O, BURNING_IN_WATER, exitWater(-1, 0, 0))
-        );
+                row(
+                        "горящий дух в воде выходит из воды, а не бежит к воде",
+                        S,
+                        ".../.W./...",
+                        O,
+                        BURNING_IN_WATER,
+                        exitWater(-1, 0, 0)));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("pictures")
-    void evaluate_Picture_GivesExpectedVerdict(String name, String floor, String feet, String head, BodyFlags flags, Expected expected) {
+    void evaluate_Picture_GivesExpectedVerdict(
+            String name, String floor, String feet, String head, BodyFlags flags, Expected expected) {
         LocalSurroundings surroundings = Pictures.of(floor, feet, head, flags);
 
         PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
 
         if (expected.policy() == null) {
-            assertEquals(new PolicyVerdict.Clear(), verdict, "Картинка «" + name + "»: опасности нет, дух не должен получать рефлекс");
+            assertEquals(
+                    new PolicyVerdict.Clear(),
+                    verdict,
+                    "Картинка «" + name + "»: опасности нет, дух не должен получать рефлекс");
             return;
         }
-        PolicyVerdict.Reflex reflex = assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Картинка «" + name + "»: ждали рефлекс, получено " + verdict);
-        assertEquals(expected.policy(), reflex.policy(), "Картинка «" + name + "»: рефлекс принадлежит другой политике, причина: " + reflex.reason());
-        assertEquals(expected.type(), reflex.action().getClass(), "Картинка «" + name + "»: другое действие рефлекса, причина: " + reflex.reason());
+        PolicyVerdict.Reflex reflex = assertInstanceOf(
+                PolicyVerdict.Reflex.class, verdict, "Картинка «" + name + "»: ждали рефлекс, получено " + verdict);
+        assertEquals(
+                expected.policy(),
+                reflex.policy(),
+                "Картинка «" + name + "»: рефлекс принадлежит другой политике, причина: " + reflex.reason());
+        assertEquals(
+                expected.type(),
+                reflex.action().getClass(),
+                "Картинка «" + name + "»: другое действие рефлекса, причина: " + reflex.reason());
         if (expected.cell().isPresent()) {
-            assertEquals(expected.cell().get(), cellOf(reflex.action()), "Картинка «" + name + "»: духа ведут не в ту клетку, причина: " + reflex.reason());
+            assertEquals(
+                    expected.cell().get(),
+                    cellOf(reflex.action()),
+                    "Картинка «" + name + "»: духа ведут не в ту клетку, причина: " + reflex.reason());
         }
     }
 
@@ -112,7 +137,9 @@ class HazardReflexTests {
 
         PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
 
-        assertEquals(new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(water), "дух горит: цель — вода"), verdict,
+        assertEquals(
+                new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(water), "дух горит: цель — вода"),
+                verdict,
                 "Горящий дух с водой в пределах досягаемости идёт к воде: огонь гаснет только в воде, а не на суше");
     }
 
@@ -123,8 +150,11 @@ class HazardReflexTests {
 
         PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
 
-        PolicyVerdict.Reflex reflex = assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Горящий дух обязан получить рефлекс");
-        assertEquals(new ReflexAction.Flee(water), reflex.action(),
+        PolicyVerdict.Reflex reflex =
+                assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Горящий дух обязан получить рефлекс");
+        assertEquals(
+                new ReflexAction.Flee(water),
+                reflex.action(),
                 "Горящему духу важнее потушиться, чем отойти от лавы вплотную: лава рядом не жжёт, а пока горим, здоровье тает");
     }
 
@@ -134,8 +164,11 @@ class HazardReflexTests {
 
         PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER));
 
-        PolicyVerdict.Reflex reflex = assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Лава вплотную обязана дать рефлекс даже при исключении WATER");
-        assertEquals(PolicyId.LAVA_FIRE, reflex.policy(),
+        PolicyVerdict.Reflex reflex = assertInstanceOf(
+                PolicyVerdict.Reflex.class, verdict, "Лава вплотную обязана дать рефлекс даже при исключении WATER");
+        assertEquals(
+                PolicyId.LAVA_FIRE,
+                reflex.policy(),
                 "Исключение WATER снимает только политику воды: лава остаётся опасной всегда");
     }
 
@@ -145,7 +178,9 @@ class HazardReflexTests {
 
         PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER));
 
-        assertEquals(new PolicyVerdict.Clear(), verdict,
+        assertEquals(
+                new PolicyVerdict.Clear(),
+                verdict,
                 "Скрипт с исключением WATER (переправа вброд) не должен выдёргиваться из воды рефлексом");
     }
 }

@@ -30,7 +30,9 @@ class KitForProperties {
 
         List<Slice> surplus = KIT_FOR.kit(activity, false).surplus(inventory, VALUES);
 
-        assertEquals(List.of(), surplus,
+        assertEquals(
+                List.of(),
+                surplus,
                 "постоянная часть всегда входит у взрослого: деятельность '" + activity
                         + "' добавляет свой набор сверх, но не имеет права вытеснить меч, лук, стрелы, "
                         + "еду или факелы из постоянной части");
@@ -55,7 +57,9 @@ class KitForProperties {
 
         for (Stack stack : left) {
             if (stack != null) {
-                assertEquals(true, stack.item().equals("bread") || isFood(stack.item()),
+                assertEquals(
+                        true,
+                        "bread".equals(stack.item()) || isFood(stack.item()),
                         "у ребёнка остаётся только еда, а в слоте '" + stack.item()
                                 + "' осталось что-то иное: ребёнок не носит инструменты и припасы");
             }
@@ -63,7 +67,7 @@ class KitForProperties {
     }
 
     private static boolean isFood(String item) {
-        return item.equals("bread") || item.equals("cooked_beef") || item.equals("apple");
+        return "bread".equals(item) || "cooked_beef".equals(item) || "apple".equals(item);
     }
 
     private static List<Stack> remove(List<Stack> inventory, List<Slice> surplus) {

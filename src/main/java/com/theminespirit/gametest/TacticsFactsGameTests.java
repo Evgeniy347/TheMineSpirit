@@ -32,8 +32,7 @@ public final class TacticsFactsGameTests {
     private static final int ARROWS = 16;
     private static final double STONE_SWORD_DAMAGE = 5.0;
 
-    private TacticsFactsGameTests() {
-    }
+    private TacticsFactsGameTests() {}
 
     private static Husk idleHusk(GameTestHelper helper, BlockPos at) {
         Husk husk = helper.spawn(EntityType.HUSK, at);
@@ -42,14 +41,16 @@ public final class TacticsFactsGameTests {
     }
 
     private static EnemyFact factOf(GameTestHelper helper, List<EnemyFact> enemies, Husk husk) {
-        Optional<EnemyFact> fact = enemies.stream().filter(e -> e.id().equals(husk.getUUID().toString())).findFirst();
+        Optional<EnemyFact> fact = enemies.stream()
+                .filter(e -> e.id().equals(husk.getUUID().toString()))
+                .findFirst();
         helper.assertTrue(fact.isPresent(), "хаск " + husk.getUUID() + " обязан попасть в факты, в фактах " + enemies);
         return fact.get();
     }
 
     private static TacticsInputs inputs() {
-        return new TacticsInputs(CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), 1_000_000, 1_000_000,
-                Optional.empty());
+        return new TacticsInputs(
+                CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), 1_000_000, 1_000_000, Optional.empty());
     }
 
     @GameTest(template = "arena", batch = "tactics_facts_visibility", timeoutTicks = 100)
@@ -64,14 +65,16 @@ public final class TacticsFactsGameTests {
             helper.setBlock(2, 2, z, Blocks.STONE);
         }
 
-        WorldFactCollector.Collected collected = new WorldFactCollector(TacticsAdapterSettings.defaults())
-                .collect(spirit, inputs());
+        WorldFactCollector.Collected collected =
+                new WorldFactCollector(TacticsAdapterSettings.defaults()).collect(spirit, inputs());
 
         List<EnemyFact> enemies = collected.context().enemies();
         EnemyFact seen = factOf(helper, enemies, inView);
         EnemyFact hidden = factOf(helper, enemies, behindWall);
         helper.assertTrue(seen.visible(), "хаск без преград обязан быть видим");
-        helper.assertTrue(!hidden.visible(), "хаск за стеной высотой два обязан быть невидим: прямая видимость идёт через клетки мира");
+        helper.assertTrue(
+                !hidden.visible(),
+                "хаск за стеной высотой два обязан быть невидим: прямая видимость идёт через клетки мира");
         helper.assertTrue("minecraft:husk".equals(seen.type()), "тип врага — id сущности, получено " + seen.type());
         helper.assertTrue(!seen.targetingSelf(), "хаск без цели не целится в духа");
         GameTestFixtures.finish(helper);
@@ -90,14 +93,19 @@ public final class TacticsFactsGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.SAND, STONE_BLOCKS));
         idleHusk(helper, new BlockPos(4, 1, 8));
 
-        SelfFacts self = new WorldFactCollector(TacticsAdapterSettings.defaults()).collect(spirit, inputs())
-                .context().self();
+        SelfFacts self = new WorldFactCollector(TacticsAdapterSettings.defaults())
+                .collect(spirit, inputs())
+                .context()
+                .self();
 
-        helper.assertTrue(self.dps() == STONE_SWORD_DAMAGE * 20.0 / SpiritGear.ATTACK_COOLDOWN_TICKS,
+        helper.assertTrue(
+                self.dps() == STONE_SWORD_DAMAGE * 20.0 / SpiritGear.ATTACK_COOLDOWN_TICKS,
                 "dps духа с каменным мечом — урон меча за секунду, получено " + self.dps());
-        helper.assertTrue(self.blocks() == STONE_BLOCKS, "блоков для баррикады " + STONE_BLOCKS
-                + " (песок падает и не годится), получено " + self.blocks());
-        helper.assertTrue(self.rangedAmmo() == ARROWS, "стрел при наличии лука " + ARROWS + ", получено " + self.rangedAmmo());
+        helper.assertTrue(
+                self.blocks() == STONE_BLOCKS,
+                "блоков для баррикады " + STONE_BLOCKS + " (песок падает и не годится), получено " + self.blocks());
+        helper.assertTrue(
+                self.rangedAmmo() == ARROWS, "стрел при наличии лука " + ARROWS + ", получено " + self.rangedAmmo());
         helper.assertTrue(self.hpFraction() == 1.0, "здоровье духа полное, доля " + self.hpFraction());
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -112,15 +120,19 @@ public final class TacticsFactsGameTests {
             idleHusk(helper, new BlockPos(i % 9, 1, (i * 3) % 9));
         }
 
-        WorldFactCollector.Collected collected = new WorldFactCollector(TacticsAdapterSettings.defaults())
-                .collect(spirit, inputs());
+        WorldFactCollector.Collected collected =
+                new WorldFactCollector(TacticsAdapterSettings.defaults()).collect(spirit, inputs());
 
-        helper.assertTrue(collected.blockReads() <= BUDGET,
+        helper.assertTrue(
+                collected.blockReads() <= BUDGET,
                 "за цикл снятия фактов не больше " + BUDGET + " чтений блоков, было " + collected.blockReads());
-        helper.assertTrue(collected.blockReads() > 0, "при врагах скан обязан читать мир, иначе предел ничего не доказывает");
-        helper.assertTrue(collected.entityQueries() == 1, "запрос сущностей один на цикл, было " + collected.entityQueries());
+        helper.assertTrue(
+                collected.blockReads() > 0, "при врагах скан обязан читать мир, иначе предел ничего не доказывает");
+        helper.assertTrue(
+                collected.entityQueries() == 1, "запрос сущностей один на цикл, было " + collected.entityQueries());
         Optional<EnemyFact> nearest = collected.context().enemies().stream()
-                .min(Comparator.comparingDouble(e -> e.pos().distanceTo(collected.context().self().pos())));
+                .min(Comparator.comparingDouble(
+                        e -> e.pos().distanceTo(collected.context().self().pos())));
         helper.assertTrue(nearest.isPresent(), "ближайший враг обязан быть в фактах");
         GameTestFixtures.finish(helper);
         helper.succeed();

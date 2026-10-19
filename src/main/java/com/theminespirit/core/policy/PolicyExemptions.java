@@ -6,22 +6,25 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public final class PolicyExemptions {
-    private static final Set<PolicyId> NON_EXEMPTIBLE = EnumSet.of(PolicyId.LAVA_FIRE, PolicyId.AIR, PolicyId.EXPLOSIVE);
+    private static final Set<PolicyId> NON_EXEMPTIBLE =
+            EnumSet.of(PolicyId.LAVA_FIRE, PolicyId.AIR, PolicyId.EXPLOSIVE);
     private static final PolicyExemptions NONE = new PolicyExemptions(EnumSet.noneOf(PolicyId.class));
 
     private final Set<PolicyId> exemptions;
 
-    private PolicyExemptions(EnumSet<PolicyId> exemptions) {
+    private PolicyExemptions(Set<PolicyId> exemptions) {
         this.exemptions = Set.copyOf(exemptions);
     }
 
     public static PolicyExemptions of(PolicyId... ids) {
-        EnumSet<PolicyId> chosen = EnumSet.noneOf(PolicyId.class);
+        Set<PolicyId> chosen = EnumSet.noneOf(PolicyId.class);
         for (PolicyId id : ids) {
-            Objects.requireNonNull(id, "Политика в списке исключений не может быть null: проверьте вызов PolicyExemptions.of");
+            Objects.requireNonNull(
+                    id, "Политика в списке исключений не может быть null: проверьте вызов PolicyExemptions.of");
             if (NON_EXEMPTIBLE.contains(id)) {
-                throw new IllegalArgumentException("Политика " + id + " не может иметь исключения: она защищает жизнь духа и работает всегда, "
-                        + "уберите её из policyExemptions() скрипта");
+                throw new IllegalArgumentException(
+                        "Политика " + id + " не может иметь исключения: она защищает жизнь духа и работает всегда, "
+                                + "уберите её из policyExemptions() скрипта");
             }
             chosen.add(id);
         }
@@ -37,14 +40,15 @@ public final class PolicyExemptions {
     }
 
     public PolicyExemptions union(PolicyExemptions other) {
-        Objects.requireNonNull(other, "Исключения для объединения не могут быть null: пустые задаются PolicyExemptions.empty()");
+        Objects.requireNonNull(
+                other, "Исключения для объединения не могут быть null: пустые задаются PolicyExemptions.empty()");
         if (other.exemptions.isEmpty()) {
             return this;
         }
         if (exemptions.isEmpty()) {
             return other;
         }
-        EnumSet<PolicyId> merged = EnumSet.copyOf(exemptions);
+        Set<PolicyId> merged = EnumSet.copyOf(exemptions);
         merged.addAll(other.exemptions);
         return new PolicyExemptions(merged);
     }

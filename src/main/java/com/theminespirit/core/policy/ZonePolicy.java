@@ -6,14 +6,11 @@ import java.util.Objects;
 public final class ZonePolicy {
     public static final int ZONE_MARGIN = 3;
 
-    private ZonePolicy() {
-    }
+    private ZonePolicy() {}
 
-    public sealed interface TargetCheck {
-    }
+    public sealed interface TargetCheck {}
 
-    public record Allowed() implements TargetCheck {
-    }
+    public record Allowed() implements TargetCheck {}
 
     public record Refused(String reason) implements TargetCheck {
         public Refused {
@@ -29,7 +26,8 @@ public final class ZonePolicy {
             return new Allowed();
         }
         return new Refused("вне рабочей зоны: цель " + pos.x() + " " + pos.y() + " " + pos.z() + " на " + excess
-                + " блоков за границей зоны (центр " + zone.center().x() + " " + zone.center().y() + " " + zone.center().z()
+                + " блоков за границей зоны (центр " + zone.center().x() + " "
+                + zone.center().y() + " " + zone.center().z()
                 + ", радиус " + zone.radius() + ")");
     }
 
@@ -40,7 +38,9 @@ public final class ZonePolicy {
         if (excess <= ZONE_MARGIN) {
             return new PolicyVerdict.Clear();
         }
-        return new PolicyVerdict.Reflex(PolicyId.WORK_ZONE, new ReflexAction.ReturnToZone(zone.nearestInside(pos)),
+        return new PolicyVerdict.Reflex(
+                PolicyId.WORK_ZONE,
+                new ReflexAction.ReturnToZone(zone.nearestInside(pos)),
                 "дух вышел на " + excess + " блоков за рабочую зону (допуск " + ZONE_MARGIN + ")");
     }
 }

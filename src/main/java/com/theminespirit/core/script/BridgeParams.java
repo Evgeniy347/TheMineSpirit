@@ -2,8 +2,10 @@ package com.theminespirit.core.script;
 
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record BridgeParams(int x, int y, int z, int length, String block) {
+public record BridgeParams(
+        int x, int y, int z, int length, @Nullable String block) {
     public BridgeParams {
         BuildingCoords.checkX(x);
         BuildingCoords.checkY(y);

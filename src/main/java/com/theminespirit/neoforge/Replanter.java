@@ -55,7 +55,8 @@ final class Replanter {
         ReplantPlan plan = ReplantPlan.of(coords, inventoryCount(), data);
         this.lackedSaplings = plan.cells().isEmpty();
         this.areaAllowed = !plan.lacked();
-        this.targets = new ArrayList<>(plan.cells().stream().map(Replanter::toPos).toList());
+        this.targets =
+                new ArrayList<>(plan.cells().stream().map(Replanter::toPos).toList());
     }
 
     State tick() {
@@ -83,8 +84,7 @@ final class Replanter {
                     case MOVING -> {
                         return State.RUNNING;
                     }
-                    case ARRIVED -> {
-                    }
+                    case ARRIVED -> {}
                     case STUCK, TIMEOUT -> {
                         skipped++;
                         index++;
@@ -145,7 +145,8 @@ final class Replanter {
         if (level.getChunkSource().getChunkNow(cell.getX() >> 4, cell.getZ() >> 4) == null) {
             return false;
         }
-        return level.getBlockState(cell).canBeReplaced() && saplingState.canSurvive(level, cell)
+        return level.getBlockState(cell).canBeReplaced()
+                && saplingState.canSurvive(level, cell)
                 && spirit.protectionGate().checkPlace(cell) instanceof BlockProtection.Allowed;
     }
 

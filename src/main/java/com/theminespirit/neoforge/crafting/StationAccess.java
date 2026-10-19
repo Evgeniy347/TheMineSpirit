@@ -1,13 +1,11 @@
 package com.theminespirit.neoforge.crafting;
 
-import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.Approach;
+import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 
 final class StationAccess {
     enum State {
@@ -27,7 +25,7 @@ final class StationAccess {
     private final StationType type;
     private final int radius;
     private final StationFinder finder;
-    private final Approach approach;
+    private final ReachApproach approach;
     private final Supply supply;
     private State state = State.WORKING;
     private BlockPos pos;
@@ -45,7 +43,7 @@ final class StationAccess {
         this.radius = radius;
         this.supply = supply;
         this.finder = new StationFinder(spirit.level(), spirit.blockPosition(), radius, type);
-        this.approach = new Approach(spirit);
+        this.approach = new ReachApproach(spirit);
     }
 
     State tick() {
@@ -110,8 +108,8 @@ final class StationAccess {
             return anchor;
         }
         if (cornerFinder == null) {
-            cornerFinder = new StationFinder(spirit.level(), spirit.blockPosition(), radius,
-                    StationType.CRAFTING_TABLE);
+            cornerFinder =
+                    new StationFinder(spirit.level(), spirit.blockPosition(), radius, StationType.CRAFTING_TABLE);
         }
         if (!cornerFinder.step()) {
             return null;
@@ -128,7 +126,7 @@ final class StationAccess {
 
     private void headTo(BlockPos target) {
         pos = target;
-        approach.begin(Vec3.atCenterOf(target), CraftTuning.STATION_REACH);
+        approach.begin(target);
         walk();
     }
 
@@ -139,8 +137,7 @@ final class StationAccess {
             return;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.READY;
             case STUCK, TIMEOUT -> fail("не дошёл до станции (" + type.noun() + ") в " + pos.toShortString());
         }

@@ -14,7 +14,8 @@ public sealed interface ContainerChoice permits ContainerChoice.Chosen, Containe
 
     record Refused(String reason) implements ContainerChoice {
         public Refused {
-            Objects.requireNonNull(reason, "Причина отказа не может быть null: без причины непонятно, почему некуда класть");
+            Objects.requireNonNull(
+                    reason, "Причина отказа не может быть null: без причины непонятно, почему некуда класть");
             if (reason.isBlank()) {
                 throw new IllegalArgumentException("Причина отказа пуста: без причины непонятно, почему некуда класть");
             }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.task.TaskJson;
 import com.theminespirit.core.task.TaskRecord;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class TaskRoutes {
+    private static final String TASK_ID = "task_id";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final TaskRegistry registry;
@@ -25,7 +27,11 @@ public final class TaskRoutes {
     private final IdempotencyCache idempotency;
     private final SseSlots slots;
 
-    public TaskRoutes(TaskRegistry registry, TaskGateway gateway, PlanningService planning, IdempotencyCache idempotency,
+    public TaskRoutes(
+            TaskRegistry registry,
+            TaskGateway gateway,
+            PlanningService planning,
+            IdempotencyCache idempotency,
             SseSlots slots) {
         this.registry = Objects.requireNonNull(registry, "registry не может быть null: задачи живут в реестре");
         this.gateway = Objects.requireNonNull(gateway, "gateway не может быть null: мир двигает только платформа");
@@ -52,14 +58,16 @@ public final class TaskRoutes {
             return RestResponse.json(202, replay.storedResponse());
         }
         if (verdict instanceof IdempotencyCache.Result.Conflict) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "request_id " + parsed.requestId() + " уже использован с другим телом запроса: повторите с новым "
                             + "request_id или пришлите исходное тело",
                     Map.of("request_id", parsed.requestId().toString()));
         }
         String response;
         try {
-            response = acceptedJson(startTask(bot, parsed), bot, parsed.requestId().toString());
+            response =
+                    acceptedJson(startTask(bot, parsed), bot, parsed.requestId().toString());
         } catch (RuntimeException failure) {
             idempotency.release(parsed.requestId().toString());
             throw failure;
@@ -68,19 +76,28 @@ public final class TaskRoutes {
         return RestResponse.json(202, response);
     }
 
+    private static String goalOf(TaskRequest parsed) {
+        String goal = parsed.goal();
+        if (goal == null) {
+            throw new IllegalStateException(
+                    "Запрос без plan обязан нести goal: TaskRequest.parse требует одно из двух");
+        }
+        return goal;
+    }
+
     private String startTask(String bot, TaskRequest parsed) {
         TaskNode plan = parsed.plan() == null ? null : planning.validatePlan(parsed.plan());
         String taskId;
         try {
             taskId = registry.reserve(bot, parsed.goal());
         } catch (TaskRegistry.BusyException busy) {
-            throw new ApiException(ErrorCode.CONFLICT, busy.getMessage(),
-                    Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
+            throw new ApiException(
+                    ErrorCode.CONFLICT, ErrorText.of(busy), Map.of("bot", busy.bot(), TASK_ID, busy.activeTaskId()));
         }
         long generation;
         try {
-            generation = plan != null ? gateway.start(bot, plan)
-                    : gateway.startGoal(bot, parsed.goal(), parsed.params());
+            generation =
+                    plan != null ? gateway.start(bot, plan) : gateway.startGoal(bot, goalOf(parsed), parsed.params());
         } catch (RuntimeException failure) {
             registry.discard(taskId);
             throw failure;
@@ -89,11 +106,11 @@ public final class TaskRoutes {
         return taskId;
     }
 
-    private RestResponse get(RestRequest request, PathParams params) {
+    private RestResponse get(RestRequest ignoredRequest, PathParams params) {
         return RestResponse.ok(TaskJson.toJson(knownTask(params.get("id"))));
     }
 
-    private RestResponse delete(RestRequest request, PathParams params) {
+    private RestResponse delete(RestRequest ignoredRequest, PathParams params) {
         String taskId = params.get("id");
         TaskRecord record = knownTask(taskId);
         if (record.active()) {
@@ -106,13 +123,15 @@ public final class TaskRoutes {
     private RestResponse events(RestRequest request, PathParams params) {
         String taskId = params.get("id");
         long lastEventId = lastEventId(request);
-        TaskRegistry.Snapshot snapshot = registry.snapshot(taskId, lastEventId).orElseThrow(
-                () -> new ApiException(ErrorCode.NOT_FOUND,
+        TaskRegistry.Snapshot snapshot = registry.snapshot(taskId, lastEventId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
                         "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при "
                                 + "перезапуске",
-                        Map.of("task_id", taskId)));
+                        Map.of(TASK_ID, taskId)));
         if (!slots.tryAcquire()) {
-            throw new ApiException(ErrorCode.RATE_LIMITED,
+            throw new ApiException(
+                    ErrorCode.RATE_LIMITED,
                     "Одновременно открыто уже " + SseSlots.MAX_STREAMS + " потоков событий: закройте один из них "
                             + "и подключитесь снова",
                     Map.of("limit", SseSlots.MAX_STREAMS));
@@ -129,7 +148,7 @@ public final class TaskRoutes {
         }
     }
 
-    private RestResponse plan(RestRequest request, PathParams params) {
+    private RestResponse plan(RestRequest request, PathParams ignoredParams) {
         JsonNode root;
         try {
             root = MAPPER.readTree(request.body());
@@ -139,26 +158,32 @@ public final class TaskRoutes {
             if (location != null && location.getLineNr() > 0) {
                 where = " (строка " + location.getLineNr() + ", столбец " + location.getColumnNr() + ")";
             }
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Тело POST plan не разобрано как JSON" + where + ": " + e.getOriginalMessage()
                             + ". Проверьте скобки, кавычки и кодировку UTF-8",
                     Map.of());
         } catch (IOException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
-                    "Тело POST plan не прочитано: " + e.getMessage(), Map.of());
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST, "Тело POST plan не прочитано: " + e.getMessage(), Map.of());
         }
         if (root == null || !root.isObject()) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Тело POST plan должно быть JSON-объектом вида {\"plan\":{…}}, получено: "
-                            + (root == null ? "пустое тело" : root.getNodeType()), Map.of());
+                            + (root == null ? "пустое тело" : root.getNodeType()),
+                    Map.of());
         }
         JsonNode planNode = root.get("plan");
         if (planNode == null || planNode.isNull()) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
-                    "В теле POST plan нет поля 'plan' с деревом плана, доступны: plan", Map.of("field", "plan"));
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
+                    "В теле POST plan нет поля 'plan' с деревом плана, доступны: plan",
+                    Map.of("field", "plan"));
         }
         if (!planNode.isObject()) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "'plan' должно быть JSON-объектом с узлом плана, получено: " + planNode.getNodeType(),
                     Map.of("field", "plan"));
         }
@@ -167,9 +192,11 @@ public final class TaskRoutes {
     }
 
     private TaskRecord knownTask(String taskId) {
-        return registry.get(taskId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при перезапуске",
-                Map.of("task_id", taskId)));
+        return registry.get(taskId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при перезапуске",
+                        Map.of(TASK_ID, taskId)));
     }
 
     private static String canonicalBotId(String raw) {
@@ -183,7 +210,7 @@ public final class TaskRoutes {
     private static long lastEventId(RestRequest request) {
         String header = null;
         for (Map.Entry<String, String> entry : request.headers().entrySet()) {
-            if (entry.getKey().equalsIgnoreCase("last-event-id")) {
+            if ("last-event-id".equalsIgnoreCase(entry.getKey())) {
                 header = entry.getValue();
                 break;
             }
@@ -194,7 +221,8 @@ public final class TaskRoutes {
         try {
             return Long.parseLong(header.trim());
         } catch (NumberFormatException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Заголовок Last-Event-ID должен быть числом, получено: '" + header + "'",
                     Map.of("header", "Last-Event-ID"));
         }
@@ -207,7 +235,7 @@ public final class TaskRoutes {
 
     private static String acceptedJson(String taskId, String bot, String requestId) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("task_id", taskId);
+        body.put(TASK_ID, taskId);
         body.put("bot", bot);
         body.put("state", TaskState.ACCEPTED.wire());
         body.put("request_id", requestId);

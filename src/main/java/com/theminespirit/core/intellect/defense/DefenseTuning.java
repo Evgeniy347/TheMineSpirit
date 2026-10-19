@@ -9,6 +9,5 @@ public final class DefenseTuning {
     public static final int MAX_ENEMIES = 16;
     public static final double MIN_DPS = 0.1;
 
-    private DefenseTuning() {
-    }
+    private DefenseTuning() {}
 }

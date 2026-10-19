@@ -31,9 +31,7 @@ final class SpiritChunkLoader {
             return;
         }
         Set<ChunkCoord> desired = ChunkSquare.chunks(center, radius);
-        ChunkDiff diff = trackedChunks == null
-                ? ChunkDiff.initial(desired)
-                : ChunkDiff.between(trackedChunks, desired);
+        ChunkDiff diff = trackedChunks == null ? ChunkDiff.initial(desired) : ChunkDiff.between(trackedChunks, desired);
         if (!diff.isEmpty()) {
             SpiritChunkTickets.apply(serverLevel, spirit, diff);
         }

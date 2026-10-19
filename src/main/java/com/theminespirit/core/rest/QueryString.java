@@ -4,17 +4,17 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public final class QueryString {
-    private QueryString() {
-    }
+    private QueryString() {}
 
-    public static Map<String, String> parse(String raw) {
+    public static Map<String, String> parse(@Nullable String raw) {
         Map<String, String> query = new LinkedHashMap<>();
         if (raw == null || raw.isEmpty()) {
             return query;
         }
-        for (String pair : raw.split("&")) {
+        for (String pair : raw.split("&", -1)) {
             if (pair.isEmpty()) {
                 continue;
             }
@@ -30,10 +30,12 @@ public final class QueryString {
         try {
             return URLDecoder.decode(part, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Параметры запроса '" + raw + "' не разобраны: неверная процентная запись в '" + part
                             + "'. Проверьте кодирование символов %XX",
-                    Map.of("query", raw), e);
+                    Map.of("query", raw),
+                    e);
         }
     }
 }

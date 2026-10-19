@@ -1,0 +1,23 @@
+# fence — ограда поселения 9×9 с калиткой во фронте (доска BUILD_FENCE); '.' — клетка обязана быть воздухом
+type: defense
+size: 9x1x9   # Ш×В×Д
+entrance: 4,0,0
+exemptions:
+  - rule: roof
+    reason: "ограда поселения открыта сверху по замыслу: это забор, а не здание"
+  - rule: inner_height
+    reason: "ограда — периметр забора без пола и потолка: внутренней высоты нет"
+legend:
+  'G': oak_fence_gate[facing=north]
+  'F': oak_fence
+layers:
+  - y0: |
+      FFFFGFFFF
+      F.......F
+      F.......F
+      F.......F
+      F.......F
+      F.......F
+      F.......F
+      F.......F
+      FFFFFFFFF

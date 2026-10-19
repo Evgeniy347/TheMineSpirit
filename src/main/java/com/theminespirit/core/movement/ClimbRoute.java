@@ -6,8 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class ClimbRoute {
-    private ClimbRoute() {
-    }
+    private ClimbRoute() {}
 
     public record Span(int bottomY, int topY) {
         public Span {
@@ -30,8 +29,8 @@ public final class ClimbRoute {
     }
 
     public static Optional<Span> span(List<Integer> climbableYs, int feetY) {
-        Objects.requireNonNull(climbableYs, "climbableYs не может быть null: колонна задаётся списком высот, "
-                + "пустая — List.of()");
+        Objects.requireNonNull(
+                climbableYs, "climbableYs не может быть null: колонна задаётся списком высот, " + "пустая — List.of()");
         List<Integer> sorted = climbableYs.stream().distinct().sorted().toList();
         if (sorted.isEmpty()) {
             return Optional.empty();
@@ -48,7 +47,7 @@ public final class ClimbRoute {
             }
             runStart = i;
         }
-        return Optional.of(best);
+        return Optional.ofNullable(best);
     }
 
     private static boolean closer(Span candidate, Span current, int feetY) {

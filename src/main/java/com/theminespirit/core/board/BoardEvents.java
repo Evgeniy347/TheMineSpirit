@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Слушатель переходов доски: адаптер пишет по нему строку журнала. Ядро не знает,
@@ -8,8 +9,7 @@ import java.util.UUID;
  */
 @FunctionalInterface
 public interface BoardEvents {
-    BoardEvents NONE = (event, ticket, holder, tick) -> {
-    };
+    BoardEvents NONE = (event, ticket, holder, tick) -> {};
 
-    void transition(BoardLog.Event event, BoardTicket ticket, UUID holder, long tick);
+    void transition(BoardLog.Event event, BoardTicket ticket, @Nullable UUID holder, long tick);
 }

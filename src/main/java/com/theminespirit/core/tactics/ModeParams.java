@@ -1,7 +1,13 @@
 package com.theminespirit.core.tactics;
 
-public record ModeParams(boolean initiates, RadiusBase radiusBase, double engageRadius, double pursuitRadius,
-        AnchorKind anchor, boolean leash, boolean returnToAnchor) {
+public record ModeParams(
+        boolean initiates,
+        RadiusBase radiusBase,
+        double engageRadius,
+        double pursuitRadius,
+        AnchorKind anchor,
+        boolean leash,
+        boolean returnToAnchor) {
     public static final double MAX_RADIUS = 256;
 
     public ModeParams {

@@ -2,8 +2,8 @@ package com.theminespirit.core.movement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,8 @@ class StandChoiceProperties {
         List<BlockCoord> shuffled = new ArrayList<>(StandChoice.candidates(target));
         Collections.shuffle(shuffled, new Random(seed));
 
-        assertEquals(bruteBest(shuffled, target, spirit, world),
+        assertEquals(
+                bruteBest(shuffled, target, spirit, world),
                 StandChoice.choose(target, spirit, world),
                 "Выбор стоянки обязан не зависеть от порядка кандидатов: иначе один и тот же подход "
                         + "даёт разные стоянки от запуска к запуску");
@@ -46,13 +47,13 @@ class StandChoiceProperties {
         return world;
     }
 
-    private static Optional<BlockCoord> bruteBest(List<BlockCoord> candidates, BlockCoord target,
-            BlockCoord spirit, CountingSafety world) {
+    private static Optional<BlockCoord> bruteBest(
+            List<BlockCoord> candidates, BlockCoord target, BlockCoord spirit, CountingSafety world) {
         double centerX = target.x() + 0.5;
         double centerY = target.y() + 0.5;
         double centerZ = target.z() + 0.5;
-        Comparator<BlockCoord> cheapestFirst = Comparator
-                .comparingInt((BlockCoord stand) -> MoveCost.walkTicks(spirit, stand))
+        Comparator<BlockCoord> cheapestFirst = Comparator.comparingInt(
+                        (BlockCoord stand) -> MoveCost.walkTicks(spirit, stand))
                 .thenComparingDouble(stand -> euclid(spirit, stand))
                 .thenComparing(Comparator.naturalOrder());
         Optional<BlockCoord> best = Optional.empty();

@@ -12,15 +12,14 @@ import java.util.Set;
 public final class VeinWalker {
     private static final int[][] NEIGHBORS = buildNeighbors();
 
-    private VeinWalker() {
-    }
+    private VeinWalker() {}
 
     public static Vein collect(BlockCoord start, OreView view, int maxBlocks) {
         Objects.requireNonNull(start, "Начало обхода не может быть null: без него неизвестно, какую жилу искать");
         Objects.requireNonNull(view, "OreView не может быть null: по нему проверяется, руда ли клетка");
         if (maxBlocks < 1) {
-            throw new IllegalArgumentException("Предел блоков жилы " + maxBlocks + " меньше 1: иначе обход "
-                    + "не вернёт ни одного блока");
+            throw new IllegalArgumentException(
+                    "Предел блоков жилы " + maxBlocks + " меньше 1: иначе обход " + "не вернёт ни одного блока");
         }
         Set<BlockCoord> visited = new HashSet<>();
         visited.add(start);
@@ -39,8 +38,8 @@ public final class VeinWalker {
             }
             blocks.add(current);
             for (int[] offset : NEIGHBORS) {
-                BlockCoord neighbor = new BlockCoord(current.x() + offset[0], current.y() + offset[1],
-                        current.z() + offset[2]);
+                BlockCoord neighbor =
+                        new BlockCoord(current.x() + offset[0], current.y() + offset[1], current.z() + offset[2]);
                 if (visited.add(neighbor) && view.isOre(neighbor)) {
                     queue.add(neighbor);
                 }

@@ -14,7 +14,9 @@ class OreKindProperties {
             return;
         }
         for (String block : OreKind.blocks(kind)) {
-            assertEquals(Optional.of(kind), OreKind.ofBlock(block),
+            assertEquals(
+                    Optional.of(kind),
+                    OreKind.ofBlock(block),
                     "Обратное сопоставление обязано держаться для каждого блока вида " + kind
                             + ": иначе добыча и распознавание руды расходятся");
         }
@@ -26,7 +28,8 @@ class OreKindProperties {
             return;
         }
         for (String block : OreKind.blocks(kind)) {
-            assertTrue(OreKind.blocks(OreKind.ANY).contains(block),
+            assertTrue(
+                    OreKind.blocks(OreKind.ANY).contains(block),
                     "any обязан включать блок " + block + " из вида " + kind
                             + ": иначе mine_vein(ore=any) пропускает эту руду");
         }

@@ -1,8 +1,7 @@
 package com.theminespirit.core.script;
 
 final class BuildingCoords {
-    private BuildingCoords() {
-    }
+    private BuildingCoords() {}
 
     static void checkX(int value) {
         if (value < -CatalogLimits.WORLD_HORIZONTAL_LIMIT || value > CatalogLimits.WORLD_HORIZONTAL_LIMIT) {

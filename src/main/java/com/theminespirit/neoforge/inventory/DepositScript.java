@@ -38,18 +38,20 @@ public final class DepositScript extends ContainerTask {
         if (transferRemaining() <= 0) {
             return null;
         }
-        return TransferRunner.filtered(spirit.getInventory(), container,
-                IdFilter.of(List.of(params.item())), transferRemaining());
+        return TransferRunner.filtered(
+                spirit.getInventory(), container, IdFilter.of(List.of(params.item())), transferRemaining());
     }
 
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
-            case SOURCE_LACK -> failed("в инвентаре только " + moved + " из " + params.count() + " '" + params.item()
-                    + "': перенесено " + moved + ", остального у духа нет");
-            case DEST_FULL -> failed("контейнер полон: перенесено " + moved + " из " + params.count() + " '"
-                    + params.item() + "', остальное осталось у духа");
+            case SOURCE_LACK ->
+                failed("в инвентаре только " + moved + " из " + params.count() + " '" + params.item() + "': перенесено "
+                        + moved + ", остального у духа нет");
+            case DEST_FULL ->
+                failed("контейнер полон: перенесено " + moved + " из " + params.count() + " '" + params.item()
+                        + "', остальное осталось у духа");
         };
     }
 
@@ -65,9 +67,13 @@ public final class DepositScript extends ContainerTask {
             return null;
         }
         int index = ((ContainerChoice.Chosen) choice).index();
-        TransferRunner runner = TransferRunner.filtered(spirit.getInventory(), scan.containers().get(index),
-                IdFilter.of(List.of(params.item())), params.count());
-        return new AutoMove(scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
+        TransferRunner runner = TransferRunner.filtered(
+                spirit.getInventory(),
+                scan.containers().get(index),
+                IdFilter.of(List.of(params.item())),
+                params.count());
+        return new AutoMove(
+                scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
     }
 
     @Override

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN" "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  Минимальный набор Checkstyle (tasks/46 п.4): только то, что не делают форматтер (Spotless), Error Prone и сторожа.
+  Не включаем: MissingSwitchDefault — все наши switch-операторы идут по enum, их полноту проверяет Error Prone
+  MissingCasesInEnumSwitch, а лишний default эту проверку отключил бы (новое значение enum прошло бы молча);
+  Indentation/LineLength/ImportOrder — работа palantir-java-format; MissingJavadoc и прочие *Javadoc —
+  противоречат правилу проекта «без Javadoc»; MethodName/имена тестов — правило проекта subject_Condition_Expected
+  держит TestNamingGuardTests; google_checks/sun_checks целиком — в основном стиль, который уже держит форматтер.
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="error"/>
+  <!-- ParameterNumber — только production, как MethodShapeGuardTests: в тестах ширину задают столбцы таблиц
+       @ParameterizedTest/@Property и фабрики строк и фикстур, повторяющие компоненты record. -->
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="ParameterNumber"/>
+    <property name="files" value="[\\/]src[\\/]test[\\/]"/>
+  </module>
+  <module name="TreeWalker">
+    <!-- Канонический и делегирующий конструкторы record повторяют компоненты: ширину держит сам record. -->
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="ParameterNumber"/>
+      <property name="query" value="//RECORD_DEF/OBJBLOCK/CTOR_DEF/IDENT"/>
+    </module>
+    <!-- Порядок объявлений: константы, поля, конструкторы, методы — класс читается сверху вниз. -->
+    <module name="DeclarationOrder"/>
+    <!-- 8+ параметров — нарушение; переопределения чужих API (Minecraft/NeoForge) не выбираем. -->
+    <module name="ParameterNumber">
+      <property name="max" value="7"/>
+      <property name="ignoreOverriddenMethods" value="true"/>
+    </module>
+    <!-- Источник строк @MethodSource в тестах (static Stream ...) — таблица данных: её длина — число строк. -->
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="MethodLength"/>
+      <property name="files" value="[\\/]src[\\/]test[\\/]"/>
+      <property name="query" value="//METHOD_DEF[./TYPE/IDENT[@text='Stream']]"/>
+    </module>
+    <!-- Метод — одна работа (docs/CONVENTIONS.md, ориентир ~40 строк); сборку роняет вдвое больше, без пустых строк
+         и комментариев. -->
+    <module name="MethodLength">
+      <property name="max" value="80"/>
+      <property name="countEmpty" value="false"/>
+    </module>
+    <module name="EqualsHashCode"/>
+  </module>
+</module>

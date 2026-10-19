@@ -36,8 +36,7 @@ public final class CraterStore extends SavedData {
 
     private final List<Crater> craters = new ArrayList<>();
 
-    public CraterStore() {
-    }
+    public CraterStore() {}
 
     public static SavedData.Factory<CraterStore> factory() {
         return new SavedData.Factory<>(CraterStore::new, CraterStore::load, null);
@@ -85,12 +84,14 @@ public final class CraterStore extends SavedData {
     }
 
     private static Crater readCrater(CompoundTag tag) {
-        return new Crater(tag.getUUID(ID_KEY),
+        return new Crater(
+                tag.getUUID(ID_KEY),
                 new BlockCoord(tag.getInt(X_KEY), tag.getInt(Y_KEY), tag.getInt(Z_KEY)),
-                tag.getInt(RADIUS_KEY), tag.getInt(LEVEL_KEY), tag.getLong(TICK_KEY));
+                tag.getInt(RADIUS_KEY),
+                tag.getInt(LEVEL_KEY),
+                tag.getLong(TICK_KEY));
     }
 
-    /** Запоминает воронку: id уникален, при повторе запись не двоится. */
     public void add(Crater crater) {
         Objects.requireNonNull(crater, "Воронка не может быть null: без неё нечего запоминать");
         craters.removeIf(existing -> existing.id().equals(crater.id()));
@@ -106,7 +107,6 @@ public final class CraterStore extends SavedData {
         return craters.stream().filter(crater -> crater.id().equals(id)).findFirst();
     }
 
-    /** Ближайшая воронка, накрывающая точку; если таких нет — ближайшая по центру. */
     public Optional<Crater> nearest(BlockCoord pos) {
         Objects.requireNonNull(pos, "Позиция не может быть null: без неё воронку не найти");
         Crater covering = null;

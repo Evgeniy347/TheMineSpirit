@@ -17,7 +17,6 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.constraints.IntRange;
-import net.jqwik.api.constraints.Positive;
 import net.jqwik.api.constraints.Size;
 
 class DoorWatchProperties {
@@ -26,10 +25,12 @@ class DoorWatchProperties {
     private static final UUID THIRD = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final List<SpiritRef> NONE = List.of();
     private static final List<SpiritRef> ONE = List.of(new SpiritRef(FIRST, new BlockCoord(64, 64, 70)));
-    private static final List<SpiritRef> TWO = List.of(new SpiritRef(FIRST, new BlockCoord(64, 64, 70)),
-            new SpiritRef(SECOND, new BlockCoord(64, 64, 58)));
-    private static final List<SpiritRef> THREE = List.of(new SpiritRef(FIRST, new BlockCoord(64, 64, 70)),
-            new SpiritRef(SECOND, new BlockCoord(64, 64, 58)), new SpiritRef(THIRD, new BlockCoord(70, 64, 64)));
+    private static final List<SpiritRef> TWO = List.of(
+            new SpiritRef(FIRST, new BlockCoord(64, 64, 70)), new SpiritRef(SECOND, new BlockCoord(64, 64, 58)));
+    private static final List<SpiritRef> THREE = List.of(
+            new SpiritRef(FIRST, new BlockCoord(64, 64, 70)),
+            new SpiritRef(SECOND, new BlockCoord(64, 64, 58)),
+            new SpiritRef(THIRD, new BlockCoord(70, 64, 64)));
 
     private final DoorWatch watch = new DoorWatch(new DoorRules(0.5, 60, 2.0, 32, 100));
 
@@ -49,7 +50,8 @@ class DoorWatchProperties {
         if (Math.sqrt(dx * dx + dz * dz) > 2.0) {
             return;
         }
-        assertFalse(closings.stream().anyMatch(closing -> closing.door().equals(door)),
+        assertFalse(
+                closings.stream().anyMatch(closing -> closing.door().equals(door)),
                 "Дух закрыл дверь, в проёме которой стоит игрок: иначе игрок оказывается зажат створкой");
     }
 
@@ -71,7 +73,8 @@ class DoorWatchProperties {
 
         Set<BlockCoord> uniqueDoors = new HashSet<>();
         for (DoorClosing closing : closings) {
-            assertTrue(uniqueDoors.add(closing.door()),
+            assertTrue(
+                    uniqueDoors.add(closing.door()),
                     "Одна дверь получила двух духов: иначе духи толкаются у одной двери вместо работы");
         }
     }
@@ -79,7 +82,8 @@ class DoorWatchProperties {
     @Property
     void closing_OneSpirit_AtMostOneDoor(@ForAll("spiritSets") List<SpiritRef> spirits) {
         long now = 20_000L;
-        List<DoorState> doors = List.of(new DoorState(new BlockCoord(64, 64, 64), true, now - 100, List.of()),
+        List<DoorState> doors = List.of(
+                new DoorState(new BlockCoord(64, 64, 64), true, now - 100, List.of()),
                 new DoorState(new BlockCoord(70, 64, 70), true, now - 100, List.of()),
                 new DoorState(new BlockCoord(58, 64, 58), true, now - 100, List.of()));
 
@@ -87,7 +91,8 @@ class DoorWatchProperties {
 
         Set<UUID> uniqueSpirits = new HashSet<>();
         for (DoorClosing closing : closings) {
-            assertTrue(uniqueSpirits.add(closing.spirit()),
+            assertTrue(
+                    uniqueSpirits.add(closing.spirit()),
                     "Один дух получил две двери: иначе вторая дверь ждёт, а дух стоит между двумя");
         }
     }
@@ -108,21 +113,23 @@ class DoorWatchProperties {
 
         List<DoorClosing> closings = watch.decide(doors, spirits, now, true);
 
-        assertEquals(Math.min(doors.size(), spirits.size()), closings.size(),
+        assertEquals(
+                Math.min(doors.size(), spirits.size()),
+                closings.size(),
                 "Вечером каждая открытая дверь без игроков обязана получить духа: иначе ночью остаётся открытой дверь");
     }
 
     @Property
     void closing_DoorOpenedRecently_DoesNotClose(
-            @ForAll("spiritSets") List<SpiritRef> spirits,
-            @ForAll @IntRange(min = 1, max = 59) long openedAgo) {
+            @ForAll("spiritSets") List<SpiritRef> spirits, @ForAll @IntRange(min = 1, max = 59) long openedAgo) {
         long now = 20_000L;
         DoorState door = new DoorState(new BlockCoord(64, 64, 64), true, now - openedAgo, List.of());
 
         if (openedAgo >= 60) {
             return;
         }
-        assertTrue(watch.decide(List.of(door), spirits, now, false).isEmpty(),
+        assertTrue(
+                watch.decide(List.of(door), spirits, now, false).isEmpty(),
                 "Днём дверь, открытая меньше предела тиков, не закрывается: иначе дух хватает игрока за руку");
     }
 

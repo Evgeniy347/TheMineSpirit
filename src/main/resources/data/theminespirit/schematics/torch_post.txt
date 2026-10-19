@@ -1,0 +1,21 @@
+# torch_post — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
+name: "Факельный столб"
+type: infrastructure
+stage: 0
+size: 2x4x1   # Ш×В×Д
+entrance: 1,0,0
+exemptions:
+  - rule: closed_walls
+    reason: "факельный столб 2×4×1 — не здание: замкнутого периметра стен у столба нет"
+legend:
+  '=': oak_log
+  'T': torch
+layers:
+  - y0: |
+      =.
+  - y1: |
+      =.
+  - y2: |
+      =.
+  - y3: |
+      T.

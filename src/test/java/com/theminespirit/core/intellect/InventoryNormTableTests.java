@@ -32,14 +32,21 @@ class InventoryNormTableTests {
     void parse_ValidJson_BuildsCurvesAndThresholds() {
         InventoryNormTable table = InventoryNormTable.parse(VALID, "тест");
 
-        assertEquals(List.of(new InventoryNormTable.CurvePoint(0.0, 0.0),
-                        new InventoryNormTable.CurvePoint(1.0, 2.0)), table.occupiedCurve(),
+        assertEquals(
+                List.of(new InventoryNormTable.CurvePoint(0.0, 0.0), new InventoryNormTable.CurvePoint(1.0, 2.0)),
+                table.occupiedCurve(),
                 "Кривые занятости обязаны разобраться из файла: иначе данные не управляют спросом");
-        assertEquals(0, table.releaseFreeSlots(ActivityId.UNLOAD),
+        assertEquals(
+                0,
+                table.releaseFreeSlots(ActivityId.UNLOAD),
                 "Порог освобождения читается по деятельностям: иначе дух не знает, когда бросить задачу");
-        assertEquals(2, table.releaseFreeSlots(ActivityId.FARM),
+        assertEquals(
+                2,
+                table.releaseFreeSlots(ActivityId.FARM),
                 "Ферма из файла бросает задачу при двух свободных ячейках: порог — данные, а не константа");
-        assertEquals(0, table.releaseFreeSlots(ActivityId.MINE),
+        assertEquals(
+                0,
+                table.releaseFreeSlots(ActivityId.MINE),
                 "Шахтёр из файла держит задачу до последней ячейки (порог 0): иначе он бросает жилу раньше времени");
     }
 
@@ -55,32 +62,39 @@ class InventoryNormTableTests {
 
     @Test
     void parse_BrokenJson_ThrowsWithOrigin() {
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> InventoryNormTable.parse("{ это не json", "битый.json"),
                 "Битый json обязан падать: иначе таблица молча подменится пустой");
-        assertTrue(error.getMessage().contains("битый.json"),
-                "Сообщение называет файл: при падении видно, что править");
+        assertTrue(
+                error.getMessage().contains("битый.json"), "Сообщение называет файл: при падении видно, что править");
     }
 
     @Test
     void parse_FallingDemand_Throws() {
-        String falling = VALID.replace("[{\"at\":0.0,\"value\":0.0},{\"at\":1.0,\"value\":4.0}]",
+        String falling = VALID.replace(
+                "[{\"at\":0.0,\"value\":0.0},{\"at\":1.0,\"value\":4.0}]",
                 "[{\"at\":0.0,\"value\":0.0},{\"at\":0.5,\"value\":3.0},{\"at\":1.0,\"value\":2.0}]");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> InventoryNormTable.parse(falling, "падение.json"),
                 "Кривая с падающим спросом недопустима: чем полнее инвентарь, тем сильнее нужда его освободить");
 
-        assertTrue(error.getMessage().contains("extra_curve"),
+        assertTrue(
+                error.getMessage().contains("extra_curve"),
                 "Сообщение называет кривую: при падении видно, какую точку чинить");
     }
 
     @Test
     void parse_UnorderedPoints_Throws() {
-        String unordered = VALID.replace("[{\"at\":0.0,\"value\":0.0},{\"at\":1.0,\"value\":2.0}]",
+        String unordered = VALID.replace(
+                "[{\"at\":0.0,\"value\":0.0},{\"at\":1.0,\"value\":2.0}]",
                 "[{\"at\":0.0,\"value\":0.0},{\"at\":0.5,\"value\":1.0},{\"at\":0.5,\"value\":2.0}]");
 
-        assertThrows(IllegalStateException.class, () -> InventoryNormTable.parse(unordered, "порядок.json"),
+        assertThrows(
+                IllegalStateException.class,
+                () -> InventoryNormTable.parse(unordered, "порядок.json"),
                 "Немонотонные доли точек недопустимы: интерполяция кривой требует роста at");
     }
 
@@ -88,11 +102,13 @@ class InventoryNormTableTests {
     void parse_MissingActivity_Throws() {
         String missing = VALID.replace("\"FARM\":2,", "");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> InventoryNormTable.parse(missing, "нет фермы.json"),
                 "Без порога деятельности таблица неполна: дух не узнает, до какой ячейки держать задачу");
 
-        assertTrue(error.getMessage().contains("FARM"),
+        assertTrue(
+                error.getMessage().contains("FARM"),
                 "Сообщение называет деятельность: при падении видно, чего не хватает");
     }
 
@@ -100,7 +116,9 @@ class InventoryNormTableTests {
     void parse_EmptyCurve_Throws() {
         String empty = VALID.replace("{\"at\":0.0,\"value\":0.0},{\"at\":1.0,\"value\":2.0}", "");
 
-        assertThrows(IllegalStateException.class, () -> InventoryNormTable.parse(empty, "пусто.json"),
+        assertThrows(
+                IllegalStateException.class,
+                () -> InventoryNormTable.parse(empty, "пусто.json"),
                 "Пустая кривая недопустима: без точек спрос не посчитать");
     }
 
@@ -110,12 +128,15 @@ class InventoryNormTableTests {
         TableDefinition<InventoryNormTable> definition = registeredDefinition("inventory_norm");
         TableHolder<InventoryNormTable> holder = registry.register(definition, InventoryNormTable.load());
         InventoryNormTable before = holder.current();
-        ContentSource source = ContentSource.of(Map.of(InventoryNormTable.RESOURCE,
+        ContentSource source = ContentSource.of(Map.of(
+                InventoryNormTable.RESOURCE,
                 new LoadedContent("{ сломано", InventoryNormTable.RESOURCE, TableStatus.Source.DATAPACK)));
 
         registry.reload(source);
 
-        assertSame(before, holder.current(),
+        assertSame(
+                before,
+                holder.current(),
                 "Битый json при /reload обязан оставить прежнюю таблицу в силе: иначе духи теряют пороги "
                         + "освобождения и бросают задачи по пустым числам");
         assertTrue(holder.status().failed(), "Ошибка загрузки обязана быть видна в статусе таблицы");
@@ -123,7 +144,9 @@ class InventoryNormTableTests {
 
     @Test
     void loadDefault_ConsumerCall_ReturnsLiveHolder() {
-        assertSame(DataTables.INSTANCE.inventoryNorm().current(), InventoryNormTable.loadDefault(),
+        assertSame(
+                DataTables.INSTANCE.inventoryNorm().current(),
+                InventoryNormTable.loadDefault(),
                 "Потребитель обязан брать версию из держателя: иначе /reload не поменяет ему числа");
     }
 

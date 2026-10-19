@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.concurrent.TimeUnit;
 
 final class ThreadStates {
-    private ThreadStates() {
-    }
+    private ThreadStates() {}
 
     static void awaitState(Thread thread, Thread.State expected, String message) {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);

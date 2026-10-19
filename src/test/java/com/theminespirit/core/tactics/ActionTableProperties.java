@@ -14,13 +14,15 @@ class ActionTableProperties {
     }
 
     @Property
-    void choose_AnySituationAndDecision_ActionIsDefinedAndMatchesDecision(@ForAll("situations") Situation situation,
-            @ForAll TacticalOption decision) {
+    void choose_AnySituationAndDecision_ActionIsDefinedAndMatchesDecision(
+            @ForAll("situations") Situation situation, @ForAll TacticalOption decision) {
         ActionTable table = new ActionTable(TacticsConfig.loadDefault().rules().actions(), new RuleCounter());
 
         ActionChoice choice = table.choose(decision, Assessments.facts(situation));
 
-        assertEquals(decision, choice.action().option(),
+        assertEquals(
+                decision,
+                choice.action().option(),
                 "Для любой ситуации действие определено и согласуется с решением: FIGHT не даёт RETREAT или CONTINUE, "
                         + "иначе адаптер получит противоречие «решили драться, а действие — бежать»");
     }

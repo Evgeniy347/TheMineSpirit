@@ -8,11 +8,18 @@ import java.util.Locale;
 import java.util.Optional;
 
 public final class TacticsTrace {
-    public static final List<String> LABELS = List.of("решение", "действие", "отход", "позвать на помощь", "состояние",
-            "режим", "вернуться к", "обоснование", "память");
+    public static final List<String> LABELS = List.of(
+            "решение",
+            "действие",
+            "отход",
+            "позвать на помощь",
+            "состояние",
+            "режим",
+            "вернуться к",
+            "обоснование",
+            "память");
 
-    private TacticsTrace() {
-    }
+    private TacticsTrace() {}
 
     public static String format(TacticalOutcome outcome) {
         if (outcome == null) {
@@ -34,6 +41,7 @@ public final class TacticsTrace {
     }
 
     private static String point(Optional<Point> point) {
-        return point.map(p -> String.format(Locale.ROOT, "(%.1f, %.1f, %.1f)", p.x(), p.y(), p.z())).orElse("нет");
+        return point.map(p -> String.format(Locale.ROOT, "(%.1f, %.1f, %.1f)", p.x(), p.y(), p.z()))
+                .orElse("нет");
     }
 }

@@ -8,12 +8,8 @@ import java.util.Optional;
  * Источник содержимого таблиц на момент перезагрузки. Ядро не знает про ресурс-менеджер NeoForge: адаптер
  * передаёт реализацию, читающую json из серверных ресурсов (мод и датапаки мира). Для тестов — карта.
  */
+@FunctionalInterface
 public interface ContentSource {
-    /**
-     * Читает содержимое по пути вида {@code data/theminespirit/tactics/weights.json}. Пустой Optional — файла нет
-     * (тогда остаётся текущая версия без ошибки: отсутствие переопределения — не сбой). Ошибка чтения бросается
-     * исключением и попадает в статус таблицы.
-     */
     Optional<LoadedContent> read(String resourcePath);
 
     static ContentSource of(Map<String, LoadedContent> content) {

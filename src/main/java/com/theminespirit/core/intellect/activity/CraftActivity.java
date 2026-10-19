@@ -60,7 +60,9 @@ public final class CraftActivity implements Activity {
     }
 
     private static ActivityIntent craft(String product, ProcessingRules rules) {
-        return new ActivityIntent(ActivityId.CRAFT, Optional.of("craft"),
+        return new ActivityIntent(
+                ActivityId.CRAFT,
+                Optional.of("craft"),
                 Map.of("item", product, "count", rules.craftCount(), "radius", rules.stationRadius()),
                 Optional.empty());
     }

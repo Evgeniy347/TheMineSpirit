@@ -19,7 +19,8 @@ class FleePlannerTests {
     }
 
     private static FleePlanner.Plan plan(AsciiWorld world, double minDistance) {
-        return FleePlanner.plan(world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), minDistance)), world);
+        return FleePlanner.plan(
+                world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), minDistance)), world);
     }
 
     private static ReflexAction.Flee flee(int x, int y, int z) {
@@ -32,7 +33,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(world, 5);
 
-        assertEquals(flee(1, 1, 0), plan.action(), "Угроза в x=6, держать 5: ближайшая клетка с расстоянием 5 — x=1, а не любая западная");
+        assertEquals(
+                flee(1, 1, 0),
+                plan.action(),
+                "Угроза в x=6, держать 5: ближайшая клетка с расстоянием 5 — x=1, а не любая западная");
     }
 
     @Test
@@ -44,7 +48,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(world, 7);
 
-        assertEquals(flee(7, 1, 4), plan.action(), "В открытой комнате ближайшая клетка на 7 от угрозы в x=0 — x=7 на той же линии, три шага от духа");
+        assertEquals(
+                flee(7, 1, 4),
+                plan.action(),
+                "В открытой комнате ближайшая клетка на 7 от угрозы в x=0 — x=7 на той же линии, три шага от духа");
     }
 
     @Test
@@ -53,7 +60,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(world, 7);
 
-        assertEquals(flee(1, 1, 0), plan.action(), "Если нужных 7 блоков нет, дух уходит в самую дальнюю клетку тупика (x=1, расстояние 5), а не стоит на месте");
+        assertEquals(
+                flee(1, 1, 0),
+                plan.action(),
+                "Если нужных 7 блоков нет, дух уходит в самую дальнюю клетку тупика (x=1, расстояние 5), а не стоит на месте");
     }
 
     @Test
@@ -62,7 +72,9 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(world, 5);
 
-        assertEquals(new ReflexAction.StopMoving(), plan.action(),
+        assertEquals(
+                new ReflexAction.StopMoving(),
+                plan.action(),
                 "Дух в тупике, угроза в двух блоках у выхода: улучшить нечем, а пройти мимо угрозы нельзя, поэтому STOP_MOVING");
     }
 
@@ -74,7 +86,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = FleePlanner.plan(start, List.of(new FleePlanner.Threat(threat, 4)), world);
 
-        assertEquals(flee(5, 1, 0), plan.action(), "Платформа выше земли на 2 блока: спуск с неё разрешён и ведёт к клетке на 4 от угрозы");
+        assertEquals(
+                flee(5, 1, 0),
+                plan.action(),
+                "Платформа выше земли на 2 блока: спуск с неё разрешён и ведёт к клетке на 4 от угрозы");
     }
 
     @Test
@@ -85,7 +100,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = FleePlanner.plan(start, List.of(new FleePlanner.Threat(threat, 4)), world);
 
-        assertEquals(new ReflexAction.StopMoving(), plan.action(), "Спуск на 3 блока ранит духа: рефлекс не прыгает с высоты, даже убегая");
+        assertEquals(
+                new ReflexAction.StopMoving(),
+                plan.action(),
+                "Спуск на 3 блока ранит духа: рефлекс не прыгает с высоты, даже убегая");
     }
 
     @Test
@@ -96,7 +114,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = FleePlanner.plan(start, List.of(new FleePlanner.Threat(threat, 7)), world);
 
-        assertEquals(flee(8, 2, 0), plan.action(), "Ступень в один блок преодолима: цель на 7 от угрозы лежит за ступенью на высоте y=2");
+        assertEquals(
+                flee(8, 2, 0),
+                plan.action(),
+                "Ступень в один блок преодолима: цель на 7 от угрозы лежит за ступенью на высоте y=2");
     }
 
     @Test
@@ -107,7 +128,10 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = FleePlanner.plan(start, List.of(new FleePlanner.Threat(threat, 7)), world);
 
-        assertEquals(flee(5, 1, 0), plan.action(), "Стена в два блока непреодолима: дух уходит в самую дальнюю клетку перед ней");
+        assertEquals(
+                flee(5, 1, 0),
+                plan.action(),
+                "Стена в два блока непреодолима: дух уходит в самую дальнюю клетку перед ней");
     }
 
     @Test
@@ -116,17 +140,25 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(world, 8);
 
-        assertEquals(flee(5, 1, 0), plan.action(), "Лава в x=7 закрывает восток: клетки за ней (x=9, расстояние 8) недосягаемы, а x=6 стоит вплотную к лаве и не годится для стоянки: дух уходит в x=5");
+        assertEquals(
+                flee(5, 1, 0),
+                plan.action(),
+                "Лава в x=7 закрывает восток: клетки за ней (x=9, расстояние 8) недосягаемы, а x=6 стоит вплотную к лаве и не годится для стоянки: дух уходит в x=5");
     }
 
     @Test
     void plan_LimitedRadius_StopsAtTheRadiusEvenWhenGoalIsFarther() {
         AsciiWorld world = world("#####################", "#1@.................#", "#...................#");
 
-        FleePlanner.Plan limited = FleePlanner.plan(world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 10)), world, 200, 3);
-        FleePlanner.Plan wide = FleePlanner.plan(world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 10)), world, 200, 12);
+        FleePlanner.Plan limited = FleePlanner.plan(
+                world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 10)), world, 200, 3);
+        FleePlanner.Plan wide = FleePlanner.plan(
+                world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 10)), world, 200, 12);
 
-        assertEquals(flee(5, 1, 0), limited.action(), "Радиус 3: дух уходит на край радиуса (x=5), цель на 10 от угрозы недосягаема");
+        assertEquals(
+                flee(5, 1, 0),
+                limited.action(),
+                "Радиус 3: дух уходит на край радиуса (x=5), цель на 10 от угрозы недосягаема");
         assertEquals(flee(11, 1, 0), wide.action(), "Радиус 12: цель на 10 от угрозы в x=11 достижима");
     }
 
@@ -134,13 +166,17 @@ class FleePlannerTests {
     void plan_NodeLimit_CapsVisitedCells() {
         String floor = String.join("/", Collections.nCopies(15, "###############"));
         String open = String.join("/", Collections.nCopies(15, "..............."));
-        String feet = String.join("/", Collections.nCopies(7, "..............."))
-                + "/1......@......./" + String.join("/", Collections.nCopies(7, "..............."));
+        String feet = String.join("/", Collections.nCopies(7, "...............")) + "/1......@......./"
+                + String.join("/", Collections.nCopies(7, "..............."));
         AsciiWorld world = world(floor, feet, open);
 
-        FleePlanner.Plan plan = FleePlanner.plan(world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 100)), world, 5, 8);
+        FleePlanner.Plan plan = FleePlanner.plan(
+                world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 100)), world, 5, 8);
 
-        assertTrue(plan.visited() <= 5, "Предел узлов 5: поиск не выходит за него, чтобы тик не зависел от размера открытого поля. Посещено: " + plan.visited());
+        assertTrue(
+                plan.visited() <= 5,
+                "Предел узлов 5: поиск не выходит за него, чтобы тик не зависел от размера открытого поля. Посещено: "
+                        + plan.visited());
     }
 
     @Test
@@ -154,13 +190,16 @@ class FleePlannerTests {
             floorRows.add(row.toString());
         }
         String open = String.join("/", Collections.nCopies(15, "..............."));
-        String feet = String.join("/", Collections.nCopies(7, "..............."))
-                + "/1......@......./" + String.join("/", Collections.nCopies(7, "..............."));
+        String feet = String.join("/", Collections.nCopies(7, "...............")) + "/1......@......./"
+                + String.join("/", Collections.nCopies(7, "..............."));
         AsciiWorld world = world(String.join("/", floorRows), feet, open);
 
         FleePlanner.plan(world.marker('@'), List.of(new FleePlanner.Threat(world.marker('1'), 100)), world, 2, 8);
 
-        assertTrue(world.reads() <= 12, "Бюджет чтений 2 узла × 6 = 12: поле с магмой отклоняет каждую стоянку, и без бюджета проверки стоянок читали бы больше. Прочитано: " + world.reads());
+        assertTrue(
+                world.reads() <= 12,
+                "Бюджет чтений 2 узла × 6 = 12: поле с магмой отклоняет каждую стоянку, и без бюджета проверки стоянок читали бы больше. Прочитано: "
+                        + world.reads());
     }
 
     @Test
@@ -169,17 +208,23 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = FleePlanner.plan(world.marker('@'), List.of(), world);
 
-        assertEquals(flee(2, 1, 0), plan.action(), "Без угроз требования выполнены на месте: план остаётся в клетке духа");
+        assertEquals(
+                flee(2, 1, 0), plan.action(), "Без угроз требования выполнены на месте: план остаётся в клетке духа");
     }
 
     @Test
     void plan_SqueezedBetweenTwoThreats_StopsMoving() {
         AsciiWorld world = world("###########", "#1...@...2#", "#.........#");
 
-        FleePlanner.Plan plan = FleePlanner.plan(world.marker('@'),
-                List.of(new FleePlanner.Threat(world.marker('1'), 6), new FleePlanner.Threat(world.marker('2'), 6)), world);
+        FleePlanner.Plan plan = FleePlanner.plan(
+                world.marker('@'),
+                List.of(new FleePlanner.Threat(world.marker('1'), 6), new FleePlanner.Threat(world.marker('2'), 6)),
+                world);
 
-        assertEquals(new ReflexAction.StopMoving(), plan.action(), "Между двумя угрозами любой шаг приближает к одной из них: стоять лучше, чем бежать в угрозу");
+        assertEquals(
+                new ReflexAction.StopMoving(),
+                plan.action(),
+                "Между двумя угрозами любой шаг приближает к одной из них: стоять лучше, чем бежать в угрозу");
     }
 
     @Test
@@ -191,7 +236,9 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(walled, 5);
 
-        assertEquals(flee(11, 1, 0), plan.action(),
+        assertEquals(
+                flee(11, 1, 0),
+                plan.action(),
                 "Угроза за стеной в двух блоках опасна по прямой: дух уходит вдоль стены на 5 по x, восточная клетка проверяется первой");
     }
 
@@ -201,25 +248,36 @@ class FleePlannerTests {
 
         FleePlanner.Plan plan = plan(closed, 5);
 
-        assertEquals(new ReflexAction.StopMoving(), plan.action(), "В закрытой клетке идти некуда: STOP_MOVING, а не исключение");
+        assertEquals(
+                new ReflexAction.StopMoving(),
+                plan.action(),
+                "В закрытой клетке идти некуда: STOP_MOVING, а не исключение");
         assertEquals(1, plan.visited(), "Посещена только исходная клетка");
     }
 
     @Test
     void threat_NonPositiveDistance_ThrowsWithValue() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new FleePlanner.Threat(CORNER, 0), "нулевое расстояние держания не имеет смысла");
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> new FleePlanner.Threat(CORNER, 0),
+                "нулевое расстояние держания не имеет смысла");
 
-        assertTrue(error.getMessage().contains("0.0"), "ошибка называет принятое значение. Фактическое: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("0.0"),
+                "ошибка называет принятое значение. Фактическое: " + error.getMessage());
     }
 
     @Test
     void plan_ZeroNodes_ThrowsWithValue() {
         AsciiWorld world = world("###", "#@1", "###");
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> FleePlanner.plan(world.marker('@'), List.of(), world, 0, 8), "maxNodes = 0 — ошибка вызова");
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> FleePlanner.plan(world.marker('@'), List.of(), world, 0, 8),
+                "maxNodes = 0 — ошибка вызова");
 
-        assertTrue(error.getMessage().contains("maxNodes 0"), "ошибка называет параметр и значение. Фактическое: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("maxNodes 0"),
+                "ошибка называет параметр и значение. Фактическое: " + error.getMessage());
     }
 }

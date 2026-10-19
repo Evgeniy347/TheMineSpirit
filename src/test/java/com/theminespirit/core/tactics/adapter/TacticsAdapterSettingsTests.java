@@ -20,14 +20,22 @@ class TacticsAdapterSettingsTests {
     void defaults_DocumentedNumbers_MatchShippedResource() {
         TacticsAdapterSettings defaults = TacticsAdapterSettings.defaults();
 
-        assertEquals(List.of(10, 16, 32, 64, 200, 32, 1),
-                List.of(defaults.evalIntervalTicks(), defaults.maxEnemies(), defaults.factRadius(),
-                        defaults.factChunkBudget(), defaults.retreatHoldTicks(), defaults.journalCapacity(),
+        assertEquals(
+                List.of(10, 16, 32, 64, 200, 32, 1),
+                List.of(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
                         defaults.journalMaxPerSecond()),
                 "Умолчания адаптера: снятие фактов раз в 10 тиков, не более 16 врагов, радиус поиска 32, бюджет 64 "
                         + "чтения блока, удержание отхода 200 тиков, журнал на 32 записи не чаще одной в секунду. "
-                        + "Изменили число — обновите adapter.json и docs/TACTICS.md");
-        assertEquals(TacticsAdapterSettings.defaults(), TacticsAdapterSettings.loadDefault(),
+                        + "Изменили число — обновите adapter.json и docs/tactics/README.md");
+        assertEquals(
+                TacticsAdapterSettings.defaults(),
+                TacticsAdapterSettings.loadDefault(),
                 "adapter.json обязан повторять умолчания: иначе числа кода и данных разойдутся молча");
     }
 
@@ -47,8 +55,11 @@ class TacticsAdapterSettingsTests {
     void constructor_ValueAtBoundary_IsAccepted(String field, int value) {
         TacticsAdapterSettings settings = with(field, value);
 
-        assertEquals(value, read(settings, field),
-                "Граница поля " + field + " входит в допустимый диапазон: конструктор держит границы чисел, а не парсер");
+        assertEquals(
+                value,
+                read(settings, field),
+                "Граница поля " + field
+                        + " входит в допустимый диапазон: конструктор держит границы чисел, а не парсер");
     }
 
     static Stream<Arguments> rejectedBounds() {
@@ -65,17 +76,23 @@ class TacticsAdapterSettingsTests {
     @ParameterizedTest(name = "{0} = {1}")
     @MethodSource("rejectedBounds")
     void constructor_ValueOutsideBounds_IsRejected(String field, int value) {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> with(field, value),
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> with(field, value),
                 "Число адаптера вне границ обязано отклоняться конструктором: иначе чтения блоков или время "
                         + "удержания отхода уйдут за бюджет тика");
 
-        assertTrue(error.getMessage().contains(field),
-                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains(field),
+                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: "
+                        + error.getMessage());
     }
 
     @Test
     void fromJson_GoodText_LoadsAllFields() {
-        assertEquals(TacticsAdapterSettings.defaults(), TacticsAdapterSettings.fromJson(GOOD),
+        assertEquals(
+                TacticsAdapterSettings.defaults(),
+                TacticsAdapterSettings.fromJson(GOOD),
                 "Полный adapter.json читается в запись без подстановок: все семь полей обязательны");
     }
 
@@ -83,12 +100,15 @@ class TacticsAdapterSettingsTests {
     void fromJson_UnknownField_IsRejectedWithFileAndField() {
         String text = GOOD.replace("}", ", \"extra\": 1}");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Лишнее поле в adapter.json — ошибка, а не молчаливый пропуск: иначе опечатка в имени поля "
                         + "оставит настройку умолчанию");
 
-        assertTrue(error.getMessage().contains("adapter.json") && error.getMessage().contains("extra"),
+        assertTrue(
+                error.getMessage().contains("adapter.json")
+                        && error.getMessage().contains("extra"),
                 "Сообщение называет файл и поле; получили: " + error.getMessage());
     }
 
@@ -96,11 +116,13 @@ class TacticsAdapterSettingsTests {
     void fromJson_MissingField_IsRejectedWithField() {
         String text = GOOD.replace("\"factRadius\": 32, ", "");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Без факт-радиуса адаптер не знает, кого считать врагом: загрузка обязана назвать пропущенное поле");
 
-        assertTrue(error.getMessage().contains("factRadius"),
+        assertTrue(
+                error.getMessage().contains("factRadius"),
                 "Сообщение называет факт-радиус; получили: " + error.getMessage());
     }
 
@@ -108,11 +130,13 @@ class TacticsAdapterSettingsTests {
     void fromJson_WrongType_IsRejectedWithField() {
         String text = GOOD.replace("\"factRadius\": 32", "\"factRadius\": \"32\"");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Число в кавычках — ошибка схемы: парсер читает число без границ, но тип проверяет");
 
-        assertTrue(error.getMessage().contains("factRadius"),
+        assertTrue(
+                error.getMessage().contains("factRadius"),
                 "Сообщение называет поле с неверным типом; получили: " + error.getMessage());
     }
 
@@ -120,11 +144,14 @@ class TacticsAdapterSettingsTests {
     void fromJson_OutOfRangeValue_IsRejectedWithFileAndField() {
         String text = GOOD.replace("\"factRadius\": 32", "\"factRadius\": 300");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Факт-радиус 300 вне границ конструктора: загрузка обязана отклонить файл, а не чинить число молча");
 
-        assertTrue(error.getMessage().contains("adapter.json") && error.getMessage().contains("factRadius"),
+        assertTrue(
+                error.getMessage().contains("adapter.json")
+                        && error.getMessage().contains("factRadius"),
                 "Сообщение называет файл и поле; получили: " + error.getMessage());
     }
 
@@ -132,58 +159,107 @@ class TacticsAdapterSettingsTests {
     void fromJson_DuplicateKey_IsRejected() {
         String text = GOOD.replace("\"factRadius\": 32", "\"factRadius\": 32, \"factRadius\": 32");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Дубль ключа — ошибка: какое из двух значений верно, неизвестно");
 
-        assertTrue(error.getMessage().contains("adapter.json"),
+        assertTrue(
+                error.getMessage().contains("adapter.json"),
                 "Сообщение называет файл; получили: " + error.getMessage());
     }
 
     @Test
     void fromJson_MalformedText_IsRejected() {
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson("{"),
                 "Сломанный JSON отклоняется на разборе с указанием файла, а не падает позже в бою");
 
-        assertTrue(error.getMessage().contains("adapter.json"),
+        assertTrue(
+                error.getMessage().contains("adapter.json"),
                 "Сообщение называет файл; получили: " + error.getMessage());
     }
 
     @Test
     void fromJson_ArrayRoot_IsRejected() {
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson("[]"),
                 "Корень adapter.json — объект, а не массив: иначе поля неоткуда взять");
 
-        assertTrue(error.getMessage().contains("adapter.json") && error.getMessage().contains("объект"),
+        assertTrue(
+                error.getMessage().contains("adapter.json")
+                        && error.getMessage().contains("объект"),
                 "Сообщение называет файл и требует объект в корне; получили: " + error.getMessage());
     }
 
     private static TacticsAdapterSettings with(String field, int value) {
         TacticsAdapterSettings defaults = TacticsAdapterSettings.defaults();
         return switch (field) {
-            case "evalIntervalTicks" -> new TacticsAdapterSettings(value, defaults.maxEnemies(),
-                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(),
-                    defaults.journalCapacity(), defaults.journalMaxPerSecond());
-            case "maxEnemies" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), value,
-                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(),
-                    defaults.journalCapacity(), defaults.journalMaxPerSecond());
-            case "factRadius" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    value, defaults.factChunkBudget(), defaults.retreatHoldTicks(), defaults.journalCapacity(),
-                    defaults.journalMaxPerSecond());
-            case "factChunkBudget" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    defaults.factRadius(), value, defaults.retreatHoldTicks(), defaults.journalCapacity(),
-                    defaults.journalMaxPerSecond());
-            case "retreatHoldTicks" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    defaults.factRadius(), defaults.factChunkBudget(), value, defaults.journalCapacity(),
-                    defaults.journalMaxPerSecond());
-            case "journalCapacity" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(), defaults.maxEnemies(),
-                    defaults.factRadius(), defaults.factChunkBudget(), defaults.retreatHoldTicks(), value,
-                    defaults.journalMaxPerSecond());
-            case "journalMaxPerSecond" -> new TacticsAdapterSettings(defaults.evalIntervalTicks(),
-                    defaults.maxEnemies(), defaults.factRadius(), defaults.factChunkBudget(),
-                    defaults.retreatHoldTicks(), defaults.journalCapacity(), value);
+            case "evalIntervalTicks" ->
+                new TacticsAdapterSettings(
+                        value,
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond());
+            case "maxEnemies" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        value,
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond());
+            case "factRadius" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        value,
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond());
+            case "factChunkBudget" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        value,
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond());
+            case "retreatHoldTicks" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        value,
+                        defaults.journalCapacity(),
+                        defaults.journalMaxPerSecond());
+            case "journalCapacity" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        value,
+                        defaults.journalMaxPerSecond());
+            case "journalMaxPerSecond" ->
+                new TacticsAdapterSettings(
+                        defaults.evalIntervalTicks(),
+                        defaults.maxEnemies(),
+                        defaults.factRadius(),
+                        defaults.factChunkBudget(),
+                        defaults.retreatHoldTicks(),
+                        defaults.journalCapacity(),
+                        value);
             default -> throw new IllegalArgumentException("Неизвестное поле настройки адаптера: " + field);
         };
     }

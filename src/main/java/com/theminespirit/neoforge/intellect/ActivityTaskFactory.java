@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -8,8 +7,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class ActivityTaskFactory {
-    private ActivityTaskFactory() {
-    }
+    private static final String RADIUS = "radius";
+
+    private ActivityTaskFactory() {}
 
     public static Optional<TaskNode> taskFor(ActivityIntent intent) {
         if (intent == null) {
@@ -21,30 +21,13 @@ public final class ActivityTaskFactory {
         }
         String script = intent.script().get();
         Map<String, Object> params = switch (script) {
-            case "chop_tree" -> Map.of("species", "any", "count", 4, "radius", 16, "replant", true);
-            case "harvest_crop" -> Map.of("crop", "any", "radius", 8, "replant", true);
-            case "mine_vein" -> Map.of("ore", "any", "count", 8, "radius", 16);
-            case "unload" -> Map.of("container", "auto", "radius", 8, "force", false);
+            case "chop_tree" -> Map.of("species", "any", "count", 4, RADIUS, 16, "replant", true);
+            case "harvest_crop" -> Map.of("crop", "any", RADIUS, 8, "replant", true);
+            case "mine_vein" -> Map.of("ore", "any", "count", 8, RADIUS, 16);
+            case "unload" -> Map.of("container", "auto", RADIUS, 8, "force", false);
             case "wait" -> Map.of("ticks", 200);
             default -> intent.params();
         };
         return Optional.of(new ScriptCall(script, params));
-    }
-
-    public static Optional<String> scriptOf(ActivityId activity) {
-        if (activity == null) {
-            throw new IllegalArgumentException("Скрипт без деятельности не опознать: id входит в план духа");
-        }
-        return switch (activity) {
-            case CHOP -> Optional.of("chop_tree");
-            case FARM -> Optional.of("harvest_crop");
-            case FORAGE -> Optional.empty();
-            case MINE -> Optional.of("mine_vein");
-            case REST -> Optional.of("wait");
-            case DEFEND -> Optional.empty();
-            case SMELT -> Optional.of("smelt");
-            case CRAFT -> Optional.of("craft");
-            case UNLOAD -> Optional.of("unload");
-        };
     }
 }

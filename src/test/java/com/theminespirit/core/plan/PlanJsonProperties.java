@@ -14,7 +14,9 @@ class PlanJsonProperties {
 
         TaskNode reparsed = PlanParser.parse(PlanJson.toJson(plan), RandomPlans.SCRIPTS, RandomPlans.CONDITIONS);
 
-        assertEquals(plan, reparsed,
+        assertEquals(
+                plan,
+                reparsed,
                 "любой валидный план обязан переживать запись в JSON и обратный разбор без потерь: потеря шага, "
                         + "типа параметра или ветки условия после перезапуска заставит духа исполнить не тот план. "
                         + "seed=" + seed + ", план=" + plan);

@@ -1,10 +1,12 @@
 package com.theminespirit.core.intellect;
 
+import org.jspecify.annotations.Nullable;
+
 public final class Invitation {
     private boolean opened;
     private long openedAt;
     private long deadline;
-    private InvitationStage stage;
+    private @Nullable InvitationStage stage;
     private boolean goWithout;
     private int extendsUsed;
 
@@ -27,8 +29,8 @@ public final class Invitation {
     public InvitationState tick(long now) {
         requireOpened();
         if (now < openedAt) {
-            throw new IllegalArgumentException("Тик приглашения " + now + " раньше открытия " + openedAt
-                    + ": время идёт вперёд");
+            throw new IllegalArgumentException(
+                    "Тик приглашения " + now + " раньше открытия " + openedAt + ": время идёт вперёд");
         }
         if ((stage == InvitationStage.OPEN || stage == InvitationStage.EXTENDED) && now >= deadline) {
             stage = InvitationStage.GO_WITHOUT;
@@ -43,8 +45,8 @@ public final class Invitation {
             throw new IllegalArgumentException("Ответ не может быть null: кнопки присылают WAIT_MORE или GO_WITHOUT");
         }
         if (now < openedAt) {
-            throw new IllegalArgumentException("Ответ в тике " + now + " раньше открытия " + openedAt
-                    + ": время идёт вперёд");
+            throw new IllegalArgumentException(
+                    "Ответ в тике " + now + " раньше открытия " + openedAt + ": время идёт вперёд");
         }
         if (stage == InvitationStage.GO_WITHOUT || stage == InvitationStage.ACCEPTED) {
             return state(now);
@@ -64,11 +66,10 @@ public final class Invitation {
     }
 
     private InvitationState state(long now) {
-        int repeats = opened
-                ? (int) ((now - openedAt) / IntellectTuning.loadDefault().inviteRepeatTicks())
-                : 0;
-        return new InvitationState(stage == null ? InvitationStage.GO_WITHOUT : stage, deadline,
-                Math.max(0, repeats), goWithout);
+        int repeats =
+                opened ? (int) ((now - openedAt) / IntellectTuning.loadDefault().inviteRepeatTicks()) : 0;
+        return new InvitationState(
+                stage == null ? InvitationStage.GO_WITHOUT : stage, deadline, Math.max(0, repeats), goWithout);
     }
 
     private void requireOpened() {

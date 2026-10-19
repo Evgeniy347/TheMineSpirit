@@ -7,7 +7,6 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableDefinition;
-import com.theminespirit.core.reload.TableRegistry;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,37 +32,40 @@ class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
     /**
      * Не таблицы /reload — путь и причина. Исключений нет: схемы доски зарегистрированы в DataTables,
-     * тела пресетов сторож берёт сам (presetBodies).
+     * тела пресетов сторож берёт сам (presetBodies), исключения сторожей схем живут в самих файлах построек.
      */
-    private static final Map<String, String> EXCLUDED = Map.of(
-            "data/theminespirit/schematics/structure_exemptions.json",
-            "список исключений сторожа схем (З1): не игровые данные и не таблица /reload, читается только тестом");
+    private static final Map<String, String> EXCLUDED = Map.of();
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
-        assertTrue(Files.isDirectory(DATA_ROOT),
+        assertTrue(
+                Files.isDirectory(DATA_ROOT),
                 "Сторож не нашёл " + DATA_ROOT + ": тесты запускаются из корня проекта (./gradlew test)");
 
-        List<String> jsonFiles = Files.walk(DATA_ROOT)
-                .filter(Files::isRegularFile)
-                .filter(p -> p.toString().endsWith(".json"))
-                .map(p -> "data/theminespirit/" + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
-                .sorted()
-                .collect(Collectors.toList());
+        List<String> jsonFiles;
+        try (Stream<Path> stream = Files.walk(DATA_ROOT)) {
+            jsonFiles = stream.filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".json") || p.toString().endsWith(".txt"))
+                    .map(p -> "data/theminespirit/"
+                            + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
 
         Set<String> registeredPaths = registeredPaths();
         Set<String> presetBodies = presetBodies();
         List<String> unregistered = new ArrayList<>();
 
         for (String path : jsonFiles) {
-            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path)
-                    && !presetBodies.contains(path)) {
+            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path) && !presetBodies.contains(path)) {
                 unregistered.add(path);
             }
         }
 
-        assertEquals(List.of(), unregistered,
-                "JSON-файл данных не зарегистрирован в DataTables и не в исключениях: "
+        assertEquals(
+                List.of(),
+                unregistered,
+                "Файл данных (json или текстовая постройка) не зарегистрирован в DataTables и не в исключениях: "
                         + "таблица без регистрации не перечитается на лету по /reload, изменение в датапаке мира игнорируется. "
                         + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED "
                         + "внутри DataTablesGuardTests с явной причиной. Правило: каждый json в data/theminespirit "
@@ -81,7 +84,9 @@ class DataTablesGuardTests {
             }
         }
 
-        assertEquals(List.of(), missing,
+        assertEquals(
+                List.of(),
+                missing,
                 "Зарегистрированная в DataTables таблица не существует как файл: "
                         + "загрузчик DataReload упадёт или вернёт ошибку при /reload, таблица не обновится. "
                         + "Как исправить: создайте файл по указанному пути или удалите регистрацию из DataTables. "

@@ -14,7 +14,9 @@ class StandSpotsTests {
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(1, 0, 0)), spots,
+        assertEquals(
+                List.of(new BlockCoord(1, 0, 0)),
+                spots,
                 "Обнажённая сбоку руда даёт стоянку в проходе: без неё дух не подходит к цели и стоит");
     }
 
@@ -22,11 +24,16 @@ class StandSpotsTests {
     void of_SealedTarget_IsEmpty() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
-                .set(0, 1, 0, Cell.SOLID).set(0, -1, 0, Cell.SOLID)
-                .set(1, 0, 0, Cell.SOLID).set(-1, 0, 0, Cell.SOLID)
-                .set(0, 0, 1, Cell.SOLID).set(0, 0, -1, Cell.SOLID);
+                .set(0, 1, 0, Cell.SOLID)
+                .set(0, -1, 0, Cell.SOLID)
+                .set(1, 0, 0, Cell.SOLID)
+                .set(-1, 0, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID);
 
-        assertEquals(List.of(), StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
+        assertEquals(
+                List.of(),
+                StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
                 "Полностью замурованная руда не даёт стоянок: дух обязан пропустить её, а не пробивать стену");
     }
 
@@ -34,10 +41,15 @@ class StandSpotsTests {
     void of_StandAtCliffWithoutFloor_IsRejected() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
-                .set(0, 1, 0, Cell.SOLID).set(0, -1, 0, Cell.SOLID)
-                .set(-1, 0, 0, Cell.SOLID).set(0, 0, 1, Cell.SOLID).set(0, 0, -1, Cell.SOLID);
+                .set(0, 1, 0, Cell.SOLID)
+                .set(0, -1, 0, Cell.SOLID)
+                .set(-1, 0, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID);
 
-        assertEquals(List.of(), StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
+        assertEquals(
+                List.of(),
+                StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
                 "Единственный проход — обрыв без пола: стоянка отвергается, иначе дух падает в яму");
     }
 
@@ -45,12 +57,17 @@ class StandSpotsTests {
     void of_StandNextToLava_IsRejected() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
-                .set(0, 1, 0, Cell.SOLID).set(0, -1, 0, Cell.SOLID)
-                .set(-1, 0, 0, Cell.SOLID).set(0, 0, 1, Cell.SOLID).set(0, 0, -1, Cell.SOLID)
+                .set(0, 1, 0, Cell.SOLID)
+                .set(0, -1, 0, Cell.SOLID)
+                .set(-1, 0, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID)
                 .set(1, -1, 0, Cell.SOLID)
                 .set(1, 0, 1, Cell.LAVA);
 
-        assertEquals(List.of(), StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
+        assertEquals(
+                List.of(),
+                StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
                 "Стоянка рядом с лавой отвергается: дух иначе сгорит, стоя у цели");
     }
 
@@ -63,7 +80,9 @@ class StandSpotsTests {
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 14, 0), world, new BlockCoord(0, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(0, 11, 0)), spots,
+        assertEquals(
+                List.of(new BlockCoord(0, 11, 0)),
+                spots,
                 "Руда на потолке достаётся с клетки пола внизу: без этого подпотолочные руды недосягаемы");
     }
 
@@ -71,13 +90,18 @@ class StandSpotsTests {
     void of_TwoOpenSides_SpotsSortedByDistanceFrom() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
-                .set(0, 1, 0, Cell.SOLID).set(0, -1, 0, Cell.SOLID)
-                .set(0, 0, 1, Cell.SOLID).set(0, 0, -1, Cell.SOLID)
-                .set(1, -1, 0, Cell.SOLID).set(-1, -1, 0, Cell.SOLID);
+                .set(0, 1, 0, Cell.SOLID)
+                .set(0, -1, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID)
+                .set(1, -1, 0, Cell.SOLID)
+                .set(-1, -1, 0, Cell.SOLID);
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(5, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(1, 0, 0), new BlockCoord(-1, 0, 0)), spots,
+        assertEquals(
+                List.of(new BlockCoord(1, 0, 0), new BlockCoord(-1, 0, 0)),
+                spots,
                 "Стоянки сортируются по расстоянию от духа: ближняя стоянка первой сокращает путь");
     }
 
@@ -87,8 +111,13 @@ class StandSpotsTests {
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(-1, 1, 0), new BlockCoord(0, 1, -1),
-                        new BlockCoord(0, 1, 1), new BlockCoord(1, 1, 0)), spots,
+        assertEquals(
+                List.of(
+                        new BlockCoord(-1, 1, 0),
+                        new BlockCoord(0, 1, -1),
+                        new BlockCoord(0, 1, 1),
+                        new BlockCoord(1, 1, 0)),
+                spots,
                 "Руда, открытая только сверху на ровной земле, обязана дать стоянки у поверхности рядом с целью, "
                         + "а не остаться недосягаемой: столб над целью исключён («пол=цель»), под целью нет пола");
     }
@@ -104,21 +133,23 @@ class StandSpotsTests {
 
         List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(1, 0, 0)), spots,
+        assertEquals(
+                List.of(new BlockCoord(1, 0, 0)),
+                spots,
                 "Стоянка в столбце руды ниже её под гравием сверху запрещена: после ломки гравий падает сквозь "
                         + "полость на духа; стоянка сбоку от столбца разрешена");
     }
 
     @Test
     void of_DeepestStandBelowTarget_MaxOffsetIsNine() {
-        CellWorld world = new CellWorld()
-                .set(0, 0, 0, Cell.SOLID)
-                .set(0, -4, 0, Cell.SOLID);
+        CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(0, -4, 0, Cell.SOLID);
         BlockCoord target = new BlockCoord(0, 0, 0);
 
         List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0));
 
-        assertEquals(List.of(new BlockCoord(0, -3, 0)), spots,
+        assertEquals(
+                List.of(new BlockCoord(0, -3, 0)),
+                spots,
                 "Самая глубокая стоянка обязана быть на 3 ниже цели: соседи дают не дальше (1,-2,0)=√5, "
                         + "низ даёт (0,-3,0)=3; иначе ранний выход планировщика вычитает неверный радиус");
         long maxOffset = spots.stream()
@@ -127,7 +158,9 @@ class StandSpotsTests {
                         + (long) (stand.z() - target.z()) * (stand.z() - target.z()))
                 .max()
                 .orElseThrow();
-        assertEquals(9, maxOffset,
+        assertEquals(
+                9,
+                maxOffset,
                 "Наибольшее смещение стоянки обязано равняться 9 = 3² (столб под целью): по нему планировщик "
                         + "вычитает 3 в раннем выходе. Стоянок: " + spots.size());
     }
@@ -136,13 +169,15 @@ class StandSpotsTests {
     void of_TargetReading_StaysWithinLimit() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
-                .set(0, 1, 0, Cell.PASSABLE).set(0, -1, 0, Cell.PASSABLE)
-                .set(1, 0, 0, Cell.PASSABLE).set(-1, 0, 0, Cell.PASSABLE)
-                .set(0, 0, 1, Cell.PASSABLE).set(0, 0, -1, Cell.PASSABLE);
+                .set(0, 1, 0, Cell.PASSABLE)
+                .set(0, -1, 0, Cell.PASSABLE)
+                .set(1, 0, 0, Cell.PASSABLE)
+                .set(-1, 0, 0, Cell.PASSABLE)
+                .set(0, 0, 1, Cell.PASSABLE)
+                .set(0, 0, -1, Cell.PASSABLE);
 
         StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertTrue(world.reads() <= StandSpots.MAX_VIEW_READS,
-                "Поиск стоянок читает не более " + StandSpots.MAX_VIEW_READS + " клеток. Чтений: " + world.reads());
+        assertTrue(world.reads() <= 440, "Поиск стоянок читает не более " + 440 + " клеток. Чтений: " + world.reads());
     }
 }

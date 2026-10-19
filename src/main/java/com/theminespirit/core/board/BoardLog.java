@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Журнал выполненных заданий на диске: одна строка JSONL на событие. Ядро даёт чистые
@@ -31,8 +32,7 @@ public final class BoardLog {
     private static final int MAX_LINE_LENGTH = 8192;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private BoardLog() {
-    }
+    private BoardLog() {}
 
     public static Map<String, Object> toMap(BoardLogEntry entry) {
         Objects.requireNonNull(entry, "Запись журнала не может быть null: писать нечего");
@@ -58,8 +58,7 @@ public final class BoardLog {
         try {
             json = MAPPER.writeValueAsString(map);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Запись журнала не сериализована: " + error.getOriginalMessage(),
-                    error);
+            throw new IllegalStateException("Запись журнала не сериализована: " + error.getOriginalMessage(), error);
         }
         if (json.length() > MAX_LINE_LENGTH) {
             throw new IllegalStateException("Строка журнала " + json.length() + " символов длиннее предела "
@@ -85,12 +84,12 @@ public final class BoardLog {
         try {
             root = MAPPER.readTree(line);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала не разобрана как JSON: "
-                    + error.getOriginalMessage(), error);
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала не разобрана как JSON: " + error.getOriginalMessage(), error);
         }
         if (root == null || !root.isObject()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала — не объект: запись "
-                    + "журнала ведётся объектом полей");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала — не объект: запись " + "журнала ведётся объектом полей");
         }
         BoardLog.Event event = event(root, lineNumber);
         long tick = longField(root, "tick", lineNumber);
@@ -105,25 +104,36 @@ public final class BoardLog {
         String configHash = text(root, "configHash", lineNumber);
         long worldTime = longField(root, "worldTime", lineNumber);
         try {
-            return new BoardLogEntry(event, tick, ticketId, boardCase, level, cause, basePriority,
-                    effectivePriority, modifiers, spirit, configHash, worldTime);
+            return new BoardLogEntry(
+                    event,
+                    tick,
+                    ticketId,
+                    boardCase,
+                    level,
+                    cause,
+                    basePriority,
+                    effectivePriority,
+                    modifiers,
+                    spirit,
+                    configHash,
+                    worldTime);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала не прошла проверки: "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала не прошла проверки: " + error.getMessage(), error);
         }
     }
 
     private static BoardLog.Event event(JsonNode root, int lineNumber) {
         JsonNode node = root.get("event");
         if (node == null || !node.isTextual()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: поле 'event' обязательно "
-                    + "и должно быть именем события");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: поле 'event' обязательно " + "и должно быть именем события");
         }
         try {
             return BoardLog.Event.valueOf(node.textValue());
         } catch (IllegalArgumentException unknown) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: неизвестное событие '"
-                    + node.textValue() + "'", unknown);
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: неизвестное событие '" + node.textValue() + "'", unknown);
         }
     }
 
@@ -136,14 +146,14 @@ public final class BoardLog {
         return node.textValue();
     }
 
-    private static String optionalText(JsonNode root, String field, int lineNumber) {
+    private static @Nullable String optionalText(JsonNode root, String field, int lineNumber) {
         JsonNode node = root.get(field);
         if (node == null || node.isNull()) {
             return null;
         }
         if (!node.isTextual()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: поле '" + field
-                    + "' должно быть строкой или отсутствовать");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: поле '" + field + "' должно быть строкой или отсутствовать");
         }
         return node.textValue();
     }
@@ -153,16 +163,16 @@ public final class BoardLog {
         try {
             return BoardCase.valueOf(name);
         } catch (IllegalArgumentException unknown) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: неизвестный кейс '"
-                    + name + "'", unknown);
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: неизвестный кейс '" + name + "'", unknown);
         }
     }
 
     private static int intField(JsonNode root, String field, int lineNumber) {
         JsonNode node = root.get(field);
         if (node == null || !node.isIntegralNumber() || !node.canConvertToInt()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: поле '" + field
-                    + "' обязано быть целым числом");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: поле '" + field + "' обязано быть целым числом");
         }
         return node.intValue();
     }
@@ -170,8 +180,8 @@ public final class BoardLog {
     private static long longField(JsonNode root, String field, int lineNumber) {
         JsonNode node = root.get(field);
         if (node == null || !node.isIntegralNumber()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: поле '" + field
-                    + "' обязано быть целым числом");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: поле '" + field + "' обязано быть целым числом");
         }
         return node.longValue();
     }
@@ -182,8 +192,8 @@ public final class BoardLog {
             return List.of();
         }
         if (!node.isArray()) {
-            throw new IllegalStateException("Строка " + lineNumber + " журнала: поле '" + field
-                    + "' должно быть массивом строк");
+            throw new IllegalStateException(
+                    "Строка " + lineNumber + " журнала: поле '" + field + "' должно быть массивом строк");
         }
         List<String> values = new ArrayList<>(node.size());
         for (JsonNode item : node) {
@@ -195,5 +205,4 @@ public final class BoardLog {
         }
         return List.copyOf(values);
     }
-
 }

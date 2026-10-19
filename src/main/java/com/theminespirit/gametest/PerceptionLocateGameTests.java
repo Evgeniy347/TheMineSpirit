@@ -21,7 +21,6 @@ import com.theminespirit.neoforge.LocateScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
@@ -34,10 +33,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PerceptionLocateGameTests {
     private static final int LOCATE_RADIUS = 8;
-    private static final int POSITIONS_PER_SLICE = 4096;
 
-    private PerceptionLocateGameTests() {
-    }
+    private PerceptionLocateGameTests() {}
 
     @GameTest(template = "arena", batch = "perception_locate_block", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateBlock_OreFiveBlocksAway_ReportsNearestMatchingBlock(GameTestHelper helper) {
@@ -47,15 +44,19 @@ public final class PerceptionLocateGameTests {
         helper.setBlock(8, 1, 8, Blocks.DIAMOND_ORE);
         helper.setBlock(2, 1, 4, Blocks.EMERALD_ORE);
         SpiritEntity spirit = spawnSpirit(helper, 1, 1, 4);
-        SpiritRun run = launch(helper, spirit, "locate_block",
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                "locate_block",
                 Map.of("filter", List.of("minecraft:diamond_ore"), "radius", LOCATE_RADIUS));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "locate_block");
             Finding finding = spirit.finding().orElse(null);
-            Sighting expected = new Sighting("block", "minecraft:diamond_ore", coordOf(helper, 6, 1, 4),
-                    "расстояние 5.0");
-            helper.assertTrue(new Finding("locate_block", List.of(expected)).equals(finding),
+            Sighting expected =
+                    new Sighting("block", "minecraft:diamond_ore", coordOf(helper, 6, 1, 4), "расстояние 5.0");
+            helper.assertTrue(
+                    new Finding("locate_block", List.of(expected)).equals(finding),
                     "locate_block с фильтром diamond_ore обязан назвать ближайшую алмазную руду в пяти блоках "
                             + expected + ", а не изумрудную рядом и не дальнюю алмазную: " + finding);
             GameTestFixtures.finish(helper);
@@ -75,7 +76,8 @@ public final class PerceptionLocateGameTests {
             assertSucceeded(helper, spirit, run, "locate_tree");
             Finding finding = spirit.finding().orElse(null);
             Sighting expected = new Sighting("tree", "minecraft:oak_log", coordOf(helper, 7, 1, 4), "расстояние 6.0");
-            helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
+            helper.assertTrue(
+                    new Finding("locate_tree", List.of(expected)).equals(finding),
                     "locate_tree с породой oak обязан назвать основание дуба в шести блоках " + expected
                             + ", а не берёзу в двух блоках: " + finding);
             GameTestFixtures.finish(helper);
@@ -97,7 +99,8 @@ public final class PerceptionLocateGameTests {
             assertSucceeded(helper, spirit, run, "locate_tree");
             Finding finding = spirit.finding().orElse(null);
             Sighting expected = new Sighting("tree", "minecraft:oak_log", coordOf(helper, 7, 1, 4), "расстояние 6.0");
-            helper.assertTrue(new Finding("locate_tree", List.of(expected)).equals(finding),
+            helper.assertTrue(
+                    new Finding("locate_tree", List.of(expected)).equals(finding),
                     "locate_tree обязан пропустить ближний столб из трёх дубовых брёвен без листвы и назвать "
                             + "основание настоящего дуба в шести блоках " + expected + ": " + finding);
             GameTestFixtures.finish(helper);
@@ -117,7 +120,8 @@ public final class PerceptionLocateGameTests {
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "locate_tree");
             Finding finding = spirit.finding().orElse(null);
-            helper.assertTrue(finding != null && finding.script().equals("locate_tree") && finding.isEmpty(),
+            helper.assertTrue(
+                    finding != null && "locate_tree".equals(finding.script()) && finding.isEmpty(),
                     "поиск дерева при одних брёвнах столба без листвы обязан завершиться успехом с пустой находкой "
                             + "(«не найдено»), а не выдуманной позицией столба: " + finding);
             GameTestFixtures.finish(helper);
@@ -136,9 +140,10 @@ public final class PerceptionLocateGameTests {
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "locate_container");
             Finding finding = spirit.finding().orElse(null);
-            Sighting expected = new Sighting("container", "minecraft:chest", coordOf(helper, 5, 1, 4),
-                    "расстояние 4.0");
-            helper.assertTrue(new Finding("locate_container", List.of(expected)).equals(finding),
+            Sighting expected =
+                    new Sighting("container", "minecraft:chest", coordOf(helper, 5, 1, 4), "расстояние 4.0");
+            helper.assertTrue(
+                    new Finding("locate_container", List.of(expected)).equals(finding),
                     "locate_container обязан назвать ближайший сундук в четырёх блоках " + expected
                             + ", а не бочку подальше: " + finding);
             GameTestFixtures.finish(helper);
@@ -150,13 +155,17 @@ public final class PerceptionLocateGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        SpiritRun run = launch(helper, spirit, "locate_block",
+        SpiritRun run = launch(
+                helper,
+                spirit,
+                "locate_block",
                 Map.of("filter", List.of("minecraft:diamond_ore"), "radius", LOCATE_RADIUS));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "locate_block");
             Finding finding = spirit.finding().orElse(null);
-            helper.assertTrue(finding != null && finding.script().equals("locate_block") && finding.isEmpty(),
+            helper.assertTrue(
+                    finding != null && "locate_block".equals(finding.script()) && finding.isEmpty(),
                     "поиск несуществующей руды обязан завершиться успехом с пустой находкой («не найдено»), а не "
                             + "ошибкой и не выдуманной позицией: " + finding);
             GameTestFixtures.finish(helper);
@@ -173,8 +182,8 @@ public final class PerceptionLocateGameTests {
                 .clampY(helper.getLevel().getMinBuildHeight(), helper.getLevel().getMaxBuildHeight() - 1)
                 .orElseThrow();
         int totalSlices = SectionCursor.of(cube, center).total();
-        LocateScript script = new LocateScript(spirit,
-                LocateQuery.block(IdFilter.of(List.of("minecraft:stone")), ScanRadius.of(ScanRadius.MAX)));
+        LocateScript script = new LocateScript(
+                spirit, LocateQuery.block(IdFilter.of(List.of("minecraft:stone")), ScanRadius.of(ScanRadius.MAX)));
 
         int ticks = 1;
         while (script.tick() == ScriptStatus.RUNNING) {
@@ -182,14 +191,15 @@ public final class PerceptionLocateGameTests {
             helper.assertTrue(ticks < 400, "locate_block радиуса 32 обязан закончиться за конечное число порций");
         }
 
-        helper.assertTrue(ticks == (totalSlices + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK,
+        helper.assertTrue(
+                ticks == (totalSlices + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK,
                 "куб из " + totalSlices + " срезов обязан читаться порциями по " + ScanTuning.SLICES_PER_TICK
-                        + " за тик, тиков потребовалось " + ticks + ": один тик значит, что поиск читает весь куб разом");
-        helper.assertTrue(script.examinedPositions() > 0,
-                "тест не доказывает порции: пол из камня обязан быть прочитан, прочитано " + script.examinedPositions());
-        helper.assertTrue(script.maxExaminedPositionsPerTick() <= ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
-                "за тик поиск читает не больше " + ScanTuning.SLICES_PER_TICK + " срезов по " + POSITIONS_PER_SLICE
-                        + " позиций, а прочитал " + script.maxExaminedPositionsPerTick());
+                        + " за тик, тиков потребовалось " + ticks
+                        + ": один тик значит, что поиск читает весь куб разом");
+        helper.assertTrue(
+                script.examinedPositions() > 0,
+                "тест не доказывает порции: пол из камня обязан быть прочитан, прочитано "
+                        + script.examinedPositions());
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

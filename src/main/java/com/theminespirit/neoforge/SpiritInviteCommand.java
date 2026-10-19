@@ -14,14 +14,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 final class SpiritInviteCommand {
-    private SpiritInviteCommand() {
-    }
+    private SpiritInviteCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("invite")
                 .then(argument("expedition", StringArgumentType.string())
-                        .then(argument("answer", StringArgumentType.word())
-                                .executes(SpiritInviteCommand::answer))));
+                        .then(argument("answer", StringArgumentType.word()).executes(SpiritInviteCommand::answer))));
     }
 
     private static int answer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -29,16 +27,17 @@ final class SpiritInviteCommand {
         ServerLevel level = context.getSource().getLevel();
         String expedition = StringArgumentType.getString(context, "expedition");
         String answer = StringArgumentType.getString(context, "answer");
-        if (!answer.equals("wait") && !answer.equals("go") && !answer.equals("join")) {
-            context.getSource().sendFailure(Component.literal("Ответ '" + answer
-                    + "' непонятен: годится wait (подождите +60с), go (идите без меня) или join (иду с вами)"));
+        if (!"wait".equals(answer) && !"go".equals(answer) && !"join".equals(answer)) {
+            context.getSource()
+                    .sendFailure(Component.literal("Ответ '" + answer
+                            + "' непонятен: годится wait (подождите +60с), go (идите без меня) или join (иду с вами)"));
             return 0;
         }
-        boolean taken = CoordinatorRegistry.answerInvite(level, expedition, answer, player,
-                level.getGameTime());
+        boolean taken = CoordinatorRegistry.answerInvite(level, expedition, answer, player, level.getGameTime());
         if (!taken) {
-            context.getSource().sendFailure(Component.literal("Поход '" + expedition
-                    + "' не ждёт ответа: приглашение истекло или команда уже ушла"));
+            context.getSource()
+                    .sendFailure(Component.literal(
+                            "Поход '" + expedition + "' не ждёт ответа: приглашение истекло или команда уже ушла"));
             return 0;
         }
         context.getSource().sendSuccess(() -> Component.literal("Ответ принят: духи учтут решение игрока"), true);

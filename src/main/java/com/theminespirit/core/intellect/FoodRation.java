@@ -26,8 +26,7 @@ public final class FoodRation {
         }
     }
 
-    private FoodRation() {
-    }
+    private FoodRation() {}
 
     public static boolean due(double personalNutrition, double norm) {
         if (Double.isNaN(personalNutrition) || Double.isInfinite(personalNutrition) || personalNutrition < 0) {
@@ -56,26 +55,27 @@ public final class FoodRation {
     }
 
     private static Optional<String> bestReady(Map<String, Integer> stock, NutritionTable table) {
-        return best(stock,
+        return best(
+                stock,
                 item -> table.nutrition().containsKey(item) && !CookableFoods.isRaw(item),
                 item -> table.nutrition().getOrDefault(item, 0.0));
     }
 
     private static Optional<String> bestRaw(Map<String, Integer> stock, NutritionTable table) {
         return best(stock, CookableFoods::isRaw, item -> {
-            Double value = CookableFoods.cooked(item).map(table.nutrition()::get).orElse(null);
+            Double value =
+                    CookableFoods.cooked(item).map(table.nutrition()::get).orElse(null);
             return value == null ? 0.0 : value;
         });
     }
 
-    private static Optional<String> best(Map<String, Integer> stock,
-            Predicate<String> kind, ToDoubleFunction<String> nutrition) {
+    private static Optional<String> best(
+            Map<String, Integer> stock, Predicate<String> kind, ToDoubleFunction<String> nutrition) {
         return stock.entrySet().stream()
                 .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
                 .map(entry -> qualify(entry.getKey()))
                 .filter(kind)
-                .max(Comparator.<String>comparingDouble(nutrition)
-                        .thenComparing(Comparator.reverseOrder()));
+                .max(Comparator.<String>comparingDouble(nutrition).thenComparing(Comparator.reverseOrder()));
     }
 
     private static String qualify(String item) {

@@ -4,8 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class DemandModel {
-    private DemandModel() {
-    }
+    private DemandModel() {}
 
     public static List<ActivityDemand> evaluate(SettlementView view, ActivityCatalog catalog) {
         if (view == null) {
@@ -16,7 +15,8 @@ public final class DemandModel {
         }
         return catalog.ordered().stream()
                 .map(activity -> new ActivityDemand(activity.id(), activity.demand(view)))
-                .sorted(Comparator.comparingDouble(ActivityDemand::demand).reversed()
+                .sorted(Comparator.comparingDouble(ActivityDemand::demand)
+                        .reversed()
                         .thenComparing(ActivityDemand::id))
                 .toList();
     }

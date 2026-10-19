@@ -25,8 +25,7 @@ class LeashAdapterTests {
     private static final double ZONE_RADIUS = 2.0;
     private static final double PURSUIT = 6.0;
 
-    record Row(String name, double distance, Optional<OrdersBuilder.Zone> zone, boolean leashIgnores) {
-    }
+    record Row(String name, double distance, Optional<OrdersBuilder.Zone> zone, boolean leashIgnores) {}
 
     static Stream<Row> rows() {
         Optional<OrdersBuilder.Zone> zone = Optional.of(new OrdersBuilder.Zone(POST, ZONE_RADIUS));
@@ -45,10 +44,12 @@ class LeashAdapterTests {
     private static TacticalOutcome decide(double distance, Optional<OrdersBuilder.Zone> zone) {
         EnemyFact enemy = new EnemyFact("minecraft:zombie", "z", new Point(distance, 0, 0), 1, 0, true, true);
         Orders orders = OrdersBuilder.build(CombatMode.GUARD_AREA, zone, Optional.empty(), false);
-        SituationContext context = new SituationContext(AdapterFixtures.self(), List.of(enemy),
-                AdapterFixtures.env(TimeOfDay.DAY), orders, 100, 100);
-        return ENGINE.step(CoreFactCollector.withDefaultSettings().collect(context),
-                TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1), 1);
+        SituationContext context = new SituationContext(
+                AdapterFixtures.self(), List.of(enemy), AdapterFixtures.env(TimeOfDay.DAY), orders, 100, 100);
+        return ENGINE.step(
+                CoreFactCollector.withDefaultSettings().collect(context),
+                TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1),
+                1);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -56,7 +57,9 @@ class LeashAdapterTests {
     void step_TargetAtDistanceFromPost_LeashRuleFiresOnlyBeyondBorder(Row row) {
         TacticalOutcome outcome = decide(row.distance(), row.zone());
 
-        assertEquals(row.leashIgnores(), "outside_leash_ignore".equals(outcome.trace().rule()),
+        assertEquals(
+                row.leashIgnores(),
+                "outside_leash_ignore".equals(outcome.trace().rule()),
                 "Жёсткое правило поводка («" + row.name() + "», расстояние " + row.distance() + " при поводке "
                         + PURSUIT + "): оно срабатывает строго за границей, на границе решает счёт; сработало "
                         + outcome.trace().rule());
@@ -66,18 +69,24 @@ class LeashAdapterTests {
     @MethodSource("rows")
     void pick_TargetBeyondLeash_NoTargetDesignated(Row row) {
         TacticalOutcome outcome = decide(row.distance(), row.zone());
-        SituationContext context = new SituationContext(AdapterFixtures.self(),
+        SituationContext context = new SituationContext(
+                AdapterFixtures.self(),
                 List.of(new EnemyFact("minecraft:zombie", "z", new Point(row.distance(), 0, 0), 1, 0, true, true)),
                 AdapterFixtures.env(TimeOfDay.DAY),
-                OrdersBuilder.build(CombatMode.GUARD_AREA, row.zone(), Optional.empty(), false), 100, 100);
+                OrdersBuilder.build(CombatMode.GUARD_AREA, row.zone(), Optional.empty(), false),
+                100,
+                100);
 
         Optional<EnemyFact> target = TargetDesignation.pick(outcome, context);
 
         if (row.leashIgnores()) {
-            assertTrue(target.isEmpty(), "Цель за поводком («" + row.name() + "») не выставляется: охранник не гонится, "
-                    + "а возвращается к посту; выставлена " + target);
+            assertTrue(
+                    target.isEmpty(),
+                    "Цель за поводком («" + row.name() + "») не выставляется: охранник не гонится, "
+                            + "а возвращается к посту; выставлена " + target);
         }
-        assertTrue(outcome.decision() != TacticalOption.FIGHT || target.isPresent(),
+        assertTrue(
+                outcome.decision() != TacticalOption.FIGHT || target.isPresent(),
                 "Решение FIGHT («" + row.name() + "») всегда несёт цель: иначе дух стоит среди врагов");
     }
 }

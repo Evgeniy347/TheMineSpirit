@@ -5,8 +5,17 @@ import com.theminespirit.core.tactics.Point;
 import java.util.Optional;
 import java.util.UUID;
 
-public record SpiritSnapshot(UUID id, Point pos, double hpFraction, SpiritRole role, CombatMode mode,
-        int threatsNear, boolean attacked, Optional<WorkTarget> workTarget, long lastSeenTick, double food) {
+public record SpiritSnapshot(
+        UUID id,
+        Point pos,
+        double hpFraction,
+        SpiritRole role,
+        CombatMode mode,
+        int threatsNear,
+        boolean attacked,
+        Optional<WorkTarget> workTarget,
+        long lastSeenTick,
+        double food) {
 
     public SpiritSnapshot {
         requireNonNull(id, "id не может быть null: снимок без id не опознает духа");
@@ -27,8 +36,7 @@ public record SpiritSnapshot(UUID id, Point pos, double hpFraction, SpiritRole r
             throw new IllegalArgumentException(
                     "lastSeenTick = " + lastSeenTick + ": тик последнего наблюдения не может быть отрицательным");
         }
-        requireNonNull(workTarget,
-                "workTarget не может быть null: у духа нет цели — передайте Optional.empty()");
+        requireNonNull(workTarget, "workTarget не может быть null: у духа нет цели — передайте Optional.empty()");
     }
 
     private static void requireNonNull(Object value, String message) {

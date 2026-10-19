@@ -62,8 +62,7 @@ public class ClearAreaSession {
     protected int foreignSkipped;
     protected int unbreakable;
     protected int restoredSkipped;
-    private int entityQueries;
-    private int blockReads;
+
     private final BuildResult tally = new BuildResult();
     private final boolean demolish;
 
@@ -162,8 +161,10 @@ public class ClearAreaSession {
     protected int boxVolume() {
         return (int) Math.min(box.volume(), Integer.MAX_VALUE);
     }
+
     private void pick() {
-        while (!remaining.isEmpty() && level.getBlockState(toPos(remaining.get(0))).isAir()) {
+        while (!remaining.isEmpty()
+                && level.getBlockState(toPos(remaining.get(0))).isAir()) {
             remaining.remove(0);
         }
         if (remaining.isEmpty()) {
@@ -172,8 +173,7 @@ public class ClearAreaSession {
         }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(from, remaining, safety,
-                approachFailures.excludedStands());
+        MiningPlanner.Outcome result = MiningPlanner.next(from, remaining, safety, approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
@@ -193,14 +193,14 @@ public class ClearAreaSession {
         reservations.reserve(next.target(), spirit.getUUID());
         currentTarget = next.target();
         currentStand = next.stand();
-        approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
+        approach.begin(
+                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> prepareBreak();
             case STUCK, TIMEOUT -> {
                 if (approachFailures.recordFailure(currentStand, currentTarget)) {
@@ -233,8 +233,7 @@ public class ClearAreaSession {
             state = State.PICK;
             return;
         }
-        if (begin instanceof BlockBreaker.Refused refused
-                && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+        if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
             fail(refused.message());
             return;
         }
@@ -250,14 +249,17 @@ public class ClearAreaSession {
 
     private void breakTick() {
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> {
-                blockReads++;
                 removed++;
                 tally.removed();
-                collector = new DropCollector(spirit, IdFilter.matchAll(), currentTarget, COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                collector = new DropCollector(
+                        spirit,
+                        IdFilter.matchAll(),
+                        currentTarget,
+                        COLLECT_RADIUS,
+                        PickupTuning.DEFAULT,
+                        OverflowMode.BY_VALUE);
                 state = State.COLLECT;
             }
             case GONE -> {
@@ -272,7 +274,6 @@ public class ClearAreaSession {
         if (collected == DropCollector.State.RUNNING) {
             return;
         }
-        entityQueries += collector.entityQueries();
         collector = null;
         if (collected == DropCollector.State.FAILED) {
             fail("не удалось подобрать дроп у " + currentTarget + ": расчистка остановлена");
@@ -303,7 +304,8 @@ public class ClearAreaSession {
     }
 
     private String summary() {
-        String counts = "убрано " + removed + " из " + boxVolume() + "; пропущено: " + skippedTotal() + " (небезопасных: " + unsafe
+        String counts = "убрано " + removed + " из " + boxVolume() + "; пропущено: " + skippedTotal()
+                + " (небезопасных: " + unsafe
                 + ", без стоянки: " + noStand + ", защищено: " + protectedSkipped + ", неразрушимых: " + unbreakable
                 + ", занято другим духом: " + foreignSkipped + ")";
         if (unreachable > 0) {

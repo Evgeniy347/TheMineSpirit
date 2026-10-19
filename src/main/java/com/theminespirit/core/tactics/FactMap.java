@@ -1,12 +1,13 @@
 package com.theminespirit.core.tactics;
 
-import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public final class FactMap {
-    private final Object[] values = new Object[FactName.values().length];
+    private final Map<FactName, Object> values = new EnumMap<>(FactName.class);
 
-    private FactMap() {
-    }
+    private FactMap() {}
 
     public static FactMap from(Situation situation, Assessment assessment) {
         FactMap map = new FactMap();
@@ -16,8 +17,8 @@ public final class FactMap {
         map.putOrders(situation.orders(), assessment);
         map.put(FactName.TIME_SINCE_HIT, situation.ticksSinceHit());
         map.put(FactName.TIME_SINCE_STRIKE, situation.ticksSinceStrike());
-        map.put(FactName.TIME_SINCE_ENEMY_SEEN, assessment.ticksSinceEnemySeen());
-        map.put(FactName.TIME_IN_STATE, assessment.ticksInState());
+        map.put(FactName.TIME_SINCE_ENEMY_SEEN, (double) assessment.ticksSinceEnemySeen());
+        map.put(FactName.TIME_IN_STATE, (double) assessment.ticksInState());
         map.put(FactName.STATE_TACTICAL, assessment.state().id());
         map.put(FactName.DERIVED_WIN_MARGIN, assessment.winMargin());
         map.put(FactName.DERIVED_SPEED_RATIO, assessment.speedRatio());
@@ -25,23 +26,32 @@ public final class FactMap {
     }
 
     public double number(FactName name) {
-        return (Double) get(name, FactType.NUM);
+        return (Double) present(name, FactType.NUM);
     }
 
     public boolean bool(FactName name) {
-        return (Boolean) get(name, FactType.BOOL);
+        return (Boolean) present(name, FactType.BOOL);
     }
 
-    public String text(FactName name) {
+    public @Nullable String text(FactName name) {
         return (String) get(name, FactType.ENUM);
     }
 
-    private Object get(FactName name, FactType expected) {
+    private Object present(FactName name, FactType expected) {
+        Object value = get(name, expected);
+        if (value == null) {
+            throw new IllegalStateException("Факт " + name.key() + " не заполнен: FactMap.from обязан записать каждый "
+                    + "числовой и булев факт");
+        }
+        return value;
+    }
+
+    private @Nullable Object get(FactName name, FactType expected) {
         if (name.type() != expected) {
             throw new IllegalArgumentException("Факт " + name.key() + " имеет тип " + name.type() + ", а запрошен "
                     + expected + ": проверьте тип значения в условии");
         }
-        return values[name.ordinal()];
+        return values.get(name);
     }
 
     private void putSelf(SelfFacts self) {
@@ -98,32 +108,32 @@ public final class FactMap {
     }
 
     private void put(FactName name, double value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     private void put(FactName name, boolean value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     private void put(FactName name, String value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof FactMap map && Arrays.equals(values, map.values);
+        return other instanceof FactMap map && values.equals(map.values);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(values);
+        return values.hashCode();
     }
 
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder("FactMap{");
         for (FactName name : FactName.values()) {
-            text.append(name.key()).append('=').append(values[name.ordinal()]).append(' ');
+            text.append(name.key()).append('=').append(values.get(name)).append(' ');
         }
         return text.append('}').toString();
     }

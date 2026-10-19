@@ -17,6 +17,5 @@ final class ScenarioDefaults {
     static final int LIGHT = 15;
     static final CombatMode MODE = CombatMode.AGGRESSIVE;
 
-    private ScenarioDefaults() {
-    }
+    private ScenarioDefaults() {}
 }

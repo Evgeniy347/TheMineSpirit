@@ -7,17 +7,16 @@ package com.theminespirit.core.experience;
  * вызывающий — сортировка по UUID). Сумма долей всегда равна исходной величине: опыт не теряется.
  */
 public final class ExperienceShare {
-    private ExperienceShare() {
-    }
+    private ExperienceShare() {}
 
     public static int[] split(int amount, int players) {
         if (amount < 0) {
-            throw new IllegalArgumentException("Опыт " + amount + " отрицательный: делить нечего, "
-                    + "нулевой опыт задают нулём");
+            throw new IllegalArgumentException(
+                    "Опыт " + amount + " отрицательный: делить нечего, " + "нулевой опыт задают нулём");
         }
         if (players < 0) {
-            throw new IllegalArgumentException("Число игроков " + players + " отрицательное: "
-                    + "пустой список игроков задают нулём");
+            throw new IllegalArgumentException(
+                    "Число игроков " + players + " отрицательное: " + "пустой список игроков задают нулём");
         }
         if (players == 0) {
             return new int[0];

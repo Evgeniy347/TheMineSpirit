@@ -1,8 +1,10 @@
 package com.theminespirit.core.observation;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record ContainerRef(String type, BlockCoord pos, String id) {
+public record ContainerRef(
+        String type, BlockCoord pos, @Nullable String id) {
     public ContainerRef {
         Objects.requireNonNull(type, "type не может быть null: ссылка на контейнер называет его тип");
         Objects.requireNonNull(pos, "pos не может быть null: ссылка на контейнер называет её позицию");

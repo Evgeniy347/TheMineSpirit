@@ -56,7 +56,9 @@ class CaseMaterialsTests {
     void need_CraftCase_MultipliesIngredientsByCrafts() {
         Map<String, Integer> need = CaseMaterials.need(new SequenceNode(List.of(gotoStep(), craft("chest", 2))), FAKE);
 
-        assertEquals(Map.of("oak_planks", 16), need,
+        assertEquals(
+                Map.of("oak_planks", 16),
+                need,
                 "Сундук крафтится по одному за крафт из 8 досок: на два нужно 16 досок, иначе "
                         + "гейт пропустит кейс без половины материала");
     }
@@ -65,7 +67,9 @@ class CaseMaterialsTests {
     void need_CraftWithOutput_RoundsCraftsUp() {
         Map<String, Integer> need = CaseMaterials.need(craft("stick", 5), FAKE);
 
-        assertEquals(Map.of("oak_planks", 4), need,
+        assertEquals(
+                Map.of("oak_planks", 4),
+                need,
                 "Палки идут по 4 за крафт из 2 досок: на 5 нужно два крафта и 4 доски, "
                         + "иначе не хватит на последнюю палку");
     }
@@ -75,7 +79,9 @@ class CaseMaterialsTests {
         Map<String, Integer> need = CaseMaterials.need(
                 new ScriptCall("build_schematic", Map.of("file", "fence", "x", 0, "y", 0, "z", 0)), FAKE);
 
-        assertEquals(Map.of("oak_fence", 32), need,
+        assertEquals(
+                Map.of("oak_fence", 32),
+                need,
                 "Забор строится схемой: гейт считает материалы схемы, а не число в коде");
     }
 
@@ -85,18 +91,19 @@ class CaseMaterialsTests {
                 new ScriptCall("place_block", Map.of("block", "minecraft:torch", "x", 1, "y", 1, "z", 1)),
                 new ScriptCall("place_block", Map.of("block", "minecraft:torch", "x", 2, "y", 1, "z", 1))));
 
-        assertEquals(Map.of("torch", 2), CaseMaterials.need(plan, FAKE),
+        assertEquals(
+                Map.of("torch", 2),
+                CaseMaterials.need(plan, FAKE),
                 "Каждая постановка факела требует по факелу: имя приводится к короткому виду "
                         + "как ключ снимка запасов");
     }
 
     @Test
     void need_AcquireStep_CountsItem() {
-        Map<String, Integer> need = CaseMaterials.need(
-                new ScriptCall("acquire", Map.of("item", "dirt", "count", 5)), FAKE);
+        Map<String, Integer> need =
+                CaseMaterials.need(new ScriptCall("acquire", Map.of("item", "dirt", "count", 5)), FAKE);
 
-        assertEquals(Map.of("dirt", 5), need,
-                "Шаг acquire требует предмет со склада: гейт обязан его учесть");
+        assertEquals(Map.of("dirt", 5), need, "Шаг acquire требует предмет со склада: гейт обязан его учесть");
     }
 
     @Test
@@ -105,29 +112,36 @@ class CaseMaterialsTests {
                 new ScriptCall("clear_area", Map.of("x1", 0, "x2", 1)),
                 new ScriptCall("dig_descent", Map.of("direction", "south"))));
 
-        assertEquals(Map.of(), CaseMaterials.need(plan, FAKE),
-                "Шаги без материалов (зачистка, спуск) не рождают нужды: пустой гейт — "
-                        + "задание выполнимо сразу");
+        assertEquals(
+                Map.of(),
+                CaseMaterials.need(plan, FAKE),
+                "Шаги без материалов (зачистка, спуск) не рождают нужды: пустой гейт — " + "задание выполнимо сразу");
     }
 
     @Test
     void need_PrefixedIngredient_IsNormalized() {
         Map<String, Integer> need = CaseMaterials.need(craft("crafting_table", 1), FAKE);
 
-        assertEquals(Map.of("oak_planks", 4), need,
+        assertEquals(
+                Map.of("oak_planks", 4),
+                need,
                 "Ингредиент с полным id приводится к короткому виду: иначе гейт не увидит "
                         + "склад, ключи которого короткие, и будет требовать доски вечно");
     }
 
     @Test
     void need_NullPlan_Rejected() {
-        assertThrows(NullPointerException.class, () -> CaseMaterials.need(null, FAKE),
+        assertThrows(
+                NullPointerException.class,
+                () -> CaseMaterials.need(null, FAKE),
                 "Без плана нечего считать: null обязан падать, а не молча давать пустой гейт");
     }
 
     @Test
     void need_NullSource_Rejected() {
-        assertThrows(NullPointerException.class, () -> CaseMaterials.need(craft("chest", 1), null),
+        assertThrows(
+                NullPointerException.class,
+                () -> CaseMaterials.need(craft("chest", 1), null),
                 "Без источника рецепт не прочитать: null обязан падать, а не молча давать пустой гейт");
     }
 
@@ -135,7 +149,9 @@ class CaseMaterialsTests {
     void gate_FullStock_LeavesNothingMissing() {
         Map<String, Integer> need = CaseMaterials.need(craft("chest", 2), FAKE);
 
-        assertEquals(Map.of(), ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 16))),
+        assertEquals(
+                Map.of(),
+                ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 16))),
                 "Полный запас закрывает нужду кейса: добыча не ставится, шаг берётся в работу сразу");
     }
 
@@ -143,7 +159,8 @@ class CaseMaterialsTests {
     void gate_PartialStock_ReportsShortage() {
         Map<String, Integer> need = CaseMaterials.need(craft("chest", 2), FAKE);
 
-        assertEquals(Map.of("oak_planks", 6),
+        assertEquals(
+                Map.of("oak_planks", 6),
                 ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 10))),
                 "Недостача — разница нужды и запаса: нужно 16 досок, есть 10 — добыть 6");
     }
@@ -152,7 +169,9 @@ class CaseMaterialsTests {
     void need_CraftWithoutKnownRecipe_Ignored() {
         Map<String, Integer> need = CaseMaterials.need(craft("unknown_thing", 3), FAKE);
 
-        assertEquals(Map.of(), need,
+        assertEquals(
+                Map.of(),
+                need,
                 "Неизвестный рецепт не даёт материалов: молчаливая догадка подставила бы "
                         + "чужую нужду, а несостоявшийся рецепт ничего не требует");
     }
@@ -162,10 +181,10 @@ class CaseMaterialsTests {
         int table = CaseMaterials.need(craft("crafting_table", count), FAKE).getOrDefault("oak_planks", 0);
         int chest = CaseMaterials.need(craft("chest", count), FAKE).getOrDefault("oak_planks", 0);
 
-        assertTrue(table >= 4 && chest >= 8,
-                "Нужда в досках положительна при любом числе крафтов: стол — 4 доски, "
-                        + "сундук — 8 (получено " + table + " и " + chest + ")");
-        assertTrue(chest >= table,
-                "Сундук не может требовать меньше досок, чем стол того же числа крафтов");
+        assertTrue(
+                table >= 4 && chest >= 8,
+                "Нужда в досках положительна при любом числе крафтов: стол — 4 доски, " + "сундук — 8 (получено "
+                        + table + " и " + chest + ")");
+        assertTrue(chest >= table, "Сундук не может требовать меньше досок, чем стол того же числа крафтов");
     }
 }

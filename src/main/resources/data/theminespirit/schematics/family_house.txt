@@ -1,0 +1,111 @@
+# Дом семьи на 3 — деревянный этап.
+# Каменный цоколь (y0), стены из дубовых досок с брёвнами на углах и у двери,
+# обвязка из обтёсанных брёвен (y3), двускатная крыша из дубовых ступенек
+# на подкладке из досок, конёк — обтёсанное бревно вдоль дома.
+# Внутри: кухня у входа (печь, верстак), сундук, стол со стульями, 3 кровати у задней стены.
+# План: первая строка слоя — фронт (z=0, вход), X слева направо.
+name: "Дом семьи на 3"
+type: housing
+stage: 1
+size: 9x8x9
+entrance: front
+legend:
+  'c': cobblestone
+  '#': oak_planks
+  'L': oak_log[axis=y]
+  'x': stripped_oak_log[axis=x]
+  'z': stripped_oak_log[axis=z]
+  'G': glass_pane
+  'D': oak_door[facing=south,hinge=left]
+  'B': white_bed[facing=south]
+  'F': furnace[facing=south]
+  'T': crafting_table
+  'C': chest[facing=south]
+  'f': oak_fence
+  'e': oak_stairs[facing=east,half=bottom]
+  'w': oak_stairs[facing=west,half=bottom]
+  'S': wall_torch[facing=south]
+  'N': wall_torch[facing=north]
+  'E': wall_torch[facing=east]
+  'W': wall_torch[facing=west]
+layers:
+  - y0 цоколь и пол: |
+      ccccccccc
+      c#######c
+      c#######c
+      c#######c
+      c#######c
+      c#######c
+      c#######c
+      c#######c
+      ccccccccc
+  - y1 стены, мебель: |
+      L##LDL##L
+      #FT....C#
+      #.......#
+      #.......#
+      L..wfe..L
+      #.......#
+      #.B.B.B.#
+      #.B.B.B.#
+      L###L###L
+  - y2 окна, факелы: |
+      LGGLDLGGL
+      #..S.S..#
+      G.......G
+      #.......#
+      LE.....WL
+      #.......#
+      G.......G
+      #..N.N..#
+      L#G#L#G#L
+  - y3 обвязка: |
+      LxxxxxxxL
+      z.......z
+      z.......z
+      z.......z
+      z.......z
+      z.......z
+      z.......z
+      z.......z
+      LxxxxxxxL
+  - y4 карниз крыши: |
+      e#######w
+      e#.....#w
+      e#.....#w
+      e#.....#w
+      e#.....#w
+      e#.....#w
+      e#.....#w
+      e#.....#w
+      e#######w
+  - y5 скат, окно во фронтоне: |
+       e##G##w
+       e#...#w
+       e#...#w
+       e#...#w
+       e#...#w
+       e#...#w
+       e#...#w
+       e#...#w
+       e##G##w
+  - y6 скат: |
+        e###w
+        e#.#w
+        e#.#w
+        e#.#w
+        e#.#w
+        e#.#w
+        e#.#w
+        e#.#w
+        e###w
+  - y7 конёк: |
+         ezw
+         ezw
+         ezw
+         ezw
+         ezw
+         ezw
+         ezw
+         ezw
+         ezw

@@ -4,11 +4,11 @@ import java.util.EnumMap;
 import java.util.Map;
 
 final class ModesParser {
-    private static final String[] MODE_FIELDS = {"initiates", "radiusBase", "engageRadius", "pursuitRadius", "anchor",
-            "leash", "returnToAnchor"};
+    private static final String[] MODE_FIELDS = {
+        "initiates", "radiusBase", "engageRadius", "pursuitRadius", "anchor", "leash", "returnToAnchor"
+    };
 
-    private ModesParser() {
-    }
+    private ModesParser() {}
 
     static Modes parse(ConfigNode root) {
         root.fields(new String[] {"returnTolerance", "modes"});
@@ -17,7 +17,8 @@ final class ModesParser {
         for (Map.Entry<String, ConfigNode> entry : modes.entries().entrySet()) {
             CombatMode mode = entry.getValue().enumValueOf(CombatMode.class, entry.getKey(), "режим боя");
             if (params.put(mode, modeParams(entry.getValue().fields(MODE_FIELDS))) != null) {
-                throw entry.getValue().fail("режим " + mode.id() + " описан дважды", "ключи регистронезависимы: уберите дубль");
+                throw entry.getValue()
+                        .fail("режим " + mode.id() + " описан дважды", "ключи регистронезависимы: уберите дубль");
             }
         }
         for (CombatMode mode : CombatMode.values()) {
@@ -29,7 +30,8 @@ final class ModesParser {
     }
 
     private static ModeParams modeParams(ConfigNode node) {
-        return node.build(() -> new ModeParams(node.get("initiates").bool(),
+        return node.build(() -> new ModeParams(
+                node.get("initiates").bool(),
                 node.get("radiusBase").enumValue(RadiusBase.class),
                 node.get("engageRadius").number(),
                 node.get("pursuitRadius").number(),

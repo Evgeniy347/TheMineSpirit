@@ -69,8 +69,11 @@ public final class SmeltActivity implements Activity {
     }
 
     private static ActivityIntent smelt(String product, int count, ProcessingRules rules) {
-        return new ActivityIntent(ActivityId.SMELT, Optional.of("smelt"),
-                Map.of("item", product, "count", count, "radius", rules.stationRadius()), Optional.empty());
+        return new ActivityIntent(
+                ActivityId.SMELT,
+                Optional.of("smelt"),
+                Map.of("item", product, "count", count, "radius", rules.stationRadius()),
+                Optional.empty());
     }
 
     private static double charcoalDeficit(ProcessingStock stock, ProcessingRules rules) {

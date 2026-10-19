@@ -1,8 +1,11 @@
 package com.theminespirit.core.repair;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Материал ремонта по типу инструмента и брони: дерево — доски, камень — булыжник,
@@ -26,18 +29,16 @@ public final class RepairMaterials {
 
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
-    private RepairMaterials() {
-    }
+    private RepairMaterials() {}
 
-    /** Материал ремонта предмета или пусто, если тип не знает своего материала. */
-    public static Optional<String> materialFor(String itemId) {
+    public static Optional<String> materialFor(@Nullable String itemId) {
         if (itemId == null || itemId.isBlank()) {
             return Optional.empty();
         }
         String path = itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
         for (String prefix : PREFIXES_LONGEST_FIRST) {
             if (path.startsWith(prefix)) {
-                return Optional.of(BY_PREFIX.get(prefix));
+                return Optional.of(present(BY_PREFIX, prefix, "Материалы ремонта"));
             }
         }
         return Optional.empty();

@@ -33,7 +33,8 @@ public final class BuildResult {
 
     public void supplies(int haveCount, int missingCount) {
         if (haveCount < 0 || missingCount < 0) {
-            throw new IllegalArgumentException("Запасы не бывают отрицательными: have=" + haveCount + ", missing=" + missingCount);
+            throw new IllegalArgumentException(
+                    "Запасы не бывают отрицательными: have=" + haveCount + ", missing=" + missingCount);
         }
         have = haveCount;
         missing = missingCount;

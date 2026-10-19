@@ -29,25 +29,32 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskSnapshotCodec {
+    private static final String STATUS = "status";
+    private static final String REASON = "reason";
+    private static final String TYPE = "type";
+    private static final String SEQUENCE = "sequence";
+    private static final String REPEAT = "repeat";
+    private static final String FALLBACK = "fallback";
+    private static final String CHILD = "child";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int MAX_VERSION = 1;
 
-    private TaskSnapshotCodec() {
-    }
+    private TaskSnapshotCodec() {}
 
     public static String encode(TaskSnapshot snapshot) {
         Objects.requireNonNull(snapshot, "snapshot не может быть null: сохранять нечего");
         ObjectNode root = MAPPER.createObjectNode();
         root.put("version", snapshot.version());
-        root.put("status", snapshot.status().name());
+        root.put(STATUS, snapshot.status().name());
         if (snapshot.reason() != null) {
-            root.put("reason", snapshot.reason());
+            root.put(REASON, snapshot.reason());
         }
         if (snapshot.running()) {
-            root.set("plan", planToJson(snapshot.plan()));
-            root.set("progress", progressToJson(snapshot.progress()));
+            root.set("plan", planToJson(snapshot.runningPlan()));
+            root.set("progress", progressToJson(snapshot.runningProgress()));
         }
         try {
             return MAPPER.writeValueAsString(root);
@@ -66,7 +73,7 @@ public final class TaskSnapshotCodec {
         }
         int version = requireVersion(root);
         RunStatus status = parseStatus(root);
-        String reason = root.hasNonNull("reason") ? root.get("reason").asText() : null;
+        String reason = root.hasNonNull(REASON) ? root.get(REASON).asText() : null;
         if (status != RunStatus.RUNNING) {
             return new TaskSnapshot(version, status, reason, null, null);
         }
@@ -80,16 +87,18 @@ public final class TaskSnapshotCodec {
         try {
             return MAPPER.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new SnapshotFormatException("Снимок задачи не разобран как JSON: проверьте синтаксис значения "
-                    + "ключа SpiritTask, файл не правьте вручную", e);
+            throw new SnapshotFormatException(
+                    "Снимок задачи не разобран как JSON: проверьте синтаксис значения "
+                            + "ключа SpiritTask, файл не правьте вручную",
+                    e);
         }
     }
 
     private static int requireVersion(JsonNode root) {
         JsonNode versionNode = root.get("version");
         if (versionNode == null || !versionNode.isIntegralNumber() || !versionNode.canConvertToInt()) {
-            throw new SnapshotFormatException("У снимка задачи нет целого поля version: без версии читатель "
-                    + "не выберет разбор формата");
+            throw new SnapshotFormatException(
+                    "У снимка задачи нет целого поля version: без версии читатель " + "не выберет разбор формата");
         }
         int version = versionNode.intValue();
         if (version > MAX_VERSION) {
@@ -97,13 +106,14 @@ public final class TaskSnapshotCodec {
                     + ": обнови мод или добавь читателя старой версии, файл не правьте вручную");
         }
         if (version < 1) {
-            throw new SnapshotFormatException("Версия снимка " + version + " меньше 1: допустимая версия начинается с 1");
+            throw new SnapshotFormatException(
+                    "Версия снимка " + version + " меньше 1: допустимая версия начинается с 1");
         }
         return version;
     }
 
     private static RunStatus parseStatus(JsonNode root) {
-        JsonNode statusNode = root.get("status");
+        JsonNode statusNode = root.get(STATUS);
         if (statusNode == null || !statusNode.isTextual()) {
             throw new SnapshotFormatException("У снимка задачи нет строкового поля status: без него неизвестно, "
                     + "продолжать задачу или показывать итог");
@@ -111,8 +121,10 @@ public final class TaskSnapshotCodec {
         try {
             return RunStatus.valueOf(statusNode.asText());
         } catch (IllegalArgumentException e) {
-            throw new SnapshotFormatException("Неизвестный статус задачи '" + statusNode.asText()
-                    + "': допустимы RUNNING, SUCCEEDED, FAILED, CANCELLED", e);
+            throw new SnapshotFormatException(
+                    "Неизвестный статус задачи '" + statusNode.asText()
+                            + "': допустимы RUNNING, SUCCEEDED, FAILED, CANCELLED",
+                    e);
         }
     }
 
@@ -129,39 +141,41 @@ public final class TaskSnapshotCodec {
 
     private static TaskProgress parseProgress(JsonNode node) {
         if (node == null || node.isNull()) {
-            throw new SnapshotFormatException("RUNNING-снимок без прогресса progress: движок не знает, "
-                    + "с какого шага продолжать");
+            throw new SnapshotFormatException(
+                    "RUNNING-снимок без прогресса progress: движок не знает, " + "с какого шага продолжать");
         }
         if (!node.isObject()) {
             throw new SnapshotFormatException("Прогресс снимка должен быть JSON-объектом, а получено " + node);
         }
-        String type = requireText(node, "type", "прогресса");
+        String type = requireText(node, TYPE, "прогресса");
         return switch (type) {
-            case "sequence" -> new SequenceAt(requireIndex(node, "sequence"), optionalChild(node, "sequence"));
-            case "repeat" -> new RepeatAt(requireIndex(node, "repeat"), optionalChild(node, "repeat"));
-            case "fallback" -> new FallbackAt(requireIndex(node, "fallback"),
-                    optionalText(node, "lastReason"), optionalChild(node, "fallback"));
+            case SEQUENCE -> new SequenceAt(requireIndex(node, SEQUENCE), optionalChild(node));
+            case REPEAT -> new RepeatAt(requireIndex(node, REPEAT), optionalChild(node));
+            case FALLBACK ->
+                new FallbackAt(requireIndex(node, FALLBACK), optionalText(node, "lastReason"), optionalChild(node));
             case "parallel" -> new ParallelAt(parseParallelChildren(node.get("children")));
-            case "condition" -> new ConditionAt(parseBranch(node), optionalChild(node, "condition"));
+            case "condition" -> new ConditionAt(parseBranch(node), optionalChild(node));
             case "script" -> new ScriptAt(parseState(node.get("state")));
-            default -> throw new SnapshotFormatException("Неизвестный тип прогресса '" + type
-                    + "': допустимы sequence, repeat, fallback, parallel, condition, script");
+            default ->
+                throw new SnapshotFormatException("Неизвестный тип прогресса '" + type
+                        + "': допустимы sequence, repeat, fallback, parallel, condition, script");
         };
     }
 
     private static List<ParallelChild> parseParallelChildren(JsonNode node) {
         if (node == null || !node.isArray()) {
-            throw new SnapshotFormatException("У прогресса parallel поле 'children' обязательно и должно быть массивом");
+            throw new SnapshotFormatException(
+                    "У прогресса parallel поле 'children' обязательно и должно быть массивом");
         }
         List<ParallelChild> children = new ArrayList<>(node.size());
         for (JsonNode child : node) {
             if (!child.isObject()) {
-                throw new SnapshotFormatException("Элемент children прогресса parallel должен быть объектом, "
-                        + "а получено " + child);
+                throw new SnapshotFormatException(
+                        "Элемент children прогресса parallel должен быть объектом, " + "а получено " + child);
             }
             ScriptStatus status = parseChildStatus(child);
-            String reason = optionalText(child, "reason");
-            JsonNode grandchild = child.get("child");
+            String reason = optionalText(child, REASON);
+            JsonNode grandchild = child.get(CHILD);
             TaskProgress parsed = grandchild == null || grandchild.isNull() ? null : parseProgress(grandchild);
             children.add(new ParallelChild(status, reason, parsed));
         }
@@ -169,12 +183,13 @@ public final class TaskSnapshotCodec {
     }
 
     private static ScriptStatus parseChildStatus(JsonNode child) {
-        String statusText = requireText(child, "status", "элемента children прогресса parallel");
+        String statusText = requireText(child, STATUS, "элемента children прогресса parallel");
         try {
             return ScriptStatus.valueOf(statusText);
         } catch (IllegalArgumentException e) {
-            throw new SnapshotFormatException("Неизвестный статус потомка parallel '" + statusText
-                    + "': допустимы RUNNING, SUCCEEDED, FAILED", e);
+            throw new SnapshotFormatException(
+                    "Неизвестный статус потомка parallel '" + statusText + "': допустимы RUNNING, SUCCEEDED, FAILED",
+                    e);
         }
     }
 
@@ -184,17 +199,18 @@ public final class TaskSnapshotCodec {
             case "unresolved" -> ConditionBranch.UNRESOLVED;
             case "then" -> ConditionBranch.THEN;
             case "else" -> ConditionBranch.ELSE;
-            default -> throw new SnapshotFormatException("Неизвестная ветка прогресса condition '" + branch
-                    + "': допустимы unresolved, then, else");
+            default ->
+                throw new SnapshotFormatException(
+                        "Неизвестная ветка прогресса condition '" + branch + "': допустимы unresolved, then, else");
         };
     }
 
-    private static TaskProgress optionalChild(JsonNode node, String owner) {
-        JsonNode child = node.get("child");
+    private static @Nullable TaskProgress optionalChild(JsonNode node) {
+        JsonNode child = node.get(CHILD);
         return child == null || child.isNull() ? null : parseProgress(child);
     }
 
-    private static String optionalText(JsonNode node, String field) {
+    private static @Nullable String optionalText(JsonNode node, String field) {
         JsonNode value = node.get(field);
         return value == null || value.isNull() ? null : value.asText();
     }
@@ -202,13 +218,13 @@ public final class TaskSnapshotCodec {
     private static int requireIndex(JsonNode node, String owner) {
         JsonNode indexNode = node.get("index");
         if (indexNode == null || !indexNode.isIntegralNumber() || !indexNode.canConvertToInt()) {
-            throw new SnapshotFormatException("У прогресса '" + owner
-                    + "' поле 'index' обязательно и должно быть целым числом в диапазоне int");
+            throw new SnapshotFormatException(
+                    "У прогресса '" + owner + "' поле 'index' обязательно и должно быть целым числом в диапазоне int");
         }
         int index = indexNode.intValue();
         if (index < 0) {
-            throw new SnapshotFormatException("У прогресса '" + owner + "' отрицательный index=" + index
-                    + ": позиция шага нумеруется с нуля");
+            throw new SnapshotFormatException(
+                    "У прогресса '" + owner + "' отрицательный index=" + index + ": позиция шага нумеруется с нуля");
         }
         return index;
     }
@@ -221,7 +237,7 @@ public final class TaskSnapshotCodec {
         return value.textValue();
     }
 
-    private static Map<String, Object> parseState(JsonNode node) {
+    private static Map<String, Object> parseState(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return Map.of();
         }
@@ -229,7 +245,8 @@ public final class TaskSnapshotCodec {
             throw new SnapshotFormatException("Состояние скрипта должно быть JSON-объектом, а получено " + node);
         }
         Map<String, Object> state = new LinkedHashMap<>();
-        node.fields().forEachRemaining(entry -> state.put(entry.getKey(), parseValue(entry.getValue(), entry.getKey())));
+        node.fields()
+                .forEachRemaining(entry -> state.put(entry.getKey(), parseValue(entry.getValue(), entry.getKey())));
         return state;
     }
 
@@ -262,18 +279,19 @@ public final class TaskSnapshotCodec {
         }
         if (node.isObject()) {
             Map<String, Object> values = new LinkedHashMap<>();
-            node.fields().forEachRemaining(
-                    entry -> values.put(entry.getKey(), parseValue(entry.getValue(), path + "." + entry.getKey())));
+            node.fields()
+                    .forEachRemaining(entry ->
+                            values.put(entry.getKey(), parseValue(entry.getValue(), path + "." + entry.getKey())));
             return values;
         }
-        throw new SnapshotFormatException("Состояние скрипта содержит недопустимое значение в '" + path
-                + "' (" + node.getNodeType() + "): состояние хранит только JSON-совместимые значения");
+        throw new SnapshotFormatException("Состояние скрипта содержит недопустимое значение в '" + path + "' ("
+                + node.getNodeType() + "): состояние хранит только JSON-совместимые значения");
     }
 
     private static void checkAgainstPlan(TaskNode plan, TaskProgress progress) {
         switch (plan) {
             case ScriptCall call -> requireProgress(progress, ScriptAt.class, "script '" + call.script() + "'");
-            case SequenceNode sequence -> checkStepAt("sequence", sequence.steps().size(), sequence.steps(), progress);
+            case SequenceNode sequence -> checkStepAt(SEQUENCE, sequence.steps().size(), sequence.steps(), progress);
             case RepeatNode repeat -> checkRepeat(repeat, progress);
             case FallbackNode fallback -> checkFallback(fallback, progress);
             case ParallelNode parallel -> checkParallel(parallel, progress);
@@ -288,7 +306,8 @@ public final class TaskSnapshotCodec {
         checkStepIndex(owner, at.index(), size, at.child(), steps);
     }
 
-    private static void checkStepIndex(String owner, int index, int size, TaskProgress child, List<TaskNode> steps) {
+    private static void checkStepIndex(
+            String owner, int index, int size, @Nullable TaskProgress child, List<TaskNode> steps) {
         if (index > size) {
             throw outOfRange(owner, index, size);
         }
@@ -304,27 +323,27 @@ public final class TaskSnapshotCodec {
 
     private static void checkRepeat(RepeatNode repeat, TaskProgress progress) {
         if (!(progress instanceof RepeatAt at)) {
-            throw mismatch("repeat", progress);
+            throw mismatch(REPEAT, progress);
         }
         int size = repeat.times();
         if (at.index() > size) {
-            throw outOfRange("repeat", at.index(), size);
+            throw outOfRange(REPEAT, at.index(), size);
         }
         if (at.child() == null) {
             return;
         }
         if (at.index() >= size) {
-            throw new SnapshotFormatException("Прогресс repeat указывает на повтор " + at.index()
-                    + " из " + size + ": child висит на несуществующем повторе, снимок повреждён");
+            throw new SnapshotFormatException("Прогресс repeat указывает на повтор " + at.index() + " из " + size
+                    + ": child висит на несуществующем повторе, снимок повреждён");
         }
         checkAgainstPlan(repeat.step(), at.child());
     }
 
     private static void checkFallback(FallbackNode fallback, TaskProgress progress) {
         if (!(progress instanceof FallbackAt at)) {
-            throw mismatch("fallback", progress);
+            throw mismatch(FALLBACK, progress);
         }
-        checkStepIndex("fallback", at.index(), fallback.steps().size(), at.child(), fallback.steps());
+        checkStepIndex(FALLBACK, at.index(), fallback.steps().size(), at.child(), fallback.steps());
     }
 
     private static void checkParallel(ParallelNode parallel, TaskProgress progress) {
@@ -333,8 +352,9 @@ public final class TaskSnapshotCodec {
         }
         int size = parallel.steps().size();
         if (at.children().size() != size) {
-            throw new SnapshotFormatException("Прогресс parallel несёт " + at.children().size() + " потомков, а план — "
-                    + size + ": снимок повреждён или собран другой версией плана");
+            throw new SnapshotFormatException(
+                    "Прогресс parallel несёт " + at.children().size() + " потомков, а план — " + size
+                            + ": снимок повреждён или собран другой версией плана");
         }
         for (int i = 0; i < size; i++) {
             TaskProgress child = at.children().get(i).child();
@@ -357,16 +377,17 @@ public final class TaskSnapshotCodec {
             }
             case THEN -> requireBranchChild("then", condition.thenStep(), at.child());
             case ELSE -> {
-                if (condition.elseStep() == null) {
+                TaskNode elseStep = condition.elseStep();
+                if (elseStep == null) {
                     throw new SnapshotFormatException("Прогресс condition с веткой else, но у плана нет ветки else: "
                             + "снимок повреждён или собран другой версией плана");
                 }
-                requireBranchChild("else", condition.elseStep(), at.child());
+                requireBranchChild("else", elseStep, at.child());
             }
         }
     }
 
-    private static void requireBranchChild(String branch, TaskNode step, TaskProgress child) {
+    private static void requireBranchChild(String branch, TaskNode step, @Nullable TaskProgress child) {
         if (child == null) {
             throw new SnapshotFormatException("Прогресс condition с веткой " + branch + " без child: выбранная ветка "
                     + "обязана нести потомка, иначе восстановление не знает, что продолжать");
@@ -387,8 +408,8 @@ public final class TaskSnapshotCodec {
     }
 
     private static SnapshotFormatException outOfRange(String owner, int index, int size) {
-        return new SnapshotFormatException("Прогресс '" + owner + "' ссылается на позицию " + index
-                + " при " + size + " шагах плана: снимок повреждён или собран другой версией плана");
+        return new SnapshotFormatException("Прогресс '" + owner + "' ссылается на позицию " + index + " при " + size
+                + " шагах плана: снимок повреждён или собран другой версией плана");
     }
 
     private static JsonNode planToJson(TaskNode plan) {
@@ -401,8 +422,8 @@ public final class TaskSnapshotCodec {
 
     private static ObjectNode progressToJson(TaskProgress progress) {
         return switch (progress) {
-            case SequenceAt at -> indexedToJson("sequence", at.index(), at.child());
-            case RepeatAt at -> indexedToJson("repeat", at.index(), at.child());
+            case SequenceAt at -> indexedToJson(SEQUENCE, at.index(), at.child());
+            case RepeatAt at -> indexedToJson(REPEAT, at.index(), at.child());
             case FallbackAt at -> fallbackToJson(at);
             case ParallelAt at -> parallelToJson(at);
             case ConditionAt at -> conditionToJson(at);
@@ -410,18 +431,18 @@ public final class TaskSnapshotCodec {
         };
     }
 
-    private static ObjectNode indexedToJson(String type, int index, TaskProgress child) {
+    private static ObjectNode indexedToJson(String type, int index, @Nullable TaskProgress child) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", type);
+        node.put(TYPE, type);
         node.put("index", index);
         if (child != null) {
-            node.set("child", progressToJson(child));
+            node.set(CHILD, progressToJson(child));
         }
         return node;
     }
 
     private static ObjectNode fallbackToJson(FallbackAt at) {
-        ObjectNode node = indexedToJson("fallback", at.index(), at.child());
+        ObjectNode node = indexedToJson(FALLBACK, at.index(), at.child());
         if (at.lastReason() != null) {
             node.put("lastReason", at.lastReason());
         }
@@ -430,16 +451,16 @@ public final class TaskSnapshotCodec {
 
     private static ObjectNode parallelToJson(ParallelAt at) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "parallel");
+        node.put(TYPE, "parallel");
         ArrayNode children = node.putArray("children");
         for (ParallelChild child : at.children()) {
             ObjectNode entry = children.addObject();
-            entry.put("status", child.status().name());
+            entry.put(STATUS, child.status().name());
             if (child.reason() != null) {
-                entry.put("reason", child.reason());
+                entry.put(REASON, child.reason());
             }
             if (child.child() != null) {
-                entry.set("child", progressToJson(child.child()));
+                entry.set(CHILD, progressToJson(child.child()));
             }
         }
         return node;
@@ -447,17 +468,17 @@ public final class TaskSnapshotCodec {
 
     private static ObjectNode conditionToJson(ConditionAt at) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "condition");
+        node.put(TYPE, "condition");
         node.put("branch", at.branch().name().toLowerCase(Locale.ROOT));
         if (at.child() != null) {
-            node.set("child", progressToJson(at.child()));
+            node.set(CHILD, progressToJson(at.child()));
         }
         return node;
     }
 
     private static ObjectNode scriptToJson(ScriptAt at) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "script");
+        node.put(TYPE, "script");
         node.set("state", stateToJson(at.state()));
         return node;
     }
@@ -509,7 +530,8 @@ public final class TaskSnapshotCodec {
             return object;
         }
         throw new IllegalArgumentException("Состояние скрипта в '" + path + "' имеет тип "
-                + value.getClass().getSimpleName() + ": допустимы строки, числа, булевы значения, списки и карты из них");
+                + value.getClass().getSimpleName()
+                + ": допустимы строки, числа, булевы значения, списки и карты из них");
     }
 
     public static SaveEncoded encodeForSave(TaskSnapshot snapshot) {
@@ -523,6 +545,5 @@ public final class TaskSnapshotCodec {
         }
     }
 
-    public record SaveEncoded(String json, String failureReason) {
-    }
+    public record SaveEncoded(String json, @Nullable String failureReason) {}
 }

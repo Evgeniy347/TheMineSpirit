@@ -21,8 +21,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RepairGameTests {
     private static final int SETTLE_TICKS = 1;
 
-    private RepairGameTests() {
-    }
+    private RepairGameTests() {}
 
     @GameTest(template = "arena", batch = "repair_anvil", timeoutTicks = 200)
     public static void repair_AnvilWithIngot_RaisesDurability(GameTestHelper helper) {
@@ -33,20 +32,24 @@ public final class RepairGameTests {
         spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 100));
         spirit.getInventory().addItem(new ItemStack(Items.IRON_INGOT, 1));
 
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "ремонт наковальней обязан завершиться успехом, статус: " + spirit.taskStatus().orElse(null)
-                            + ", причина: " + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "ремонт наковальней обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().orElse(null) + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
             int durability = bestDurability(spirit, Items.IRON_PICKAXE);
             int expected = 212;
-            helper.assertTrue(durability == expected,
-                    "150 + 25% от 250 (62) = 212: наковальня добавляет четверть максимума за слиток, "
-                            + "фактически " + durability);
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT) == 0,
+            helper.assertTrue(
+                    durability == expected,
+                    "150 + 25% от 250 (62) = 212: наковальня добавляет четверть максимума за слиток, " + "фактически "
+                            + durability);
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT) == 0,
                     "слиток обязан быть израсходован на ремонт, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_INGOT));
         });
@@ -60,23 +63,29 @@ public final class RepairGameTests {
         spirit.getInventory().addItem(damaged(Items.WOODEN_PICKAXE, 30));
         spirit.getInventory().addItem(damaged(Items.WOODEN_PICKAXE, 40));
 
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("repair_tool", Map.of("item", "minecraft:wooden_pickaxe")), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("repair_tool", Map.of("item", "minecraft:wooden_pickaxe")),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "комбинирование двух деревянных кирок обязано завершиться успехом, статус: "
                             + spirit.taskStatus().orElse(null) + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE) == 1,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE) == 1,
                     "после комбинирования обязана остаться одна кирка, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WOODEN_PICKAXE));
             int durability = bestDurability(spirit, Items.WOODEN_PICKAXE);
             int expected = 51;
-            helper.assertTrue(durability == expected,
-                    "19 + 29 + 5% от 59 (3) = 51: точило складывает прочность и добавляет бонус, "
-                            + "фактически " + durability);
+            helper.assertTrue(
+                    durability == expected,
+                    "19 + 29 + 5% от 59 (3) = 51: точило складывает прочность и добавляет бонус, " + "фактически "
+                            + durability);
         });
     }
 
@@ -88,20 +97,24 @@ public final class RepairGameTests {
         spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 100));
         spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 150));
 
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "ремонт обязан завершиться успехом, статус: " + spirit.taskStatus().orElse(null)
-                            + ", причина: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "ремонт обязан завершиться успехом, статус: "
+                            + spirit.taskStatus().orElse(null) + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1,
                     "после ремонта обязана остаться одна кирка, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE));
             int durability = bestDurability(spirit, Items.IRON_PICKAXE);
             int expected = 250;
-            helper.assertTrue(durability == expected,
+            helper.assertTrue(
+                    durability == expected,
                     "100 + 150 + 5% от 250 (13) = 263 обрезается до максимума 250, фактически " + durability);
         });
     }
@@ -113,12 +126,13 @@ public final class RepairGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 50));
 
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "ремонт обязан провалиться без материала и второго предмета, статус: "
                             + spirit.taskStatus().orElse(null) + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));

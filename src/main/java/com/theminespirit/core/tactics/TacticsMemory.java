@@ -2,9 +2,18 @@ package com.theminespirit.core.tactics;
 
 import java.util.Optional;
 
-public record TacticsMemory(Optional<TacticalOption> previous, DecisionSource previousSource, long decidedAt,
-        TacticalState state, long stateSince, CombatMode mode, CombatMode orderedMode, Optional<Point> anchor,
-        long lastSeenTick, double hpWindowRef, long hpWindowStart) {
+public record TacticsMemory(
+        Optional<TacticalOption> previous,
+        DecisionSource previousSource,
+        long decidedAt,
+        TacticalState state,
+        long stateSince,
+        CombatMode mode,
+        CombatMode orderedMode,
+        Optional<Point> anchor,
+        long lastSeenTick,
+        double hpWindowRef,
+        long hpWindowStart) {
     public static final long NEVER_SEEN = -1_000_000L;
 
     public TacticsMemory {
@@ -18,7 +27,17 @@ public record TacticsMemory(Optional<TacticalOption> previous, DecisionSource pr
     }
 
     public static TacticsMemory initial(CombatMode ordered, long now, double hpFraction) {
-        return new TacticsMemory(Optional.empty(), DecisionSource.SCORE, now, TacticalState.CALM, now, ordered,
-                ordered, Optional.empty(), NEVER_SEEN, hpFraction, now);
+        return new TacticsMemory(
+                Optional.empty(),
+                DecisionSource.SCORE,
+                now,
+                TacticalState.CALM,
+                now,
+                ordered,
+                ordered,
+                Optional.empty(),
+                NEVER_SEEN,
+                hpFraction,
+                now);
     }
 }

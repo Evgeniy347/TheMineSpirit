@@ -2,8 +2,8 @@ package com.theminespirit.core.armor;
 
 import java.util.Objects;
 
-public record ArmorPiece(String item, ArmorSlot slot, int defense, double toughness, int protection,
-        double durabilityFraction) {
+public record ArmorPiece(
+        String item, ArmorSlot slot, int defense, double toughness, int protection, double durabilityFraction) {
     public ArmorPiece {
         Objects.requireNonNull(item, "Предмет брони не назван: без id его не вернуть в инвентарь");
         if (item.isBlank()) {

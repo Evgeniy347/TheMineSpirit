@@ -4,8 +4,7 @@ import com.theminespirit.core.script.ScriptCatalog;
 import java.util.List;
 
 final class CapabilitiesRoutes {
-    private CapabilitiesRoutes() {
-    }
+    private CapabilitiesRoutes() {}
 
     static List<Route> of(ScriptCatalog catalog) {
         String json = CapabilitiesJson.toJson(catalog);

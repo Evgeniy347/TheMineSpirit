@@ -6,17 +6,15 @@ import com.theminespirit.core.intellect.InvitationAnswer;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class CoordinatorRegistry {
     private static final Map<ServerLevel, LevelSettlements> BY_LEVEL = new ConcurrentHashMap<>();
 
-    private CoordinatorRegistry() {
-    }
+    private CoordinatorRegistry() {}
 
     public static SpiritCoordinator get(ServerLevel level, SettlementKey key) {
         if (level == null) {
@@ -26,7 +24,8 @@ public final class CoordinatorRegistry {
             throw new IllegalArgumentException(
                     "key не может быть null: координатор ведёт своё поселение, а не весь уровень");
         }
-        return BY_LEVEL.computeIfAbsent(level, ignored -> new LevelSettlements()).coordinator(level, key);
+        return BY_LEVEL.computeIfAbsent(level, ignored -> new LevelSettlements())
+                .coordinator(level, key);
     }
 
     public static void remove(ServerLevel level, SettlementKey key) {
@@ -62,7 +61,8 @@ public final class CoordinatorRegistry {
         }
         for (SettlementKey key : settlements.byKey.keySet().stream().toList()) {
             SpiritCoordinator coordinator = settlements.byKey.get(key);
-            if (coordinator != null && coordinator.lastTick() >= 0
+            if (coordinator != null
+                    && coordinator.lastTick() >= 0
                     && (tick - coordinator.lastTick()) > CoordinatorTuning.SNAPSHOT_STALE_TICKS) {
                 settlements.byKey.remove(key);
             }
@@ -73,8 +73,8 @@ public final class CoordinatorRegistry {
         BY_LEVEL.clear();
     }
 
-    public static boolean answerInvite(ServerLevel level, String expedition, String answer,
-            ServerPlayer player, long now) {
+    public static boolean answerInvite(
+            ServerLevel level, String expedition, String answer, ServerPlayer player, long now) {
         if (level == null || expedition == null || answer == null || player == null) {
             throw new IllegalArgumentException(
                     "Ответ без уровня, похода или игрока не принять: кнопки зовут конкретную команду");
@@ -86,14 +86,12 @@ public final class CoordinatorRegistry {
         for (SpiritCoordinator coordinator : settlements.byKey.values().stream().toList()) {
             if ("join".equals(answer)) {
                 if (expedition.equals(idOf(coordinator))) {
-                    coordinator.intellect().expeditions().accept(player,
-                            membersOf(level, coordinator), now);
+                    coordinator.intellect().expeditions().accept(player, membersOf(level, coordinator), now);
                     return true;
                 }
                 continue;
             }
-            InvitationAnswer parsed =
-                    "wait".equals(answer) ? InvitationAnswer.WAIT_MORE : InvitationAnswer.GO_WITHOUT;
+            InvitationAnswer parsed = "wait".equals(answer) ? InvitationAnswer.WAIT_MORE : InvitationAnswer.GO_WITHOUT;
             if (coordinator.intellect().expeditions().onAnswer(expedition, parsed, now)) {
                 return true;
             }
@@ -102,7 +100,8 @@ public final class CoordinatorRegistry {
     }
 
     private static String idOf(SpiritCoordinator coordinator) {
-        return coordinator.intellect().expeditions().expeditionId() == null ? ""
+        return coordinator.intellect().expeditions().expeditionId() == null
+                ? ""
                 : coordinator.intellect().expeditions().expeditionId().toString();
     }
 

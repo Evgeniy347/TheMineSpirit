@@ -31,7 +31,8 @@ class ActivityProperties {
 
         @Override
         public double demand(SettlementView view) {
-            return Activity.checkedDemand(activityId, (activityId.ordinal() + 1) * 1.0);
+            return Activity.checkedDemand(
+                    activityId, (List.of(ActivityId.values()).indexOf(activityId) + 1) * 1.0);
         }
 
         @Override
@@ -60,9 +61,14 @@ class ActivityProperties {
         for (ActivityId id : ActivityId.values()) {
             Activity activity = new FixedActivity(id);
 
-            assertEquals(activity.demand(view), activity.demand(view),
+            assertEquals(
+                    activity.demand(view),
+                    activity.demand(view),
                     "Спрос " + id + " детерминирован: иначе распределение мигает между пересборками");
-            assertTrue(activity.demand(view) >= 0 && activity.demand(view) <= IntellectTuning.loadDefault().maxDemand(),
+            assertTrue(
+                    activity.demand(view) >= 0
+                            && activity.demand(view)
+                                    <= IntellectTuning.loadDefault().maxDemand(),
                     "Спрос " + id + " лежит в 0..MAX_DEMAND: иначе сравнение деятельностей несравнимо");
         }
     }
@@ -77,7 +83,8 @@ class ActivityProperties {
                 }
                 Optional<String> script = activity.order(spirit, view).script();
 
-                assertTrue(script.isEmpty() || KNOWN_SCRIPTS.contains(script.get()),
+                assertTrue(
+                        script.isEmpty() || KNOWN_SCRIPTS.contains(script.get()),
                         "Намерение " + id + " ссылается на известный скрипт или пусто: "
                                 + "неизвестный скрипт дух не исполнит");
             }
@@ -89,7 +96,9 @@ class ActivityProperties {
         for (ActivityId id : ActivityId.values()) {
             Activity activity = new FixedActivity(id);
             for (SpiritSnapshot spirit : view.spirits()) {
-                assertEquals(activity.eligible(spirit, view), activity.eligible(spirit, view),
+                assertEquals(
+                        activity.eligible(spirit, view),
+                        activity.eligible(spirit, view),
                         "Пригодность " + id + " не зависит от порядка вызовов: иначе жребий вместо отбора");
             }
         }

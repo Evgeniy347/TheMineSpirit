@@ -71,14 +71,14 @@ final class FuelBalance {
             return;
         }
         if (node instanceof ScriptCall call) {
-            if (call.script().equals("smelt")) {
+            if ("smelt".equals(call.script())) {
                 int count = number(call);
                 accumulator.smelts += count;
                 accumulator.cook += count * (long) COOK_TICKS;
-                accumulator.fuelAhead &= accumulator.burn >= accumulator.cook;
+                accumulator.fuelAhead = accumulator.fuelAhead && accumulator.burn >= accumulator.cook;
                 return;
             }
-            if (call.script().equals("gather")) {
+            if ("gather".equals(call.script())) {
                 int burn = BURN_TICKS.getOrDefault(String.valueOf(call.params().get("block")), 0);
                 accumulator.burn += number(call) * (long) burn;
             }

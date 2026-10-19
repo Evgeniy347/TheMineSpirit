@@ -11,12 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class PlanParser {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private PlanParser() {
-    }
+    private PlanParser() {}
 
     public static TaskNode parse(String json, ScriptCatalog catalog) {
         return parse(json, catalog, ConditionCatalog.empty());
@@ -55,7 +55,8 @@ public final class PlanParser {
                     + " узлов: проверьте план, ИИ-планировщик вернул неограниченно большое дерево");
         }
         if (node == null || !node.isObject()) {
-            throw new PlanValidationException("Узел плана должен быть JSON-объектом с полем 'type', а получено " + node);
+            throw new PlanValidationException(
+                    "Узел плана должен быть JSON-объектом с полем 'type', а получено " + node);
         }
         String type = requiredText(node, "type", "узел плана");
         return switch (type) {
@@ -65,8 +66,9 @@ public final class PlanParser {
             case "fallback" -> parseFallback(node, depth, counter);
             case "parallel" -> parseParallel(node, depth, counter);
             case "condition" -> parseCondition(node, depth, counter);
-            default -> throw new PlanValidationException("Неизвестный тип узла плана '" + type
-                    + "': допустимы script, sequence, repeat, fallback, parallel, condition");
+            default ->
+                throw new PlanValidationException("Неизвестный тип узла плана '" + type
+                        + "': допустимы script, sequence, repeat, fallback, parallel, condition");
         };
     }
 
@@ -102,8 +104,9 @@ public final class PlanParser {
         ParallelMode mode = switch (modeText) {
             case "all" -> ParallelMode.ALL;
             case "any" -> ParallelMode.ANY;
-            default -> throw new PlanValidationException(
-                    "Неизвестный режим parallel '" + modeText + "': допустимы 'all' и 'any'");
+            default ->
+                throw new PlanValidationException(
+                        "Неизвестный режим parallel '" + modeText + "': допустимы 'all' и 'any'");
         };
         return new ParallelNode(mode, parseSteps(node, depth, counter, "parallel"));
     }
@@ -117,9 +120,7 @@ public final class PlanParser {
         }
         TaskNode thenStep = parseNode(thenNode, depth + 1, counter);
         JsonNode elseNode = node.get("else");
-        TaskNode elseStep = elseNode == null || elseNode.isNull()
-                ? null
-                : parseNode(elseNode, depth + 1, counter);
+        TaskNode elseStep = elseNode == null || elseNode.isNull() ? null : parseNode(elseNode, depth + 1, counter);
         return new ConditionNode(check, params, thenStep, elseStep);
     }
 
@@ -136,7 +137,7 @@ public final class PlanParser {
         return parsed;
     }
 
-    private static Map<String, Object> toPlainObject(JsonNode node, String owner) {
+    private static Map<String, Object> toPlainObject(@Nullable JsonNode node, String owner) {
         Map<String, Object> result = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return result;
@@ -155,7 +156,7 @@ public final class PlanParser {
         return result;
     }
 
-    private static Object toPlainValue(JsonNode node) {
+    private static @Nullable Object toPlainValue(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return null;
         }

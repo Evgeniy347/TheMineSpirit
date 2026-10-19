@@ -4,20 +4,18 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 public final class CoordinatorLifecycle {
-    private CoordinatorLifecycle() {
-    }
+    private CoordinatorLifecycle() {}
 
     public static void register(IEventBus bus) {
         if (bus == null) {
@@ -25,7 +23,7 @@ public final class CoordinatorLifecycle {
                     "bus не может быть null: без шины событий слушатели координатора не зарегистрируются");
         }
         bus.addListener((ServerTickEvent.Post event) -> onServerTick(event));
-        bus.addListener((ServerStoppingEvent event) -> onServerStopping(event));
+        bus.addListener((ServerStoppingEvent event) -> onServerStopping());
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {
@@ -57,7 +55,7 @@ public final class CoordinatorLifecycle {
         return groups;
     }
 
-    private static void onServerStopping(ServerStoppingEvent event) {
+    private static void onServerStopping() {
         CoordinatorRegistry.clear();
     }
 }

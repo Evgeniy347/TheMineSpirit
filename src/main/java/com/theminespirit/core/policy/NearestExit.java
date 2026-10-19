@@ -12,8 +12,7 @@ import java.util.Optional;
 final class NearestExit {
     private static final int[] LEVELS = {0, 1};
 
-    private NearestExit() {
-    }
+    private NearestExit() {}
 
     static Optional<BlockCoord> find(LocalSurroundings surroundings, SafetyView standView) {
         BlockCoord feet = surroundings.feet();
@@ -27,10 +26,12 @@ final class NearestExit {
                 }
             }
         }
-        candidates.sort(Comparator.comparingInt((BlockCoord c) -> squaredDistance(feet, c)).thenComparing(Comparator.naturalOrder()));
+        candidates.sort(Comparator.comparingInt((BlockCoord c) -> squaredDistance(feet, c))
+                .thenComparing(Comparator.naturalOrder()));
         for (BlockCoord candidate : candidates) {
             BlockCoord head = new BlockCoord(candidate.x(), candidate.y() + 1, candidate.z());
-            if (surroundings.cellAt(candidate) == Cell.PASSABLE && surroundings.cellAt(head) == Cell.PASSABLE
+            if (surroundings.cellAt(candidate) == Cell.PASSABLE
+                    && surroundings.cellAt(head) == Cell.PASSABLE
                     && MiningSafety.canStand(candidate, standView)) {
                 return Optional.of(candidate);
             }

@@ -9,8 +9,7 @@ import net.minecraft.world.item.Items;
 public final class ItemIds {
     private static final String DEFAULT_NAMESPACE = "minecraft";
 
-    private ItemIds() {
-    }
+    private ItemIds() {}
 
     public static String of(Item item) {
         ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
@@ -23,7 +22,7 @@ public final class ItemIds {
         if (location == null) {
             return Optional.empty();
         }
-        return BuiltInRegistries.ITEM.getOptional(location).filter(item -> item != Items.AIR);
+        return BuiltInRegistries.ITEM.getOptional(location).filter(item -> !Items.AIR.equals(item));
     }
 
     public static String normalize(String id) {

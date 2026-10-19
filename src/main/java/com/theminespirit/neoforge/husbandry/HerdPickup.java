@@ -11,6 +11,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 final class HerdPickup {
+    private static final IdFilter EGGS = IdFilter.of(List.of("minecraft:egg"));
+
     private final HerdSession session;
 
     HerdPickup(HerdSession session) {
@@ -18,38 +20,54 @@ final class HerdPickup {
     }
 
     void findEggs() {
-        List<ItemEntity> eggs = session.spirit.level().getEntitiesOfClass(
-                ItemEntity.class,
-                new AABB(session.home.x() - session.searchRadius, session.home.y() - session.searchRadius,
-                        session.home.z() - session.searchRadius,
-                        session.home.x() + session.searchRadius + 1.0,
-                        session.home.y() + session.searchRadius + 1.0,
-                        session.home.z() + session.searchRadius + 1.0),
-                drop -> !drop.isRemoved() && drop.getItem().is(Items.EGG)
-                        && session.pen.inside(new BlockCoord(drop.blockPosition().getX(),
-                                drop.blockPosition().getY(), drop.blockPosition().getZ())));
+        AABB area = new AABB(
+                session.home.x() - session.searchRadius,
+                session.home.y() - session.searchRadius,
+                session.home.z() - session.searchRadius,
+                session.home.x() + session.searchRadius + 1.0,
+                session.home.y() + session.searchRadius + 1.0,
+                session.home.z() + session.searchRadius + 1.0);
+        List<ItemEntity> eggs = session.spirit
+                .level()
+                .getEntitiesOfClass(
+                        ItemEntity.class,
+                        area,
+                        drop -> !drop.isRemoved()
+                                && drop.getItem().is(Items.EGG)
+                                && session.pen.inside(new BlockCoord(
+                                        drop.blockPosition().getX(),
+                                        drop.blockPosition().getY(),
+                                        drop.blockPosition().getZ())));
         session.entityQueries++;
         session.maxEntityQueriesPerTick = Math.max(session.maxEntityQueriesPerTick, 1);
         if (eggs.isEmpty()) {
+            int pulled = session.spirit.claimMagnetPulls(
+                    area, EGGS, session.spirit.level().getGameTime() - session.ticks);
+            if (pulled > 0) {
+                session.eggsPicked += pulled;
+                session.done = session.eggsPicked;
+                session.finishWithTally();
+                return;
+            }
             session.fail("яиц в загоне нет: куры несутся медленно, мир не изменён");
             return;
         }
-        session.startCollect(IdFilter.of(List.of("minecraft:egg")),
-                new BlockPos(session.home.x(), session.home.y(), session.home.z()), session.searchRadius);
+        session.startCollect(
+                EGGS, new BlockPos(session.home.x(), session.home.y(), session.home.z()), session.searchRadius);
     }
 
     void collectTick() {
         int before = session.collector.entityQueries();
         DropCollector.State collected = session.collector.tick();
-        session.maxEntityQueriesPerTick = Math.max(session.maxEntityQueriesPerTick,
-                session.collector.entityQueries() - before);
+        session.maxEntityQueriesPerTick =
+                Math.max(session.maxEntityQueriesPerTick, session.collector.entityQueries() - before);
         if (collected == DropCollector.State.RUNNING) {
             return;
         }
         session.entityQueries += session.collector.entityQueries();
         if (collected == DropCollector.State.FAILED) {
-            session.fail("не удалось подобрать рядом с " + session.currentId + ": "
-                    + session.collector.failureReason());
+            session.fail(
+                    "не удалось подобрать рядом с " + session.currentId + ": " + session.collector.failureReason());
             return;
         }
         if (session.job == HerdJob.COLLECT_EGGS) {

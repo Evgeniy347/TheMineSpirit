@@ -24,7 +24,8 @@ public final class EatScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез до еды");
         }
-        boolean ate = params.item().map(id -> spirit.hunger().eat(id))
+        boolean ate = params.item()
+                .map(id -> spirit.hunger().eat(id))
                 .orElseGet(() -> spirit.hunger().eatBest());
         if (!ate) {
             return fail(params.item()
@@ -35,8 +36,7 @@ public final class EatScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public String failureReason() {

@@ -13,7 +13,8 @@ public record DecisionsQuery(int limit) {
 
     public DecisionsQuery {
         if (limit < 1 || limit > MAX_LIMIT) {
-            throw invalid("'limit' = " + limit + " вне границ: от 1 до " + MAX_LIMIT + " записей",
+            throw invalid(
+                    "'limit' = " + limit + " вне границ: от 1 до " + MAX_LIMIT + " записей",
                     Map.of("field", LIMIT, "min", 1, "max", MAX_LIMIT));
         }
     }
@@ -21,7 +22,8 @@ public record DecisionsQuery(int limit) {
     public static DecisionsQuery parse(Map<String, String> query) {
         for (String name : query.keySet()) {
             if (!LIMIT.equals(name)) {
-                throw invalid("Неизвестный параметр запроса '" + name + "' в decisions: допустим только 'limit'",
+                throw invalid(
+                        "Неизвестный параметр запроса '" + name + "' в decisions: допустим только 'limit'",
                         Map.of("field", name, "allowed", FIELDS));
             }
         }

@@ -23,15 +23,19 @@ class CraterPlanProperties {
 
     @Provide
     Arbitrary<List<Integer>> depths() {
-        return Arbitraries.integers().between(0, MAX_DEPTH).list().ofSize(columns().size());
+        return Arbitraries.integers()
+                .between(0, MAX_DEPTH)
+                .list()
+                .ofSize(columns().size());
     }
 
     @Provide
     Arbitrary<Set<BlockCoord>> protectedCells() {
         Arbitrary<BlockCoord> any = Combinators.combine(
-                Arbitraries.integers().between(-RADIUS, RADIUS),
-                Arbitraries.integers().between(LEVEL - MAX_DEPTH, LEVEL),
-                Arbitraries.integers().between(-RADIUS, RADIUS)).as(BlockCoord::new);
+                        Arbitraries.integers().between(-RADIUS, RADIUS),
+                        Arbitraries.integers().between(LEVEL - MAX_DEPTH, LEVEL),
+                        Arbitraries.integers().between(-RADIUS, RADIUS))
+                .as(BlockCoord::new);
         return any.list().ofMaxSize(4).map(HashSet::new);
     }
 
@@ -70,8 +74,8 @@ class CraterPlanProperties {
     }
 
     @Property
-    void plan_AfterFill_NoFillableCellBelowGroundRemainsEmpty(@ForAll("depths") List<Integer> depths,
-            @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
+    void plan_AfterFill_NoFillableCellBelowGroundRemainsEmpty(
+            @ForAll("depths") List<Integer> depths, @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
         TestCraterSurface surface = surface(depths, protectedCells);
         CraterPlan.Plan plan = CraterPlan.plan(surface);
         Set<BlockCoord> filled = new HashSet<>(plan.cells());
@@ -82,7 +86,8 @@ class CraterPlanProperties {
             for (int y = LEVEL; y >= LEVEL - MAX_DEPTH; y--) {
                 BlockCoord cell = new BlockCoord(x, y, z);
                 if (surface.isAir(x, y, z) && !surface.isProtected(x, y, z)) {
-                    assertTrue(filled.contains(cell),
+                    assertTrue(
+                            filled.contains(cell),
                             "После засыпки в клетке " + cell + " ниже уровня земли не должно остаться пустоты: "
                                     + "иначе яма не закрыта");
                 }
@@ -91,35 +96,39 @@ class CraterPlanProperties {
     }
 
     @Property
-    void plan_BlockCount_EqualsNumberOfEmptyPlanCells(@ForAll("depths") List<Integer> depths,
-            @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
+    void plan_BlockCount_EqualsNumberOfEmptyPlanCells(
+            @ForAll("depths") List<Integer> depths, @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
         CraterPlan.Plan plan = CraterPlan.plan(surface(depths, protectedCells));
 
-        assertEquals(plan.cells().size(), plan.blockCount(),
+        assertEquals(
+                plan.cells().size(),
+                plan.blockCount(),
                 "Расход блоков обязан совпасть с числом пустых клеток плана: иначе дух берёт лишнее или недобирает");
     }
 
     @Property
-    void plan_AnyInput_CellsAreBottomUpAndInsideDisk(@ForAll("depths") List<Integer> depths,
-            @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
+    void plan_AnyInput_CellsAreBottomUpAndInsideDisk(
+            @ForAll("depths") List<Integer> depths, @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
         CraterPlan.Plan plan = CraterPlan.plan(surface(depths, protectedCells));
 
         for (BlockCoord cell : plan.cells()) {
-            assertTrue(inDisk(cell),
-                    "Клетка засыпки " + cell + " обязана лежать в диске взрыва: иначе дух засыпает мимо");
+            assertTrue(
+                    inDisk(cell), "Клетка засыпки " + cell + " обязана лежать в диске взрыва: иначе дух засыпает мимо");
         }
         int previousY = Integer.MIN_VALUE;
         for (BlockCoord cell : plan.cells()) {
-            assertTrue(cell.y() >= previousY,
+            assertTrue(
+                    cell.y() >= previousY,
                     "Клетки плана обязаны идти снизу вверх: иначе верхний блок повиснет без опоры");
             previousY = cell.y();
         }
     }
 
     @Property
-    void plan_SameInput_TwiceSameResult(@ForAll("depths") List<Integer> depths,
-            @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
-        assertEquals(CraterPlan.plan(surface(depths, protectedCells)),
+    void plan_SameInput_TwiceSameResult(
+            @ForAll("depths") List<Integer> depths, @ForAll("protectedCells") Set<BlockCoord> protectedCells) {
+        assertEquals(
+                CraterPlan.plan(surface(depths, protectedCells)),
                 CraterPlan.plan(surface(depths, protectedCells)),
                 "Тот же вход даёт тот же план: иначе число блоков и постановка расходятся");
     }

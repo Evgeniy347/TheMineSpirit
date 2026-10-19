@@ -5,8 +5,7 @@ import java.util.Objects;
 public final class SseFormat {
     private static final String KEEPALIVE = ": keepalive\n\n";
 
-    private SseFormat() {
-    }
+    private SseFormat() {}
 
     public static String frame(long id, String event, String dataJson) {
         Objects.requireNonNull(event, "event не может быть null: тип кадра обязателен для SSE");

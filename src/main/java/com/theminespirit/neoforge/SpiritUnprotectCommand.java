@@ -17,17 +17,16 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
 final class SpiritUnprotectCommand {
+    private static final String COLUMN = " | ";
     private static final String DEFAULT_REASON = "по просьбе игрока";
 
-    private SpiritUnprotectCommand() {
-    }
+    private SpiritUnprotectCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("unprotect")
                 .then(literal("list").executes(SpiritUnprotectCommand::list))
                 .then(literal("remove")
-                        .then(argument("id", StringArgumentType.word())
-                                .executes(SpiritUnprotectCommand::remove)))
+                        .then(argument("id", StringArgumentType.word()).executes(SpiritUnprotectCommand::remove)))
                 .then(coordinates()));
     }
 
@@ -40,22 +39,30 @@ final class SpiritUnprotectCommand {
                                                 .then(argument("z2", IntegerArgumentType.integer())
                                                         .executes(context -> grant(context, DEFAULT_REASON))
                                                         .then(argument("reason", StringArgumentType.greedyString())
-                                                                .executes(context -> grant(context,
-                                                                        StringArgumentType.getString(context, "reason")))))))));
+                                                                .executes(context -> grant(
+                                                                        context,
+                                                                        StringArgumentType.getString(
+                                                                                context, "reason")))))))));
     }
 
     private static int grant(CommandContext<CommandSourceStack> context, String reason) {
         CommandSourceStack source = context.getSource();
-        BlockCoord first = new BlockCoord(IntegerArgumentType.getInteger(context, "x1"),
-                IntegerArgumentType.getInteger(context, "y1"), IntegerArgumentType.getInteger(context, "z1"));
-        BlockCoord second = new BlockCoord(IntegerArgumentType.getInteger(context, "x2"),
-                IntegerArgumentType.getInteger(context, "y2"), IntegerArgumentType.getInteger(context, "z2"));
+        BlockCoord first = new BlockCoord(
+                IntegerArgumentType.getInteger(context, "x1"),
+                IntegerArgumentType.getInteger(context, "y1"),
+                IntegerArgumentType.getInteger(context, "z1"));
+        BlockCoord second = new BlockCoord(
+                IntegerArgumentType.getInteger(context, "x2"),
+                IntegerArgumentType.getInteger(context, "y2"),
+                IntegerArgumentType.getInteger(context, "z2"));
         String dimension = source.getLevel().dimension().location().toString();
         try {
-            UnprotectArea area = UnprotectService.of(source.getServer()).grant(dimension, first, second,
-                    source.getTextName(), reason, 0, System.currentTimeMillis());
-            source.sendSuccess(() -> Component.literal("Защита снята с области " + area.id() + ": " + format(area)
-                    + ". Вернуть защиту — /spirit unprotect remove " + area.id()), true);
+            UnprotectArea area = UnprotectService.of(source.getServer())
+                    .grant(dimension, first, second, source.getTextName(), reason, 0, System.currentTimeMillis());
+            source.sendSuccess(
+                    () -> Component.literal("Защита снята с области " + area.id() + ": " + format(area)
+                            + ". Вернуть защиту — /spirit unprotect remove " + area.id()),
+                    true);
             return 1;
         } catch (IllegalArgumentException refused) {
             source.sendFailure(Component.literal("Защита не снята: " + refused.getMessage()));
@@ -71,8 +78,17 @@ final class SpiritUnprotectCommand {
             return 0;
         }
         for (UnprotectArea area : areas) {
-            source.sendSuccess(() -> Component.literal(area.id() + " | " + format(area) + " | " + area.grantedBy()
-                    + " | " + area.reason() + " | " + until(area)), false);
+            source.sendSuccess(
+                    () -> Component.literal(area.id()
+                            + COLUMN
+                            + format(area)
+                            + COLUMN
+                            + area.grantedBy()
+                            + COLUMN
+                            + area.reason()
+                            + COLUMN
+                            + until(area)),
+                    false);
         }
         source.sendSuccess(() -> Component.literal("Разрешённых областей: " + areas.size()), false);
         return areas.size();
@@ -82,16 +98,20 @@ final class SpiritUnprotectCommand {
         CommandSourceStack source = context.getSource();
         String id = StringArgumentType.getString(context, "id");
         if (!UnprotectService.of(source.getServer()).remove(id)) {
-            source.sendFailure(Component.literal("Разрешение '" + id + "' не найдено: список — /spirit unprotect list"));
+            source.sendFailure(
+                    Component.literal("Разрешение '" + id + "' не найдено: список — /spirit unprotect list"));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Разрешение '" + id + "' снято: постройки в области снова защищены"), true);
+        source.sendSuccess(
+                () -> Component.literal("Разрешение '" + id + "' снято: постройки в области снова защищены"), true);
         return 1;
     }
 
     private static String format(UnprotectArea area) {
-        return area.dimension() + " [" + area.box().min().x() + " " + area.box().min().y() + " " + area.box().min().z()
-                + " — " + area.box().max().x() + " " + area.box().max().y() + " " + area.box().max().z() + "]";
+        return area.dimension() + " [" + area.box().min().x() + " "
+                + area.box().min().y() + " " + area.box().min().z() + " — "
+                + area.box().max().x() + " " + area.box().max().y() + " "
+                + area.box().max().z() + "]";
     }
 
     private static String until(UnprotectArea area) {

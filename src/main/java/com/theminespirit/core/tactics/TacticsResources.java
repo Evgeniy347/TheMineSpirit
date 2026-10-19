@@ -10,8 +10,7 @@ final class TacticsResources {
     private static final String ROOT = "/data/theminespirit/tactics/";
     private static final AtomicInteger READS = new AtomicInteger();
 
-    private TacticsResources() {
-    }
+    private TacticsResources() {}
 
     static int reads() {
         return READS.get();
@@ -26,7 +25,8 @@ final class TacticsResources {
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new UncheckedIOException("Ресурс тактики " + name + " не прочитан: проверьте права и кодировку UTF-8", e);
+            throw new UncheckedIOException(
+                    "Ресурс тактики " + name + " не прочитан: проверьте права и кодировку UTF-8", e);
         }
     }
 }

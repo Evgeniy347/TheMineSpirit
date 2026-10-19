@@ -20,7 +20,8 @@ public final class Hysteresis {
         if (now - memory.decidedAt() >= weights.holdTicks()) {
             return HoldStatus.BONUS;
         }
-        return memory.hpWindowRef() - hpFraction > weights.hpDropRelease() ? HoldStatus.RELEASED_HP_DROP
+        return memory.hpWindowRef() - hpFraction > weights.hpDropRelease()
+                ? HoldStatus.RELEASED_HP_DROP
                 : HoldStatus.HELD;
     }
 
@@ -29,9 +30,17 @@ public final class Hysteresis {
         boolean changed = memory.previous().map(option -> option != chosen).orElse(true)
                 || memory.previousSource() != decision.source();
         boolean windowOver = now - memory.hpWindowStart() >= weights.holdTicks();
-        return new TacticsMemory(Optional.of(chosen), decision.source(), changed ? now : memory.decidedAt(),
-                memory.state(), memory.stateSince(), memory.mode(), memory.orderedMode(), memory.anchor(),
-                memory.lastSeenTick(), windowOver ? hpFraction : memory.hpWindowRef(),
+        return new TacticsMemory(
+                Optional.of(chosen),
+                decision.source(),
+                changed ? now : memory.decidedAt(),
+                memory.state(),
+                memory.stateSince(),
+                memory.mode(),
+                memory.orderedMode(),
+                memory.anchor(),
+                memory.lastSeenTick(),
+                windowOver ? hpFraction : memory.hpWindowRef(),
                 windowOver ? now : memory.hpWindowStart());
     }
 }

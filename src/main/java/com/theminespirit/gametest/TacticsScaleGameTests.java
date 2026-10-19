@@ -20,11 +20,11 @@ public final class TacticsScaleGameTests {
     private static final int MAX_ENTITY_QUERIES = 50 * 200 / 10;
     private static final int MAX_STEPS = 50 * 200 / 10 + 50;
 
-    private TacticsScaleGameTests() {
-    }
+    private TacticsScaleGameTests() {}
 
     @GameTest(template = "arena", batch = "tactics_scale", timeoutTicks = 400)
-    public static void scale_FiftySpiritsSeeOneHuskForTwoHundredTicks_ReadsQueriesAndStepsStayWithinLimits(GameTestHelper helper) {
+    public static void scale_FiftySpiritsSeeOneHuskForTwoHundredTicks_ReadsQueriesAndStepsStayWithinLimits(
+            GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int row = 0; row < 7; row++) {
@@ -32,7 +32,8 @@ public final class TacticsScaleGameTests {
                 spirits.add(TacticsScene.spirit(helper, new BlockPos(column + 1, 1, row + 1)));
             }
         }
-        helper.assertTrue(spirits.size() == SPIRITS, "в тесте на масштаб " + SPIRITS + " духов, создано " + spirits.size());
+        helper.assertTrue(
+                spirits.size() == SPIRITS, "в тесте на масштаб " + SPIRITS + " духов, создано " + spirits.size());
         TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 9));
 
         helper.succeedWhen(() -> {
@@ -40,17 +41,28 @@ public final class TacticsScaleGameTests {
             int queries = 0;
             int steps = 0;
             for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(spirit.tickCount >= OBSERVED_TICKS, "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
-                helper.assertTrue(spirit.tactics().failures() == 0, "тактика не падала: " + spirit.tactics().lastFailure().orElse("нет"));
+                helper.assertTrue(
+                        spirit.tickCount >= OBSERVED_TICKS,
+                        "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
+                helper.assertTrue(
+                        spirit.tactics().failures() == 0,
+                        "тактика не падала: " + spirit.tactics().lastFailure().orElse("нет"));
                 reads += spirit.tactics().blockReads();
                 queries += spirit.tactics().entityQueries();
                 steps += spirit.tactics().stepCalls();
             }
-            helper.assertTrue(steps > 0 && reads > 0 && queries > 0,
-                    "тактика обязана работать, иначе предел ничего не доказывает: оценок " + steps + ", чтений " + reads);
-            helper.assertTrue(reads <= MAX_BLOCK_READS, "чтений блоков за " + OBSERVED_TICKS + " тиков не больше " + MAX_BLOCK_READS + ", было " + reads);
-            helper.assertTrue(queries <= MAX_ENTITY_QUERIES, "запросов сущностей не больше " + MAX_ENTITY_QUERIES + ", было " + queries);
-            helper.assertTrue(steps <= MAX_STEPS, "вызовов TacticsEngine.step не больше " + MAX_STEPS + ", было " + steps);
+            helper.assertTrue(
+                    steps > 0 && reads > 0 && queries > 0,
+                    "тактика обязана работать, иначе предел ничего не доказывает: оценок " + steps + ", чтений "
+                            + reads);
+            helper.assertTrue(
+                    reads <= MAX_BLOCK_READS,
+                    "чтений блоков за " + OBSERVED_TICKS + " тиков не больше " + MAX_BLOCK_READS + ", было " + reads);
+            helper.assertTrue(
+                    queries <= MAX_ENTITY_QUERIES,
+                    "запросов сущностей не больше " + MAX_ENTITY_QUERIES + ", было " + queries);
+            helper.assertTrue(
+                    steps <= MAX_STEPS, "вызовов TacticsEngine.step не больше " + MAX_STEPS + ", было " + steps);
             for (SpiritEntity spirit : spirits) {
                 spirit.discard();
             }

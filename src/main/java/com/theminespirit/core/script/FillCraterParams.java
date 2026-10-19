@@ -29,8 +29,8 @@ public sealed interface FillCraterParams {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         String value = ScriptArgs.requireString(params, "crater");
         if (value.isBlank()) {
-            throw new IllegalArgumentException("Параметр 'crater' пуст: укажите UUID воронки из /spirit craters "
-                    + "или позицию «x,y,z»");
+            throw new IllegalArgumentException(
+                    "Параметр 'crater' пуст: укажите UUID воронки из /spirit craters " + "или позицию «x,y,z»");
         }
         try {
             return new ById(UUID.fromString(value.trim()));
@@ -40,13 +40,15 @@ public sealed interface FillCraterParams {
     }
 
     private static FillCraterParams byPosition(String value) {
-        String[] parts = value.split(",");
+        String[] parts = value.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Параметр 'crater' = '" + value + "' не UUID и не позиция "
                     + "«x,y,z»: укажите id воронки или три целых координаты через запятую");
         }
         try {
-            return new ByPosition(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()),
+            return new ByPosition(
+                    Integer.parseInt(parts[0].trim()),
+                    Integer.parseInt(parts[1].trim()),
                     Integer.parseInt(parts[2].trim()));
         } catch (NumberFormatException invalid) {
             throw new IllegalArgumentException("Позиция воронки '" + value + "' содержит не целое число: "

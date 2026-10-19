@@ -26,14 +26,14 @@ class TransferPlannerProperties {
 
     @Provide
     Arbitrary<List<Stack>> slots() {
-        Arbitrary<String> items = Arbitraries.of("cobblestone", "dirt", "oak_planks", "iron_ingot", "bread",
-                "iron_pickaxe", "torch");
+        Arbitrary<String> items =
+                Arbitraries.of("cobblestone", "dirt", "oak_planks", "iron_ingot", "bread", "iron_pickaxe", "torch");
         Arbitrary<Stack> stack = Combinators.combine(
-                items,
-                Arbitraries.integers().between(0, 2),
-                Arbitraries.integers().between(1, 3))
-                .as((item, variant, count) -> new Stack(item, variant, Math.min(count, maxStackOf(item)),
-                        maxStackOf(item)));
+                        items,
+                        Arbitraries.integers().between(0, 2),
+                        Arbitraries.integers().between(1, 3))
+                .as((item, variant, count) ->
+                        new Stack(item, variant, Math.min(count, maxStackOf(item)), maxStackOf(item)));
         return stack.list().ofMaxSize(8);
     }
 
@@ -43,12 +43,15 @@ class TransferPlannerProperties {
     }
 
     private static int maxStackOf(String item) {
-        return item.equals("iron_pickaxe") ? 1 : 64;
+        return "iron_pickaxe".equals(item) ? 1 : 64;
     }
 
     @Property
-    void plan_Moves_PreserveItemsOnBothSides(@ForAll("slots") List<Stack> from, @ForAll("slots") List<Stack> to,
-            @ForAll("filters") IdFilter filter, @ForAll("limits") int maxCount) {
+    void plan_Moves_PreserveItemsOnBothSides(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
+            @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
         List<Stack> fromAfter = applyToSource(from, plan);
         List<Stack> toAfter = applyToTarget(to, plan, from);
@@ -57,7 +60,9 @@ class TransferPlannerProperties {
             for (int variant : variantsOf(from, to, item)) {
                 int before = countOf(from, item, variant) + countOf(to, item, variant);
                 int after = countOf(fromAfter, item, variant) + countOf(toAfter, item, variant);
-                assertEquals(before, after,
+                assertEquals(
+                        before,
+                        after,
                         "Перенос только перекладывает предметы: '" + item + "' варианта " + variant
                                 + " было " + before + " на обеих сторонах, стало " + after
                                 + ". План " + plan + " по источнику " + from + " и приёмнику " + to);
@@ -66,8 +71,11 @@ class TransferPlannerProperties {
     }
 
     @Property
-    void plan_Moves_KeepStacksWithinMaxStack(@ForAll("slots") List<Stack> from, @ForAll("slots") List<Stack> to,
-            @ForAll("filters") IdFilter filter, @ForAll("limits") int maxCount) {
+    void plan_Moves_KeepStacksWithinMaxStack(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
+            @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
         List<Stack> toAfter = applyToTarget(to, plan, from);
 
@@ -75,7 +83,8 @@ class TransferPlannerProperties {
             if (stack == null) {
                 continue;
             }
-            assertTrue(stack.count() <= stack.maxStack(),
+            assertTrue(
+                    stack.count() <= stack.maxStack(),
                     "Стопка " + stack + " в приёмнике не может быть больше максимума " + stack.maxStack()
                             + ": в игре такая стопка не влезет в слот, и предметы потеряются. План по "
                             + "источнику " + from + " и приёмнику " + to);
@@ -83,31 +92,40 @@ class TransferPlannerProperties {
     }
 
     @Property
-    void plan_Moved_NeverExceedsMaxCount(@ForAll("slots") List<Stack> from, @ForAll("slots") List<Stack> to,
-            @ForAll("filters") IdFilter filter, @ForAll("limits") int maxCount) {
+    void plan_Moved_NeverExceedsMaxCount(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
+            @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
 
-        assertTrue(plan.moved() <= maxCount,
+        assertTrue(
+                plan.moved() <= maxCount,
                 "Перенесено " + plan.moved() + " при лимите " + maxCount + ": лимит плана — приказ, "
                         + "перенос сверх него отдал бы в контейнер больше, чем просили. Источник " + from
                         + ", приёмник " + to);
     }
 
     @Property
-    void plan_MovesCount_NeverExceedsSlotsOfBothSides(@ForAll("slots") List<Stack> from,
-            @ForAll("slots") List<Stack> to, @ForAll("filters") IdFilter filter,
+    void plan_MovesCount_NeverExceedsSlotsOfBothSides(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
             @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
 
-        assertTrue(plan.moves().size() <= from.size() + to.size(),
+        assertTrue(
+                plan.moves().size() <= from.size() + to.size(),
                 "Ходов " + plan.moves().size() + " не больше слотов источника и приёмника (" + from.size()
                         + " + " + to.size() + "): за тик скрипт делает ограниченное число перемещений, "
                         + "и план длиннее этого предела не выполнится. План " + plan);
     }
 
     @Property
-    void plan_Leftover_EqualsMatchingItemsLeftInSource(@ForAll("slots") List<Stack> from,
-            @ForAll("slots") List<Stack> to, @ForAll("filters") IdFilter filter,
+    void plan_Leftover_EqualsMatchingItemsLeftInSource(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
             @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
         int matching = 0;
@@ -117,23 +135,29 @@ class TransferPlannerProperties {
             }
         }
 
-        assertEquals(matching - plan.moved(), plan.leftover(),
+        assertEquals(
+                matching - plan.moved(),
+                plan.leftover(),
                 "Остаток равен подходящим предметам источника минус перенесённое (" + matching + " - "
                         + plan.moved() + "): по нему скрипт сообщает «в инвентаре только a из b». "
                         + "Источник " + from + ", фильтр " + filter.patterns());
     }
 
     @Property
-    void plan_Moves_ReferenceSlotsInsideContainers(@ForAll("slots") List<Stack> from,
-            @ForAll("slots") List<Stack> to, @ForAll("filters") IdFilter filter,
+    void plan_Moves_ReferenceSlotsInsideContainers(
+            @ForAll("slots") List<Stack> from,
+            @ForAll("slots") List<Stack> to,
+            @ForAll("filters") IdFilter filter,
             @ForAll("limits") int maxCount) {
         TransferPlan plan = TransferPlanner.plan(from, to, filter, maxCount);
 
         for (Move move : plan.moves()) {
-            assertTrue(move.fromSlot() < from.size(),
+            assertTrue(
+                    move.fromSlot() < from.size(),
                     "Слот источника " + move.fromSlot() + " вне инвентаря из " + from.size()
                             + " слотов: перенос из несуществующего слота потерял бы предметы");
-            assertTrue(move.toSlot() < to.size(),
+            assertTrue(
+                    move.toSlot() < to.size(),
                     "Слот приёмника " + move.toSlot() + " вне контейнера из " + to.size()
                             + " слотов: перенос в несуществующий слот уничтожил бы предметы");
         }
@@ -155,8 +179,7 @@ class TransferPlannerProperties {
             Stack source = from.get(move.fromSlot());
             Stack target = result.get(move.toSlot());
             if (target == null) {
-                result.set(move.toSlot(),
-                        new Stack(source.item(), source.variant(), move.count(), source.maxStack()));
+                result.set(move.toSlot(), new Stack(source.item(), source.variant(), move.count(), source.maxStack()));
                 continue;
             }
             result.set(move.toSlot(), target.withCount(target.count() + move.count()));

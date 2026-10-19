@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.PriorityContext;
@@ -33,8 +33,7 @@ import net.minecraft.world.phys.Vec3;
 public final class HerdWatch {
     private static final int HERD_RADIUS = 32;
 
-    private HerdWatch() {
-    }
+    private HerdWatch() {}
 
     public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -74,13 +73,24 @@ public final class HerdWatch {
 
     private static void capture(BoardService service, Species species, Animal animal, long now) {
         String id = captureId(species, animal);
-        BlockCoord target = new BlockCoord(animal.blockPosition().getX(),
-                animal.blockPosition().getY(), animal.blockPosition().getZ());
+        BlockCoord target = new BlockCoord(
+                animal.blockPosition().getX(),
+                animal.blockPosition().getY(),
+                animal.blockPosition().getZ());
         TicketTarget point = TicketTarget.at(target).withSpecies(species);
         service.noteCapture(id, species, animal.getUUID(), point);
-        service.submit(new BoardTicket(id, BoardCase.CAPTURE_ANIMAL, Optional.empty(),
-                priority(BoardCase.CAPTURE_ANIMAL, service, species, false), now, 1,
-                "animal:" + id, List.of(), Map.of()), point);
+        service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.CAPTURE_ANIMAL,
+                        Optional.empty(),
+                        priority(BoardCase.CAPTURE_ANIMAL, service, species, false),
+                        now,
+                        1,
+                        "animal:" + id,
+                        List.of(),
+                        Map.of()),
+                point);
     }
 
     private static void breed(BoardService service, BlockCoord home, long now) {
@@ -89,17 +99,30 @@ public final class HerdWatch {
             boolean penBuilt = penBuilt(service, species);
             BreedingRules.Action action = BreedingRules.action(species, housed, penBuilt);
             if (action == BreedingRules.Action.BREED && !hasActiveCase(service, species, BoardCase.BREED_ANIMALS)) {
-                service.submit(new BoardTicket(species.name().toLowerCase(Locale.ROOT) + "_breed",
-                        BoardCase.BREED_ANIMALS, Optional.empty(),
-                        priority(BoardCase.BREED_ANIMALS, service, species, penBuilt), now, 1,
-                        causeOf(service, species), List.of(), BreedingRules.breedingGate(species)),
+                service.submit(
+                        new BoardTicket(
+                                species.name().toLowerCase(Locale.ROOT) + "_breed",
+                                BoardCase.BREED_ANIMALS,
+                                Optional.empty(),
+                                priority(BoardCase.BREED_ANIMALS, service, species, penBuilt),
+                                now,
+                                1,
+                                causeOf(service, species),
+                                List.of(),
+                                BreedingRules.breedingGate(species)),
                         TicketTarget.at(home).withSpecies(species));
-            } else if (action == BreedingRules.Action.CULL
-                    && !hasActiveCase(service, species, BoardCase.HERD_CULL)) {
-                service.submit(new BoardTicket(species.name().toLowerCase(Locale.ROOT) + "_cull",
-                        BoardCase.HERD_CULL, Optional.empty(),
-                        priority(BoardCase.HERD_CULL, service, species, penBuilt), now, 1,
-                        causeOf(service, species), List.of(), Map.of()),
+            } else if (action == BreedingRules.Action.CULL && !hasActiveCase(service, species, BoardCase.HERD_CULL)) {
+                service.submit(
+                        new BoardTicket(
+                                species.name().toLowerCase(Locale.ROOT) + "_cull",
+                                BoardCase.HERD_CULL,
+                                Optional.empty(),
+                                priority(BoardCase.HERD_CULL, service, species, penBuilt),
+                                now,
+                                1,
+                                causeOf(service, species),
+                                List.of(),
+                                Map.of()),
                         TicketTarget.at(home).withSpecies(species));
             }
         }
@@ -120,7 +143,8 @@ public final class HerdWatch {
     static boolean penBuilt(BoardService service, Species species) {
         String prefix = species.name().toLowerCase(Locale.ROOT);
         for (BoardTicket ticket : service.board().all()) {
-            if (ticket.boardCase() == BoardCase.BUILD_PEN && ticket.id().startsWith(prefix)
+            if (ticket.boardCase() == BoardCase.BUILD_PEN
+                    && ticket.id().startsWith(prefix)
                     && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
                 return true;
             }
@@ -159,8 +183,7 @@ public final class HerdWatch {
     private static boolean hasActiveCase(BoardService service, Species species, BoardCase boardCase) {
         String prefix = species.name().toLowerCase(Locale.ROOT);
         for (BoardTicket ticket : service.board().all()) {
-            if (ticket.boardCase() == boardCase && ticket.id().startsWith(prefix)
-                    && active(service, ticket.id())) {
+            if (ticket.boardCase() == boardCase && ticket.id().startsWith(prefix) && active(service, ticket.id())) {
                 return true;
             }
         }
@@ -168,8 +191,10 @@ public final class HerdWatch {
     }
 
     private static boolean active(BoardService service, String id) {
-        return service.board().statusOf(id)
-                .map(status -> status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return service.board()
+                .statusOf(id)
+                .map(status -> status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.ASSIGNED)
                 .orElse(false);
     }

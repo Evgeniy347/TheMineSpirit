@@ -15,9 +15,13 @@ class SectionCursorTests {
 
         List<SectionSlice> slices = cursor.next(10);
 
-        assertEquals(1, slices.size(),
+        assertEquals(
+                1,
+                slices.size(),
                 "Куб внутри одной секции 16×16×16 обязан резаться на один срез: лишние срезы удваивают чтение блоков");
-        assertEquals(box, slices.get(0).bounds(),
+        assertEquals(
+                box,
+                slices.get(0).bounds(),
                 "Срез единственной секции обязан совпадать с кубом: иначе часть куба не будет просмотрена");
         assertTrue(cursor.isDone(), "После выдачи единственного среза курсор обязан быть пуст");
     }
@@ -30,9 +34,13 @@ class SectionCursorTests {
         List<SectionSlice> slices = cursor.next(10);
 
         assertEquals(2, slices.size(), "Куб через границу секций по X обязан резаться на два среза");
-        assertEquals(new BlockBox(new BlockCoord(12, 0, 0), new BlockCoord(15, 3, 3)), slices.get(0).bounds(),
+        assertEquals(
+                new BlockBox(new BlockCoord(12, 0, 0), new BlockCoord(15, 3, 3)),
+                slices.get(0).bounds(),
                 "Первым идёт срез с центром: его границы обрезаются по границе секции x=15");
-        assertEquals(new BlockBox(new BlockCoord(16, 0, 0), new BlockCoord(19, 3, 3)), slices.get(1).bounds(),
+        assertEquals(
+                new BlockBox(new BlockCoord(16, 0, 0), new BlockCoord(19, 3, 3)),
+                slices.get(1).bounds(),
                 "Второй срез начинается ровно с x=16: щель или нахлёст дают пропуск или двойной подсчёт блоков");
     }
 
@@ -43,7 +51,9 @@ class SectionCursorTests {
 
         List<SectionSlice> slices = cursor.next(10);
 
-        assertEquals(List.of(-1, 0), slices.stream().map(SectionSlice::sectionX).toList(),
+        assertEquals(
+                List.of(-1, 0),
+                slices.stream().map(SectionSlice::sectionX).toList(),
                 "Блоки x=-2 и x=1 лежат в секциях -1 и 0: деление к нулю вместо floor склеило бы их в одну секцию");
     }
 
@@ -54,11 +64,17 @@ class SectionCursorTests {
 
         List<SectionSlice> slices = cursor.next(10);
 
-        assertEquals(List.of(0, 0, 1, 1), slices.stream().map(SectionSlice::sectionX).toList(),
+        assertEquals(
+                List.of(0, 0, 1, 1),
+                slices.stream().map(SectionSlice::sectionX).toList(),
                 "Центр у угла четырёх секций: расстояния 0, 1, 1, 2, ничья двух средних решается по x");
-        assertEquals(List.of(0, 1, 0, 1), slices.stream().map(SectionSlice::sectionZ).toList(),
+        assertEquals(
+                List.of(0, 1, 0, 1),
+                slices.stream().map(SectionSlice::sectionZ).toList(),
                 "При равном x ничья решается по z: порядок обязан быть стабильным между запусками");
-        assertEquals(0L, slices.get(0).distanceSquared(new BlockCoord(15, 0, 15)),
+        assertEquals(
+                0L,
+                slices.get(0).distanceSquared(new BlockCoord(15, 0, 15)),
                 "Срез, содержащий центр, обязан идти первым с расстоянием 0");
     }
 
@@ -79,17 +95,21 @@ class SectionCursorTests {
         SectionCursor cursor = SectionCursor.of(box, new BlockCoord(0, 0, 0));
         cursor.next(1);
 
-        assertEquals(2, cursor.next(Integer.MAX_VALUE).size(),
+        assertEquals(
+                2,
+                cursor.next(Integer.MAX_VALUE).size(),
                 "Порция Integer.MAX_VALUE после частичного чтения обязана отдать остаток: переполнение int "
                         + "сломало бы WorldScanner.observe, который шагает до конца одной порцией");
     }
 
     @Test
     void next_ZeroPortionSize_IsRejected() {
-        SectionCursor cursor = SectionCursor.of(new BlockBox(new BlockCoord(0, 0, 0), new BlockCoord(1, 1, 1)),
-                new BlockCoord(0, 0, 0));
+        SectionCursor cursor = SectionCursor.of(
+                new BlockBox(new BlockCoord(0, 0, 0), new BlockCoord(1, 1, 1)), new BlockCoord(0, 0, 0));
 
-        assertThrows(IllegalArgumentException.class, () -> cursor.next(0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> cursor.next(0),
                 "Порция в 0 срезов обязана отвергаться: цикл скана с ней не закончился бы никогда");
     }
 
@@ -97,13 +117,15 @@ class SectionCursorTests {
     void empty_Cursor_IsDoneAndReturnsNoSlices() {
         SectionCursor cursor = SectionCursor.empty();
 
-        assertTrue(cursor.isDone() && cursor.next(4).isEmpty() && cursor.total() == 0,
+        assertTrue(
+                cursor.isDone() && cursor.next(4).isEmpty() && cursor.total() == 0,
                 "Пустой курсор нужен для центра вне высоты мира: скан обязан закончиться сразу, а не упасть");
     }
 
     @Test
     void blockBox_MinBeyondMax_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> new BlockBox(new BlockCoord(5, 0, 0), new BlockCoord(4, 0, 0)),
                 "Куб с min правее max обязан отвергаться: его объём отрицателен и скан просмотрел бы ничего");
     }
@@ -112,9 +134,12 @@ class SectionCursorTests {
     void clampY_RangeOutsideCube_ReturnsEmpty() {
         BlockBox box = new BlockBox(new BlockCoord(0, 100, 0), new BlockCoord(3, 110, 3));
 
-        assertEquals(true, box.clampY(-64, 50).isEmpty(),
+        assertEquals(
+                true,
+                box.clampY(-64, 50).isEmpty(),
                 "Куб целиком выше высоты мира обязан давать пустой результат: иначе курсор получит куб с min > max");
-        assertEquals(new BlockBox(new BlockCoord(0, 100, 0), new BlockCoord(3, 105, 3)),
+        assertEquals(
+                new BlockBox(new BlockCoord(0, 100, 0), new BlockCoord(3, 105, 3)),
                 box.clampY(-64, 105).orElseThrow(),
                 "Куб, выступающий над высотой мира, обязан обрезаться по ней");
     }

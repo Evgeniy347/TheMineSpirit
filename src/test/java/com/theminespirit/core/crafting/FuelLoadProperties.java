@@ -40,18 +40,26 @@ class FuelLoadProperties {
             plannedFuel = gathered.get().fuel();
             inventory.merge(plannedFuel, gathered.get().count(), Integer::sum);
         } else {
-            plannedFuel = fuels.stream().filter(fuel -> remaining.get(fuel) < inventory.get(fuel)).findFirst()
+            plannedFuel = fuels.stream()
+                    .filter(fuel -> remaining.get(fuel) < inventory.get(fuel))
+                    .findFirst()
                     .orElseThrow();
         }
 
         List<Portion> load = FuelLoad.choose(count, COOK, inventory, KNOWLEDGE);
 
-        assertEquals(1, load.size(),
+        assertEquals(
+                1,
+                load.size(),
                 "Когда резолвер выбрал одно топливо, скрипт обязан жечь одно и то же топливо. Порции: " + load);
-        assertEquals(plannedFuel, load.get(0).fuel(),
+        assertEquals(
+                plannedFuel,
+                load.get(0).fuel(),
                 "Скрипт smelt обязан жечь топливо, которое выбрал резолвер: иначе добытое под план топливо "
                         + "остаётся лежать, а горит другое. Запас: " + stock + ", предметов: " + count);
-        assertEquals(FuelTable.fuelNeeded(count, FuelTable.burnTicks(plannedFuel)), load.get(0).count(),
+        assertEquals(
+                FuelTable.fuelNeeded(count, FuelTable.burnTicks(plannedFuel)),
+                load.get(0).count(),
                 "Количество топлива обязано быть ровно расчётным: ceil(count × 200 / горение)");
     }
 
@@ -66,7 +74,8 @@ class FuelLoadProperties {
         }
 
         for (Portion portion : FuelLoad.choose(count, COOK, inventory, KNOWLEDGE)) {
-            assertTrue(portion.count() <= inventory.get(portion.fuel()),
+            assertTrue(
+                    portion.count() <= inventory.get(portion.fuel()),
                     "Порция " + portion + " больше запаса " + inventory.get(portion.fuel())
                             + ": дух не может положить в печь то, чего нет. Запас: " + stock);
         }

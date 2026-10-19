@@ -5,17 +5,16 @@ import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalOutcome;
 
 public final class RetreatCommitment {
-    private RetreatCommitment() {
-    }
+    private RetreatCommitment() {}
 
-    public static RetreatTracker next(RetreatTracker current, TacticalOutcome outcome, long nowTick,
-            TacticsAdapterSettings settings, boolean building) {
+    public static RetreatTracker next(
+            RetreatTracker current, TacticalOutcome outcome, long nowTick, TacticsAdapterSettings settings) {
         if (current == null || outcome == null || settings == null) {
             throw new IllegalArgumentException("RetreatCommitment.next: current/outcome/settings = null; "
                     + "обязательство отхода обновляют по решению ядра и настройкам адаптера");
         }
         if (outcome.decision() == TacticalOption.FIGHT) {
-            return building ? current : RetreatTracker.IDLE;
+            return RetreatTracker.IDLE;
         }
         if (replacesFallback(current, outcome)) {
             return new RetreatTracker(outcome.retreatMethod(), nowTick);
@@ -24,7 +23,9 @@ public final class RetreatCommitment {
     }
 
     private static boolean replacesFallback(RetreatTracker current, TacticalOutcome outcome) {
-        return current.method() == RetreatMethod.AWAY && outcome.decision() == TacticalOption.RETREAT
-                && outcome.retreatMethod() != RetreatMethod.NONE && outcome.retreatMethod() != RetreatMethod.AWAY;
+        return current.method() == RetreatMethod.AWAY
+                && outcome.decision() == TacticalOption.RETREAT
+                && outcome.retreatMethod() != RetreatMethod.NONE
+                && outcome.retreatMethod() != RetreatMethod.AWAY;
     }
 }

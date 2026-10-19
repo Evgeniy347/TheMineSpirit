@@ -9,8 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RecipeCurator {
-    private RecipeCurator() {
-    }
+    private RecipeCurator() {}
 
     public static List<RecipeSpec> curate(List<RecipeSpec> recipes) {
         Objects.requireNonNull(recipes, "recipes не может быть null: куратору нечего отбирать");
@@ -18,7 +17,7 @@ public final class RecipeCurator {
         List<RecipeSpec> kept = new ArrayList<>(recipes.size());
         for (RecipeSpec recipe : recipes) {
             if (recipe.kind() == RecipeKind.SMELTING
-                    || !smelted.contains(recipe.outputItem()) && !consumesOwnResult(recipe)) {
+                    || (!smelted.contains(recipe.outputItem()) && !consumesOwnResult(recipe))) {
                 kept.add(recipe);
             }
         }
@@ -59,7 +58,8 @@ public final class RecipeCurator {
         Map<String, List<RecipeSpec>> byOutput = new HashMap<>();
         for (RecipeSpec recipe : recipes) {
             if (recipe.kind() != RecipeKind.SMELTING) {
-                byOutput.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>()).add(recipe);
+                byOutput.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>())
+                        .add(recipe);
             }
         }
         return byOutput;
@@ -72,7 +72,7 @@ public final class RecipeCurator {
         for (IngredientSpec ingredient : recipe.ingredients()) {
             for (String source : ingredient.alternatives()) {
                 for (RecipeSpec candidate : craftsByOutput.getOrDefault(source, List.of())) {
-                    if (candidate != recipe && consumes(candidate, recipe.outputItem())) {
+                    if (!candidate.equals(recipe) && consumes(candidate, recipe.outputItem())) {
                         return true;
                     }
                 }

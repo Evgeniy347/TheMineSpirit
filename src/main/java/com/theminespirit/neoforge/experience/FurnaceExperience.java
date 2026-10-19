@@ -16,8 +16,7 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
  * использованных рецептов и возвращается числом вызывающему, а карта очищается, как в ванили.
  */
 public final class FurnaceExperience {
-    private FurnaceExperience() {
-    }
+    private FurnaceExperience() {}
 
     public static int withdraw(AbstractFurnaceBlockEntity furnace, Level level) {
         if (furnace.recipesUsed.isEmpty()) {

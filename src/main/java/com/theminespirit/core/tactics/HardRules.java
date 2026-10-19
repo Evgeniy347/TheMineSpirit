@@ -48,7 +48,8 @@ public final class HardRules {
             }
         }
         for (HardRule rule : rules) {
-            if (rule.noRouteOption().isPresent() && !excluded.contains(rule.noRouteOption().get())) {
+            if (rule.noRouteOption().isPresent()
+                    && !excluded.contains(rule.noRouteOption().get())) {
                 counter.check();
                 if (rule.when().matches(facts)) {
                     return new NoRouteVerdict(Optional.of(rule), excluded, excluding);

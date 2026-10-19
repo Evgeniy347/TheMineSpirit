@@ -27,38 +27,42 @@ class TaskRunnerObserverTests {
 
     @Test
     void observesWhileTacticsOwns_ScriptFlag_PropagatesToRunner() {
-        TaskRunner observing = TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(),
-                TestScripts.condition(CHECK, true));
-        TaskRunner moving = TaskRunner.start(new ScriptCall(MOVE, Map.of()), registry(),
-                TestScripts.condition(CHECK, true));
+        TaskRunner observing =
+                TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(), TestScripts.condition(CHECK, true));
+        TaskRunner moving =
+                TaskRunner.start(new ScriptCall(MOVE, Map.of()), registry(), TestScripts.condition(CHECK, true));
 
         observing.tick();
         moving.tick();
 
-        assertTrue(observing.observesWhileTacticsOwns(),
+        assertTrue(
+                observing.observesWhileTacticsOwns(),
                 "скрипт-наблюдатель обязан сообщать это через раннер: иначе тактика заморозит его и он не увидит мир");
-        assertFalse(moving.observesWhileTacticsOwns(),
+        assertFalse(
+                moving.observesWhileTacticsOwns(),
                 "обычный скрипт не наблюдатель: под управлением тактики он обязан оставаться приостановленным");
     }
 
     @Test
     void observesWhileTacticsOwns_BeforeFirstTick_ReportsFromPlannedScript() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(),
-                TestScripts.condition(CHECK, true));
+        TaskRunner runner =
+                TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(), TestScripts.condition(CHECK, true));
 
-        assertTrue(runner.observesWhileTacticsOwns(),
+        assertTrue(
+                runner.observesWhileTacticsOwns(),
                 "флаг обязан быть известен до первого тика: иначе при уже взятой тактикой инициативе скрипт не начнёт наблюдаться");
     }
 
     @Test
     void observesWhileTacticsOwns_AfterTerminalStatus_ReportsFalse() {
-        TaskRunner runner = TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(),
-                TestScripts.condition(CHECK, true));
+        TaskRunner runner =
+                TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry(), TestScripts.condition(CHECK, true));
         runner.tick();
         runner.tick();
         runner.tick();
 
-        assertFalse(runner.observesWhileTacticsOwns(),
+        assertFalse(
+                runner.observesWhileTacticsOwns(),
                 "завершённая задача не наблюдает: флаг обязан гаснуть вместе с задачей");
     }
 
@@ -74,48 +78,55 @@ class TaskRunnerObserverTests {
                 }
             };
         }));
-        TaskRunner runner = TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry,
-                TestScripts.condition(CHECK, true));
+        TaskRunner runner =
+                TaskRunner.start(new ScriptCall(WATCH, Map.of()), registry, TestScripts.condition(CHECK, true));
 
         runner.observesWhileTacticsOwns();
 
-        assertEquals(0, creations.get(),
+        assertEquals(
+                0,
+                creations.get(),
                 "флаг обязан читаться без конструирования скрипта: фабрика вызвана " + creations.get()
                         + " раз — конструирование имеет побочные эффекты и может упасть на невалидных параметрах");
     }
 
     @Test
     void observesWhileTacticsOwns_Sequence_ReportsCurrentStep() {
-        TaskNode plan = new SequenceNode(List.of(
-                new ScriptCall(WATCH, Map.of()), new ScriptCall(MOVE, Map.of())));
+        TaskNode plan = new SequenceNode(List.of(new ScriptCall(WATCH, Map.of()), new ScriptCall(MOVE, Map.of())));
         TaskRunner runner = TaskRunner.start(plan, registry(), TestScripts.condition(CHECK, true));
 
         runner.tick();
-        assertTrue(runner.observesWhileTacticsOwns(),
+        assertTrue(
+                runner.observesWhileTacticsOwns(),
                 "внутри последовательности флаг обязан отражать текущий шаг-наблюдатель");
 
         runner.tick();
         runner.tick();
         runner.tick();
-        assertFalse(runner.observesWhileTacticsOwns(),
-                "после перехода к шагу без наблюдения флаг обязан погаснуть");
+        assertFalse(runner.observesWhileTacticsOwns(), "после перехода к шагу без наблюдения флаг обязан погаснуть");
     }
 
     @Test
     void observesWhileTacticsOwns_Parallel_RequiresEveryRunningStepToObserve() {
-        TaskRunner allWatching = TaskRunner.start(new ParallelNode(ParallelMode.ALL,
-                List.of(new ScriptCall(WATCH, Map.of()), new ScriptCall(WATCH, Map.of()))),
-                registry(), TestScripts.condition(CHECK, true));
-        TaskRunner mixed = TaskRunner.start(new ParallelNode(ParallelMode.ALL,
-                List.of(new ScriptCall(WATCH, Map.of()), new ScriptCall(MOVE, Map.of()))),
-                registry(), TestScripts.condition(CHECK, true));
+        TaskRunner allWatching = TaskRunner.start(
+                new ParallelNode(
+                        ParallelMode.ALL, List.of(new ScriptCall(WATCH, Map.of()), new ScriptCall(WATCH, Map.of()))),
+                registry(),
+                TestScripts.condition(CHECK, true));
+        TaskRunner mixed = TaskRunner.start(
+                new ParallelNode(
+                        ParallelMode.ALL, List.of(new ScriptCall(WATCH, Map.of()), new ScriptCall(MOVE, Map.of()))),
+                registry(),
+                TestScripts.condition(CHECK, true));
 
         allWatching.tick();
         mixed.tick();
 
-        assertTrue(allWatching.observesWhileTacticsOwns(),
+        assertTrue(
+                allWatching.observesWhileTacticsOwns(),
                 "параллель из наблюдателей обязана наблюдаться: иначе ветки заморозятся под тактикой");
-        assertFalse(mixed.observesWhileTacticsOwns(),
+        assertFalse(
+                mixed.observesWhileTacticsOwns(),
                 "если хоть одна ветка параллели не наблюдатель, вся параллель обязана считаться управляемой");
     }
 }

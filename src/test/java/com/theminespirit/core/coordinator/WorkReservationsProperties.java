@@ -27,17 +27,13 @@ class WorkReservationsProperties {
     private static final long NOW = 100;
     private static final long LEASE = 50;
 
-    private sealed interface Op {
-    }
+    private sealed interface Op {}
 
-    private record Reserve(WorkTarget target, UUID spirit) implements Op {
-    }
+    private record Reserve(WorkTarget target, UUID spirit) implements Op {}
 
-    private record Release(WorkTarget target, UUID spirit) implements Op {
-    }
+    private record Release(WorkTarget target, UUID spirit) implements Op {}
 
-    private record ReleaseAll(UUID spirit) implements Op {
-    }
+    private record ReleaseAll(UUID spirit) implements Op {}
 
     @Provide
     Arbitrary<List<Op>> opLists() {
@@ -65,7 +61,9 @@ class WorkReservationsProperties {
                                 ? WorkReservations.Outcome.TAKEN_BY_SELF
                                 : WorkReservations.Outcome.TAKEN_BY_OTHER)
                         : WorkReservations.Outcome.GRANTED;
-                assertEquals(expected, reservations.reserve(reserve.target(), reserve.spirit(), NOW, LEASE),
+                assertEquals(
+                        expected,
+                        reservations.reserve(reserve.target(), reserve.spirit(), NOW, LEASE),
                         "Исхода брони обязан совпасть с моделью владения: иначе два духа оказались бы на одной цели "
                                 + "или бронь потеряла владельца");
                 if (expected == WorkReservations.Outcome.GRANTED) {
@@ -73,7 +71,9 @@ class WorkReservationsProperties {
                 }
             } else if (op instanceof Release release) {
                 boolean expected = release.spirit().equals(model.get(release.target()));
-                assertEquals(expected, reservations.release(release.target(), release.spirit()),
+                assertEquals(
+                        expected,
+                        reservations.release(release.target(), release.spirit()),
                         "Снятие брони обязано совпасть с моделью: иначе цель освободилась бы без владельца "
                                 + "или осталась занята после снятия");
                 if (expected) {
@@ -81,15 +81,21 @@ class WorkReservationsProperties {
                 }
             } else {
                 ReleaseAll releaseAll = (ReleaseAll) op;
-                long expected = model.values().stream().filter(releaseAll.spirit()::equals).count();
-                assertEquals((int) expected, reservations.releaseAll(releaseAll.spirit()),
+                long expected = model.values().stream()
+                        .filter(releaseAll.spirit()::equals)
+                        .count();
+                assertEquals(
+                        (int) expected,
+                        reservations.releaseAll(releaseAll.spirit()),
                         "Число снятых броней обязано совпасть с моделью: иначе у духа осталась бы бронь или снялась "
                                 + "чужая");
                 model.values().removeIf(releaseAll.spirit()::equals);
             }
         }
         for (WorkTarget target : TARGETS) {
-            assertEquals(Optional.ofNullable(model.get(target)), reservations.owner(target),
+            assertEquals(
+                    Optional.ofNullable(model.get(target)),
+                    reservations.owner(target),
                     "Владелец цели обязан совпасть с моделью после всей последовательности: иначе два духа владеют "
                             + "одной целью или бронь потерялась");
         }
@@ -104,7 +110,8 @@ class WorkReservationsProperties {
         UUID chosen = SPIRITS.get(0);
         reservations.releaseAll(chosen);
         for (WorkTarget target : TARGETS) {
-            assertEquals(Optional.ofNullable(model.get(target)).filter(owner -> !owner.equals(chosen)),
+            assertEquals(
+                    Optional.ofNullable(model.get(target)).filter(owner -> !owner.equals(chosen)),
                     reservations.owner(target),
                     "После снятия все брони духа сняты, а чужие владения целы: иначе выгрузка одного духа "
                             + "освобождала бы цели других или оставляла свои");
@@ -112,12 +119,17 @@ class WorkReservationsProperties {
     }
 
     @Property
-    void expire_AnyDeadline_KeepsThenRemoves(@ForAll("targets") WorkTarget target,
-            @ForAll("spirits") UUID spirit, @ForAll("nows") long now, @ForAll("leases") long lease) {
+    void expire_AnyDeadline_KeepsThenRemoves(
+            @ForAll("targets") WorkTarget target,
+            @ForAll("spirits") UUID spirit,
+            @ForAll("nows") long now,
+            @ForAll("leases") long lease) {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(target, spirit, now, lease);
 
-        assertEquals(0, reservations.expire(now + lease - 1),
+        assertEquals(
+                0,
+                reservations.expire(now + lease - 1),
                 "Бронь не снимается раньше дедлайна: иначе цель перераспределялась бы под руками");
         assertEquals(Optional.of(spirit), reservations.owner(target), "До дедлайна цель остаётся под бронью");
         assertEquals(1, reservations.expire(now + lease), "На дедлайне бронь снимается");

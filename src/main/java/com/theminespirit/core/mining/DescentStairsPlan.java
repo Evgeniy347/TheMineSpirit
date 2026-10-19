@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record DescentStairsPlan(
         BlockCoord entry,
@@ -77,12 +78,16 @@ public record DescentStairsPlan(
         for (DescentStep base : level1.steps()) {
             List<BlockCoord> stairCells = new ArrayList<>(stairWidth);
             for (int lane : stairLanes) {
-                stairCells.add(new BlockCoord(base.stand().x() + sideX * lane, base.floor() + 1,
+                stairCells.add(new BlockCoord(
+                        base.stand().x() + sideX * lane,
+                        base.floor() + 1,
                         base.stand().z() + sideZ * lane));
             }
             List<BlockCoord> railCells = new ArrayList<>(railCount);
             for (int lane : railLanes) {
-                railCells.add(new BlockCoord(base.stand().x() + sideX * lane, base.floor() + 1,
+                railCells.add(new BlockCoord(
+                        base.stand().x() + sideX * lane,
+                        base.floor() + 1,
                         base.stand().z() + sideZ * lane));
             }
             String danger = stairsDangerAt(view, base, stairCells, railCells);
@@ -96,12 +101,18 @@ public record DescentStairsPlan(
             dangerReason = level1.dangerReason();
         }
         DescentStop stop = dangerReason == null ? DescentStop.TARGET_Y : DescentStop.DANGER;
-        return new DescentStairsPlan(level1.entry(), direction, widenWidth, stairWidth, steps, stop,
+        return new DescentStairsPlan(
+                level1.entry(),
+                direction,
+                widenWidth,
+                stairWidth,
+                steps,
+                stop,
                 dangerReason == null ? "" : dangerReason);
     }
 
-    private static String stairsDangerAt(SafetyView view, DescentStep base, List<BlockCoord> stairCells,
-            List<BlockCoord> railCells) {
+    private static @Nullable String stairsDangerAt(
+            SafetyView view, DescentStep base, List<BlockCoord> stairCells, List<BlockCoord> railCells) {
         for (BlockCoord stair : stairCells) {
             BlockCoord floor = new BlockCoord(stair.x(), base.floor(), stair.z());
             String reason = DescentDanger.solidFloor(view, floor, "пол", base.index());

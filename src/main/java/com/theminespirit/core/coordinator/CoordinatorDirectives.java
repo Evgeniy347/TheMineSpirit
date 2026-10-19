@@ -10,8 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class CoordinatorDirectives {
-    private CoordinatorDirectives() {
-    }
+    private CoordinatorDirectives() {}
 
     public static Map<UUID, CombatDirective> of(CoordinatorPlan plan) {
         if (plan == null) {
@@ -31,12 +30,15 @@ public final class CoordinatorDirectives {
     }
 
     private static CombatDirective defense(DefenseAssignment assignment) {
-        return new CombatDirective(CombatMode.GUARD_AREA, Optional.empty(), Optional.of(RetreatMethod.HOME),
+        return new CombatDirective(
+                CombatMode.GUARD_AREA,
+                Optional.empty(),
+                Optional.of(RetreatMethod.HOME),
                 Optional.of(assignment.post()));
     }
 
     private static CombatDirective assist(AssistOrder order) {
-        return CombatDirective.defend(
-                new TargetSelector.Target(TargetSelector.Kind.SPIRIT, Optional.of(order.ward().toString())));
+        return CombatDirective.defend(new TargetSelector.Target(
+                TargetSelector.Kind.SPIRIT, Optional.of(order.ward().toString())));
     }
 }

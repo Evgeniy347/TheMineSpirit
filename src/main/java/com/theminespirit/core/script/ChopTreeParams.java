@@ -18,7 +18,8 @@ public record ChopTreeParams(List<TreeSpecies> species, int count, int radius, b
         }
         if (radius < CatalogLimits.CHOP_RADIUS_MIN || radius > CatalogLimits.CHOP_RADIUS_MAX) {
             throw new IllegalArgumentException("radius=" + radius + " вне диапазона [" + CatalogLimits.CHOP_RADIUS_MIN
-                    + ", " + CatalogLimits.CHOP_RADIUS_MAX + "]: радиус поиска деревьев должен лежать в этом промежутке");
+                    + ", " + CatalogLimits.CHOP_RADIUS_MAX
+                    + "]: радиус поиска деревьев должен лежать в этом промежутке");
         }
     }
 

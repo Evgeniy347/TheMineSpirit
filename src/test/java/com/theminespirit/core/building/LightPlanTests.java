@@ -21,7 +21,9 @@ class LightPlanTests {
 
         List<BlockCoord> grid = LightPlan.grid(0, 0, 6, cells);
 
-        assertEquals(9, grid.size(),
+        assertEquals(
+                9,
+                grid.size(),
                 "Площадь 13×13 при шаге сетки " + LightPlan.GRID_STEP + " даёт 3×3 узла: сетка не нашла часть узлов");
     }
 
@@ -31,11 +33,17 @@ class LightPlanTests {
 
         LightPlan.Plan plan = LightPlan.plan(0, 0, 4, cells);
 
-        assertEquals(List.of(new BlockCoord(0, Y, 0)), plan.torches(),
+        assertEquals(
+                List.of(new BlockCoord(0, Y, 0)),
+                plan.torches(),
                 "Квадрат 9×9 целиком лежит в досягаемости одного факела в центре: лишние факелы — перерасход");
-        assertEquals(0, plan.darkRemaining(),
+        assertEquals(
+                0,
+                plan.darkRemaining(),
                 "После плана тёмных клеток быть не должно: мобы спавнятся при блочном свете 0");
-        assertEquals(81, plan.darkTotal(),
+        assertEquals(
+                81,
+                plan.darkTotal(),
                 "Тёмными были все 81 клетка площадки: счёт тёмных врёт — план не защищает территорию");
     }
 
@@ -45,10 +53,10 @@ class LightPlanTests {
 
         LightPlan.Plan plan = LightPlan.plan(0, 0, 4, cells);
 
-        assertTrue(plan.torches().isEmpty(),
+        assertTrue(
+                plan.torches().isEmpty(),
                 "Светлая площадка не требует факелов: факел на освещённой клетке — трата материала");
-        assertEquals(0, plan.darkTotal(),
-                "Ни одна клетка не темнее порога спавна: счёт тёмных обязан быть нулём");
+        assertEquals(0, plan.darkTotal(), "Ни одна клетка не темнее порога спавна: счёт тёмных обязан быть нулём");
     }
 
     @Test
@@ -58,10 +66,10 @@ class LightPlanTests {
 
         List<BlockCoord> grid = LightPlan.grid(0, 0, 6, cells);
 
-        assertFalse(grid.contains(new BlockCoord(0, Y, 0)),
+        assertFalse(
+                grid.contains(new BlockCoord(0, Y, 0)),
                 "Запрещённая клетка не может стать факелом: иначе дух ставит блок на чужое или в воду");
-        assertEquals(9, grid.size(),
-                "Ближайшая свободная клетка заменяет запрещённый узел: сетка не теряет узел");
+        assertEquals(9, grid.size(), "Ближайшая свободная клетка заменяет запрещённый узел: сетка не теряет узел");
     }
 
     @Test
@@ -77,12 +85,16 @@ class LightPlanTests {
         LightPlan.Plan plan = LightPlan.plan(0, 0, 14, cells);
 
         for (BlockCoord torch : plan.torches()) {
-            assertTrue(placeable.contains(torch),
+            assertTrue(
+                    placeable.contains(torch),
                     "Факел " + torch + " стоит на запрещённой клетке: чужую постройку, воду и листья не трогаем");
         }
-        assertEquals(List.of(new BlockCoord(0, Y, 0)), plan.torches(),
+        assertEquals(
+                List.of(new BlockCoord(0, Y, 0)),
+                plan.torches(),
                 "Единственная разрешённая клетка — центр: план ставит факел только там");
-        assertTrue(plan.darkRemaining() > 0,
+        assertTrue(
+                plan.darkRemaining() > 0,
                 "Дальние тёмные клетки вне досягаемости центрального факела остаются тёмными: "
                         + "план не выдумывает факелы там, где ставить негде");
     }
@@ -91,7 +103,9 @@ class LightPlanTests {
     void plan_SameInput_ReturnsSamePlan() {
         List<LightCell> cells = openArea(6, 0);
 
-        assertEquals(LightPlan.plan(0, 0, 6, cells), LightPlan.plan(0, 0, 6, cells),
+        assertEquals(
+                LightPlan.plan(0, 0, 6, cells),
+                LightPlan.plan(0, 0, 6, cells),
                 "Тот же вход даёт тот же план: иначе исполнитель и бронь расходятся");
     }
 
@@ -99,7 +113,9 @@ class LightPlanTests {
     void plan_ZeroRadius_Throws() {
         List<LightCell> cells = List.of();
 
-        assertThrows(IllegalArgumentException.class, () -> LightPlan.plan(0, 0, 0, cells),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> LightPlan.plan(0, 0, 0, cells),
                 "Нулевой радиус обязан падать: освещать нечего");
     }
 

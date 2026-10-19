@@ -31,16 +31,30 @@ final class SetCampScript implements ScriptInstance {
         int x = params.x().orElse(feet.getX());
         int y = params.y().orElse(feet.getY());
         int z = params.z().orElse(feet.getZ());
-        published = new Camp(new Point(x + 0.5, y, z + 0.5), params.radius(), 0, spirit.level().getGameTime());
+        published = new Camp(
+                new Point(x + 0.5, y, z + 0.5),
+                params.radius(),
+                0,
+                spirit.level().getGameTime());
         spirit.setCamp(published);
         return ScriptStatus.SUCCEEDED;
     }
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
-                : Optional.of(new ScriptResult.Data(Map.of("camp", true, "x", published.center().x(),
-                        "y", published.center().y(), "z", published.center().z(), "radius", published.radius())));
+        return published == null
+                ? Optional.empty()
+                : Optional.of(new ScriptResult.Data(Map.of(
+                        "camp",
+                        true,
+                        "x",
+                        published.center().x(),
+                        "y",
+                        published.center().y(),
+                        "z",
+                        published.center().z(),
+                        "radius",
+                        published.radius())));
     }
 
     @Override

@@ -2,8 +2,8 @@ package com.theminespirit.gametest;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.io.IOException;
@@ -54,8 +54,7 @@ public final class HotReloadGameTests {
             }
             """;
 
-    private HotReloadGameTests() {
-    }
+    private HotReloadGameTests() {}
 
     @GameTest(template = "arena", batch = "hotreload_apply", timeoutTicks = 300)
     public static void tables_DatapackOverridesArmor_SpiritWearsByNewTable(GameTestHelper helper) {
@@ -66,17 +65,18 @@ public final class HotReloadGameTests {
         wornIron.setDamageValue(wornIron.getMaxDamage() / 2);
         spirit.setItemSlot(EquipmentSlot.CHEST, wornIron);
         spirit.getInventory().setItem(0, new ItemStack(Items.LEATHER_CHESTPLATE));
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-        });
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {});
         try {
             reloadFromDatapack(helper, OVERRIDE);
             helper.succeedWhen(() -> {
                 scene.assertStarted();
-                helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == 1,
+                helper.assertTrue(
+                        DataTables.INSTANCE.armor().current().checkIntervalTicks() == 1,
                         "после перезагрузки таблица брони обязана прийти из датапака мира (check_interval_ticks = 1), "
                                 + "а не из мода (40); фактически "
                                 + DataTables.INSTANCE.armor().current().checkIntervalTicks());
-                helper.assertTrue(spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.LEATHER_CHESTPLATE),
+                helper.assertTrue(
+                        spirit.getItemBySlot(EquipmentSlot.CHEST).is(Items.LEATHER_CHESTPLATE),
                         "по новой таблице потёртая железная кираса считается сломанной и дух обязан надеть кожаную; "
                                 + "в слоте груди " + spirit.getItemBySlot(EquipmentSlot.CHEST));
                 GameTestFixtures.finish(helper);
@@ -92,15 +92,19 @@ public final class HotReloadGameTests {
         int before = DataTables.INSTANCE.armor().current().checkIntervalTicks();
         try {
             reloadFromDatapack(helper, "{ это не json ");
-            boolean reported = DataReload.lastReload().stream()
-                    .anyMatch(report -> report.id().equals("armor") && report.failed());
-            helper.assertTrue(reported,
+            boolean reported =
+                    DataReload.lastReload().stream().anyMatch(report -> "armor".equals(report.id()) && report.failed());
+            helper.assertTrue(
+                    reported,
                     "битый armor_table.json обязан попасть в отчёт перезагрузки ошибкой: иначе ошибка не видна");
-            helper.assertTrue(DataTables.INSTANCE.armor().status().failed(),
+            helper.assertTrue(
+                    DataTables.INSTANCE.armor().status().failed(),
                     "статус таблицы брони обязан нести ошибку последней перезагрузки");
-            helper.assertTrue(DataTables.INSTANCE.armor().current().checkIntervalTicks() == before,
+            helper.assertTrue(
+                    DataTables.INSTANCE.armor().current().checkIntervalTicks() == before,
                     "битый json не подменяет таблицу: работает прежняя (check_interval_ticks = " + before + "); "
-                            + "фактически " + DataTables.INSTANCE.armor().current().checkIntervalTicks());
+                            + "фактически "
+                            + DataTables.INSTANCE.armor().current().checkIntervalTicks());
             GameTestFixtures.finish(helper);
             helper.succeed();
         } finally {
@@ -117,9 +121,9 @@ public final class HotReloadGameTests {
         packs.add(new PathPackResources(
                 new PackLocationInfo("file/" + PACK, Component.literal(PACK), PackSource.WORLD, Optional.empty()),
                 packDir(helper)));
-        MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs);
-        DataReload.reloadFrom(manager);
-        manager.close();
+        try (MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs)) {
+            DataReload.reloadFrom(manager);
+        }
     }
 
     private static void writeDatapack(GameTestHelper helper, String armorJson) {
@@ -127,7 +131,8 @@ public final class HotReloadGameTests {
         Path dir = pack.resolve("data/theminespirit/armor");
         try {
             Files.createDirectories(dir);
-            Files.writeString(pack.resolve("pack.mcmeta"),
+            Files.writeString(
+                    pack.resolve("pack.mcmeta"),
                     "{\"pack\": {\"pack_format\": 48, \"description\": \"hot reload gametest\"}}\n",
                     StandardCharsets.UTF_8);
             Files.writeString(dir.resolve("armor_table.json"), armorJson, StandardCharsets.UTF_8);
@@ -156,7 +161,9 @@ public final class HotReloadGameTests {
     }
 
     private static Path packDir(GameTestHelper helper) {
-        return helper.getLevel().getServer().getWorldPath(LevelResource.DATAPACK_DIR)
+        return helper.getLevel()
+                .getServer()
+                .getWorldPath(LevelResource.DATAPACK_DIR)
                 .resolve(PACK);
     }
 }

@@ -25,12 +25,17 @@ class RetreatSelectorProperties {
 
         choice.rule().ifPresent(id -> {
             RetreatEntry entry = CONFIG.rules().retreat().entries().stream()
-                    .filter(candidate -> candidate.id().equals(id)).findFirst().get();
-            assertTrue(entry.requires().matches(facts),
+                    .filter(candidate -> candidate.id().equals(id))
+                    .findFirst()
+                    .get();
+            assertTrue(
+                    entry.requires().matches(facts),
                     "Выбранный способ " + choice.method() + " (" + id + ") обязан удовлетворять собственным requires: "
                             + "иначе дух отходит туда, куда по условиям отходить нельзя");
         });
-        assertEquals(options.routes() == 0, choice.method() == RetreatMethod.NONE,
+        assertEquals(
+                options.routes() == 0,
+                choice.method() == RetreatMethod.NONE,
                 "NONE выбирается тогда и только тогда, когда ни один способ не подошёл");
     }
 }

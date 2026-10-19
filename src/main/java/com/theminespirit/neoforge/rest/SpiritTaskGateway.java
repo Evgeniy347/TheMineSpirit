@@ -1,15 +1,15 @@
 package com.theminespirit.neoforge.rest;
 
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
-import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.rest.TaskGateway;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.WorldScanner;
@@ -32,32 +32,38 @@ public final class SpiritTaskGateway implements TaskGateway {
 
     @Override
     public long start(String bot, TaskNode plan) {
-        return serverCall.call(() -> {
-            SpiritEntity spirit = living(bot);
-            rejectIfBusy(spirit, bot);
-            spirit.startTask(plan);
-            return spirit.taskGeneration();
-        }, RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(
+                () -> {
+                    SpiritEntity spirit = living(bot);
+                    rejectIfBusy(spirit, bot);
+                    spirit.startTask(plan);
+                    return spirit.taskGeneration();
+                },
+                RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
     public long startGoal(String bot, String goal, Map<String, Object> params) {
-        return serverCall.call(() -> {
-            SpiritEntity spirit = living(bot);
-            rejectIfBusy(spirit, bot);
-            WorldObservation observation = spirit.observation().orElseGet(() -> minimal(bot, spirit));
-            spirit.startTask(planning.planGoal(goal, params, observation));
-            return spirit.taskGeneration();
-        }, RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(
+                () -> {
+                    SpiritEntity spirit = living(bot);
+                    rejectIfBusy(spirit, bot);
+                    WorldObservation observation = spirit.observation().orElseGet(() -> minimal(bot, spirit));
+                    spirit.startTask(planning.planGoal(goal, params, observation));
+                    return spirit.taskGeneration();
+                },
+                RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
     public void cancelIfPresent(String bot, String taskId) {
-        serverCall.call(() -> {
-            Optional<SpiritEntity> spirit = parse(bot).flatMap(index::find);
-            spirit.ifPresent(SpiritEntity::cancelTask);
-            return null;
-        }, RestTuning.SERVER_CALL_TIMEOUT);
+        serverCall.call(
+                () -> {
+                    Optional<SpiritEntity> spirit = parse(bot).flatMap(index::find);
+                    spirit.ifPresent(SpiritEntity::cancelTask);
+                    return null;
+                },
+                RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     public ServerThreadCall serverCall() {
@@ -66,7 +72,8 @@ public final class SpiritTaskGateway implements TaskGateway {
 
     private static void rejectIfBusy(SpiritEntity spirit, String bot) {
         if (spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "Дух '" + bot + "' уже выполняет задачу, поставленную вне REST (команда или планировщик "
                             + "ИИ): отмените её или дождитесь завершения, вытеснения нет",
                     Map.of("id", bot));
@@ -74,20 +81,29 @@ public final class SpiritTaskGateway implements TaskGateway {
     }
 
     private SpiritEntity living(String bot) {
-        SpiritEntity spirit = parse(bot).flatMap(index::find).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Дух '" + bot + "' не найден: список живых духов — GET /v1/bots", Map.of("id", bot)));
+        SpiritEntity spirit = parse(bot)
+                .flatMap(index::find)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Дух '" + bot + "' не найден: список живых духов — GET /v1/bots",
+                        Map.of("id", bot)));
         if (!spirit.isAlive()) {
-            throw new ApiException(ErrorCode.CONFLICT, "Дух '" + bot + "' мёртв: его нельзя поставить в задачу",
-                    Map.of("id", bot));
+            throw new ApiException(
+                    ErrorCode.CONFLICT, "Дух '" + bot + "' мёртв: его нельзя поставить в задачу", Map.of("id", bot));
         }
         return spirit;
     }
 
     private static WorldObservation minimal(String bot, SpiritEntity spirit) {
         BlockPos position = spirit.blockPosition();
-        return new WorldObservation(bot, spirit.level().getGameTime(),
+        return new WorldObservation(
+                bot,
+                spirit.level().getGameTime(),
                 new BlockCoord(position.getX(), position.getY(), position.getZ()),
-                WorldScanner.inventoryEntries(spirit.getInventory()), List.of(), List.of(), List.of(),
+                WorldScanner.inventoryEntries(spirit.getInventory()),
+                List.of(),
+                List.of(),
+                List.of(),
                 ScanRadius.DEFAULT.value());
     }
 

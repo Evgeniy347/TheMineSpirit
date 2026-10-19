@@ -35,8 +35,7 @@ public final class PolicyDangerGameTests {
     private static final double TNT_HOLD = 9.0;
     private static final double CHARGED_MOVED_AWAY = 11.0;
 
-    private PolicyDangerGameTests() {
-    }
+    private PolicyDangerGameTests() {}
 
     private static double cellDistance(GameTestHelper helper, SpiritEntity spirit, BlockPos other) {
         BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
@@ -50,14 +49,18 @@ public final class PolicyDangerGameTests {
     }
 
     private static String threatReport(GameTestHelper helper, SpiritEntity spirit) {
-        String threats = helper.getLevel().getEntitiesOfClass(Entity.class,
-                        spirit.getBoundingBox().inflate(ExplosionAvoidance.SCAN_RADIUS)).stream()
+        String threats = helper
+                .getLevel()
+                .getEntitiesOfClass(Entity.class, spirit.getBoundingBox().inflate(ExplosionAvoidance.SCAN_RADIUS))
+                .stream()
                 .filter(entity -> entity instanceof Creeper || entity instanceof PrimedTnt)
                 .sorted(Comparator.comparingDouble(entity -> entity.distanceTo(spirit)))
-                .map(entity -> entity.getType().toShortString() + "@" + entity.blockPosition().toShortString()
+                .map(entity -> entity.getType().toShortString() + "@"
+                        + entity.blockPosition().toShortString()
                         + " d=" + String.format("%.2f", entity.distanceTo(spirit))
                         + (entity instanceof Creeper creeper
-                                ? " swell=" + creeper.getSwelling(1.0F) + " target=" + creeper.getTarget() : ""))
+                                ? " swell=" + creeper.getSwelling(1.0F) + " target=" + creeper.getTarget()
+                                : ""))
                 .collect(Collectors.joining("; "));
         return "вердикт " + spirit.policies().verdict() + "; угрозы [" + threats + "]";
     }
@@ -71,8 +74,7 @@ public final class PolicyDangerGameTests {
         idleCreeper(helper, creeperAt);
         double[] closestAfter = {Double.MAX_VALUE};
         int[] farSince = {-1};
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-        }, observed -> {
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {}, observed -> {
             double distance = cellDistance(helper, observed, creeperAt);
             if (farSince[0] < 0 && distance >= CREEPER_HOLD) {
                 farSince[0] = observed.tickCount;
@@ -85,11 +87,15 @@ public final class PolicyDangerGameTests {
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(farSince[0] >= 0 && farSince[0] - (spirit.tickCount - scene.ticks()) <= FLEE_LIMIT_TICKS,
+            helper.assertTrue(
+                    farSince[0] >= 0 && farSince[0] - (spirit.tickCount - scene.ticks()) <= FLEE_LIMIT_TICKS,
                     "дух обязан отойти от крипера на 7 блоков за " + FLEE_LIMIT_TICKS + " тиков, расстояние сейчас "
                             + cellDistance(helper, spirit, creeperAt));
-            helper.assertTrue(spirit.tickCount >= farSince[0] + HOLD_AFTER_FLEE_TICKS, "ещё не прошло 40 тиков после отхода");
-            helper.assertTrue(closestAfter[0] >= CREEPER_HOLD, "после отхода дух не должен возвращаться ближе 7 блоков, самое близкое " + closestAfter[0]);
+            helper.assertTrue(
+                    spirit.tickCount >= farSince[0] + HOLD_AFTER_FLEE_TICKS, "ещё не прошло 40 тиков после отхода");
+            helper.assertTrue(
+                    closestAfter[0] >= CREEPER_HOLD,
+                    "после отхода дух не должен возвращаться ближе 7 блоков, самое близкое " + closestAfter[0]);
             GameTestFixtures.finish(helper);
         });
     }
@@ -115,12 +121,12 @@ public final class PolicyDangerGameTests {
         BlockPos creeperAt = new BlockPos(10, 1, 5);
         Creeper creeper = chargedCreeper(helper, creeperAt);
         helper.assertTrue(creeper.isPowered(), "заряженный крипер не заряжен: сцена не проверяет то, что заявлено");
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-        });
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {});
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(cellDistance(helper, spirit, creeperAt) >= CHARGED_MOVED_AWAY,
+            helper.assertTrue(
+                    cellDistance(helper, spirit, creeperAt) >= CHARGED_MOVED_AWAY,
                     "заряженный крипер в 10 блоках: радиус урона ~12, дух обязан отойти вдоль края хотя бы до "
                             + CHARGED_MOVED_AWAY + " блоков, сейчас " + cellDistance(helper, spirit, creeperAt));
             GameTestFixtures.finish(helper);
@@ -135,8 +141,7 @@ public final class PolicyDangerGameTests {
         idleCreeper(helper, new BlockPos(7, 1, 7));
         Vec3 start = spirit.position();
         String[] reflexSeen = {null};
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-        }, observed -> {
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {}, observed -> {
             if (reflexSeen[0] == null && observed.policies().verdict() instanceof PolicyVerdict.Reflex) {
                 reflexSeen[0] = observed.policies().verdict() + " на " + observed.position();
             }
@@ -146,7 +151,8 @@ public final class PolicyDangerGameTests {
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(scene.ticks() >= 40, "ещё не прошло 40 тиков наблюдения");
-            helper.assertTrue(spirit.position().distanceTo(start) < 0.3,
+            helper.assertTrue(
+                    spirit.position().distanceTo(start) < 0.3,
                     "крипер дальше 7 блоков: ложного срабатывания быть не должно, дух сместился на "
                             + spirit.position().distanceTo(start) + "; рефлекс " + reflexSeen[0] + "; "
                             + threatReport(helper, spirit));
@@ -162,23 +168,33 @@ public final class PolicyDangerGameTests {
         BlockPos tntAt = new BlockPos(0, 1, 0);
         PrimedTnt[] tnt = {null};
         double[] distanceAtBlast = {-1};
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-            Vec3 absolute = helper.absoluteVec(Vec3.atBottomCenterOf(tntAt));
-            tnt[0] = new PrimedTnt(helper.getLevel(), absolute.x, absolute.y, absolute.z, null);
-            tnt[0].setFuse(80);
-            helper.getLevel().addFreshEntity(tnt[0]);
-        }, observed -> {
-            if (tnt[0] != null && !tnt[0].isRemoved() && tnt[0].getFuse() <= 1) {
-                distanceAtBlast[0] = cellDistance(helper, observed, tntAt);
-            }
-            return null;
-        });
+        PolicyScene scene = PolicyScene.launch(
+                helper,
+                spirit,
+                2,
+                () -> {
+                    Vec3 absolute = helper.absoluteVec(Vec3.atBottomCenterOf(tntAt));
+                    tnt[0] = new PrimedTnt(helper.getLevel(), absolute.x, absolute.y, absolute.z, null);
+                    tnt[0].setFuse(80);
+                    helper.getLevel().addFreshEntity(tnt[0]);
+                },
+                observed -> {
+                    if (tnt[0] != null && !tnt[0].isRemoved() && tnt[0].getFuse() <= 1) {
+                        distanceAtBlast[0] = cellDistance(helper, observed, tntAt);
+                    }
+                    return null;
+                });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(tnt[0] != null && tnt[0].isRemoved(), "запал 80 тиков ещё не догорел");
-            helper.assertTrue(distanceAtBlast[0] >= TNT_HOLD, "к взрыву дух обязан быть не ближе 9 блоков (радиус урона 8 и запас на смещение внутри клетки), было " + distanceAtBlast[0]);
-            helper.assertTrue(scene.minHealth() >= spirit.getMaxHealth(), "дух вне радиуса взрыва: здоровье не должно меняться, минимум " + scene.minHealth());
+            helper.assertTrue(
+                    distanceAtBlast[0] >= TNT_HOLD,
+                    "к взрыву дух обязан быть не ближе 9 блоков (радиус урона 8 и запас на смещение внутри клетки), было "
+                            + distanceAtBlast[0]);
+            helper.assertTrue(
+                    scene.minHealth() >= spirit.getMaxHealth(),
+                    "дух вне радиуса взрыва: здоровье не должно меняться, минимум " + scene.minHealth());
             GameTestFixtures.finish(helper);
         });
     }
@@ -194,7 +210,11 @@ public final class PolicyDangerGameTests {
         }
         for (int x = 4; x <= 5; x++) {
             for (int y = 1; y <= 3; y++) {
-                helper.setBlock(x, y, 4, Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, Direction.Axis.X));
+                helper.setBlock(
+                        x,
+                        y,
+                        4,
+                        Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, Direction.Axis.X));
             }
         }
     }
@@ -204,20 +224,29 @@ public final class PolicyDangerGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         portalFrame(helper);
-        helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.NETHER_PORTAL), "портал обязан стоять до начала проверки");
+        helper.assertTrue(
+                helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.NETHER_PORTAL),
+                "портал обязан стоять до начала проверки");
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
         BlockPos absolute = helper.absolutePos(new BlockPos(5, 1, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())), 1);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
+                1);
         var home = spirit.level().dimension();
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(run.spiritTicks() >= 100, "ещё не прошло 100 тиков, тик духа " + run.spiritTicks());
-            helper.assertTrue(spirit.level().dimension() == home && !spirit.isRemoved(),
-                    "дух не должен переходить через портал: измерение " + spirit.level().dimension().location());
+            helper.assertTrue(
+                    spirit.level().dimension().equals(home) && !spirit.isRemoved(),
+                    "дух не должен переходить через портал: измерение "
+                            + spirit.level().dimension().location());
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
-            helper.assertTrue(!helper.getBlockState(cell).is(Blocks.NETHER_PORTAL) && !helper.getBlockState(cell.above()).is(Blocks.NETHER_PORTAL),
+            helper.assertTrue(
+                    !helper.getBlockState(cell).is(Blocks.NETHER_PORTAL)
+                            && !helper.getBlockState(cell.above()).is(Blocks.NETHER_PORTAL),
                     "через 100 тиков дух обязан стоять вне клетки портала, клетка " + cell.toShortString());
             GameTestFixtures.finish(helper);
         });
@@ -230,20 +259,29 @@ public final class PolicyDangerGameTests {
         portalFrame(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 1));
         BlockPos absolute = helper.absolutePos(new BlockPos(4, 1, 4));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())), 2);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ())),
+                2);
         var home = spirit.level().dimension();
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "цель в клетке портала: goto обязан провалиться сразу, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "цель в клетке портала: goto обязан провалиться сразу, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал, а не «застрял»: «" + reason + "»");
+            helper.assertTrue(
+                    reason.contains("клетка портала"),
+                    "причина обязана называть портал, а не «застрял»: «" + reason + "»");
             helper.assertTrue(run.spiritTicks() >= 40, "ещё не прошло 40 тиков наблюдения за духом после отказа");
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
-            helper.assertTrue(cell.getZ() <= 2 && spirit.level().dimension() == home,
-                    "после отказа дух не должен идти к порталу: клетка " + cell.toShortString() + ", измерение " + spirit.level().dimension().location());
+            helper.assertTrue(
+                    cell.getZ() <= 2 && spirit.level().dimension().equals(home),
+                    "после отказа дух не должен идти к порталу: клетка " + cell.toShortString() + ", измерение "
+                            + spirit.level().dimension().location());
             GameTestFixtures.finish(helper);
         });
     }
@@ -255,13 +293,18 @@ public final class PolicyDangerGameTests {
         portalFrame(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 4), "gt_portal_follow_player");
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", 2)), 2);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", 2)),
+                2);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "игрок стоит в клетке портала: follow обязан отказаться идти туда, статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "игрок стоит в клетке портала: follow обязан отказаться идти туда, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(reason.contains("клетка портала"), "причина обязана называть портал: «" + reason + "»");
             GameTestFixtures.finish(helper);

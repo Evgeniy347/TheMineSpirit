@@ -13,8 +13,7 @@ final class ConditionParser {
     private static final Set<Comparison> BOOL_OPS = Set.of(Comparison.EQ, Comparison.NE);
     private static final Set<Comparison> ENUM_OPS = Set.of(Comparison.EQ, Comparison.NE, Comparison.IN);
 
-    private ConditionParser() {
-    }
+    private ConditionParser() {}
 
     static Condition parse(ConfigNode array) {
         List<Atom> atoms = new ArrayList<>();
@@ -27,8 +26,9 @@ final class ConditionParser {
     private static Atom atom(ConfigNode node) {
         FactName fact = fact(node.get("fact"));
         ConfigNode opNode = node.get("op");
-        Comparison op = Comparison.bySymbol(opNode.text()).orElseThrow(() -> opNode.fail(
-                "неизвестный оператор '" + opNode.text() + "'", "допустимы < <= > >= == != in"));
+        Comparison op = Comparison.bySymbol(opNode.text())
+                .orElseThrow(() ->
+                        opNode.fail("неизвестный оператор '" + opNode.text() + "'", "допустимы < <= > >= == != in"));
         ConfigNode value = node.get("value");
         return switch (fact.type()) {
             case NUM -> numAtom(fact, op, opNode, value);
@@ -39,21 +39,24 @@ final class ConditionParser {
 
     private static FactName fact(ConfigNode node) {
         String key = node.text();
-        return FactName.byKey(key).orElseThrow(() -> node.fail("неизвестный факт '" + key + "'",
-                "имя берётся из каталога фактов (docs/TACTICS.md), возможна опечатка"));
+        return FactName.byKey(key)
+                .orElseThrow(() -> node.fail(
+                        "неизвестный факт '" + key + "'",
+                        "имя берётся из каталога фактов (docs/tactics/README.md), возможна опечатка"));
     }
 
     private static Atom numAtom(FactName fact, Comparison op, ConfigNode opNode, ConfigNode value) {
         if (op == Comparison.IN) {
-            throw opNode.fail("оператор in не применим к числовому факту " + fact.key(),
-                    "для чисел используйте < <= > >= == !=");
+            throw opNode.fail(
+                    "оператор in не применим к числовому факту " + fact.key(), "для чисел используйте < <= > >= == !=");
         }
         return new NumAtom(fact, op, value.number(-1.0E9, 1.0E9));
     }
 
     private static Atom boolAtom(FactName fact, Comparison op, ConfigNode opNode, ConfigNode value) {
         if (!BOOL_OPS.contains(op)) {
-            throw opNode.fail("оператор " + op.symbol() + " не применим к булеву факту " + fact.key(),
+            throw opNode.fail(
+                    "оператор " + op.symbol() + " не применим к булеву факту " + fact.key(),
                     "для булевых фактов допустимы только == и !=");
         }
         return new BoolAtom(fact, op, value.bool());
@@ -61,7 +64,8 @@ final class ConditionParser {
 
     private static Atom enumAtom(FactName fact, Comparison op, ConfigNode opNode, ConfigNode value) {
         if (!ENUM_OPS.contains(op)) {
-            throw opNode.fail("оператор " + op.symbol() + " не применим к перечислению " + fact.key(),
+            throw opNode.fail(
+                    "оператор " + op.symbol() + " не применим к перечислению " + fact.key(),
                     "для перечислений допустимы ==, != и in");
         }
         List<String> values = new ArrayList<>();
@@ -76,7 +80,8 @@ final class ConditionParser {
     private static String enumValue(FactName fact, ConfigNode node) {
         String text = node.text();
         if (!fact.enumValues().contains(text)) {
-            throw node.fail("значение '" + text + "' не из перечисления " + fact.key(),
+            throw node.fail(
+                    "значение '" + text + "' не из перечисления " + fact.key(),
                     "допустимы " + fact.enumValues() + ", опечатка в имени");
         }
         return text;

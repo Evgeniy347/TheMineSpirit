@@ -19,8 +19,8 @@ final class WaterScan {
     }
 
     static WaterScan around(Level level, BlockPos center, int radius) {
-        return new WaterScan(Optional.of(
-                BlockLocator.search(level, center, radius + Hydration.RADIUS, Set.of(Blocks.WATER))));
+        return new WaterScan(
+                Optional.of(BlockLocator.search(level, center, radius + Hydration.RADIUS, Set.of(Blocks.WATER))));
     }
 
     static WaterScan skipped() {

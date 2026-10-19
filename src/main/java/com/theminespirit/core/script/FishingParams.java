@@ -9,8 +9,7 @@ public record FishingParams(int count, int durationTicks, int radius) {
             throw new IllegalArgumentException("count=" + count + " вне диапазона [" + CatalogLimits.COUNT_MIN + ", "
                     + CatalogLimits.COUNT_MAX + "]: число пойманной рыбы должно лежать в этом промежутке");
         }
-        if (durationTicks < CatalogLimits.FISH_DURATION_MIN
-                || durationTicks > CatalogLimits.FISH_DURATION_MAX) {
+        if (durationTicks < CatalogLimits.FISH_DURATION_MIN || durationTicks > CatalogLimits.FISH_DURATION_MAX) {
             throw new IllegalArgumentException("duration_ticks=" + durationTicks + " вне диапазона ["
                     + CatalogLimits.FISH_DURATION_MIN + ", " + CatalogLimits.FISH_DURATION_MAX
                     + "]: время ловли должно лежать в этом промежутке");

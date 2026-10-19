@@ -14,7 +14,9 @@ class BoardPauseBackoffTests {
 
     @Test
     void pause_FirstFailure_EqualsLiveInitialPause() {
-        assertEquals(BoardTuning.caseFailPauseTicks(), BoardBackoff.pauseTicks(1),
+        assertEquals(
+                BoardTuning.caseFailPauseTicks(),
+                BoardBackoff.pauseTicks(1),
                 "Первый провал даёт начальную паузу из board.json: иначе дух возвращается к сбойному "
                         + "кейсу раньше, чем успевает смениться обстановка");
     }
@@ -25,19 +27,29 @@ class BoardPauseBackoffTests {
         assertEquals(2400, BoardBackoff.pauseTicks(2), "Ступень 2 — удвоенная пауза 2400 тиков");
         assertEquals(4800, BoardBackoff.pauseTicks(3), "Ступень 3 — 4800 тиков");
         assertEquals(9600, BoardBackoff.pauseTicks(4), "Ступень 4 — потолок 9600 тиков");
-        assertEquals(9600, BoardBackoff.pauseTicks(100), "Потолок держится на любой серии провалов: "
-                + "экспонента не выключает духа навсегда");
+        assertEquals(
+                9600,
+                BoardBackoff.pauseTicks(100),
+                "Потолок держится на любой серии провалов: " + "экспонента не выключает духа навсегда");
     }
 
     @Test
     void pause_BadArguments_Throw() {
-        assertThrows(IllegalArgumentException.class, () -> BoardBackoff.pauseTicks(0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BoardBackoff.pauseTicks(0),
                 "Пауза до первого провала не считается: нулевой серии нет");
-        assertThrows(IllegalArgumentException.class, () -> BoardBackoff.pauseTicks(1, 0, 2, 10),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BoardBackoff.pauseTicks(1, 0, 2, 10),
                 "Начальная пауза 0 тиков значит отсутствие отката — это ошибка данных");
-        assertThrows(IllegalArgumentException.class, () -> BoardBackoff.pauseTicks(1, 1, 0, 10),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BoardBackoff.pauseTicks(1, 1, 0, 10),
                 "Множитель 0 гасил бы паузу вместо роста — это ошибка данных");
-        assertThrows(IllegalArgumentException.class, () -> BoardBackoff.pauseTicks(1, 1, 2, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BoardBackoff.pauseTicks(1, 1, 2, 0),
                 "Потолок 0 запрещал бы любую паузу — это ошибка данных");
     }
 
@@ -48,25 +60,28 @@ class BoardPauseBackoffTests {
             @ForAll @LongRange(min = 1, max = 50_000) long cap,
             @ForAll @IntRange(min = 1, max = 60) int failures) {
         long previous = BoardBackoff.pauseTicks(1, initial, multiplier, cap);
-        assertEquals(Math.min(initial, cap), previous,
-                "Ступень 1 — начальная пауза, но не выше потолка: было " + previous);
+        assertEquals(
+                Math.min(initial, cap), previous, "Ступень 1 — начальная пауза, но не выше потолка: было " + previous);
         for (int step = 2; step <= failures; step++) {
             long pause = BoardBackoff.pauseTicks(step, initial, multiplier, cap);
-            assertTrue(pause >= previous,
+            assertTrue(
+                    pause >= previous,
                     "Пауза на шаге " + step + " (" + pause + ") не короче прошлой (" + previous + "): "
                             + "откат обязан расти или стоять на потолке");
             if (previous < cap && multiplier > 1) {
-                assertTrue(pause > previous,
+                assertTrue(
+                        pause > previous,
                         "Пока не достигнут потолок " + cap + ", множитель " + multiplier
                                 + " обязан удлинять паузу: шаг " + step + " дал " + pause
                                 + " вместо роста от " + previous);
             }
-            assertTrue(pause <= cap,
-                    "Пауза на шаге " + step + " (" + pause + ") не выше потолка " + cap);
+            assertTrue(pause <= cap, "Пауза на шаге " + step + " (" + pause + ") не выше потолка " + cap);
             previous = pause;
         }
         if (initial >= cap) {
-            assertEquals(cap, BoardBackoff.pauseTicks(failures, initial, multiplier, cap),
+            assertEquals(
+                    cap,
+                    BoardBackoff.pauseTicks(failures, initial, multiplier, cap),
                     "Начальная пауза выше потолка сразу упирается в потолок: иначе данные обходили бы предел");
         }
     }

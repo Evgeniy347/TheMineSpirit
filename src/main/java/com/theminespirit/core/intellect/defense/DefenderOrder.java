@@ -6,8 +6,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public record DefenderOrder(UUID defender, DefenderRole role, Optional<EnemyFact> target, CombatStance stance,
-        Optional<Double> holdDistance, Optional<Point> cover, Optional<UUID> handOff, String reason) {
+public record DefenderOrder(
+        UUID defender,
+        DefenderRole role,
+        Optional<EnemyFact> target,
+        CombatStance stance,
+        Optional<Double> holdDistance,
+        Optional<Point> cover,
+        Optional<UUID> handOff,
+        String reason) {
     public DefenderOrder {
         Objects.requireNonNull(defender, "defender не может быть null: приказ адресуется конкретному духу");
         Objects.requireNonNull(role, "role не может быть null: стойка зависит от специализации");

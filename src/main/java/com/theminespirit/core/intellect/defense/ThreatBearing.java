@@ -9,8 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class ThreatBearing {
-    private ThreatBearing() {
-    }
+    private ThreatBearing() {}
 
     public static List<DirectionThreat> sum(List<EnemyFact> enemies, Point center, EnemyProfiles profiles) {
         if (enemies == null) {
@@ -34,8 +33,8 @@ public final class ThreatBearing {
         List<DirectionThreat> threats = new ArrayList<>();
         for (int sector = 0; sector < sectors; sector++) {
             if (count[sector] > 0) {
-                threats.add(new DirectionThreat((sector + 0.5) * 2 * Math.PI / sectors, strength[sector],
-                        count[sector]));
+                threats.add(
+                        new DirectionThreat((sector + 0.5) * 2 * Math.PI / sectors, strength[sector], count[sector]));
             }
         }
         threats.sort(Comparator.comparingDouble(DirectionThreat::bearing));

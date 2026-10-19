@@ -6,10 +6,6 @@ import java.util.Optional;
 public interface ResourceKnowledge {
     boolean isGatherable(String item);
 
-    /**
-     * Блок, который надо сломать, чтобы добыть предмет: по умолчанию сам предмет —
-     * для дропов адаптер возвращает блок-источник из таблицы «дроп ← блок».
-     */
     default String gatherBlockFor(String item) {
         return item;
     }
@@ -28,12 +24,6 @@ public interface ResourceKnowledge {
         return Optional.empty();
     }
 
-    /**
-     * Минимальный инструмент, без которого сломанный блок не отдаёт дроп:
-     * пусто — блок ломается рукой. Адаптер возвращает кирку по уровню инструмента
-     * (камень — деревянная, руда — каменная и т. д.), чтобы резолвер поставил её
-     * предварительным шагом.
-     */
     default Optional<String> toolForBlock(String block) {
         return Optional.empty();
     }

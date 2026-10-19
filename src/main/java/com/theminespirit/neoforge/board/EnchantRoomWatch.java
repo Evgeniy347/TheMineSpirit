@@ -26,11 +26,10 @@ public final class EnchantRoomWatch {
     private static final int LEVEL_ONE_BOOK = 1;
     private static final int LEVEL_TWO_SHELVES = 15;
 
-    private EnchantRoomWatch() {
-    }
+    private EnchantRoomWatch() {}
 
-    public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
-            StockView stock, long now) {
+    public static void tick(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || active(service)) {
             return;
         }
@@ -46,16 +45,31 @@ public final class EnchantRoomWatch {
             if (lapis < LEVEL_ONE_LAPIS || book < LEVEL_ONE_BOOK) {
                 return;
             }
-            service.submit(new BoardTicket("enchant_room_1", BoardCase.ENCHANT_ROOM, Optional.empty(),
-                    BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()), now, 1,
-                    BoardTicket.ALWAYS_CAUSE, List.of(),
-                    Map.of("lapis_lazuli", LEVEL_ONE_LAPIS, "book", LEVEL_ONE_BOOK)),
+            service.submit(
+                    new BoardTicket(
+                            "enchant_room_1",
+                            BoardCase.ENCHANT_ROOM,
+                            Optional.empty(),
+                            BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of("lapis_lazuli", LEVEL_ONE_LAPIS, "book", LEVEL_ONE_BOOK)),
                     TicketTarget.at(home));
             return;
         }
-        service.submit(new BoardTicket("enchant_room_2", BoardCase.ENCHANT_ROOM, Optional.empty(),
-                BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()), now, 2,
-                BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("bookshelf", LEVEL_TWO_SHELVES)),
+        service.submit(
+                new BoardTicket(
+                        "enchant_room_2",
+                        BoardCase.ENCHANT_ROOM,
+                        Optional.empty(),
+                        BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()),
+                        now,
+                        2,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of("bookshelf", LEVEL_TWO_SHELVES)),
                 TicketTarget.at(home));
     }
 
@@ -77,7 +91,8 @@ public final class EnchantRoomWatch {
                 continue;
             }
             BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);
-            if (status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+            if (status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
                     || status == BoardStatus.ASSIGNED) {
                 return true;
             }

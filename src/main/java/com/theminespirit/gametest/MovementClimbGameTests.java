@@ -26,29 +26,31 @@ public final class MovementClimbGameTests {
     private static final BlockPos TOP = new BlockPos(5, 6, CELL_Z);
     private static final int CLIMB_LIMIT_TICKS = 200;
 
-    private MovementClimbGameTests() {
-    }
+    private MovementClimbGameTests() {}
 
     @GameTest(template = "arena", batch = "move_climb_up", timeoutTicks = 300)
     public static void climb_LadderFiveBlocksUp_ReachesTopRung(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildLadder(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, BASE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("climb", Map.of()),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.call("climb", Map.of()), MovementScene.SETTLE_TICKS);
         double[] peak = {relativeY(helper, spirit)};
         helper.onEachTick(() -> peak[0] = Math.max(peak[0], relativeY(helper, spirit)));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "подъём по лестнице обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(peak[0] >= LADDER_HEIGHT,
+            helper.assertTrue(
+                    peak[0] >= LADDER_HEIGHT,
                     "дух обязан подняться на " + CLIMB_BLOCKS + " блоков от y=" + BASE.getY() + " до верхней ступени y="
                             + LADDER_HEIGHT + ", а забрался только до y=" + peak[0]);
-            helper.assertTrue(run.spiritTicks() <= CLIMB_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= CLIMB_LIMIT_TICKS,
                     "подъём на " + CLIMB_BLOCKS + " блоков обязан уложиться в " + CLIMB_LIMIT_TICKS + " тиков духа, "
                             + "ушло " + run.spiritTicks());
             MovementScene.finish(helper);
@@ -61,8 +63,8 @@ public final class MovementClimbGameTests {
         buildLadder(helper);
         helper.setBlock(TOP_PLATFORM, Blocks.STONE);
         SpiritEntity spirit = MovementScene.spirit(helper, TOP);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("climb", Map.of("down", true)),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.call("climb", Map.of("down", true)), MovementScene.SETTLE_TICKS);
         double[] startY = {-1};
         helper.onEachTick(() -> {
             if (run.started() && startY[0] < 0) {
@@ -72,16 +74,21 @@ public final class MovementClimbGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "спуск по лестнице обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(startY[0] >= LADDER_HEIGHT - 0.5,
-                    "спуск обязан начаться с верхней площадки y=" + LADDER_HEIGHT + ", а дух стартовал с y=" + startY[0]);
+            helper.assertTrue(
+                    startY[0] >= LADDER_HEIGHT - 0.5,
+                    "спуск обязан начаться с верхней площадки y=" + LADDER_HEIGHT + ", а дух стартовал с y="
+                            + startY[0]);
             double feetY = relativeY(helper, spirit);
-            helper.assertTrue(feetY <= BASE.getY() + 0.5,
+            helper.assertTrue(
+                    feetY <= BASE.getY() + 0.5,
                     "дух обязан спуститься к низу колонны y=" + BASE.getY() + ", а оказался на y=" + feetY);
-            helper.assertTrue(helper.relativePos(spirit.blockPosition()).getY() <= BASE.getY(),
+            helper.assertTrue(
+                    helper.relativePos(spirit.blockPosition()).getY() <= BASE.getY(),
                     "дух обязан стоять на нижней ступени, а его клетка y="
                             + helper.relativePos(spirit.blockPosition()).getY());
             MovementScene.finish(helper);
@@ -98,7 +105,8 @@ public final class MovementClimbGameTests {
             helper.setBlock(new BlockPos(WALL_X, y, CELL_Z), Blocks.STONE);
         }
         for (int y = 1; y <= LADDER_HEIGHT; y++) {
-            helper.setBlock(ladder.offset(0, y - 1, 0),
+            helper.setBlock(
+                    ladder.offset(0, y - 1, 0),
                     Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.EAST));
         }
     }

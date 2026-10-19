@@ -16,34 +16,38 @@ class ErrorJsonTests {
 
     @Test
     void toJson_InvalidPlanError_IsByteEqualToApiDocExample() throws IOException {
-        ApiError error = ApiError.of(ErrorCode.INVALID_PLAN,
-                "У скрипта 'wait' не задан обязательный параметр 'ticks' (INT)");
+        ApiError error =
+                ApiError.of(ErrorCode.INVALID_PLAN, "У скрипта 'wait' не задан обязательный параметр 'ticks' (INT)");
 
         String json = ErrorJson.toJson(error);
 
-        assertEquals(DOC_EXAMPLE, json,
-                "Формат ошибки — контракт docs/API.md: {error:{code,message,details}} без пробелов и с details-объектом");
-        String apiDoc = Files.readString(Path.of("docs/API.md"), StandardCharsets.UTF_8);
-        assertTrue(apiDoc.contains(json),
-                "Пример ошибки в docs/API.md обязан быть побайтно равен тому, что отдаёт мост: клиенты сверяют "
-                        + "ответы с документом. Поправь пример в docs/API.md");
+        assertEquals(
+                DOC_EXAMPLE,
+                json,
+                "Формат ошибки — контракт docs/api/README.md: {error:{code,message,details}} без пробелов и с details-объектом");
+        String apiDoc = Files.readString(Path.of("docs/api/README.md"), StandardCharsets.UTF_8);
+        assertTrue(
+                apiDoc.contains(json),
+                "Пример ошибки в docs/api/README.md обязан быть побайтно равен тому, что отдаёт мост: клиенты сверяют "
+                        + "ответы с документом. Поправь пример в docs/api/README.md");
     }
 
     @Test
     void toJson_ErrorWithoutDetails_WritesEmptyObjectNotNull() {
         ApiError error = new ApiError(ErrorCode.NOT_FOUND, "нет", null);
 
-        assertEquals("{\"error\":{\"code\":\"not_found\",\"message\":\"нет\",\"details\":{}}}",
+        assertEquals(
+                "{\"error\":{\"code\":\"not_found\",\"message\":\"нет\",\"details\":{}}}",
                 ErrorJson.toJson(error),
                 "details всегда объект: клиент не должен проверять его на null");
     }
 
     @Test
     void toJson_ErrorWithDetails_KeepsInsertionOrderAndEscapesQuotes() {
-        ApiError error = new ApiError(ErrorCode.INVALID_REQUEST, "поле \"radius\"",
-                Map.of("field", "radius"));
+        ApiError error = new ApiError(ErrorCode.INVALID_REQUEST, "поле \"radius\"", Map.of("field", "radius"));
 
-        assertEquals("{\"error\":{\"code\":\"invalid_request\",\"message\":\"поле \\\"radius\\\"\","
+        assertEquals(
+                "{\"error\":{\"code\":\"invalid_request\",\"message\":\"поле \\\"radius\\\"\","
                         + "\"details\":{\"field\":\"radius\"}}}",
                 ErrorJson.toJson(error),
                 "Кавычки в тексте обязаны экранироваться, иначе клиент получит битый JSON");
@@ -53,9 +57,10 @@ class ErrorJsonTests {
     void response_NotFoundException_CarriesStatusFromCode() {
         RestResponse response = ErrorJson.response(new ApiException(ErrorCode.NOT_FOUND, "нет бота"));
 
-        assertEquals(404, response.status(),
-                "Статус ответа берётся из кода ошибки: not_found обязан быть 404");
-        assertEquals("{\"error\":{\"code\":\"not_found\",\"message\":\"нет бота\",\"details\":{}}}", response.body(),
+        assertEquals(404, response.status(), "Статус ответа берётся из кода ошибки: not_found обязан быть 404");
+        assertEquals(
+                "{\"error\":{\"code\":\"not_found\",\"message\":\"нет бота\",\"details\":{}}}",
+                response.body(),
                 "Тело ответа — тот же объект ошибки");
     }
 }

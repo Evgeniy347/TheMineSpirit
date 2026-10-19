@@ -8,7 +8,8 @@ import java.util.Objects;
 
 public record ScanParams(ScanRadius radius, IdFilter filter) {
     public ScanParams {
-        Objects.requireNonNull(radius, "radius не может быть null: скан без радиуса не знает, сколько мира просматривать");
+        Objects.requireNonNull(
+                radius, "radius не может быть null: скан без радиуса не знает, сколько мира просматривать");
         Objects.requireNonNull(filter, "filter не может быть null: пустой фильтр задаётся IdFilter.matchAll()");
     }
 

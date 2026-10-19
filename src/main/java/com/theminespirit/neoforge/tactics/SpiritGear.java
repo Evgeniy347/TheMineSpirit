@@ -4,11 +4,11 @@ import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ArrowItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -66,21 +66,6 @@ public final class SpiritGear {
 
     public int healItems() {
         return count(Items.GOLDEN_APPLE) + count(Items.ENCHANTED_GOLDEN_APPLE);
-    }
-
-    public boolean takeBlock(BlockPos pos) {
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            if (placeable(stack)) {
-                BlockState state = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
-                if (spirit.level().setBlock(pos, state, 3)) {
-                    stack.shrink(1);
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
     }
 
     public boolean pourWater(BlockPos pos) {
@@ -178,11 +163,12 @@ public final class SpiritGear {
         if (stack.isEmpty()) {
             return 0.0;
         }
-        ItemAttributeModifiers modifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS,
-                ItemAttributeModifiers.EMPTY);
+        ItemAttributeModifiers modifiers =
+                stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
         double[] total = {HAND_DAMAGE};
         modifiers.forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
-            if (attribute.value() == Attributes.ATTACK_DAMAGE.value() && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
+            if (attribute.value().equals(Attributes.ATTACK_DAMAGE.value())
+                    && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
                 total[0] += modifier.amount();
             }
         });
@@ -195,7 +181,8 @@ public final class SpiritGear {
         }
         BlockState state = blockItem.getBlock().defaultBlockState();
         return state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)
-                && !(blockItem.getBlock() instanceof EntityBlock) && !(blockItem.getBlock() instanceof FallingBlock)
+                && !(blockItem.getBlock() instanceof EntityBlock)
+                && !(blockItem.getBlock() instanceof FallingBlock)
                 && !(blockItem.getBlock() instanceof TntBlock);
     }
 }

@@ -12,6 +12,7 @@ import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.perception.Finding;
 import com.theminespirit.core.perception.MemoryCodec;
@@ -48,6 +49,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -56,8 +58,8 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 public final class SpiritEntity extends PathfinderMob {
@@ -74,7 +76,8 @@ public final class SpiritEntity extends PathfinderMob {
     private final ArmorEquipPolicy armorEquip = new ArmorEquipPolicy(this);
     private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
-    private SpiritBrain brain;
+    private final DropMagnet magnet = new DropMagnet(this);
+    private SpiritBrain spiritBrain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
     private Finding finding;
@@ -82,8 +85,8 @@ public final class SpiritEntity extends PathfinderMob {
     private SpiritHome home = SpiritHome.none();
     private BlockCoord bed;
     private Camp camp;
-    private DropCollector activeCollector;
     private int pathBuilds;
+    private int teleports;
     private int entityQueries;
     private int snapshotBuilds;
     private long lastSayTick = Long.MIN_VALUE;
@@ -124,11 +127,12 @@ public final class SpiritEntity extends PathfinderMob {
         armorEquip.tick();
         hunger.tick();
         NightLeashGate.arm(this);
+        magnet.tick();
         policies.tick();
         if (demo) {
             tactics.pause();
-            if (brain != null) {
-                brain.tick();
+            if (spiritBrain != null) {
+                spiritBrain.tick();
             }
             return;
         }
@@ -137,8 +141,8 @@ public final class SpiritEntity extends PathfinderMob {
             return;
         }
         tactics.tick();
-        if (brain != null && (!strategyOwned() || brain.observesWhileTacticsOwns())) {
-            brain.tick();
+        if (spiritBrain != null && (!strategyOwned() || spiritBrain.observesWhileTacticsOwns())) {
+            spiritBrain.tick();
         }
     }
 
@@ -255,10 +259,6 @@ public final class SpiritEntity extends PathfinderMob {
         this.bed = bed;
     }
 
-    public void clearBed() {
-        this.bed = null;
-    }
-
     public boolean nightLeashArmed() {
         return nightLeashArmed;
     }
@@ -288,7 +288,7 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<SpiritBrain> brainIfPresent() {
-        return Optional.ofNullable(brain);
+        return Optional.ofNullable(spiritBrain);
     }
 
     @Override
@@ -322,8 +322,8 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     private String taskJsonForSave() {
-        if (brain != null) {
-            String json = brain.snapshot().map(this::encodeForSave).orElse(null);
+        if (spiritBrain != null) {
+            String json = spiritBrain.snapshot().map(this::encodeForSave).orElse(null);
             if (json != null) {
                 return json;
             }
@@ -372,7 +372,9 @@ public final class SpiritEntity extends PathfinderMob {
     private void restoreHome(CompoundTag compound) {
         try {
             BlockPos pos = blockPosition();
-            home = SpiritHome.resolve(SpiritHomeStore.read(compound), memory.recallAll(MemoryType.BASE),
+            home = SpiritHome.resolve(
+                    SpiritHomeStore.read(compound),
+                    memory.recallAll(MemoryType.BASE),
                     level().dimension().location().toString(),
                     new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         } catch (RuntimeException e) {
@@ -411,8 +413,11 @@ public final class SpiritEntity extends PathfinderMob {
                 tactics.restore(stored);
             } catch (TacticsFormatException e) {
                 tactics.failRestore(e.getMessage());
-                LOGGER.error("Дух {} потерял состояние тактики, начнёт с чистого листа. Причина: {}", getUUID(),
-                        e.getMessage(), e);
+                LOGGER.error(
+                        "Дух {} потерял состояние тактики, начнёт с чистого листа. Причина: {}",
+                        getUUID(),
+                        e.getMessage(),
+                        e);
             }
         });
     }
@@ -421,9 +426,11 @@ public final class SpiritEntity extends PathfinderMob {
         try {
             return MemoryCodec.decode(json);
         } catch (MemoryFormatException e) {
-            SpiritMemoryStore.countCorruptLoad();
-            LOGGER.error("Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
-                    getUUID(), e.getMessage(), e);
+            LOGGER.error(
+                    "Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
+                    getUUID(),
+                    e.getMessage(),
+                    e);
             return MemoryStore.empty();
         }
     }
@@ -440,24 +447,12 @@ public final class SpiritEntity extends PathfinderMob {
         return inventory;
     }
 
-    public void trackDropCollector(DropCollector collector) {
-        this.activeCollector = collector;
-    }
-
-    public DropCollector activeDropCollector() {
-        return activeCollector;
-    }
-
-    public float equipmentDropChance(EquipmentSlot slot) {
-        return getEquipmentDropChance(slot);
-    }
-
     public void startTask(TaskNode plan) {
         brain().start(plan);
     }
 
     public long taskGeneration() {
-        return brain == null ? SpiritReading.UNKNOWN_GENERATION : brain.generation();
+        return spiritBrain == null ? SpiritReading.UNKNOWN_GENERATION : spiritBrain.generation();
     }
 
     public void cancelTask() {
@@ -465,11 +460,11 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<RunStatus> taskStatus() {
-        return brain == null ? Optional.empty() : brain.status();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.status();
     }
 
     public Optional<TaskNode> currentPlan() {
-        return brain == null ? Optional.empty() : brain.plan();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.plan();
     }
 
     public Optional<String> currentActivity() {
@@ -505,34 +500,29 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<String> currentTaskScript() {
-        return brain == null ? Optional.empty() : brain.currentScript();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.currentScript();
     }
 
     public boolean isFollowingPlayer() {
-        return currentTaskScript().filter(NightLeashGate.FOLLOW_SCRIPTS::contains).isPresent();
+        return currentTaskScript()
+                .filter(NightLeashGate.FOLLOW_SCRIPTS::contains)
+                .isPresent();
     }
 
     public Optional<RunProgress> taskProgress() {
-        return brain == null ? Optional.empty() : brain.progress();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.progress();
     }
 
     public Optional<RunProgress> taskFailedAt() {
-        return brain == null ? Optional.empty() : brain.failedAt();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.failedAt();
     }
 
     public Optional<String> taskFailureReason() {
-        return brain == null ? Optional.empty() : brain.failureReason();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.failureReason();
     }
 
     public Optional<ScriptResult> taskResult() {
-        return brain == null ? Optional.empty() : brain.successResult();
-    }
-
-    public Optional<String> taskSnapshot() {
-        if (brain == null) {
-            return Optional.empty();
-        }
-        return brain.snapshot().map(snapshot -> TaskSnapshotCodec.encode(snapshot));
+        return spiritBrain == null ? Optional.empty() : spiritBrain.successResult();
     }
 
     public Optional<WorldObservation> observation() {
@@ -559,20 +549,31 @@ public final class SpiritEntity extends PathfinderMob {
         this.finding = finding;
     }
 
-
     public int snapshotBuilds() {
         return snapshotBuilds;
     }
 
     private SpiritBrain brain() {
-        if (brain == null) {
-            brain = new SpiritBrain(this);
+        if (spiritBrain == null) {
+            spiritBrain = new SpiritBrain(this);
         }
-        return brain;
+        return spiritBrain;
     }
 
     public void countPathBuild() {
         pathBuilds++;
+    }
+
+    public void countTeleport() {
+        teleports++;
+    }
+
+    public int teleports() {
+        return teleports;
+    }
+
+    public int claimMagnetPulls(AABB area, IdFilter items, long since) {
+        return magnet.claim(area, items, since);
     }
 
     public int pathBuilds() {
@@ -614,8 +615,8 @@ public final class SpiritEntity extends PathfinderMob {
 
     private void restoreSnapshot(TaskSnapshot snapshot) {
         try {
-            TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(snapshot, SpiritScripts.catalogFor(this),
-                    SpiritScripts.conditionCatalog());
+            TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(
+                    snapshot, SpiritScripts.catalogFor(this), SpiritScripts.conditionCatalog());
             brain().restore(validated);
         } catch (RuntimeException e) {
             String reason = "не удалось восстановить задачу: " + e.getMessage();
@@ -624,4 +625,3 @@ public final class SpiritEntity extends PathfinderMob {
         }
     }
 }
-

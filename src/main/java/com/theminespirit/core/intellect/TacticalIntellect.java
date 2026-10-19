@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class TacticalIntellect {
     private final ActivityCatalog catalog;
@@ -21,7 +22,7 @@ public final class TacticalIntellect {
     private final ExpeditionPlanner expeditions = new ExpeditionPlanner();
     private final OutsideGate outsideGate = OutsideGate.withDefaults();
     private List<EnemyFact> enemies = List.of();
-    private Point vein;
+    private @Nullable Point vein;
     private boolean weaponStock;
     private boolean playerEscort;
 
@@ -31,7 +32,8 @@ public final class TacticalIntellect {
                     "Интеллект без каталога не распределяет: деятельности — классы каталога");
         }
         if (profiles == null) {
-            throw new IllegalArgumentException("Интеллект без профилей врагов не оценивает силы: урон — из enemies.json");
+            throw new IllegalArgumentException(
+                    "Интеллект без профилей врагов не оценивает силы: урон — из enemies.json");
         }
         if (armor == null) {
             throw new IllegalArgumentException("Интеллект без модели брони не оценивает силы: входит в запас победы");
@@ -44,7 +46,8 @@ public final class TacticalIntellect {
 
     public void trackEnemies(List<EnemyFact> sighted) {
         if (sighted == null) {
-            throw new IllegalArgumentException("Наблюдение без списка врагов не учитывается: пустой список — нет угроз");
+            throw new IllegalArgumentException(
+                    "Наблюдение без списка врагов не учитывается: пустой список — нет угроз");
         }
         enemies = List.copyOf(sighted);
     }
@@ -65,8 +68,8 @@ public final class TacticalIntellect {
         return outsideGate;
     }
 
-    public TacticalDecision decide(SettlementView view, ActivityLedger ledger, WorkReservations reservations,
-            StrategicQueue queue, long now) {
+    public TacticalDecision decide(
+            SettlementView view, ActivityLedger ledger, WorkReservations reservations, StrategicQueue queue, long now) {
         if (view == null) {
             throw new IllegalArgumentException("Решение без обстановки не принимается: зависит от нужд поселения");
         }
@@ -92,9 +95,10 @@ public final class TacticalIntellect {
                 ordered.add(spirit.id());
             }
         }
-        List<SpiritSnapshot> free = view.spirits().stream().filter(spirit -> !ordered.contains(spirit.id())).toList();
-        List<StrengthVerdict> strengths =
-                StrengthAssessor.assess(free, enemies, profiles, armor, weaponStock);
+        List<SpiritSnapshot> free = view.spirits().stream()
+                .filter(spirit -> !ordered.contains(spirit.id()))
+                .toList();
+        List<StrengthVerdict> strengths = StrengthAssessor.assess(free, enemies, profiles, armor, weaponStock);
         Set<UUID> judged = new HashSet<>();
         for (StrengthVerdict verdict : strengths) {
             judged.add(verdict.spirit());
@@ -104,11 +108,24 @@ public final class TacticalIntellect {
         for (UUID spirit : displaced) {
             ledger.clear(spirit);
         }
-        SettlementView workers = new SettlementView(view.population(), view.children(), view.foodPerSoul(),
-                view.foodNutritionPerSoul(), view.ore(), view.iron(), view.weapons(), view.threats(),
-                view.dayFraction(), view.farmWork(), view.forage(),
-                view.spirits().stream().filter(spirit -> !displaced.contains(spirit.id())).toList(),
-                view.tick(), view.processing(), view.inventoryFills());
+        SettlementView workers = new SettlementView(
+                view.population(),
+                view.children(),
+                view.foodPerSoul(),
+                view.foodNutritionPerSoul(),
+                view.ore(),
+                view.iron(),
+                view.weapons(),
+                view.threats(),
+                view.dayFraction(),
+                view.farmWork(),
+                view.forage(),
+                view.spirits().stream()
+                        .filter(spirit -> !displaced.contains(spirit.id()))
+                        .toList(),
+                view.tick(),
+                view.processing(),
+                view.inventoryFills());
         List<String> refusals = new ArrayList<>();
         List<ActivityDemand> demands = admitOutside(workers, DemandModel.evaluate(view, catalog), refusals);
         ActivityPlan plan = assigner.assign(workers, demands, ledger, now);
@@ -125,8 +142,8 @@ public final class TacticalIntellect {
         return new TacticalDecision(List.copyOf(orders), strengths, plan, expedition, refusals);
     }
 
-    private List<ActivityDemand> admitOutside(SettlementView workers, List<ActivityDemand> demands,
-            List<String> refusals) {
+    private List<ActivityDemand> admitOutside(
+            SettlementView workers, List<ActivityDemand> demands, List<String> refusals) {
         List<ActivityDemand> allowed = new ArrayList<>();
         boolean evening = outsideGate.isEvening(workers.dayFraction());
         for (ActivityDemand demand : demands) {

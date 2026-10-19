@@ -37,8 +37,10 @@ public final class ComeToPlayerScript implements ScriptInstance {
             started = true;
             player = findPlayer();
             if (player == null) {
-                return fail(playerName.equals(NEAREST) ? "на сервере нет игрока, к которому можно подойти"
-                        : "игрок '" + playerName + "' не найден на сервере");
+                return fail(
+                        NEAREST.equals(playerName)
+                                ? "на сервере нет игрока, к которому можно подойти"
+                                : "игрок '" + playerName + "' не найден на сервере");
             }
             String refusal = TravelCheck.refusal(spirit, cellOf(player));
             if (refusal != null) {
@@ -53,10 +55,12 @@ public final class ComeToPlayerScript implements ScriptInstance {
         return switch (approach.tick()) {
             case ARRIVED -> ScriptStatus.SUCCEEDED;
             case MOVING -> ScriptStatus.RUNNING;
-            case TIMEOUT -> fail("не дошёл до игрока '" + player.getName().getString() + "' за "
-                    + approach.timeoutTicks() + " тиков");
-            case STUCK -> fail("застрял по дороге к игроку '" + player.getName().getString() + "' в (x="
-                    + spirit.getX() + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")");
+            case TIMEOUT ->
+                fail("не дошёл до игрока '" + player.getName().getString() + "' за " + approach.timeoutTicks()
+                        + " тиков");
+            case STUCK ->
+                fail("застрял по дороге к игроку '" + player.getName().getString() + "' в (x=" + spirit.getX() + ", y="
+                        + spirit.getY() + ", z=" + spirit.getZ() + ")");
         };
     }
 
@@ -85,7 +89,7 @@ public final class ComeToPlayerScript implements ScriptInstance {
             return null;
         }
         spirit.countEntityQuery();
-        if (playerName.equals(NEAREST)) {
+        if (NEAREST.equals(playerName)) {
             return (ServerPlayer) level.getNearestPlayer(spirit, -1.0);
         }
         for (ServerPlayer candidate : level.players()) {

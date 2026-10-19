@@ -14,13 +14,16 @@ public final class TaskAdmission {
         CANCEL_AND_START
     }
 
-    private TaskAdmission() {
-    }
+    private TaskAdmission() {}
 
-    public static Verdict decide(Optional<String> currentScript, RunStatus status, String issuedScript,
-            long issuedGeneration, long currentGeneration, String requestedScript) {
-        Objects.requireNonNull(currentScript,
-                "Текущий скрипт не может быть null: отсутствие — это Optional.empty()");
+    public static Verdict decide(
+            Optional<String> currentScript,
+            RunStatus status,
+            String issuedScript,
+            long issuedGeneration,
+            long currentGeneration,
+            String requestedScript) {
+        Objects.requireNonNull(currentScript, "Текущий скрипт не может быть null: отсутствие — это Optional.empty()");
         Objects.requireNonNull(requestedScript, "Запрошенный скрипт не может быть null: что именно выдаём");
         if (currentScript.isPresent()) {
             if (currentScript.get().equals(requestedScript)) {
@@ -38,7 +41,6 @@ public final class TaskAdmission {
     }
 
     private static boolean generationIsOwn(long issuedGeneration, long currentGeneration) {
-        return issuedGeneration != SpiritReading.UNKNOWN_GENERATION
-                && currentGeneration == issuedGeneration;
+        return issuedGeneration != SpiritReading.UNKNOWN_GENERATION && currentGeneration == issuedGeneration;
     }
 }

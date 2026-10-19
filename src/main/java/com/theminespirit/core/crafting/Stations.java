@@ -3,8 +3,10 @@ package com.theminespirit.core.crafting;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class Stations {
     public static final String CRAFTING_TABLE = "crafting_table";
@@ -13,8 +15,7 @@ public final class Stations {
     public static final String CAMPFIRE = "campfire";
     public static final int CAMPFIRE_SLOTS = 4;
 
-    private Stations() {
-    }
+    private Stations() {}
 
     public static Optional<String> forRecipe(RecipeSpec recipe) {
         if (recipe.kind() == RecipeKind.SMELTING) {
@@ -23,16 +24,16 @@ public final class Stations {
         return recipe.needsTable() ? Optional.of(CRAFTING_TABLE) : Optional.empty();
     }
 
-    public static boolean isFoodProduct(String product) {
+    public static boolean isFoodProduct(@Nullable String product) {
         if (product == null) {
             return false;
         }
-        String normalized = product.toLowerCase();
+        String normalized = product.toLowerCase(Locale.ROOT);
         int colon = normalized.indexOf(':');
         if (colon >= 0) {
             normalized = normalized.substring(colon + 1);
         }
-        return normalized.startsWith("cooked_") || normalized.equals("baked_potato");
+        return normalized.startsWith("cooked_") || "baked_potato".equals(normalized);
     }
 
     public static List<String> smeltingCandidates(String product) {
@@ -42,7 +43,7 @@ public final class Stations {
         return List.of(FURNACE);
     }
 
-    public static Optional<String> preferredSmeltingStation(String product, Collection<String> available) {
+    public static Optional<String> preferredSmeltingStation(String product, @Nullable Collection<String> available) {
         Set<String> set = available == null ? Set.of() : new HashSet<>(available);
         return smeltingCandidates(product).stream().filter(set::contains).findFirst();
     }

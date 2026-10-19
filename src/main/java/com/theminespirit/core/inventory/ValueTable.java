@@ -14,10 +14,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class ValueTable {
     public static final int VALUE_LIMIT = 100_000;
 
+    private static final String MATCH = "match";
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/item_values.json";
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "default", "categories");
-    private static final Set<String> RULE_FIELDS = Set.of("match", "value");
-    private static final Set<String> CATEGORY_FIELDS = Set.of("name", "match");
+    private static final Set<String> RULE_FIELDS = Set.of(MATCH, "value");
+    private static final Set<String> CATEGORY_FIELDS = Set.of("name", MATCH);
 
     private final String origin;
     private final List<ValueRule> rules;
@@ -121,17 +122,21 @@ public final class ValueTable {
         for (int index = 0; index < nodes.size(); index++) {
             JsonNode ruleNode = nodes.get(index);
             if (!ruleNode.isObject()) {
-                throw new IllegalStateException("Файл ценностей '" + origin + "': правило №" + index
-                        + " — не объект с полями match и value");
+                throw new IllegalStateException(
+                        "Файл ценностей '" + origin + "': правило №" + index + " — не объект с полями match и value");
             }
             JsonResource.checkFields(ruleNode, RULE_FIELDS, origin, "правила №" + index);
             int value = JsonResource.integer(ruleNode.get("value"), origin, "поля value правила №" + index);
             if (value < 0) {
-                throw new IllegalStateException("Файл ценностей '" + origin + "': ценность правила №" + index
-                        + " равна " + value + ": отрицательная ценность правила делает выбор «самое дешёвое» бессмысленным");
+                throw new IllegalStateException(
+                        "Файл ценностей '" + origin + "': ценность правила №" + index + " равна " + value
+                                + ": отрицательная ценность правила делает выбор «самое дешёвое» бессмысленным");
             }
-            rules.add(rule(JsonResource.strings(ruleNode.get("match"), origin, "поля match правила №" + index),
-                    value, origin, "правила №" + index));
+            rules.add(rule(
+                    JsonResource.strings(ruleNode.get(MATCH), origin, "поля match правила №" + index),
+                    value,
+                    origin,
+                    "правила №" + index));
         }
         return rules;
     }
@@ -147,14 +152,16 @@ public final class ValueTable {
         for (int index = 0; index < nodes.size(); index++) {
             JsonNode categoryNode = nodes.get(index);
             if (!categoryNode.isObject()) {
-                throw new IllegalStateException("Файл ценностей '" + origin + "': категория №" + index
-                        + " — не объект с полями name и match");
+                throw new IllegalStateException(
+                        "Файл ценностей '" + origin + "': категория №" + index + " — не объект с полями name и match");
             }
             JsonResource.checkFields(categoryNode, CATEGORY_FIELDS, origin, "категории №" + index);
             String name = JsonResource.text(categoryNode.get("name"), origin, "поля name категории №" + index);
-            categories.add(category(name,
-                    JsonResource.strings(categoryNode.get("match"), origin, "поля match категории №" + index),
-                    origin, "категории №" + index));
+            categories.add(category(
+                    name,
+                    JsonResource.strings(categoryNode.get(MATCH), origin, "поля match категории №" + index),
+                    origin,
+                    "категории №" + index));
             names.add(name);
         }
         if (names.size() != categories.size()) {
@@ -183,8 +190,8 @@ public final class ValueTable {
         try {
             return new ValueRule(match, value);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл ценностей '" + origin + "': " + what + " неверно — "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл ценностей '" + origin + "': " + what + " неверно — " + error.getMessage(), error);
         }
     }
 
@@ -192,8 +199,8 @@ public final class ValueTable {
         try {
             return new Category(name, match);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл ценностей '" + origin + "': " + what + " неверна — "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл ценностей '" + origin + "': " + what + " неверна — " + error.getMessage(), error);
         }
     }
 
@@ -228,7 +235,7 @@ public final class ValueTable {
     }
 
     private static boolean subsumes(String wide, String narrow) {
-        if (wide.equals(narrow) || wide.equals("*")) {
+        if (wide.equals(narrow) || "*".equals(wide)) {
             return true;
         }
         return narrow.indexOf('*') < 0 && IdFilter.of(List.of(wide)).matches(narrow);

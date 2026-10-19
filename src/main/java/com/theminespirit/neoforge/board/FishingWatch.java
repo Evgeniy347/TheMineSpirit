@@ -9,8 +9,8 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingNeeds;
 import com.theminespirit.core.fishing.FishingSpots;
@@ -61,12 +61,12 @@ final class FishingWatch {
             return;
         }
         FishingData data = FishingData.loadDefault();
-        tickSmoker(level, service, spirits, stock, now, home, data);
+        tickSmoker(level, service, stock, now, home, data);
         tickWork(level, service, spirits, stock, now, home, data);
     }
 
-    private void tickSmoker(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock,
-            long now, BlockPos home, FishingData data) {
+    private void tickSmoker(
+            ServerLevel level, BoardService service, StockView stock, long now, BlockPos home, FishingData data) {
         if (!FishingNeeds.wantsSmoker(stock.available(), data) || smokerNear(level, home)) {
             cancelWaiting(service, SMOKER_ID);
             return;
@@ -78,15 +78,32 @@ final class FishingWatch {
         TicketTarget target = TicketTarget.at(at);
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = materials(source, target);
-        LOGGER.info("Поставлено: коптильня под улов — рыбы {} при пороге {}", FishingNeeds.cookableFish(
-                stock.available()), data.smokerFish());
-        service.submit(new BoardTicket(SMOKER_ID, BoardCase.CRAFT_SMOKER, Optional.empty(),
-                BoardPriorities.effective(BoardCase.CRAFT_SMOKER, PriorityContext.none()),
-                now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), need), target);
+        LOGGER.info(
+                "Поставлено: коптильня под улов — рыбы {} при пороге {}",
+                FishingNeeds.cookableFish(stock.available()),
+                data.smokerFish());
+        service.submit(
+                new BoardTicket(
+                        SMOKER_ID,
+                        BoardCase.CRAFT_SMOKER,
+                        Optional.empty(),
+                        BoardPriorities.effective(BoardCase.CRAFT_SMOKER, PriorityContext.none()),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        need),
+                target);
     }
 
-    private void tickWork(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock,
-            long now, BlockPos home, FishingData data) {
+    private void tickWork(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            long now,
+            BlockPos home,
+            FishingData data) {
         double share = FishingNeeds.foodShare(stock.available(), spirits.size());
         if (!FishingNeeds.wantsFishing(share)) {
             cancelWaiting(service, WORK_ID);
@@ -100,9 +117,17 @@ final class FishingWatch {
             return;
         }
         LOGGER.info("Поставлено: рыбалка на рабочей точке {} (нехватка еды {})", spot.stand(), share);
-        service.submit(new BoardTicket(WORK_ID, BoardCase.FISH, Optional.empty(),
-                BoardPriorities.effective(BoardCase.FISH, PriorityContext.none()),
-                now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+        service.submit(
+                new BoardTicket(
+                        WORK_ID,
+                        BoardCase.FISH,
+                        Optional.empty(),
+                        BoardPriorities.effective(BoardCase.FISH, PriorityContext.none()),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
                 TicketTarget.at(spot.stand()));
     }
 
@@ -113,8 +138,8 @@ final class FishingWatch {
             return remembered;
         }
         BlockCoord origin = new BlockCoord(home.getX(), home.getY(), home.getZ());
-        Optional<FishingSpots.Spot> found = FishingWorkPointPicker.pick(level, origin, data, WORK_POINT_RADIUS,
-                List.of(), WORK_POINT_AVOID);
+        Optional<FishingSpots.Spot> found =
+                FishingWorkPointPicker.pick(level, origin, data, WORK_POINT_RADIUS, List.of(), WORK_POINT_AVOID);
         found.ifPresent(spot -> workPoints.put(key, spot));
         return found.orElse(null);
     }
@@ -172,7 +197,8 @@ final class FishingWatch {
 
     private static boolean active(BoardService service, String id) {
         BoardStatus status = service.board().statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
     }
 

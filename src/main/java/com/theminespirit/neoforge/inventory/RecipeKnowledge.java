@@ -24,8 +24,11 @@ final class RecipeKnowledge implements ResourceKnowledge {
             if (result.isEmpty()) {
                 continue;
             }
-            knowledge.add(BuiltInRegistries.ITEM.getKey(result.getItem()).toString(), result.getCount(),
-                    RecipeInputs.inputsOf(holder.value()), holder.value() instanceof AbstractCookingRecipe);
+            knowledge.add(
+                    BuiltInRegistries.ITEM.getKey(result.getItem()).toString(),
+                    result.getCount(),
+                    RecipeInputs.inputsOf(holder.value()),
+                    holder.value() instanceof AbstractCookingRecipe);
         }
         return knowledge;
     }

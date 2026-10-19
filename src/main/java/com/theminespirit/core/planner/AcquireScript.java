@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * «Добыть предмет любым способом»: владеет вложенным подпланом — инвентарь, ближние сундуки,
@@ -41,39 +42,47 @@ public final class AcquireScript implements ScriptInstance {
     private final Supplier<ScriptRegistry> registry;
     private final ConditionRegistry conditionRegistry;
 
-    private TaskRunner runner;
+    private @Nullable TaskRunner runner;
     private int attempts;
     private int startInventory;
     private int chestPlanned;
-    private ScriptStatus finalStatus;
-    private String failureReason;
-    private String lastStepFailure;
+    private @Nullable ScriptStatus finalStatus;
+    private @Nullable String failureReason;
+    private @Nullable String lastStepFailure;
     private boolean suspendedBeforeStart;
 
-    public AcquireScript(String item, int count, ResourceKnowledge knowledge, AcquireSupplies supplies,
-            ScriptCatalog catalog, ConditionCatalog conditions, Supplier<ScriptRegistry> registry,
-            ConditionRegistry conditionRegistry) {
+    public AcquireScript(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            AcquireSupplies supplies,
+            ScriptCatalog catalog,
+            ConditionCatalog conditions,
+            Registries registries) {
         if (item == null || item.isBlank()) {
             throw new IllegalArgumentException("Предмет для acquire пуст: без id скрипт не знает, что добыть");
         }
         if (count < 1) {
-            throw new IllegalArgumentException("Число предметов " + count + " не положительно: цель добычи "
-                    + "должна быть хотя бы 1");
+            throw new IllegalArgumentException(
+                    "Число предметов " + count + " не положительно: цель добычи " + "должна быть хотя бы 1");
         }
         this.item = item;
         this.count = count;
-        this.knowledge = Objects.requireNonNull(knowledge, "knowledge не может быть null: без знаний резолвер "
-                + "не отличит крафт от сбора");
-        this.supplies = Objects.requireNonNull(supplies, "supplies не может быть null: без снабжения скрипт "
-                + "не прочитает инвентарь и сундуки");
-        this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: без каталога подплан "
-                + "не пройдёт валидацию");
-        this.conditions = Objects.requireNonNull(conditions, "conditions не может быть null: без каталога "
-                + "проверок подплан не пройдёт валидацию");
-        this.registry = Objects.requireNonNull(registry, "registry не может быть null: реестр скриптов отдаётся "
-                + "лениво, иначе регистрация acquire упирается в саму себя");
-        this.conditionRegistry = Objects.requireNonNull(conditionRegistry, "conditionRegistry не может быть null: "
-                + "без реестра проверок вложенный раннер не выберет ветку");
+        this.knowledge = Objects.requireNonNull(
+                knowledge, "knowledge не может быть null: без знаний резолвер " + "не отличит крафт от сбора");
+        this.supplies = Objects.requireNonNull(
+                supplies, "supplies не может быть null: без снабжения скрипт " + "не прочитает инвентарь и сундуки");
+        this.catalog = Objects.requireNonNull(
+                catalog, "catalog не может быть null: без каталога подплан " + "не пройдёт валидацию");
+        this.conditions = Objects.requireNonNull(
+                conditions, "conditions не может быть null: без каталога " + "проверок подплан не пройдёт валидацию");
+        this.registry = Objects.requireNonNull(
+                registries.registry(),
+                "registry не может быть null: реестр скриптов "
+                        + "отдаётся лениво, иначе регистрация acquire упирается в саму себя");
+        this.conditionRegistry = Objects.requireNonNull(
+                registries.conditionRegistry(),
+                "conditionRegistry не может " + "быть null: без реестра проверок вложенный раннер не выберет ветку");
     }
 
     @Override
@@ -101,17 +110,15 @@ public final class AcquireScript implements ScriptInstance {
             }
         }
         RunStatus status = runner.tick();
-        switch (status) {
-            case RUNNING -> {
-                return ScriptStatus.RUNNING;
-            }
+        return switch (status) {
+            case RUNNING -> ScriptStatus.RUNNING;
             case SUCCEEDED -> {
                 finalStatus = ScriptStatus.SUCCEEDED;
-                return ScriptStatus.SUCCEEDED;
+                yield ScriptStatus.SUCCEEDED;
             }
             case CANCELLED -> {
                 finalStatus = ScriptStatus.CANCELLED;
-                return ScriptStatus.CANCELLED;
+                yield ScriptStatus.CANCELLED;
             }
             case FAILED -> {
                 lastStepFailure = runner.failureReason().orElse("причина шага не указана");
@@ -119,19 +126,13 @@ public final class AcquireScript implements ScriptInstance {
                     // Пересборка на следующем тике: один перечит мира на провал шага,
                     // не чаще одного внутреннего тика на внешний.
                     runner = null;
-                    return ScriptStatus.RUNNING;
+                    yield ScriptStatus.RUNNING;
                 }
-                return fail(lastStepFailure);
+                yield fail(lastStepFailure);
             }
-        }
-        return ScriptStatus.RUNNING;
+        };
     }
 
-    /**
-     * Собирает подплан: инвентарь → сундуки → остаток через резолвер. Пустой результат —
-     * цель уже лежит в инвентаре, мир трогать не нужно. Пакетный доступ — чтобы тесты
-     * осматривали дерево, не запуская вложенный раннер.
-     */
     Optional<TaskNode> buildSubplan() {
         if (attempts == 0) {
             // Фиксируем стартовые числа только на первой попытке: итог описывает
@@ -152,8 +153,8 @@ public final class AcquireScript implements ScriptInstance {
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {
-            nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions,
-                    supplies.inventory(), supplies.nearbyStations()));
+            nodes.add(ResourceResolver.resolve(
+                    item, need, knowledge, catalog, conditions, supplies.inventory(), supplies.nearbyStations()));
         }
         TaskNode plan = new SequenceNode(nodes);
         plan = PlanValidator.validate(plan, catalog, conditions);
@@ -170,7 +171,7 @@ public final class AcquireScript implements ScriptInstance {
         return value instanceof Integer integer ? integer : 0;
     }
 
-    private ScriptStatus fail(String detail) {
+    private ScriptStatus fail(@Nullable String detail) {
         finalStatus = ScriptStatus.FAILED;
         int now = supplies.inInventory(item);
         int gathered = Math.max(0, now - startInventory);
@@ -204,13 +205,14 @@ public final class AcquireScript implements ScriptInstance {
         if (runner == null) {
             return Optional.empty();
         }
-        return runner.progress().map(step -> step.done() != null && step.target() != null
-                ? new Progress(step.done(), step.target())
-                : new Progress(step.step(), step.totalSteps()));
+        return runner.progress()
+                .map(step -> step.done() != null && step.target() != null
+                        ? new Progress(step.done(), step.target())
+                        : new Progress(step.step(), step.totalSteps()));
     }
 
     @Override
-    public String failureReason() {
+    public @Nullable String failureReason() {
         return failureReason;
     }
 
@@ -306,4 +308,6 @@ public final class AcquireScript implements ScriptInstance {
     int attempts() {
         return attempts;
     }
+
+    public record Registries(Supplier<ScriptRegistry> registry, ConditionRegistry conditionRegistry) {}
 }

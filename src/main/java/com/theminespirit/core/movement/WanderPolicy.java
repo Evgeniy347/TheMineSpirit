@@ -9,8 +9,7 @@ public final class WanderPolicy {
 
     private static final long ATTEMPT_MIX = 0x9E3779B97F4A7C15L;
 
-    private WanderPolicy() {
-    }
+    private WanderPolicy() {}
 
     public static BlockCoord next(long seed, BlockCoord origin, int radius, int attempt) {
         Objects.requireNonNull(origin, "Старт блуждания не может быть null: без него неизвестно, вокруг чего бродить");
@@ -19,8 +18,8 @@ public final class WanderPolicy {
                     + " отрицателен: точка с отрицательным радиусом недостижима и дух встанет");
         }
         if (attempt < 0) {
-            throw new IllegalArgumentException("Попытка " + attempt
-                    + " отрицательна: счётчик попыток растёт от нуля при каждом застревании");
+            throw new IllegalArgumentException(
+                    "Попытка " + attempt + " отрицательна: счётчик попыток растёт от нуля при каждом застревании");
         }
         if (radius == 0) {
             return origin;

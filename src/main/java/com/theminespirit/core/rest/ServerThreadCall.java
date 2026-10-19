@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ServerThreadCall {
@@ -18,6 +19,7 @@ public final class ServerThreadCall {
     private final Executor serverThread;
     private final AtomicInteger submitted = new AtomicInteger();
     private final Object stopLock = new Object();
+    private final CompletableFuture<Void> stopSignal = new CompletableFuture<>();
     private boolean stopping;
 
     public ServerThreadCall(Executor serverThread) {
@@ -35,9 +37,11 @@ public final class ServerThreadCall {
         try {
             serverThread.execute(() -> run(task, future));
         } catch (RejectedExecutionException e) {
-            throw new ApiException(ErrorCode.INTERNAL,
+            throw new ApiException(
+                    ErrorCode.INTERNAL,
                     "Серверный поток не принял задачу: сервер останавливается или перегружен, повторите запрос позже",
-                    Map.of(), e);
+                    Map.of(),
+                    e);
         }
         return future;
     }
@@ -49,36 +53,29 @@ public final class ServerThreadCall {
     public void stop() {
         synchronized (stopLock) {
             stopping = true;
-            stopLock.notifyAll();
         }
+        stopSignal.complete(null);
     }
 
     public <T> T await(CompletableFuture<T> future, Duration timeout) {
-        future.whenComplete((value, error) -> {
-            synchronized (stopLock) {
-                stopLock.notifyAll();
-            }
-        });
-        long deadline = System.nanoTime() + timeout.toNanos();
-        synchronized (stopLock) {
-            while (!future.isDone()) {
-                if (stopping) {
-                    future.cancel(false);
-                    throw stoppingError();
-                }
-                long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
-                if (remainingMillis <= 0) {
-                    future.cancel(false);
-                    throw timeoutError(timeout);
-                }
-                try {
-                    stopLock.wait(remainingMillis);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ApiException(ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается",
-                            Map.of(), e);
-                }
-            }
+        try {
+            CompletableFuture.anyOf(future, stopSignal)
+                    .exceptionally(failure -> null)
+                    .get(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(false);
+            throw timeoutError(timeout);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException(
+                    "anyOf после exceptionally не завершается исключением: исход задачи разбирает result", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
+        }
+        if (!future.isDone()) {
+            future.cancel(false);
+            throw stoppingError();
         }
         return result(future);
     }
@@ -99,24 +96,28 @@ public final class ServerThreadCall {
         try {
             return future.get();
         } catch (ExecutionException e) {
-            throw failure(e.getCause());
+            Throwable cause = e.getCause();
+            throw failure(cause != null ? cause : e);
         } catch (CancellationException e) {
-            throw new ApiException(ErrorCode.INTERNAL, "Задача на серверном потоке отменена до выполнения",
-                    Map.of(), e);
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Задача на серверном потоке отменена до выполнения", Map.of(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ApiException(ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается",
-                    Map.of(), e);
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
         }
     }
 
     private static ApiException stoppingError() {
-        return new ApiException(ErrorCode.INTERNAL,
-                "Сервер останавливается, повторите запрос позже: мост закрывается и больше не читает мир", Map.of());
+        return new ApiException(
+                ErrorCode.INTERNAL,
+                "Сервер останавливается, повторите запрос позже: мост закрывается и больше не читает мир",
+                Map.of());
     }
 
     private static ApiException timeoutError(Duration timeout) {
-        return new ApiException(ErrorCode.INTERNAL,
+        return new ApiException(
+                ErrorCode.INTERNAL,
                 "Сервер не ответил за " + formatSeconds(timeout) + " с: серверный тик завис или перегружен, "
                         + "повторите запрос позже и проверьте нагрузку сервера",
                 Map.of("timeout_ms", timeout.toMillis()));
@@ -138,8 +139,10 @@ public final class ServerThreadCall {
             return api;
         }
         String description = cause.getClass().getName() + ": " + cause.getMessage();
-        return new ApiException(ErrorCode.INTERNAL,
+        return new ApiException(
+                ErrorCode.INTERNAL,
                 "Задача на серверном потоке завершилась ошибкой: " + description + ". Полный стек — в логе сервера",
-                Map.of("cause", description), cause);
+                Map.of("cause", description),
+                cause);
     }
 }

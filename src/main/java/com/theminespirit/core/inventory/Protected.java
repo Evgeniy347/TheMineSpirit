@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class Protected {
     private final List<String> patterns;
-    private final IdFilter filter;
+    private final @Nullable IdFilter filter;
     private final List<Stack> inventory;
     private final int[] giveAway;
 
@@ -20,12 +21,11 @@ public final class Protected {
     }
 
     public static Protected of(List<String> patterns, List<Stack> inventory, BaseKit kit, ValueTable values) {
-        Objects.requireNonNull(patterns, "Список защищённых шаблонов не может быть null: "
-                + "пустая защита задаётся пустым списком");
+        Objects.requireNonNull(
+                patterns, "Список защищённых шаблонов не может быть null: " + "пустая защита задаётся пустым списком");
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: по его слотам считают излишек набора");
         Objects.requireNonNull(kit, "Базовый набор не может быть null: без него квоты набора не проверить");
-        Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
-                + "по ней набор выбирает лучшую кирку");
+        Objects.requireNonNull(values, "Таблица ценностей не может быть null: " + "по ней набор выбирает лучшую кирку");
         int[] giveAway = new int[inventory.size()];
         for (Slice slice : kit.surplus(inventory, values)) {
             giveAway[slice.slot()] = slice.count();

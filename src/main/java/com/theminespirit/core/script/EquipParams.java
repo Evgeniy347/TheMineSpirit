@@ -6,8 +6,8 @@ import java.util.Objects;
 public record EquipParams(String item) {
     public EquipParams {
         if (item == null || item.isBlank()) {
-            throw new IllegalArgumentException("Не задан предмет equip: без id или шаблона ('*_pickaxe') "
-                    + "не понять, что надевать");
+            throw new IllegalArgumentException(
+                    "Не задан предмет equip: без id или шаблона ('*_pickaxe') " + "не понять, что надевать");
         }
     }
 

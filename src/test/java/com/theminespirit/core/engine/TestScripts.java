@@ -4,8 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 final class TestScripts {
-    private TestScripts() {
-    }
+    private TestScripts() {}
 
     static ScriptFactory succeeding(int ticks) {
         return params -> new TimedInstance(ticks, ScriptStatus.SUCCEEDED);

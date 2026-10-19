@@ -15,10 +15,23 @@ import net.jqwik.api.Provide;
 class ArmorChoiceProperties {
     private static final ArmorTable TABLE = ArmorTable.load();
 
-    private static final String[] HEAD_ITEMS = {"leather_helmet", "golden_helmet", "chainmail_helmet", "iron_helmet",
-            "turtle_helmet", "diamond_helmet", "netherite_helmet"};
-    private static final String[] CHEST_ITEMS = {"leather_chestplate", "golden_chestplate", "chainmail_chestplate",
-            "iron_chestplate", "diamond_chestplate", "netherite_chestplate"};
+    private static final String[] HEAD_ITEMS = {
+        "leather_helmet",
+        "golden_helmet",
+        "chainmail_helmet",
+        "iron_helmet",
+        "turtle_helmet",
+        "diamond_helmet",
+        "netherite_helmet"
+    };
+    private static final String[] CHEST_ITEMS = {
+        "leather_chestplate",
+        "golden_chestplate",
+        "chainmail_chestplate",
+        "iron_chestplate",
+        "diamond_chestplate",
+        "netherite_chestplate"
+    };
 
     @Provide
     Arbitrary<ArmorPiece> headPieces() {
@@ -36,49 +49,60 @@ class ArmorChoiceProperties {
         Arbitrary<Integer> protection = Arbitraries.integers().between(0, 4);
         Arbitrary<Integer> durabilityPercent = Arbitraries.integers().between(0, 100);
         return Combinators.combine(item, defense, protection, durabilityPercent)
-                .as((id, def, prot, percent) -> new ArmorPiece("minecraft:" + id, slot, def,
-                        TABLE.materialRank("minecraft:" + id) >= 4 ? 2.0 : 0.0, prot, percent / 100.0));
+                .as((id, def, prot, percent) -> new ArmorPiece(
+                        "minecraft:" + id,
+                        slot,
+                        def,
+                        TABLE.materialRank("minecraft:" + id) >= 4 ? 2.0 : 0.0,
+                        prot,
+                        percent / 100.0));
     }
 
     @Property
-    void decide_Chosen_IsNeverWorseThanWorn(@ForAll("headPieces") ArmorPiece worn,
-            @ForAll("headPieces") ArmorPiece candidate) {
-        Map<ArmorSlot, ArmorPiece> chosen = ArmorChoice.decide(List.of(candidate), Map.of(ArmorSlot.HEAD, worn),
-                TABLE);
+    void decide_Chosen_IsNeverWorseThanWorn(
+            @ForAll("headPieces") ArmorPiece worn, @ForAll("headPieces") ArmorPiece candidate) {
+        Map<ArmorSlot, ArmorPiece> chosen = ArmorChoice.decide(List.of(candidate), Map.of(ArmorSlot.HEAD, worn), TABLE);
 
         ArmorPiece result = chosen.get(ArmorSlot.HEAD);
-        assertTrue(ArmorChoice.compare(result, worn, TABLE) >= 0,
-                "Выбранный предмет обязан быть не хуже надетого: дух не снимает хорошую броню ради худшей. "
-                        + "Надет " + worn + ", выбран " + result);
+        assertTrue(
+                ArmorChoice.compare(result, worn, TABLE) >= 0,
+                "Выбранный предмет обязан быть не хуже надетого: дух не снимает хорошую броню ради худшей. " + "Надет "
+                        + worn + ", выбран " + result);
     }
 
     @Property
     void decide_EqualWornAndCandidate_KeepsWorn(@ForAll("headPieces") ArmorPiece worn) {
         Map<ArmorSlot, ArmorPiece> chosen = ArmorChoice.decide(List.of(worn), Map.of(ArmorSlot.HEAD, worn), TABLE);
 
-        assertEquals(worn, chosen.get(ArmorSlot.HEAD),
+        assertEquals(
+                worn,
+                chosen.get(ArmorSlot.HEAD),
                 "При равном кандидате остаётся надетый: замена только при строгом улучшении, иначе дух "
                         + "дёргается между равными. Предмет " + worn);
     }
 
     @Property
-    void isStrictlyBetter_RepeatedDecision_IsStable(@ForAll("chestPieces") ArmorPiece worn,
-            @ForAll("chestPieces") ArmorPiece candidate) {
+    void isStrictlyBetter_RepeatedDecision_IsStable(
+            @ForAll("chestPieces") ArmorPiece worn, @ForAll("chestPieces") ArmorPiece candidate) {
         boolean better = ArmorChoice.isStrictlyBetter(candidate, worn, TABLE);
         boolean reverse = ArmorChoice.isStrictlyBetter(worn, candidate, TABLE);
 
-        assertTrue(!(better && reverse),
+        assertTrue(
+                !(better && reverse),
                 "Строгое улучшение не может быть взаимным: иначе замена дёргалась бы между двумя предметами "
                         + "каждый тик. Надет " + worn + ", кандидат " + candidate);
     }
 
     @Property
-    void compare_Pieces_IsAntisymmetric(@ForAll("chestPieces") ArmorPiece left, @ForAll("chestPieces") ArmorPiece right) {
+    void compare_Pieces_IsAntisymmetric(
+            @ForAll("chestPieces") ArmorPiece left, @ForAll("chestPieces") ArmorPiece right) {
         int forward = Integer.signum(ArmorChoice.compare(left, right, TABLE));
         int backward = Integer.signum(ArmorChoice.compare(right, left, TABLE));
 
-        assertEquals(-forward, backward,
-                "Сравнение обязано быть антисимметричным: иначе порядок «лучше» зависел бы от порядка "
-                        + "аргументов. " + left + " и " + right);
+        assertEquals(
+                -forward,
+                backward,
+                "Сравнение обязано быть антисимметричным: иначе порядок «лучше» зависел бы от порядка " + "аргументов. "
+                        + left + " и " + right);
     }
 }

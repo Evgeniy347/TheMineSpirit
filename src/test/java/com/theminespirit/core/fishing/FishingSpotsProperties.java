@@ -19,8 +19,7 @@ class FishingSpotsProperties {
 
     @Property
     void findWorkPoint_AnyOriginNearPond_IsDeterministicAndOnThePond(
-            @ForAll @IntRange(min = -40, max = 40) int originX,
-            @ForAll @IntRange(min = -40, max = 40) int originZ) {
+            @ForAll @IntRange(min = -40, max = 40) int originX, @ForAll @IntRange(min = -40, max = 40) int originZ) {
         WaterView view = openShore();
         BlockCoord origin = new BlockCoord(originX, 64, originZ);
 
@@ -29,26 +28,32 @@ class FishingSpotsProperties {
         FishingSpots.Spot second = FishingSpots.findWorkPoint(origin, view, DATA, FishingSpots.SpotFilter.ALL)
                 .orElseThrow();
 
-        assertEquals(first, second,
+        assertEquals(
+                first,
+                second,
                 "Выбор рабочей точки обязан быть детерминирован: два одинаковых запроса дают одно место, "
                         + "иначе дух мечется между берегами");
-        assertTrue(first.water().x() >= POND_X && first.water().x() < POND_X + SIDE
-                        && first.water().z() >= POND_Z && first.water().z() < POND_Z + SIDE,
+        assertTrue(
+                first.water().x() >= POND_X
+                        && first.water().x() < POND_X + SIDE
+                        && first.water().z() >= POND_Z
+                        && first.water().z() < POND_Z + SIDE,
                 "Цель заброса обязана лежать в пятне воды, а не в воздухе: иначе удочка летит мимо, "
                         + "фактическая клетка " + first.water());
-        assertTrue(first.stand().y() == 64 || first.stand().y() == 65,
+        assertTrue(
+                first.stand().y() == 64 || first.stand().y() == 65,
                 "Рабочая стоянка обязана быть на уровне воды или на блок выше: с обрыва дух не забросит, "
                         + "фактическая высота " + first.stand().y());
     }
 
     @Property
     void findWorkPoint_AnyOriginWithRejectingFilter_Refuses(
-            @ForAll @IntRange(min = -40, max = 40) int originX,
-            @ForAll @IntRange(min = -40, max = 40) int originZ) {
+            @ForAll @IntRange(min = -40, max = 40) int originX, @ForAll @IntRange(min = -40, max = 40) int originZ) {
         WaterView view = openShore();
 
-        assertTrue(FishingSpots.findWorkPoint(new BlockCoord(originX, 64, originZ), view, DATA,
-                        (stand, cell) -> false).isEmpty(),
+        assertTrue(
+                FishingSpots.findWorkPoint(new BlockCoord(originX, 64, originZ), view, DATA, (stand, cell) -> false)
+                        .isEmpty(),
                 "Фильтр, отвергающий весь берег, обязан оставить рабочую точку ненайденной: "
                         + "запрет построек не обходится подстановкой места по умолчанию");
     }
@@ -69,8 +74,10 @@ class FishingSpotsProperties {
             @Override
             public boolean canStand(BlockCoord feet) {
                 return feet.y() == 64
-                        && (feet.x() < POND_X || feet.x() >= POND_X + SIDE
-                                || feet.z() < POND_Z || feet.z() >= POND_Z + SIDE);
+                        && (feet.x() < POND_X
+                                || feet.x() >= POND_X + SIDE
+                                || feet.z() < POND_Z
+                                || feet.z() >= POND_Z + SIDE);
             }
         };
     }

@@ -14,8 +14,8 @@ class SafeMinePlanTests {
     private static CellWorld safeStaircase(BlockCoord entry, int targetY) {
         CellWorld world = new CellWorld();
         int entryFloor = entry.y() - 1;
-        for (int floor = entryFloor, index = 0; floor >= targetY; floor--, index++) {
-            world.set(entry.x() + index, floor, entry.z(), Cell.SOLID);
+        for (int floor = entryFloor; floor >= targetY; floor--) {
+            world.set(entry.x() + (entryFloor - floor), floor, entry.z(), Cell.SOLID);
         }
         return world;
     }
@@ -36,7 +36,9 @@ class SafeMinePlanTests {
 
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
-        assertEquals(9, plan.steps().size(),
+        assertEquals(
+                9,
+                plan.steps().size(),
                 "Спуск с этажа 9 до целевого 1 обязан состоять из девяти шагов: по одному на каждый этаж");
         assertEquals(DescentStop.TARGET_Y, plan.stop(), "Безопасная шахта без опасных клеток заканчивается целью");
         assertEquals("", plan.dangerReason(), "До цели дошли без опасности — причины остановки нет");
@@ -44,8 +46,12 @@ class SafeMinePlanTests {
         for (int index = 1; index < plan.steps().size(); index++) {
             SafeMineStep previous = plan.steps().get(index - 1);
             SafeMineStep step = plan.steps().get(index);
-            assertEquals(new BlockCoord(previous.stand().x() + EAST.dx, previous.stand().y() - 1,
-                            previous.stand().z() + EAST.dz), step.stand(),
+            assertEquals(
+                    new BlockCoord(
+                            previous.stand().x() + EAST.dx,
+                            previous.stand().y() - 1,
+                            previous.stand().z() + EAST.dz),
+                    step.stand(),
                     "Ступени обязаны быть непрерывны: следующий шаг — на этаж ниже и на блок ближе, без разрывов");
         }
     }
@@ -58,7 +64,9 @@ class SafeMinePlanTests {
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
         for (SafeMineStep step : plan.steps()) {
-            assertEquals(step.index() % 4 == 0, step.torch(),
+            assertEquals(
+                    step.index() % 4 == 0,
+                    step.torch(),
                     "Факелы обязаны идти с шагом интервала из данных: иначе шахта либо темна, либо разорена");
         }
         long torches = plan.steps().stream().filter(SafeMineStep::torch).count();
@@ -90,9 +98,12 @@ class SafeMinePlanTests {
 
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
-        assertEquals(DescentStop.TARGET_Y, plan.stop(),
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
                 "Лава сбоку — не повод бросать шахту: её закладывают блоком и идут дальше");
-        assertTrue(plan.steps().stream().anyMatch(step -> step.fill().contains(side)),
+        assertTrue(
+                plan.steps().stream().anyMatch(step -> step.fill().contains(side)),
                 "Опасная клетка сбоку обязана попасть в заделки шага, иначе дух упрётся в лаву");
     }
 
@@ -118,10 +129,10 @@ class SafeMinePlanTests {
 
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
-        assertEquals(2, plan.steps().size(),
-                "Провал под ногами обязан обрезать план перед шагом: дух туда не шагает");
+        assertEquals(2, plan.steps().size(), "Провал под ногами обязан обрезать план перед шагом: дух туда не шагает");
         assertEquals(DescentStop.DANGER, plan.stop(), "Провал — остановка по опасности, а не цель");
-        assertTrue(plan.dangerReason().contains("пол"),
+        assertTrue(
+                plan.dangerReason().contains("пол"),
                 "Причина обязана называть пол, иначе игрок не поймёт, куда дух не шагнул, фактически: "
                         + plan.dangerReason());
     }
@@ -148,7 +159,8 @@ class SafeMinePlanTests {
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
         assertEquals(DescentStop.TARGET_Y, plan.stop(), "Сыпучий блок над головой не останавливает шахту");
-        assertTrue(plan.steps().get(3).fallingAbove(),
+        assertTrue(
+                plan.steps().get(3).fallingAbove(),
                 "Сыпучий блок над проходом обязан пометить шаг: сначала ждём падения, потом копаем");
         assertFalse(plan.steps().get(2).fallingAbove(), "Чужой шаг не обязан наследовать пометку соседа");
     }
@@ -171,7 +183,9 @@ class SafeMinePlanTests {
 
         SafeMinePlan.staircase(world, entry, EAST, 1, 4);
 
-        assertEquals(99, world.reads(),
+        assertEquals(
+                99,
+                world.reads(),
                 "Каждый шаг лесенки обязан читать ровно 11 клеток (пол, три клетки прохода, шесть боковых, "
                         + "потолок): лишние чтения кладут серверный тик при планировании");
     }
@@ -180,7 +194,8 @@ class SafeMinePlanTests {
     void tunnel_LengthLessThanOne_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMinePlan.tunnel(world, new BlockCoord(0, 10, 0), EAST, 0, 4),
                 "Штольня нулевой длины обязана отклоняться до чтения мира");
 
@@ -191,7 +206,8 @@ class SafeMinePlanTests {
     void tunnel_TorchIntervalOutOfRange_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMinePlan.tunnel(world, new BlockCoord(0, 10, 0), EAST, 4, 0),
                 "Интервал факелов 0 обязан отклоняться до чтения мира");
 
@@ -202,7 +218,8 @@ class SafeMinePlanTests {
     void staircase_TargetYAboveWorldCeiling_Throws() {
         CellWorld world = new CellWorld();
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> SafeMinePlan.staircase(world, new BlockCoord(0, 10, 0), EAST, 320, 4),
                 "Цель выше потолка мира обязана отклоняться до чтения мира");
 
@@ -211,9 +228,13 @@ class SafeMinePlanTests {
 
     @Test
     void worldBounds_ComparedToDescentPlan_AreEqual() {
-        assertEquals(DescentPlan.WORLD_MIN_Y, SafeMinePlan.WORLD_MIN_Y,
+        assertEquals(
+                DescentPlan.WORLD_MIN_Y,
+                SafeMinePlan.WORLD_MIN_Y,
                 "Граница мира в плане шахты обязана совпадать с планом спуска: расхождение пустит шахту за дно");
-        assertEquals(DescentPlan.WORLD_MAX_Y, SafeMinePlan.WORLD_MAX_Y,
+        assertEquals(
+                DescentPlan.WORLD_MAX_Y,
+                SafeMinePlan.WORLD_MAX_Y,
                 "Граница мира в плане шахты обязана совпадать с планом спуска: расхождение пустит шахту выше потолка");
     }
 }

@@ -39,8 +39,8 @@ public final class DefenseService {
     private int entityQueries;
     private int planCalls;
 
-    public Map<UUID, DefenseIssuedOrder> tick(ServerLevel level, List<SpiritEntity> members,
-            CoordinatorState state, long tick) {
+    public Map<UUID, DefenseIssuedOrder> tick(
+            ServerLevel level, List<SpiritEntity> members, CoordinatorState state, long tick) {
         if (level == null) {
             throw new IllegalArgumentException("level не может быть null: враги обороны стоят в мире");
         }
@@ -65,8 +65,8 @@ public final class DefenseService {
             }
             DefenderReader.read(spirit).ifPresent(defenders::add);
         }
-        List<EnemyFact> sighted =
-                SettlementScanner.scan(level, members, state.spirits(), state.defendedPoint(), "").enemies();
+        List<EnemyFact> sighted = SettlementScanner.scan(level, members, state.spirits(), state.defendedPoint(), "")
+                .enemies();
         entityQueries++;
         planCalls++;
         DefensePlan plan = DefensePlanner.plan(state, defenders, sighted, enemies, profile());
@@ -97,8 +97,7 @@ public final class DefenseService {
     }
 
     private static boolean busy(SpiritEntity spirit) {
-        return spirit.currentTaskScript().isPresent()
-                || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+        return spirit.currentTaskScript().isPresent() || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
     }
 
     private Set<String> charged(ServerLevel level, DefensePlan plan) {
@@ -169,7 +168,8 @@ public final class DefenseService {
             if (distance > DefenseTuning.RUSH_MARGIN) {
                 continue;
             }
-            if (nearest == null || distance < nearestDistance
+            if (nearest == null
+                    || distance < nearestDistance
                     || (distance == nearestDistance && enemy.id().compareTo(nearest.id()) < 0)) {
                 nearest = enemy;
                 nearestDistance = distance;

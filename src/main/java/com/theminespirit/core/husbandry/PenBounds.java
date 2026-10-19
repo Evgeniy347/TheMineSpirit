@@ -25,11 +25,10 @@ public record PenBounds(BlockCoord center, int radius) {
         return nearestInside(pos, 0);
     }
 
-    /** Точка возврата приманкой: желаемый отступ от кромки, но не больше, чем позволяет радиус загона. */
     public BlockCoord lureTarget(BlockCoord pos, int preferredInset) {
         if (preferredInset < 0) {
-            throw new IllegalArgumentException("Отступ возврата " + preferredInset
-                    + " отрицательный: он двигал бы цель наружу загона");
+            throw new IllegalArgumentException(
+                    "Отступ возврата " + preferredInset + " отрицательный: он двигал бы цель наружу загона");
         }
         return nearestInside(pos, Math.min(preferredInset, radius - 1));
     }
@@ -49,9 +48,9 @@ public record PenBounds(BlockCoord center, int radius) {
         if (dx == 0 && dz == 0) {
             return new BlockCoord(center.x() + target, pos.y(), center.z());
         }
-        double scale = target / Math.sqrt(dx * dx + dz * dz);
-        BlockCoord inside = new BlockCoord(center.x() + (int) Math.round(dx * scale), pos.y(),
-                center.z() + (int) Math.round(dz * scale));
+        double scale = target / Math.sqrt((double) (dx * dx + dz * dz));
+        BlockCoord inside = new BlockCoord(
+                center.x() + (int) Math.round(dx * scale), pos.y(), center.z() + (int) Math.round(dz * scale));
         while (!shallowInside(inside, target)) {
             int stepX = Integer.compare(center.x(), inside.x());
             int stepZ = Integer.compare(center.z(), inside.z());

@@ -14,8 +14,7 @@ public final class SpiritHomeStore {
 
     private static final String VERSION_KEY = "Version";
 
-    private SpiritHomeStore() {
-    }
+    private SpiritHomeStore() {}
 
     public static void write(CompoundTag tag, SpiritHome home) {
         if (home == null) {
@@ -47,7 +46,6 @@ public final class SpiritHomeStore {
         if (!set) {
             return Optional.of(SpiritHome.none());
         }
-        return Optional.of(SpiritHome.at(
-                new BlockCoord(stored.getInt("X"), stored.getInt("Y"), stored.getInt("Z"))));
+        return Optional.of(SpiritHome.at(new BlockCoord(stored.getInt("X"), stored.getInt("Y"), stored.getInt("Z"))));
     }
 }

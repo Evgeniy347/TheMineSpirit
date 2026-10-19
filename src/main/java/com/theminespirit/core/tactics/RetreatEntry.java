@@ -3,8 +3,14 @@ package com.theminespirit.core.tactics;
 import java.util.List;
 import java.util.Optional;
 
-public record RetreatEntry(String id, RetreatMethod method, Condition requires, double base, Optional<FactName> fact,
-        double perUnit, List<Bonus> bonuses) {
+public record RetreatEntry(
+        String id,
+        RetreatMethod method,
+        Condition requires,
+        double base,
+        Optional<FactName> fact,
+        double perUnit,
+        List<Bonus> bonuses) {
     public RetreatEntry {
         bonuses = List.copyOf(bonuses);
     }
@@ -19,6 +25,5 @@ public record RetreatEntry(String id, RetreatMethod method, Condition requires, 
         return WinMargin.clamp(value, 0, 1);
     }
 
-    public record Bonus(Condition when, double add) {
-    }
+    public record Bonus(Condition when, double add) {}
 }

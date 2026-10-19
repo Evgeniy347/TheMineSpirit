@@ -25,8 +25,7 @@ final class SpiritRegistry extends SavedData {
 
     private final Set<UUID> alive = new HashSet<>();
 
-    private SpiritRegistry() {
-    }
+    private SpiritRegistry() {}
 
     static SpiritRegistry get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
@@ -52,7 +51,7 @@ final class SpiritRegistry extends SavedData {
         }
     }
 
-    private static SpiritRegistry load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static SpiritRegistry load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SpiritRegistry registry = new SpiritRegistry();
         ListTag list = tag.getList(ALIVE_KEY, Tag.TAG_STRING);
         for (Tag element : list) {

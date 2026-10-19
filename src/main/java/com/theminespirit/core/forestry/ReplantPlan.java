@@ -20,8 +20,8 @@ public record ReplantPlan(List<BlockCoord> cells, BlockCoord base, boolean squar
             throw new IllegalArgumentException("Нет клеток ствола: дерево без брёвен основания не пересаживают");
         }
         if (availableSaplings < 0) {
-            throw new IllegalArgumentException("availableSaplings=" + availableSaplings
-                    + ": число саженцев не может быть отрицательным");
+            throw new IllegalArgumentException(
+                    "availableSaplings=" + availableSaplings + ": число саженцев не может быть отрицательным");
         }
         List<BlockCoord> sorted = trunkCells.stream().sorted().toList();
         BlockCoord base = sorted.get(0);

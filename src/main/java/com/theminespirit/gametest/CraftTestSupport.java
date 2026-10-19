@@ -11,10 +11,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 final class CraftTestSupport {
     static final String FIELD = "arena";
@@ -25,8 +25,7 @@ final class CraftTestSupport {
     private static final int SERVER_TICKS_PER_ITEM = 200;
     private static final int CAMPFIRE_TICKS_PER_ITEM = 600;
 
-    private CraftTestSupport() {
-    }
+    private CraftTestSupport() {}
 
     static void field(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -57,9 +56,12 @@ final class CraftTestSupport {
         run.assertStarted();
         RunStatus actual = spirit.taskStatus().orElse(null);
         if (actual != expected) {
-            helper.assertTrue(false, "задача обязана завершиться статусом " + expected + ", статус: "
-                    + actual + ", причина: " + spirit.taskFailureReason().orElse("нет")
-                    + "; станции рядом: " + stationsNear(helper, spirit));
+            helper.assertTrue(
+                    false,
+                    "задача обязана завершиться статусом " + expected + ", статус: "
+                            + actual + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет")
+                            + "; станции рядом: " + stationsNear(helper, spirit));
         }
     }
 
@@ -73,15 +75,22 @@ final class CraftTestSupport {
                 for (int dz = -17; dz <= 17; dz++) {
                     BlockPos cell = center.offset(dx, dy, dz);
                     BlockState state = helper.getLevel().getBlockState(cell);
-                    if (!state.is(Blocks.FURNACE) && !state.is(Blocks.SMOKER) && !state.is(Blocks.BLAST_FURNACE)
+                    if (!state.is(Blocks.FURNACE)
+                            && !state.is(Blocks.SMOKER)
+                            && !state.is(Blocks.BLAST_FURNACE)
                             && !state.is(Blocks.CAMPFIRE)) {
                         continue;
                     }
                     report.append(state.getBlock()).append('@').append(cell.toShortString());
                     BlockEntity entity = helper.getLevel().getBlockEntity(cell);
                     if (entity instanceof AbstractFurnaceBlockEntity furnace) {
-                        report.append("[in=").append(furnace.getItem(0)).append(" fuel=").append(furnace.getItem(1))
-                                .append(" out=").append(furnace.getItem(2)).append(']');
+                        report.append("[in=")
+                                .append(furnace.getItem(0))
+                                .append(" fuel=")
+                                .append(furnace.getItem(1))
+                                .append(" out=")
+                                .append(furnace.getItem(2))
+                                .append(']');
                     } else if (entity instanceof CampfireBlockEntity campfire) {
                         report.append(campfire.getItems());
                     }
@@ -94,7 +103,8 @@ final class CraftTestSupport {
 
     static void assertReason(GameTestHelper helper, SpiritEntity spirit, String fragment) {
         String reason = spirit.taskFailureReason().orElse("");
-        helper.assertTrue(reason.contains(fragment),
+        helper.assertTrue(
+                reason.contains(fragment),
                 "причина провала обязана содержать '" + fragment + "', фактическая: '" + reason + "'");
     }
 
@@ -111,8 +121,8 @@ final class CraftTestSupport {
                     BlockEntity entity = helper.getLevel().getBlockEntity(cell);
                     if (entity instanceof AbstractFurnaceBlockEntity furnace) {
                         for (int i = 0; i < SERVER_TICKS_PER_ITEM; i++) {
-                            AbstractFurnaceBlockEntity.serverTick(helper.getLevel(), cell,
-                                    helper.getLevel().getBlockState(cell), furnace);
+                            AbstractFurnaceBlockEntity.serverTick(
+                                    helper.getLevel(), cell, helper.getLevel().getBlockState(cell), furnace);
                         }
                     }
                 }
@@ -128,8 +138,8 @@ final class CraftTestSupport {
                     BlockEntity entity = helper.getLevel().getBlockEntity(cell);
                     if (entity instanceof CampfireBlockEntity campfire) {
                         for (int i = 0; i < CAMPFIRE_TICKS_PER_ITEM; i++) {
-                            CampfireBlockEntity.cookTick(helper.getLevel(), cell,
-                                    helper.getLevel().getBlockState(cell), campfire);
+                            CampfireBlockEntity.cookTick(
+                                    helper.getLevel(), cell, helper.getLevel().getBlockState(cell), campfire);
                         }
                     }
                 }

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Категории склада: порядок задаёт и раскладку по сундукам, и надпись на табличке. Последняя категория
@@ -63,18 +64,18 @@ public final class WarehouseCategories {
         Set<String> names = new LinkedHashSet<>();
         for (JsonNode item : JsonResource.items(node)) {
             if (!item.isObject()) {
-                throw new IllegalStateException("Файл '" + origin
-                        + "': категория склада обязана быть объектом с полями name и match");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': категория склада обязана быть объектом с полями name и match");
             }
             JsonResource.checkFields(item, CATEGORY_FIELDS, origin, "категории склада");
             String name = JsonResource.text(item.get("name"), origin, "поля name категории склада");
             Category category;
             try {
-                category = new Category(name,
-                        JsonResource.strings(item.get("match"), origin, "поля match категории '" + name + "'"));
+                category = new Category(
+                        name, JsonResource.strings(item.get("match"), origin, "поля match категории '" + name + "'"));
             } catch (IllegalArgumentException error) {
-                throw new IllegalStateException("Файл '" + origin + "': категория '" + name + "' неверна — "
-                        + error.getMessage(), error);
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': категория '" + name + "' неверна — " + error.getMessage(), error);
             }
             names.add(name);
             categories.add(category);
@@ -110,7 +111,6 @@ public final class WarehouseCategories {
         return categories.stream().map(Category::name).toList();
     }
 
-    /** Категория пустого сундука без таблички: первый положенный предмет задаёт её. */
     public String categoryOfSlots(List<Stack> slots) {
         Objects.requireNonNull(slots, "Слоты контейнера не могут быть null: категория берётся из содержимого");
         for (Stack stack : slots) {
@@ -121,7 +121,7 @@ public final class WarehouseCategories {
         return "";
     }
 
-    public boolean known(String name) {
+    public boolean known(@Nullable String name) {
         return name != null && byName.containsKey(name);
     }
 

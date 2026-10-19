@@ -12,8 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
  * расстояния и измерения. Если игроков нет — опыт уходит в пул поселения {@link SettlementExperience}.
  */
 public final class ExperienceAwards {
-    private ExperienceAwards() {
-    }
+    private ExperienceAwards() {}
 
     public static void award(MinecraftServer server, int amount) {
         if (amount <= 0) {
@@ -27,7 +26,6 @@ public final class ExperienceAwards {
         giveSplit(players, amount);
     }
 
-    /** Раздаёт накопленный пул текущим игрокам. Вызывается при входе игрока на сервер. */
     public static void flushPool(MinecraftServer server) {
         int pending = SettlementExperience.get(server).drain();
         if (pending <= 0) {

@@ -42,12 +42,17 @@ class ActivityCatalogTests {
 
     @Test
     void forChild_AdultAndChildCatalogs_DoNotMix() {
-        ActivityCatalog catalog = new ActivityCatalog(Map.of(ActivityId.CHOP, new FixedActivity(ActivityId.CHOP)),
+        ActivityCatalog catalog = new ActivityCatalog(
+                Map.of(ActivityId.CHOP, new FixedActivity(ActivityId.CHOP)),
                 Map.of(ActivityId.REST, new FixedActivity(ActivityId.REST)));
 
-        assertEquals(List.of(ActivityId.CHOP), List.copyOf(catalog.forChild(false).keySet()),
+        assertEquals(
+                List.of(ActivityId.CHOP),
+                List.copyOf(catalog.forChild(false).keySet()),
                 "Взрослый каталог не содержит детских id: иначе взрослый дух возьмёт детскую деятельность");
-        assertEquals(List.of(ActivityId.REST), List.copyOf(catalog.forChild(true).keySet()),
+        assertEquals(
+                List.of(ActivityId.REST),
+                List.copyOf(catalog.forChild(true).keySet()),
                 "Детский каталог не содержит взрослых id: иначе ребёнок возьмёт взрослую деятельность");
     }
 
@@ -56,7 +61,8 @@ class ActivityCatalogTests {
         ActivityCatalog catalog = ActivityCatalog.adultsOnly(
                 List.of(new FixedActivity(ActivityId.CHOP), new FixedActivity(ActivityId.FARM)));
 
-        assertTrue(catalog.forChild(true).isEmpty(),
+        assertTrue(
+                catalog.forChild(true).isEmpty(),
                 "Детский каталог первого этапа пуст: дети появятся с чеклистом Социальность, сейчас children = 0");
     }
 
@@ -64,11 +70,13 @@ class ActivityCatalogTests {
     void byId_UnknownId_Throws() {
         ActivityCatalog catalog = ActivityCatalog.adultsOnly(List.of(new FixedActivity(ActivityId.CHOP)));
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> catalog.byId(ActivityId.MINE),
                 "Неизвестная деятельность не ищется: дух не возьмёт работу, которой нет в каталоге");
 
-        assertTrue(error.getMessage().contains("MINE"),
+        assertTrue(
+                error.getMessage().contains("MINE"),
                 "Сообщение называет id: при падении видно, какой деятельности нет в каталоге");
     }
 
@@ -77,26 +85,34 @@ class ActivityCatalogTests {
         FixedActivity chop = new FixedActivity(ActivityId.CHOP);
         ActivityCatalog catalog = ActivityCatalog.adultsOnly(List.of(chop));
 
-        assertSame(chop, catalog.byId(ActivityId.CHOP),
+        assertSame(
+                chop,
+                catalog.byId(ActivityId.CHOP),
                 "Каталог отдаёт ту же деятельность: спрос и намерение берутся из одного класса, а не копии");
     }
 
     @Test
     void adultsOnly_DuplicateId_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> ActivityCatalog.adultsOnly(
                         List.of(new FixedActivity(ActivityId.CHOP), new FixedActivity(ActivityId.CHOP))),
                 "Дубль id в каталоге не собирается: распределитель не решит, чьим спросом пользоваться");
 
-        assertTrue(error.getMessage().contains("CHOP"),
+        assertTrue(
+                error.getMessage().contains("CHOP"),
                 "Сообщение называет дубль: при падении видно, какая деятельность задвоилась");
     }
 
     @Test
     void constructor_NullMapsAndNullEntries_Throw() {
-        assertThrows(IllegalArgumentException.class, () -> new ActivityCatalog(null, Map.of()),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ActivityCatalog(null, Map.of()),
                 "Каталог с null взрослых не собирается: пустой каталог задают пустой картой");
-        assertThrows(IllegalArgumentException.class, () -> new ActivityCatalog(Map.of(), null),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ActivityCatalog(Map.of(), null),
                 "Каталог с null детей не собирается: пустой каталог задают пустой картой");
     }
 }

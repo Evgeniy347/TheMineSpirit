@@ -1,9 +1,25 @@
 package com.theminespirit.core.tactics;
 
-public record FactorScales(ArmorModel armor, double minDps, double winMarginDivisor, double lowHpFloor,
-        double proximityRange, double rangedRange, double rangedFull, double explosiveRange, double allyFull,
-        double routesFull, double lavaRange, double dropSafe, double dropRange, double nightFloor,
-        double hungerThreshold, double healFull, double leashMargin, double speedRatioCap, double urgencyHorizon) {
+public record FactorScales(
+        ArmorModel armor,
+        double minDps,
+        double winMarginDivisor,
+        double lowHpFloor,
+        double proximityRange,
+        double rangedRange,
+        double rangedFull,
+        double explosiveRange,
+        double allyFull,
+        double routesFull,
+        double lavaRange,
+        double dropSafe,
+        double dropRange,
+        double nightFloor,
+        double hungerThreshold,
+        double healFull,
+        double leashMargin,
+        double speedRatioCap,
+        double urgencyHorizon) {
     public FactorScales {
         FactChecks.required("FactorScales.armor", armor);
         FactChecks.range("FactorScales.minDps", minDps, 0.001, 100);

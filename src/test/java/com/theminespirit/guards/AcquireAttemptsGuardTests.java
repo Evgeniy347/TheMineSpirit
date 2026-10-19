@@ -3,8 +3,6 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +19,8 @@ class AcquireAttemptsGuardTests {
         List<String> found = new ArrayList<>();
         Matcher matcher = ATTEMPT_CONSTANT.matcher(text);
         while (matcher.find()) {
-            found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " " + matcher.group().trim());
+            found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " "
+                    + matcher.group().trim());
         }
         return found;
     }
@@ -29,10 +28,13 @@ class AcquireAttemptsGuardTests {
     @Test
     void neoforgeSources_AttemptConstants_DeclaredOnlyInCore() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(NEOFORGE).forEach((file, text) ->
-                offenders.addAll(attemptConstants(file.getFileName().toString(), text)));
+        SourceFiles.javaUnder(NEOFORGE)
+                .forEach((file, text) ->
+                        offenders.addAll(attemptConstants(file.getFileName().toString(), text)));
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Адаптер neoforge не задаёт свои константы попыток: предел пересборок acquire живёт в "
                         + "CatalogLimits.ACQUIRE_MAX_ATTEMPTS (core), и AcquireScript читает его оттуда. Цена "
                         + "дублирования: правка одного места оставит другое старым, acquire в мире и тесты в core "
@@ -41,19 +43,29 @@ class AcquireAttemptsGuardTests {
 
     @Test
     void attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected() {
-        assertEquals(1, attemptConstants("X.java", "static final int ACQUIRE_ATTEMPTS = 3;").size(),
+        assertEquals(
+                1,
+                attemptConstants("X.java", "static final int ACQUIRE_ATTEMPTS = 3;")
+                        .size(),
                 "Сторож ослеп: константа с ACQUIRE и ATTEMPT в имени должна находиться");
-        assertEquals(1, attemptConstants("X.java", "static final int ACQUIRE_MAX_ATTEMPTS = 5;").size(),
+        assertEquals(
+                1,
+                attemptConstants("X.java", "static final int ACQUIRE_MAX_ATTEMPTS = 5;")
+                        .size(),
                 "Сторож ослеп: константа ACQUIRE_MAX_ATTEMPTS должна находиться");
     }
 
     @Test
     void attemptConstantPattern_UnrelatedConstants_AreIgnored() {
-        assertTrue(attemptConstants("X.java", "static final int CONTAINER_RADIUS_DEFAULT = 8;").isEmpty(),
+        assertTrue(
+                attemptConstants("X.java", "static final int CONTAINER_RADIUS_DEFAULT = 8;")
+                        .isEmpty(),
                 "Сторож ложно срабатывает: константа без ATTEMPT в имени — не нарушение");
-        assertTrue(attemptConstants("X.java", "int attempts = 0;").isEmpty(),
+        assertTrue(
+                attemptConstants("X.java", "int attempts = 0;").isEmpty(),
                 "Сторож ложно срабатывает: локальная переменная attempts — не константа предела");
-        assertTrue(attemptConstants("X.java", "static final int MAX_ATTEMPTS = 3;").isEmpty(),
+        assertTrue(
+                attemptConstants("X.java", "static final int MAX_ATTEMPTS = 3;").isEmpty(),
                 "Сторож ложно срабатывает: константа попыток StandWalker (движение) не относится к acquire");
     }
 }

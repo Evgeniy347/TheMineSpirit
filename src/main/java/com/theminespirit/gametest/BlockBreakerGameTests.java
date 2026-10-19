@@ -24,26 +24,34 @@ public final class BlockBreakerGameTests {
     private static final int TOOL_SLOT = 5;
     private static final int RUNAWAY_LIMIT = 1000;
 
-    private BlockBreakerGameTests() {
-    }
+    private BlockBreakerGameTests() {}
 
     @GameTest(template = "arena", batch = "breaker_hand", timeoutTicks = 40)
     public static void blockBreaker_HandOnDirt_BreaksInVanillaTimeAndDropsDirt(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.DIRT);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "земля рядом с духом обязана ломаться");
+        helper.assertTrue(
+                breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started,
+                "земля рядом с духом обязана ломаться");
         int expected = BreakTiming.ticks(0.5, 1.0, true);
-        helper.assertTrue(breaker.requiredTicks() == expected,
-                "рука на земле: срок ломки " + expected + " тиков по формуле игрока, а выбран " + breaker.requiredTicks());
+        helper.assertTrue(
+                breaker.requiredTicks() == expected,
+                "рука на земле: срок ломки " + expected + " тиков по формуле игрока, а выбран "
+                        + breaker.requiredTicks());
         int ticks = runToEnd(breaker);
 
         helper.assertTrue(ticks == expected, "ломка обязана занять ровно " + expected + " тиков, заняла " + ticks);
         helper.assertTrue(helper.getBlockState(TARGET).isAir(), "после ломки в клетке обязан быть воздух");
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.DIRT) == 1,
-                "рука на земле обязана оставить дроп: один блок земли, фактически "
+        helper.assertTrue(
+                GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 1
+                        && GameTestFixtures.countInWorld(helper, Items.DIRT) == 0,
+                "рука на земле обязана дать дроп — один блок земли сразу в инвентарь духа (дроп целевого блока в "
+                        + "инвентарь, решение владельца 18.10), в инвентаре "
+                        + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) + ", на земле "
                         + GameTestFixtures.countInWorld(helper, Items.DIRT));
-        helper.assertTrue(breaker.crackStage() == -1, "после BROKEN трещина обязана быть снята, стадия " + breaker.crackStage());
+        helper.assertTrue(
+                breaker.crackStage() == -1, "после BROKEN трещина обязана быть снята, стадия " + breaker.crackStage());
         GameTestFixtures.reset(helper);
         helper.succeed();
     }
@@ -55,20 +63,30 @@ public final class BlockBreakerGameTests {
         spirit.getInventory().setItem(TOOL_SLOT + 1, new ItemStack(Items.WOODEN_AXE));
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "камень рядом с духом обязан ломаться");
-        helper.assertTrue(breaker.choice().slot() == TOOL_SLOT && breaker.choice().dropsAllowed(),
+        helper.assertTrue(
+                breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started,
+                "камень рядом с духом обязан ломаться");
+        helper.assertTrue(
+                breaker.choice().slot() == TOOL_SLOT && breaker.choice().dropsAllowed(),
                 "для камня обязана выбраться кирка из слота " + TOOL_SLOT + ", а выбрано " + breaker.choice());
-        int expected = BreakTiming.ticks(1.5, new ItemStack(Items.IRON_PICKAXE).getDestroySpeed(Blocks.STONE.defaultBlockState()), true);
-        helper.assertTrue(breaker.requiredTicks() == expected,
+        int expected = BreakTiming.ticks(
+                1.5, new ItemStack(Items.IRON_PICKAXE).getDestroySpeed(Blocks.STONE.defaultBlockState()), true);
+        helper.assertTrue(
+                breaker.requiredTicks() == expected,
                 "железная кирка на камне: срок " + expected + " тиков, а выбран " + breaker.requiredTicks());
         runToEnd(breaker);
 
         helper.assertTrue(helper.getBlockState(TARGET).isAir(), "камень обязан исчезнуть");
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 1,
-                "кирка обязана дать булыжник, фактически " + GameTestFixtures.countInWorld(helper, Items.COBBLESTONE));
-        helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == 1,
-                "износ кирки за блок обязан быть 1, фактически " + spirit.getInventory().getItem(TOOL_SLOT).getDamageValue());
-        helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT + 1).getDamageValue() == 0,
+        helper.assertTrue(
+                GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+                "кирка обязана дать булыжник прямо в инвентарь, фактически "
+                        + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+        helper.assertTrue(
+                spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == 1,
+                "износ кирки за блок обязан быть 1, фактически "
+                        + spirit.getInventory().getItem(TOOL_SLOT).getDamageValue());
+        helper.assertTrue(
+                spirit.getInventory().getItem(TOOL_SLOT + 1).getDamageValue() == 0,
                 "неподходящий топор не должен изнашиваться");
         GameTestFixtures.reset(helper);
         helper.succeed();
@@ -79,15 +97,20 @@ public final class BlockBreakerGameTests {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
-        helper.assertTrue(breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started, "камень обязан ломаться и рукой");
-        helper.assertTrue(breaker.choice().slot() == ToolChoice.HAND && !breaker.choice().dropsAllowed(),
+        helper.assertTrue(
+                breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started,
+                "камень обязан ломаться и рукой");
+        helper.assertTrue(
+                breaker.choice().slot() == ToolChoice.HAND && !breaker.choice().dropsAllowed(),
                 "без кирки обязана выбраться рука без дропа, а выбрано " + breaker.choice());
-        helper.assertTrue(breaker.requiredTicks() == 150,
+        helper.assertTrue(
+                breaker.requiredTicks() == 150,
                 "камень рукой без кирки ломается 150 тиков, а выбрано " + breaker.requiredTicks());
         runToEnd(breaker);
 
         helper.assertTrue(helper.getBlockState(TARGET).isAir(), "камень обязан исчезнуть и при ломке рукой");
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 0,
+        helper.assertTrue(
+                GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 0,
                 "камень, сломанный рукой, не даёт булыжника, как у игрока");
         GameTestFixtures.reset(helper);
         helper.succeed();
@@ -104,14 +127,17 @@ public final class BlockBreakerGameTests {
 
         BlockBreaker.Begin begin = breaker.begin(helper.absolutePos(TARGET));
 
-        helper.assertTrue(refusedWith(begin, BlockBreaker.RefuseReason.NEED_TOOL),
+        helper.assertTrue(
+                refusedWith(begin, BlockBreaker.RefuseReason.NEED_TOOL),
                 "кирка с последним ударом не тратится на камень: ожидается отказ " + BlockBreaker.RefuseReason.NEED_TOOL
                         + ", получено " + begin);
-        helper.assertTrue(spirit.getInventory().getItem(TOOL_SLOT).getCount() == 1
-                && spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == lastUseDamage,
+        helper.assertTrue(
+                spirit.getInventory().getItem(TOOL_SLOT).getCount() == 1
+                        && spirit.getInventory().getItem(TOOL_SLOT).getDamageValue() == lastUseDamage,
                 "изношенная кирка обязана остаться в слоте нетронутой, а в слоте "
                         + spirit.getInventory().getItem(TOOL_SLOT));
-        helper.assertTrue(GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 0,
+        helper.assertTrue(
+                GameTestFixtures.countInWorld(helper, Items.COBBLESTONE) == 0,
                 "камень не сломан: булыжника быть не должно");
         GameTestFixtures.reset(helper);
         helper.succeed();
@@ -123,23 +149,27 @@ public final class BlockBreakerGameTests {
         BlockBreaker breaker = new BlockBreaker(spirit);
 
         BlockBreaker.Begin bedrock = breaker.begin(helper.absolutePos(TARGET));
-        helper.assertTrue(refusedWith(bedrock, BlockBreaker.RefuseReason.UNBREAKABLE),
+        helper.assertTrue(
+                refusedWith(bedrock, BlockBreaker.RefuseReason.UNBREAKABLE),
                 "бедрок обязан отвергаться как неразрушимый, получено " + bedrock);
         BlockBreaker.Begin air = breaker.begin(helper.absolutePos(new BlockPos(2, 3, 2)));
-        helper.assertTrue(refusedWith(air, BlockBreaker.RefuseReason.AIR),
-                "воздух обязан отвергаться, получено " + air);
+        helper.assertTrue(
+                refusedWith(air, BlockBreaker.RefuseReason.AIR), "воздух обязан отвергаться, получено " + air);
         helper.setBlock(8, 1, 2, Blocks.DIRT);
         BlockBreaker.Begin far = breaker.begin(helper.absolutePos(new BlockPos(8, 1, 2)));
-        helper.assertTrue(refusedWith(far, BlockBreaker.RefuseReason.OUT_OF_REACH),
+        helper.assertTrue(
+                refusedWith(far, BlockBreaker.RefuseReason.OUT_OF_REACH),
                 "блок дальше досягаемости " + BlockBreaker.REACH + " обязан отвергаться, получено " + far);
         BlockPos base = helper.absolutePos(SPIRIT_START);
         BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
         helper.assertTrue(unloaded != null, "рядом должна найтись незагруженная область для проверки отказа");
         int loadedBefore = helper.getLevel().getChunkSource().getLoadedChunksCount();
         BlockBreaker.Begin notLoaded = breaker.begin(unloaded);
-        helper.assertTrue(refusedWith(notLoaded, BlockBreaker.RefuseReason.CHUNK_NOT_LOADED),
+        helper.assertTrue(
+                refusedWith(notLoaded, BlockBreaker.RefuseReason.CHUNK_NOT_LOADED),
                 "блок в незагруженном чанке обязан отвергаться, получено " + notLoaded);
-        helper.assertTrue(helper.getLevel().getChunkSource().getLoadedChunksCount() == loadedBefore,
+        helper.assertTrue(
+                helper.getLevel().getChunkSource().getLoadedChunksCount() == loadedBefore,
                 "проверка блока в незагруженном чанке не должна грузить чанк");
         GameTestFixtures.reset(helper);
         helper.succeed();
@@ -155,7 +185,8 @@ public final class BlockBreakerGameTests {
         for (int i = 0; i < 40; i++) {
             breaker.tick();
         }
-        helper.assertTrue(breaker.crackStage() > 0 && breaker.crackStage() <= 9,
+        helper.assertTrue(
+                breaker.crackStage() > 0 && breaker.crackStage() <= 9,
                 "посреди ломки обязана показываться стадия трещины 1..9, а стадия " + breaker.crackStage());
         breaker.cancel();
         helper.assertTrue(breaker.crackStage() == -1, "cancel обязан снять трещину, стадия " + breaker.crackStage());
@@ -166,8 +197,7 @@ public final class BlockBreakerGameTests {
             breaker.tick();
         }
         helper.setBlock(TARGET, Blocks.AIR);
-        helper.assertTrue(breaker.tick() == BlockBreaker.Progress.GONE,
-                "блок, исчезнувший сам, обязан дать GONE");
+        helper.assertTrue(breaker.tick() == BlockBreaker.Progress.GONE, "блок, исчезнувший сам, обязан дать GONE");
         helper.assertTrue(breaker.crackStage() == -1, "GONE обязан снять трещину, стадия " + breaker.crackStage());
         GameTestFixtures.reset(helper);
         helper.succeed();

@@ -4,8 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class ErrorJson {
-    private ErrorJson() {
-    }
+    private ErrorJson() {}
 
     public static String toJson(ApiError error) {
         Map<String, Object> body = new LinkedHashMap<>();

@@ -47,8 +47,7 @@ public final class PerceptionGameTests {
     private static final double DROP_DISTANCE = 3.0;
     private static final double EPSILON = 1e-6;
 
-    private PerceptionGameTests() {
-    }
+    private PerceptionGameTests() {}
 
     @GameTest(template = "arena", batch = "perception_scan_blocks", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void scanBlocks_OreFloorWithOreFilter_ReportsOnlyOres(GameTestHelper helper) {
@@ -65,20 +64,26 @@ public final class PerceptionGameTests {
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "scan_blocks");
             PerceptionResult result = spirit.perceptionResult().orElse(null);
-            helper.assertTrue(result != null && result.type() == PerceptionType.BLOCKS,
+            helper.assertTrue(
+                    result != null && result.type() == PerceptionType.BLOCKS,
                     "после scan_blocks результат восприятия обязан лежать в духе с типом BLOCKS: иначе ИИ нечего читать");
-            helper.assertTrue(result.blocks().size() == 2,
+            helper.assertTrue(
+                    result.blocks().size() == 2,
                     "в результате фильтра *_ore обязаны быть ровно два вида руды (уголь и железо), а там: "
                             + result.blocks() + ". Лишние виды значат, что фильтр не применяется");
-            helper.assertTrue(result.blocks().stream().allMatch(entry -> entry.item().endsWith("_ore")),
+            helper.assertTrue(
+                    result.blocks().stream().allMatch(entry -> entry.item().endsWith("_ore")),
                     "в результате должны быть только руды, а там: " + result.blocks());
-            helper.assertTrue(countOf(result, "minecraft:coal_ore") == COAL_ORES
+            helper.assertTrue(
+                    countOf(result, "minecraft:coal_ore") == COAL_ORES
                             && countOf(result, "minecraft:iron_ore") == IRON_ORES,
                     "руды в результате обязаны считаться точно: угля " + COAL_ORES + ", железа " + IRON_ORES
                             + ", фактически " + result.blocks());
-            helper.assertTrue(result.entities().isEmpty(),
+            helper.assertTrue(
+                    result.entities().isEmpty(),
                     "scan_blocks не собирает сущности, а в результате: " + result.entities());
-            helper.assertTrue(spirit.observation().isEmpty(),
+            helper.assertTrue(
+                    spirit.observation().isEmpty(),
                     "scan_blocks кладёт результат восприятия, а не полное наблюдение: полный скан остался за scan");
             GameTestFixtures.finish(helper);
         });
@@ -94,23 +99,26 @@ public final class PerceptionGameTests {
         frozen(helper.spawn(EntityType.SHEEP, new BlockPos(6, 1, 6)));
         frozen(helper.spawn(EntityType.SHEEP, new BlockPos(4, 1, 2)));
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        SpiritRun run = launch(helper, spirit, "scan_entities",
-                Map.of("radius", 8, "filter", List.of("minecraft:cow")));
+        SpiritRun run =
+                launch(helper, spirit, "scan_entities", Map.of("radius", 8, "filter", List.of("minecraft:cow")));
 
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "scan_entities");
             PerceptionResult result = spirit.perceptionResult().orElse(null);
-            helper.assertTrue(result != null && result.type() == PerceptionType.ENTITIES,
+            helper.assertTrue(
+                    result != null && result.type() == PerceptionType.ENTITIES,
                     "после scan_entities результат восприятия обязан лежать в духе с типом ENTITIES");
-            helper.assertTrue(result.entities().size() == COWS,
+            helper.assertTrue(
+                    result.entities().size() == COWS,
                     "в результате фильтра minecraft:cow обязаны быть ровно " + COWS + " коровы, а там: "
                             + result.entities().stream().map(EntityRef::type).toList()
                             + ". Овцы или дух в результате значат, что фильтр не применяется к сущностям");
-            helper.assertTrue(result.entities().stream().allMatch(entity -> entity.type().equals("minecraft:cow")),
+            helper.assertTrue(
+                    result.entities().stream().allMatch(entity -> "minecraft:cow".equals(entity.type())),
                     "в результате должны быть только коровы, а там: "
                             + result.entities().stream().map(EntityRef::type).toList());
-            helper.assertTrue(result.blocks().isEmpty(),
-                    "scan_entities не собирает блоки, а в результате: " + result.blocks());
+            helper.assertTrue(
+                    result.blocks().isEmpty(), "scan_entities не собирает блоки, а в результате: " + result.blocks());
             GameTestFixtures.finish(helper);
         });
     }
@@ -121,8 +129,8 @@ public final class PerceptionGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         frozen(helper.spawn(EntityType.COW, new BlockPos(2, 1, 2)));
         SpiritEntity spirit = spawnSpirit(helper, 4, 1, 4);
-        ScanScript blocks = new ScanScript(spirit,
-                PerceptionParams.blocks(Map.of("radius", 8, "filter", List.of("minecraft:stone"))));
+        ScanScript blocks = new ScanScript(
+                spirit, PerceptionParams.blocks(Map.of("radius", 8, "filter", List.of("minecraft:stone"))));
         ScanScript entities = new ScanScript(spirit, PerceptionParams.entities(Map.of("radius", 8)));
 
         while (blocks.tick() == ScriptStatus.RUNNING) {
@@ -132,15 +140,19 @@ public final class PerceptionGameTests {
             helper.assertTrue(entities.stepCalls() < 200, "scan_entities обязан закончиться сразу");
         }
 
-        helper.assertTrue(blocks.examinedPositions() > 0,
+        helper.assertTrue(
+                blocks.examinedPositions() > 0,
                 "scan_blocks по полу из камня обязан читать позиции блоков: прочитано " + blocks.examinedPositions());
-        helper.assertTrue(blocks.entityQueries() == 0,
+        helper.assertTrue(
+                blocks.entityQueries() == 0,
                 "scan_blocks не вправе опрашивать сущности: запросов " + blocks.entityQueries()
                         + ", иначе «только блоки» стоит как полный скан");
-        helper.assertTrue(entities.examinedPositions() == 0,
+        helper.assertTrue(
+                entities.examinedPositions() == 0,
                 "scan_entities не вправе читать блоки: прочитано позиций " + entities.examinedPositions()
                         + ", иначе «только сущности» стоит как полный скан");
-        helper.assertTrue(entities.entityQueries() == 1,
+        helper.assertTrue(
+                entities.entityQueries() == 1,
                 "scan_entities опрашивает сущности ровно один раз за скан: запросов " + entities.entityQueries());
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -159,20 +171,27 @@ public final class PerceptionGameTests {
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "sense_hazard");
             PerceptionResult result = spirit.perceptionResult().orElse(null);
-            helper.assertTrue(result != null && result.type() == PerceptionType.HAZARDS,
+            helper.assertTrue(
+                    result != null && result.type() == PerceptionType.HAZARDS,
                     "после sense_hazard результат восприятия обязан лежать в духе с типом HAZARDS");
             OptionalDouble nearestLava = nearestDistance(result, HazardType.LAVA);
-            helper.assertTrue(nearestLava.isPresent(),
+            helper.assertTrue(
+                    nearestLava.isPresent(),
                     "лава в четырёх блоках обязана попасть в факты об опасностях, а там: " + result.hazards());
-            helper.assertTrue(Math.abs(nearestLava.getAsDouble() - LAVA_DISTANCE) < EPSILON,
+            helper.assertTrue(
+                    Math.abs(nearestLava.getAsDouble() - LAVA_DISTANCE) < EPSILON,
                     "расстояние до лавы обязано быть " + LAVA_DISTANCE + " (4 по горизонтали, 1 по вертикали), а там "
                             + nearestLava.getAsDouble());
-            helper.assertTrue(result.hazards().stream().anyMatch(hazard -> hazard.type() == HazardType.LAVA
-                            && hazard.pos().equals(new BlockCoord(lava.getX(), lava.getY(), lava.getZ()))),
+            helper.assertTrue(
+                    result.hazards().stream()
+                            .anyMatch(hazard -> hazard.type() == HazardType.LAVA
+                                    && hazard.pos().equals(new BlockCoord(lava.getX(), lava.getY(), lava.getZ()))),
                     "опасность обязана называть позицию лавы " + lava + ", а там: " + result.hazards());
-            helper.assertTrue(nearestDistance(result, HazardType.WATER).isEmpty(),
+            helper.assertTrue(
+                    nearestDistance(result, HazardType.WATER).isEmpty(),
                     "воды на площадке нет, а в фактах: " + result.hazards());
-            helper.assertTrue(spirit.blockPosition().equals(before),
+            helper.assertTrue(
+                    spirit.blockPosition().equals(before),
                     "sense_hazard отдаёт факты и не двигает духа: было " + before + ", стало " + spirit.blockPosition()
                             + ". Рефлексы остаются за политиками");
             GameTestFixtures.finish(helper);
@@ -195,20 +214,26 @@ public final class PerceptionGameTests {
         helper.succeedWhen(() -> {
             assertSucceeded(helper, spirit, run, "sense_hazard");
             PerceptionResult result = spirit.perceptionResult().orElse(null);
-            helper.assertTrue(result != null && result.type() == PerceptionType.HAZARDS,
+            helper.assertTrue(
+                    result != null && result.type() == PerceptionType.HAZARDS,
                     "после sense_hazard результат восприятия обязан лежать в духе с типом HAZARDS");
             OptionalDouble nearestDrop = nearestDistance(result, HazardType.DROP);
-            helper.assertTrue(nearestDrop.isPresent(),
+            helper.assertTrue(
+                    nearestDrop.isPresent(),
                     "край площадки с перепадом в " + 3 + " блока обязан попасть в факты как DROP, а там: "
                             + result.hazards());
-            helper.assertTrue(Math.abs(nearestDrop.getAsDouble() - DROP_DISTANCE) < EPSILON,
+            helper.assertTrue(
+                    Math.abs(nearestDrop.getAsDouble() - DROP_DISTANCE) < EPSILON,
                     "ближайший обрыв в трёх блоках от духа (до края 3), а там " + nearestDrop.getAsDouble()
                             + ": середина площадки обрывом не является");
-            helper.assertTrue(nearestDistance(result, HazardType.LAVA).isEmpty()
+            helper.assertTrue(
+                    nearestDistance(result, HazardType.LAVA).isEmpty()
                             && nearestDistance(result, HazardType.WATER).isEmpty(),
                     "лавы и воды на площадке нет, а в фактах: " + result.hazards());
-            helper.assertTrue(spirit.blockPosition().equals(before),
-                    "sense_hazard отдаёт факты и не двигает духа: было " + before + ", стало " + spirit.blockPosition());
+            helper.assertTrue(
+                    spirit.blockPosition().equals(before),
+                    "sense_hazard отдаёт факты и не двигает духа: было " + before + ", стало "
+                            + spirit.blockPosition());
             GameTestFixtures.finish(helper);
         });
     }
@@ -219,7 +244,8 @@ public final class PerceptionGameTests {
         GameTestFixtures.reset(helper);
         BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
         BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
-        helper.assertTrue(unloaded != null,
+        helper.assertTrue(
+                unloaded != null,
                 "в пределах 256 чанков к востоку обязана найтись незагруженная область: иначе тест не проверяет пропуск");
         SpiritEntity far = ModEntities.SPIRIT.get().create(helper.getLevel());
         far.setPos(unloaded.getX() - 24, base.getY(), base.getZ());
@@ -238,16 +264,20 @@ public final class PerceptionGameTests {
                 .clampY(helper.getLevel().getMinBuildHeight(), helper.getLevel().getMaxBuildHeight() - 1)
                 .orElseThrow();
         int totalSlices = SectionCursor.of(cube, center).total();
-        helper.assertTrue(script.maxSlicesPerTick() == ScanTuning.SLICES_PER_TICK,
+        helper.assertTrue(
+                script.maxSlicesPerTick() == ScanTuning.SLICES_PER_TICK,
                 "за тик sense_hazard обязан брать ровно " + ScanTuning.SLICES_PER_TICK + " среза: больше значит, что "
-                        + "куб читается не порциями, меньше — что порция урезана, а взято " + script.maxSlicesPerTick());
-        helper.assertTrue(ticks + 1 == (totalSlices + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK,
+                        + "куб читается не порциями, меньше — что порция урезана, а взято "
+                        + script.maxSlicesPerTick());
+        helper.assertTrue(
+                ticks + 1 == (totalSlices + ScanTuning.SLICES_PER_TICK - 1) / ScanTuning.SLICES_PER_TICK,
                 "куб из " + totalSlices + " срезов обязан читаться порциями по " + ScanTuning.SLICES_PER_TICK
                         + ", тиков потребовалось " + (ticks + 1));
-        helper.assertTrue(loadedAfter == loadedBefore,
+        helper.assertTrue(
+                loadedAfter == loadedBefore,
                 "sense_hazard не должен грузить чанки: было " + loadedBefore + ", стало " + loadedAfter);
-        helper.assertTrue(script.blockReads() > 0,
-                "тест не доказывает порции: ни одного чтения загруженных блоков не было");
+        helper.assertTrue(
+                script.blockReads() > 0, "тест не доказывает порции: ни одного чтения загруженных блоков не было");
         far.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -259,11 +289,16 @@ public final class PerceptionGameTests {
     }
 
     private static int countOf(PerceptionResult result, String blockId) {
-        return result.blocks().stream().filter(entry -> entry.item().equals(blockId)).mapToInt(ItemCount::count).sum();
+        return result.blocks().stream()
+                .filter(entry -> entry.item().equals(blockId))
+                .mapToInt(ItemCount::count)
+                .sum();
     }
 
     private static OptionalDouble nearestDistance(PerceptionResult result, HazardType type) {
-        return result.hazards().stream().filter(hazard -> hazard.type() == type)
-                .mapToDouble(HazardRef::distance).min();
+        return result.hazards().stream()
+                .filter(hazard -> hazard.type() == type)
+                .mapToDouble(HazardRef::distance)
+                .min();
     }
 }

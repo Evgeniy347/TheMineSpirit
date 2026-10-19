@@ -4,18 +4,19 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskRunner {
-    private final TaskNode plan;
-    private final NodeExecutor root;
+    private final @Nullable TaskNode plan;
+    private final @Nullable NodeExecutor root;
     private RunStatus status = RunStatus.RUNNING;
     private boolean suspended;
-    private String reason;
-    private Throwable cause;
-    private RunProgress failedAt;
+    private @Nullable String reason;
+    private @Nullable Throwable cause;
+    private @Nullable RunProgress failedAt;
     private Optional<ScriptResult> successResult = Optional.empty();
 
-    private TaskRunner(TaskNode plan, NodeExecutor root) {
+    private TaskRunner(@Nullable TaskNode plan, @Nullable NodeExecutor root) {
         this.plan = plan;
         this.root = root;
     }
@@ -34,10 +35,15 @@ public final class TaskRunner {
         TaskRunner runner = new TaskRunner(snapshot.plan(), null);
         runner.status = snapshot.status();
         runner.reason = snapshot.reason();
+        TaskNode plan = snapshot.plan();
+        TaskProgress progress = snapshot.progress();
         if (snapshot.status() == RunStatus.RUNNING) {
-            NodeExecutor restored = NodeExecutor.create(snapshot.plan(), scripts, conditions);
-            restored.restore(snapshot.progress());
-            return new TaskRunner(snapshot.plan(), restored);
+            if (plan == null || progress == null) {
+                throw new SnapshotFormatException("RUNNING-снимок без плана или прогресса: продолжать нечего");
+            }
+            NodeExecutor restored = NodeExecutor.create(plan, scripts, conditions);
+            restored.restore(progress);
+            return new TaskRunner(plan, restored);
         }
         return runner;
     }
@@ -46,22 +52,24 @@ public final class TaskRunner {
         if (status != RunStatus.RUNNING) {
             return Optional.empty();
         }
-        return Optional.of(new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING, reason, plan, root.snapshot()));
+        return Optional.of(new TaskSnapshot(
+                TaskSnapshot.VERSION, RunStatus.RUNNING, reason, plan, running().snapshot()));
     }
 
     public RunStatus tick() {
         if (status != RunStatus.RUNNING || suspended) {
             return status;
         }
-        ScriptStatus node = root.tick();
+        NodeExecutor running = running();
+        ScriptStatus node = running.tick();
         if (node == ScriptStatus.SUCCEEDED) {
             status = RunStatus.SUCCEEDED;
-            successResult = root.result();
+            successResult = running.result();
         } else if (node == ScriptStatus.FAILED) {
             status = RunStatus.FAILED;
-            reason = root.failureReason();
-            cause = root.failureCause().orElse(null);
-            failedAt = root.progress();
+            reason = running.failureReason();
+            cause = running.failureCause().orElse(null);
+            failedAt = running.progress();
         } else if (node == ScriptStatus.CANCELLED) {
             status = RunStatus.CANCELLED;
             suspended = false;
@@ -73,8 +81,8 @@ public final class TaskRunner {
         return status;
     }
 
-    public TaskNode plan() {
-        return plan;
+    public Optional<TaskNode> plan() {
+        return Optional.ofNullable(plan);
     }
 
     public Optional<String> failureReason() {
@@ -93,24 +101,24 @@ public final class TaskRunner {
         if (status != RunStatus.RUNNING) {
             return Optional.empty();
         }
-        return Optional.ofNullable(root.currentScript());
+        return Optional.ofNullable(running().currentScript());
     }
 
     public boolean observesWhileTacticsOwns() {
-        return status == RunStatus.RUNNING && root.observesWhileTacticsOwns();
+        return status == RunStatus.RUNNING && running().observesWhileTacticsOwns();
     }
 
     public void suspend() {
         if (status == RunStatus.RUNNING && !suspended) {
             suspended = true;
-            root.suspend();
+            running().suspend();
         }
     }
 
     public void resume() {
         if (status == RunStatus.RUNNING && suspended) {
             suspended = false;
-            root.resume();
+            running().resume();
         }
     }
 
@@ -119,14 +127,14 @@ public final class TaskRunner {
     }
 
     public PolicyExemptions policyExemptions() {
-        return status == RunStatus.RUNNING ? root.exemptions() : PolicyExemptions.empty();
+        return status == RunStatus.RUNNING ? running().exemptions() : PolicyExemptions.empty();
     }
 
     public Optional<RunProgress> progress() {
         if (status != RunStatus.RUNNING) {
             return Optional.empty();
         }
-        return Optional.of(root.progress());
+        return Optional.of(running().progress());
     }
 
     public Optional<RunProgress> failedAt() {
@@ -139,6 +147,15 @@ public final class TaskRunner {
         }
         status = RunStatus.CANCELLED;
         suspended = false;
-        root.cancel();
+        running().cancel();
+    }
+
+    private NodeExecutor running() {
+        NodeExecutor executor = root;
+        if (executor == null) {
+            throw new IllegalStateException("Задача в статусе " + status + " без исполнителя: исполнитель есть только "
+                    + "у RUNNING-задачи, завершённая восстановленная задача ничего не исполняет");
+        }
+        return executor;
     }
 }

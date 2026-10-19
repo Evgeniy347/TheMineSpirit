@@ -5,7 +5,7 @@
 #   scripts/test.sh unit [--tests <фильтр gradle>]…
 #   scripts/test.sh gametest [имя пачки или теста…]
 # Пределы времени (переменные окружения, секунды):
-#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 180), THEMINESPIRIT_UNIT_STOP_SECONDS (360)
+#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 300), THEMINESPIRIT_UNIT_STOP_SECONDS (900; холодная сборка с анализаторами на 4 ядрах — до ~6 мин)
 #   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (1500)
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
 # Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
@@ -22,8 +22,8 @@ LOG_DIR="TestResults/logs"
 mkdir -p "$LOG_DIR"
 
 # Пределы времени (секунды)
-UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-180}"
-UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-360}"
+UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-300}"
+UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-900}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-300}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-1500}"
 
@@ -72,8 +72,8 @@ usage() {
 
 Переменные окружения:
   THEMINESPIRIT_GRADLEW              команда запуска gradle (по умолчанию ./gradlew)
-  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 180)
-  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 360)
+  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 300)
+  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 900)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение gametest (по умолчанию 300)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 1500)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
@@ -661,6 +661,7 @@ parse_unit_reports() {
 
 analyze_unit() {
     local log="$1"
+    local gradle_code="${2:-0}"
     local xml_dir="TestResults/unit/xml"
 
     local total=0 failures=0 errors=0
@@ -676,6 +677,14 @@ analyze_unit() {
     [ "${#report[@]}" -gt 1 ] && failed_names=("${report[@]:1}")
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
+        if [ "$gradle_code" -ne 0 ]; then
+            # Тесты зелёные, но gradle упал: красный анализатор (staticAnalysis) или задача после тестов.
+            echo "FAIL static: $total тестов зелёные, но сборка упала (код gradle $gradle_code)"
+            grep -A3 "What went wrong" "$log" | grep -v "^--$" | head -16
+            grep -m10 -E "violation|\[(ERROR|WARN)\]|spotlessApply" "$log" | head -10
+            echo "полный лог: $log"
+            return 1
+        fi
         echo "OK unit: $total тестов, $ELAPSED с"
         return 0
     fi
@@ -747,10 +756,15 @@ if [ "$MODE" = "unit" ]; then
     start_monitor "unit"
     # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
+    # Полный прогон (без --tests, в том числе хук pre-commit) гоняет и строгие анализаторы (tasks/46):
+    # --continue — тесты идут и при красном анализаторе, итог называет обе части.
+    UNIT_EXTRA=()
+    [ ${#UNIT_TESTS[@]} -eq 0 ] && UNIT_EXTRA=(staticAnalysis --continue)
+
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
@@ -771,7 +785,7 @@ if [ "$MODE" = "unit" ]; then
         exit 124
     fi
 
-    analyze_unit "$LOG_FILE"
+    analyze_unit "$LOG_FILE" "$CODE"
     exit $?
 
 else

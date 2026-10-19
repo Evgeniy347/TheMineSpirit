@@ -6,13 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public final class ObservationHash {
     private static final char FIELD_SEPARATOR = '\u001f';
     private static final char RECORD_SEPARATOR = '\u001e';
 
-    private ObservationHash() {
-    }
+    private ObservationHash() {}
 
     public static String compute(WorldObservation obs) {
         String canonical = canonicalForm(obs);
@@ -47,16 +47,21 @@ public final class ObservationHash {
         return builder.toString();
     }
 
-    private static void appendSpirit(StringBuilder builder, SpiritStatus spirit) {
+    private static void appendSpirit(StringBuilder builder, @Nullable SpiritStatus spirit) {
         if (spirit == null) {
             return;
         }
         if (spirit.held() != null) {
-            builder.append(spirit.held().item()).append('@').append(spirit.held().durability());
+            builder.append(spirit.held().item())
+                    .append('@')
+                    .append(spirit.held().durability());
         }
         builder.append('|').append(spirit.health()).append('|').append(spirit.food());
         if (spirit.boardTask() != null) {
-            builder.append('|').append(spirit.boardTask().caseName()).append(':').append(spirit.boardTask().status());
+            builder.append('|')
+                    .append(spirit.boardTask().caseName())
+                    .append(':')
+                    .append(spirit.boardTask().status());
         }
         builder.append(RECORD_SEPARATOR);
     }
@@ -77,11 +82,7 @@ public final class ObservationHash {
         }
     }
 
-    /**
-     * В хэш входит только день/ночь, но не точный тик суток: тик растёт каждую секунду игры и ломал бы
-     * сравнение «мир не изменился», из-за чего стратег звал бы модель на каждый цикл.
-     */
-    private static void appendTime(StringBuilder builder, WorldTime time) {
+    private static void appendTime(StringBuilder builder, @Nullable WorldTime time) {
         if (time != null) {
             builder.append(time.day());
         }

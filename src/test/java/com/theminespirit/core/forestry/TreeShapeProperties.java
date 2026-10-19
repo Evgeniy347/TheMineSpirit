@@ -25,26 +25,35 @@ class TreeShapeProperties {
         List<BlockCoord> members = new ArrayList<>(component);
         BlockCoord start = members.get(random.nextInt(members.size()));
 
-        Tree tree = assertInstanceOf(Tree.class, TreeShape.detect(start, grid),
+        Tree tree = assertInstanceOf(
+                Tree.class,
+                TreeShape.detect(start, grid),
                 "Разбор обязана давать одно и то же дерево, с какого бы бревна его ни начали: стартовое бревно — "
                         + "ближайшее к духу, это может быть конец ветви акации, и дерево не должно становиться TOO_BIG "
                         + "из-за выбора начала обхода");
-        assertEquals(Set.copyOf(component), Set.copyOf(tree.logs()),
+        assertEquals(
+                Set.copyOf(component),
+                Set.copyOf(tree.logs()),
                 "Разбор обязан вернуть всю компоненту связности: пропущенное или лишнее бревно даёт "
                         + "неправильный план рубки");
-        assertEquals(tree.logs().size(), Set.copyOf(tree.logs()).size(),
+        assertEquals(
+                tree.logs().size(),
+                Set.copyOf(tree.logs()).size(),
                 "Каждое бревно обязано попасть в дерево один раз: дубль приведёт к повторной ломке одного блока");
         for (int i = 1; i < tree.logs().size(); i++) {
-            assertTrue(tree.logs().get(i - 1).y() <= tree.logs().get(i).y(),
+            assertTrue(
+                    tree.logs().get(i - 1).y() <= tree.logs().get(i).y(),
                     "Порядок брёвен обязан не убывать по y: рубка идёт снизу вверх, а нарушение порядка "
                             + "ломки заставляет духа прыгать по стволу вверх-вниз");
         }
         int neighbours = nonLogNeighbours(component);
-        assertTrue(grid.logReads() <= component.size() + neighbours,
+        assertTrue(
+                grid.logReads() <= component.size() + neighbours,
                 "Разбор одного дерева обязан читать isLog не больше одного раза на клетку: без множества "
                         + "посещённых обход читает соседей каждого бревна повторно, и на плотных группах число "
                         + "чтений перерастает размер группы с её соседями");
-        assertTrue(grid.leavesReads() <= neighbours,
+        assertTrue(
+                grid.leavesReads() <= neighbours,
                 "Разбор одного дерева обязан вызывать isNaturalLeaves только для различных неповторяющихся "
                         + "соседей-не-брёвен: повторный вызов на одной клетке — симптом повторного обхода, который "
                         + "на 128 брёвен разрастается до тысяч чтений за тик");
@@ -62,15 +71,22 @@ class TreeShapeProperties {
         grid.planks(plank.x(), plank.y(), plank.z());
         BlockCoord start = members.get(random.nextInt(members.size()));
 
-        NotATree rejection = assertInstanceOf(NotATree.class, TreeShape.detect(start, grid),
+        NotATree rejection = assertInstanceOf(
+                NotATree.class,
+                TreeShape.detect(start, grid),
                 "Доска вплотную к любому бревну группы обязана отвергать всю группу как постройку, с какого бы "
                         + "бревна ни начали разбор: лучше оставить дерево, чем сломать стену игрока");
-        assertEquals(NotATree.Reason.BUILT_NEARBY, rejection.reason(),
+        assertEquals(
+                NotATree.Reason.BUILT_NEARBY,
+                rejection.reason(),
                 "Группа с искусственным соседом отвергается по причине BUILT_NEARBY, а не по форме или листьям");
-        assertEquals(Set.copyOf(component), rejection.logs(),
+        assertEquals(
+                Set.copyOf(component),
+                rejection.logs(),
                 "Отвергнутая постройка несёт все свои брёвна: адаптер заносит их в known одним разбором");
         int neighbours = nonLogNeighbours(component);
-        assertTrue(grid.artificialReads() <= neighbours,
+        assertTrue(
+                grid.artificialReads() <= neighbours,
                 "isArtificial читается не больше одного раза на различного соседа-не-бревно: без этого "
                         + "проверка построек удваивает чтения мира в тике");
     }
@@ -107,8 +123,7 @@ class TreeShapeProperties {
             if (candidate.y() <= 0) {
                 continue;
             }
-            if (Math.abs(candidate.x()) > ChopTuning.MAX_SPREAD
-                    || Math.abs(candidate.z()) > ChopTuning.MAX_SPREAD) {
+            if (Math.abs(candidate.x()) > ChopTuning.MAX_SPREAD || Math.abs(candidate.z()) > ChopTuning.MAX_SPREAD) {
                 continue;
             }
             if (component.add(candidate)) {

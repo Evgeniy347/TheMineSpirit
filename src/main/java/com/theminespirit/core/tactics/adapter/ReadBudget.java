@@ -6,8 +6,9 @@ public final class ReadBudget {
 
     public ReadBudget(int limit) {
         if (limit < 0) {
-            throw new IllegalArgumentException("ReadBudget.limit = " + limit
-                    + ": предел чтений блоков за цикл не может быть отрицательным; возьмите factChunkBudget из настроек");
+            throw new IllegalArgumentException(
+                    "ReadBudget.limit = " + limit
+                            + ": предел чтений блоков за цикл не может быть отрицательным; возьмите factChunkBudget из настроек");
         }
         this.limit = limit;
     }

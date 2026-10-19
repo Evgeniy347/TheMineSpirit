@@ -3,21 +3,25 @@ package com.theminespirit.core.engine;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public sealed interface TaskProgress {
-    record SequenceAt(int index, TaskProgress child) implements TaskProgress {
+    record SequenceAt(int index, @Nullable TaskProgress child) implements TaskProgress {
         public SequenceAt {
             requireNonNegative(index);
         }
     }
 
-    record RepeatAt(int index, TaskProgress child) implements TaskProgress {
+    record RepeatAt(int index, @Nullable TaskProgress child) implements TaskProgress {
         public RepeatAt {
             requireNonNegative(index);
         }
     }
 
-    record FallbackAt(int index, String lastReason, TaskProgress child) implements TaskProgress {
+    record FallbackAt(
+            int index,
+            @Nullable String lastReason,
+            @Nullable TaskProgress child) implements TaskProgress {
         public FallbackAt {
             requireNonNegative(index);
         }
@@ -30,7 +34,7 @@ public sealed interface TaskProgress {
         }
     }
 
-    record ConditionAt(ConditionBranch branch, TaskProgress child) implements TaskProgress {
+    record ConditionAt(ConditionBranch branch, @Nullable TaskProgress child) implements TaskProgress {
         public ConditionAt {
             Objects.requireNonNull(branch, "branch не может быть null: по нему условие решает, какую ветку продолжать");
         }
@@ -43,7 +47,10 @@ public sealed interface TaskProgress {
         }
     }
 
-    record ParallelChild(ScriptStatus status, String reason, TaskProgress child) {
+    record ParallelChild(
+            ScriptStatus status,
+            @Nullable String reason,
+            @Nullable TaskProgress child) {
         public ParallelChild {
             Objects.requireNonNull(status, "status не может быть null: без статуса потомок parallel не восстановится");
         }
@@ -57,8 +64,8 @@ public sealed interface TaskProgress {
 
     private static void requireNonNegative(int index) {
         if (index < 0) {
-            throw new IllegalArgumentException("Индекс прогресса не может быть отрицательным: позиция шага в узле "
-                    + "нумеруется с нуля");
+            throw new IllegalArgumentException(
+                    "Индекс прогресса не может быть отрицательным: позиция шага в узле " + "нумеруется с нуля");
         }
     }
 }

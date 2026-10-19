@@ -28,11 +28,13 @@ class PillarUpParamsTests {
 
     @Test
     void from_ZeroHeight_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> PillarUpParams.from(Map.of("height", 0)),
                 "нулевая высота не строит столб: параметр обязан отвергаться до запуска");
 
-        assertTrue(error.getMessage().contains("0"),
+        assertTrue(
+                error.getMessage().contains("0"),
                 "сообщение обязано называть высоту 0, фактическое: " + error.getMessage());
     }
 }

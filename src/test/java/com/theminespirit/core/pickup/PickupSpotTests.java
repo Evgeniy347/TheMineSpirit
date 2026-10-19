@@ -19,7 +19,9 @@ class PickupSpotTests {
     void accessCell_ItemUnderBush_ReturnsBushCell() {
         MapSafety safety = plantedBed();
 
-        assertEquals(new BlockCoord(0, 1, 0), PickupSpot.accessCell(new BlockCoord(0, 0, 0), safety),
+        assertEquals(
+                new BlockCoord(0, 1, 0),
+                PickupSpot.accessCell(new BlockCoord(0, 0, 0), safety),
                 "Ягода падает сквозь куст на землю: клетка доступа — сам куст над предметом, иначе подбор пойдёт "
                         + "к пашне под кустом, куда не встать");
     }
@@ -28,7 +30,9 @@ class PickupSpotTests {
     void accessCell_ItemOnOpenGround_ReturnsItemCell() {
         MapSafety safety = new MapSafety().floor();
 
-        assertEquals(ITEM, PickupSpot.accessCell(ITEM, safety),
+        assertEquals(
+                ITEM,
+                PickupSpot.accessCell(ITEM, safety),
                 "Предмет на открытом месте доступен из своей клетки: поведение обычного дропа не меняется");
     }
 
@@ -38,7 +42,9 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertEquals(Optional.of(new BlockCoord(2, 1, 0)), spot,
+        assertEquals(
+                Optional.of(new BlockCoord(2, 1, 0)),
+                spot,
                 "Ягоды выпадают в клетку куста (HAZARD), а дух не заходит в куст: подбор обязан встать на ближайшую "
                         + "безопасную клетку в двух шагах от духа — с неё куст достаётся, иначе сбор падает");
     }
@@ -56,7 +62,9 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertEquals(Optional.empty(), spot,
+        assertEquals(
+                Optional.empty(),
+                spot,
                 "Если все клетки вокруг куста — тоже кусты, стоять негде: подбор не выдумывает стоянку в опасной "
                         + "клетке, и вызывающий обрабатывает недостижимость как раньше");
     }
@@ -72,7 +80,9 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(new BlockCoord(4, 1, 4), new BlockCoord(1, 1, 3), safety);
 
-        assertEquals(Optional.of(new BlockCoord(2, 1, 3)), spot,
+        assertEquals(
+                Optional.of(new BlockCoord(2, 1, 3)),
+                spot,
                 "В центре грядки 3x3 стоянка обязана быть ближайшей безопасной клеткой у духа, а не на другой стороне "
                         + "грядки: иначе дух идёт через кусты, получает урон и бросает подбор");
     }
@@ -81,10 +91,11 @@ class PickupSpotTests {
     void forDrop_ItemInWater_ReturnsEmpty() {
         MapSafety safety = new MapSafety().floor();
 
-        Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0),
-                safety.set(0, 1, 0, Cell.WATER));
+        Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety.set(0, 1, 0, Cell.WATER));
 
-        assertEquals(Optional.empty(), spot,
+        assertEquals(
+                Optional.empty(),
+                spot,
                 "В воду за предметом дух не лезет и рядом с водой не встаёт: стоянка не находится, "
                         + "и вызывающий сохраняет прежнее поведение");
     }
@@ -93,10 +104,11 @@ class PickupSpotTests {
     void forDrop_ItemInLava_ReturnsEmpty() {
         MapSafety safety = new MapSafety().floor();
 
-        Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0),
-                safety.set(0, 1, 0, Cell.LAVA));
+        Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety.set(0, 1, 0, Cell.LAVA));
 
-        assertEquals(Optional.empty(), spot,
+        assertEquals(
+                Optional.empty(),
+                spot,
                 "Возле лавы стоять нельзя: подбор не имеет права предлагать стоянку у лавовой клетки");
     }
 
@@ -107,7 +119,9 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertEquals(Optional.of(new BlockCoord(2, 1, 0)), spot,
+        assertEquals(
+                Optional.of(new BlockCoord(2, 1, 0)),
+                spot,
                 "Вода у пола рядом со стоянкой не запрещает подбор (дух стоит на твёрдом полу у воды, как на ферме): "
                         + "запрет отправлял духа в обход грядки, где он застревал");
     }
@@ -118,7 +132,9 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertEquals(Optional.of(ITEM), spot,
+        assertEquals(
+                Optional.of(ITEM),
+                spot,
                 "Предмет на проходимой клетке подбирается с неё же: поведение обычного дропа не меняется");
     }
 
@@ -136,7 +152,8 @@ class PickupSpotTests {
 
         Optional<BlockCoord> spot = PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertTrue(spot.isEmpty(),
+        assertTrue(
+                spot.isEmpty(),
                 "Куст в лавовом кольце: безопасной стоянки рядом нет, подбор не должен подставлять духа под лаву");
     }
 
@@ -146,16 +163,22 @@ class PickupSpotTests {
 
         List<BlockCoord> stands = PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety);
 
-        assertEquals(new BlockCoord(2, 1, 0), stands.get(0),
+        assertEquals(
+                new BlockCoord(2, 1, 0),
+                stands.get(0),
                 "Ближайшая к духу стоянка у куста обязана быть первой: по ней подбор идёт до того, как пробовать "
                         + "следующие");
-        assertTrue(stands.size() > 1,
+        assertTrue(
+                stands.size() > 1,
                 "Куст на открытом месте обязан дать больше одной стоянки: без запаса подбор бросал предмет, если "
                         + "ближайшая стоянка оказалась за заградой, фактически " + stands);
-        assertTrue(stands.indexOf(new BlockCoord(1, 1, 2)) > 0,
+        assertTrue(
+                stands.indexOf(new BlockCoord(1, 1, 2)) > 0,
                 "Дальняя стоянка обязана остаться в списке после ближней: именно её берёт повторная попытка, а не "
                         + "пропуск предмета, список " + stands);
-        assertEquals(Optional.of(new BlockCoord(2, 1, 0)), PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety),
+        assertEquals(
+                Optional.of(new BlockCoord(2, 1, 0)),
+                PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety),
                 "forDrop обязан остаться ближайшей стоянкой из standsFor: поведение одиночного подбора не меняется");
     }
 
@@ -163,7 +186,9 @@ class PickupSpotTests {
     void standsFor_ItemOnOpenGround_ReturnsItsOwnCellOnly() {
         MapSafety safety = new MapSafety().floor();
 
-        assertEquals(List.of(ITEM), PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety),
+        assertEquals(
+                List.of(ITEM),
+                PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety),
                 "Предмет на проходимой клетке подбирается с неё же: список из одной клетки, поведение обычного дропа "
                         + "не меняется");
     }

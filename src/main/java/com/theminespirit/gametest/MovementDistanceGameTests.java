@@ -30,8 +30,7 @@ public final class MovementDistanceGameTests {
     private static final int SCALE_DISTANCE = 2;
     private static final double RING_RADIUS = 2.5;
 
-    private MovementDistanceGameTests() {
-    }
+    private MovementDistanceGameTests() {}
 
     @GameTest(template = "arena", batch = "move_keep_close", timeoutTicks = 300)
     public static void keepDistance_TargetTwoBlocksAway_BacksOffToFiveAndHoldsForFortyTicks(GameTestHelper helper) {
@@ -61,11 +60,14 @@ public final class MovementDistanceGameTests {
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(reachedAt[0] >= 0, "дух ещё не отошёл на дистанцию " + DISTANCE);
-            helper.assertTrue(run.spiritTicks() >= reachedAt[0] + HOLD_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() >= reachedAt[0] + HOLD_TICKS,
                     "после отхода дистанция должна продержаться " + HOLD_TICKS + " тиков");
-            helper.assertTrue(closestAfterReach[0] >= DISTANCE,
+            helper.assertTrue(
+                    closestAfterReach[0] >= DISTANCE,
                     "дистанция " + DISTANCE + " обязана держаться, а дух подошёл на " + closestAfterReach[0]);
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                     "keep_distance не заканчивается, пока жива цель: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
             MovementScene.removePlayer(helper, player);
@@ -104,9 +106,11 @@ public final class MovementDistanceGameTests {
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(reachedAt[0] >= 0, "дух ещё не подошёл на дистанцию " + DISTANCE);
-            helper.assertTrue(run.spiritTicks() >= reachedAt[0] + HOLD_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() >= reachedAt[0] + HOLD_TICKS,
                     "после подхода дистанция должна продержаться " + HOLD_TICKS + " тиков");
-            helper.assertTrue(closest[0] >= DISTANCE - APPROACH_BAND && widest[0] <= DISTANCE + APPROACH_BAND,
+            helper.assertTrue(
+                    closest[0] >= DISTANCE - APPROACH_BAND && widest[0] <= DISTANCE + APPROACH_BAND,
                     "дистанция обязана держаться в пределах " + DISTANCE + " плюс-минус " + APPROACH_BAND
                             + ", а была от " + closest[0] + " до " + widest[0]);
             MovementScene.removePlayer(helper, player);
@@ -121,12 +125,14 @@ public final class MovementDistanceGameTests {
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int i = 0; i < SPIRITS; i++) {
             double angle = 2 * Math.PI * i / SPIRITS;
-            spirits.add(helper.spawn(ModEntities.SPIRIT.get(), new Vec3(4.5 + RING_RADIUS * Math.cos(angle), 1,
-                    4.5 + RING_RADIUS * Math.sin(angle))));
+            spirits.add(helper.spawn(
+                    ModEntities.SPIRIT.get(),
+                    new Vec3(4.5 + RING_RADIUS * Math.cos(angle), 1, 4.5 + RING_RADIUS * Math.sin(angle))));
         }
         int[] startedAt = {-1};
         helper.onEachTick(() -> {
-            if (startedAt[0] < 0 && spirits.stream().allMatch(spirit -> spirit.tickCount >= MovementScene.SETTLE_TICKS)) {
+            if (startedAt[0] < 0
+                    && spirits.stream().allMatch(spirit -> spirit.tickCount >= MovementScene.SETTLE_TICKS)) {
                 startedAt[0] = spirits.get(0).tickCount;
                 spirits.forEach(spirit -> spirit.startTask(keepCall(player, SCALE_DISTANCE)));
             }
@@ -135,24 +141,29 @@ public final class MovementDistanceGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(startedAt[0] >= 0, "духи ещё не получили задачу");
-            helper.assertTrue(spirits.get(0).tickCount >= startedAt[0] + SCALE_TICKS,
+            helper.assertTrue(
+                    spirits.get(0).tickCount >= startedAt[0] + SCALE_TICKS,
                     "наблюдение за " + SCALE_TICKS + " тиками ещё не закончилось");
-            helper.assertTrue(KeepDistanceScript.DECISION_PERIOD_TICKS == 10,
+            helper.assertTrue(
+                    KeepDistanceScript.DECISION_PERIOD_TICKS == 10,
                     "период решения keep_distance — 10 тиков (решение главного агента к чеклисту 24), в коде "
                             + KeepDistanceScript.DECISION_PERIOD_TICKS);
             int total = 0;
             for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                helper.assertTrue(
+                        spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "keep_distance за живой целью работает все " + SCALE_TICKS + " тиков, а статус "
                                 + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                                 + spirit.taskFailureReason().orElse("нет")
                                 + ": упавший скрипт не спрашивает мир, и счёт запросов ничего бы не доказывал");
-                helper.assertTrue(spirit.entityQueries() >= 1 && spirit.entityQueries() <= perSpiritBudget,
+                helper.assertTrue(
+                        spirit.entityQueries() >= 1 && spirit.entityQueries() <= perSpiritBudget,
                         "дух спрашивает мир раз в период решения: от 1 до " + perSpiritBudget + " запросов за "
                                 + SCALE_TICKS + " тиков, а задал " + spirit.entityQueries());
                 total += spirit.entityQueries();
             }
-            helper.assertTrue(total <= SPIRITS * perSpiritBudget,
+            helper.assertTrue(
+                    total <= SPIRITS * perSpiritBudget,
                     "двадцать духов за " + SCALE_TICKS + " тиков обязаны уложиться в " + SPIRITS * perSpiritBudget
                             + " запросов мира, а задали " + total);
             MovementScene.removePlayer(helper, player);
@@ -161,6 +172,7 @@ public final class MovementDistanceGameTests {
     }
 
     private static TaskNode keepCall(ServerPlayer player, int distance) {
-        return MovementScene.call("keep_distance", Map.of("target", player.getName().getString(), "distance", distance));
+        return MovementScene.call(
+                "keep_distance", Map.of("target", player.getName().getString(), "distance", distance));
     }
 }

@@ -7,8 +7,8 @@ import com.theminespirit.core.script.AttackParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
@@ -76,10 +76,7 @@ public final class AttackScript implements ScriptInstance {
 
     private ScriptStatus succeed() {
         result = new ScriptResult.Data(Map.of(
-                "mode", directive.mode().name(),
-                "target", targetText,
-                "ticks", ticks,
-                "outcome", "target_down"));
+                "mode", directive.mode().name(), "target", targetText, "ticks", ticks, "outcome", "target_down"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

@@ -16,31 +16,34 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class TransferPlanner {
-    private static final Comparator<Candidate> CANDIDATE_ORDER = Comparator
-            .comparingInt(Candidate::surplus).reversed()
+    private static final Comparator<Candidate> CANDIDATE_ORDER = Comparator.comparingInt(Candidate::surplus)
+            .reversed()
             .thenComparingDouble(Candidate::distance)
             .thenComparing(candidate -> candidate.source().spirit());
 
-    private TransferPlanner() {
-    }
+    private TransferPlanner() {}
 
-    public static List<TransferOrder> plan(List<TransferNeed> needs, List<TransferSource> sources,
-            Map<String, Integer> warehouse, ValueTable values, int radius, int maxCount) {
+    public static List<TransferOrder> plan(
+            List<TransferNeed> needs,
+            List<TransferSource> sources,
+            Map<String, Integer> warehouse,
+            ValueTable values,
+            int radius,
+            int maxCount) {
         Objects.requireNonNull(needs, "Нужды передачи не могут быть null: пустой список задают пустым");
         Objects.requireNonNull(sources, "Источники не могут быть null: пустой список задают пустым");
         Objects.requireNonNull(warehouse, "Склад не может быть null: пустой склад задают пустой картой");
         Objects.requireNonNull(values, "Ценности не могут быть null: без них норма не выбирает лучшее");
         if (radius < 0) {
-            throw new IllegalArgumentException("Радиус передачи " + radius + " отрицателен: близость "
-                    + "считается расстоянием");
+            throw new IllegalArgumentException(
+                    "Радиус передачи " + radius + " отрицателен: близость " + "считается расстоянием");
         }
         if (maxCount <= 0) {
-            throw new IllegalArgumentException("Предел передачи " + maxCount + " не положителен: "
-                    + "пустая передача не создаёт задачи");
+            throw new IllegalArgumentException(
+                    "Предел передачи " + maxCount + " не положителен: " + "пустая передача не создаёт задачи");
         }
         List<TransferNeed> orderedNeeds = new ArrayList<>(needs);
-        orderedNeeds.sort(Comparator.comparing(TransferNeed::recipient)
-                .thenComparing(TransferNeed::item));
+        orderedNeeds.sort(Comparator.comparing(TransferNeed::recipient).thenComparing(TransferNeed::item));
         List<TransferSource> orderedSources = new ArrayList<>(sources);
         orderedSources.sort(Comparator.comparing(TransferSource::spirit));
         Map<UUID, Map<String, Integer>> allocated = new HashMap<>();
@@ -56,9 +59,14 @@ public final class TransferPlanner {
                 if (count <= 0) {
                     continue;
                 }
-                orders.add(new TransferOrder(Optional.of(candidate.source().spirit()), need.recipient(),
-                        need.item(), count, candidate.distance()));
-                allocated.computeIfAbsent(candidate.source().spirit(), ignored -> new HashMap<>())
+                orders.add(new TransferOrder(
+                        Optional.of(candidate.source().spirit()),
+                        need.recipient(),
+                        need.item(),
+                        count,
+                        candidate.distance()));
+                allocated
+                        .computeIfAbsent(candidate.source().spirit(), ignored -> new HashMap<>())
                         .merge(need.item(), count, Integer::sum);
                 remaining -= count;
             }
@@ -66,26 +74,33 @@ public final class TransferPlanner {
                 int stored = warehouse.getOrDefault(need.item(), 0);
                 int count = Math.min(remaining, Math.min(stored, maxCount));
                 if (count > 0) {
-                    orders.add(new TransferOrder(Optional.empty(), need.recipient(), need.item(),
-                            count, 0));
+                    orders.add(new TransferOrder(Optional.empty(), need.recipient(), need.item(), count, 0));
                 }
             }
         }
         return List.copyOf(orders);
     }
 
-    public static List<TransferOrder> planForCraft(String craftItem, UUID crafter, BlockCoord at,
-            List<Stack> inventory, List<Ingredient> ingredients, List<TransferSource> sources,
-            Map<String, Integer> warehouse, ValueTable values, int radius, int maxCount) {
+    public static List<TransferOrder> planForCraft(CraftRequest request) {
+        String craftItem = request.craftItem();
+        UUID crafter = request.crafter();
+        BlockCoord at = request.at();
+        List<Stack> inventory = request.inventory();
+        List<Ingredient> ingredients = request.ingredients();
+        List<TransferSource> sources = request.sources();
+        Map<String, Integer> warehouse = request.warehouse();
+        ValueTable values = request.values();
+        int radius = request.radius();
+        int maxCount = request.maxCount();
         if (craftItem == null || craftItem.isBlank()) {
-            throw new IllegalArgumentException("Предмет крафта пуст: без него неясно, чьи ингредиенты "
-                    + "собирает передача");
+            throw new IllegalArgumentException(
+                    "Предмет крафта пуст: без него неясно, чьи ингредиенты " + "собирает передача");
         }
         Objects.requireNonNull(crafter, "Крафтер не может быть null: передача адресована ему");
         Objects.requireNonNull(at, "Точка крафтера не может быть null: по ней ищут ближайший излишек");
         Objects.requireNonNull(inventory, "Инвентарь крафтера не может быть null: нехватка считается по нему");
-        Objects.requireNonNull(ingredients, "Ингредиенты рецепта не могут быть null: пустой рецепт "
-                + "задают пустым списком");
+        Objects.requireNonNull(
+                ingredients, "Ингредиенты рецепта не могут быть null: пустой рецепт " + "задают пустым списком");
         Map<String, Integer> have = new HashMap<>();
         for (Stack stack : inventory) {
             if (stack != null) {
@@ -102,8 +117,12 @@ public final class TransferPlanner {
         return plan(needs, sources, warehouse, values, radius, maxCount);
     }
 
-    private static List<Candidate> candidates(TransferNeed need, List<TransferSource> sources,
-            ValueTable values, int radius, Map<UUID, Map<String, Integer>> allocated) {
+    private static List<Candidate> candidates(
+            TransferNeed need,
+            List<TransferSource> sources,
+            ValueTable values,
+            int radius,
+            Map<UUID, Map<String, Integer>> allocated) {
         List<Candidate> candidates = new ArrayList<>();
         for (TransferSource source : sources) {
             if (source.spirit().equals(need.recipient())) {
@@ -141,6 +160,17 @@ public final class TransferPlanner {
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    private record Candidate(TransferSource source, int surplus, double distance) {
-    }
+    private record Candidate(TransferSource source, int surplus, double distance) {}
+
+    public record CraftRequest(
+            String craftItem,
+            UUID crafter,
+            BlockCoord at,
+            List<Stack> inventory,
+            List<Ingredient> ingredients,
+            List<TransferSource> sources,
+            Map<String, Integer> warehouse,
+            ValueTable values,
+            int radius,
+            int maxCount) {}
 }

@@ -29,11 +29,12 @@ public final class Decider {
             excluded.addAll(decision.excluded());
             excluded.addAll(replacement.excluded());
             List<String> excludingRules = mergeExcluding(decision, replacement);
-            return replacement.rule()
-                    .map(rule -> new Decision(rule.noRouteOption().get(), rule.id(), excluded, excludingRules,
-                            HoldStatus.NONE))
-                    .orElseGet(() -> new Decision(TacticalOption.FIGHT, Decision.ALL_EXCLUDED, excluded,
-                            excludingRules, HoldStatus.NONE));
+            return replacement
+                    .rule()
+                    .map(rule -> new Decision(
+                            rule.noRouteOption().get(), rule.id(), excluded, excludingRules, HoldStatus.NONE))
+                    .orElseGet(() -> new Decision(
+                            TacticalOption.FIGHT, Decision.ALL_EXCLUDED, excluded, excludingRules, HoldStatus.NONE));
         }
         return decision;
     }
@@ -59,21 +60,29 @@ public final class Decider {
         candidates.removeAll(verdict.excluded());
         if (candidates.isEmpty()) {
             TacticalOption fallback = escapeRoutes > 0 ? TacticalOption.RETREAT : TacticalOption.FIGHT;
-            return new Decision(fallback, Decision.ALL_EXCLUDED, verdict.excluded(), verdict.excludingRules(),
-                    HoldStatus.NONE);
+            return new Decision(
+                    fallback, Decision.ALL_EXCLUDED, verdict.excluded(), verdict.excludingRules(), HoldStatus.NONE);
         }
         double hpFraction = facts.number(FactName.SELF_HP_FRACTION);
         HoldStatus hold = hysteresis.status(memory, now, hpFraction, candidates);
         if (candidates.size() == 1) {
-            return new Decision(candidates.iterator().next(), Decision.SOLE_CANDIDATE, verdict.excluded(),
-                    verdict.excludingRules(), hold == HoldStatus.RELEASED_EXCLUDED ? hold : HoldStatus.NONE);
+            return new Decision(
+                    candidates.iterator().next(),
+                    Decision.SOLE_CANDIDATE,
+                    verdict.excluded(),
+                    verdict.excludingRules(),
+                    hold == HoldStatus.RELEASED_EXCLUDED ? hold : HoldStatus.NONE);
         }
         if (hold == HoldStatus.HELD) {
-            return new Decision(memory.previous().get(), Decision.HELD, verdict.excluded(), verdict.excludingRules(),
-                    hold);
+            return new Decision(
+                    memory.previous().get(), Decision.HELD, verdict.excluded(), verdict.excludingRules(), hold);
         }
         Optional<TacticalOption> sticky = hold == HoldStatus.BONUS ? memory.previous() : Optional.empty();
-        return new Decision(scores.best(candidates, weights, sticky), Decision.BY_SCORE, verdict.excluded(),
-                verdict.excludingRules(), hold);
+        return new Decision(
+                scores.best(candidates, weights, sticky),
+                Decision.BY_SCORE,
+                verdict.excluded(),
+                verdict.excludingRules(),
+                hold);
     }
 }

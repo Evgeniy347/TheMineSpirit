@@ -15,10 +15,10 @@ public final class BoardRoutes {
     private final IdempotencyCache idempotency;
 
     public BoardRoutes(BoardGateway gateway, IdempotencyCache idempotency) {
-        this.gateway = Objects.requireNonNull(gateway,
-                "gateway не может быть null: очередь доски читает и меняет только платформа");
-        this.idempotency = Objects.requireNonNull(idempotency,
-                "idempotency не может быть null: повтор request_id обязан вернуть прежнее задание");
+        this.gateway = Objects.requireNonNull(
+                gateway, "gateway не может быть null: очередь доски читает и меняет только платформа");
+        this.idempotency = Objects.requireNonNull(
+                idempotency, "idempotency не может быть null: повтор request_id обязан вернуть прежнее задание");
     }
 
     public List<Route> routes() {
@@ -29,16 +29,16 @@ public final class BoardRoutes {
                 new Route("DELETE", "/v1/board/tasks/{id}", this::cancel));
     }
 
-    private RestResponse list(RestRequest request, PathParams params) {
+    private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
         return RestResponse.ok(BoardJson.listJson(gateway.tasks()));
     }
 
-    private RestResponse log(RestRequest request, PathParams params) {
+    private RestResponse log(RestRequest request, PathParams ignoredParams) {
         BoardLogQuery query = BoardLogQuery.parse(request.query());
         return RestResponse.ok(BoardJson.logJson(gateway.log(query.limit())));
     }
 
-    private RestResponse create(RestRequest request, PathParams params) {
+    private RestResponse create(RestRequest request, PathParams ignoredParams) {
         BoardTaskRequest parsed = BoardTaskRequest.parse(request.body());
         String requestId = parsed.requestId().toString();
         String fingerprint = fingerprint(parsed);
@@ -47,7 +47,8 @@ public final class BoardRoutes {
             return RestResponse.json(202, replay.storedResponse());
         }
         if (verdict instanceof IdempotencyCache.Result.Conflict) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "request_id " + requestId + " уже использован с другим телом запроса: повторите с новым "
                             + "request_id или пришлите исходное тело",
                     Map.of("request_id", requestId));
@@ -64,7 +65,7 @@ public final class BoardRoutes {
         return RestResponse.json(202, response);
     }
 
-    private RestResponse cancel(RestRequest request, PathParams params) {
+    private RestResponse cancel(RestRequest ignoredRequest, PathParams params) {
         return RestResponse.ok(BoardJson.toJson(gateway.cancel(params.get("id"))));
     }
 

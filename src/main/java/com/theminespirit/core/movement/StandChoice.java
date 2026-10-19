@@ -14,8 +14,7 @@ public final class StandChoice {
     public static final double REACH_DISTANCE = 4.5;
     public static final int HORIZONTAL_SPREAD = 3;
 
-    private StandChoice() {
-    }
+    private StandChoice() {}
 
     public static List<BlockCoord> candidates(BlockCoord target) {
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, вокруг чего искать стоянку");
@@ -40,11 +39,15 @@ public final class StandChoice {
         double centerX = target.x() + 0.5;
         double centerY = target.y() + 0.5;
         double centerZ = target.z() + 0.5;
-        Comparator<BlockCoord> cheapestFirst = Comparator
-                .comparingInt((BlockCoord stand) -> MoveCost.walkTicks(spiritFeet, stand))
+        Comparator<BlockCoord> cheapestFirst = Comparator.comparingInt(
+                        (BlockCoord stand) -> MoveCost.walkTicks(spiritFeet, stand))
                 .thenComparingDouble(stand -> distanceSquared(
-                        spiritFeet.x() + 0.5, spiritFeet.y() + EYE_HEIGHT, spiritFeet.z() + 0.5,
-                        stand.x() + 0.5, stand.y() + EYE_HEIGHT, stand.z() + 0.5))
+                        spiritFeet.x() + 0.5,
+                        spiritFeet.y() + EYE_HEIGHT,
+                        spiritFeet.z() + 0.5,
+                        stand.x() + 0.5,
+                        stand.y() + EYE_HEIGHT,
+                        stand.z() + 0.5))
                 .thenComparing(Comparator.naturalOrder());
         Optional<BlockCoord> best = Optional.empty();
         for (BlockCoord stand : candidates(target)) {
@@ -65,8 +68,7 @@ public final class StandChoice {
         double eyeX = stand.x() + 0.5;
         double eyeY = stand.y() + EYE_HEIGHT;
         double eyeZ = stand.z() + 0.5;
-        return distanceSquared(eyeX, eyeY, eyeZ, centerX, centerY, centerZ)
-                <= REACH_DISTANCE * REACH_DISTANCE;
+        return distanceSquared(eyeX, eyeY, eyeZ, centerX, centerY, centerZ) <= REACH_DISTANCE * REACH_DISTANCE;
     }
 
     private static double distanceSquared(double ax, double ay, double az, double bx, double by, double bz) {

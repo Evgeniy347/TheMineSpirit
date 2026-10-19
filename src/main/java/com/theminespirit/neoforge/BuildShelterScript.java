@@ -4,10 +4,8 @@ import com.theminespirit.core.building.ShelterPlan;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.intellect.FortifyTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BuildShelterParams;
-import com.theminespirit.neoforge.fortify.FortifyMaterial;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +17,7 @@ final class BuildShelterScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
 
     BuildShelterScript(SpiritEntity spirit, BuildShelterParams params) {
-        Optional<String> material = FortifyMaterial.placeableBlockId(spirit.getInventory());
+        Optional<String> material = ShelterMaterial.placeableBlockId(spirit.getInventory());
         if (material.isEmpty()) {
             this.session = null;
             this.failureReason = "нет блоков для укрытия: в инвентаре нет полного блока, который можно поставить";
@@ -29,7 +27,9 @@ final class BuildShelterScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         List<BlockCoord> cells = ShelterPlan.shelter(
                 new BlockCoord(feet.getX() - 1, feet.getY(), feet.getZ() - 1),
-                params.side(), FortifyTuning.SHELTER_WALL_HEIGHT, FortifyTuning.FORTIFY_BLOCK_BUDGET);
+                params.side(),
+                ShelterPlan.WALL_HEIGHT,
+                ShelterPlan.BLOCK_BUDGET);
         this.session = new FillSession(spirit, material.get(), cells);
     }
 

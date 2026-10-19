@@ -3,8 +3,12 @@ package com.theminespirit.core.intellect;
 import java.util.List;
 import java.util.Optional;
 
-public record TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict> strengths,
-        ActivityPlan activities, Optional<Expedition> expedition, List<String> refusals) {
+public record TacticalDecision(
+        List<StrategicOrder> orders,
+        List<StrengthVerdict> strengths,
+        ActivityPlan activities,
+        Optional<Expedition> expedition,
+        List<String> refusals) {
     public TacticalDecision {
         if (orders == null) {
             throw new IllegalArgumentException("Решение без приказов не применяется: пустой список — нет приказов");
@@ -28,8 +32,11 @@ public record TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict
         refusals = List.copyOf(refusals);
     }
 
-    public TacticalDecision(List<StrategicOrder> orders, List<StrengthVerdict> strengths,
-            ActivityPlan activities, Optional<Expedition> expedition) {
+    public TacticalDecision(
+            List<StrategicOrder> orders,
+            List<StrengthVerdict> strengths,
+            ActivityPlan activities,
+            Optional<Expedition> expedition) {
         this(orders, strengths, activities, expedition, List.of());
     }
 }

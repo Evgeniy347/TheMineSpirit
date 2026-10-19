@@ -26,6 +26,8 @@ class FarmPlannerProperties {
     private static final Above[] ABOVES = {Above.AIR, Above.WEED, Above.BLOCKED};
     private static final CropKind[] CROPS = {CropKind.WHEAT, CropKind.CARROT, CropKind.POTATO, CropKind.BEETROOT};
 
+    private static final int WIDE = 8;
+
     @Property
     void next_RandomInput_ReturnedTargetIsEligibleWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -34,14 +36,16 @@ class FarmPlannerProperties {
         Hydration hydration = randomHydration(random);
         List<BlockCoord> candidates = randomTargets(random);
 
-        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm,
-                safety, hydration);
+        FarmPlanner.Outcome outcome =
+                FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm, safety, hydration);
 
         if (outcome instanceof FarmPlanner.Next next) {
             FarmTile fresh = farm.peek(next.target());
-            assertTrue(FarmJob.HARVEST.eligible(fresh, CropKind.ANY, false),
+            assertTrue(
+                    FarmJob.HARVEST.eligible(fresh, CropKind.ANY, false),
                     "Выбранная цель обязана подходить под работу на свежем тайле: иначе дух идёт к чужой клетке");
-            assertTrue(FarmStandSpots.of(next.target(), FROM, safety, farm).contains(next.stand()),
+            assertTrue(
+                    FarmStandSpots.of(next.target(), FROM, safety, farm).contains(next.stand()),
                     "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место");
         }
     }
@@ -55,19 +59,20 @@ class FarmPlannerProperties {
         List<BlockCoord> shuffled = new ArrayList<>(candidates);
         Collections.shuffle(shuffled, new Random((long) seed + 1));
 
-        FarmPlanner.Outcome ordered = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm,
-                randomSafety(new Random(seed + 100)), hydration);
-        FarmPlanner.Outcome reordered = FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, shuffled, farm,
-                randomSafety(new Random(seed + 100)), hydration);
+        FarmPlanner.Outcome ordered = FarmPlanner.next(
+                FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm, randomSafety(new Random(seed + 100)), hydration);
+        FarmPlanner.Outcome reordered = FarmPlanner.next(
+                FarmJob.HARVEST, CropKind.ANY, FROM, shuffled, farm, randomSafety(new Random(seed + 100)), hydration);
 
-        assertEquals(ordered, reordered,
+        assertEquals(
+                ordered,
+                reordered,
                 "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
                         + "работа непредсказуемо выбирает разные клетки");
     }
 
     @Property
-    void next_DenseTillWorld_MatchesFullScanWithoutEarlyExit(
-            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void next_DenseTillWorld_MatchesFullScanWithoutEarlyExit(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         MapFarmView farm = tillableFarm(random);
         CountingSafety safety = standableSafety(random);
@@ -75,25 +80,28 @@ class FarmPlannerProperties {
         List<BlockCoord> candidates = wideTargets(random);
         BlockCoord from = new BlockCoord(random.nextInt(WIDE), 1, random.nextInt(WIDE));
 
-        FarmPlanner.Outcome actual = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from, candidates, farm,
-                safety, hydration);
-        FarmPlanner.Outcome expected = referenceNext(FarmJob.TILL, CropKind.ANY, from, candidates, farm,
-                safety, hydration);
+        FarmPlanner.Outcome actual =
+                FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from, candidates, farm, safety, hydration);
+        FarmPlanner.Outcome expected =
+                referenceNext(FarmJob.TILL, CropKind.ANY, from, candidates, farm, safety, hydration);
 
-        assertEquals(expected, actual,
+        assertEquals(
+                expected,
+                actual,
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
                         + "со стоянкой на смещении до √11. Цели: " + candidates);
     }
-
-    private static final int WIDE = 8;
 
     private static MapFarmView tillableFarm(Random random) {
         MapFarmView farm = new MapFarmView();
         for (int x = 0; x < WIDE; x++) {
             for (int z = 0; z < WIDE; z++) {
                 Above above = random.nextBoolean() ? Above.AIR : Above.WEED;
-                farm.set(x, 0, z, new FarmTile(random.nextBoolean() ? Ground.DIRT : Ground.GRASS, above,
-                        Optional.empty()));
+                farm.set(
+                        x,
+                        0,
+                        z,
+                        new FarmTile(random.nextBoolean() ? Ground.DIRT : Ground.GRASS, above, Optional.empty()));
             }
         }
         return farm;
@@ -132,14 +140,20 @@ class FarmPlannerProperties {
         return targets;
     }
 
-    private static FarmPlanner.Outcome referenceNext(FarmJob job, CropKind filter, BlockCoord from,
-            List<BlockCoord> candidates, MapFarmView farm, SafetyView safety, Hydration hydration) {
+    private static FarmPlanner.Outcome referenceNext(
+            FarmJob job,
+            CropKind filter,
+            BlockCoord from,
+            List<BlockCoord> candidates,
+            MapFarmView farm,
+            SafetyView safety,
+            Hydration hydration) {
         List<BlockCoord> ordered = new ArrayList<>(candidates);
         ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
                 .thenComparing(Comparator.naturalOrder()));
         CachedSafetyView cached = new CachedSafetyView(safety);
         FarmPlanner.Next best = null;
-        long bestStandSquared = Long.MAX_VALUE;
+
         int ineligible = 0;
         int dry = 0;
         int noStand = 0;
@@ -162,7 +176,6 @@ class FarmPlannerProperties {
             FarmPlanner.Next candidate = new FarmPlanner.Next(target, stands.get(0));
             if (best == null || closer(candidate, best, from)) {
                 best = candidate;
-                bestStandSquared = distanceSquared(from, candidate.stand());
             }
         }
         return best == null ? new FarmPlanner.Exhausted(ineligible, noStand, dry) : best;
@@ -198,8 +211,9 @@ class FarmPlannerProperties {
 
         FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm, safety, hydration);
 
-        assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * candidates.size(),
-                "Планирование читает не более " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET + " клеток на цель: "
+        assertTrue(
+                safety.reads() <= 324 * candidates.size(),
+                "Планирование читает не более " + 324 + " клеток на цель: "
                         + "иначе перебор целей кладёт серверный тик. Чтений: " + safety.reads() + ", целей: "
                         + candidates.size());
     }
@@ -209,7 +223,8 @@ class FarmPlannerProperties {
         for (int x = 0; x < GRID; x++) {
             for (int z = 0; z < GRID; z++) {
                 Ground ground = GROUNDS[random.nextInt(GROUNDS.length)];
-                Above above = ground == Ground.FARMLAND && random.nextBoolean() ? Above.CROP
+                Above above = ground == Ground.FARMLAND && random.nextBoolean()
+                        ? Above.CROP
                         : ABOVES[random.nextInt(ABOVES.length)];
                 Optional<CropState> crop = Optional.empty();
                 if (above == Above.CROP) {

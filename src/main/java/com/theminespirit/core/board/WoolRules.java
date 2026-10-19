@@ -16,8 +16,15 @@ import java.util.Set;
  */
 public final class WoolRules {
     public static final Set<String> WOOL_KEYS = Set.of(
-            "min_pen_sheep", "wild_sheep_radius", "wild_sheep_per_day", "string_threshold",
-            "string_reserve", "shears_iron", "bed_wool", "bed_planks", "shear_radius");
+            "min_pen_sheep",
+            "wild_sheep_radius",
+            "wild_sheep_per_day",
+            "string_threshold",
+            "string_reserve",
+            "shears_iron",
+            "bed_wool",
+            "bed_planks",
+            "shear_radius");
 
     public static final int DEFAULT_MIN_PEN_SHEEP = 4;
     public static final int DEFAULT_WILD_SHEEP_RADIUS = 48;
@@ -33,19 +40,30 @@ public final class WoolRules {
     public static final String SHEARS = "shears";
     public static final String IRON_INGOT = "iron_ingot";
     public static final String STRING = "string";
-    public static final String WHITE_WOOL = "white_wool";
-    public static final String WHITE_BED = "white_bed";
     public static final String CRAFTED_SHEARS = "minecraft:shears";
     public static final String CRAFTED_WOOL = "minecraft:white_wool";
     public static final String CRAFTED_BED = "minecraft:white_bed";
     public static final String PLANK_SUFFIX = "_planks";
 
     public static final List<String> COLORS = List.of(
-            "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
-            "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black");
+            "white",
+            "orange",
+            "magenta",
+            "light_blue",
+            "yellow",
+            "lime",
+            "pink",
+            "gray",
+            "light_gray",
+            "cyan",
+            "purple",
+            "blue",
+            "brown",
+            "green",
+            "red",
+            "black");
 
-    private WoolRules() {
-    }
+    private WoolRules() {}
 
     public static int minPenSheep() {
         return woolValue("min_pen_sheep", DEFAULT_MIN_PEN_SHEEP);
@@ -98,7 +116,6 @@ public final class WoolRules {
         return !hasShears && iron >= shearsIron();
     }
 
-    /** Сколько шерсти выйдет из нитей, не трогая запас: партия — 4 нити за 1 шерсть. */
     public static int woolFromStrings(int strings) {
         if (strings < 0) {
             throw new IllegalArgumentException("Нитей " + strings + ": запас не бывает отрицательным");
@@ -112,16 +129,15 @@ public final class WoolRules {
 
     public static int bedsNeeded(int beds, int spirits) {
         if (beds < 0 || spirits < 0) {
-            throw new IllegalArgumentException("Кроватей " + beds + " и духов " + spirits
-                    + ": количество не бывает отрицательным");
+            throw new IllegalArgumentException(
+                    "Кроватей " + beds + " и духов " + spirits + ": количество не бывает отрицательным");
         }
         return Math.max(0, spirits - beds);
     }
 
     public static boolean wildTarget(boolean inHomePen, long distanceSquared, int radius) {
         if (distanceSquared < 0) {
-            throw new IllegalArgumentException("Квадрат расстояния " + distanceSquared
-                    + " не бывает отрицательным");
+            throw new IllegalArgumentException("Квадрат расстояния " + distanceSquared + " не бывает отрицательным");
         }
         if (radius < 0) {
             throw new IllegalArgumentException("Радиус охоты " + radius + " не бывает отрицательным");
@@ -137,7 +153,6 @@ public final class WoolRules {
         return requireColor(color) + "_bed";
     }
 
-    /** Цвет кровати: сначала белая, потом первый цвет, которого набралось на кровать. */
     public static Optional<String> bedColor(StockView stock) {
         Objects.requireNonNull(stock, "Склад не может быть null: цвет кровати считают по запасам");
         if (wool(stock, "white") >= bedWool()) {
@@ -179,16 +194,15 @@ public final class WoolRules {
 
     static String woolKey(String key) {
         if (!WOOL_KEYS.contains(key)) {
-            throw new IllegalArgumentException("Неизвестный ключ шерсти '" + key + "': допустимы "
-                    + WOOL_KEYS + ", сверьтесь с секцией wool в board.json");
+            throw new IllegalArgumentException("Неизвестный ключ шерсти '" + key + "': допустимы " + WOOL_KEYS
+                    + ", сверьтесь с секцией wool в board.json");
         }
         return key;
     }
 
     private static String requireColor(String color) {
         if (color == null || !COLORS.contains(color)) {
-            throw new IllegalArgumentException("Неизвестный цвет шерсти '" + color + "': допустимы "
-                    + COLORS);
+            throw new IllegalArgumentException("Неизвестный цвет шерсти '" + color + "': допустимы " + COLORS);
         }
         return color;
     }

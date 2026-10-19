@@ -31,7 +31,9 @@ class RoutePlanProperties {
             points.add(new BlockCoord(i, 0, i));
         }
 
-        assertEquals(lone, new RoutePlan(points, mode).next(current, skipped).orElseThrow(),
+        assertEquals(
+                lone,
+                new RoutePlan(points, mode).next(current, skipped).orElseThrow(),
                 "Когда пропущены все точки, кроме одной, маршрут обязан стоять на ней: иначе патруль "
                         + "с недостижимыми точками виснет вместо обхода единственной доступной");
     }

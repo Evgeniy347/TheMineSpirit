@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,9 +42,12 @@ class HerdCyclesTests {
         cycles.cycle(Species.COW).captured("cow_1");
         cycles.cycle(Species.PIG).captured("pig_1");
 
-        assertTrue(active(board, "cow_pen") && active(board, "pig_pen"),
+        assertTrue(
+                active(board, "cow_pen") && active(board, "pig_pen"),
                 "У каждого вида свой загон: два вида — два независимых цикла, а не одна машина");
-        assertNotEquals("cow_pen", "pig_pen",
+        assertEquals(
+                List.of("cow_pen", "pig_pen"),
+                board.all().stream().map(ticket -> ticket.id()).sorted().toList(),
                 "id заданий видов различаются префиксом: иначе второй вид затирал бы задания первого");
     }
 
@@ -54,9 +56,13 @@ class HerdCyclesTests {
         Board board = new Board(() -> 0);
         HerdCycles cycles = new HerdCycles(board);
 
-        assertSame(cycles.cycle(Species.COW), cycles.cycle(Species.COW),
+        assertSame(
+                cycles.cycle(Species.COW),
+                cycles.cycle(Species.COW),
                 "Один вид — один цикл: два цикла на вид плодили бы вторую очередь заданий");
-        assertEquals(1, cycles.species().size(),
+        assertEquals(
+                1,
+                cycles.species().size(),
                 "Реестр помнит виды, которые открывали: новый вид добавляется, повторный — нет");
     }
 
@@ -69,7 +75,8 @@ class HerdCyclesTests {
         cycles.cycle(Species.COW).penBuilt("cow_1");
         cycles.cycle(Species.PIG).penBuilt("pig_1");
 
-        assertTrue(active(board, "cow_lure") && active(board, "pig_lure"),
+        assertTrue(
+                active(board, "cow_lure") && active(board, "pig_lure"),
                 "Оба вида приманены параллельно: цикл одного вида не снимает задания другого");
     }
 
@@ -84,10 +91,11 @@ class HerdCyclesTests {
 
         cycles.cycle(Species.COW).animalDied();
 
-        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("cow_lure"),
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("cow_lure"),
                 "Гибель коровы снимает «приманить» коровы: приманка коровы больше не нужна");
-        assertTrue(active(board, "pig_lure"),
-                "Гибель коровы не трогает свинью: циклы видов независимы");
+        assertTrue(active(board, "pig_lure"), "Гибель коровы не трогает свинью: циклы видов независимы");
     }
 
     @Test
@@ -97,8 +105,8 @@ class HerdCyclesTests {
 
         cycles.cycle(Species.COW).penBuilt("cow_1");
 
-        assertTrue(board.all().isEmpty(),
-                "«Приманить» без отлова и загона не ставится: зависимость цикла держит порядок");
+        assertTrue(
+                board.all().isEmpty(), "«Приманить» без отлова и загона не ставится: зависимость цикла держит порядок");
     }
 
     @Test
@@ -106,19 +114,23 @@ class HerdCyclesTests {
         Board board = new Board(() -> 0);
         HerdCycles cycles = new HerdCycles(board);
 
-        assertThrows(NullPointerException.class, () -> cycles.cycle(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> cycles.cycle(null),
                 "Вид null обязан отвергаться: без него непонятно, чей цикл открывать");
     }
 
     @Test
     void cycle_NullBoard_Rejected() {
-        assertThrows(NullPointerException.class, () -> new HerdCycles(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> new HerdCycles(null),
                 "Доска обязана быть задана: без неё циклы не могут ставить задания");
     }
 
     @Property
-    void anyEvents_ParallelSpecies_AtMostOneActivePerCase(@ForAll("events") List<String> cowEvents,
-            @ForAll("events") List<String> pigEvents) {
+    void anyEvents_ParallelSpecies_AtMostOneActivePerCase(
+            @ForAll("events") List<String> cowEvents, @ForAll("events") List<String> pigEvents) {
         Board board = new Board(() -> 0);
         HerdCycles cycles = new HerdCycles(board);
         cycles.cycle(Species.COW).captured("cow_1");
@@ -127,14 +139,15 @@ class HerdCyclesTests {
         pigEvents.forEach(event -> apply(cycles.cycle(Species.PIG), "pig_1", event));
 
         for (String prefix : List.of("cow", "pig")) {
-            for (BoardCase boardCase : List.of(BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL,
-                    BoardCase.DISMANTLE_SHELTER)) {
+            for (BoardCase boardCase :
+                    List.of(BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL, BoardCase.DISMANTLE_SHELTER)) {
                 long active = board.all().stream()
                         .filter(ticket -> ticket.boardCase() == boardCase)
                         .filter(ticket -> ticket.id().startsWith(prefix + "_"))
                         .filter(ticket -> active(board, ticket.id()))
                         .count();
-                assertTrue(active <= 1,
+                assertTrue(
+                        active <= 1,
                         "У вида " + prefix + " не больше одного активного задания " + boardCase
                                 + ": получено " + active + " — два загона или две приманки на вид "
                                 + "разошлись бы по доске");

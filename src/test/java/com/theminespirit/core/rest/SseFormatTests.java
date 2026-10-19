@@ -20,19 +20,25 @@ class SseFormatTests {
     void frame_GivenIdEventData_IsThreeLinesEndingWithBlankLine() {
         String frame = SseFormat.frame(7, "progress", "{\"step\":2}");
 
-        assertEquals("id: 7\nevent: progress\ndata: {\"step\":2}\n\n", frame,
+        assertEquals(
+                "id: 7\nevent: progress\ndata: {\"step\":2}\n\n",
+                frame,
                 "Кадр SSE — контракт: id:, event:, data: и пустая строка в конце");
     }
 
     @Test
     void keepalive_CommentLine_EndsWithBlankLine() {
-        assertEquals(": keepalive\n\n", SseFormat.keepalive(),
+        assertEquals(
+                ": keepalive\n\n",
+                SseFormat.keepalive(),
                 "Keepalive — комментарий-строка с пустой строкой в конце, без id/event/data");
     }
 
     @Test
     void frame_DataWithNewline_ThrowsInsteadOfBreakingStream() {
-        assertThrows(IllegalArgumentException.class, () -> SseFormat.frame(1, "progress", "a\nb"),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SseFormat.frame(1, "progress", "a\nb"),
                 "Перевод строки внутри data разорвёт поток SSE: форматтер обязан отвергать такие данные");
     }
 
@@ -44,8 +50,7 @@ class SseFormatTests {
         String frame = SseFormat.frame(1, "progress", json);
 
         String[] lines = frame.split("\n", -1);
-        assertEquals(5, lines.length,
-                "Кадр из трёх полей + пустая строка даёт 5 сегментов при split: " + frame);
+        assertEquals(5, lines.length, "Кадр из трёх полей + пустая строка даёт 5 сегментов при split: " + frame);
         assertTrue(lines[0].startsWith("id: "), "Первая строка — id: " + frame);
         assertTrue(lines[1].startsWith("event: "), "Вторая строка — event: " + frame);
         assertTrue(lines[2].startsWith("data: "), "Третья строка — data: " + frame);
@@ -56,8 +61,15 @@ class SseFormatTests {
     @Provide
     Arbitrary<Map<String, String>> payloads() {
         return Arbitraries.maps(
-                Arbitraries.strings().withChars('a', 'б', 'к').ofMinLength(1).ofMaxLength(8),
-                Arbitraries.strings().withChars('a', 'б', '\n', '\t', '"', '\\', ' ').ofMinLength(0).ofMaxLength(16))
-                .ofMinSize(0).ofMaxSize(4);
+                        Arbitraries.strings()
+                                .withChars('a', 'б', 'к')
+                                .ofMinLength(1)
+                                .ofMaxLength(8),
+                        Arbitraries.strings()
+                                .withChars('a', 'б', '\n', '\t', '"', '\\', ' ')
+                                .ofMinLength(0)
+                                .ofMaxLength(16))
+                .ofMinSize(0)
+                .ofMaxSize(4);
     }
 }

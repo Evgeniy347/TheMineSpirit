@@ -19,10 +19,16 @@ import net.jqwik.api.Provide;
 class HazardFactsProperties {
     @Provide
     Arbitrary<List<HazardRef>> scenes() {
-        Arbitrary<BlockCoord> pos = Combinators.combine(Arbitraries.integers().between(-20, 20),
-                Arbitraries.integers().between(55, 70), Arbitraries.integers().between(-20, 20)).as(BlockCoord::new);
-        Arbitrary<HazardRef> hazard = Combinators.combine(Arbitraries.of(HazardType.class), pos,
-                Arbitraries.integers().between(0, 6).map(Integer::doubleValue)).as(HazardRef::new);
+        Arbitrary<BlockCoord> pos = Combinators.combine(
+                        Arbitraries.integers().between(-20, 20),
+                        Arbitraries.integers().between(55, 70),
+                        Arbitraries.integers().between(-20, 20))
+                .as(BlockCoord::new);
+        Arbitrary<HazardRef> hazard = Combinators.combine(
+                        Arbitraries.of(HazardType.class),
+                        pos,
+                        Arbitraries.integers().between(0, 6).map(Integer::doubleValue))
+                .as(HazardRef::new);
         return hazard.list().ofMaxSize(25);
     }
 
@@ -35,7 +41,10 @@ class HazardFactsProperties {
             return;
         }
         double minimum = hazards.stream().mapToDouble(HazardRef::distance).min().orElseThrow();
-        assertEquals(minimum, facts.nearest().distance(), 0.0,
+        assertEquals(
+                minimum,
+                facts.nearest().distance(),
+                0.0,
                 "nearest обязан иметь наименьшее расстояние среди опасностей сцены");
         assertTrue(hazards.contains(facts.nearest()), "nearest обязан быть одной из опасностей сцены");
     }
@@ -45,7 +54,9 @@ class HazardFactsProperties {
         List<HazardRef> shuffled = new ArrayList<>(hazards);
         Collections.shuffle(shuffled, new Random(seed));
 
-        assertEquals(new HazardFacts(hazards).nearest(), new HazardFacts(shuffled).nearest(),
+        assertEquals(
+                new HazardFacts(hazards).nearest(),
+                new HazardFacts(shuffled).nearest(),
                 "порядок опасностей в списке не должен влиять на ближайшую: сцена одна и та же");
     }
 }

@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class FreeInventoryDemand {
-    private FreeInventoryDemand() {
-    }
+    private FreeInventoryDemand() {}
 
     public static double demand(InventoryFill fill, InventoryNormTable table) {
         Objects.requireNonNull(fill, "Заполнение инвентаря не может быть null: по нему считают спрос");
@@ -17,8 +16,8 @@ public final class FreeInventoryDemand {
         Objects.requireNonNull(table, "Таблица нормы не может быть null: кривые спроса — данные");
         checkFraction(occupiedFraction, "Доля занятых ячеек");
         checkFraction(extraFraction, "Доля лишнего");
-        double value = interpolate(table.occupiedCurve(), occupiedFraction)
-                + interpolate(table.extraCurve(), extraFraction);
+        double value =
+                interpolate(table.occupiedCurve(), occupiedFraction) + interpolate(table.extraCurve(), extraFraction);
         return Math.min(IntellectTuning.loadDefault().maxDemand(), value);
     }
 
@@ -40,8 +39,8 @@ public final class FreeInventoryDemand {
 
     private static void checkFraction(double value, String what) {
         if (Double.isNaN(value) || value < 0 || value > 1) {
-            throw new IllegalArgumentException(what + " = " + value
-                    + ": доля обязана лежать в 0..1, иначе кривую не с чем сравнивать");
+            throw new IllegalArgumentException(
+                    what + " = " + value + ": доля обязана лежать в 0..1, иначе кривую не с чем сравнивать");
         }
     }
 }

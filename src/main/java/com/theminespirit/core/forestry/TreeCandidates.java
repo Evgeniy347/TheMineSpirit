@@ -29,7 +29,8 @@ public final class TreeCandidates {
     }
 
     public void markKnown(Collection<BlockCoord> logs) {
-        Objects.requireNonNull(logs, "logs не может быть null: разобранное дерево или отвергнутая группа несут свои брёвна");
+        Objects.requireNonNull(
+                logs, "logs не может быть null: разобранное дерево или отвергнутая группа несут свои брёвна");
         known.addAll(logs);
         live.removeAll(logs);
     }

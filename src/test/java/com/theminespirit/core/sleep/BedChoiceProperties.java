@@ -25,15 +25,15 @@ class BedChoiceProperties {
     @Provide
     Arbitrary<Set<BlockCoord>> beds() {
         Arbitrary<BlockCoord> bed = Combinators.combine(
-                Arbitraries.integers().between(-RADIUS, RADIUS),
-                Arbitraries.integers().between(-RADIUS, RADIUS))
+                        Arbitraries.integers().between(-RADIUS, RADIUS),
+                        Arbitraries.integers().between(-RADIUS, RADIUS))
                 .as((x, z) -> new BlockCoord(x, 64, z));
         return bed.set().ofMaxSize(6);
     }
 
     @Property
-    void choose_SequentialSpirits_NeverShareBed(@ForAll("beds") Set<BlockCoord> beds,
-            @ForAll @IntRange(min = 1, max = 8) int spiritCount) {
+    void choose_SequentialSpirits_NeverShareBed(
+            @ForAll("beds") Set<BlockCoord> beds, @ForAll @IntRange(min = 1, max = 8) int spiritCount) {
         Set<BlockCoord> taken = new HashSet<>();
         List<BlockCoord> assigned = new ArrayList<>();
         for (int i = 0; i < spiritCount; i++) {
@@ -45,9 +45,12 @@ class BedChoiceProperties {
             }
         }
 
-        assertEquals(assigned.size(), new LinkedHashSet<>(assigned).size(),
+        assertEquals(
+                assigned.size(),
+                new LinkedHashSet<>(assigned).size(),
                 "Двое духов легли в одну кровать: выбор обязан считать занятую кровать занятой");
-        assertTrue(beds.containsAll(assigned),
+        assertTrue(
+                beds.containsAll(assigned),
                 "Выбранная кровать обязана быть среди найденных в мире: иначе дух ляжет в несуществующую кровать");
     }
 }

@@ -1,11 +1,11 @@
 package com.theminespirit.core.tactics.adapter;
 
-import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.tactics.Situation;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,8 +14,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Set;
 
-public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int factRadius, int factChunkBudget,
-        int retreatHoldTicks, int journalCapacity, int journalMaxPerSecond) {
+public record TacticsAdapterSettings(
+        int evalIntervalTicks,
+        int maxEnemies,
+        int factRadius,
+        int factChunkBudget,
+        int retreatHoldTicks,
+        int journalCapacity,
+        int journalMaxPerSecond) {
     public static final int DEFAULT_EVAL_INTERVAL_TICKS = 10;
     public static final int DEFAULT_MAX_ENEMIES = Situation.MAX_ENEMIES;
     public static final int DEFAULT_FACT_RADIUS = 32;
@@ -33,10 +39,17 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
 
     private static final String FILE = "adapter.json";
     private static final String RESOURCE = "/data/theminespirit/tactics/" + FILE;
-    private static final Set<String> FIELDS = Set.of("evalIntervalTicks", "maxEnemies", "factRadius",
-            "factChunkBudget", "retreatHoldTicks", "journalCapacity", "journalMaxPerSecond");
-    private static final ObjectMapper MAPPER = new ObjectMapper(
-            JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
+    private static final Set<String> FIELDS = Set.of(
+            "evalIntervalTicks",
+            "maxEnemies",
+            "factRadius",
+            "factChunkBudget",
+            "retreatHoldTicks",
+            "journalCapacity",
+            "journalMaxPerSecond");
+    private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder()
+            .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+            .build());
 
     public TacticsAdapterSettings {
         range("evalIntervalTicks", evalIntervalTicks, 1, MAX_EVAL_INTERVAL_TICKS);
@@ -49,8 +62,13 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
     }
 
     public static TacticsAdapterSettings defaults() {
-        return new TacticsAdapterSettings(DEFAULT_EVAL_INTERVAL_TICKS, DEFAULT_MAX_ENEMIES, DEFAULT_FACT_RADIUS,
-                DEFAULT_FACT_CHUNK_BUDGET, DEFAULT_RETREAT_HOLD_TICKS, DEFAULT_JOURNAL_CAPACITY,
+        return new TacticsAdapterSettings(
+                DEFAULT_EVAL_INTERVAL_TICKS,
+                DEFAULT_MAX_ENEMIES,
+                DEFAULT_FACT_RADIUS,
+                DEFAULT_FACT_CHUNK_BUDGET,
+                DEFAULT_RETREAT_HOLD_TICKS,
+                DEFAULT_JOURNAL_CAPACITY,
                 DEFAULT_JOURNAL_MAX_PER_SECOND);
     }
 
@@ -58,7 +76,6 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         return DataTables.INSTANCE.adapter().current();
     }
 
-    /** Начальная версия для держателя: читается из classpath один раз за процесс. */
     public static TacticsAdapterSettings readFromClasspath() {
         return fromJson(readResource());
     }
@@ -66,21 +83,29 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
     public static TacticsAdapterSettings fromJson(String json) {
         JsonNode root = parse(json);
         if (!root.isObject()) {
-            throw new IllegalStateException(FILE + " → (корень): ожидался объект { ... }. Проверьте: схему adapter.json");
+            throw new IllegalStateException(
+                    FILE + " → (корень): ожидался объект { ... }. Проверьте: схему adapter.json");
         }
-        for (Iterator<String> names = root.fieldNames(); names.hasNext();) {
+        for (Iterator<String> names = root.fieldNames(); names.hasNext(); ) {
             String name = names.next();
             if (!FIELDS.contains(name)) {
                 throw fieldFail(name, "неизвестное поле, допустимы " + FIELDS);
             }
         }
         try {
-            return new TacticsAdapterSettings(readInt(root, "evalIntervalTicks"), readInt(root, "maxEnemies"),
-                    readInt(root, "factRadius"), readInt(root, "factChunkBudget"), readInt(root, "retreatHoldTicks"),
-                    readInt(root, "journalCapacity"), readInt(root, "journalMaxPerSecond"));
+            return new TacticsAdapterSettings(
+                    readInt(root, "evalIntervalTicks"),
+                    readInt(root, "maxEnemies"),
+                    readInt(root, "factRadius"),
+                    readInt(root, "factChunkBudget"),
+                    readInt(root, "retreatHoldTicks"),
+                    readInt(root, "journalCapacity"),
+                    readInt(root, "journalMaxPerSecond"));
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException(FILE + " → " + error.getMessage()
-                    + ". Проверьте: значение в границах, которые держит конструктор TacticsAdapterSettings", error);
+            throw new IllegalStateException(
+                    FILE + " → " + error.getMessage()
+                            + ". Проверьте: значение в границах, которые держит конструктор TacticsAdapterSettings",
+                    error);
         }
     }
 
@@ -88,8 +113,10 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         try {
             return MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException(FILE + " → (корень): JSON не разобран (" + error.getOriginalMessage()
-                    + "). Проверьте: синтаксис, кавычки, запятые, дубли ключей и кодировку UTF-8", error);
+            throw new IllegalStateException(
+                    FILE + " → (корень): JSON не разобран (" + error.getOriginalMessage()
+                            + "). Проверьте: синтаксис, кавычки, запятые, дубли ключей и кодировку UTF-8",
+                    error);
         }
     }
 
@@ -110,8 +137,8 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
 
     private static void range(String field, int value, int min, int max) {
         if (value < min || value > max) {
-            throw new IllegalArgumentException("TacticsAdapterSettings." + field + " = " + value + ": допустимо от "
-                    + min + " до " + max);
+            throw new IllegalArgumentException(
+                    "TacticsAdapterSettings." + field + " = " + value + ": допустимо от " + min + " до " + max);
         }
     }
 
@@ -123,9 +150,8 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException error) {
-            throw new UncheckedIOException("Ресурс адаптера тактики " + FILE
-                    + " не прочитан: проверьте права и кодировку UTF-8", error);
+            throw new UncheckedIOException(
+                    "Ресурс адаптера тактики " + FILE + " не прочитан: проверьте права и кодировку UTF-8", error);
         }
     }
-
-    }
+}

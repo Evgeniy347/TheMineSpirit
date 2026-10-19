@@ -1,5 +1,7 @@
 package com.theminespirit.core.coordinator;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -17,8 +19,7 @@ public final class WorkReservations {
         TAKEN_BY_SELF
     }
 
-    private record Lease(UUID owner, long deadline) {
-    }
+    private record Lease(UUID owner, long deadline) {}
 
     private final Map<WorkTarget, Lease> leases = new LinkedHashMap<>();
     private final Map<UUID, Set<WorkTarget>> byOwner = new HashMap<>();
@@ -34,8 +35,8 @@ public final class WorkReservations {
             throw new IllegalArgumentException("now = " + now + ": время брони не может быть отрицательным");
         }
         if (leaseTicks <= 0) {
-            throw new IllegalArgumentException(
-                    "leaseTicks = " + leaseTicks + ": срок брони обязан быть положительным, иначе цель занята навсегда");
+            throw new IllegalArgumentException("leaseTicks = " + leaseTicks
+                    + ": срок брони обязан быть положительным, иначе цель занята навсегда");
         }
         dropExpired(target, now);
         Lease lease = leases.get(target);
@@ -105,7 +106,8 @@ public final class WorkReservations {
                 .map(Map.Entry::getKey)
                 .toList();
         for (WorkTarget target : expired) {
-            Lease lease = leases.remove(target);
+            Lease lease = present(leases, target, "Аренды работ");
+            leases.remove(target);
             forget(target, lease.owner());
         }
         return expired.size();
@@ -120,7 +122,7 @@ public final class WorkReservations {
     }
 
     private void forget(WorkTarget target, UUID spirit) {
-        Set<WorkTarget> owned = byOwner.get(spirit);
+        Set<WorkTarget> owned = present(byOwner, spirit, "Работы духа");
         owned.remove(target);
         if (owned.isEmpty()) {
             byOwner.remove(spirit);

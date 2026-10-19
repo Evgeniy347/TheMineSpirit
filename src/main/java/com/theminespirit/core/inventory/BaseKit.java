@@ -2,15 +2,17 @@ package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class BaseKit {
+    static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "never_give_away");
-    static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
 
     private final String origin;
     private final List<KitRule> rules;
@@ -34,18 +36,17 @@ public final class BaseKit {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, ROOT_FIELDS, origin, "файла базового набора");
         List<KitRule> rules = parseRules(root.get("rules"), origin);
-        List<String> neverAway = JsonResource.optionalStrings(root.get("never_give_away"), origin,
-                "списка never_give_away");
+        List<String> neverAway =
+                JsonResource.optionalStrings(root.get("never_give_away"), origin, "списка never_give_away");
         return new BaseKit(origin, rules, neverAway);
     }
 
     public static BaseKit of(List<KitRule> rules, List<String> neverGiveAway) {
         Objects.requireNonNull(rules, "Список правил набора не может быть null: набор собирается из правил");
-        Objects.requireNonNull(neverGiveAway, "Список неотдаваемого не может быть null: "
-                + "пустой список задаётся пустым списком");
+        Objects.requireNonNull(
+                neverGiveAway, "Список неотдаваемого не может быть null: " + "пустой список задаётся пустым списком");
         return new BaseKit("kit-for", rules, neverGiveAway);
     }
-
 
     public List<Slice> surplus(List<Stack> inventory, ValueTable values) {
         Grouping grouping = group(inventory, values);
@@ -97,7 +98,9 @@ public final class BaseKit {
                 return false;
             }
             if (rule.mode() == KitMode.BEST) {
-                String bestItem = grouping.stacks().get(bestSlot(grouping.stacks(), slots, values)).item();
+                String bestItem = grouping.stacks()
+                        .get(bestSlot(grouping.stacks(), slots, values))
+                        .item();
                 for (int slot : slots) {
                     if (!grouping.stacks().get(slot).item().equals(bestItem)) {
                         return false;
@@ -120,14 +123,14 @@ public final class BaseKit {
         return rules;
     }
 
-    private static void keepBestOnly(List<Stack> stacks, List<Integer> slots, int keep, ValueTable values,
-            int[] result) {
+    private static void keepBestOnly(
+            List<Stack> stacks, List<Integer> slots, int keep, ValueTable values, int[] result) {
         int best = bestSlot(stacks, slots, values);
         result[best] = Math.min(stacks.get(best).count(), keep);
     }
 
-    private static void keepMostValuableFirst(List<Stack> stacks, List<Integer> slots, int keep, ValueTable values,
-            int[] result) {
+    private static void keepMostValuableFirst(
+            List<Stack> stacks, List<Integer> slots, int keep, ValueTable values, int[] result) {
         List<Integer> order = new ArrayList<>(slots);
         order.sort((left, right) -> {
             int byValue = Integer.compare(values.stackValue(stacks.get(right)), values.stackValue(stacks.get(left)));
@@ -147,7 +150,8 @@ public final class BaseKit {
     private static int bestSlot(List<Stack> stacks, List<Integer> slots, ValueTable values) {
         int best = slots.get(0);
         for (int slot : slots) {
-            int byValue = Integer.compare(values.valueOf(stacks.get(slot).item()),
+            int byValue = Integer.compare(
+                    values.valueOf(stacks.get(slot).item()),
                     values.valueOf(stacks.get(best).item()));
             if (byValue > 0 || (byValue == 0 && slot < best)) {
                 best = slot;
@@ -158,11 +162,11 @@ public final class BaseKit {
 
     private Grouping group(List<Stack> inventory, ValueTable values) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: излишек считают по слотам инвентаря");
-        Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
-                + "по ней набор отличает лучшую кирку от худшей");
+        Objects.requireNonNull(
+                values, "Таблица ценностей не может быть null: " + "по ней набор отличает лучшую кирку от худшей");
         List<Stack> stacks = new ArrayList<>(inventory.size());
         List<List<Integer>> byRule = new ArrayList<>(rules.size());
-        for (int index = 0; index < rules.size(); index++) {
+        for (KitRule ignored : rules) {
             byRule.add(new ArrayList<>());
         }
         int[] claimed = new int[inventory.size()];
@@ -191,7 +195,47 @@ public final class BaseKit {
         return -1;
     }
 
-    private record Grouping(List<Stack> stacks, List<List<Integer>> byRule, int[] claimed) {
+    private static final class Grouping {
+        private final List<Stack> stacks;
+        private final List<List<Integer>> byRule;
+        private final int[] claimed;
+
+        private Grouping(List<Stack> stacks, List<List<Integer>> byRule, int[] claimed) {
+            this.stacks = stacks;
+            this.byRule = byRule;
+            this.claimed = claimed;
+        }
+
+        private List<Stack> stacks() {
+            return stacks;
+        }
+
+        private List<List<Integer>> byRule() {
+            return byRule;
+        }
+
+        private int[] claimed() {
+            return claimed;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Grouping other
+                    && Objects.equals(stacks, other.stacks)
+                    && Objects.equals(byRule, other.byRule)
+                    && Arrays.equals(claimed, other.claimed);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(stacks, byRule) + Arrays.hashCode(claimed);
+        }
+
+        @Override
+        public String toString() {
+            return "Grouping[" + "stacks=" + stacks + ", " + "byRule=" + byRule + ", " + "claimed="
+                    + Arrays.toString(claimed) + "]";
+        }
     }
 
     private static List<KitRule> parseRules(JsonNode node, String origin) {
@@ -208,21 +252,29 @@ public final class BaseKit {
                         + " — не объект с полями match/category, keep и mode");
             }
             JsonResource.checkFields(ruleNode, RULE_FIELDS, origin, "правила №" + index);
-            rules.add(rule(optionalStringsField(ruleNode.get("match"), origin, "поля match правила №" + index),
+            rules.add(rule(
+                    optionalStringsField(ruleNode.get("match"), origin, "поля match правила №" + index),
                     textField(ruleNode.get("category"), origin, "правила №" + index),
                     keepField(ruleNode.get("keep"), origin, "поля keep правила №" + index),
-                    modeField(ruleNode.get("mode"), origin, "правила №" + index), origin, "правила №" + index));
+                    modeField(ruleNode.get("mode"), origin, "правила №" + index),
+                    origin,
+                    "правила №" + index));
         }
         return rules;
     }
 
-    private static KitRule rule(List<String> match, String category, int keep, KitMode mode, String origin,
+    private static KitRule rule(
+            @Nullable List<String> match,
+            @Nullable String category,
+            int keep,
+            KitMode mode,
+            String origin,
             String what) {
         try {
             return new KitRule(match, category, keep, mode);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл базового набора '" + origin + "': " + what + " неверно — "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл базового набора '" + origin + "': " + what + " неверно — " + error.getMessage(), error);
         }
     }
 
@@ -234,19 +286,21 @@ public final class BaseKit {
         try {
             return KitMode.valueOf(node.asText().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл базового набора '" + origin + "': у " + what + " режим '"
-                    + node.asText() + "' неизвестен: допустимы best и any", error);
+            throw new IllegalStateException(
+                    "Файл базового набора '" + origin + "': у " + what + " режим '" + node.asText()
+                            + "' неизвестен: допустимы best и any",
+                    error);
         }
     }
 
-    static List<String> optionalStringsField(JsonNode node, String origin, String what) {
+    static @Nullable List<String> optionalStringsField(@Nullable JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return null;
         }
         return JsonResource.strings(node, origin, what);
     }
 
-    static String textField(JsonNode node, String origin, String what) {
+    static @Nullable String textField(@Nullable JsonNode node, String origin, String what) {
         if (node == null) {
             return null;
         }
@@ -266,5 +320,4 @@ public final class BaseKit {
         }
         return node.asInt();
     }
-
 }

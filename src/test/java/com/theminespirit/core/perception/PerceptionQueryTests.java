@@ -31,10 +31,11 @@ class PerceptionQueryTests {
 
     @ParameterizedTest(name = "{0} {1} r={2} -> принят={3}")
     @MethodSource("queries")
-    void constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent(PerceptionType type, List<String> patterns,
-            int radius, boolean accepted) {
+    void constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent(
+            PerceptionType type, List<String> patterns, int radius, boolean accepted) {
         if (!accepted) {
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(
+                    IllegalArgumentException.class,
                     () -> new PerceptionQuery(type, IdFilter.of(patterns), new ScanRadius(radius)),
                     "запрос " + type + " с фильтром " + patterns + " и радиусом " + radius
                             + " обязан отклоняться: иначе скрипт получит запрос, который не может исполнить");
@@ -44,7 +45,9 @@ class PerceptionQueryTests {
 
         assertEquals(type, query.type(), "тип запроса обязан сохраняться как задан: по нему скрипт выбирает сканер");
         assertEquals(radius, query.radius().value(), "радиус запроса обязан сохраняться как задан");
-        assertEquals(IdFilter.of(patterns).patterns(), query.filter().patterns(),
+        assertEquals(
+                IdFilter.of(patterns).patterns(),
+                query.filter().patterns(),
                 "фильтр запроса обязан сохраняться как задан: иначе скан вернёт лишние блоки");
     }
 
@@ -52,26 +55,35 @@ class PerceptionQueryTests {
     void factories_EachType_BuildQueryOfThatType() {
         ScanRadius radius = ScanRadius.of(5);
 
-        assertEquals(PerceptionType.BLOCKS, PerceptionQuery.blocks(IdFilter.matchAll(), radius).type(),
+        assertEquals(
+                PerceptionType.BLOCKS,
+                PerceptionQuery.blocks(IdFilter.matchAll(), radius).type(),
                 "фабрика blocks обязана строить запрос BLOCKS");
-        assertEquals(PerceptionType.ENTITIES, PerceptionQuery.entities(IdFilter.matchAll(), radius).type(),
+        assertEquals(
+                PerceptionType.ENTITIES,
+                PerceptionQuery.entities(IdFilter.matchAll(), radius).type(),
                 "фабрика entities обязана строить запрос ENTITIES");
         PerceptionQuery hazards = PerceptionQuery.hazards(radius);
         assertEquals(PerceptionType.HAZARDS, hazards.type(), "фабрика hazards обязана строить запрос HAZARDS");
-        assertTrue(hazards.filter().matchesAll(),
+        assertTrue(
+                hazards.filter().matchesAll(),
                 "запрос опасностей обязан нести фильтр «всё»: опасности им не отбираются");
     }
 
     @Test
     void constructor_NullPart_NamesMissingPart() {
-        NullPointerException noType = assertThrows(NullPointerException.class,
+        NullPointerException noType = assertThrows(
+                NullPointerException.class,
                 () -> new PerceptionQuery(null, IdFilter.matchAll(), ScanRadius.DEFAULT),
                 "запрос без типа обязан отклоняться");
-        assertTrue(noType.getMessage().contains("type"), "сообщение обязано называть поле type: " + noType.getMessage());
-        assertThrows(NullPointerException.class,
+        assertTrue(
+                noType.getMessage().contains("type"), "сообщение обязано называть поле type: " + noType.getMessage());
+        assertThrows(
+                NullPointerException.class,
                 () -> new PerceptionQuery(PerceptionType.BLOCKS, null, ScanRadius.DEFAULT),
                 "запрос без фильтра обязан отклоняться: «всё» задаётся IdFilter.matchAll()");
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> new PerceptionQuery(PerceptionType.BLOCKS, IdFilter.matchAll(), null),
                 "запрос без радиуса обязан отклоняться");
     }

@@ -14,7 +14,9 @@ class ConditionRegistryTests {
         ConditionEvaluator evaluator = params -> true;
         ConditionRegistry registry = ConditionRegistry.of(Map.of("is_day", evaluator));
 
-        assertSame(evaluator, registry.find("is_day").orElseThrow(),
+        assertSame(
+                evaluator,
+                registry.find("is_day").orElseThrow(),
                 "find обязан вернуть именно зарегистрированный вычислитель: иначе условие выберет не ту ветку");
     }
 
@@ -22,7 +24,8 @@ class ConditionRegistryTests {
     void find_UnknownCheck_IsEmpty() {
         ConditionRegistry registry = ConditionRegistry.of(Map.of("is_day", params -> true));
 
-        assertTrue(registry.find("ghost").isEmpty(),
+        assertTrue(
+                registry.find("ghost").isEmpty(),
                 "неизвестная проверка обязана давать пустой Optional: движок провалит condition, а не угадает ветку");
     }
 
@@ -34,7 +37,8 @@ class ConditionRegistryTests {
 
         source.clear();
 
-        assertTrue(registry.find("is_day").isPresent(),
+        assertTrue(
+                registry.find("is_day").isPresent(),
                 "реестр обязан делать защитную копию: иначе правка исходной карты меняет ветвление на ходу");
     }
 
@@ -43,13 +47,17 @@ class ConditionRegistryTests {
         Map<String, ConditionEvaluator> source = new HashMap<>();
         source.put("is_day", null);
 
-        assertThrows(NullPointerException.class, () -> ConditionRegistry.of(source),
+        assertThrows(
+                NullPointerException.class,
+                () -> ConditionRegistry.of(source),
                 "реестр с null-вычислителем обязан отвергаться при создании: иначе падение случится в серверном тике");
     }
 
     @Test
     void of_NullMap_IsRejected() {
-        assertThrows(NullPointerException.class, () -> ConditionRegistry.of(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> ConditionRegistry.of(null),
                 "реестр без карты обязан отвергаться: пустой реестр задают пустой картой");
     }
 }

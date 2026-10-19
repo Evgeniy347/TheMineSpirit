@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -27,15 +27,15 @@ import org.slf4j.Logger;
 public final class DataReload {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private DataReload() {
-    }
+    private static volatile List<TableRegistry.Report> lastReload = List.of();
 
-    /** Подписка на перезагрузку данных; вызывается один раз из точки входа мода. */
+    private DataReload() {}
+
     public static void register(AddReloadListenerEvent event) {
-        event.addListener((barrier, resourceManager, prepareProfiler, applyProfiler, backgroundExecutor, gameExecutor) ->
-                CompletableFuture
-                        .runAsync(() -> reloadFrom(resourceManager), backgroundExecutor)
-                        .thenCompose(barrier::wait));
+        event.addListener(
+                (barrier, resourceManager, prepareProfiler, applyProfiler, backgroundExecutor, gameExecutor) ->
+                        CompletableFuture.runAsync(() -> reloadFrom(resourceManager), backgroundExecutor)
+                                .thenCompose(barrier::wait));
     }
 
     public static void reloadFrom(ResourceManager resourceManager) {
@@ -50,9 +50,6 @@ public final class DataReload {
         }
     }
 
-    private static volatile List<TableRegistry.Report> lastReload = List.of();
-
-    /** Итог последней перезагрузки: ошибки видны в /spirit tables и в логе, а не молча. */
     public static List<TableRegistry.Report> lastReload() {
         return lastReload;
     }

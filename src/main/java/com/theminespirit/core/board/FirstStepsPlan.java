@@ -8,8 +8,7 @@ import java.util.Optional;
  * строго по цепочке. Вход — чистые факты о поселении, решение — один следующий кейс.
  */
 public final class FirstStepsPlan {
-    private FirstStepsPlan() {
-    }
+    private FirstStepsPlan() {}
 
     public static Optional<BoardCase> next(SettlementFacts facts) {
         Objects.requireNonNull(facts, "facts не может быть null: генератор решает по фактам, а не вслепую");

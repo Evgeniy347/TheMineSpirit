@@ -22,19 +22,18 @@ public final class SettlementExperience extends SavedData {
 
     private int pending;
 
-    private SettlementExperience() {
-    }
+    private SettlementExperience() {}
 
     public static SettlementExperience get(MinecraftServer server) {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) {
-            throw new IllegalStateException("Уровень Верхнего мира не найден: пул опыта поселения хранится там, "
-                    + "а его нет у сервера");
+            throw new IllegalStateException(
+                    "Уровень Верхнего мира не найден: пул опыта поселения хранится там, " + "а его нет у сервера");
         }
         return overworld.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
 
-    private static SettlementExperience load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static SettlementExperience load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementExperience data = new SettlementExperience();
         data.pending = tag.getInt(PENDING_KEY);
         return data;
@@ -50,11 +49,10 @@ public final class SettlementExperience extends SavedData {
         return pending;
     }
 
-    /** Добавляет опыт в пул и возвращает новое значение: без игроков опыт не теряется. */
     public int add(int amount) {
         if (amount < 0) {
-            throw new IllegalArgumentException("Опыт " + amount + " отрицательный: в пул кладут только "
-                    + "положительный опыт");
+            throw new IllegalArgumentException(
+                    "Опыт " + amount + " отрицательный: в пул кладут только " + "положительный опыт");
         }
         if (amount > 0) {
             pending += amount;
@@ -63,7 +61,6 @@ public final class SettlementExperience extends SavedData {
         return pending;
     }
 
-    /** Забирает весь накопленный опыт, обнуляя пул: вызывающий сам делит его между игроками. */
     public int drain() {
         int drained = pending;
         if (drained > 0) {
