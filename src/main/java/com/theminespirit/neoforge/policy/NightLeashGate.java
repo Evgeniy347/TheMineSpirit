@@ -26,7 +26,8 @@ public final class NightLeashGate {
         BlockCoord cell = cellOf(spirit);
         boolean inside = LEASH.insideSettlement(cell, home.get(), LEASH.settlementRadius());
         boolean evening = LEASH.isEvening(dayFraction(spirit.level()));
-        spirit.setNightLeashArmed(LEASH.armedNext(evening, spirit.nightLeashArmed(), inside));
+        spirit.setNightLeashArmed(LEASH.armedNext(
+                new NightLeash.ArmedState(evening, spirit.nightLeashArmed(), inside)));
     }
 
     public static String refusal(SpiritEntity spirit, BlockCoord target) {
@@ -36,7 +37,8 @@ public final class NightLeashGate {
         }
         boolean following = spirit.currentTaskScript().filter(FOLLOW_SCRIPTS::contains).isPresent();
         NightLeash.Decision decision = LEASH.checkTarget(target, home.get(), LEASH.settlementRadius(),
-                LEASH.isEvening(dayFraction(spirit.level())), spirit.nightLeashArmed(), following);
+                new NightLeash.TargetState(LEASH.isEvening(dayFraction(spirit.level())),
+                        spirit.nightLeashArmed(), following));
         if (decision instanceof NightLeash.Refused refused) {
             return refused.reason();
         }

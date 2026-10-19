@@ -18,13 +18,13 @@ class HerdSafetyTests {
 
     @Test
     void dangerReason_LavaFireWater_NamesCause() {
-        assertEquals(Optional.of("в лаве"), HerdSafety.dangerReason(true, false, false),
+        assertEquals(Optional.of("в лаве"), HerdSafety.dangerReason(new HerdSafety.Hazards(true, false, false)),
                 "Лава обязана откладывать действие: иначе дух погонит животное в огонь");
-        assertEquals(Optional.of("в огне"), HerdSafety.dangerReason(false, true, false),
+        assertEquals(Optional.of("в огне"), HerdSafety.dangerReason(new HerdSafety.Hazards(false, true, false)),
                 "Огонь обязан откладывать действие");
-        assertEquals(Optional.of("в воде"), HerdSafety.dangerReason(false, false, true),
+        assertEquals(Optional.of("в воде"), HerdSafety.dangerReason(new HerdSafety.Hazards(false, false, true)),
                 "Вода обязана откладывать действие: мокрое животное не стригут и не бьют");
-        assertEquals(Optional.empty(), HerdSafety.dangerReason(false, false, false),
+        assertEquals(Optional.empty(), HerdSafety.dangerReason(new HerdSafety.Hazards(false, false, false)),
                 "Без опасности действие идёт: иначе дух будет стоять над сухим стадом");
     }
 
@@ -40,7 +40,7 @@ class HerdSafetyTests {
 
     @Test
     void dangerReason_AllDangersAtOnce_NamesLavaFirst() {
-        assertEquals(Optional.of("в лаве"), HerdSafety.dangerReason(true, true, true),
+        assertEquals(Optional.of("в лаве"), HerdSafety.dangerReason(new HerdSafety.Hazards(true, true, true)),
                 "Лава главнее огня и воды: из лавы животное уже не вывести, её называют первой");
     }
 

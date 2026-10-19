@@ -25,8 +25,7 @@ final class HerdLure {
             nextEscapee();
             return;
         }
-        Optional<String> danger = HerdSafety.dangerReason(session.lureTarget.isInLava(),
-                session.lureTarget.isOnFire(), session.lureTarget.isInWater());
+        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(session.lureTarget.isInLava(), session.lureTarget.isOnFire(), session.lureTarget.isInWater()));
         if (danger.isPresent()) {
             session.skipped++;
             session.lureSkipped.add(session.lureId);

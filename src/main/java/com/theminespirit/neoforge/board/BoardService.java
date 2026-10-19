@@ -108,10 +108,6 @@ public final class BoardService {
         return board;
     }
 
-    /**
-     * Последний снимок запасов пересборки: наблюдатель REST показывает по нему {@code missing},
-     * не читая мир лишний раз. До первой пересборки снимок пуст.
-     */
     public StockView stock() {
         return stock;
     }
@@ -124,22 +120,18 @@ public final class BoardService {
         return claims;
     }
 
-    /** Сколько раз пересборка проверяла актуальность: один вызов retain на пересборку, не на тик. */
     public int retains() {
         return retains;
     }
 
-    /** Сканов стада: тест масштаба держит число в периоде herdScanIntervalTicks. */
     public int herdScans() {
         return sources.herdScans();
     }
 
-    /** Блоков мира, прочитанных снимком запасов: тест масштаба держит число в бюджете. */
     public long stockBlockReads() {
         return stockBlockReads;
     }
 
-    /** Контейнеров, прочитанных снимком запасов: тест масштаба держит число в бюджете. */
     public long stockContainers() {
         return stockContainers;
     }
@@ -152,7 +144,6 @@ public final class BoardService {
         rebuild(level, now);
     }
 
-    /** Пересборка без интервала: вызывается событиями и тестами, идемпотентна. */
     public void rebuild(ServerLevel level, long now) {
         board.prune(now);
         Set<String> alive = new HashSet<>();
@@ -189,7 +180,6 @@ public final class BoardService {
     }
 
 
-    /** Пойманное животное: помним вид и сущность, чтобы проверять «животное ещё живо?». */
     public void noteCapture(String captureId, Species species, UUID animal, TicketTarget penTarget) {
         Objects.requireNonNull(captureId, "captureId не может быть null: по нему идёт причина задания");
         Objects.requireNonNull(species, "Вид пойманного животного не может быть null: цикл идёт по виду");
@@ -211,10 +201,6 @@ public final class BoardService {
         return count;
     }
 
-    /**
-     * Живые причины выкинутых вещей: задание «забрать» держится, пока предмет лежит в клетке.
-     * Подобранный предмет снимает задание со следующей пересборкой, а не висит вечно.
-     */
     private Set<String> liveDropCauses(ServerLevel level) {
         Set<String> live = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
@@ -251,7 +237,6 @@ public final class BoardService {
         return live;
     }
 
-    /** Животные вида, взятые в укрытии: по ним отделяют своё стадо от дикого. */
     public Set<UUID> capturedAnimals(Species species) {
         Set<UUID> animals = new HashSet<>();
         for (Capture capture : captures.values()) {
@@ -262,7 +247,6 @@ public final class BoardService {
         return Set.copyOf(animals);
     }
 
-    /** Живые причины стада: пойманное животное живо. Гибель снимает «приманить» и ставит разбор. */
     public Set<String> liveHerdCauses(ServerLevel level) {
         Set<String> live = new HashSet<>();
         Iterator<Map.Entry<String, Capture>> iterator = captures.entrySet().iterator();
@@ -282,11 +266,6 @@ public final class BoardService {
     private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {
     }
 
-    /**
-     * Выкинутая духом вещь становится заданием «забрать выкинутые вещи»: координаты и предмет
-     * в билете, исполнитель — любой свободный дух. Задание ставится только поселению: у духа
-     * без дома доски нет.
-     */
     public boolean reportDropped(SpiritEntity source, ItemEntity drop) {
         Objects.requireNonNull(source, "Дух, выкинувший вещь, не может быть null: по нему ищется поселение");
         Objects.requireNonNull(drop, "Выкинутая вещь не может быть null: без неё нечего забирать");
@@ -321,10 +300,6 @@ public final class BoardService {
         return outcome;
     }
 
-    /**
-     * Постановка задания без точки (источник — REST стратега): цель не задана, при выдаче
-     * берётся дом поселения, как для заявок без цели.
-     */
     public BoardOutcome submit(BoardTicket ticket) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
@@ -333,11 +308,6 @@ public final class BoardService {
         return outcome;
     }
 
-    /**
-     * Отмена задания: доска снимает его и зависимые, цели забываются, а духи-держатели
-     * прекращают работу ({@code cancelTask}) и отпускают брони работ — иначе отменённое
-     * задание продолжало бы исполняться, а бронь держала бы занятость духа.
-     */
     public boolean cancel(ServerLevel level, String ticketId) {
         Set<UUID> holders = new HashSet<>();
         collectHolders(ticketId, holders, new HashSet<>());
@@ -355,7 +325,6 @@ public final class BoardService {
         return true;
     }
 
-    /** Держатели отменяемого задания и всех зависимых от него: их работу отменяем вместе. */
     private void collectHolders(String ticketId, Set<UUID> holders, Set<String> visited) {
         if (!visited.add(ticketId)) {
             return;
@@ -368,7 +337,6 @@ public final class BoardService {
         }
     }
 
-    /** Дух погиб: его выданные задания возвращаются в очередь, брони снимаются. */
     public void releaseSpirit(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             board.release(ticket.id());
@@ -380,10 +348,6 @@ public final class BoardService {
         animals.cycle(speciesOfCapture(captureId)).captured(captureId);
     }
 
-    /**
-     * Загон построен: следующее звено — «приманить» с гейтом по приманке. Пара к
-     * {@link #completeCapture}: производство зовёт из учёта исполнителя, GameTest — напрямую.
-     */
     public void completePen(String penId) {
         Species species = speciesOfId(penId);
         animals.cycle(species).penBuilt(penId);
@@ -394,7 +358,6 @@ public final class BoardService {
         }
     }
 
-    /** Животное в загоне: ставится «разобрать укрытие». */
     public void completeLure(Species species) {
         animals.cycle(species).lured();
     }
@@ -403,7 +366,6 @@ public final class BoardService {
         animals.cycle(firstCaptureSpecies()).lured();
     }
 
-    /** Животное погибло: «приманить» снимается, ставится «разобрать укрытие». */
     public void notifyAnimalDied(Species species) {
         animals.cycle(species).animalDied();
     }
@@ -562,11 +524,6 @@ public final class BoardService {
         }
     }
 
-    /**
-     * Центры чтения склада — цели заданий, ждущих ресурса: склад ищется там, где идёт работа,
-     * и число мест обхода не растёт от числа духов. Если ждущих заявок нет, берём дом как
-     * последнюю опору — иначе снимок не увидел бы даже собранного духами.
-     */
     private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
         List<BlockCoord> centers = new ArrayList<>();
         for (BoardTicket ticket : board.all()) {
@@ -614,10 +571,6 @@ public final class BoardService {
                 && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
     }
 
-    /**
-     * Снимок нужды в еде: постоянное задание берёт только тот дух, которому не хватает
-     * сытости или здоровья. Мир читается в адаптере, решение остаётся в ядре.
-     */
     private static EatNeed eatNeed(SpiritEntity spirit) {
         return new EatNeed(spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()),
                 SpiritHunger.MAX_FOOD, (int) Math.ceil(spirit.getMaxHealth()));
@@ -678,10 +631,6 @@ public final class BoardService {
         permanentSupplies(spirits, stock, now);
     }
 
-    /**
-     * Постоянные запасы чаровальни (полки 32, книги 32, бумага 128): висят всегда и держат
-     * склад. Приоритет полок ниже воронки — иначе запасы вытесняли бы срочную работу.
-     */
     private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {
         EvergreenRules.supplyThresholds().forEach((item, threshold) -> {
             String shortItem = shortId(item);

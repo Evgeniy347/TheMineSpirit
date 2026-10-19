@@ -24,6 +24,7 @@ final class SchematicGrid {
         boolean[][][] done = new boolean[sy][sz][sx];
         List<Schematic.Entry> blocks = new ArrayList<>();
         List<Schematic.Cell> air = new ArrayList<>();
+        Surface surface = new Surface(grid, done, blocks, origin);
         for (int y = 0; y < sy; y++) {
             for (int z = 0; z < sz; z++) {
                 for (int x = 0; x < sx; x++) {
@@ -37,9 +38,9 @@ final class SchematicGrid {
                     }
                     SchematicTextParser.LegendEntry entry = legend.get(symbol);
                     if (SchematicBlocks.isDoor(entry.block())) {
-                        door(grid, done, blocks, entry, symbol, x, y, z, origin);
+                        door(surface, entry, symbol, x, y, z);
                     } else if (SchematicBlocks.isBed(entry.block())) {
-                        bed(grid, done, blocks, entry, symbol, x, y, z, origin);
+                        bed(surface, entry, symbol, x, y, z);
                     } else {
                         blocks.add(new Schematic.Entry(x, y, z, entry.block(), entry.state(), entry.text()));
                     }
@@ -50,20 +51,25 @@ final class SchematicGrid {
         return new Result(List.copyOf(blocks), List.copyOf(air));
     }
 
-    private static void door(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks,
-            SchematicTextParser.LegendEntry entry, char symbol, int x, int y, int z, String origin) {
-        if (y + 1 >= grid.length || grid[y + 1][z][x] != symbol || done[y + 1][z][x]) {
-            throw new IllegalStateException("Файл постройки '" + origin + "': дверь '" + symbol + "' в клетке ["
-                    + x + "," + y + "," + z + "] без верхней половины: напишите тот же символ в слое y" + (y + 1)
-                    + " над ней (строка " + (z + 1) + ", позиция " + (x + 1) + ")");
+    private static void door(Surface surface, SchematicTextParser.LegendEntry entry, char symbol,
+            int x, int y, int z) {
+        char[][][] grid = surface.grid();
+        if (y + 1 >= grid.length || grid[y + 1][z][x] != symbol || surface.done()[y + 1][z][x]) {
+            throw new IllegalStateException("Файл постройки '" + surface.origin() + "': дверь '" + symbol
+                    + "' в клетке [" + x + "," + y + "," + z + "] без верхней половины: напишите тот же символ в слое y"
+                    + (y + 1) + " над ней (строка " + (z + 1) + ", позиция " + (x + 1) + ")");
         }
-        blocks.add(new Schematic.Entry(x, y, z, entry.block(), with(entry.state(), "half", "lower"), entry.text()));
-        blocks.add(new Schematic.Entry(x, y + 1, z, entry.block(), with(entry.state(), "half", "upper"), entry.text()));
-        done[y + 1][z][x] = true;
+        surface.blocks().add(new Schematic.Entry(x, y, z, entry.block(), with(entry.state(), "half", "lower"),
+                entry.text()));
+        surface.blocks().add(new Schematic.Entry(x, y + 1, z, entry.block(), with(entry.state(), "half", "upper"),
+                entry.text()));
+        surface.done()[y + 1][z][x] = true;
     }
 
-    private static void bed(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks,
-            SchematicTextParser.LegendEntry entry, char symbol, int x, int y, int z, String origin) {
+    private static void bed(Surface surface, SchematicTextParser.LegendEntry entry, char symbol,
+            int x, int y, int z) {
+        char[][][] grid = surface.grid();
+        boolean[][][] done = surface.done();
         String facing = entry.state().get("facing");
         int dx = switch (facing) {
             case "east" -> 1;
@@ -76,7 +82,7 @@ final class SchematicGrid {
             default -> 0;
         };
         if (dx == 0 && dz == 0) {
-            throw new IllegalStateException("Файл постройки '" + origin + "': у кровати '" + symbol
+            throw new IllegalStateException("Файл постройки '" + surface.origin() + "': у кровати '" + symbol
                     + "' facing=" + facing + ": допустимы north, south, east, west");
         }
         int footX = x;
@@ -88,13 +94,14 @@ final class SchematicGrid {
         int headX = footX + dx;
         int headZ = footZ + dz;
         if (!same(grid, done, symbol, y, headX, headZ) || !same(grid, done, symbol, y, footX, footZ)) {
-            throw new IllegalStateException("Файл постройки '" + origin + "': кровать '" + symbol + "' в клетке ["
-                    + x + "," + y + "," + z + "] без пары: вторая клетка тем же символом обязана стоять рядом "
-                    + "вдоль facing=" + facing + " — изголовье по направлению facing, ножная часть позади");
+            throw new IllegalStateException("Файл постройки '" + surface.origin() + "': кровать '" + symbol
+                    + "' в клетке [" + x + "," + y + "," + z + "] без пары: вторая клетка тем же символом "
+                    + "обязана стоять рядом вдоль facing=" + facing
+                    + " — изголовье по направлению facing, ножная часть позади");
         }
-        blocks.add(new Schematic.Entry(footX, y, footZ, entry.block(), with(entry.state(), "part", "foot"),
+        surface.blocks().add(new Schematic.Entry(footX, y, footZ, entry.block(), with(entry.state(), "part", "foot"),
                 entry.text()));
-        blocks.add(new Schematic.Entry(headX, y, headZ, entry.block(), with(entry.state(), "part", "head"),
+        surface.blocks().add(new Schematic.Entry(headX, y, headZ, entry.block(), with(entry.state(), "part", "head"),
                 entry.text()));
         done[y][headZ][headX] = true;
         done[y][footZ][footX] = true;
@@ -109,5 +116,8 @@ final class SchematicGrid {
         Map<String, String> copy = new HashMap<>(state);
         copy.put(key, value);
         return Map.copyOf(copy);
+    }
+
+    private record Surface(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks, String origin) {
     }
 }

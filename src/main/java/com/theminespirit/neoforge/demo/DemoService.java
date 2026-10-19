@@ -55,7 +55,8 @@ public final class DemoService {
         int lookDz = player == null ? 1 : player.getDirection().getStepZ();
         List<DemoPlan> plans;
         try {
-            plans = plans(building, levelRequested, anchor, lookDx, lookDz, rotation, upgradeFrom, upgradeTo);
+            plans = plans(new PlanRequest(building, levelRequested, anchor, lookDx, lookDz, rotation,
+                    upgradeFrom, upgradeTo));
         } catch (IllegalArgumentException refused) {
             source.sendFailure(Component.literal("Демо-стройка не начата: " + refused.getMessage()));
             return 0;
@@ -115,8 +116,15 @@ public final class DemoService {
         }
     }
 
-    private static List<DemoPlan> plans(DemoBuildings.Building building, int levelRequested, BlockPos anchor,
-            int lookDx, int lookDz, BuildRotation rotation, int upgradeFrom, int upgradeTo) {
+    private static List<DemoPlan> plans(PlanRequest request) {
+        DemoBuildings.Building building = request.building();
+        int levelRequested = request.levelRequested();
+        BlockPos anchor = request.anchor();
+        int lookDx = request.lookDx();
+        int lookDz = request.lookDz();
+        BuildRotation rotation = request.rotation();
+        int upgradeFrom = request.upgradeFrom();
+        int upgradeTo = request.upgradeTo();
         if (upgradeFrom > 0 || upgradeTo > 0) {
             if (!building.leveled()) {
                 throw new IllegalArgumentException("У постройки '" + building.id()
@@ -165,5 +173,9 @@ public final class DemoService {
             return plans.get(0).name() + " (" + plans.get(0).scheme() + ")";
         }
         return plans.get(0).name() + " (" + plans.get(0).scheme() + " → " + plans.get(1).scheme() + ")";
+    }
+
+    private record PlanRequest(DemoBuildings.Building building, int levelRequested, BlockPos anchor, int lookDx,
+            int lookDz, BuildRotation rotation, int upgradeFrom, int upgradeTo) {
     }
 }

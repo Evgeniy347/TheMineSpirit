@@ -90,34 +90,40 @@ class RepairCalculatorTests {
     @Test
     void chooseMethod_MaterialOnly_ReturnsAnvil() {
         assertEquals(RepairMethod.ANVIL,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, false, false, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(true, false, false, true)),
                 "Есть материал и нет второго инструмента — чиним наковальней");
     }
 
     @Test
     void chooseMethod_SecondToolOnly_ReturnsGrindstone() {
         assertEquals(RepairMethod.GRINDSTONE,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, true, false, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(false, true, false, true)),
                 "Нет материала, но есть второй такой же инструмент — чиним точилом");
     }
 
     @Test
     void chooseMethod_BothAvailable_CheapestWins() {
         assertEquals(RepairMethod.ANVIL,
-                RepairCalculator.chooseMethod(new RepairCosts(1, 2, 10), true, true, false, true),
+                RepairCalculator.chooseMethod(new RepairCosts(1, 2, 10),
+                        new RepairCalculator.Availability(true, true, false, true)),
                 "Материал (1) + опыт (1×2) = 3 дешевле второго инструмента (10): выбираем наковальню");
         assertEquals(RepairMethod.GRINDSTONE,
-                RepairCalculator.chooseMethod(new RepairCosts(1, 20, 10), true, true, false, true),
+                RepairCalculator.chooseMethod(new RepairCosts(1, 20, 10),
+                        new RepairCalculator.Availability(true, true, false, true)),
                 "Материал (1) + опыт (1×20) = 21 дороже второго инструмента (10): выбираем точило");
     }
 
     @Test
     void chooseMethod_Enchanted_RequiresAnvil() {
         assertEquals(RepairMethod.ANVIL,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, true, true, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(true, true, true, true)),
                 "Зачарованный инструмент чинится только наковальней: точило снимет чары");
         assertEquals(RepairMethod.NONE,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, true, true, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(false, true, true, true)),
                 "Зачарованный инструмент без материала не чинится вовсе: точило снимет чары, а наковальня без "
                         + "материала бесполезна");
     }
@@ -125,21 +131,24 @@ class RepairCalculatorTests {
     @Test
     void chooseMethod_NotDamagedEnough_ReturnsNone() {
         assertEquals(RepairMethod.NONE,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), true, true, false, false),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(true, true, false, false)),
                 "Крепкий инструмент не чиним даже при материале и паре: ресурс тратился бы зря");
     }
 
     @Test
     void chooseMethod_NothingAvailable_ReturnsNone() {
         assertEquals(RepairMethod.NONE,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), false, false, false, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(false, false, false, true)),
                 "Без материала и без второго инструмента чинить нечем");
     }
 
     @Test
     void chooseMethod_NullCosts_Throws() {
         assertThrows(NullPointerException.class,
-                () -> RepairCalculator.chooseMethod(null, true, true, false, true),
+                () -> RepairCalculator.chooseMethod(null,
+                        new RepairCalculator.Availability(true, true, false, true)),
                 "Стоимость без чисел не задать: выбор способа обязан падать, а не подставлять нули");
     }
 }

@@ -55,7 +55,6 @@ public record HungerRules(
         return DEFAULTS;
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static HungerRules loadDefault() {
         return DataTables.INSTANCE.hunger().current();
     }

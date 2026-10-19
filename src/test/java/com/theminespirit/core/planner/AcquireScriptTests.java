@@ -100,12 +100,10 @@ class AcquireScriptTests {
     @Test
     void stepKeepsFailing_AttemptsReachLimit_RebuildStops() {
         AtomicInteger builds = new AtomicInteger();
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> {
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> {
                     builds.incrementAndGet();
                     return ScriptRegistry.of(Map.of("gather", params -> new AlwaysFailingInstance()));
-                }, NO_CONDITIONS);
+                }, NO_CONDITIONS));
 
         ScriptStatus status = run(script, 40);
 
@@ -127,10 +125,9 @@ class AcquireScriptTests {
     void subplanExceedsBudget_NodesOverBudget_BuildFailsWithNumbers() {
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.chestSteps = withdrawSteps(CatalogLimits.COUNT_MAX + 1);
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG,
-                ConditionCatalog.empty(), () -> {
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> {
                     throw new AssertionError("Реестр не должен запрашиваться: подплан отклоняется по бюджету");
-                }, NO_CONDITIONS);
+                }, NO_CONDITIONS));
 
         Optional<TaskNode> plan;
         String reason = null;
@@ -153,10 +150,7 @@ class AcquireScriptTests {
     @Test
     void nestedRunnerRunning_WhileWorking_ProgressAndExemptionsDelegate() {
         AtomicInteger ticks = new AtomicInteger();
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, ticks))),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, ticks))), NO_CONDITIONS));
 
         assertEquals(ScriptStatus.RUNNING, script.tick(), "Первый тик строит подплан и двигает первый шаг");
         assertEquals(ScriptStatus.RUNNING, script.tick(), "Счётный скрипт ещё работает");
@@ -169,10 +163,7 @@ class AcquireScriptTests {
     @Test
     void nestedStarted_ControlSignals_ReachLiveStep() {
         List<String> calls = new ArrayList<>();
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new RecordingInstance(calls))),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new RecordingInstance(calls))), NO_CONDITIONS));
 
         script.tick();
         script.suspend();
@@ -209,10 +200,7 @@ class AcquireScriptTests {
     @Test
     void suspend_BeforeFirstTick_NewRunnerIsSuspended() {
         AtomicInteger ticks = new AtomicInteger();
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))), NO_CONDITIONS));
 
         script.suspend();
         assertEquals(ScriptStatus.RUNNING, script.tick(),
@@ -232,10 +220,7 @@ class AcquireScriptTests {
     @Test
     void cancel_AfterNestedStarted_InsteadOfFailed() {
         AtomicInteger ticks = new AtomicInteger();
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))), NO_CONDITIONS));
         assertEquals(ScriptStatus.RUNNING, script.tick(), "Первый тик строит подплан");
         assertEquals(ScriptStatus.RUNNING, script.tick(), "Вложенный скрипт работает");
 
@@ -249,18 +234,12 @@ class AcquireScriptTests {
     @Test
     void saveRestore_BetweenTicks_AttemptAndSnapshotKept() {
         AtomicInteger ticks = new AtomicInteger();
-        AcquireScript first = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
-                NO_CONDITIONS);
+        AcquireScript first = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))), NO_CONDITIONS));
         assertEquals(ScriptStatus.RUNNING, first.tick(), "Первый тик строит подплан");
         assertEquals(ScriptStatus.RUNNING, first.tick(), "Вложенный скрипт работает");
 
         Map<String, Object> saved = first.saveState();
-        AcquireScript restored = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))),
-                NO_CONDITIONS);
+        AcquireScript restored = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, ticks))), NO_CONDITIONS));
         restored.restoreState(saved);
 
         assertEquals(first.attempts(), restored.attempts(),
@@ -280,20 +259,14 @@ class AcquireScriptTests {
         AtomicInteger firstInventory = new AtomicInteger(1);
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryLive = firstInventory;
-        AcquireScript first = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG,
-                ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, firstInventory))),
-                NO_CONDITIONS);
+        AcquireScript first = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, firstInventory))), NO_CONDITIONS));
         assertEquals(ScriptStatus.RUNNING, first.tick(), "Первый тик строит подплан");
 
         Map<String, Object> saved = first.saveState();
         AtomicInteger restoredInventory = new AtomicInteger(1);
         StubSupplies restoredSupplies = new StubSupplies(0, Map.of());
         restoredSupplies.inventoryLive = restoredInventory;
-        AcquireScript restored = new AcquireScript(ITEM, 3, alwaysGatherable(), restoredSupplies, CATALOG,
-                ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, restoredInventory))),
-                NO_CONDITIONS);
+        AcquireScript restored = new AcquireScript(ITEM, 3, alwaysGatherable(), restoredSupplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(3, restoredInventory))), NO_CONDITIONS));
         restored.restoreState(saved);
 
         assertEquals(ScriptStatus.SUCCEEDED, run(restored, 20),
@@ -313,16 +286,14 @@ class AcquireScriptTests {
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryLive = inventory;
         AtomicInteger buildCount = new AtomicInteger();
-        AcquireScript script = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG,
-                ConditionCatalog.empty(),
-                () -> {
+        AcquireScript script = new AcquireScript(ITEM, 3, alwaysGatherable(), supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> {
                     buildCount.incrementAndGet();
                     // Первая попытка добила 1 предмет и упала; вторая добывает 2.
                     return ScriptRegistry.of(Map.of("gather", params ->
                             buildCount.get() == 1
                                     ? new GatherThenFailInstance(inventory)
                                     : new CountingInstance(2, inventory)));
-                }, NO_CONDITIONS);
+                }, NO_CONDITIONS));
 
         assertEquals(ScriptStatus.SUCCEEDED, run(script, 40),
                 "Первая попытка добывает и падает, вторая успешна — acquire обязан дойти до конца");
@@ -338,10 +309,7 @@ class AcquireScriptTests {
 
     @Test
     void savedRunnerState_AfterFirstTick_SnapshotDecodesBack() {
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, new AtomicInteger()))),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(5, new AtomicInteger()))), NO_CONDITIONS));
         script.tick();
 
         String snapshot = (String) script.saveState().get("runner");
@@ -366,8 +334,7 @@ class AcquireScriptTests {
         FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryOverride = Map.of("coal", 1);
-        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
-                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of()), NO_CONDITIONS));
 
         Optional<TaskNode> plan = script.buildSubplan();
 
@@ -380,8 +347,7 @@ class AcquireScriptTests {
     @Test
     void emptyInventory_ResolverPlans_GatherForFuel() {
         FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
-        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, new StubSupplies(0, Map.of()),
-                CATALOG, ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of()), NO_CONDITIONS));
 
         Optional<TaskNode> plan = script.buildSubplan();
 
@@ -397,8 +363,7 @@ class AcquireScriptTests {
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryOverride = Map.of("coal", 1);
         supplies.stations = Set.of("furnace");
-        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
-                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of()), NO_CONDITIONS));
 
         Optional<TaskNode> plan = script.buildSubplan();
 
@@ -415,8 +380,7 @@ class AcquireScriptTests {
         FuelAwareKnowledge knowledge = new FuelAwareKnowledge();
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryOverride = Map.of("coal", 1);
-        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG,
-                ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS);
+        AcquireScript script = new AcquireScript("iron_ingot", 1, knowledge, supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of()), NO_CONDITIONS));
 
         Optional<TaskNode> plan = script.buildSubplan();
 
@@ -433,10 +397,7 @@ class AcquireScriptTests {
         AtomicInteger gatheredFromWorld = new AtomicInteger();
         StubSupplies supplies = new StubSupplies(0, Map.of());
         supplies.inventoryLive = gatheredFromWorld;
-        AcquireScript acquire = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG,
-                ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(1, gatheredFromWorld))),
-                NO_CONDITIONS);
+        AcquireScript acquire = new AcquireScript(ITEM, 1, alwaysGatherable(), supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new CountingInstance(1, gatheredFromWorld))), NO_CONDITIONS));
         TaskRunner runner = TaskRunner.start(new ScriptCall("acquire", Map.of("item", ITEM, "count", 1)),
                 ScriptRegistry.of(Map.of("acquire", params -> acquire)), NO_CONDITIONS);
 
@@ -455,10 +416,7 @@ class AcquireScriptTests {
 
     @Test
     void failedAcquire_Result_IsEmpty() {
-        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(),
-                new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(),
-                () -> ScriptRegistry.of(Map.of("gather", params -> new AlwaysFailingInstance())),
-                NO_CONDITIONS);
+        AcquireScript script = new AcquireScript(ITEM, 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of("gather", params -> new AlwaysFailingInstance())), NO_CONDITIONS));
 
         assertEquals(ScriptStatus.FAILED, run(script, 40),
                 "Шаг падает на каждой пересборке — acquire обязан честно завершиться FAILED");
@@ -469,8 +427,7 @@ class AcquireScriptTests {
     @Test
     void constructor_BlankItem_IsRejectedWithReason() {
         String reason = assertThrows(IllegalArgumentException.class,
-                () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG,
-                        ConditionCatalog.empty(), () -> ScriptRegistry.of(Map.of()), NO_CONDITIONS),
+                () -> new AcquireScript("  ", 1, alwaysGatherable(), new StubSupplies(0, Map.of()), CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(() -> ScriptRegistry.of(Map.of()), NO_CONDITIONS)),
                 "Пустой item обязан отвергаться: без имени предмета скрипт не знает, что добыть")
                 .getMessage();
 
@@ -502,8 +459,7 @@ class AcquireScriptTests {
 
     private static AcquireScript script(int count, StubSupplies supplies, StubKnowledge knowledge,
             AtomicInteger registryCalls) {
-        return new AcquireScript(ITEM, count, knowledge, supplies, CATALOG, ConditionCatalog.empty(),
-                countingRegistry(registryCalls, 10), NO_CONDITIONS);
+        return new AcquireScript(ITEM, count, knowledge, supplies, CATALOG, ConditionCatalog.empty(), new AcquireScript.Registries(countingRegistry(registryCalls, 10), NO_CONDITIONS));
     }
 
     private static StubKnowledge alwaysGatherable() {

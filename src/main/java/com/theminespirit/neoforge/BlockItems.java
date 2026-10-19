@@ -21,7 +21,6 @@ public final class BlockItems {
         return item;
     }
 
-    /** Есть ли у блока предмет: воду и подобные блоки в инвентарь не положить, их ставят напрямую. */
     public static boolean hasBlockItem(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что ставить");
         return BlockStates.blockFor(blockId).asItem() instanceof BlockItem;

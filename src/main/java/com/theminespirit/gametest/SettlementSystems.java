@@ -17,9 +17,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SettlementSystems {
-    /** Нужен глобальный тик доски: источники, пересборка, выдача заданий. */
     boolean board() default false;
 
-    /** Нужен глобальный тик координатора: снимки поселений, оборона, интеллект. */
     boolean coordinator() default false;
 }

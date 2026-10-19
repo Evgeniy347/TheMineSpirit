@@ -18,7 +18,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside() {
-        DemoPlacement placement = DemoPlacement.compute(10, 64, 10, 0, 1, 2, 0, 5, 3, 5, null);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(10, 64, 10), new DemoPlacement.Look(0, 1), 2, 0, new DemoPlacement.Size(5, 3, 5), null);
 
         assertEquals(BuildRotation.NONE, placement.rotation(),
                 "Схема с входом на северной стороне и игроком, смотрящим на юг, не поворачивается: "
@@ -36,7 +36,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_Platform_IsFootprintPlusPaddingSidesAndUp() {
-        DemoPlacement placement = DemoPlacement.compute(10, 64, 10, 0, 1, 2, 0, 5, 3, 5, null);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(10, 64, 10), new DemoPlacement.Look(0, 1), 2, 0, new DemoPlacement.Size(5, 3, 5), null);
         int pad = BuildTuning.DEMO_PLATFORM_PADDING;
 
         assertEquals(5, pad,
@@ -58,7 +58,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_LookEast_TurnsEntryToPlayer() {
-        DemoPlacement placement = DemoPlacement.compute(10, 64, 10, 1, 0, 2, 0, 5, 3, 5, null);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(10, 64, 10), new DemoPlacement.Look(1, 0), 2, 0, new DemoPlacement.Size(5, 3, 5), null);
 
         assertEquals(BuildRotation.COUNTERCLOCKWISE_90, placement.rotation(),
                 "Игрок смотрит на восток — вход на северной стороне обязан повернуться на запад, к игроку");
@@ -71,8 +71,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_ExplicitRotation_OverridesLook() {
-        DemoPlacement placement = DemoPlacement.compute(10, 64, 10, 0, 1, 2, 0, 5, 3, 5,
-                BuildRotation.CLOCKWISE_180);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(10, 64, 10), new DemoPlacement.Look(0, 1), 2, 0, new DemoPlacement.Size(5, 3, 5), BuildRotation.CLOCKWISE_180);
 
         assertEquals(BuildRotation.CLOCKWISE_180, placement.rotation(),
                 "Явный поворот обязан перебивать вывод из взгляда игрока: иначе параметр поворота не работает");
@@ -83,7 +82,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_EntryInDepth_KeepsNoRotation() {
-        DemoPlacement placement = DemoPlacement.compute(0, 64, 0, 1, 0, 1, 1, 3, 2, 3, null);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(0, 64, 0), new DemoPlacement.Look(1, 0), 1, 1, new DemoPlacement.Size(3, 2, 3), null);
 
         assertEquals(BuildRotation.NONE, placement.rotation(),
                 "Вход внутри схемы (колодец) не задаёт сторону: поворот не выводится из взгляда, постройка "
@@ -92,7 +91,7 @@ class DemoPlacementTests {
 
     @Test
     void compute_EntryOnSouthEdge_LooksNorthToPlayer() {
-        DemoPlacement placement = DemoPlacement.compute(0, 64, 0, 0, 1, 4, 8, 9, 4, 9, null);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(0, 64, 0), new DemoPlacement.Look(0, 1), 4, 8, new DemoPlacement.Size(9, 4, 9), null);
 
         assertEquals(BuildRotation.CLOCKWISE_180, placement.rotation(),
                 "Вход на южной стороне (чаровальня) при взгляде на юг обязан перевернуть схему, чтобы вход "
@@ -108,8 +107,7 @@ class DemoPlacementTests {
                 BlockCoord entry = library.byId(level.scheme()).map(Preset::entry)
                         .orElseGet(() -> new BlockCoord(schematic.sizeX() / 2, 0, 0));
                 for (int[] look : LOOKS) {
-                    DemoPlacement placement = DemoPlacement.compute(0, 64, 0, look[0], look[1],
-                            entry.x(), entry.z(), schematic.sizeX(), schematic.sizeY(), schematic.sizeZ(), null);
+                    DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(0, 64, 0), new DemoPlacement.Look(look[0], look[1]), entry.x(), entry.z(), new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()), null);
                     String where = building.id() + "/" + level.scheme() + " взгляд " + look[0] + "," + look[1];
                     BlockCoord front = new BlockCoord(0, 64, 0);
                     assertPlatform(placement, schematic, where);

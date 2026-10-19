@@ -30,7 +30,6 @@ public final class DataReload {
     private DataReload() {
     }
 
-    /** Подписка на перезагрузку данных; вызывается один раз из точки входа мода. */
     public static void register(AddReloadListenerEvent event) {
         event.addListener((barrier, resourceManager, prepareProfiler, applyProfiler, backgroundExecutor, gameExecutor) ->
                 CompletableFuture
@@ -52,7 +51,6 @@ public final class DataReload {
 
     private static volatile List<TableRegistry.Report> lastReload = List.of();
 
-    /** Итог последней перезагрузки: ошибки видны в /spirit tables и в логе, а не молча. */
     public static List<TableRegistry.Report> lastReload() {
         return lastReload;
     }

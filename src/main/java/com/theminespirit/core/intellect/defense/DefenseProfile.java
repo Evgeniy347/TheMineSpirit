@@ -41,12 +41,10 @@ public record DefenseProfile(Map<String, TargetClass> classes, TargetClass fallb
         priorityWithoutArcher = checkedOrders("DefenseProfile.priorityWithoutArcher", priorityWithoutArcher, false);
     }
 
-    /** Начальная версия для держателя: читается с classpath один раз за процесс. */
     public static DefenseProfile readFromClasspath() {
         return DefenseProfileParser.fromJson(JsonResource.readClasspath(RESOURCE));
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет приоритеты на лету. */
     public static DefenseProfile loadDefault() {
         return DataTables.INSTANCE.priorities().current();
     }

@@ -90,7 +90,6 @@ public final class CraterStore extends SavedData {
                 tag.getInt(RADIUS_KEY), tag.getInt(LEVEL_KEY), tag.getLong(TICK_KEY));
     }
 
-    /** Запоминает воронку: id уникален, при повторе запись не двоится. */
     public void add(Crater crater) {
         Objects.requireNonNull(crater, "Воронка не может быть null: без неё нечего запоминать");
         craters.removeIf(existing -> existing.id().equals(crater.id()));
@@ -106,7 +105,6 @@ public final class CraterStore extends SavedData {
         return craters.stream().filter(crater -> crater.id().equals(id)).findFirst();
     }
 
-    /** Ближайшая воронка, накрывающая точку; если таких нет — ближайшая по центру. */
     public Optional<Crater> nearest(BlockCoord pos) {
         Objects.requireNonNull(pos, "Позиция не может быть null: без неё воронку не найти");
         Crater covering = null;

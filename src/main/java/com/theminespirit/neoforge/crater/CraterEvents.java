@@ -75,7 +75,6 @@ public final class CraterEvents {
         return false;
     }
 
-    /** Уровень земли края: самый частый столбец твёрдой поверхности по кольцу радиуса воронки. */
     private static int rimLevel(ServerLevel level, BlockPos center, int radius) {
         int baseline = level.getMinBuildHeight();
         int[] histogram = new int[level.getHeight() + 1];

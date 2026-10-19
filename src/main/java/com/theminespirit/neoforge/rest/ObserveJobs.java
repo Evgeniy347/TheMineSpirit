@@ -127,8 +127,9 @@ public final class ObserveJobs {
             BlockPos position = spirit.blockPosition();
             this.session = new WorldScanner.Session(spirit.level(), botId,
                     new BlockCoord(position.getX(), position.getY(), position.getZ()), request.radius(),
-                    request.blockFilter(), spirit.getInventory(), ScanFocus.ALL,
-                    ObservationLimits.loadDefault().maxOpenBlocks());
+                    request.blockFilter(), spirit.getInventory(),
+                    new WorldScanner.ScanOptions(ScanFocus.ALL,
+                            ObservationLimits.loadDefault().maxOpenBlocks()));
             this.includeEntities = request.includeEntities();
         }
 

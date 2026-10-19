@@ -34,14 +34,12 @@ public record WorldObservation(
         openBlocks = sortOpenBlocks(openBlocks);
     }
 
-    /** Наблюдение без открытых блоков, данных о самом духе, выпавших предметах, контейнерах и времени суток. */
     public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
             List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius) {
         this(botId, tick, position, inventory, blocks, entities, containers, radius,
                 null, List.of(), List.of(), null, List.of());
     }
 
-    /** Наблюдение без открытых блоков: путям, которым позиции важных блоков не нужны. */
     public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
             List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius,
             SpiritStatus spirit, List<GroundItem> groundItems, List<ContainerContents> containerItems,

@@ -8,7 +8,6 @@ import java.util.List;
  * Числа сюда не входят — только правило «что важно», порядок и предел списка.
  */
 public final class OpenBlocks {
-    /** Порядок записей в ответе и в hash: сначала ближайшие, при равенстве — по имени и координатам. */
     public static final Comparator<OpenBlock> ORDER = Comparator.comparingDouble(OpenBlock::distance)
             .thenComparing(OpenBlock::item)
             .thenComparing(OpenBlock::pos);
@@ -16,7 +15,6 @@ public final class OpenBlocks {
     private OpenBlocks() {
     }
 
-    /** Важный блок по id вида {@code minecraft:iron_ore} или короткому имени {@code stone}. */
     public static boolean isImportant(String blockId) {
         if (blockId == null) {
             return false;
@@ -31,10 +29,6 @@ public final class OpenBlocks {
                 || path.endsWith("_hyphae");
     }
 
-    /**
-     * Держать не больше {@code limit} ближайших записей: дальняя запись вытесняется более близкой.
-     * Список остаётся отсортированным по {@link #ORDER}, поэтому ответ стабилен.
-     */
     public static void keepNearest(List<OpenBlock> target, OpenBlock candidate, int limit) {
         if (limit <= 0) {
             return;

@@ -114,7 +114,6 @@ public record IntellectTuning(
         return DEFAULTS;
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static IntellectTuning loadDefault() {
         DataTables tables = DataTables.INSTANCE;
         if (tables == null) {

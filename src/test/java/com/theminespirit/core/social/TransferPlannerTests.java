@@ -140,10 +140,7 @@ class TransferPlannerTests {
     void planForCraft_MissingIngredient_TransferFromHolder() {
         List<Ingredient> recipe = List.of(new Ingredient("stick", 2), new Ingredient("cobblestone", 3));
 
-        List<TransferOrder> orders = TransferPlanner.planForCraft("stone_pickaxe", B, HOME,
-                List.of(cobble(3)), recipe,
-                List.of(source(A, new BlockCoord(2, 64, 0), NOTHING_PROTECTED, sticks(5))), Map.of(),
-                VALUES, 32, 64);
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest("stone_pickaxe", B, HOME, List.of(cobble(3)), recipe, List.of(source(A, new BlockCoord(2, 64, 0), NOTHING_PROTECTED, sticks(5))), Map.of(), VALUES, 32, 64));
 
         assertEquals(1, orders.size(), "Нехватка одного ингредиента даёт одну передачу нужного предмета");
         assertEquals("stick", orders.get(0).item(), "Передают тот ингредиент, которого крафтеру не хватает");
@@ -153,9 +150,7 @@ class TransferPlannerTests {
 
     @Test
     void planForCraft_IngredientPresent_NoOrders() {
-        List<TransferOrder> orders = TransferPlanner.planForCraft("stone_pickaxe", B, HOME,
-                List.of(cobble(3), sticks(2)), List.of(new Ingredient("stick", 2), new Ingredient("cobblestone", 3)),
-                List.of(source(A, HOME, NOTHING_PROTECTED, sticks(5))), Map.of(), VALUES, 32, 64);
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest("stone_pickaxe", B, HOME, List.of(cobble(3), sticks(2)), List.of(new Ingredient("stick", 2), new Ingredient("cobblestone", 3)), List.of(source(A, HOME, NOTHING_PROTECTED, sticks(5))), Map.of(), VALUES, 32, 64));
 
         assertTrue(orders.isEmpty(), "Все ингредиенты на месте — передача не нужна");
     }

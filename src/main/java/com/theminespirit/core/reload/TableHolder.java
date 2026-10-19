@@ -42,16 +42,11 @@ public final class TableHolder<T> {
         return current.get().status();
     }
 
-    /** Атомарная замена версии: читатель либо видит старую, либо новую, промежуточного состояния нет. */
     public void replace(T next, TableStatus.Source source, String origin, String hash, Clock clock) {
         Objects.requireNonNull(next, "Новая версия таблицы не может быть null: пустая подмена запрещена, ошибку видно");
         current.set(new Entry<>(next, new TableStatus(id, source, origin, Instant.now(clock), hash, null)));
     }
 
-    /**
-     * Неудачная загрузка: прежняя версия остаётся в силе, статус получает текст ошибки. Возвращает статус,
-     * чтобы вызывающий показал его в логе и в ответе команды.
-     */
     public TableStatus failed(String message) {
         Objects.requireNonNull(message, "Текст ошибки не может быть null: ошибка обязана быть видимой, а не молчаливой");
         return current.updateAndGet(entry -> new Entry<>(entry.value(),

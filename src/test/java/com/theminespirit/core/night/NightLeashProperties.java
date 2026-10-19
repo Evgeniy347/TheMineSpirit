@@ -30,7 +30,7 @@ class NightLeashProperties {
         double dz = targetZ - homeZ;
         boolean within = Math.sqrt(dx * dx + dz * dz) <= radius;
 
-        NightLeash.Decision decision = leash.checkTarget(target, home, radius, true, true, false);
+        NightLeash.Decision decision = leash.checkTarget(target, home, radius, new NightLeash.TargetState(true, true, false));
 
         if (decision instanceof NightLeash.Allowed) {
             assertTrue(within,
@@ -50,7 +50,7 @@ class NightLeashProperties {
             @ForAll @IntRange(min = -200, max = 200) int targetX,
             @ForAll @IntRange(min = 1, max = 128) int radius) {
         NightLeash.Decision decision =
-                leash.checkTarget(new BlockCoord(targetX, 64, 0), new BlockCoord(0, 64, 0), radius, true, true, true);
+                leash.checkTarget(new BlockCoord(targetX, 64, 0), new BlockCoord(0, 64, 0), radius, new NightLeash.TargetState(true, true, true));
 
         assertInstanceOf(NightLeash.Allowed.class, decision,
                 "Следование за игроком обязано быть разрешено всегда: иначе дух бросит игрока в темноте за границей");
@@ -61,7 +61,7 @@ class NightLeashProperties {
             @ForAll @IntRange(min = -200, max = 200) int targetX,
             @ForAll @IntRange(min = 1, max = 128) int radius) {
         NightLeash.Decision decision =
-                leash.checkTarget(new BlockCoord(targetX, 64, 0), new BlockCoord(0, 64, 0), radius, false, true, false);
+                leash.checkTarget(new BlockCoord(targetX, 64, 0), new BlockCoord(0, 64, 0), radius, new NightLeash.TargetState(false, true, false));
 
         assertInstanceOf(NightLeash.Allowed.class, decision,
                 "Днём граница поселения не держит ни одну цель: иначе дневная работа за его пределами встала бы");

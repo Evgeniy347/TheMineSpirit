@@ -49,12 +49,8 @@ public final class TransferGameTests {
         crafter.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
 
         StackMapper mapper = new StackMapper();
-        List<TransferOrder> orders = TransferPlanner.planForCraft("stone_pickaxe", crafter.getUUID(),
-                at(crafter), mapper.map(crafter.getInventory()),
-                List.of(new Ingredient("minecraft:stick", 2), new Ingredient("minecraft:cobblestone", 3)),
-                List.of(new TransferSource(giver.getUUID(), at(giver), mapper.map(giver.getInventory()),
-                        NO_PROTECTION, List.of())),
-                Map.of(), InventoryTables.values(), 16, 64);
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest("stone_pickaxe", crafter.getUUID(), at(crafter), mapper.map(crafter.getInventory()), List.of(new Ingredient("minecraft:stick", 2), new Ingredient("minecraft:cobblestone", 3)), List.of(new TransferSource(giver.getUUID(), at(giver), mapper.map(giver.getInventory()),
+                        NO_PROTECTION, List.of())), Map.of(), InventoryTables.values(), 16, 64));
 
         helper.assertTrue(orders.size() == 1 && orders.get(0).from().isPresent()
                         && orders.get(0).from().orElseThrow().equals(giver.getUUID())

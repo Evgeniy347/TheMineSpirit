@@ -77,27 +77,28 @@ public final class WorldScanner {
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter blockFilter,
                 Container inventory) {
-            this(level, botId, center, radius, blockFilter, inventory, ScanFocus.ALL, 0);
+            this(level, botId, center, radius, blockFilter, inventory, new ScanOptions(ScanFocus.ALL, 0));
         }
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
                 Container inventory, ScanFocus focus) {
-            this(level, botId, center, radius, filter, inventory, focus, 0);
+            this(level, botId, center, radius, filter, inventory, new ScanOptions(focus, 0));
         }
 
         public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
-                Container inventory, ScanFocus focus, int openBlockLimit) {
+                Container inventory, ScanOptions options) {
             this.level = level;
             this.botId = botId;
             this.center = center;
             this.radius = radius.value();
             this.inventory = inventory;
             this.box = LoadedWorld.cube(level, center, this.radius);
-            this.cursor = focus.needsSlices() ? LoadedWorld.cursor(box, center) : SectionCursor.empty();
-            this.focus = focus;
-            this.entityFilter = focus.filtersEntities() ? filter : IdFilter.matchAll();
-            this.filteredBlocks = focus.collectsBlocks() && !filter.matchesAll() ? BlockSets.resolve(filter) : null;
-            this.openBlockLimit = Math.max(0, openBlockLimit);
+            this.cursor = options.focus().needsSlices() ? LoadedWorld.cursor(box, center) : SectionCursor.empty();
+            this.focus = options.focus();
+            this.entityFilter = options.focus().filtersEntities() ? filter : IdFilter.matchAll();
+            this.filteredBlocks = options.focus().collectsBlocks() && !filter.matchesAll()
+                    ? BlockSets.resolve(filter) : null;
+            this.openBlockLimit = Math.max(0, options.openBlockLimit());
         }
 
         public void step(int maxSlices) {
@@ -265,5 +266,8 @@ public final class WorldScanner {
 
     private static BlockCoord toCore(BlockPos pos) {
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public record ScanOptions(ScanFocus focus, int openBlockLimit) {
     }
 }

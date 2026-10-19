@@ -30,7 +30,6 @@ public final class CookableFoods {
         return item != null && FISH.contains(item);
     }
 
-    /** Рыба, которая жарится: иглобрюх и тропическая рыба в пищу не идут и на склад кладутся сырыми. */
     public static boolean isCookableFish(String item) {
         return isFish(item) && isRaw(item);
     }

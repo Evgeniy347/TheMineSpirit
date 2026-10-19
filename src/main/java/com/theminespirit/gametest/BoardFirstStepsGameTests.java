@@ -197,12 +197,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    /**
-     * Пустой склад: до сундуков на доску встаёт добыча досок (рубка дерева), сам шаг ждёт;
-     * после пополнения запаса сундуки и верстак открываются по цепочке, а журнал доски
-     * содержит постановки. Доска — своя, отдельная от общей: на общей чужие сцены ставят
-     * те же first: и gather:, и «шаг не поставлен» ловило бы чужой билет.
-     */
     @GameTest(template = "arena", batch = STOCK_BATCH, timeoutTicks = 100)
     public static void firstSteps_EmptyStock_GathersBeforeStations(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -244,11 +238,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    /**
-     * Пустой склад: деревянный набор ждёт досок, каменный — булыжника. Каждый предмет — отдельное
-     * задание, следующее открывается после выполнения предыдущего; каменная ступень не открывается,
-     * пока гейт не увидит булыжник из рецепта каменной кирки.
-     */
     @GameTest(template = "arena", batch = TOOLS_BATCH, timeoutTicks = 100)
     public static void firstSteps_EmptyStock_WoodenToolsThenStone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -302,11 +291,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    /**
-     * Стул кузнеца и наковальня идут после дома: с железом (блоки и слитки) доска открывает
-     * крафт наковальни, а без железа ставит мелкие задачи добычи, а сам крафт ждёт. Все
-     * прежние факты цепочки подготовлены блоками, склад — инструментами и материалами.
-     */
     @GameTest(template = "arena", batch = SMITHY_BATCH, timeoutTicks = 100)
     public static void firstSteps_WithIron_CraftsAnvil(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -347,8 +331,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    /** Поселение со всеми фактами цепочки до кузнечества: дом, сундуки, верстак, шахта, забор,
-     * свет, постройка и стол кузнеца. Наковальни нет — её и проверяет тест. */
     private static SpiritEntity smithySettlement(GameTestHelper helper) {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -410,7 +392,6 @@ public final class BoardFirstStepsGameTests {
                 "cobblestone", 64));
     }
 
-    /** Своя доска уровня для теста: общая живёт через границы сцен, и чужие билеты мешают проверке. */
     private static BoardService isolatedBoard(ServerLevel level) {
         return isolatedBoard(level, "gametest-first-steps-gate.jsonl");
     }
@@ -429,7 +410,6 @@ public final class BoardFirstStepsGameTests {
                 BoardSources.create(), journal);
     }
 
-    /** Запас для цепочки: материалы из рецептов и схем плюс снимок доски (по нему виден инструмент). */
     private static StockView stockOf(BoardService board) {
         Map<String, Integer> items = new HashMap<>(board.stock().available());
         items.putIfAbsent("oak_planks", 256);
@@ -442,13 +422,6 @@ public final class BoardFirstStepsGameTests {
         return new StockView(items);
     }
 
-    /**
-     * Дух без дома — не поселение: первых шагов у него нет. Генератор без дома обязан молчать
-     * ({@code FirstStepsPlan.next} возвращает empty), а не подставлять точку (0,64,0) и не выдавать
-     * свободному духу {@code first:*} — иначе сцена REST получала чужое задание до своего POST и
-     * мост отвечал 409 conflict (флак 17.10: choptree_reloadedafterfirsttree_resultkeepscountersofboth).
-     * Доска — своя, отдельная: на общей чужие сцены ставят те же first:.
-     */
     @GameTest(template = "arena", batch = "board_first_steps_nohome", timeoutTicks = 100)
     public static void firstSteps_SpiritWithoutHome_NoTickets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -475,10 +448,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    /**
-     * Чужие деревья в обзоре поселения: мои клетки уже пусты, любой найденный ствол/листва —
-     * соседняя сцена. Геометрия обязана повторять обзор генератора.
-     */
     private static boolean foreignTreesPresent(GameTestHelper helper) {
         BlockPos home = helper.absolutePos(new BlockPos(4, 1, 4));
         ServerLevel level = helper.getLevel();
@@ -556,7 +525,6 @@ public final class BoardFirstStepsGameTests {
         }
     }
 
-    /** Предмет инструмента набора: проверяющему нужен стек, чтобы запас увидел собранное. */
     private static ItemStack toolStack(BoardCase boardCase) {
         return switch (boardCase) {
             case CRAFT_WOODEN_PICKAXE -> new ItemStack(Items.WOODEN_PICKAXE, 1);

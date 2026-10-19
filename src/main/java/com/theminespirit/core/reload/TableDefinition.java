@@ -54,7 +54,6 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
         return new TableDefinition<>(id, resourcePaths, parser, Expander.none());
     }
 
-    /** Таблица-индекс: после основного файла дочитывает пути, названные {@code expander}. */
     public static <T> TableDefinition<T> indexed(String id, String resourcePath, Expander expander, Parser<T> parser) {
         return new TableDefinition<>(id, List.of(resourcePath), parser, expander);
     }
@@ -63,11 +62,6 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
         T parse(String json, String origin);
     }
 
-    /**
-     * Читает все файлы таблицы из источника, затем дочитывает пути из {@link #expander}. Пустой Optional у файла —
-     * файла нет: это не ошибка переопределения, поэтому такой файл просто не попадает в список (парсер сам решает,
-     * что делать с неполным набором).
-     */
     Optional<List<LoadedContent>> read(ContentSource source) {
         List<LoadedContent> contents = new ArrayList<>(resourcePaths.size());
         for (String path : resourcePaths) {

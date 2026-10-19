@@ -37,7 +37,6 @@ public final class KitFor {
         return DataTables.INSTANCE.kitFor().current();
     }
 
-    /** Чтение из classpath для начальной версии держателя: не заглядывает в сам держатель. */
     public static KitFor readClasspath() {
         return parse(JsonResource.readClasspath("data/theminespirit/inventory/kit_activities.json"),
                 "data/theminespirit/inventory/kit_activities.json");

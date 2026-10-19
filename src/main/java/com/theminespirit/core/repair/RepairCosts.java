@@ -30,7 +30,6 @@ public record RepairCosts(int anvilXpCost, int experienceWeight, int toolCost) {
         return new RepairCosts(ANVIL_XP_COST, EXPERIENCE_WEIGHT, TOOL_COST);
     }
 
-    /** Стоимость ремонта наковальней: материал плюс уровни опыта по весу. */
     public long anvilCost() {
         return MATERIAL_COST + (long) anvilXpCost * experienceWeight;
     }

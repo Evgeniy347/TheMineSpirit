@@ -42,17 +42,14 @@ public final class BoardJournal {
         return pending.size();
     }
 
-    /** Сколько записей поставлено в журнал: каждая запись — один переход статуса задания. */
     public int enqueued() {
         return enqueued;
     }
 
-    /** Сколько записей уже на диске: тест масштаба сверяет число строк с переходами. */
     public int written() {
         return written;
     }
 
-    /** Сбрасывает не больше {@code maxLines} строк: остальное дочитается следующим тиком. */
     public int flush(int maxLines) {
         if (pending.isEmpty()) {
             return 0;
@@ -83,11 +80,6 @@ public final class BoardJournal {
         return flush(pending.size());
     }
 
-    /**
-     * Один проход по журналу при старте: каждое {@code DONE} возвращает отметку
-     * «постройка стоит». Оборванная последняя строка обрезается, ошибка возвращается
-     * вызывающему — адаптер пишет её в лог с причиной.
-     */
     public LoadResult load(BoardLedger ledger) {
         Objects.requireNonNull(ledger, "Ledger не может быть null: восстанавливать некуда");
         if (!Files.exists(path)) {
@@ -128,7 +120,6 @@ public final class BoardJournal {
         return new LoadResult(lines.size(), restored, lastLine, error, truncated);
     }
 
-    /** Последние {@code limit} записей от свежих к старым: для GET /v1/board/log. */
     public List<BoardLogEntry> last(int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException("limit журнала " + limit + " меньше 1: "

@@ -239,10 +239,6 @@ public final class SafeMineSession {
         state = fillQueue.isEmpty() ? State.DIG_BEGIN : State.FILL;
     }
 
-    /**
-     * Заделки текущего шага и шага впереди: жидкость у следующей ступени (особенно лава по диагонали)
-     * делает стоянку текущего шага непроходимой для поиска пути, поэтому закладываем её заранее.
-     */
     private List<BlockCoord> fillQueue() {
         Set<BlockCoord> cells = new LinkedHashSet<>(plan.steps().get(stepIndex).fill());
         if (stepIndex + 1 < plan.steps().size()) {

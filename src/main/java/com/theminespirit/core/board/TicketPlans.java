@@ -41,11 +41,6 @@ public final class TicketPlans {
     private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
 
-    /**
-     * Кейсы без плана доски: задание исполняется вне очереди планов (дух ест сам,
-     * без выдачи TaskNode). Список явный: новый кейс без плана встаёт сюда, а не
-     * проваливается в исключение молча.
-     */
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
     private TicketPlans() {
@@ -221,7 +216,6 @@ public final class TicketPlans {
                 Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
-    /** Рыбалка на запомненной рабочей точке: подойти к берегу и ловить удочкой. */
     private static TaskNode fishWorkPoint(TicketTarget target) {
         return sequence(gotoTarget(target), new ScriptCall("fish", Map.of(
                 "count", CatalogLimits.FISH_COUNT_DEFAULT,
@@ -229,7 +223,6 @@ public final class TicketPlans {
                 "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
-    /** Инструмент набора: крафтится по числу комплектов поселения, но не больше партии каталога. */
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
         int count = target.toolCount() > 0 ? target.toolCount() : 1;
         return craft(ToolSet.itemId(boardCase), Math.min(count, CatalogLimits.COUNT_MAX), target);

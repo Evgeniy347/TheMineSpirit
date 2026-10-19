@@ -29,7 +29,6 @@ public record DescentData(int targetY, int torchInterval) {
         return DEFAULTS;
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static DescentData loadDefault() {
         return DataTables.INSTANCE.descent().current();
     }

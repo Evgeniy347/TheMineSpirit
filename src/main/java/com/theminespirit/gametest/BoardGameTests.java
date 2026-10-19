@@ -111,12 +111,6 @@ public final class BoardGameTests {
         });
     }
 
-    /**
-     * Общая доска уровня переживает границы сцен: до начала теста на ней висят билеты прошлых
-     * сцен, оставленные глобальным {@code FirstStepsRunner}. Билет без гейта приоритетнее добычи
-     * и забирает единственного свободного духа раньше supply — тест видит вечный PENDING.
-     * Чужие билеты снимаем до своей постановки (как тесты пачки firststeps в 35Б).
-     */
     private static void drainForeignTickets(BoardService board) {
         for (BoardTicket ticket : board.board().all()) {
             board.board().cancel(ticket.id());

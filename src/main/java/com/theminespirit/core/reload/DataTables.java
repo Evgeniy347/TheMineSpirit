@@ -55,7 +55,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * работать в classpath-версии: отсутствие файла — не ошибка, ошибкой считается только нечитаемый/битый json.
  */
 public final class DataTables {
-    /** Схемы, читаемые по имени потребителем: тела перечитываются на /reload вместе с остальными таблицами. */
     private static final List<String> LIVE_SCHEMATIC_FILES = List.of("fixture_plate", "fence", "storage_v1",
             "storage_v2", "storage_v3", "storage_v4", "reach_wall", "state_demo");
 
@@ -383,16 +382,10 @@ public final class DataTables {
         return observation;
     }
 
-    /**
-     * Держатель схемы по имени файла, если схема зарегистрирована как таблица. Потребитель берёт
-     * {@link TableHolder#current()}, поэтому /reload меняет тело схемы на лету. Схемы без регистрации
-     * (тела пресетов) держателя не имеют — вызывающий читает их из classpath сам.
-     */
     public Optional<TableHolder<Schematic>> schematic(String file) {
         return Optional.ofNullable(schematics.get(file));
     }
 
-    /** Перезагружает все таблицы из источника. Возвращает отчёт по каждой таблице: обновлена или ошибка. */
     public List<TableRegistry.Report> reload(ContentSource source) {
         return registry.reload(source);
     }

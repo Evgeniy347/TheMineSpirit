@@ -38,7 +38,8 @@ class UnprotectAreasTests {
 
     private BlockProtection.Decision check(UnprotectAreas areas, BlockCoord pos, long now) {
         boolean inUnprotectArea = areas.covers(DIMENSION, pos, now);
-        return protection.check("minecraft:cobblestone", buildingNeighbours(), true, false, inUnprotectArea);
+        return protection.check("minecraft:cobblestone", buildingNeighbours(),
+                new BlockProtection.Placement(true, false, inUnprotectArea));
     }
 
     @Test

@@ -48,10 +48,6 @@ public final class Board {
                 "Слушатель переходов не может быть null: без него задают BoardEvents.NONE");
     }
 
-    /**
-     * Текущее время доски: источники жизненного цикла ставят задания этим временем,
-     * а не нулём — иначе через 5 минут работы сервера задание просрочено уже при постановке.
-     */
     public long now() {
         return nowTicks.getAsLong();
     }
@@ -84,11 +80,6 @@ public final class Board {
         return BoardOutcome.ACCEPTED;
     }
 
-    /**
-     * Задание с этим id провалено недавно: до {@link BoardTuning#FAIL_BACKOFF_TICKS} его не
-     * переиздают. Метка держится по id задания, а не по духу (урок ветки 32): одна метка на
-     * духа вытесняла бы провал другого задания и доска выдавала бы проваленное заново.
-     */
     public boolean recentlyFailed(String ticketId, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: откат считается по id задания");
         requireNow(now);
@@ -196,10 +187,6 @@ public final class Board {
         return true;
     }
 
-    /**
-     * Пара дух+кейс свободна для выдачи: после провала она отдыхает паузу, а после предела
-     * провалов подряд снята с духа до конца жизни доски.
-     */
     public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
         Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
         Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
@@ -222,7 +209,6 @@ public final class Board {
         return failures == null ? 0 : failures.consecutive;
     }
 
-    /** Длина текущей паузы пары дух+кейс: 0 — пауз нет, иначе ступень экспоненциального отката. */
     public long casePauseTicks(UUID spirit, BoardCase boardCase) {
         Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
         Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
@@ -240,24 +226,20 @@ public final class Board {
         return statuses.get(ticketId) == BoardStatus.BLOCKED;
     }
 
-    /** Записи BLOCKED/UNBLOCKED: причина блокировки задания и её снятие. */
     public List<BoardLogEntry> blocks() {
         return List.copyOf(blockNotes);
     }
 
-    /** Отдаёт записи блокировки и очищает буфер: адаптер пишет их в журнал ровно один раз. */
     public List<BoardLogEntry> drainBlocks() {
         List<BoardLogEntry> drained = List.copyOf(blockNotes);
         blockNotes.clear();
         return drained;
     }
 
-    /** Записи DETACHED: кейс снят с духа после предела провалов подряд. */
     public List<BoardLogEntry> detachments() {
         return List.copyOf(detachments);
     }
 
-    /** Отдаёт записи DETACHED и очищает буфер: адаптер пишет их в журнал ровно один раз. */
     public List<BoardLogEntry> drainDetachments() {
         List<BoardLogEntry> drained = List.copyOf(detachments);
         detachments.clear();
@@ -274,12 +256,6 @@ public final class Board {
         return true;
     }
 
-    /**
-     * Возврат задания в очередь после выдачи: исполнитель погиб, не завершив задание,
-     * — задание снова доступно любому свободному, а не висит навсегда. Выданное задание
-     * ({@code ASSIGNED}) возвращается в {@code PENDING} со сбросом владельца; задание в другом
-     * статусе не трогаем — вернуть в работу завершённое нельзя.
-     */
     public boolean release(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
         if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
@@ -290,12 +266,6 @@ public final class Board {
         return true;
     }
 
-    /**
-     * Проверка актуальности вместо срока жизни: снимает в {@code CANCELLED} каскадом
-     * по зависимым все задания, чья причина не входит в живые и не {@code "always"}.
-     * Выполненные не трогает — {@code DONE} остаётся условием для других заданий.
-     * Возвращает id снятых в порядке очереди: адаптер пишет их в журнал.
-     */
     public List<String> retain(Set<String> liveCauses, long now) {
         Objects.requireNonNull(liveCauses, "liveCauses не может быть null: без живых причин "
                 + "непонятно, что актуально — пустой набор задают пустым множеством");
@@ -354,12 +324,6 @@ public final class Board {
         return List.copyOf(pending);
     }
 
-    /**
-     * Задания, выданные доской и ещё не закрытые, где дух назван держателем: либо владельцем
-     * из заявки, либо тем, кто взял задание (claim). Одного {@code pendingFor} мало: у задания
-     * без владельца (добыча, поставленная доской) держателя видно только по выдаче, и без этого
-     * провал духа не закрывает задание — оно висит ASSIGNED до срока и блокирует духа.
-     */
     public List<BoardTicket> assignedTo(UUID spirit) {
         Objects.requireNonNull(spirit, "spirit не может быть null: держатель задания — дух");
         List<BoardTicket> held = new ArrayList<>();
@@ -372,7 +336,6 @@ public final class Board {
         return List.copyOf(held);
     }
 
-    /** Число незакрытых выданных заданий на каждого духа-держателя: занятость для выдачи. */
     public Map<UUID, Integer> assignedCounts() {
         Map<UUID, Integer> counts = new LinkedHashMap<>();
         for (BoardTicket ticket : tickets.values()) {
@@ -418,15 +381,10 @@ public final class Board {
         return Optional.ofNullable(statuses.get(ticketId));
     }
 
-    /** Отметки «постройка стоит»: условие для зависимых и восстановление после перезапуска. */
     public BoardLedger ledger() {
         return ledger;
     }
 
-    /**
-     * Держатель задания для наблюдателя: владелец из заявки или тот, кто взял задание.
-     * Пустой ответ — задание ждёт любого свободного духа (ещё не выдано или отпущено).
-     */
     public Optional<UUID> holderOf(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: держатель читается по id задания");
         BoardTicket ticket = tickets.get(ticketId);
@@ -451,12 +409,6 @@ public final class Board {
         }
     }
 
-    /**
-     * Зависимости выполнены: предшественник либо ещё стоит {@code DONE}, либо уже снят
-     * пересборкой, оставив отметку в {@link #completed}. Без отметки снятое завершённое
-     * задание навсегда блокировало бы зависящие: цепочка «отлов → загон → приманка»
-     * рвалась бы на первом же {@code prune}.
-     */
     private boolean dependenciesDone(BoardTicket ticket) {
         for (String dependency : ticket.dependsOn()) {
             Optional<BoardLedger.BuildingMark> mark = BoardLedger.parse(dependency);

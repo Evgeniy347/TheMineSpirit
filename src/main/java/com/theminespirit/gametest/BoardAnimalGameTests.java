@@ -159,7 +159,6 @@ public final class BoardAnimalGameTests {
                 .orElse(null);
     }
 
-    /** Закрывает чужое или своё активное задание цикла: выданное — выполнить, ждущее — отменить. */
     private static void drainLifecycle(BoardService service, UUID holder, long now) {
         for (BoardTicket ticket : service.board().all()) {
             if (!LIFECYCLE.contains(ticket.boardCase())) {

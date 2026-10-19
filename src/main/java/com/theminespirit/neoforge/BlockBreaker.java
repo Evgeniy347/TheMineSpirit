@@ -33,6 +33,12 @@ public final class BlockBreaker {
         GONE
     }
 
+    public enum Intent {
+        BREAK,
+        HARVEST,
+        DEMOLISH
+    }
+
     public enum RefuseReason {
         CHUNK_NOT_LOADED,
         AIR,
@@ -72,26 +78,30 @@ public final class BlockBreaker {
     }
 
     public Begin begin(BlockPos target) {
-        return begin(target, false, false);
+        return begin(target, Intent.BREAK, true);
     }
 
     public Begin begin(BlockPos target, boolean tended) {
-        return begin(target, tended, false);
+        return begin(target, tended ? Intent.HARVEST : Intent.BREAK, true);
     }
 
     public Begin begin(BlockPos target, boolean tended, boolean demolish) {
-        return begin(target, tended, demolish, true);
+        return begin(target, intent(tended, demolish), true);
     }
 
     public Begin beginAnyDistance(BlockPos target) {
-        return begin(target, false, false, false);
+        return begin(target, Intent.BREAK, false);
     }
 
     public Begin beginAnyDistance(BlockPos target, boolean tended) {
-        return begin(target, tended, false, false);
+        return begin(target, tended ? Intent.HARVEST : Intent.BREAK, false);
     }
 
-    private Begin begin(BlockPos target, boolean tended, boolean demolish, boolean reachLimited) {
+    private static Intent intent(boolean tended, boolean demolish) {
+        return demolish ? Intent.DEMOLISH : tended ? Intent.HARVEST : Intent.BREAK;
+    }
+
+    private Begin begin(BlockPos target, Intent intent, boolean reachLimited) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
@@ -113,9 +123,11 @@ public final class BlockBreaker {
                         + distance + "): сначала подойти");
             }
         }
-        BlockProtection.Decision decision = tended ? spirit.protectionGate().checkHarvest(target, targetState)
-                : demolish ? spirit.protectionGate().checkDemolish(target, targetState)
-                : spirit.protectionGate().checkBreak(target, targetState);
+        BlockProtection.Decision decision = switch (intent) {
+            case HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
+            case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
+            case BREAK -> spirit.protectionGate().checkBreak(target, targetState);
+        };
         if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }

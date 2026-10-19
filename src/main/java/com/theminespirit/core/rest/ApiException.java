@@ -20,7 +20,6 @@ public final class ApiException extends RuntimeException {
         this(new ApiError(code, message, details), code.status(), cause);
     }
 
-    /** Тот же код ошибки с другим HTTP-статусом: контракт различает 400 и 422 при одном wire-коде. */
     public ApiException(ErrorCode code, int status, String message, Map<String, Object> details) {
         this(new ApiError(code, message, details), status, null);
     }

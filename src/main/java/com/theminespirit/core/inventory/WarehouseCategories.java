@@ -110,7 +110,6 @@ public final class WarehouseCategories {
         return categories.stream().map(Category::name).toList();
     }
 
-    /** Категория пустого сундука без таблички: первый положенный предмет задаёт её. */
     public String categoryOfSlots(List<Stack> slots) {
         Objects.requireNonNull(slots, "Слоты контейнера не могут быть null: категория берётся из содержимого");
         for (Stack stack : slots) {

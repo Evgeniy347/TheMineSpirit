@@ -50,7 +50,6 @@ public final class WarehouseRules {
         return intermediate < MAX_INTERMEDIATE;
     }
 
-    /** Старые уровни, которые надо перенести в самый высокий построенный склад и снести. */
     public static List<Integer> relocateOldLevels(Collection<Integer> standing) {
         Objects.requireNonNull(standing, "Список стоящих складов не может быть null: без него нечего переносить");
         if (standing.isEmpty()) {
@@ -66,7 +65,6 @@ public final class WarehouseRules {
         return List.copyOf(old);
     }
 
-    /** Место склада уровня: первый — у дома, каждый следующий — на шаг в стороне. */
     public static BlockCoord site(BlockCoord home, int level) {
         Objects.requireNonNull(home, "Дом не может быть null: склад ставится от него");
         if (level < 1 || level > MAX_LEVEL) {

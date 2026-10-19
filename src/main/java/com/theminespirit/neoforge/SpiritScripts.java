@@ -263,9 +263,7 @@ public final class SpiritScripts {
         table.put("set_combat_mode", spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
-            return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()),
-                    new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT),
-                    catalog(), conditionCatalog(), () -> registryFor(spirit), conditions());
+            return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()), new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT), catalog(), conditionCatalog(), new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
         });
         return table;
     }

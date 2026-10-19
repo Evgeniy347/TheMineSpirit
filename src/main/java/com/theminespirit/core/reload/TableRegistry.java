@@ -69,10 +69,6 @@ public final class TableRegistry {
         return List.copyOf(definitions);
     }
 
-    /**
-     * Перезагружает все таблицы из источника. Возвращает отчёты по каждой: успех (заменена) или ошибка
-     * (прежняя версия в силе). Ни одна ошибка не прерывает загрузку остальных таблиц.
-     */
     public List<Report> reload(ContentSource source) {
         Objects.requireNonNull(source, "Источник содержимого не может быть null: перезагружать не из чего");
         List<Report> reports = new ArrayList<>(byId.size());

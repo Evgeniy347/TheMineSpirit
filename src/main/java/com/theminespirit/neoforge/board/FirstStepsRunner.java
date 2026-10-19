@@ -90,13 +90,11 @@ public final class FirstStepsRunner {
                 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), target);
     }
 
-    /** Цель задания: точка поселения, а для инструментов — ещё и число комплектов из таблицы board. */
     private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, int spirits) {
         TicketTarget target = TicketTarget.at(home);
         return ToolSet.isTool(caseValue) ? target.withToolCount(ToolSet.count(spirits)) : target;
     }
 
-    /** Мелочь на доску: добыть недостающий материал в запас, тогда ждущий шаг откроется. */
     private static void postGather(BoardService service, MaterialSource source, BlockCoord home, String item,
             int shortage, long now) {
         String id = GATHER_PREFIX + item;
@@ -123,10 +121,6 @@ public final class FirstStepsRunner {
         }
     }
 
-    /**
-     * Материалы из игры: рецепты предметов и блоки схем. Схемы кэширует
-     * {@link SchematicResources}, рецепты — {@link RecipeKnowledge}.
-     */
     private static MaterialSource materialSource(ServerLevel level) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(level);
         return new MaterialSource() {
@@ -156,12 +150,6 @@ public final class FirstStepsRunner {
                         .orElse(false));
     }
 
-    /**
-     * Факты поселения из снимка мира: деревья (брёвна/листва — земля не зачищена), вход в шахту
-     * (лестница спуска — знак построенного входа), забор (то же множество ограждений, что видит
-     * {@code FenceWatch}, иначе runner и событие говорили бы о разных заборах). Сканирование
-     * бюджетировано радиусом и вызывается раз в пересборку, а не каждый тик.
-     */
     private static SettlementFacts buildFacts(ServerLevel level, BlockCoord home, StockView stock) {
         boolean hasHome = true;
         boolean groundsCleared = true;
@@ -221,7 +209,6 @@ public final class FirstStepsRunner {
                 lighting, houses, smithingTable, anvil);
     }
 
-    /** Собранные инструменты набора: короткие ключи снимка запасов (wooden_pickaxe и т. п.). */
     private static Set<String> toolStock(StockView stock) {
         Set<String> tools = new HashSet<>();
         for (BoardCase toolCase : ToolSet.chain()) {
