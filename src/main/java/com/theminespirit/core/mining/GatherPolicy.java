@@ -24,9 +24,6 @@ public final class GatherPolicy {
         return FORBIDDEN_EXACT;
     }
 
-    public static List<String> forbiddenSuffixes() {
-        return FORBIDDEN_SUFFIXES;
-    }
 
     public static Decision check(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: тогда непонятно, что запрещать");

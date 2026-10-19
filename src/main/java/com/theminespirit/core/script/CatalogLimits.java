@@ -10,7 +10,6 @@ public final class CatalogLimits {
     public static final int COUNT_MIN = 1;
     public static final int COUNT_MAX = 256;
 
-    public static final int SCAN_RADIUS_MIN = ScanRadius.MIN;
     public static final int SCAN_RADIUS_MAX = ScanRadius.MAX;
 
     public static final int DROP_RADIUS_MIN = 1;

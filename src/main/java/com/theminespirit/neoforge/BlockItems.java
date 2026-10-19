@@ -45,16 +45,4 @@ public final class BlockItems {
         return total;
     }
 
-    public static boolean takeOne(Container inventory, String blockId) {
-        Objects.requireNonNull(inventory, "Инвентарь не может быть null: без него нечего списывать");
-        Item wanted = itemFor(blockId);
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty() && stack.is(wanted)) {
-                stack.shrink(1);
-                return true;
-            }
-        }
-        return false;
-    }
 }

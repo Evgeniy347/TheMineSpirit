@@ -99,13 +99,4 @@ public final class ArmorChoice {
         return piece.durabilityFraction() < table.wornFraction();
     }
 
-    public static List<ArmorPiece> inventoryOf(List<ArmorPiece> pieces, ArmorSlot slot) {
-        List<ArmorPiece> result = new ArrayList<>();
-        for (ArmorPiece piece : pieces) {
-            if (piece != null && piece.slot() == slot) {
-                result.add(piece);
-            }
-        }
-        return result;
-    }
 }

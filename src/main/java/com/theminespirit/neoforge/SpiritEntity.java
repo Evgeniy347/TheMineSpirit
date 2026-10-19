@@ -260,9 +260,6 @@ public final class SpiritEntity extends PathfinderMob {
         this.bed = bed;
     }
 
-    public void clearBed() {
-        this.bed = null;
-    }
 
     public boolean nightLeashArmed() {
         return nightLeashArmed;
@@ -588,9 +585,6 @@ public final class SpiritEntity extends PathfinderMob {
         return teleports;
     }
 
-    public int magnetPulls() {
-        return magnet.pulls();
-    }
 
     public int claimMagnetPulls(AABB area, IdFilter items, long since) {
         return magnet.claim(area, items, since);

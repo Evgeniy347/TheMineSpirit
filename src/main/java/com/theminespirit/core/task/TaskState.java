@@ -39,16 +39,4 @@ public enum TaskState {
         };
     }
 
-    public static TaskState fromWire(String text) {
-        if (text == null) {
-            throw new IllegalArgumentException("Состояние задачи не может быть null: клиент передаёт wire-строку");
-        }
-        for (TaskState state : values()) {
-            if (state.wire.equals(text.toLowerCase(Locale.ROOT))) {
-                return state;
-            }
-        }
-        throw new IllegalArgumentException("Неизвестное состояние задачи '" + text + "': допустимы accepted, running, "
-                + "succeeded, failed, cancelled");
-    }
 }

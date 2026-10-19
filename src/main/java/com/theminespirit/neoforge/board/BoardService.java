@@ -188,9 +188,6 @@ public final class BoardService {
         return craters;
     }
 
-    public HerdCycles herds() {
-        return animals;
-    }
 
     /** Пойманное животное: помним вид и сущность, чтобы проверять «животное ещё живо?». */
     public void noteCapture(String captureId, Species species, UUID animal, TicketTarget penTarget) {
