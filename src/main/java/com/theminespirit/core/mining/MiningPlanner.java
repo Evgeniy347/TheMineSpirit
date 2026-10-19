@@ -8,8 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class MiningPlanner {
-    public static final int MAX_VIEW_READS_PER_TARGET = MiningSafety.FACE_READS + StandSpots.MAX_VIEW_READS;
-
     private static final int STAND_RADIUS = 3;
 
     private MiningPlanner() {

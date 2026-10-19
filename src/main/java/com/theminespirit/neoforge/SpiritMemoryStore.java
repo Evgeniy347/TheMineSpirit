@@ -1,14 +1,11 @@
 package com.theminespirit.neoforge;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
 public final class SpiritMemoryStore {
     public static final String KEY = "SpiritMemory";
-    private static final AtomicInteger CORRUPT_LOADS = new AtomicInteger();
-
     private SpiritMemoryStore() {
     }
 
@@ -31,11 +28,4 @@ public final class SpiritMemoryStore {
         return value.isBlank() ? Optional.empty() : Optional.of(value);
     }
 
-    static void countCorruptLoad() {
-        CORRUPT_LOADS.incrementAndGet();
-    }
-
-    public static int corruptLoads() {
-        return CORRUPT_LOADS.get();
-    }
 }

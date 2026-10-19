@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 
 public final class StandSpots {
-    public static final int MAX_VIEW_READS = 440;
 
     private static final int MAX_DEPTH = 2;
     private static final int[][] FACE_OFFSETS = {

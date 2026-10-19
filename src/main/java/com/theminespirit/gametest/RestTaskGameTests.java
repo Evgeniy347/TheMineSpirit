@@ -171,7 +171,7 @@ public final class RestTaskGameTests {
                     && progress.path("step").asInt() == 1 && progress.path("total_steps").asInt() == 1,
                     "У завершённой задачи обязан остаться прогресс последнего шага 1 из 1 (goto): "
                             + poller.lastJson());
-            helper.assertTrue(rest.gateway().taskRegistry().activeRecords().isEmpty(),
+            helper.assertTrue(rest.gateway().taskRegistry().watchableRecords().isEmpty(),
                     "После succeeded активных задач в реестре быть не должно");
         });
     }

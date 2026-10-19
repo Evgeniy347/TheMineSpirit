@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ApplicabilityTests {
@@ -70,10 +71,8 @@ class ApplicabilityTests {
 
     @Test
     void otherPermanent_AnyCase_Applicable() {
-        for (BoardCase boardCase : EvergreenRules.permanentCases()) {
-            if (boardCase == BoardCase.EAT_TO_FULL || boardCase == BoardCase.RESTOCK_FOOD) {
-                continue;
-            }
+        for (BoardCase boardCase : List.of(BoardCase.REPAIR_FENCE, BoardCase.REPAIR_BUILDING,
+                BoardCase.FILL_CRATER, BoardCase.ENCHANT_SHELVES)) {
             assertTrue(Applicability.applicable(boardCase, FULL, FREE),
                     "Постоянная проверка " + boardCase + " применима по гейту ресурсов: "
                             + "применимость к духу не отсекает её, иначе проверка молча исчезла бы");

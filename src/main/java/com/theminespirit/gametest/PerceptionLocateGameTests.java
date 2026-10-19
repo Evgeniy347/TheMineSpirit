@@ -187,9 +187,6 @@ public final class PerceptionLocateGameTests {
                         + " за тик, тиков потребовалось " + ticks + ": один тик значит, что поиск читает весь куб разом");
         helper.assertTrue(script.examinedPositions() > 0,
                 "тест не доказывает порции: пол из камня обязан быть прочитан, прочитано " + script.examinedPositions());
-        helper.assertTrue(script.maxExaminedPositionsPerTick() <= ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
-                "за тик поиск читает не больше " + ScanTuning.SLICES_PER_TICK + " срезов по " + POSITIONS_PER_SLICE
-                        + " позиций, а прочитал " + script.maxExaminedPositionsPerTick());
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

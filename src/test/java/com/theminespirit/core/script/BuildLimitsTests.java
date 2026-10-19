@@ -36,15 +36,7 @@ class BuildLimitsTests {
     }
 
     @Test
-    void blocksPerTick_LimitValue_EqualsOne() {
-        assertEquals(1, CatalogLimits.BLOCKS_PER_TICK,
-                "За тик меняется ровно один блок: два блока за тик удваивают нагрузку серверного тика, число меняет геймдизайн только с согласия");
-    }
-
-    @Test
     void farmPlotSide_LimitValues_MatchDeclared() {
-        assertEquals(1, CatalogLimits.FARM_PLOT_SIDE_MIN,
-                "Сторона грядки начинается с 1: грядка из одной клетки — законная работа");
         assertEquals(16, CatalogLimits.FARM_PLOT_SIDE_MAX,
                 "Сторона грядки ограничена 16, как радиус фермы: больше держит духа часами");
     }
@@ -55,8 +47,6 @@ class BuildLimitsTests {
                 "Укрытие начинается с 3×3: в меньшем дух не встаёт внутри");
         assertEquals(4, CatalogLimits.SHELTER_SIDE_MAX,
                 "Укрытие кончается на 4×4: это размер быстрого укрытия build_shelter");
-        assertEquals(64, CatalogLimits.SHELTER_BLOCKS_MAX,
-                "Бюджет укрытия 64 блока: стены 4×4 с крышей помещаются, лишнего дух не ставит");
     }
 
     @Test

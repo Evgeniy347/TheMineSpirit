@@ -15,7 +15,6 @@ import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
 import java.util.Map;
@@ -48,32 +47,32 @@ public final class FirstToolsGameTests {
 
     @BeforeBatch(batch = "first_tools_wood")
     public static void mobsOffWood(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_wood")
     public static void mobsOnWood(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = "first_tools_stone")
     public static void mobsOffStone(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_stone")
     public static void mobsOnStone(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = "first_tools_corner")
     public static void mobsOffCorner(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = "first_tools_corner")
     public static void mobsOnCorner(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     // [флак] три acquire подряд (кирка, топор, лопата), запас 2× к замеру цепочки

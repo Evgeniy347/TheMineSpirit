@@ -10,8 +10,6 @@ public final class CatalogLimits {
     public static final int COUNT_MIN = 1;
     public static final int COUNT_MAX = 256;
 
-    public static final int SCAN_RADIUS_MAX = ScanRadius.MAX;
-
     public static final int DROP_RADIUS_MIN = 1;
     public static final int DROP_RADIUS_MAX = 16;
     public static final int DROP_RADIUS_DEFAULT = 8;
@@ -77,13 +75,11 @@ public final class CatalogLimits {
     public static final int BONE_MEAL_COUNT_DEFAULT = 16;
 
     // build_farm: прямоугольная грядка вокруг духа
-    public static final int FARM_PLOT_SIDE_MIN = 1;
     public static final int FARM_PLOT_SIDE_MAX = 16;
 
     // build_shelter: сторона укрытия и предел блоков, как бюджет укрепления
     public static final int SHELTER_SIDE_MIN = 3;
     public static final int SHELTER_SIDE_MAX = 4;
-    public static final int SHELTER_BLOCKS_MAX = 64;
 
     // build_fence: точки контура и предел клеток забора
     public static final int FENCE_CORNERS_MIN = 3;
@@ -173,7 +169,6 @@ public final class CatalogLimits {
     public static final int BUILD_VOLUME_MAX = 4096;
     public static final int SCHEMATIC_SIZE_MAX = 32;
     public static final int SCHEMATIC_BLOCKS_MAX = 4096;
-    public static final int BLOCKS_PER_TICK = 1;
 
     // Освещение территории (light_area): радиус квадрата вокруг точки
     public static final int LIGHT_RADIUS_MIN = 1;
@@ -208,8 +203,6 @@ public final class CatalogLimits {
     public static final int FLEE_TIMEOUT_TICKS = 600;
     public static final int FLEE_SAFE_TICKS = 40;
     public static final int RETREAT_TIMEOUT_TICKS = 1200;
-    public static final int MEET_TIMEOUT_TICKS = 1200;
-    public static final int DELIVER_TIMEOUT_TICKS = 1200;
 
     // climb: подъём/спуск по лестнице, лиане или строительным лесам до конца колонны
     public static final int CLIMB_TIMEOUT_TICKS = 1200;

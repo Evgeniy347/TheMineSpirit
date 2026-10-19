@@ -87,7 +87,7 @@ public final class BuildRestartGameTests {
                 holder.set(reload(helper, current, tag));
             } else if (saved.get() && !snapshotChecked.get() && holder.get().tickCount >= 3) {
                 snapshotChecked.set(true);
-                Optional<String> json = holder.get().taskSnapshot();
+                Optional<String> json = GameTestFixtures.taskSnapshot(holder.get());
                 helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
                 TaskSnapshot snapshot = TaskSnapshotCodec.decode(json.get());
                 helper.assertTrue(snapshot.status() == RunStatus.RUNNING,

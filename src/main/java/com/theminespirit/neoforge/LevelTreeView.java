@@ -83,6 +83,10 @@ public final class LevelTreeView implements TreeView {
         this.logs = Set.copyOf(logs);
     }
 
+    public long blockReads() {
+        return blockReads;
+    }
+
     @Override
     public boolean isLog(BlockCoord coord) {
         return kind(coord) == Kind.LOG;
@@ -106,10 +110,6 @@ public final class LevelTreeView implements TreeView {
     @Override
     public boolean isEmpty(BlockCoord coord) {
         return kind(coord) == Kind.EMPTY;
-    }
-
-    public long blockReads() {
-        return blockReads;
     }
 
     private Kind kind(BlockCoord coord) {

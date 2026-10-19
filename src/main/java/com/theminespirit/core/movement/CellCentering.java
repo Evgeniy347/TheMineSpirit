@@ -11,7 +11,4 @@ public final class CellCentering {
     private CellCentering() {
     }
 
-    public static boolean centered(double dx, double dz) {
-        return dx * dx + dz * dz <= TOLERANCE * TOLERANCE;
-    }
 }

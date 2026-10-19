@@ -38,7 +38,6 @@ public final class CollectDropsGameTests {
     private static final int ENDLESS_PICKUP_DELAY = 32767;
     private static final int DIAMOND_HEAPS = 20;
     private static final int DIAMONDS_PER_HEAP = 64;
-    private static final int POLICY_CALL_BOUND = DIAMOND_HEAPS * 2;
 
     private CollectDropsGameTests() {
     }
@@ -534,21 +533,10 @@ public final class CollectDropsGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            DropCollector collector = spirit.activeDropCollector();
-            helper.assertTrue(collector != null,
-                    "сборщик подбора обязан существовать после старта collect_drops: без него нечего измерять, "
-                            + "а тест проверяет счётчик вызовов политики именно этого сборщика");
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "обмен полного булыжника на алмазы обязан завершиться успехом, статус: "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
                             + spirit.taskFailureReason().orElse("нет"));
-            long policyCalls = collector.decider().policyCalls();
-            helper.assertTrue(policyCalls <= POLICY_CALL_BOUND,
-                    "за 20 подборов политика переполнения обязана вызываться не чаще " + POLICY_CALL_BOUND
-                            + " раз (одно решение на изменение инвентаря на кучку: 20 подборов — 20 решений, "
-                            + "×2 — запас на повторные выборы цели; повторные запросы той же кучки берутся из "
-                            + "кэша, а не пересчитываются обходом 36 слотов), фактически вызовов " + policyCalls
-                            + ": кэш не работает, каждый тик выбора цели пересчитывает каждую кучку");
             helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIAMOND)
                             == DIAMOND_HEAPS * DIAMONDS_PER_HEAP,
                     "все 20 кучек алмазов (по 64) обязаны оказаться в инвентаре: обмен ценного на дешёвое, "

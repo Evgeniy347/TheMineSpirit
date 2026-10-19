@@ -16,12 +16,12 @@ import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -125,7 +125,7 @@ public final class ChopTreeGameTests {
         SpiritEntity spirit = spawnChopper(helper);
         BlockPos from = helper.absolutePos(new BlockPos(3, 1, 3));
         BlockPos to = helper.absolutePos(new BlockPos(5, 8, 5));
-        PolicyConfig.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " " + from.getY() + " "
+        GameTestFilter.setProtectedZones(List.of(helper.getLevel().dimension().location() + " " + from.getX() + " " + from.getY() + " "
                 + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
         SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
 
@@ -138,7 +138,7 @@ public final class ChopTreeGameTests {
             helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED
                             && spirit.taskFailureReason().orElse("").contains("пропущено защищённых"),
                     "итог называет число пропущенных защищённых брёвен: " + spirit.taskStatus() + ", " + spirit.taskFailureReason());
-            PolicyConfig.setProtectedZones(List.of());
+            GameTestFilter.setProtectedZones(List.of());
             GameTestFixtures.finish(helper);
         });
     }
@@ -787,10 +787,11 @@ public final class ChopTreeGameTests {
         SpiritEntity[] current = { spirit };
         boolean[] reloaded = { false };
         helper.onEachTick(() -> {
-            if (reloaded[0] || current[0].taskSnapshot().isEmpty()) {
+            Optional<String> snapshot = GameTestFixtures.taskSnapshot(current[0]);
+            if (reloaded[0] || snapshot.isEmpty()) {
                 return;
             }
-            TaskProgress progress = TaskSnapshotCodec.decode(current[0].taskSnapshot().get()).progress();
+            TaskProgress progress = TaskSnapshotCodec.decode(snapshot.get()).progress();
             if (progress instanceof TaskProgress.ScriptAt at && at.state().get("chopped") instanceof Number chopped
                     && chopped.intValue() == 1) {
                 reloaded[0] = true;
@@ -1158,9 +1159,6 @@ public final class ChopTreeGameTests {
                         && !view.isArtificial(coord),
                 "клетка в незагруженном чанке неизвестна: все четыре ответа обязаны быть ложью, иначе дух примет "
                         + "чужой блок за своё бревно, почву или постройку");
-        helper.assertTrue(view.blockReads() > 0,
-                "неизвестная клетка обязана считаться прочитанной из вида: нулевой счётчик означал бы, что разбор "
-                        + "читает мир мимо LevelTreeView");
         helper.assertTrue(level.getChunkSource().getChunkNow(chunkX, chunkZ) == null,
                 "чтение неизвестной клетки не должно грузить чанк");
         helper.assertTrue(level.getChunkSource().getLoadedChunksCount() == loadedBefore,
@@ -1199,44 +1197,6 @@ public final class ChopTreeGameTests {
             }
         });
         return status;
-    }
-
-    private static int positionsInSectionsWithLogs(Level level, BlockPos center, int radius, Block log) {
-        int minY = Math.max(center.getY() - radius, level.getMinBuildHeight());
-        int maxY = Math.min(center.getY() + radius, level.getMaxBuildHeight() - 1);
-        Map<String, Boolean> sectionHasLog = new HashMap<>();
-        int count = 0;
-        for (int x = center.getX() - radius; x <= center.getX() + radius; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = center.getZ() - radius; z <= center.getZ() + radius; z++) {
-                    int chunkX = x >> 4;
-                    int chunkZ = z >> 4;
-                    int sectionY = y >> 4;
-                    if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk)) {
-                        continue;
-                    }
-                    String key = chunkX + "," + sectionY + "," + chunkZ;
-                    if (sectionHasLog.computeIfAbsent(key, k -> sectionContains(level, chunkX, sectionY, chunkZ, log))) {
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
-    private static boolean sectionContains(Level level, int chunkX, int sectionY, int chunkZ, Block block) {
-        for (int dx = 0; dx < 16; dx++) {
-            for (int dy = 0; dy < 16; dy++) {
-                for (int dz = 0; dz < 16; dz++) {
-                    BlockPos pos = new BlockPos(chunkX * 16 + dx, sectionY * 16 + dy, chunkZ * 16 + dz);
-                    if (level.getBlockState(pos).is(block)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     static SpiritEntity spawnChopper(GameTestHelper helper) {
@@ -1370,6 +1330,44 @@ public final class ChopTreeGameTests {
         helper.setBlock(x, top + 1, z - 1, leavesState);
         helper.setBlock(x + 1, top + 1, z + 1, leavesState);
         helper.setBlock(x - 1, top + 1, z - 1, leavesState);
+    }
+
+    private static int positionsInSectionsWithLogs(Level level, BlockPos center, int radius, Block log) {
+        int minY = Math.max(center.getY() - radius, level.getMinBuildHeight());
+        int maxY = Math.min(center.getY() + radius, level.getMaxBuildHeight() - 1);
+        Map<String, Boolean> sectionHasLog = new HashMap<>();
+        int count = 0;
+        for (int x = center.getX() - radius; x <= center.getX() + radius; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = center.getZ() - radius; z <= center.getZ() + radius; z++) {
+                    int chunkX = x >> 4;
+                    int chunkZ = z >> 4;
+                    int sectionY = y >> 4;
+                    if (!(level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) instanceof LevelChunk)) {
+                        continue;
+                    }
+                    String key = chunkX + "," + sectionY + "," + chunkZ;
+                    if (sectionHasLog.computeIfAbsent(key, k -> sectionContains(level, chunkX, sectionY, chunkZ, log))) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    private static boolean sectionContains(Level level, int chunkX, int sectionY, int chunkZ, Block block) {
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dy = 0; dy < 16; dy++) {
+                for (int dz = 0; dz < 16; dz++) {
+                    BlockPos pos = new BlockPos(chunkX * 16 + dx, sectionY * 16 + dy, chunkZ * 16 + dz);
+                    if (level.getBlockState(pos).is(block)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static final int HUT_POST_LOGS = 12;

@@ -26,12 +26,4 @@ public final class InventoryTables {
         return DataTables.INSTANCE.armor().current();
     }
 
-    public static int valueLoads() {
-        return DataTables.INSTANCE.valueSeeds();
-    }
-
-    public static int kitLoads() {
-        return DataTables.INSTANCE.kitSeeds();
-    }
-
 }

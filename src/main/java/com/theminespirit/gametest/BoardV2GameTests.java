@@ -32,7 +32,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableStatus;
 import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -107,22 +106,22 @@ public final class BoardV2GameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void prepareBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = EVERGREEN_BATCH)
     public static void prepareEvergreenBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = EVERGREEN_BATCH)
     public static void restoreEvergreenBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @GameTest(template = "arena", batch = EVERGREEN_BATCH, timeoutTicks = 400)

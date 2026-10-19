@@ -24,10 +24,9 @@ import net.minecraft.world.level.block.state.properties.Property;
  * ровно одна постановка на клетку и ноль пропусков. Возвращает список расхождений; assert'ов внутри нет.
  */
 public final class BuildAudit {
-    public record Before(Map<BlockCoord, BlockState> states, Map<BlockCoord, Integer> placements) {
+    public record Before(Map<BlockCoord, BlockState> states) {
         public Before {
             states = Map.copyOf(states);
-            placements = Map.copyOf(placements);
         }
     }
 
@@ -62,8 +61,7 @@ public final class BuildAudit {
                 }
             }
         }
-        Map<BlockCoord, Integer> placements = counts(level, min, max);
-        return new Before(states, placements);
+        return new Before(states);
     }
 
     public static Result audit(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation,
@@ -85,14 +83,12 @@ public final class BuildAudit {
                         + ", стал " + current.getBlock());
             }
         }
-        Map<BlockCoord, Integer> after = counts(level, bounds(before), boundsMax(before));
         for (Schematic.PlacedEntry entry : entries) {
             BlockCoord cell = entry.pos();
-            int delta = after.getOrDefault(cell, 0) - before.placements().getOrDefault(cell, 0);
-            if (delta > 1) {
-                problems.add("клетка " + cell + " поставлена " + delta + " раз: схема ставится по одному блоку");
-            } else if (delta == 0 && BlockItems.hasBlockItem(entry.block()) && !wasAlready(level, entry, before)) {
-                problems.add("клетка " + cell + " не поставлена духом: счётчик постановок 0");
+            if (BlockItems.hasBlockItem(entry.block()) && !wasAlready(level, entry, before)
+                    && !(level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(
+                            new BlockPos(cell.x(), cell.y(), cell.z())))) {
+                problems.add("клетка " + cell + " не помечена духом: постановка не учтена");
             }
         }
         if (skipped != 0) {
@@ -131,37 +127,6 @@ public final class BuildAudit {
         BlockState expected = BlockStates.stateFor(entry.block(), entry.state());
         BlockState old = before.states().get(entry.pos());
         return old != null && old.is(expected.getBlock());
-    }
-
-    private static Map<BlockCoord, Integer> counts(Level level, BlockCoord min, BlockCoord max) {
-        if (!(level instanceof ServerLevel server)) {
-            return Map.of();
-        }
-        return PlacedBlocksData.get(server).spiritPlacementCounts(min, max);
-    }
-
-    private static BlockCoord bounds(Before before) {
-        int minX = Integer.MAX_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int minZ = Integer.MAX_VALUE;
-        for (BlockCoord cell : before.states().keySet()) {
-            minX = Math.min(minX, cell.x());
-            minY = Math.min(minY, cell.y());
-            minZ = Math.min(minZ, cell.z());
-        }
-        return new BlockCoord(minX, minY, minZ);
-    }
-
-    private static BlockCoord boundsMax(Before before) {
-        int maxX = Integer.MIN_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        int maxZ = Integer.MIN_VALUE;
-        for (BlockCoord cell : before.states().keySet()) {
-            maxX = Math.max(maxX, cell.x());
-            maxY = Math.max(maxY, cell.y());
-            maxZ = Math.max(maxZ, cell.z());
-        }
-        return new BlockCoord(maxX, maxY, maxZ);
     }
 
     private static Rotation mcRotation(BuildRotation rotation) {

@@ -227,10 +227,6 @@ public final class HarvestSession {
         return planCalls;
     }
 
-    public int safetyReads() {
-        return safety.reads();
-    }
-
     public int slicesUsed() {
         return targets.slicesUsed();
     }
@@ -243,20 +239,12 @@ public final class HarvestSession {
         return collectRuns;
     }
 
-    public int totalTicks() {
-        return ticks;
-    }
-
     public int entityQueries() {
         return entityQueries;
     }
 
     public int maxSlicesPerTick() {
         return targets.maxSlicesPerTick();
-    }
-
-    public int maxBreakerHitsPerTick() {
-        return breaker.maxHitsPerTick();
     }
 
     private void find() {

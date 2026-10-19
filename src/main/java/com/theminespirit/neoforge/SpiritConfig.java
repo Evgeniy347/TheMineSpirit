@@ -55,24 +55,12 @@ public final class SpiritConfig {
         return MOBS_TARGET_SPIRITS.get();
     }
 
-    public static void setMobsTargetSpirits(boolean value) {
-        MOBS_TARGET_SPIRITS.set(value);
-    }
-
     public static boolean coordinatorEnabled() {
         return COORDINATOR_ENABLED.get();
     }
 
-    public static void setCoordinatorEnabled(boolean value) {
-        COORDINATOR_ENABLED.set(value);
-    }
-
     public static boolean boardEnabled() {
         return BOARD_ENABLED.get();
-    }
-
-    public static void setBoardEnabled(boolean value) {
-        BOARD_ENABLED.set(value);
     }
 
     public static int craterHomeRadius() {

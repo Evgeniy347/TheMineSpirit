@@ -33,8 +33,12 @@ public final class PolicyConfig {
     private PolicyConfig() {
     }
 
+    public static ModConfigSpec spec() {
+        return SPEC;
+    }
+
     public static void register(ModContainer container, IEventBus modEventBus) {
-        container.registerConfig(ModConfig.Type.SERVER, SPEC, FILE_NAME);
+        container.registerConfig(ModConfig.Type.SERVER, spec(), FILE_NAME);
         modEventBus.addListener(ModConfigEvent.Loading.class, PolicyConfig::onConfig);
         modEventBus.addListener(ModConfigEvent.Reloading.class, PolicyConfig::onConfig);
     }
@@ -46,11 +50,6 @@ public final class PolicyConfig {
             parsedFrom = raw;
         }
         return parsed;
-    }
-
-    public static synchronized void setProtectedZones(List<String> lines) {
-        ProtectedZoneParser.parse(lines);
-        PROTECTED_ZONES.set(List.copyOf(lines));
     }
 
     private static void onConfig(ModConfigEvent event) {

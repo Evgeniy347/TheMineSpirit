@@ -48,7 +48,4 @@ public final class TokenBucket {
         return Math.max(seconds, 1);
     }
 
-    public synchronized int trackedKeys() {
-        return buckets.size();
-    }
 }

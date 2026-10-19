@@ -142,7 +142,7 @@ class StandSpotsTests {
 
         StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertTrue(world.reads() <= StandSpots.MAX_VIEW_READS,
-                "Поиск стоянок читает не более " + StandSpots.MAX_VIEW_READS + " клеток. Чтений: " + world.reads());
+        assertTrue(world.reads() <= 440,
+                "Поиск стоянок читает не более " + 440 + " клеток. Чтений: " + world.reads());
     }
 }

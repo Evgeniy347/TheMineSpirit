@@ -120,7 +120,7 @@ public final class LightAreaGameTests {
                     "поставленный духом факел обязан быть помечен: иначе дух не разберёт своё; клетка " + torchCell
                             + " isMarked=" + (torchCell != null && placed.isMarked(torchCell))
                             + " isSpiritMarked=" + (torchCell != null && placed.isSpiritMarked(torchCell))
-                            + " spiritSize=" + placed.spiritSize() + " size=" + placed.size());
+                            + " size=" + placed.size());
             Map<String, Object> data = dataOf(helper, spirit, "успешный light_area");
             helper.assertTrue(Integer.valueOf(1).equals(data.get("placed")) && "minecraft:torch".equals(data.get("block")),
                     "итог обязан назвать placed=1 и block=minecraft:torch, фактически " + data);

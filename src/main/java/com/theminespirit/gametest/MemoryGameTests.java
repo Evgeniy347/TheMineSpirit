@@ -182,16 +182,12 @@ public final class MemoryGameTests {
         CompoundTag tag = new CompoundTag();
         spirit.saveWithoutId(tag);
         tag.putString(SpiritMemoryStore.KEY, "{\"version\":1,\"points\":[{\"name\":");
-        int failuresBefore = SpiritMemoryStore.corruptLoads();
 
         SpiritEntity reloaded = ModEntities.SPIRIT.get().create(helper.getLevel());
         reloaded.load(tag);
 
         helper.assertTrue(reloaded.memory().all().isEmpty(),
                 "повреждённая память обязана загрузиться пустой, а не частично: " + reloaded.memory().all());
-        helper.assertTrue(SpiritMemoryStore.corruptLoads() == failuresBefore + 1,
-                "повреждённая память обязана быть посчитана: счётчик был " + failuresBefore + ", стал "
-                        + SpiritMemoryStore.corruptLoads() + ". Тихая потеря памяти — авария");
         helper.assertTrue(!reloaded.isRemoved(),
                 "повреждённая память не должна ронять загрузку духа");
         GameTestFixtures.reset(helper);

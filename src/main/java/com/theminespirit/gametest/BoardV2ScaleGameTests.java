@@ -9,7 +9,6 @@ import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -51,12 +50,12 @@ public final class BoardV2ScaleGameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void prepareBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreBatch(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     // [флак] наблюдение 400 тиков (пересборки по 100, скан стада по 200) плюс старт сцены:

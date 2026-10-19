@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritBuildSupplies;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -187,7 +186,7 @@ public final class BuildingGameTests {
         String dimension = helper.getLevel().dimension().location().toString();
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 8);
         try {
-            PolicyConfig.setProtectedZones(List.of(dimension + " " + from.getX() + " "
+            GameTestFilter.setProtectedZones(List.of(dimension + " " + from.getX() + " "
                     + from.getY() + " " + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
             SpiritRun run = SpiritRun.launch(helper, spirit, fillCall(helper, first, second), SETTLE_TICKS);
 
@@ -212,11 +211,11 @@ public final class BuildingGameTests {
                         "мир обязан остаться нетронутым: в зону ни блока, стоит " + inWorld);
                 helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
                         "материал при отказе по зоне обязан остаться целым");
-                PolicyConfig.setProtectedZones(List.of());
+                GameTestFilter.setProtectedZones(List.of());
                 GameTestFixtures.finish(helper);
             });
         } catch (RuntimeException error) {
-            PolicyConfig.setProtectedZones(List.of());
+            GameTestFilter.setProtectedZones(List.of());
             throw error;
         }
     }

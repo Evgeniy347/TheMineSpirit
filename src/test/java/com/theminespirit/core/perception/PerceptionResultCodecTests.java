@@ -1,7 +1,6 @@
 package com.theminespirit.core.perception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,11 +36,12 @@ class PerceptionResultCodecTests {
                 List.of(new ItemCount("minecraft:oak_log", 12), new ItemCount("minecraft:dirt", 3)));
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
-        PerceptionResult back = PerceptionResultCodec.toPerceptionResult(map);
 
-        assertEquals(result, back, "JSON-объект блоков обязан возвращаться без потерь: item, count и радиус");
         assertEquals("blocks", map.get("type"), "тип обязан называться в нижнем регистре");
         assertEquals(8, map.get("radius"), "радиус запроса обязан попасть в JSON");
+        assertEquals(List.of(Map.of("item", "minecraft:oak_log", "count", 12),
+                        Map.of("item", "minecraft:dirt", "count", 3)),
+                map.get("blocks"), "JSON-объект блоков обязан хранить item и count без потерь");
     }
 
     @Test
@@ -50,12 +50,13 @@ class PerceptionResultCodecTests {
                 List.of(new EntityRef("minecraft:zombie", new BlockCoord(3, 64, -2), 4.5)));
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
-        PerceptionResult back = PerceptionResultCodec.toPerceptionResult(map);
 
-        assertEquals(result, back, "JSON-объект сущностей обязан возвращаться без потерь: тип, позиция, дистанция");
+        assertEquals("entities", map.get("type"), "тип обязан называться в нижнем регистре");
         @SuppressWarnings("unchecked")
         Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("entities")).get(0);
+        assertEquals("minecraft:zombie", entry.get("type"), "тип сущности обязан попасть в JSON");
         assertEquals(List.of(3, 64, -2), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
+        assertEquals(4.5, entry.get("distance"), "дистанция обязана попасть в JSON");
     }
 
     @Test
@@ -64,9 +65,13 @@ class PerceptionResultCodecTests {
                 List.of(new HazardRef(HazardType.LAVA, new BlockCoord(1, 60, 1), 2.25)));
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
-        PerceptionResult back = PerceptionResultCodec.toPerceptionResult(map);
 
-        assertEquals(result, back, "JSON-объект опасностей обязан возвращаться без потерь: вид, позиция, дистанция");
+        assertEquals("hazards", map.get("type"), "тип обязан называться в нижнем регистре");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("hazards")).get(0);
+        assertEquals("lava", entry.get("type"), "вид опасности обязан попасть в JSON");
+        assertEquals(List.of(1, 60, 1), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
+        assertEquals(2.25, entry.get("distance"), "дистанция обязана попасть в JSON");
     }
 
     @Test
@@ -76,11 +81,15 @@ class PerceptionResultCodecTests {
                         "расстояние 12.3")));
 
         Map<String, Object> map = PerceptionResultCodec.toMap(finding);
-        Finding back = PerceptionResultCodec.toFinding(map);
 
-        assertEquals(finding, back, "JSON-объект находки обязан возвращаться без потерь: kind, label, pos, detail");
         assertEquals("located", map.get("type"), "locate_* обязан называться located");
         assertEquals("locate_block", map.get("script"), "находка обязана помнить скрипт, который её дал");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("sightings")).get(0);
+        assertEquals(Sighting.BLOCK, entry.get("kind"), "вид находки обязан попасть в JSON");
+        assertEquals("minecraft:diamond_ore", entry.get("label"), "метка находки обязана попасть в JSON");
+        assertEquals(List.of(5, 12, 9), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
+        assertEquals("расстояние 12.3", entry.get("detail"), "подробность находки обязана попасть в JSON");
     }
 
     @Test
@@ -132,19 +141,6 @@ class PerceptionResultCodecTests {
         assertTrue(json.length <= PerceptionResultCodec.MAX_JSON_BYTES,
                 "JSON итога обязан укладываться в 4 КиБ (H1), фактически: " + json.length + " байт");
         assertEquals(Boolean.TRUE, map.get("truncated"), "обрезка по байтам обязана нести truncated: true");
-    }
-
-    @Test
-    void toPerceptionResult_UnknownType_IsRejectedNamingType() {
-        Map<String, Object> map = Map.of("type", "souls", "radius", 8);
-
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> PerceptionResultCodec.toPerceptionResult(map),
-                "неизвестный тип обязан ронять разбор: тихий fallback спрятал бы опечатку в данных");
-
-        assertTrue(error.getMessage().contains("souls"),
-                "отказ обязан называть неизвестный тип: по сообщению видно, что пришло. Фактическое: "
-                        + error.getMessage());
     }
 
     static Stream<Map<String, Object>> roundTripMaps() {

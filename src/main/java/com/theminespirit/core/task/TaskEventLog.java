@@ -41,7 +41,6 @@ public final class TaskEventLog {
     private final Condition changed = lock.newCondition();
     private final Deque<TaskEvent> events = new ArrayDeque<>();
     private long nextId = 1;
-    private long appendedCount;
     private boolean closed;
 
     public void append(List<TaskEvent> incoming) {
@@ -55,7 +54,6 @@ public final class TaskEventLog {
             }
             for (TaskEvent event : incoming) {
                 events.addLast(event.withId(nextId++));
-                appendedCount++;
             }
             while (events.size() > CAPACITY) {
                 events.removeFirst();
@@ -112,15 +110,6 @@ public final class TaskEventLog {
                 }
                 changed.awaitNanos(remaining);
             }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public long appendedCount() {
-        lock.lock();
-        try {
-            return appendedCount;
         } finally {
             lock.unlock();
         }

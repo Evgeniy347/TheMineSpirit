@@ -86,12 +86,12 @@ public final class MobTargetsGameTests {
 
     @BeforeBatch(batch = DISABLED_BATCH)
     public static void disableSpiritTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = DISABLED_BATCH)
     public static void restoreSpiritTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @GameTest(template = "arena", batch = "mob_targets_zombie", timeoutTicks = 200)

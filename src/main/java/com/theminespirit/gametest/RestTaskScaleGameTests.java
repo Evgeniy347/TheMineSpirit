@@ -130,7 +130,7 @@ public final class RestTaskScaleGameTests {
             for (RestFixture.SseCapture stream : streams) {
                 helper.assertTrue(stream.finished(), "Все " + STREAMS + " потока обязаны закрыться после завершения задачи");
             }
-            long writes = rest.gateway().taskRegistry().appendedEventCount(taskId.get());
+            long writes = rest.gateway().taskRegistry().log(taskId.get()).lastId();
             helper.assertTrue(writes == EXPECTED_LOG_WRITES,
                     "Журнал задачи из " + LEGS + " шагов обязан получить ровно " + EXPECTED_LOG_WRITES
                             + " записей (progress+state запуска, два перехода шага, финальный state) независимо от числа "

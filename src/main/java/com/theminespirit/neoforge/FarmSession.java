@@ -232,14 +232,6 @@ public final class FarmSession {
         return planCalls;
     }
 
-    public int viewReads() {
-        return view.reads();
-    }
-
-    public int safetyReads() {
-        return safety.reads();
-    }
-
     public int slicesUsed() {
         return targets.slicesUsed();
     }
@@ -262,10 +254,6 @@ public final class FarmSession {
 
     public int collectRuns() {
         return collectRuns;
-    }
-
-    public int totalTicks() {
-        return ticks;
     }
 
     private void find() {

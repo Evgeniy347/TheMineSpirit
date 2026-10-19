@@ -67,10 +67,6 @@ public final class StandWalker {
         approach.suspend();
     }
 
-    public int safetyReads() {
-        return safety.reads();
-    }
-
     public int standChoices() {
         return standChoices;
     }

@@ -130,10 +130,10 @@ class MiningPlannerTests {
 
         assertTrue(outcome instanceof MiningPlanner.Next,
                 "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
-        assertTrue(world.reads() <= MiningPlanner.MAX_VIEW_READS_PER_TARGET * 8L,
+        assertTrue(world.reads() <= 446 * 8L,
                 "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
                         + "(dist(from,target) − 3), и дальше перебирать незачем. Чтений: " + world.reads()
-                        + ", предел: " + MiningPlanner.MAX_VIEW_READS_PER_TARGET * 8L);
+                        + ", предел: " + 446 * 8L);
     }
 
     @Test

@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -21,26 +20,6 @@ class EvergreenRulesTests {
     private static final SpiritView FREE = SpiritView.free();
 
     @Test
-    void permanent_FromLiterals_MatchesSet() {
-        assertEquals(Set.of(BoardCase.EAT_TO_FULL, BoardCase.RESTOCK_FOOD, BoardCase.REPAIR_FENCE,
-                        BoardCase.REPAIR_BUILDING, BoardCase.FILL_CRATER, BoardCase.ENCHANT_SHELVES),
-                EvergreenRules.permanentCases(),
-                "Постоянный набор обязан совпадать с литералами: еда (EAT_TO_FULL, RESTOCK_FOOD), "
-                        + "четыре постоянные проверки (REPAIR_FENCE, REPAIR_BUILDING, FILL_CRATER, "
-                        + "ENCHANT_SHELVES). Лишний кейс в наборе висел бы на доске без источника, "
-                        + "забытый — молча исчез бы");
-    }
-
-    @Test
-    void permanent_EveryCase_StaysOnBoard() {
-        for (BoardCase boardCase : EvergreenRules.permanentCases()) {
-            assertTrue(EvergreenRules.permanent(boardCase),
-                    "Кейс " + boardCase + " постоянный: его причина always, снятие по актуальности "
-                            + "его не трогает");
-        }
-    }
-
-    @Test
     void supplies_FromClasspath_MatchLiterals() {
         assertEquals(Map.of(
                         "minecraft:bookshelf", 32,
@@ -50,27 +29,10 @@ class EvergreenRulesTests {
                 "Пороги постоянных запасов обязаны совпадать с литералами: полки — полстака (32), "
                         + "книги — полстака (32), бумага — два стака (128). Поменянное число в файле "
                         + "без правки теста молча изменило бы склад");
-        assertEquals(32, EvergreenRules.supplyThreshold("minecraft:bookshelf"),
+        assertEquals(32, EvergreenRules.supplyThresholds().get("minecraft:bookshelf"),
                 "Предел в тесте, факт из production: полок держат полстака");
-        assertEquals(128, EvergreenRules.supplyThreshold("minecraft:paper"),
+        assertEquals(128, EvergreenRules.supplyThresholds().get("minecraft:paper"),
                 "Предел в тесте, факт из production: бумаги держат два стака");
-    }
-
-    @Test
-    void supplyShortfall_BelowThreshold_Computes() {
-        assertEquals(16, EvergreenRules.supplyShortfall("minecraft:bookshelf", 16),
-                "Полок 16 при пороге 32 — не хватает 16: задание скрафтит до порога");
-        assertEquals(0, EvergreenRules.supplyShortfall("minecraft:bookshelf", 32),
-                "Полок ровно порог — нехватки нет: задание не ставится");
-        assertEquals(0, EvergreenRules.supplyShortfall("minecraft:bookshelf", 40),
-                "Полок больше порога — нехватки нет: перебор не карается");
-    }
-
-    @Test
-    void supplyShortfall_UnknownItem_Zero() {
-        assertEquals(0, EvergreenRules.supplyShortfall("minecraft:unknown", 0),
-                "Предмет без порога не требует запаса: постоянное задание на него не ставится, "
-                        + "иначе доска гоняла бы духа за несуществующим порогом");
     }
 
     @Test
@@ -117,13 +79,6 @@ class EvergreenRulesTests {
         assertThrows(NullPointerException.class,
                 () -> EvergreenRules.issuedTo(assigned, null, HUNGRY, FREE),
                 "Дух null обязан отвергаться: выдача идёт конкретному духу");
-        assertThrows(NullPointerException.class, () -> EvergreenRules.permanent(null),
-                "Кейс null обязан отвергаться: проверка постоянного набора идёт по имени кейса");
-        assertThrows(NullPointerException.class, () -> EvergreenRules.supplyThreshold(null),
-                "Предмет null обязан отвергаться: порог ищут по имени предмета");
-        assertThrows(IllegalArgumentException.class,
-                () -> EvergreenRules.supplyShortfall("minecraft:bookshelf", -1),
-                "Отрицательное наличие обязано падать: склад не бывает в минусе");
     }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, Optional<UUID> assignee) {

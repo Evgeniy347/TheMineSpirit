@@ -10,7 +10,6 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -48,12 +47,12 @@ public final class BoardFenceGameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)

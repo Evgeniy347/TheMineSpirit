@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class MiningSafety {
-    public static final int FACE_READS = 6;
 
     private static final int[][] FACE_OFFSETS = {
             {0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}

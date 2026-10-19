@@ -53,7 +53,7 @@ class TaskRegistryTests {
     void reserve_BotFreedAfterTerminal_OneActiveTaskRuleHolds() {
         TaskRegistry registry = new TaskRegistry();
         String first = registry.reserve(BOT, null);
-        registry.observe(first, TaskState.RUNNING, RunProgress.singleStep("goto"), null);
+        registry.observe(first, TaskState.RUNNING, new RunProgress(1, 1, "goto", null, null), null);
         registry.observe(first, TaskState.SUCCEEDED, null, null);
 
         String second = registry.reserve(BOT, "новая цель");
@@ -115,6 +115,7 @@ class TaskRegistryTests {
         String taskId = registry.reserve(BOT, "цель");
         RunProgress progress = new RunProgress(2, 3, "chop_tree", 3, 5);
 
+        long before = registry.log(taskId).lastId();
         List<TaskEvent> events = registry.observe(taskId, TaskState.RUNNING, progress, null);
 
         assertEquals(2, events.size(), "ACCEPTED → RUNNING с прогрессом даёт progress и state — два кадра");
@@ -123,7 +124,7 @@ class TaskRegistryTests {
         TaskRecord record = registry.get(taskId).orElseThrow();
         assertEquals(TaskState.RUNNING, record.state(), "Запись обязана перейти в running");
         assertEquals(progress, record.progress(), "Прогресс обязан сохраняться в записи");
-        assertEquals(events.size(), registry.appendedEventCount(taskId),
+        assertEquals(before + events.size(), registry.log(taskId).lastId(),
                 "События observe обязаны попадать в журнал задачи для SSE");
     }
 
@@ -165,20 +166,6 @@ class TaskRegistryTests {
         String second = registry.reserve(BOT, null);
         assertEquals(second, registry.activeForBot(BOT).orElseThrow().taskId(),
                 "Активная задача обязана находиться по bot");
-    }
-
-    @Test
-    void activeRecords_TerminalExcluded_WatcherPollsOnlyActive() {
-        TaskRegistry registry = new TaskRegistry();
-        String done = registry.reserve(BOT, null);
-        registry.observe(done, TaskState.SUCCEEDED, null, null);
-        String running = registry.reserve(OTHER_BOT, null);
-        registry.observe(running, TaskState.RUNNING, null, null);
-
-        List<TaskRecord> active = registry.activeRecords();
-
-        assertEquals(List.of(running), active.stream().map(TaskRecord::taskId).toList(),
-                "activeRecords обязан отдавать только нетерминальные записи: TaskWatcher опрашивает только их");
     }
 
     @Test

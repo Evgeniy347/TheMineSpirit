@@ -4,9 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.PlacedBlockCodec;
 import com.theminespirit.core.policy.PlacedBlockSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +25,6 @@ public final class PlacedBlocksData extends SavedData {
 
     private final PlacedBlockSet set;
     private final PlacedBlockSet spiritSet;
-    private final Map<BlockCoord, Integer> spiritPlacements = new HashMap<>();
 
     public PlacedBlocksData() {
         this(new PlacedBlockSet(), new PlacedBlockSet());
@@ -102,7 +99,6 @@ public final class PlacedBlocksData extends SavedData {
         if (spiritSet.add(toCoord(pos))) {
             setDirty();
         }
-        spiritPlacements.merge(toCoord(pos), 1, Integer::sum);
     }
 
     public void unmarkSpirit(BlockPos pos) {
@@ -115,22 +111,6 @@ public final class PlacedBlocksData extends SavedData {
         return spiritSet.contains(toCoord(pos));
     }
 
-
-    public Map<BlockCoord, Integer> spiritPlacementCounts(BlockCoord min, BlockCoord max) {
-        Map<BlockCoord, Integer> counts = new HashMap<>();
-        for (Map.Entry<BlockCoord, Integer> entry : spiritPlacements.entrySet()) {
-            BlockCoord pos = entry.getKey();
-            if (pos.x() >= min.x() && pos.x() <= max.x() && pos.y() >= min.y() && pos.y() <= max.y()
-                    && pos.z() >= min.z() && pos.z() <= max.z()) {
-                counts.put(pos, entry.getValue());
-            }
-        }
-        return Map.copyOf(counts);
-    }
-
-    public int spiritSize() {
-        return spiritSet.size();
-    }
 
     public int size() {
         return set.size();

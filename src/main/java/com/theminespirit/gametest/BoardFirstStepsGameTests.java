@@ -13,7 +13,6 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
@@ -70,52 +69,52 @@ public final class BoardFirstStepsGameTests {
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = BATCH)
     public static void restoreMobTargeting(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = STOCK_BATCH)
     public static void stopMobsTargetingSpiritsForStock(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = STOCK_BATCH)
     public static void restoreMobTargetingAfterStock(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = TOOLS_BATCH)
     public static void stopMobsTargetingSpiritsForTools(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = TOOLS_BATCH)
     public static void restoreMobTargetingAfterTools(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = SMITHY_BATCH)
     public static void stopMobsTargetingSpiritsForSmithy(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = SMITHY_BATCH)
     public static void restoreMobTargetingAfterSmithy(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @BeforeBatch(batch = SMITHY_IRON_BATCH)
     public static void stopMobsTargetingSpiritsForSmithyIron(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(false);
+        GameTestFilter.setMobsTargetSpirits(false);
     }
 
     @AfterBatch(batch = SMITHY_IRON_BATCH)
     public static void restoreMobTargetingAfterSmithyIron(ServerLevel level) {
-        SpiritConfig.setMobsTargetSpirits(true);
+        GameTestFilter.setMobsTargetSpirits(true);
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)

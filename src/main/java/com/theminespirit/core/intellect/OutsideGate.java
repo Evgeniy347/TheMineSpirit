@@ -1,7 +1,6 @@
 package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.night.NightLeash;
-import com.theminespirit.core.tactics.Point;
 import java.util.Objects;
 
 public final class OutsideGate {
@@ -38,21 +37,6 @@ public final class OutsideGate {
         return rules.escortRadius();
     }
 
-    public boolean outside(Point target, Point home) {
-        Objects.requireNonNull(target, "Цель не может быть null: проверяется, лежит ли она за границей");
-        Objects.requireNonNull(home, "Дом не может быть null: граница считается от дома поселения");
-        return Math.sqrt(square(target.x() - home.x()) + square(target.y() - home.y()) + square(target.z() - home.z()))
-                > settlementRadius;
-    }
-
-    public Decision admit(Point target, Point home, int party, boolean playerAccompanied) {
-        requireParty(party);
-        if (!outside(target, home)) {
-            return new Allowed();
-        }
-        return admitExternal(party, playerAccompanied);
-    }
-
     public boolean isEvening(double dayFraction) {
         return leash.isEvening(dayFraction);
     }
@@ -77,10 +61,6 @@ public final class OutsideGate {
         if (party < 0) {
             throw new IllegalArgumentException("Группа " + party + ": число духов не может быть отрицательным");
         }
-    }
-
-    private static double square(double value) {
-        return value * value;
     }
 
     public sealed interface Decision {

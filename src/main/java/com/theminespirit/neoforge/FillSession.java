@@ -145,10 +145,6 @@ public final class FillSession {
         return blockReads;
     }
 
-    public int safetyReads() {
-        return safety.reads();
-    }
-
     public Map<String, Object> saveState() {
         return new BuildState(placed, 0, skipped, failed, outcome == Outcome.RUNNING).toMap();
     }

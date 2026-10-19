@@ -52,7 +52,10 @@ class ProtectionConfigTests {
         BlockProtection protection = ProtectionConfig.parse(json("[\"*_door\"]", "[\"stone\"]", "3"), ORIGIN);
 
         assertEquals(3, protection.buildingThreshold(), "Порог берётся из файла");
-        assertEquals(List.of("minecraft:*_door"), protection.denyPatterns(), "Шаблоны deny хранятся с пространством имён minecraft:");
+        assertTrue(protection.checkOwn("minecraft:oak_door", false) instanceof BlockProtection.Refused,
+                "Шаблон deny с пространством имён minecraft: обязан запрещать дверь");
+        assertTrue(protection.checkOwn("minecraft:stone", false) instanceof BlockProtection.Allowed,
+                "Блок вне шаблона deny обязан оставаться разрешённым");
     }
 
     @Test

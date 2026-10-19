@@ -30,6 +30,7 @@ class DeadCodeGuardTests {
             + "(?:<[^;{}()]*>\\s*)?"
             + "([A-Za-z_$][\\w$.]*(?:\\s*<[^{};()]*>)?(?:\\s*\\[\\])*)\\s+"
             + "([A-Za-z_$][\\w$]*)\\s*\\(", Pattern.MULTILINE);
+    private static final Pattern TEST_METHOD = Pattern.compile("\\bvoid\\s+([A-Za-z_$][\\w$]*)\\s*\\(");
     private static final Pattern FIELD = Pattern.compile("(?:^|[;{}])\\s*" + PREFIX
             + "([A-Za-z_$][\\w$.]*(?:\\s*<[^{};()]*>)?(?:\\s*\\[\\])*)\\s+"
             + "([A-Za-z_$][\\w$]*)\\s*(?==|;)", Pattern.MULTILINE);
@@ -38,6 +39,17 @@ class DeadCodeGuardTests {
             "class", "interface", "enum", "record", "extends", "implements", "permits", "throws", "this", "super");
 
     private static final List<Exception> OPEN_TASKS = List.of(
+            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#setChild", "Заготовка под открытую задачу: todo.md → «Дети»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeCapture", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds", "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskFailures", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskStarts", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
+            new Exception("src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#retreatExecutor", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exception("src/main/java/com/theminespirit/core/board/Board.java|method|Board#caseDetached", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
             new Exception("src/main/java/com/theminespirit/core/board/Board.java|method|Board#casePauseTicks", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
             new Exception("src/main/java/com/theminespirit/core/board/Board.java|method|Board#pendingFor", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
@@ -73,96 +85,60 @@ class DeadCodeGuardTests {
             new Exception("src/main/java/com/theminespirit/core/tactics/TacticsEngine.java|method|TacticsEngine#totalRules", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exception("src/main/java/com/theminespirit/core/tactics/adapter/CoreFactCollector.java|method|CoreFactCollector#withDefaultSettings", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exception("src/main/java/com/theminespirit/core/tactics/adapter/RetreatTracker.java|method|RetreatTracker#progressTicks", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception("src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#setChild", "Заготовка под открытую задачу: todo.md → «Дети»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeCapture", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied", "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds", "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskFailures", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskStarts", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception("src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#retreatExecutor", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»")
+            new Exception("src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated", "Заготовка под открытую задачу: todo.md → «Тактический интеллект»")
     );
 
-    private static final List<Exception> DEBT = List.of(
-            new Exception("src/main/java/com/theminespirit/core/base/CampTuning.java|field|CampTuning#CAMP_STANDOFF", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/BoardTuning.java|method|BoardTuning#enchantShelvesMin", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/EvergreenRules.java|method|EvergreenRules#permanent", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/EvergreenRules.java|method|EvergreenRules#permanentCases", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/EvergreenRules.java|method|EvergreenRules#supplyShortfall", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/TicketTarget.java|method|TicketTarget#withKnowledge", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/board/WoolRules.java|field|WoolRules#WHITE_BED", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/board/WoolRules.java|field|WoolRules#WHITE_WOOL", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/doors/DoorTuning.java|method|DoorTuning#defaultLoads", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/engine/RunProgress.java|method|RunProgress#singleStep", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/farming/FarmPlanner.java|field|FarmPlanner#MAX_SAFETY_READS_PER_TARGET", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/intellect/OutsideGate.java|method|OutsideGate#admit", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/mining/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/mining/MiningPlanner.java|field|MiningPlanner#MAX_VIEW_READS_PER_TARGET", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/mining/TargetBuffer.java|method|TargetBuffer#activeSize", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/mining/TargetBuffer.java|method|TargetBuffer#surplusSize", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/CellCentering.java|method|CellCentering#centered", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/MoveCost.java|method|MoveCost#costOf", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/MoveCost.java|method|MoveCost#fallDamage", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/ToolBreakCost.java|method|ToolBreakCost#breakTicks", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/ToolBreakCost.java|method|ToolBreakCost#orderByCost", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/movement/ToolBreakCost.java|method|ToolBreakCost#placePenalty", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/perception/PerceptionResultCodec.java|method|PerceptionResultCodec#toFinding", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/perception/PerceptionResultCodec.java|method|PerceptionResultCodec#toPerceptionResult", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/policy/BlockProtection.java|method|BlockProtection#denyPatterns", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/policy/PlacedBlockSet.java|method|PlacedBlockSet#isOverflowed", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/rest/ServerThreadCall.java|method|ServerThreadCall#submittedCount", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/rest/TokenBucket.java|method|TokenBucket#trackedKeys", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#BLOCKS_PER_TICK", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#DELIVER_TIMEOUT_TICKS", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#FARM_PLOT_SIDE_MIN", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#MEET_TIMEOUT_TICKS", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#SCAN_RADIUS_MAX", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/script/CatalogLimits.java|field|CatalogLimits#SHELTER_BLOCKS_MAX", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/tactics/TacticsConfig.java|method|TacticsConfig#defaultLoads", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/task/TaskReconciler.java|method|TaskReconciler#trackedAbsences", "Долг: используется только JUnit-тестами; удалить метод вместе с тестами отдельным блоком"),
-            new Exception("src/main/java/com/theminespirit/core/task/TaskRegistry.java|method|TaskRegistry#activeRecords", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/core/task/TaskRegistry.java|method|TaskRegistry#appendedEventCount", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/BuildPace.java|method|BuildPace#overrideForGameTest", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/BuildPace.java|method|BuildPace#useTable", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchExaminedPositions", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchMaxExaminedPositionsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#treeBlockReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#totalTicks", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FarmSession.java|method|FarmSession#viewReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/FillSession.java|method|FillSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#maxBreakerHitsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/HarvestSession.java|method|HarvestSession#totalTicks", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/LocateScript.java|method|LocateScript#maxExaminedPositionsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setBoardEnabled", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setCoordinatorEnabled", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritConfig.java|method|SpiritConfig#setMobsTargetSpirits", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#activeDropCollector", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#equipmentDropChance", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#taskSnapshot", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/SpiritMemoryStore.java|method|SpiritMemoryStore#corruptLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/inventory/InventoryTables.java|method|InventoryTables#kitLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/inventory/InventoryTables.java|method|InventoryTables#valueLoads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/movement/StandWalker.java|method|StandWalker#safetyReads", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PlacedBlocksData.java|method|PlacedBlocksData#spiritPlacementCounts", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PlacedBlocksData.java|method|PlacedBlocksData#spiritSize", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/policy/PolicyConfig.java|method|PolicyConfig#setProtectedZones", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#maxObserveReadsPerTick", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeActiveCount", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeTickCalls", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#peakObserveJobs", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются"),
-            new Exception("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#taskWatcher", "Долг: нужен GameTest-инфраструктуре (диагностика/настройка сцены); ссылки из gametest не считаются")
+    private static final List<Probe> SCALE_PROBES = List.of(
+            new Probe("src/main/java/com/theminespirit/core/mining/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds",
+                    "gatherPolicy_ExactIds_ExistInRegistries",
+                    "список точных запретов gather обязан существовать в реестре блоков: опечатка ослепляет политику"),
+            new Probe("src/main/java/com/theminespirit/core/policy/BlockProtection.java|method|BlockProtection#denyPatterns",
+                    "file_Loaded_ThresholdIsSixAndGatherPolicyIsNotDuplicated",
+                    "deny не дублирует точные запреты GatherPolicy: списки не должны разъезжаться"),
+            new Probe("src/main/java/com/theminespirit/core/rest/ServerThreadCall.java|method|ServerThreadCall#submittedCount",
+                    "concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach",
+                    "счётчик переходов на серверный поток: один переход на запрос, отказы и чтения — без перехода"),
+            new Probe("src/main/java/com/theminespirit/core/farming/FarmPlanner.java|field|FarmPlanner#MAX_SAFETY_READS_PER_TARGET",
+                    "maxSafetyReadsPerTarget_SearchBoxVolume_Is324",
+                    "бюджет чтений безопасности на цель: масштаб планирования фермы"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#treeBlockReads",
+                    "chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog",
+                    "счётчик чтений разбора дерева: бюджет на бревно и кеш LevelTreeView"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchExaminedPositions",
+                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
+                    "счётчик прочитанных позиций поиска: только секции с брёвнами"),
+            new Probe("src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchMaxExaminedPositionsPerTick",
+                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
+                    "максимум прочитанных позиций за тик: не больше срезов ScanTuning"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#maxObserveReadsPerTick",
+                    "observe_Radius32_ReadsWithinPerTickBudget",
+                    "пик чтений observe за тик: одно наблюдение не должно ронять тик"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeActiveCount",
+                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
+                    "число активных наблюдений: середина скана для остановки и удаления духа"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeTickCalls",
+                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
+                    "счётчик тиков ObserveJobs: после stop() подписка снята, тик не дёргает мёртвый мост"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#peakObserveJobs",
+                    "observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent",
+                    "пик одновременных наблюдений: параллельные запросы не превышают лимит"),
+            new Probe("src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#taskWatcher",
+                    "watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty",
+                    "наблюдатель задач для теста масштаба: ровно один опрос на активную задачу за тик")
     );
 
     private static final List<Exception> EXCEPTIONS = exceptions();
 
     @Test
     void productionSources_EveryDeclaration_IsReferencedOrEntryPoint() {
+        Set<String> knownTests = testMethodNames();
+        List<String> missingTests = SCALE_PROBES.stream()
+                .filter(probe -> !knownTests.contains(probe.test()))
+                .map(probe -> probe.key() + " — нет теста " + probe.test())
+                .toList();
+        assertEquals(List.of(), missingTests,
+                "Проба масштаба ссылается на несуществующий тест: исключение устарело и прикрывает мёртвый код. "
+                        + "Верните тест или удалите пробу: " + missingTests);
         List<Finding> findings = deadCode(production());
         List<String> offenders = new ArrayList<>();
         List<String> stale = new ArrayList<>();
@@ -262,9 +238,35 @@ class DeadCodeGuardTests {
                 "Сторож ложно считает ссылкой упоминание в комментарии или строке: такой код остаётся мёртвым");
     }
 
+    private static Set<String> testMethodNames() {
+        Set<String> names = new HashSet<>();
+        Matcher matcher;
+        for (Map<Path, String> sources : List.of(SourceFiles.javaUnder(SourceFiles.TEST), gameTests())) {
+            for (String source : sources.values()) {
+                matcher = TEST_METHOD.matcher(strip(source));
+                while (matcher.find()) {
+                    names.add(matcher.group(1));
+                }
+            }
+        }
+        return names;
+    }
+
+    private static Map<Path, String> gameTests() {
+        Map<Path, String> sources = new TreeMap<>();
+        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+            if (file.startsWith(SourceFiles.GAME_TESTS)) {
+                sources.put(file, text);
+            }
+        });
+        return sources;
+    }
+
     private static List<Exception> exceptions() {
         List<Exception> all = new ArrayList<>(OPEN_TASKS);
-        all.addAll(DEBT);
+        for (Probe probe : SCALE_PROBES) {
+            all.add(new Exception(probe.key(), "Проба теста " + probe.test() + ": " + probe.reason()));
+        }
         return List.copyOf(all);
     }
 
@@ -613,6 +615,9 @@ class DeadCodeGuardTests {
     }
 
     private record Parsed(List<Token> tokens, List<Declaration> declarations, boolean[] ignored) {
+    }
+
+    private record Probe(String key, String test, String reason) {
     }
 
     private record Exception(String key, String reason) {

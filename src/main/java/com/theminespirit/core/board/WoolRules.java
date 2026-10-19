@@ -33,8 +33,6 @@ public final class WoolRules {
     public static final String SHEARS = "shears";
     public static final String IRON_INGOT = "iron_ingot";
     public static final String STRING = "string";
-    public static final String WHITE_WOOL = "white_wool";
-    public static final String WHITE_BED = "white_bed";
     public static final String CRAFTED_SHEARS = "minecraft:shears";
     public static final String CRAFTED_WOOL = "minecraft:white_wool";
     public static final String CRAFTED_BED = "minecraft:white_bed";

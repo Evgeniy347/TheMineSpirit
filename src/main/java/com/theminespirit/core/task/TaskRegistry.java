@@ -78,16 +78,6 @@ public final class TaskRegistry {
         return Optional.empty();
     }
 
-    public synchronized List<TaskRecord> activeRecords() {
-        List<TaskRecord> active = new ArrayList<>();
-        for (Entry entry : tasks.values()) {
-            if (entry.record.active()) {
-                active.add(entry.record);
-            }
-        }
-        return List.copyOf(active);
-    }
-
     public synchronized TaskEventLog log(String taskId) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
@@ -180,11 +170,6 @@ public final class TaskRegistry {
             }
         }
         return completed;
-    }
-
-    public synchronized long appendedEventCount(String taskId) {
-        Entry entry = tasks.get(taskId);
-        return entry == null ? 0 : entry.log.appendedCount();
     }
 
     private void ensureCompletedCap() {

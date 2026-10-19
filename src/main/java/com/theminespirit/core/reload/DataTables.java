@@ -63,8 +63,6 @@ public final class DataTables {
     public static final String TACTICS_ROOT = "data/theminespirit/tactics/";
 
     private final TableRegistry registry;
-    private final AtomicInteger valueSeeds = new AtomicInteger();
-    private final AtomicInteger kitSeeds = new AtomicInteger();
     private final AtomicInteger armorSeeds = new AtomicInteger();
     private final TableHolder<TacticsConfig> tactics;
     private final TableHolder<TacticsAdapterSettings> adapter;
@@ -116,7 +114,6 @@ public final class DataTables {
                 TableDefinition.single("item_values", "data/theminespirit/inventory/item_values.json",
                         ValueTable::parse),
                 () -> {
-                    valueSeeds.incrementAndGet();
                     return ValueTable.load();
                 });
         this.warehouseCategories = registry.registerLazy(
@@ -126,7 +123,6 @@ public final class DataTables {
         this.kit = registry.registerLazy(
                 TableDefinition.single("base_kit", "data/theminespirit/inventory/base_kit.json", BaseKit::parse),
                 () -> {
-                    kitSeeds.incrementAndGet();
                     return BaseKit.load();
                 });
         this.kitFor = registry.registerLazy(
@@ -240,14 +236,6 @@ public final class DataTables {
 
     public TableRegistry registry() {
         return registry;
-    }
-
-    public int valueSeeds() {
-        return valueSeeds.get();
-    }
-
-    public int kitSeeds() {
-        return kitSeeds.get();
     }
 
     public int armorSeeds() {

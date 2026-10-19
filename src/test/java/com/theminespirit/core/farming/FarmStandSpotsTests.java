@@ -55,8 +55,8 @@ class FarmStandSpotsTests {
 
         FarmStandSpots.of(TARGET, FROM, new CachedSafetyView(safety), dirtPlane());
 
-        assertTrue(safety.reads() <= FarmStandSpots.MAX_SAFETY_READS,
-                "Поиск стоянки через кэш читает не более ящика 9×4×9=" + FarmStandSpots.MAX_SAFETY_READS
+        assertTrue(safety.reads() <= 324,
+                "Поиск стоянки через кэш читает не более ящика 9×4×9=" + 324
                         + " клеток: иначе перебор стоянок кладёт серверный тик. Чтений: " + safety.reads());
     }
 
