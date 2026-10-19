@@ -100,7 +100,7 @@ public final class HarvestSession {
     private int planCalls;
     private int collectTicks;
     private int collectRuns;
-    private int ticks;
+
     private int entityQueries;
 
     private HarvestSession(SpiritEntity spirit, Spec spec) {
@@ -159,7 +159,7 @@ public final class HarvestSession {
             }
             beginRetryCollect();
         }
-        ticks++;
+
         watchdog.tick();
         if (watchdog.stalled()) {
             return fail(stallReason());

@@ -21,8 +21,7 @@ class DependencyVersionGuardTests {
     private static final Path BUILD = Path.of("build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");
     private static final Path SETTINGS = Path.of("settings.gradle");
-    private static final List<String> LIBRARY_CONFIGS =
-            List.of("implementation", "additionalRuntimeClasspath", "jarJar");
+
     private static final Set<String> KNOWN_CONFIGS = Set.of(
             "implementation",
             "additionalRuntimeClasspath",
@@ -74,10 +73,22 @@ class DependencyVersionGuardTests {
 
     @Test
     void pluginParser_LiteralVersions_AreReported() {
-        String build = "plugins {\n    id 'com.example.plugin' version '1.0'\n}\n"
-                + "checkstyle {\n    toolVersion = '10.0'\n}\n";
-        String settings = "pluginManagement {\n    plugins {\n        id 'com.example.other' version '2.0'\n"
-                + "        id 'com.example.third' version \"${missing_version}\"\n    }\n}\n";
+        String build = """
+                       plugins {
+                           id 'com.example.plugin' version '1.0'
+                       }
+                       checkstyle {
+                           toolVersion = '10.0'
+                       }
+                       """;
+        String settings = """
+                          pluginManagement {
+                              plugins {
+                                  id 'com.example.other' version '2.0'
+                                  id 'com.example.third' version "${missing_version}"
+                              }
+                          }
+                          """;
 
         List<String> offenders = pluginOffendersOf(build, settings, "");
 
@@ -90,11 +101,13 @@ class DependencyVersionGuardTests {
 
     @Test
     void dependenciesParser_LiteralVersion_IsReported() {
-        String build = "dependencies {\n"
-                + "    implementation \"com.example:lib:1.2.3\"\n"
-                + "    additionalRuntimeClasspath \"com.example:lib:1.2.3\"\n"
-                + "    jarJar(\"com.example:lib:1.2.3\")\n"
-                + "}\n";
+        String build = """
+                       dependencies {
+                           implementation "com.example:lib:1.2.3"
+                           additionalRuntimeClasspath "com.example:lib:1.2.3"
+                           jarJar("com.example:lib:1.2.3")
+                       }
+                       """;
 
         List<String> offenders = offendersOf(build, "");
 
@@ -105,7 +118,11 @@ class DependencyVersionGuardTests {
 
     @Test
     void dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported() {
-        String build = "dependencies {\n" + "    implementation \"com.example:lib:${lib_version}\"\n" + "}\n";
+        String build = """
+                       dependencies {
+                           implementation "com.example:lib:${lib_version}"
+                       }
+                       """;
         String properties = "lib_version=1.2.3\n";
 
         List<String> offenders = offendersOf(build, properties);
@@ -122,12 +139,14 @@ class DependencyVersionGuardTests {
 
     @Test
     void dependenciesParser_TransitiveCompanionInJarJar_IsAccepted() {
-        String build = "dependencies {\n"
-                + "    implementation \"com.fasterxml.jackson.core:jackson-databind:${jackson_version}\"\n"
-                + "    additionalRuntimeClasspath \"com.fasterxml.jackson.core:jackson-databind:${jackson_version}\"\n"
-                + "    jarJar(\"com.fasterxml.jackson.core:jackson-databind:${jackson_version}\")\n"
-                + "    jarJar(\"com.fasterxml.jackson.core:jackson-core:${jackson_version}\")\n"
-                + "}\n";
+        String build = """
+                       dependencies {
+                           implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+                           additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+                           jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}")
+                           jarJar("com.fasterxml.jackson.core:jackson-core:${jackson_version}")
+                       }
+                       """;
         String properties = "jackson_version=2.18.2\n";
 
         assertEquals(
@@ -139,11 +158,13 @@ class DependencyVersionGuardTests {
 
     @Test
     void dependenciesParser_UnknownVersionProperty_IsReported() {
-        String build = "dependencies {\n"
-                + "    implementation \"com.example:lib:${missing_version}\"\n"
-                + "    additionalRuntimeClasspath \"com.example:lib:${missing_version}\"\n"
-                + "    jarJar(\"com.example:lib:${missing_version}\")\n"
-                + "}\n";
+        String build = """
+                       dependencies {
+                           implementation "com.example:lib:${missing_version}"
+                           additionalRuntimeClasspath "com.example:lib:${missing_version}"
+                           jarJar("com.example:lib:${missing_version}")
+                       }
+                       """;
 
         List<String> offenders = offendersOf(build, "");
 

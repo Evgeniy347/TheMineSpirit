@@ -137,7 +137,7 @@ public final class SchematicTool {
         }
         Map<String, Character> symbols = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : schematic.entries(origin, rotation)) {
-            char symbol = symbols.computeIfAbsent(entry.block(), block -> symbolFor(block, symbols.size()));
+            char symbol = symbols.computeIfAbsent(entry.block(), block -> symbolFor(symbols.size()));
             grid[entry.pos().y()][entry.pos().z()][entry.pos().x()] = symbol;
         }
         StringBuilder out = new StringBuilder("Легенда среза:");
@@ -153,7 +153,7 @@ public final class SchematicTool {
         return out.toString();
     }
 
-    private static char symbolFor(String block, int index) {
+    private static char symbolFor(int index) {
         String spare = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#=+*%&@$";
         return spare.charAt(index % spare.length());
     }

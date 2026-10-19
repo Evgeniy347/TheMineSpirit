@@ -31,13 +31,13 @@ class GameTestTimeGuardTests {
 
     @Test
     void dayTimePattern_DirectCallOutsideHelper_IsReported() {
-        Map<Path, String> sources = Map.of(
-                Path.of("MobTargetsGameTests.java"),
-                "class Sample {\n"
-                        + "    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {\n"
-                        + "        helper.getLevel().setDayTime(18000);\n"
-                        + "    }\n"
-                        + "}\n");
+        Map<Path, String> sources = Map.of(Path.of("MobTargetsGameTests.java"), """
+                class Sample {
+                    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {
+                        helper.getLevel().setDayTime(18000);
+                    }
+                }
+                """);
 
         assertEquals(
                 List.of("MobTargetsGameTests.java:3"),
@@ -47,13 +47,13 @@ class GameTestTimeGuardTests {
 
     @Test
     void dayTimePattern_HelperCallOutsideHelper_IsAccepted() {
-        Map<Path, String> sources = Map.of(
-                Path.of("MobTargetsGameTests.java"),
-                "class Sample {\n"
-                        + "    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {\n"
-                        + "        GameTestFixtures.holdDayTime(helper, 18000);\n"
-                        + "    }\n"
-                        + "}\n");
+        Map<Path, String> sources = Map.of(Path.of("MobTargetsGameTests.java"), """
+                class Sample {
+                    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {
+                        GameTestFixtures.holdDayTime(helper, 18000);
+                    }
+                }
+                """);
 
         assertEquals(
                 List.of(),
@@ -63,13 +63,13 @@ class GameTestTimeGuardTests {
 
     @Test
     void dayTimePattern_DirectCallInsideHelper_IsAccepted() {
-        Map<Path, String> sources = Map.of(
-                Path.of(HELPER),
-                "class Sample {\n"
-                        + "    static void holdDayTime(GameTestHelper helper, long dayTime) {\n"
-                        + "        helper.getLevel().setDayTime(dayTime);\n"
-                        + "    }\n"
-                        + "}\n");
+        Map<Path, String> sources = Map.of(Path.of(HELPER), """
+                class Sample {
+                    static void holdDayTime(GameTestHelper helper, long dayTime) {
+                        helper.getLevel().setDayTime(dayTime);
+                    }
+                }
+                """);
 
         assertEquals(
                 List.of(),

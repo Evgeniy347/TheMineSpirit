@@ -162,7 +162,7 @@ public final class SmeltGameTests {
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
         SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 8), stack(Items.COAL, 3));
         speedUpFurnaces(helper);
-        SpiritRun run = launch(helper, spirit, "smelt", "iron_ingot", 8);
+        launch(helper, spirit, "smelt", "iron_ingot", 8);
         boolean[] cancelled = {false};
         helper.onEachTick(() -> {
             if (!cancelled[0] && firstIngotReady(helper)) {

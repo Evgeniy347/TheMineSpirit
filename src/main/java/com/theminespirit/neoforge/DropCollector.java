@@ -236,7 +236,7 @@ public final class DropCollector {
         for (ItemEntity drop : nearby) {
             if (!drop.isRemoved() && skipped.contains(drop.getStringUUID())) {
                 return " (" + itemId(drop.getItem()) + " в "
-                        + drop.blockPosition().toShortString() + " дольше " + (elapsed) + " тиков)";
+                        + drop.blockPosition().toShortString() + " дольше " + elapsed + " тиков)";
             }
         }
         return "";

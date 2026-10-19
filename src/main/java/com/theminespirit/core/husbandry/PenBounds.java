@@ -48,7 +48,7 @@ public record PenBounds(BlockCoord center, int radius) {
         if (dx == 0 && dz == 0) {
             return new BlockCoord(center.x() + target, pos.y(), center.z());
         }
-        double scale = target / Math.sqrt(dx * dx + dz * dz);
+        double scale = target / Math.sqrt((double) (dx * dx + dz * dz));
         BlockCoord inside = new BlockCoord(
                 center.x() + (int) Math.round(dx * scale), pos.y(), center.z() + (int) Math.round(dz * scale));
         while (!shallowInside(inside, target)) {

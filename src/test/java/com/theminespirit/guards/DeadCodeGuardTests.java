@@ -769,11 +769,7 @@ class DeadCodeGuardTests {
 
     private record Token(String text, int offset, boolean identifier) {}
 
-    private record Declaration(String file, int line, String kind, String owner, String name) {
-        String key() {
-            return file + "|" + kind + "|" + owner + "#" + name;
-        }
-    }
+    private record Declaration(String file, int line, String kind, String owner, String name) {}
 
     private record Finding(String file, int line, String kind, String owner, String name) {
         String key() {

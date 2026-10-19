@@ -184,7 +184,7 @@ final class RestFixture {
     }
 
     static InetAddress loopback() throws UnknownHostException {
-        return InetAddress.getByName("127.0.0.1");
+        return InetAddress.getLoopbackAddress();
     }
 
     static RestFixture start(MinecraftServer minecraft) throws IOException {

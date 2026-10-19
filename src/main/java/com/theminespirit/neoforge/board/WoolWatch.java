@@ -84,7 +84,6 @@ public final class WoolWatch {
                 SHEARS_ID,
                 BoardCase.CRAFT_SHEARS,
                 now,
-                home,
                 Map.of(WoolRules.IRON_INGOT, WoolRules.shearsIron()),
                 TicketTarget.at(home));
     }
@@ -103,7 +102,6 @@ public final class WoolWatch {
                 SHEAR_ID,
                 BoardCase.SHEAR_SHEEP,
                 now,
-                home,
                 Map.of(WoolRules.SHEARS, 1),
                 TicketTarget.at(home).withCount(sheep));
     }
@@ -128,7 +126,6 @@ public final class WoolWatch {
                 HUNT_ID,
                 BoardCase.HUNT_WILD_SHEEP,
                 now,
-                home,
                 Map.of(),
                 TicketTarget.at(home).withCount(count));
     }
@@ -148,7 +145,6 @@ public final class WoolWatch {
                 STRING_ID,
                 BoardCase.WEAVE_WOOL,
                 now,
-                home,
                 Map.of(WoolRules.STRING, count * WoolRules.STRINGS_PER_WOOL),
                 TicketTarget.at(home).withCraft(WoolRules.CRAFTED_WOOL, count));
     }
@@ -168,7 +164,6 @@ public final class WoolWatch {
                 BED_ID,
                 BoardCase.CRAFT_BED,
                 now,
-                home,
                 Map.of(woolId, WoolRules.bedWool(), planks.orElseThrow(), WoolRules.bedPlanks()),
                 TicketTarget.at(home).withCraft(WoolRules.bedId(color.orElseThrow()), 1));
     }
@@ -178,7 +173,6 @@ public final class WoolWatch {
             String id,
             BoardCase boardCase,
             long now,
-            BlockCoord home,
             Map<String, Integer> required,
             TicketTarget target) {
         service.submit(
@@ -250,7 +244,7 @@ public final class WoolWatch {
         long radius = WoolRules.wildSheepRadius();
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
         long count = 0;
-        for (Animal animal : HerdSurvey.query(level, center, radius)) {
+        for (Animal animal : HerdSurvey.query(level, center, (double) radius)) {
             if (!(animal instanceof Sheep) || !animal.isAlive() || own.contains(animal.getUUID())) {
                 continue;
             }

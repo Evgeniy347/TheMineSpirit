@@ -175,8 +175,8 @@ class ResourceResolverProperties {
     }
 
     private static boolean producesItem(ScriptCall call, String item) {
-        return call.script().equals("gather") && item.equals(call.params().get("block"))
-                || call.script().equals("craft") && item.equals(call.params().get("item"));
+        return (call.script().equals("gather") && item.equals(call.params().get("block")))
+                || (call.script().equals("craft") && item.equals(call.params().get("item")));
     }
 
     private static TaskNode finalStep(TaskNode plan) {

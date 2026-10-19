@@ -69,7 +69,7 @@ public record DescentWidenPlan(
                     cells.add(new BlockCoord(columnX, base.floor() + above, columnZ));
                 }
             }
-            String danger = widenDangerAt(view, base, width, height, sideX, sideZ, cells);
+            String danger = widenDangerAt(view, base, width, sideX, sideZ, cells);
             if (danger != null) {
                 dangerReason = danger;
                 break;
@@ -93,7 +93,7 @@ public record DescentWidenPlan(
     }
 
     private static String widenDangerAt(
-            SafetyView view, DescentStep base, int width, int height, int sideX, int sideZ, List<BlockCoord> cells) {
+            SafetyView view, DescentStep base, int width, int sideX, int sideZ, List<BlockCoord> cells) {
         int half = width / 2;
         for (int lane = -half; lane <= half; lane++) {
             BlockCoord floor = new BlockCoord(

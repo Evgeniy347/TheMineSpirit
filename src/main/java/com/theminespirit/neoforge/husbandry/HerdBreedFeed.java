@@ -38,7 +38,7 @@ final class HerdBreedFeed {
                 flock.refreshSnapshot(true);
                 return;
             }
-            if (flock.deferEndangeredId(feed.targetId()) | flock.deferEndangeredId(feed.partnerId())) {
+            if (flock.deferEndangeredId(feed.targetId()) || flock.deferEndangeredId(feed.partnerId())) {
                 return;
             }
             session.current = first;

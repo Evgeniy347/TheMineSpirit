@@ -3,6 +3,7 @@ package com.theminespirit.core.crafting;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,7 +27,7 @@ public final class Stations {
         if (product == null) {
             return false;
         }
-        String normalized = product.toLowerCase();
+        String normalized = product.toLowerCase(Locale.ROOT);
         int colon = normalized.indexOf(':');
         if (colon >= 0) {
             normalized = normalized.substring(colon + 1);

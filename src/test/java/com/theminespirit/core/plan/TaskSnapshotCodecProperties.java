@@ -71,11 +71,6 @@ class TaskSnapshotCodecProperties {
         return new RepeatAt(index, child);
     }
 
-    private static TaskProgress chosenChild(Random random, List<TaskNode> steps) {
-        int index = chosenIndex(random, steps.size());
-        return index < steps.size() && random.nextBoolean() ? progress(steps.get(index), random) : null;
-    }
-
     private static TaskProgress fallbackProgress(Random random, FallbackNode fallback) {
         int index = chosenIndex(random, fallback.steps().size());
         TaskProgress child = index < fallback.steps().size() && random.nextBoolean()

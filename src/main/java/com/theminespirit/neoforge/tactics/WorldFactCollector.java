@@ -130,18 +130,18 @@ public final class WorldFactCollector {
         double nearestHelpDistance = tuning.rallyRadius();
         for (LivingEntity entity : near) {
             double distance = entity.distanceTo(spirit);
-            boolean help = entity instanceof SpiritEntity || entity instanceof Player player && !player.isSpectator();
+            boolean help = entity instanceof SpiritEntity || (entity instanceof Player player && !player.isSpectator());
             if (help
                     && distance <= tuning.rallyRadius()
                     && (nearestHelp == null
                             || distance < nearestHelpDistance
-                            || distance == nearestHelpDistance
+                            || (distance == nearestHelpDistance
                                     && entity.getUUID()
                                                     .toString()
                                                     .compareTo(nearestHelp
                                                             .getUUID()
                                                             .toString())
-                                            < 0)) {
+                                            < 0))) {
                 nearestHelp = entity;
                 nearestHelpDistance = distance;
             }
@@ -243,7 +243,7 @@ public final class WorldFactCollector {
         if (time >= NIGHT_START && time < NIGHT_END) {
             return TimeOfDay.NIGHT;
         }
-        return time >= DUSK_START && time < NIGHT_START || time >= NIGHT_END ? TimeOfDay.DUSK : TimeOfDay.DAY;
+        return (time >= DUSK_START && time < NIGHT_START) || time >= NIGHT_END ? TimeOfDay.DUSK : TimeOfDay.DAY;
     }
 
     private static Point point(Vec3 vec) {

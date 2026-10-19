@@ -85,9 +85,7 @@ public final class ReportScript implements ScriptInstance {
     private String reportText() {
         String task = spirit.currentTaskScript()
                 .map(script -> script
-                        + (spirit.taskStatus()
-                                .map(status -> " (" + status + ")")
-                                .orElse("")))
+                        + spirit.taskStatus().map(status -> " (" + status + ")").orElse(""))
                 .orElse("нет");
         return "Доклад: задача " + task
                 + "; здоровье " + (int) Math.ceil(spirit.getHealth()) + "/" + (int) Math.ceil(spirit.getMaxHealth())

@@ -121,7 +121,7 @@ class PerceptionResultCodecTests {
 
         assertEquals(
                 200, ((String) labelOf(map)).length(), "строка длиннее 200 символов обязана обрезаться до лимита (H1)");
-        assertEquals(Boolean.TRUE, map.get("truncated"), "обрезанная строка обязана нести truncated: true");
+        assertEquals(true, map.get("truncated"), "обрезанная строка обязана нести truncated: true");
     }
 
     @Test
@@ -134,7 +134,7 @@ class PerceptionResultCodecTests {
         Map<String, Object> map = PerceptionResultCodec.toMap(new Finding("locate_block", many));
 
         assertEquals(32, sightingsOf(map).size(), "список длиннее 32 элементов обязана обрезаться до лимита (H1)");
-        assertEquals(Boolean.TRUE, map.get("truncated"), "обрезанный список обязана нести truncated: true");
+        assertEquals(true, map.get("truncated"), "обрезанный список обязана нести truncated: true");
     }
 
     @Test
@@ -150,7 +150,7 @@ class PerceptionResultCodecTests {
         assertTrue(
                 json.length <= PerceptionResultCodec.MAX_JSON_BYTES,
                 "JSON итога обязан укладываться в 4 КиБ (H1), фактически: " + json.length + " байт");
-        assertEquals(Boolean.TRUE, map.get("truncated"), "обрезка по байтам обязана нести truncated: true");
+        assertEquals(true, map.get("truncated"), "обрезка по байтам обязана нести truncated: true");
     }
 
     static Stream<Map<String, Object>> roundTripMaps() {

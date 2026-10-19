@@ -94,9 +94,9 @@ public final class StockScan {
     private static long nearestDistance(BlockCoord pos, List<BlockCoord> centers) {
         long best = Long.MAX_VALUE;
         for (BlockCoord center : centers) {
-            long dx = pos.x() - center.x();
-            long dy = pos.y() - center.y();
-            long dz = pos.z() - center.z();
+            long dx = (long) pos.x() - center.x();
+            long dy = (long) pos.y() - center.y();
+            long dz = (long) pos.z() - center.z();
             best = Math.min(best, dx * dx + dy * dy + dz * dz);
         }
         return best;

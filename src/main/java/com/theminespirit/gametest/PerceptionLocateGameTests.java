@@ -33,7 +33,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class PerceptionLocateGameTests {
     private static final int LOCATE_RADIUS = 8;
-    private static final int POSITIONS_PER_SLICE = 4096;
 
     private PerceptionLocateGameTests() {}
 

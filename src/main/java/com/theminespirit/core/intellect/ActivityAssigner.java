@@ -112,12 +112,12 @@ public final class ActivityAssigner {
                 && eligible(ActivityId.DEFEND, spirit, view)) {
             return ActivityId.DEFEND;
         }
-        ActivityId best = bestScored(spirit, view, demands, demandById, taken, null);
+        ActivityId best = bestScored(spirit, view, demands, taken, null);
         if (best == null) {
             return null;
         }
         if (best == ActivityId.DEFEND && defenders >= defendersNeeded && view.threats() > 0) {
-            best = bestScored(spirit, view, demands, demandById, taken, ActivityId.DEFEND);
+            best = bestScored(spirit, view, demands, taken, ActivityId.DEFEND);
             if (best == null) {
                 return null;
             }
@@ -138,7 +138,6 @@ public final class ActivityAssigner {
             SpiritSnapshot spirit,
             SettlementView view,
             List<ActivityDemand> demands,
-            Map<ActivityId, Double> demandById,
             Map<ActivityId, Integer> taken,
             ActivityId excluded) {
         IntellectTuning tuning = IntellectTuning.loadDefault();

@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public final class SourceFiles {
@@ -18,6 +20,7 @@ public final class SourceFiles {
     public static final Path GAME_TESTS = Path.of("src/main/java/com/theminespirit/gametest");
 
     private static final Map<Path, Map<Path, String>> CACHE = new ConcurrentHashMap<>();
+    private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"[ \\t]*\\n(?s:.*?)(?<!\\\\)\"\"\"");
 
     private SourceFiles() {}
 
@@ -39,6 +42,17 @@ public final class SourceFiles {
         } catch (IOException e) {
             throw new UncheckedIOException("Сторож не смог прочитать исходники в " + root, e);
         }
+    }
+
+    public static String withoutTextBlocks(String text) {
+        Matcher matcher = TEXT_BLOCK.matcher(text);
+        StringBuilder out = new StringBuilder();
+        while (matcher.find()) {
+            String newlines = matcher.group().replaceAll("[^\\n]", "");
+            matcher.appendReplacement(out, Matcher.quoteReplacement("\"\"" + newlines));
+        }
+        matcher.appendTail(out);
+        return out.toString();
     }
 
     public static int lineOf(String text, int offset) {

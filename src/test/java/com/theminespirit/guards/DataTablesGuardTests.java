@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -41,13 +42,15 @@ class DataTablesGuardTests {
                 Files.isDirectory(DATA_ROOT),
                 "Сторож не нашёл " + DATA_ROOT + ": тесты запускаются из корня проекта (./gradlew test)");
 
-        List<String> jsonFiles = Files.walk(DATA_ROOT)
-                .filter(Files::isRegularFile)
-                .filter(p -> p.toString().endsWith(".json") || p.toString().endsWith(".txt"))
-                .map(p -> "data/theminespirit/"
-                        + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
-                .sorted()
-                .collect(Collectors.toList());
+        List<String> jsonFiles;
+        try (Stream<Path> stream = Files.walk(DATA_ROOT)) {
+            jsonFiles = stream.filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".json") || p.toString().endsWith(".txt"))
+                    .map(p -> "data/theminespirit/"
+                            + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
 
         Set<String> registeredPaths = registeredPaths();
         Set<String> presetBodies = presetBodies();

@@ -1196,10 +1196,6 @@ public final class MineGameTests {
         return spirit;
     }
 
-    private static void buildCave(GameTestHelper helper) {
-        buildCave(helper, 0);
-    }
-
     private static void buildCave(GameTestHelper helper, int shift) {
         for (int x = SHELL_MIN + shift; x <= SHELL_MAX + shift; x++) {
             for (int y = 0; y <= SHELL_TOP; y++) {
@@ -1246,10 +1242,6 @@ public final class MineGameTests {
             }
         }
         return total;
-    }
-
-    private static String caveSnapshot(GameTestHelper helper) {
-        return caveSnapshot(helper, 0);
     }
 
     private static String caveSnapshot(GameTestHelper helper, int shift) {

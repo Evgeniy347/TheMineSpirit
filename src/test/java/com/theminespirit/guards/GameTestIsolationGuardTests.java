@@ -53,17 +53,19 @@ class GameTestIsolationGuardTests {
 
     @Test
     void sceneAlias_CleanHelperBeforeSpawn_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    private static void arenaFloor(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "    }\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {\n"
-                + "        arenaFloor(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static void arenaFloor(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                            }
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {
+                                arenaFloor(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -73,17 +75,19 @@ class GameTestIsolationGuardTests {
 
     @Test
     void sceneAlias_DirtyHelperBeforeSpawn_IsReported() {
-        String sample = "class Sample {\n"
-                + "    private static void arenaFloor(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.buildFloor(helper, Blocks.STONE);\n"
-                + "    }\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {\n"
-                + "        arenaFloor(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static void arenaFloor(GameTestHelper helper) {
+                                GameTestFixtures.buildFloor(helper, Blocks.STONE);
+                            }
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void till_WithoutHoe_FailsFast(GameTestHelper helper) {
+                                arenaFloor(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("till_WithoutHoe_FailsFast"),
@@ -93,13 +97,15 @@ class GameTestIsolationGuardTests {
 
     @Test
     void gameTestSpawnPattern_SpawnWithoutCleanup_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("zombie_NearSpirit_TakesTarget"),
@@ -109,14 +115,16 @@ class GameTestIsolationGuardTests {
 
     @Test
     void gameTestSpawnPattern_CleanupAfterSpawn_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                GameTestFixtures.reset(helper);
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("zombie_NearSpirit_TakesTarget"),
@@ -126,14 +134,16 @@ class GameTestIsolationGuardTests {
 
     @Test
     void gameTestSpawnPattern_CleanupBeforeSpawn_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.sweepEntities(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void zombie_NearSpirit_TakesTarget(GameTestHelper helper) {
+                                GameTestFixtures.sweepEntities(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(), offendersOf(sample), "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
@@ -141,16 +151,18 @@ class GameTestIsolationGuardTests {
 
     @Test
     void gameTestBody_SecondResetCall_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeedWhen(() -> {\n"
-                + "            GameTestFixtures.reset(helper);\n"
-                + "        });\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeedWhen(() -> {
+                                    GameTestFixtures.reset(helper);
+                                });
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"),
@@ -161,16 +173,18 @@ class GameTestIsolationGuardTests {
 
     @Test
     void gameTestBody_ResetAndFinish_IsAccepted() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", timeoutTicks = 200)\n"
-                + "    public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {\n"
-                + "        GameTestFixtures.reset(helper);\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeedWhen(() -> {\n"
-                + "            GameTestFixtures.finish(helper);\n"
-                + "        });\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", timeoutTicks = 200)
+                            public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
+                                GameTestFixtures.reset(helper);
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeedWhen(() -> {
+                                    GameTestFixtures.finish(helper);
+                                });
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),

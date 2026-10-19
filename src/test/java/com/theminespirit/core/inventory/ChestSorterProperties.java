@@ -91,7 +91,7 @@ class ChestSorterProperties {
         List<Stack> layout = ChestSorter.sort(slots, VALUES);
         int minimal = 0;
         for (Map.Entry<String, Integer> kind : countsByKind(slots).entrySet()) {
-            int max = maxStackOfKind(slots, kind.getKey());
+            int max = maxStackOfKind(kind.getKey());
             minimal += (int) Math.ceil((double) kind.getValue() / max);
         }
 
@@ -150,7 +150,7 @@ class ChestSorterProperties {
         return counts;
     }
 
-    private static int maxStackOfKind(List<Stack> slots, String kind) {
+    private static int maxStackOfKind(String kind) {
         String item = kind.substring(0, kind.indexOf('#'));
         return maxStackOf(item);
     }

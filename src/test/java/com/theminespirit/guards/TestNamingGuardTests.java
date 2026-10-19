@@ -46,9 +46,11 @@ class TestNamingGuardTests {
 
     @Test
     void testMethodPattern_AnnotationWithArgumentsAndParameters_IsFound() {
-        String sample = "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    @SuppressWarnings(\"unused\")\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n";
+        String sample = """
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            @SuppressWarnings("unused")
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                        """;
 
         assertEquals(
                 List.of("spawn_spiritType_Lives"),
@@ -68,7 +70,8 @@ class TestNamingGuardTests {
     }
 
     private static void collectBadNames(Map<Path, String> sources, List<String> offenders) {
-        sources.forEach((file, text) -> {
+        sources.forEach((file, source) -> {
+            String text = SourceFiles.withoutTextBlocks(source);
             Matcher matcher = TEST_METHOD.matcher(text);
             while (matcher.find()) {
                 String name = matcher.group(2);

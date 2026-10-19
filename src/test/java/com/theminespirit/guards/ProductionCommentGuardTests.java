@@ -62,12 +62,14 @@ class ProductionCommentGuardTests {
 
     @Test
     void commentPattern_ClassJavadocAndRestrictionLabels_AreClean() {
-        String sample = "/** Документация класса. */\n"
-                + "final class Sample {\n"
-                + "    // mc: ванильный тик — 20 раз в секунду, иначе скорость духа не совпадёт с игроком\n"
-                + "    // lib: Jackson пишет поле только с этой аннотацией\n"
-                + "    private int value;\n"
-                + "}\n";
+        String sample = """
+                        /** Документация класса. */
+                        final class Sample {
+                            // mc: ванильный тик — 20 раз в секунду, иначе скорость духа не совпадёт с игроком
+                            // lib: Jackson пишет поле только с этой аннотацией
+                            private int value;
+                        }
+                        """;
 
         assertEquals(
                 List.of(),

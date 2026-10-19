@@ -115,7 +115,7 @@ class FarmPlannerTests {
         for (int x = -3; x <= 3; x++) {
             for (int z = -3; z <= 3; z++) {
                 for (int y = 0; y <= 1; y++) {
-                    BlockCoord floor = new BlockCoord(x, y, z);
+
                     long distance = distanceSquared(from, new BlockCoord(x, y + 1, z));
                     if ((x != 0 || z != 0) && distance < 16 && !(x == 1 && y == 0 && z == 0)) {
                         farm.set(x, y, z, new FarmTile(Ground.FARMLAND, Above.AIR, Optional.empty()));
@@ -294,7 +294,7 @@ class FarmPlannerTests {
         BlockCoord from = new BlockCoord(0, 5, 0);
         BlockCoord close = new BlockCoord(9, 0, 3);
         BlockCoord far = new BlockCoord(5, 0, 15);
-        BlockCoord closeStand = new BlockCoord(12, 1, 4);
+
         BlockCoord farStand = new BlockCoord(4, 1, 12);
         MapFarmView farm = new MapFarmView().set(9, 0, 3, DIRT_AIR).set(5, 0, 15, DIRT_AIR);
         CountingSafety safety = new CountingSafety().set(12, 0, 4, Cell.SOLID).set(4, 0, 12, Cell.SOLID);

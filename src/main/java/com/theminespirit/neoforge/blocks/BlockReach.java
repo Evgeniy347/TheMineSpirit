@@ -6,14 +6,14 @@ import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
 
 public final class BlockReach {
-    private final SpiritEntity spirit;
+
     private final BlockCoord target;
     private final ReachApproach approach;
     private boolean arrived;
     private String refusal;
 
     public BlockReach(SpiritEntity spirit, BlockCoord target) {
-        this.spirit = spirit;
+
         this.target = target;
         this.approach = new ReachApproach(spirit);
     }

@@ -27,7 +27,7 @@ public final class DeliverScript implements ScriptInstance {
     private final Approach approach;
     private Item item;
     private LivingEntity target;
-    private int ticks;
+
     private int delivered;
     private boolean started;
     private String failureReason;
@@ -69,7 +69,7 @@ public final class DeliverScript implements ScriptInstance {
             approach.begin(target, SocialTuning.DELIVER_ARRIVAL);
             started = true;
         }
-        ticks++;
+
         if (target.isRemoved() || !target.isAlive()) {
             approach.cancel();
             return fail("адресат '" + params.to() + "' ушёл по дороге: доставка сорвана");

@@ -13,7 +13,8 @@ class LayerArbiterTests {
     static String run(String script) {
         LayerArbiter arbiter = new LayerArbiter();
         StringBuilder owners = new StringBuilder();
-        for (char step : script.toCharArray()) {
+        for (int i = 0; i < script.length(); i++) {
+            char step = script.charAt(i);
             boolean reflex = step == 'r' || step == 'x';
             boolean tactics = step == 't';
             boolean task = step != 'i' && step != 'x';

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
+import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +75,7 @@ class DigDescentParamsTests {
 
             assertEquals(
                     name,
-                    params.direction().name().toLowerCase(),
+                    params.direction().name().toLowerCase(Locale.ROOT),
                     "Имя '" + name + "' обязано пережить разбор без потерь: каталог и ядро говорят на одном языке");
         }
     }

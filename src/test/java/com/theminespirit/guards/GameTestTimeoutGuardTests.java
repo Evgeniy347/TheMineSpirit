@@ -38,11 +38,13 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_Ticks600_NoComment() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 600)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 600)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=600"),
@@ -52,12 +54,14 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_Ticks600_WithFlakComment() {
-        String sample = "class Sample {\n"
-                + "    // [флак] под нагрузкой: ждём сдвиг набора через succeedWhen\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 600)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            // [флак] под нагрузкой: ждём сдвиг набора через succeedWhen
+                            @GameTest(template = "empty", timeoutTicks = 600)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -67,11 +71,13 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_Ticks400_NoComment() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 400)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 400)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -81,12 +87,14 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_MultilineAnnotation_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\",\n"
-                + "            timeoutTicks = 600)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty",
+                                    timeoutTicks = 600)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=600"),
@@ -96,12 +104,14 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_Ticks600_WithFlakMarker() {
-        String sample = "class Sample {\n"
-                + "    // [флак] под нагрузкой: ждём сдвиг набора через thenWaitUntil\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 600)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            // [флак] под нагрузкой: ждём сдвиг набора через thenWaitUntil
+                            @GameTest(template = "empty", timeoutTicks = 600)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -111,23 +121,27 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_Literal300_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 300)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 300)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: литерал 300 ≤ 400 — законен без метки");
     }
 
     @Test
     void gameTestTimeoutPattern_SameClassConstant500_NoComment() {
-        String sample = "class Sample {\n"
-                + "    private static final int TIMEOUT_TICKS = 500;\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = TIMEOUT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static final int TIMEOUT_TICKS = 500;
+                            @GameTest(template = "empty", timeoutTicks = TIMEOUT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=500 (TIMEOUT_TICKS)"),
@@ -138,13 +152,15 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_SameClassConstant500_WithFlakComment() {
-        String sample = "class Sample {\n"
-                + "    private static final int TIMEOUT_TICKS = 500;\n"
-                + "    // [флак] замер 240 тиков: запас 2× под нагрузкой\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = TIMEOUT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static final int TIMEOUT_TICKS = 500;
+                            // [флак] замер 240 тиков: запас 2× под нагрузкой
+                            @GameTest(template = "empty", timeoutTicks = TIMEOUT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -154,12 +170,14 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_SameClassConstant300_IsClean() {
-        String sample = "class Sample {\n"
-                + "    static final int TIMEOUT = 300;\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = TIMEOUT)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            static final int TIMEOUT = 300;
+                            @GameTest(template = "empty", timeoutTicks = TIMEOUT)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: константа 300 ≤ 400 — законна без метки");
@@ -167,13 +185,15 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeout_ConstantJustifiedAtDeclaration_IsClean() {
-        String sample = "class Sample {\n"
-                + "    // [флак] замер 240 тиков: запас 2× под нагрузкой\n"
-                + "    static final int TIMEOUT_TICKS = 500;\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = TIMEOUT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            // [флак] замер 240 тиков: запас 2× под нагрузкой
+                            static final int TIMEOUT_TICKS = 500;
+                            @GameTest(template = "empty", timeoutTicks = TIMEOUT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -184,15 +204,17 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeout_QualifiedConstantJustifiedAtDeclaration_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = Limits.TIMEOUT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n"
-                + "class Limits {\n"
-                + "    // [флак] замер 240 тиков: запас 2× под нагрузкой\n"
-                + "    static final int TIMEOUT_TICKS = 500;\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = Limits.TIMEOUT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        class Limits {
+                            // [флак] замер 240 тиков: запас 2× под нагрузкой
+                            static final int TIMEOUT_TICKS = 500;
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -203,11 +225,13 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_UnknownConstant_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = LIMIT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = LIMIT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=LIMIT_TICKS"),
@@ -218,11 +242,13 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_ArithmeticExpression_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 400 + 200)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 400 + 200)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=400 + 200"),
@@ -233,14 +259,16 @@ class GameTestTimeoutGuardTests {
 
     @Test
     void gameTestTimeoutPattern_QualifiedConstant500_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = Limits.TIMEOUT_TICKS)\n"
-                + "    public static void spawn_spiritType_Lives(GameTestHelper helper) {\n"
-                + "    }\n"
-                + "}\n"
-                + "class Limits {\n"
-                + "    static final int TIMEOUT_TICKS = 500;\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = Limits.TIMEOUT_TICKS)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        class Limits {
+                            static final int TIMEOUT_TICKS = 500;
+                        }
+                        """;
 
         assertEquals(
                 List.of("timeoutTicks=500 (Limits.TIMEOUT_TICKS)"),
@@ -269,7 +297,7 @@ class GameTestTimeoutGuardTests {
                 } else if (constant.value() > SANE_TIMEOUT_LIMIT
                         && !hasAnyJustification(text, matcher.start(), constant)) {
                     offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " timeoutTicks="
-                            + constant.value() + describe(expression, constant.value()));
+                            + constant.value() + describe(expression));
                 }
             }
         });
@@ -285,7 +313,7 @@ class GameTestTimeoutGuardTests {
             if (constant == null) {
                 names.add("timeoutTicks=" + expression);
             } else if (constant.value() > SANE_TIMEOUT_LIMIT && !hasAnyJustification(text, matcher.start(), constant)) {
-                names.add("timeoutTicks=" + constant.value() + describe(expression, constant.value()));
+                names.add("timeoutTicks=" + constant.value() + describe(expression));
             }
         }
         return names;
@@ -298,7 +326,7 @@ class GameTestTimeoutGuardTests {
         return constant.declarationOffset() >= 0 && hasJustification(constant.text(), constant.declarationOffset());
     }
 
-    private static String describe(String expression, int timeout) {
+    private static String describe(String expression) {
         return expression.matches("[0-9_]+") ? "" : " (" + expression + ")";
     }
 

@@ -61,7 +61,7 @@ public final class WorldScanner {
         private final ScanFocus focus;
         private final IdFilter entityFilter;
         private final Set<Block> filteredBlocks;
-        private final Map<Block, int[]> blockCounts = new IdentityHashMap<>();
+        private final IdentityHashMap<Block, int[]> blockCounts = new IdentityHashMap<>();
         private final List<ContainerRef> containers = new ArrayList<>();
         private final List<OpenBlock> openBlocks = new ArrayList<>();
         private final int openBlockLimit;

@@ -103,7 +103,7 @@ public final class FarmPlanner {
         if (targetSquared <= MAX_STAND_OFFSET_SQUARED) {
             return false;
         }
-        double gap = Math.sqrt(targetSquared) - Math.sqrt(MAX_STAND_OFFSET_SQUARED);
+        double gap = Math.sqrt((double) targetSquared) - Math.sqrt(MAX_STAND_OFFSET_SQUARED);
         return gap * gap > bestStandSquared + 1e-9;
     }
 

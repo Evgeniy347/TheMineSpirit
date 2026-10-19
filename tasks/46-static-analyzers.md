@@ -36,7 +36,7 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 
 ## Порядок (каждый пункт — блок, сборка падает только на НОВЫХ нарушениях, временный список → 0)
 
-1. [ ] Spotless: один механический коммит `spotlessApply` + `.git-blame-ignore-revs`, `spotlessCheck` в `check`.
+1. [x] Spotless: один механический коммит `spotlessApply` + `.git-blame-ignore-revs`, `spotlessCheck` в `check`.
    Только после слияния параллельных веток (иначе конфликты в 1688 файлах).
 2. [ ] Error Prone: подключить; патч `-XepPatchChecks` всех найденных, кроме UnnecessaryLambda и StringSplitter (Guava),
    с ревью диффа (~200); руками — ReferenceEquality через `stack.is(item)`/`state.is(block)`, StringSplitter через

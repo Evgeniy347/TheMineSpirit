@@ -141,15 +141,12 @@ public final class TaskSnapshotCodec {
         }
         String type = requireText(node, "type", "прогресса");
         return switch (type) {
-            case "sequence" -> new SequenceAt(requireIndex(node, "sequence"), optionalChild(node, "sequence"));
-            case "repeat" -> new RepeatAt(requireIndex(node, "repeat"), optionalChild(node, "repeat"));
+            case "sequence" -> new SequenceAt(requireIndex(node, "sequence"), optionalChild(node));
+            case "repeat" -> new RepeatAt(requireIndex(node, "repeat"), optionalChild(node));
             case "fallback" ->
-                new FallbackAt(
-                        requireIndex(node, "fallback"),
-                        optionalText(node, "lastReason"),
-                        optionalChild(node, "fallback"));
+                new FallbackAt(requireIndex(node, "fallback"), optionalText(node, "lastReason"), optionalChild(node));
             case "parallel" -> new ParallelAt(parseParallelChildren(node.get("children")));
-            case "condition" -> new ConditionAt(parseBranch(node), optionalChild(node, "condition"));
+            case "condition" -> new ConditionAt(parseBranch(node), optionalChild(node));
             case "script" -> new ScriptAt(parseState(node.get("state")));
             default ->
                 throw new SnapshotFormatException("Неизвестный тип прогресса '" + type
@@ -200,7 +197,7 @@ public final class TaskSnapshotCodec {
         };
     }
 
-    private static TaskProgress optionalChild(JsonNode node, String owner) {
+    private static TaskProgress optionalChild(JsonNode node) {
         JsonNode child = node.get("child");
         return child == null || child.isNull() ? null : parseProgress(child);
     }

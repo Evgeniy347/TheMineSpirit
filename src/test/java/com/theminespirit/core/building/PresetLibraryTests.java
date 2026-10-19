@@ -123,8 +123,13 @@ class PresetLibraryTests {
 
     @Test
     void parse_EntryInsideSolidBlock_IsRejected() {
-        LoadedContent body = bodyContent(
-                body("name: Столб\ntype: infrastructure\nstage: 0\nsize: 1x1x1\n" + "entrance: 0,0,0\n", "#"));
+        LoadedContent body = bodyContent(body("""
+                     name: Столб
+                     type: infrastructure
+                     stage: 0
+                     size: 1x1x1
+                     entrance: 0,0,0
+                     """, "#"));
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
@@ -138,8 +143,13 @@ class PresetLibraryTests {
 
     @Test
     void parse_EntryOutsideSize_IsRejected() {
-        LoadedContent body = bodyContent(
-                body("name: Столб\ntype: infrastructure\nstage: 0\nsize: 1x1x1\n" + "entrance: 2,0,0\n", "#"));
+        LoadedContent body = bodyContent(body("""
+                     name: Столб
+                     type: infrastructure
+                     stage: 0
+                     size: 1x1x1
+                     entrance: 2,0,0
+                     """, "#"));
 
         assertThrows(
                 IllegalStateException.class,
@@ -325,9 +335,15 @@ class PresetLibraryTests {
 
     @Test
     void parse_RequiresUnknownPreset_IsRejected() {
-        LoadedContent body = bodyContent(body(
-                "name: Зал\ntype: craft\nstage: 2\nlevel: 2\nrequires: ghost\n" + "size: 2x1x1\nentrance: 0,0,0\n",
-                ".C"));
+        LoadedContent body = bodyContent(body("""
+                name: Зал
+                type: craft
+                stage: 2
+                level: 2
+                requires: ghost
+                size: 2x1x1
+                entrance: 0,0,0
+                """, ".C"));
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
@@ -371,8 +387,13 @@ class PresetLibraryTests {
                         + "\"planned\":[{\"level\":3,\"name\":\"Финал\",\"requires\":\"ghost\"}]}",
                 "тестовый индекс",
                 TableStatus.Source.BUILTIN);
-        LoadedContent body =
-                bodyContent(body("name: Хижина\ntype: housing\nstage: 0\nsize: 2x1x1\n" + "entrance: 0,0,0\n", ".#"));
+        LoadedContent body = bodyContent(body("""
+                                 name: Хижина
+                                 type: housing
+                                 stage: 0
+                                 size: 2x1x1
+                                 entrance: 0,0,0
+                                 """, ".#"));
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,

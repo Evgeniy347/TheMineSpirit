@@ -20,6 +20,7 @@ public record EntityRef(String type, BlockCoord pos, String id, double distance)
         this(type, pos, null, 0.0);
     }
 
+    @Override
     public double distance() {
         return distance;
     }

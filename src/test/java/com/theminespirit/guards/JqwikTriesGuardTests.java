@@ -32,11 +32,13 @@ class JqwikTriesGuardTests {
 
     @Test
     void propertyTriesPattern_Tries1000_NoSlowTag() {
-        String sample = "class Sample {\n"
-                + "    @Property(tries = 1000)\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property(tries = 1000)
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("tries=1000"),
@@ -46,13 +48,15 @@ class JqwikTriesGuardTests {
 
     @Test
     void propertyTriesPattern_Tries1000_WithSlowTag() {
-        String sample = "import net.jqwik.api.Tag;\n"
-                + "class Sample {\n"
-                + "    @Property(tries = 1000)\n"
-                + "    @Tag(\"slow\")\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        import net.jqwik.api.Tag;
+                        class Sample {
+                            @Property(tries = 1000)
+                            @Tag("slow")
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -62,11 +66,13 @@ class JqwikTriesGuardTests {
 
     @Test
     void propertyTriesPattern_Tries200_NoSlowTag() {
-        String sample = "class Sample {\n"
-                + "    @Property\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -76,11 +82,13 @@ class JqwikTriesGuardTests {
 
     @Test
     void propertyTriesPattern_TriesNotFirstArgument_IsReported() {
-        String sample = "class Sample {\n"
-                + "    @Property(seed = \"abc\", tries = 1000)\n"
-                + "    void hash_AnySeed_StaysEqual(@ForAll int seed) {\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @Property(seed = "abc", tries = 1000)
+                            void hash_AnySeed_StaysEqual(@ForAll int seed) {
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("tries=1000"),

@@ -44,9 +44,11 @@ class QualifiedNameGuardTests {
 
     @Test
     void qualifiedNamePattern_ImportStringAndComment_AreIgnored() {
-        String sample = "import net.minecraft.world.entity.EntityType;\n"
-                + "        String hint = \"см. net.minecraft.world.entity.EntityType\";\n"
-                + "        // net.minecraft.world.entity.EntityType упомянут в комментарии\n";
+        String sample = """
+                        import net.minecraft.world.entity.EntityType;
+                                String hint = "см. net.minecraft.world.entity.EntityType";
+                                // net.minecraft.world.entity.EntityType упомянут в комментарии
+                        """;
 
         assertEquals(
                 List.of(),

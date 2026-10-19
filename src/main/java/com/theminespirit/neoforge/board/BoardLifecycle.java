@@ -15,7 +15,7 @@ public final class BoardLifecycle {
             throw new IllegalArgumentException("bus не может быть null: без шины слушатель доски не встанет");
         }
         bus.addListener((ServerTickEvent.Post event) -> onServerTick(event));
-        bus.addListener((ServerStoppingEvent event) -> onServerStopping(event));
+        bus.addListener((ServerStoppingEvent event) -> onServerStopping());
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {
@@ -27,7 +27,7 @@ public final class BoardLifecycle {
         }
     }
 
-    private static void onServerStopping(ServerStoppingEvent event) {
+    private static void onServerStopping() {
         BoardRegistry.closeAll();
         BoardRegistry.clear();
     }

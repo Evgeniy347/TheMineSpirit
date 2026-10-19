@@ -154,6 +154,11 @@ class TaskRunnerRestoreTests {
                 restoredElapsed,
                 "состояние из saveState обязано дойти до экземпляра через restoreState: иначе счётный скрипт "
                         + "начнёт счёт заново. Получено " + restoredElapsed);
+        assertEquals(
+                List.of("stateful"),
+                created,
+                "восстановление обязано создать экземпляр скрипта ровно один раз: второй экземпляр начал бы "
+                        + "работу с нуля рядом с восстановленным. Получено " + created);
     }
 
     @Test

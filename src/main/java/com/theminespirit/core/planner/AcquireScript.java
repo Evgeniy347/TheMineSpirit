@@ -109,17 +109,15 @@ public final class AcquireScript implements ScriptInstance {
             }
         }
         RunStatus status = runner.tick();
-        switch (status) {
-            case RUNNING -> {
-                return ScriptStatus.RUNNING;
-            }
+        return switch (status) {
+            case RUNNING -> ScriptStatus.RUNNING;
             case SUCCEEDED -> {
                 finalStatus = ScriptStatus.SUCCEEDED;
-                return ScriptStatus.SUCCEEDED;
+                yield ScriptStatus.SUCCEEDED;
             }
             case CANCELLED -> {
                 finalStatus = ScriptStatus.CANCELLED;
-                return ScriptStatus.CANCELLED;
+                yield ScriptStatus.CANCELLED;
             }
             case FAILED -> {
                 lastStepFailure = runner.failureReason().orElse("причина шага не указана");
@@ -127,12 +125,11 @@ public final class AcquireScript implements ScriptInstance {
                     // Пересборка на следующем тике: один перечит мира на провал шага,
                     // не чаще одного внутреннего тика на внешний.
                     runner = null;
-                    return ScriptStatus.RUNNING;
+                    yield ScriptStatus.RUNNING;
                 }
-                return fail(lastStepFailure);
+                yield fail(lastStepFailure);
             }
-        }
-        return ScriptStatus.RUNNING;
+        };
     }
 
     Optional<TaskNode> buildSubplan() {

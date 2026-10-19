@@ -99,10 +99,7 @@ public final class TacticsJournalGameTests {
     }
 
     private static int execute(
-            GameTestHelper helper,
-            CommandDispatcher<CommandSourceStack> dispatcher,
-            String command,
-            CommandSourceStack source) {
+            CommandDispatcher<CommandSourceStack> dispatcher, String command, CommandSourceStack source) {
         try {
             return dispatcher.execute(command, source);
         } catch (CommandSyntaxException e) {
@@ -173,7 +170,7 @@ public final class TacticsJournalGameTests {
 
         helper.runAtTickTime(
                 EMPTY_JOURNAL_TICK,
-                () -> emptyResult.set(execute(helper, dispatcher, "spirit decisions " + tagSelector(tag), source)));
+                () -> emptyResult.set(execute(dispatcher, "spirit decisions " + tagSelector(tag), source)));
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
@@ -193,7 +190,7 @@ public final class TacticsJournalGameTests {
                     "Журнал обязан получить запись «игнор → бой» после атаки хаска: "
                             + spirit.tactics().decisions(LIMIT));
             chat.clear();
-            int printed = execute(helper, dispatcher, "spirit decisions " + tagSelector(tag), source);
+            int printed = execute(dispatcher, "spirit decisions " + tagSelector(tag), source);
 
             helper.assertTrue(printed == 1, "Команда возвращает число духов, которым показала журнал: " + printed);
             helper.assertTrue(!chat.isEmpty(), "Команда печатает записи журнала в чат: " + chat);

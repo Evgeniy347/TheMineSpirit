@@ -276,7 +276,7 @@ public final class HusbandryGameTests {
             helper.assertTrue(saved.get() != null, "состояние обязано сохраниться после первой пары");
             Object done = saved.get().get("done");
             helper.assertTrue(
-                    done instanceof Number && ((Number) done).intValue() >= 1,
+                    done instanceof Number number && number.intValue() >= 1,
                     "прогресс done обязан пережить saveState/restoreState (не меньше 1 пары), а там " + done);
             HerdSession again = restored.get();
             helper.assertTrue(

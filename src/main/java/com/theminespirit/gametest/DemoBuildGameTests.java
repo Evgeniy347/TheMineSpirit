@@ -28,7 +28,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class DemoBuildGameTests {
     private DemoBuildGameTests() {}
 
-    private static CommandSourceStack source(GameTestHelper helper, ServerPlayer player) {
+    private static CommandSourceStack source(ServerPlayer player) {
         return player.server
                 .createCommandSourceStack()
                 .withEntity(player)
@@ -75,7 +75,7 @@ public final class DemoBuildGameTests {
         helper.setBlock(10, 1, 14, Blocks.DIRT);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "gt_demo_hut");
 
-        int accepted = dispatcher(helper).execute(demo("storage_hut", anchor) + " none", source(helper, player));
+        int accepted = dispatcher(helper).execute(demo("storage_hut", anchor) + " none", source(player));
         helper.assertTrue(
                 accepted == 1,
                 "Демо-стройка обязана начаться по команде оператора: результат=" + accepted + ", причина отказа "
@@ -122,7 +122,7 @@ public final class DemoBuildGameTests {
                 .execute(
                         "spirit demo pen upgrade 1 2 " + anchor.getX() + " " + anchor.getY() + " " + anchor.getZ()
                                 + " none",
-                        source(helper, player));
+                        source(player));
         helper.assertTrue(accepted == 1, "Улучшение загона обязано начаться по команде: результат=" + accepted);
         List<SpiritEntity> spawned = spiritsNear(helper, anchor, 5);
         helper.assertTrue(!spawned.isEmpty(), "Дух-строитель обязан появиться у площадки");

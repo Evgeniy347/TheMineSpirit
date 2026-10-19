@@ -93,9 +93,11 @@ class TestHygieneGuardTests {
 
     @Test
     void reflectionPattern_AccessingPrivateMember_IsReported() {
-        String sample = "Field f = clazz.getDeclaredField(\"x\");\n"
-                + "f.setAccessible(true);\n"
-                + "Method m = clazz.getDeclaredMethod(\"y\");\n";
+        String sample = """
+                        Field f = clazz.getDeclaredField("x");
+                        f.setAccessible(true);
+                        Method m = clazz.getDeclaredMethod("y");
+                        """;
 
         assertEquals(
                 3,
@@ -115,10 +117,12 @@ class TestHygieneGuardTests {
 
     @Test
     void mutableStaticCollection_ConstructorInitializer_IsReported() {
-        String sample = "class Sample {\n"
-                + "    private static final Map<String, Integer> seen = new HashMap<>();\n"
-                + "    static final List<String> order = new ArrayList<>();\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static final Map<String, Integer> seen = new HashMap<>();
+                            static final List<String> order = new ArrayList<>();
+                        }
+                        """;
 
         assertEquals(
                 List.of("seen", "order"),
@@ -128,23 +132,40 @@ class TestHygieneGuardTests {
 
     @Test
     void immutableStatics_ConstantsAndMethods_AreIgnored() {
-        String sample = "class Sample {\n"
-                + "    private static final Pattern P = Pattern.compile(\"x\");\n"
-                + "    private static final Map<String, Integer> M = Map.of(\"a\", 1);\n"
-                + "    private static final List<String> L = List.of(\"a\");\n"
-                + "    private static final BlockCoord C = new BlockCoord(0, 0, 0);\n"
-                + "    private static void helper() {\n"
-                + "    }\n"
-                + "    static {\n"
-                + "        int a = 1;\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            private static final Pattern P = Pattern.compile("x");
+                            private static final Map<String, Integer> M = Map.of("a", 1);
+                            private static final List<String> L = List.of("a");
+                            private static final BlockCoord C = new BlockCoord(0, 0, 0);
+                            private static void helper() {
+                            }
+                            static {
+                                int a = 1;
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
                 staticFieldNames(sample),
                 "Сторож ложно срабатывает: неизменяемые константы (Map.of/List.of, статический конструктор), "
                         + "static-метод и static-блок — не изменяемое состояние");
+    }
+
+    @Test
+    void textBlockSample_InsideTestSource_IsNotCode() {
+        String quotes = "\"\"\"";
+        String source = "class Sample {\n    String s = " + quotes + "\n        static int seen;\n        " + quotes
+                + ";\n    static int real;\n}\n";
+
+        List<String> offenders = mutableStaticOffenders(Map.of(Path.of("Sample.java"), source), Map.of());
+
+        assertEquals(
+                List.of("Sample.java:5 изменяемое static-поле real"),
+                offenders,
+                "Образец кода в текстовом блоке — данные теста, а не код: иначе сторож ловит собственные образцы; "
+                        + "вырезанный блок сохраняет переводы строк, иначе номер строки нарушителя съезжает");
     }
 
     @Test
@@ -173,7 +194,10 @@ class TestHygieneGuardTests {
     }
 
     private static String code(String text) {
-        return COMMENT.matcher(STRING_LITERAL.matcher(text).replaceAll("\"\"")).replaceAll("");
+        return COMMENT.matcher(STRING_LITERAL
+                        .matcher(SourceFiles.withoutTextBlocks(text))
+                        .replaceAll("\"\""))
+                .replaceAll("");
     }
 
     private static List<String> mutableStaticOffenders(Map<Path, String> sources) {

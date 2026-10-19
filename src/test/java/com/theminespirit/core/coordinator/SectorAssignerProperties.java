@@ -73,7 +73,7 @@ class SectorAssignerProperties {
     @Property
     void assign_DefenderRemoved_OthersStayInRadius(
             @ForAll("defenderListsTwoPlus") List<UUID> defenders, @ForAll("radii") double radius) {
-        List<DefenseAssignment> before = new SectorAssigner().assign(CENTER, radius, defenders);
+
         UUID removed = defenders.get(0);
         List<DefenseAssignment> after = new SectorAssigner()
                 .assign(

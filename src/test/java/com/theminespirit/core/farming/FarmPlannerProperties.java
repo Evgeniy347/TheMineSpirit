@@ -153,7 +153,7 @@ class FarmPlannerProperties {
                 .thenComparing(Comparator.naturalOrder()));
         CachedSafetyView cached = new CachedSafetyView(safety);
         FarmPlanner.Next best = null;
-        long bestStandSquared = Long.MAX_VALUE;
+
         int ineligible = 0;
         int dry = 0;
         int noStand = 0;
@@ -176,7 +176,6 @@ class FarmPlannerProperties {
             FarmPlanner.Next candidate = new FarmPlanner.Next(target, stands.get(0));
             if (best == null || closer(candidate, best, from)) {
                 best = candidate;
-                bestStandSquared = distanceSquared(from, candidate.stand());
             }
         }
         return best == null ? new FarmPlanner.Exhausted(ineligible, noStand, dry) : best;

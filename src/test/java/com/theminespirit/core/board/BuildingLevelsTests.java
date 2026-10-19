@@ -102,7 +102,6 @@ class BuildingLevelsTests {
 
     @Test
     void nextLevel_NullArgs_AreRejected() {
-        BoardLedger ledger = new BoardLedger();
 
         assertThrows(
                 NullPointerException.class,

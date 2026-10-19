@@ -15,8 +15,8 @@ public final class FactMap {
         map.putOrders(situation.orders(), assessment);
         map.put(FactName.TIME_SINCE_HIT, situation.ticksSinceHit());
         map.put(FactName.TIME_SINCE_STRIKE, situation.ticksSinceStrike());
-        map.put(FactName.TIME_SINCE_ENEMY_SEEN, assessment.ticksSinceEnemySeen());
-        map.put(FactName.TIME_IN_STATE, assessment.ticksInState());
+        map.put(FactName.TIME_SINCE_ENEMY_SEEN, (double) assessment.ticksSinceEnemySeen());
+        map.put(FactName.TIME_IN_STATE, (double) assessment.ticksInState());
         map.put(FactName.STATE_TACTICAL, assessment.state().id());
         map.put(FactName.DERIVED_WIN_MARGIN, assessment.winMargin());
         map.put(FactName.DERIVED_SPEED_RATIO, assessment.speedRatio());

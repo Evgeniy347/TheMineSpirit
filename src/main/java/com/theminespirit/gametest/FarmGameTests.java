@@ -69,15 +69,6 @@ public final class FarmGameTests {
 
     private FarmGameTests() {}
 
-    // Сцены сладких ягод и столбовых культур проверяют только сбор и подбор. Раньше на каждую
-    // такую пачку стояла пара @BeforeBatch/@AfterBatch с выключением координатора и доски;
-    // теперь обе системы выключены на GameTest-сервере по умолчанию, и пачке ничего не нужно.
-    private static final String BERRY_HARVEST_BATCH = "farm_harvest_sweetberry";
-    private static final String BERRY_SESSION_BATCH = "farm_session_sweetberry";
-    private static final String CANE_BATCH = "farm_column_sugarcane";
-    private static final String BAMBOO_BATCH = "farm_column_bamboo";
-    private static final String CACTUS_BATCH = "farm_column_cactus";
-    private static final String SINGLE_COLUMN_BATCH = "farm_column_single";
     private static final String MELON_BATCH = "farm_fruit_melon";
     private static final String PUMPKIN_BATCH = "farm_fruit_pumpkin";
     private static final String COCOA_BATCH = "farm_cocoa";
@@ -1153,7 +1144,7 @@ public final class FarmGameTests {
             assertSucceeded(
                     helper, spirit, "пять зрелых кустов обязаны собраться PICK без ломки, недозрелые не мешают");
             for (int i = 0; i < cells.size(); i++) {
-                int expectedAge = i % 2 == 0 ? 1 : 1;
+                int expectedAge = 1;
                 helper.assertTrue(
                         cropAge(helper, cells.get(i)) == expectedAge,
                         "клетка " + i

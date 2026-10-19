@@ -38,7 +38,6 @@ public final class TestCostListener implements TestExecutionListener {
     private final ConcurrentHashMap<String, Long> startCpu = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> startGc = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Integer> classesAtTestStart = new ConcurrentHashMap<>();
-    private int classesAtRunStart;
 
     public TestCostListener() {
         String configured = System.getProperty(CSV_PROPERTY);
@@ -47,7 +46,7 @@ public final class TestCostListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionStarted(TestPlan testPlan) {
-        classesAtRunStart = classMx.getLoadedClassCount();
+
         try {
             Files.createDirectories(csv.getParent());
             Files.writeString(csv, "class,test,kind,cpu_ms,wall_ms,gc_ms,warmup\n", StandardCharsets.UTF_8);

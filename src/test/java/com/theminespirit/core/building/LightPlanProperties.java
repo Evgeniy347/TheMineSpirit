@@ -85,7 +85,7 @@ class LightPlanProperties {
 
         for (BlockCoord torch : plan.torches()) {
             assertEquals(
-                    Boolean.TRUE,
+                    true,
                     placeable.get(torch),
                     "Факел " + torch + " стоит на занятой или запрещённой клетке: чужую постройку и воду не трогаем");
         }

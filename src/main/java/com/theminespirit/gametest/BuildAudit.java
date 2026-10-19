@@ -85,7 +85,7 @@ public final class BuildAudit {
         for (Schematic.PlacedEntry entry : entries) {
             BlockCoord cell = entry.pos();
             if (BlockItems.hasBlockItem(entry.block())
-                    && !wasAlready(level, entry, before)
+                    && !wasAlready(entry, before)
                     && !(level instanceof ServerLevel server
                             && PlacedBlocksData.get(server)
                                     .isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())))) {
@@ -125,7 +125,7 @@ public final class BuildAudit {
         }
     }
 
-    private static boolean wasAlready(Level level, Schematic.PlacedEntry entry, Before before) {
+    private static boolean wasAlready(Schematic.PlacedEntry entry, Before before) {
         BlockState expected = BlockStates.stateFor(entry.block(), entry.state());
         BlockState old = before.states().get(entry.pos());
         return old != null && old.is(expected.getBlock());

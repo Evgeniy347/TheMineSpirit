@@ -62,8 +62,7 @@ public class ClearAreaSession {
     protected int foreignSkipped;
     protected int unbreakable;
     protected int restoredSkipped;
-    private int entityQueries;
-    private int blockReads;
+
     private final BuildResult tally = new BuildResult();
     private final boolean demolish;
 
@@ -252,7 +251,6 @@ public class ClearAreaSession {
         switch (breaker.tick()) {
             case BREAKING -> {}
             case BROKEN -> {
-                blockReads++;
                 removed++;
                 tally.removed();
                 collector = new DropCollector(
@@ -276,7 +274,6 @@ public class ClearAreaSession {
         if (collected == DropCollector.State.RUNNING) {
             return;
         }
-        entityQueries += collector.entityQueries();
         collector = null;
         if (collected == DropCollector.State.FAILED) {
             fail("не удалось подобрать дроп у " + currentTarget + ": расчистка остановлена");

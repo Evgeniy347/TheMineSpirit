@@ -183,7 +183,7 @@ class NeedsOfPlanTests {
 
         assertEquals(
                 List.of(),
-                NeedsOfPlan.collect(plan, KnowledgeFor(List.of())),
+                NeedsOfPlan.collect(plan, KnowledgeFor()),
                 "Скрипт вне списка item/craft/smelt/equip/deposit/acquire/gather не защищает свой item: "
                         + "иначе параметр item у любого нового скрипта молча делал предмет неуничтожимым");
     }
@@ -200,7 +200,7 @@ class NeedsOfPlanTests {
         TaskNode plan = new ScriptCall(script, Map.of("item", item, "count", 1));
 
         assertTrue(
-                NeedsOfPlan.collect(plan, KnowledgeFor(List.of())).contains(item),
+                NeedsOfPlan.collect(plan, KnowledgeFor()).contains(item),
                 "Скрипт '" + script + "' защищает свой параметр item: предмет заказа плана не должен "
                         + "выбрасываться при переполнении инвентаря");
     }
@@ -217,7 +217,7 @@ class NeedsOfPlanTests {
                         + "разошёлся бы с тем, что считает ResourceResolver");
     }
 
-    private static ResourceKnowledge KnowledgeFor(List<String> items) {
+    private static ResourceKnowledge KnowledgeFor() {
         return new RecipeKnowledge(Map.of(), Map.of(), Map.of(), Set.of());
     }
 

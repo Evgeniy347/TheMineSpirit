@@ -41,13 +41,15 @@ class GameTestTemplateGuardTests {
 
     @Test
     void gameTestTemplatePattern_EmptyWithSpawn_FindsViolation() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void spawn_SpiritType_Lives(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void spawn_SpiritType_Lives(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("spawn_SpiritType_Lives"),
@@ -57,13 +59,15 @@ class GameTestTemplateGuardTests {
 
     @Test
     void gameTestTemplatePattern_EmptyWithSetBlock_FindsViolation() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void floor_Stone_IsBuilt(GameTestHelper helper) {\n"
-                + "        helper.setBlock(0, 0, 0, Blocks.STONE);\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void floor_Stone_IsBuilt(GameTestHelper helper) {
+                                helper.setBlock(0, 0, 0, Blocks.STONE);
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of("floor_Stone_IsBuilt"),
@@ -73,13 +77,15 @@ class GameTestTemplateGuardTests {
 
     @Test
     void gameTestTemplatePattern_ArenaWithSpawn_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"arena\", batch = \"spawn\", timeoutTicks = 100)\n"
-                + "    public static void spawn_SpiritType_Lives(GameTestHelper helper) {\n"
-                + "        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", batch = "spawn", timeoutTicks = 100)
+                            public static void spawn_SpiritType_Lives(GameTestHelper helper) {
+                                SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -89,13 +95,15 @@ class GameTestTemplateGuardTests {
 
     @Test
     void gameTestTemplatePattern_EmptyWithoutSpawnOrBlocks_IsClean() {
-        String sample = "class Sample {\n"
-                + "    @GameTest(template = \"empty\", timeoutTicks = 100)\n"
-                + "    public static void registry_EveryScript_IsDescribed(GameTestHelper helper) {\n"
-                + "        helper.assertTrue(SpiritScripts.registryFor(null).ids().size() > 0, \"реестр пуст\");\n"
-                + "        helper.succeed();\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "empty", timeoutTicks = 100)
+                            public static void registry_EveryScript_IsDescribed(GameTestHelper helper) {
+                                helper.assertTrue(SpiritScripts.registryFor(null).ids().size() > 0, "реестр пуст");
+                                helper.succeed();
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),

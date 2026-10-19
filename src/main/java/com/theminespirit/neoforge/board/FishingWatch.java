@@ -61,18 +61,12 @@ final class FishingWatch {
             return;
         }
         FishingData data = FishingData.loadDefault();
-        tickSmoker(level, service, spirits, stock, now, home, data);
+        tickSmoker(level, service, stock, now, home, data);
         tickWork(level, service, spirits, stock, now, home, data);
     }
 
     private void tickSmoker(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            StockView stock,
-            long now,
-            BlockPos home,
-            FishingData data) {
+            ServerLevel level, BoardService service, StockView stock, long now, BlockPos home, FishingData data) {
         if (!FishingNeeds.wantsSmoker(stock.available(), data) || smokerNear(level, home)) {
             cancelWaiting(service, SMOKER_ID);
             return;

@@ -95,7 +95,7 @@ public final class BoardV2GameTests {
     private static final String BATCH = "board_v2";
     private static final String EVERGREEN_BATCH = "board_v2_evergreen";
     private static final String FOOD_BATCH = "board_v2_food";
-    private static final int CLEAR_RADIUS = 4;
+
     private static final long NIGHT_TIME = 18_000L;
     private static final int NOON_TIME = 6_000;
     private static final int HUNGRY_LEVEL = 19;
@@ -610,7 +610,7 @@ public final class BoardV2GameTests {
         board.board().claim("journal_build", holder, now);
         board.board().complete("journal_build");
         board.journal().flushAll();
-        BoardLogEntry first = entryOf(board, log, "journal_build");
+        BoardLogEntry first = entryOf(log, "journal_build");
         helper.assertTrue(first != null, "Выполненное задание обязано дать строку журнала");
         helper.assertTrue(
                 beforeHash.equals(first.configHash()),
@@ -637,7 +637,7 @@ public final class BoardV2GameTests {
             board.board().claim("journal_after_reload", holder, now + 1);
             board.board().complete("journal_after_reload");
             board.journal().flushAll();
-            BoardLogEntry second = entryOf(board, log, "journal_after_reload");
+            BoardLogEntry second = entryOf(log, "journal_after_reload");
             helper.assertTrue(second != null, "Новое задание после перезагрузки обязано попасть в журнал");
             helper.assertTrue(
                     afterHash.equals(second.configHash()),
@@ -804,7 +804,7 @@ public final class BoardV2GameTests {
                 .count();
     }
 
-    private static BoardLogEntry entryOf(BoardService board, Path log, String ticketId) {
+    private static BoardLogEntry entryOf(Path log, String ticketId) {
         try {
             for (String line : Files.readAllLines(log, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) {

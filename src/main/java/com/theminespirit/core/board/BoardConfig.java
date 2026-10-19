@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
@@ -33,8 +32,6 @@ public record BoardConfig(
         Map<String, Integer> wool,
         Map<String, Integer> hive) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public BoardConfig {
         Objects.requireNonNull(

@@ -136,7 +136,7 @@ public final class IntellectScaleGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
         spirit.setHome(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
-        String id = spirit.getUUID().toString();
+
         boolean[] failed = {false};
         long[] failTick = {-1};
         long[] lastGen = {spirit.taskGeneration()};

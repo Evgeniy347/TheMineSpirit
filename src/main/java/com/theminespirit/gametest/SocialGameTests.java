@@ -69,7 +69,7 @@ public final class SocialGameTests {
     public static void deliver_NoItem_FailsWithNumbers(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "DeliverEmpty");
+        GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "DeliverEmpty");
 
         SpiritRun run = SpiritRun.launch(
                 helper,
@@ -144,7 +144,7 @@ public final class SocialGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
         List<Component> messages = new ArrayList<>();
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SayTarget", messages);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SayTarget", messages);
 
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("say", Map.of("text", "привет")), 10);
 
@@ -197,7 +197,7 @@ public final class SocialGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
         List<Component> messages = new ArrayList<>();
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SpamTarget", messages);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SpamTarget", messages);
 
         spirit.setLastSayTick(spirit.tickCount);
 

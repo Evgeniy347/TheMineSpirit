@@ -17,7 +17,7 @@ public final class RecipeCurator {
         List<RecipeSpec> kept = new ArrayList<>(recipes.size());
         for (RecipeSpec recipe : recipes) {
             if (recipe.kind() == RecipeKind.SMELTING
-                    || !smelted.contains(recipe.outputItem()) && !consumesOwnResult(recipe)) {
+                    || (!smelted.contains(recipe.outputItem()) && !consumesOwnResult(recipe))) {
                 kept.add(recipe);
             }
         }

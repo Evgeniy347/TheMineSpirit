@@ -62,7 +62,7 @@ public final class FillSession {
     private int protectedSkipped;
     private int foreignSkipped;
     private int blockReads;
-    private int slices;
+
     private final BuildResult tally = new BuildResult();
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
@@ -209,7 +209,7 @@ public final class FillSession {
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
-            slices++;
+
             if (stands.isEmpty()) {
                 noStand++;
                 skipped++;

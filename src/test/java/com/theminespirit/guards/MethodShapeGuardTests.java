@@ -51,11 +51,13 @@ class MethodShapeGuardTests {
 
     @Test
     void methodShapePattern_BooleanFlagsAndLongList_AreReported() {
-        String sample = "class Sample {\n"
-                + "    boolean flags(boolean first, boolean second, boolean third) { return first; }\n"
-                + "    void wide(int a, int b, int c, int d, int e, int f, int g, int h) { }\n"
-                + "    void narrow(boolean first, boolean second, int value) { }\n"
-                + "}\n";
+        String sample = """
+                        class Sample {
+                            boolean flags(boolean first, boolean second, boolean third) { return first; }
+                            void wide(int a, int b, int c, int d, int e, int f, int g, int h) { }
+                            void narrow(boolean first, boolean second, int value) { }
+                        }
+                        """;
 
         assertEquals(
                 List.of("2 Sample.flags", "3 Sample.wide"),
@@ -75,11 +77,13 @@ class MethodShapeGuardTests {
 
     @Test
     void methodShapePattern_RecordDelegatingConstructor_IsClean() {
-        String sample = "record Point(int x, int y, int z, int level, int kind, int meta, int light, int sky) {\n"
-                + "    Point(int x, int y, int z) {\n"
-                + "        this(x, y, z, 0, 0, 0, 15, 15);\n"
-                + "    }\n"
-                + "}\n";
+        String sample = """
+                        record Point(int x, int y, int z, int level, int kind, int meta, int light, int sky) {
+                            Point(int x, int y, int z) {
+                                this(x, y, z, 0, 0, 0, 15, 15);
+                            }
+                        }
+                        """;
 
         assertEquals(
                 List.of(),
@@ -143,7 +147,7 @@ class MethodShapeGuardTests {
                 public Void visitClass(ClassTree node, Void unused) {
                     owners.push(node);
                     try {
-                        return super.visitClass(node, unused);
+                        return super.visitClass(node, null);
                     } finally {
                         owners.pop();
                     }
@@ -153,7 +157,7 @@ class MethodShapeGuardTests {
                 public Void visitMethod(MethodTree node, Void unused) {
                     ClassTree owner = owners.peek();
                     if (owner == null) {
-                        return super.visitMethod(node, unused);
+                        return super.visitMethod(node, null);
                     }
                     int parameters = node.getParameters().size();
                     int booleans = 0;
@@ -171,7 +175,7 @@ class MethodShapeGuardTests {
                     boolean tooWide = parameters >= MAX_PARAMETERS;
                     boolean tooManyFlags = booleans >= MAX_BOOLEAN_PARAMETERS;
                     if ((tooWide || tooManyFlags) && !canonical && !delegates) {
-                        String key = key(unit, node, owner, file);
+                        String key = key(node, owner, file);
                         seen.add(key);
                         if (!exceptions.containsKey(key)) {
                             long line = unit.getLineMap().getLineNumber(positions.getStartPosition(unit, node));
@@ -184,7 +188,7 @@ class MethodShapeGuardTests {
                                     booleans));
                         }
                     }
-                    return super.visitMethod(node, unused);
+                    return super.visitMethod(node, null);
                 }
             }.scan(unit, null);
         }
@@ -199,7 +203,7 @@ class MethodShapeGuardTests {
 
     private record Violation(String file, long line, String owner, String name, int params, int booleans) {}
 
-    private static String key(CompilationUnitTree unit, MethodTree node, ClassTree owner, String file) {
+    private static String key(MethodTree node, ClassTree owner, String file) {
         String path = file.replace('\\', '/');
         int root = path.indexOf("src/main/java/");
         String relative = root < 0 ? path : path.substring(root + "src/main/java/".length());

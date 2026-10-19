@@ -18,7 +18,6 @@ class StockScanTests {
     private static final class FakeBlocks implements StockScan.Blocks {
         private final Set<BlockCoord> containers = new HashSet<>();
         private final Set<BlockCoord> unloaded = new HashSet<>();
-        private int reads;
 
         FakeBlocks containerAt(BlockCoord pos) {
             containers.add(pos);
@@ -37,7 +36,7 @@ class StockScanTests {
 
         @Override
         public boolean isContainer(BlockCoord pos) {
-            reads++;
+
             return containers.contains(pos);
         }
     }

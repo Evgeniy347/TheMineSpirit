@@ -229,7 +229,7 @@ public final class RestEventsGameTests {
                 open.get(0).cancel();
             }
             if (retry.get() == null
-                    || retry.get().status().isDone() && retry.get().status().join() == 429) {
+                    || (retry.get().status().isDone() && retry.get().status().join() == 429)) {
                 retry.set(rest.stream(eventsPath.get(), Map.of()));
                 retries.incrementAndGet();
             }

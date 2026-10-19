@@ -102,7 +102,7 @@ public final class SpiritCoordinator {
         for (var assignment : defense.lastPlan().posts()) {
             posts.put(assignment.defender(), assignment.post());
         }
-        applyPlan(plan, overlay, posts, helpCalls, tick);
+        applyPlan(plan, overlay, posts, helpCalls);
         intellect.tick(level, members, snapshots, defendedPoint, reservations, tick);
     }
 
@@ -133,7 +133,7 @@ public final class SpiritCoordinator {
     }
 
     private void expireStale(List<SpiritSnapshot> snapshots, long tick) {
-        long cutoff = tick - CoordinatorTuning.SNAPSHOT_STALE_TICKS;
+
         List<UUID> seen = snapshots.stream().map(SpiritSnapshot::id).toList();
         List<UUID> toRelease = new ArrayList<>();
         for (UUID owner : new ArrayList<>(reservationsOwners())) {
@@ -199,8 +199,7 @@ public final class SpiritCoordinator {
             CoordinatorPlan plan,
             Map<UUID, DefenseIssuedOrder> overlay,
             Map<UUID, Point> posts,
-            List<HelpCall> helpCalls,
-            long now) {
+            List<HelpCall> helpCalls) {
         Map<UUID, CombatDirective> directives = new HashMap<>(CoordinatorDirectives.of(plan));
         Set<UUID> callers = new HashSet<>();
         for (HelpCall call : helpCalls) {

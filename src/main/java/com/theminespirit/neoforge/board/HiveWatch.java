@@ -171,8 +171,8 @@ public final class HiveWatch {
     private static long flowersAround(BlockPos center, List<BlockPos> known, int radius) {
         long count = 0;
         for (BlockPos flower : known) {
-            long dx = flower.getX() - center.getX();
-            long dz = flower.getZ() - center.getZ();
+            long dx = (long) flower.getX() - center.getX();
+            long dz = (long) flower.getZ() - center.getZ();
             if (dx * dx + dz * dz <= (long) radius * radius) {
                 count++;
             }

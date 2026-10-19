@@ -34,12 +34,14 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void bareReturnPattern_ReturnInsideSucceedWhenLambda_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(3),
@@ -49,14 +51,16 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void bareReturnPattern_ReturnOutsideSucceedWhen_IsIgnored() {
-        String sample = "helper.onEachTick(() -> {\n"
-                + "    if (session == null) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "});\n"
-                + "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.onEachTick(() -> {
+                            if (session == null) {
+                                return;
+                            }
+                        });
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(),
@@ -86,7 +90,10 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void methodRef_ThisAndStaticRefsInSucceedWhen_AreReported() {
-        String sample = "helper.succeedWhen(this::checkReady);\n" + "helper.succeedWhen(Checks::isReady);\n";
+        String sample = """
+                        helper.succeedWhen(this::checkReady);
+                        helper.succeedWhen(Checks::isReady);
+                        """;
 
         assertEquals(
                 List.of(1, 2),
@@ -98,7 +105,10 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void methodRef_OutsideSucceedWhen_IsIgnored() {
-        String sample = "pending.add(this::checkReady);\n" + "stream.map(Foo::bar).toList();\n";
+        String sample = """
+                        pending.add(this::checkReady);
+                        stream.map(Foo::bar).toList();
+                        """;
 
         assertEquals(
                 List.of(),
@@ -108,13 +118,15 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void bracesAndEscapedQuoteInString_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    String hint = \"нажми (A), скажи \\\"готово } жди\\\"\";\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            String hint = "нажми (A), скажи \\"готово } жди\\"";
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(4),
@@ -126,9 +138,11 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void returnWordInStringLiteral_InsideMessage_IsIgnored() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"без return; не засчитает\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "без return; не засчитает");
+                        });
+                        """;
 
         assertEquals(
                 List.of(),
@@ -139,14 +153,16 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void bracesInComments_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    // ждём } пока не готово\n"
-                + "    /* { проверка */\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            // ждём } пока не готово
+                            /* { проверка */
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(5),
@@ -158,12 +174,14 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void commentedOutSucceedWhen_InLineComments_IsIgnored() {
-        String sample = "// helper.succeedWhen(() -> {\n"
-                + "//     return;\n"
-                + "// });\n"
-                + "helper.succeedWhen(() -> {\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        // helper.succeedWhen(() -> {
+                        //     return;
+                        // });
+                        helper.succeedWhen(() -> {
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(),
@@ -173,13 +191,15 @@ class SucceedWhenReturnGuardTests {
 
     @Test
     void braceInCharLiteral_RealReturnAfterwards_IsReported() {
-        String sample = "helper.succeedWhen(() -> {\n"
-                + "    char closing = '}';\n"
-                + "    if (status == RUNNING) {\n"
-                + "        return;\n"
-                + "    }\n"
-                + "    helper.assertTrue(done, \"готово\");\n"
-                + "});\n";
+        String sample = """
+                        helper.succeedWhen(() -> {
+                            char closing = '}';
+                            if (status == RUNNING) {
+                                return;
+                            }
+                            helper.assertTrue(done, "готово");
+                        });
+                        """;
 
         assertEquals(
                 List.of(4),

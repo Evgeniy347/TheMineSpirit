@@ -63,7 +63,7 @@ public final class MiningPlanner {
         if (targetSquared <= (long) STAND_RADIUS * STAND_RADIUS) {
             return false;
         }
-        double gap = Math.sqrt(targetSquared) - STAND_RADIUS;
+        double gap = Math.sqrt((double) targetSquared) - STAND_RADIUS;
         return gap * gap > bestStandSquared;
     }
 

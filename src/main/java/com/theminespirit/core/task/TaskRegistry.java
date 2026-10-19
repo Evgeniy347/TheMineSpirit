@@ -20,7 +20,8 @@ public final class TaskRegistry {
         if (active != null) {
             throw new BusyException(bot, active.taskId());
         }
-        String taskId = "t-" + (++nextId);
+        nextId++;
+        String taskId = "t-" + nextId;
         tasks.put(taskId, new Entry(new TaskRecord(taskId, bot, TaskState.ACCEPTED, goal, null, null, null)));
         ensureCompletedCap();
         return taskId;

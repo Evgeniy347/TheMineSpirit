@@ -100,7 +100,7 @@ class FleePlannerProperties {
         return null;
     }
 
-    private static List<FleePlanner.Threat> randomThreats(Grid grid, Random random) {
+    private static List<FleePlanner.Threat> randomThreats(Random random) {
         List<FleePlanner.Threat> threats = new ArrayList<>();
         int count = 1 + random.nextInt(3);
         for (int i = 0; i < count; i++) {
@@ -127,7 +127,7 @@ class FleePlannerProperties {
         if (origin == null) {
             return;
         }
-        List<FleePlanner.Threat> threats = randomThreats(grid, random);
+        List<FleePlanner.Threat> threats = randomThreats(random);
 
         FleePlanner.Plan plan = FleePlanner.plan(origin, threats, grid);
 
@@ -175,7 +175,7 @@ class FleePlannerProperties {
         if (origin == null) {
             return;
         }
-        List<FleePlanner.Threat> threats = randomThreats(grid, random);
+        List<FleePlanner.Threat> threats = randomThreats(random);
 
         FleePlanner.Plan first = FleePlanner.plan(origin, threats, grid);
         FleePlanner.Plan second = FleePlanner.plan(origin, threats, grid);

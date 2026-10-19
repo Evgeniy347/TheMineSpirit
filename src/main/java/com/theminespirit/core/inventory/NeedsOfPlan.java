@@ -37,7 +37,7 @@ public final class NeedsOfPlan {
 
     private static void collectFrom(TaskNode node, ResourceKnowledge knowledge, Set<String> path, List<String> needs) {
         switch (node) {
-            case ScriptCall call -> collectFromScript(call, knowledge, path, needs);
+            case ScriptCall call -> collectFromScript(call, knowledge, needs);
             case SequenceNode sequence -> collectFromSteps(sequence.steps(), knowledge, path, needs);
             case FallbackNode fallback -> collectFromSteps(fallback.steps(), knowledge, path, needs);
             case ParallelNode parallel -> collectFromSteps(parallel.steps(), knowledge, path, needs);
@@ -58,8 +58,7 @@ public final class NeedsOfPlan {
         }
     }
 
-    private static void collectFromScript(
-            ScriptCall call, ResourceKnowledge knowledge, Set<String> path, List<String> needs) {
+    private static void collectFromScript(ScriptCall call, ResourceKnowledge knowledge, List<String> needs) {
         if (ITEM_SCRIPTS.contains(call.script())) {
             String item = text(call, ITEM_PARAM);
             if (item != null) {
