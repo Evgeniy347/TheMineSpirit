@@ -126,7 +126,7 @@ class PlanParserTests {
         TaskNode node = PlanParser.parse(json, CATALOG);
 
         assertEquals(new ScriptCall("scan", Map.of("radius", 32, "filter", List.of("*_log", "*_ore"))), node,
-                "scan.filter принимает массив строк: иначе планировщик не сможет задать фильтр блоков, как в API.md");
+                "scan.filter принимает массив строк: иначе планировщик не сможет задать фильтр блоков, как в docs/api/README.md");
     }
 
     @Test

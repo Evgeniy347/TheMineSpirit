@@ -48,9 +48,9 @@ class CapabilitiesJsonTests {
         String actual = CapabilitiesJson.toJson(smallCatalog());
 
         assertEquals(expected, actual,
-                "Каталог в JSON — контракт docs/API.md для ИИ-планировщика: типы параметров в JSON-Schema "
+                "Каталог в JSON — контракт docs/api/README.md для ИИ-планировщика: типы параметров в JSON-Schema "
                         + "(integer/number/string/array/boolean/enum), границы, умолчания, required и порядок скриптов "
-                        + "как в каталоге. Меняя формат осознанно, правь docs/API.md");
+                        + "как в каталоге. Меняя формат осознанно, правь docs/api/README.md");
     }
 
     @Test

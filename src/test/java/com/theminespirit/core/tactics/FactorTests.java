@@ -86,7 +86,7 @@ class FactorTests {
 
         expected.forEach((factor, wanted) -> assertEquals(wanted,
                 factor.value(situation, assessment, Scales.defaults()), TOLERANCE,
-                "Ситуация «" + name + "», фактор " + factor + ": значение считается по формуле из docs/TACTICS.md; "
+                "Ситуация «" + name + "», фактор " + factor + ": значение считается по формуле из docs/tactics/README.md; "
                         + "если формулу меняют осознанно, пересчитайте таблицу и веса сценариев"));
     }
 

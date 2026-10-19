@@ -22,11 +22,11 @@ class ErrorJsonTests {
         String json = ErrorJson.toJson(error);
 
         assertEquals(DOC_EXAMPLE, json,
-                "Формат ошибки — контракт docs/API.md: {error:{code,message,details}} без пробелов и с details-объектом");
-        String apiDoc = Files.readString(Path.of("docs/API.md"), StandardCharsets.UTF_8);
+                "Формат ошибки — контракт docs/api/README.md: {error:{code,message,details}} без пробелов и с details-объектом");
+        String apiDoc = Files.readString(Path.of("docs/api/README.md"), StandardCharsets.UTF_8);
         assertTrue(apiDoc.contains(json),
-                "Пример ошибки в docs/API.md обязан быть побайтно равен тому, что отдаёт мост: клиенты сверяют "
-                        + "ответы с документом. Поправь пример в docs/API.md");
+                "Пример ошибки в docs/api/README.md обязан быть побайтно равен тому, что отдаёт мост: клиенты сверяют "
+                        + "ответы с документом. Поправь пример в docs/api/README.md");
     }
 
     @Test

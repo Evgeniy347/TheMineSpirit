@@ -6,7 +6,7 @@ public final class CatalogLimits {
     private CatalogLimits() {
     }
 
-    // docs/API.md: count 1..256
+    // docs/api/README.md: count 1..256
     public static final int COUNT_MIN = 1;
     public static final int COUNT_MAX = 256;
 

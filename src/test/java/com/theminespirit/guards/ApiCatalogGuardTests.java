@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class ApiCatalogGuardTests {
-    private static final Path API_DOC = Path.of("docs/API.md");
+    private static final Path API_DIR = Path.of("docs/api");
     private static final String CATALOG_HEADING = "### GET /v1/capabilities";
     private static final Pattern BACKTICKED = Pattern.compile("`([^`\\n]+)`");
     private static final Pattern SCRIPT_ID = Pattern.compile("[a-z][a-z0-9_]*");
@@ -37,10 +37,10 @@ class ApiCatalogGuardTests {
         List<String> missing = missingScripts(CoreScripts.defaultCatalog().all(), readApiDoc());
 
         assertEquals(List.of(), missing,
-                "Скрипт каталога не упомянут в docs/API.md обратными кавычками: контракт и каталог разошлись, "
+                "Скрипт каталога не упомянут в docs/api/README.md обратными кавычками: контракт и каталог разошлись, "
                         + "и клиент по документу не узнает скрипт, который /v1/capabilities уже отдаёт. "
-                        + "Допишите строку с id и параметрами из ScriptSpec (docs/API.md → «GET /v1/capabilities»). "
-                        + "Правило: каталог и docs/API.md не расходятся. Не упомянуты");
+                        + "Допишите строку с id и параметрами из ScriptSpec (docs/api/README.md → «GET /v1/capabilities»). "
+                        + "Правило: каталог и docs/api/README.md не расходятся. Не упомянуты");
     }
 
     @Test
@@ -50,11 +50,11 @@ class ApiCatalogGuardTests {
                 knownNonScriptWords(CoreScripts.defaultCatalog()));
 
         assertEquals(List.of(), unknown,
-                "В разделе каталога docs/API.md обещан скрипт, которого нет в ScriptSpec: дух его не выполнит, "
+                "В разделе каталога docs/api/README.md обещан скрипт, которого нет в ScriptSpec: дух его не выполнит, "
                         + "а /v1/capabilities не отдаст — документ врёт клиенту. Уберите устаревшее упоминание "
                         + "или добавьте скрипт в CoreScripts. Параметры, значения enum и слова итога задачи "
                         + "(result/error/done/have/missing/null) скриптами не считаются. "
-                        + "Правило: docs/API.md → «GET /v1/capabilities». Лишние упоминания");
+                        + "Правило: docs/api/README.md → «GET /v1/capabilities». Лишние упоминания");
     }
 
     @Test
@@ -105,7 +105,7 @@ class ApiCatalogGuardTests {
                 new IdempotencyCache()).routes());
 
         assertEquals(List.of(), missing,
-                "Маршрут /v1/policy/* объявлен в PolicyRoutes, но не описан в docs/API.md: клиент по документу "
+                "Маршрут /v1/policy/* объявлен в PolicyRoutes, но не описан в docs/api/README.md: клиент по документу "
                         + "не узнает конечную точку снятия защиты построек игрока. Допишите строку таблицы "
                         + "«Конечные точки» и раздел с телом запроса. Не описаны");
     }
@@ -154,9 +154,15 @@ class ApiCatalogGuardTests {
     }
 
     private static String readApiDoc() throws IOException {
-        assertTrue(Files.isRegularFile(API_DOC),
-                "Сторож не нашёл " + API_DOC + ": тесты запускаются из корня проекта (./gradlew test)");
-        return Files.readString(API_DOC, StandardCharsets.UTF_8);
+        assertTrue(Files.isDirectory(API_DIR),
+                "Сторож не нашёл " + API_DIR + ": тесты запускаются из корня проекта (./gradlew test)");
+        StringBuilder text = new StringBuilder();
+        try (var files = Files.list(API_DIR)) {
+            for (Path file : files.filter(path -> path.toString().endsWith(".md")).sorted().toList()) {
+                text.append(Files.readString(file, StandardCharsets.UTF_8)).append('\n');
+            }
+        }
+        return text.toString();
     }
 
     private static List<String> missingScripts(List<ScriptSpec> catalog, String doc) {
@@ -203,7 +209,7 @@ class ApiCatalogGuardTests {
     private static String catalogSection(String doc) {
         int start = doc.indexOf(CATALOG_HEADING);
         assertTrue(start >= 0,
-                "В docs/API.md нет раздела «" + CATALOG_HEADING + "»: заголовок переименован — поправь сторожа");
+                "В docs/api/README.md нет раздела «" + CATALOG_HEADING + "»: заголовок переименован — поправь сторожа");
         int next = doc.indexOf("\n### ", start + CATALOG_HEADING.length());
         return next < 0 ? doc.substring(start) : doc.substring(start, next);
     }

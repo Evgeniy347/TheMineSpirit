@@ -8,7 +8,7 @@
 
 ## Документы и план
 
-1. [ ] **DocsSizeGuard**: `AGENTS.md`, `README.md`, `docs/**/*.md`, `tasks/*.md` — не длиннее 200 строк.
+1. [x] **DocsSizeGuard**: `AGENTS.md`, `README.md`, `docs/**/*.md`, `tasks/*.md` — не длиннее 200 строк.
    Сейчас нарушают: `docs/API.md` (730), `docs/TACTICS.md` (311), `docs/research/{colony-economy,llm-agents-skills,
    millenaire-classic,bot-api-bridge}.md` (206–287). Раздробить: `docs/api/` (README-карта + разделы; стратег
    `agents/strategist/prompt.py` и его тесты, `ApiCatalogGuardTests`, ссылки в коде берут «Формат плана» из нового

@@ -36,7 +36,7 @@ class TacticsScenarioTests {
 
         assertEquals(List.of(), mismatches,
                 "Сценарий «" + name + "» расходится с ожиданием: тактическое решение изменилось. Если изменение "
-                        + "осознанное (веса, правила), поправьте scenarios.json и docs/TACTICS.md; иначе откатите "
+                        + "осознанное (веса, правила), поправьте scenarios.json и docs/tactics/README.md; иначе откатите "
                         + "правку. Трасса: " + outcome.trace().explain() + ". Расхождения");
     }
 

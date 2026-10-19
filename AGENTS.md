@@ -11,7 +11,7 @@
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера | только по согласованию с пользователем |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md) | роль главного агента: задания, приёмка, присмотр | если ты главный агент (Claude) |
 | [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | модели-исполнители и их качество | главному агенту — перед выбором исполнителя |
-| [docs/TACTICS.md](docs/TACTICS.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md), [docs/API.md](docs/API.md) | справочники подсистем | при работе с подсистемой |
+| [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md), [docs/api/README.md](docs/api/README.md) | справочники подсистем | при работе с подсистемой |
 
 ## Правило — это сторож или тест, а не текст (владелец 19.10)
 
@@ -26,12 +26,10 @@
 
 ## Документы
 
-- **Предел — 200 строк на файл** (`AGENTS.md`, `README.md`, `docs/**/*.md`, `tasks/*.md`). Длиннее — дробится по
-  темам (каталог с `README.md`-картой) или сокращается без потери смысла.
+- Предел длины документов держит `DocsSizeGuardTests`; карту README и ссылки — `DocsMapGuardTests`.
 - Документ не пополняется историями багов, частными командами диагностики, датами «урок от …» и пересказом
   устройства скрипта: устройство — в самом скрипте, поведение — в тесте.
-- Новый файл инструкций попадает в эту таблицу и в карту README тем же коммитом.
-- `todo.md` — только открытые задачи; выполненное удаляется, счётчик «сделано» в строке прогресса растёт.
+- `todo.md` — только открытые задачи; счётчик прогресса держит `TodoProgressGuardTests`.
 
 ## Исполнитель
 
