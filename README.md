@@ -137,52 +137,35 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 
 | Файл | Назначение |
 |---|---|
-| [AGENTS.md](AGENTS.md) | карта правил для разработчика и AI-агента, решения пользователя |
-| [todo.md](todo.md) | примерный план работ, техдолг и открытые решения |
-| [tasks/](tasks/) | подробные чеклисты блоков из todo.md для opencode; удаляются после выполнения и ревью |
+| [AGENTS.md](AGENTS.md) | карта правил, принцип «правило — сторож, а не текст», решения пользователя |
+| [todo.md](todo.md) | открытые задачи плана и прогресс |
+| [tasks/](tasks/) | чеклисты блоков в работе; удаляются после приёмки |
 | [CLAUDE.md](CLAUDE.md) | вход для Claude Code, отсылает к AGENTS.md |
-| [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | соглашения кода |
-| [docs/TESTING.md](docs/TESTING.md) | тесты: JUnit, GameTest, сторожа |
-| [docs/GIT.md](docs/GIT.md) | коммиты и работа с git |
-| [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера, согласование |
-| [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | модели-исполнители opencode: проба и качество на заданиях |
-| [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md) | роль главного агента и ревьюера: задания для opencode, ревью, сторожа |
-| [docs/TACTICS.md](docs/TACTICS.md) | ядро тактики боя: факты, факторы, правила, режимы, схема JSON, trace |
-| [opencode.json](opencode.json) | настройки opencode в проекте: модель big-pickle, полный доступ, вопросы запрещены |
-| [docs/STRATEGIST.md](docs/STRATEGIST.md) | агент-стратег духов (`agents/strategist`): цикл, режимы, журнал, лимиты, смена модели |
-| [docs/API.md](docs/API.md) | контракт REST-сервиса духов (bridge), формат плана |
-| [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | горячая перезагрузка таблиц: датапак мира + /reload, команда /spirit tables |
-| [docs/research/README.md](docs/research/README.md) | карта знаний: что переиспользовать из 13 готовых проектов, лицензии |
+| [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git |
+| [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода (только по согласованию) |
+| [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md), [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | главный агент, приёмка, модели-исполнители |
+| [docs/API.md](docs/API.md) | контракт REST-сервиса духов, формат плана и построек |
+| [docs/TACTICS.md](docs/TACTICS.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
+| [docs/research/README.md](docs/research/README.md) | карта знаний о похожих проектах и лицензиях |
+| [opencode.json](opencode.json) | настройки opencode в проекте |
 
 ## Скрипты
 
-| Скрипт | Назначение | Проверка |
-|---|---|---|
-| [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер (только по согласованию с пользователем) | в `/opt/minecraft/server/mods/` лежит свежий jar |
-| [scripts/test.sh](scripts/test.sh) | единый запуск тестов: `unit [--tests <фильтр>]` и `gametest [имя пачки или теста…]`. Полный лог — в `TestResults/logs/`, на экран — итог. Пределы времени (переменные `THEMINESPIRIT_*_WARN_SECONDS` / `THEMINESPIRIT_*_STOP_SECONDS`): unit — предупреждение 3 мин, стоп 6 мин; gametest — предупреждение 5 мин, стоп 10 мин (жёсткий стоп, код 124). GameTest — под замком «один сервер на машину» | `OK unit: N тестов, T с` / `OK gametest: N тестов, T с`; `FAIL …` + первая ошибка + короткий стек + путь к логу; код 75 — идёт чужой GameTest; код 124 — стоп по пределу |
-| [scripts/gametest.sh](scripts/gametest.sh) | тонкая обёртка над `scripts/test.sh gametest` (совместимость) | то же, что `scripts/test.sh gametest` |
-| [scripts/schematic.sh](scripts/schematic.sh) | постройки в текстовом формате слоёв вне игры: `show` (материалы, срезы), `check` (сторожа) — через Gradle-задачу `schematicTool` | `OK <id>` на каждую постройку, код 1 при ошибке |
-| [scripts/mem-guard.sh](scripts/mem-guard.sh) | Сторож памяти на domovoy при параллельных исполнителях: свободно < 15 % — SIGSTOP самой тяжёлой java сборки, > 25 % — SIGCONT | строка в журнале TestResults/mem-guard.log на каждое действие |
-| [scripts/lead/oc-watch.sh](scripts/lead/oc-watch.sh) | слежение главного агента за исполнителями (ПК и domovoy): завершения, зависания, ресурсы, сироты — только события; запуск через Monitor (docs/LEAD-AGENT.md → «Присмотр — инструменты») | строка на каждое событие |
-| [scripts/lead/res-pc.ps1](scripts/lead/res-pc.ps1) | ресурсы ПК и уборка сирот исполнителей (только процессы проекта и `find /`) | строки только при проблеме |
-| [scripts/lead/orphan-sweep.sh](scripts/lead/orphan-sweep.sh) | уборка сирот исполнителей на domovoy (PPID 1, worktree задач или `find /`; Gradle-демон и игровой сервер не трогает) | строка на каждое убийство |
-| [scripts/lead/keepawake.ps1](scripts/lead/keepawake.ps1) | ПК не засыпает N часов, пока работает процесс (SetThreadExecutionState, без изменения настроек питания) | процесс жив |
-| [scripts/opencode-task.sh](scripts/opencode-task.sh) | задание для opencode (big-pickle) с надзором: при сбое провайдера (free usage, rate limit, квота, 429), сетевом сбое (нет соединения, «Endpoint is unavailable») или молчании модели ≥ 5 мин — перезапуск той же сессии (5, 5, 10, 30, 60 с), затем режим ожидания: раз в 120 с (`OPENCODE_PROBE_INTERVAL`) короткая проба модели из пустого каталога, провайдер вернулся — та же сессия продолжается, предел ожидания `OPENCODE_WAIT_LIMIT` 7200 с, потом стоп; сбои пишутся в `TestResults/opencode/failures.log`; новое задание не стартует в грязном дереве (там может работать другой агент), `OPENCODE_ALLOW_DIRTY=1` — осознанно | код выхода 0 и `Сессия: ses_…`; 75 (предел ожидания исчерпан) — сообщить пользователю |
-| [scripts/testing/check-opencode-task.sh](scripts/testing/check-opencode-task.sh) | регрессионная проверка `opencode-task.sh` на подделке [scripts/testing/fake-opencode.sh](scripts/testing/fake-opencode.sh): сбои провайдера, сетевые сбои (json «Cannot connect», stderr «Endpoint is unavailable» опознаются как сбой провайдера, а не молчание), режим ожидания (провайдер вернулся / предел исчерпан), молчание модели, долгая команда, ложные срабатывания на файлах и логе INFO | все строки `OK` |
-| [scripts/strategist.sh](scripts/strategist.sh) | надзор за агентом-стратегом: `start`, `stop`, `status`, `pause`, `resume`, `once`, `smoke [модель]`, `logs [N]`; tmux-сессия `mc-strategist`, второй экземпляр отказывается, `live` только с `STRATEGIST_CONFIRM_LIVE=1` (после согласия пользователя) | `status` показывает «агент: работает», режим, модель и счётчики за час |
-| [scripts/testing/check-strategist.sh](scripts/testing/check-strategist.sh) | регрессионная проверка агента-стратега и `strategist.sh` на временном `STRATEGIST_HOME` | все строки `OK` |
-| [scripts/opencode-status.sh](scripts/opencode-status.sh) | короткая сводка о текущем задании opencode: жив ли, давно ли писал, последние действия, состояние git | строка `opencode: работает; …` |
-| [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | сводка в тему «Оповещения» Telegram: прогресс плана, работающие исполнители (tmux `oc-*`), сбои модели; таймер раз в 5 мин, молчит без исполнителей | `sudo systemd-run --unit=mc-opencode-status --on-calendar='*:0/5' <путь>` |
-| [scripts/progress.sh](scripts/progress.sh) | общий прогресс плана по `todo.md`: отмеченные `[x]` / все пункты | строка `N% (x из всего)` |
-| [scripts/prove-red.sh](scripts/prove-red.sh) | `prove-red.sh <fix-коммит> [фильтр]`: доказывает, что тест fix-коммита краснеет на родителе и зеленеет на самом коммите; временный worktree в `TestResults/prove-red/<хэш>/`, основное дерево не трогает; GameTest не проверяет | строка `OK красный→зелёный` на каждый тест-класс, код выхода 0; `FAIL …` и код 1 — тест не доказывает исправление |
-| [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh) | подключает git-хуки из `scripts/git-hooks/` (один раз после клонирования) | `git config core.hooksPath` → `scripts/git-hooks` |
-| [scripts/git-hooks/reference-transaction](scripts/git-hooks/reference-transaction) | сторож истории: запрещает `--amend`, `rebase`, `reset` назад, `branch -f`, `stash` (docs/GIT.md) | `git commit --amend` отклоняется с объяснением |
-| [scripts/git-hooks/pre-rebase](scripts/git-hooks/pre-rebase) | ранний отказ `rebase` с объяснением | `git rebase` отклоняется |
-| [scripts/git-hooks/commit-msg](scripts/git-hooks/commit-msg) | сторож формата сообщения коммита (docs/GIT.md) | `git commit -m "build: x"` отклоняется с объяснением |
-| [scripts/git-hooks/pre-commit](scripts/git-hooks/pre-commit) | сторож зелёного коммита: при изменениях в `src/`, `build.gradle`, `gradle.properties`, `settings.gradle` прогоняет `./gradlew test` и отклоняет коммит при красном; документы, скрипты и слияния — без прогона (docs/GIT.md) | коммит с падающим тестом отклоняется с объяснением |
-| [scripts/testing/check-pre-commit.sh](scripts/testing/check-pre-commit.sh) | регрессионная проверка `pre-commit` на временном клоне: красный тест, документ, зелёный тест, `git commit -- путь`, незастейдженная правка, слияние | все строки `OK` |
-| [scripts/testing/check-gametest-lock.sh](scripts/testing/check-gametest-lock.sh) | регрессионная проверка замка `gametest.sh` на фейковом gradlew без Gradle: параллельные запуски не пересекаются, протухший замок снимает ровно один из двух ожидающих (атомарное переименование), оба отрабатывают по очереди, живой замок даёт код 75, код gradlew возвращается, `trap` снимает замок | все строки `OK` |
-| `gradlew`, `gradlew.bat` | Gradle wrapper | `./gradlew --version` |
+| Скрипт | Назначение |
+|---|---|
+| [scripts/test.sh](scripts/test.sh) | единственный запуск тестов: `unit [--tests …]`, `gametest [пачка…]`; лог — `TestResults/logs/`, замок GameTest и пределы — в шапке скрипта; коды 0/1/2/75/124 |
+| [scripts/gametest.sh](scripts/gametest.sh) | обёртка над `scripts/test.sh gametest` (совместимость) |
+| [scripts/prove-red.sh](scripts/prove-red.sh) | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
+| [scripts/schematic.sh](scripts/schematic.sh) | постройки текстом: `show` (материалы, срезы), `check` (сторожа) |
+| [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер — только по согласованию |
+| [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
+| [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux) |
+| [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; сводка в Telegram раз в 5 мин |
+| [scripts/strategist.sh](scripts/strategist.sh) | надзор агента-стратега (`start/stop/status/once/smoke/logs`) |
+| [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
+| [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `res-pc.ps1`, `keepawake.ps1` |
+| [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh), [scripts/git-hooks/](scripts/git-hooks/) | хуки: формат коммита, зелёный коммит, запрет перезаписи истории |
+| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-strategist.sh` |
 
 ## Структура
 
