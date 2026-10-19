@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -13,44 +12,11 @@ import java.util.UUID;
  * ({@code supplies}); набор кейсов — код, новый постоянный кейс встаёт сюда явно.
  */
 public final class EvergreenRules {
-    public static final Set<BoardCase> PERMANENT = Set.of(
-            BoardCase.EAT_TO_FULL,
-            BoardCase.RESTOCK_FOOD,
-            BoardCase.REPAIR_FENCE,
-            BoardCase.REPAIR_BUILDING,
-            BoardCase.FILL_CRATER,
-            BoardCase.ENCHANT_SHELVES);
-
     private EvergreenRules() {
-    }
-
-    public static boolean permanent(BoardCase boardCase) {
-        Objects.requireNonNull(boardCase, "Кейс постоянного набора не может быть null: без него "
-                + "непонятно, всегда ли задание висит на доске");
-        return PERMANENT.contains(boardCase);
-    }
-
-    public static Set<BoardCase> permanentCases() {
-        return PERMANENT;
     }
 
     public static Map<String, Integer> supplyThresholds() {
         return DataTables.INSTANCE.board().current().supplies();
-    }
-
-    public static int supplyThreshold(String item) {
-        Objects.requireNonNull(item, "Предмет порога не может быть null: без него неизвестно, "
-                + "сколько держать на складе");
-        return supplyThresholds().getOrDefault(item, 0);
-    }
-
-    /** Нехватка до порога: сколько ещё нужно, чтобы склад держал постоянный запас. */
-    public static int supplyShortfall(String item, int have) {
-        if (have < 0) {
-            throw new IllegalArgumentException("Наличие " + have + " отрицательное: склад не бывает "
-                    + "в минусе, отрицательное число прятало бы перебор");
-        }
-        return Math.max(0, supplyThreshold(item) - have);
     }
 
     /**

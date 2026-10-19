@@ -99,11 +99,6 @@ public final class PlacedBlockSet {
         return chunk != null && chunk.positions.contains(pack(coord));
     }
 
-    public boolean isOverflowed(BlockCoord coord) {
-        Chunk chunk = chunks.get(chunkKeyOf(coord));
-        return chunk != null && chunk.overflowed;
-    }
-
     public int size() {
         return size;
     }

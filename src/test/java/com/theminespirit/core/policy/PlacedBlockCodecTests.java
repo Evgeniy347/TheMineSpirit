@@ -45,7 +45,9 @@ class PlacedBlockCodecTests {
         PlacedBlockSet restored = PlacedBlockCodec.decode(PlacedBlockCodec.encode(set));
 
         assertEquals(set, restored, "Набор после кодека равен исходному: позиции, порядок и признак переполнения");
-        assertTrue(restored.isOverflowed(new BlockCoord(0, 0, 0)), "Признак переполнения чанка пережил сохранение");
+        assertTrue(PlacedBlockCodec.encode(restored).stream()
+                        .filter(entry -> entry.chunkX() == 0 && entry.chunkZ() == 0).findFirst().orElseThrow()
+                        .overflowed(), "Признак переполнения чанка пережил сохранение");
         assertTrue(restored.contains(new BlockCoord(-40, -10, 500)), "Позиция в отрицательном чанке пережила сохранение");
     }
 

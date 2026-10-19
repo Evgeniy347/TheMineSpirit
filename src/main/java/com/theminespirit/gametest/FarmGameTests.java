@@ -1007,8 +1007,6 @@ public final class FarmGameTests {
             helper.assertTrue(run.outcome() == FarmSession.Outcome.SUCCEEDED,
                     "сбор девяти зрелых клеток обязан завершиться успехом: " + run.outcome() + ", "
                             + run.failureReason());
-            helper.assertTrue(FarmPlanner.MAX_SAFETY_READS_PER_TARGET == 324,
-                    "предел чтений безопасности на цель в production изменился с 324: пересмотри K в этом тесте");
             long viewBudget = (long) VIEW_READS_PER_CELL_PER_CALL * cells.size() * run.planCalls();
             helper.assertTrue(run.viewReads() <= viewBudget,
                     "чтений мира видом грядки обязано быть не больше " + viewBudget + " (K = "

@@ -63,10 +63,6 @@ public final class TaskReconciler {
         absentTicks.keySet().retainAll(observedIds);
     }
 
-    public int trackedAbsences() {
-        return absentTicks.size();
-    }
-
     private boolean displaced(TaskRecord record, SpiritReading reading) {
         long expected = registry.startedGeneration(record.taskId());
         return expected != SpiritReading.UNKNOWN_GENERATION && reading.generation() != SpiritReading.UNKNOWN_GENERATION

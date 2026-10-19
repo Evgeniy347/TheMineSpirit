@@ -67,9 +67,8 @@ class TacticsScaleTests {
             TacticsConfig.loadDefault();
         }
 
-        assertEquals(List.of(readsBefore, 1), List.of(TacticsResources.reads(), TacticsConfig.defaultLoads()),
-                "После loadDefault() файлы тактики не читаются: чтение с диска в тике - дефект производительности, "
-                        + "а конфигурация по умолчанию загружается один раз за процесс");
+        assertEquals(readsBefore, TacticsResources.reads(),
+                "После loadDefault() файлы тактики не читаются: чтение с диска в тике - дефект производительности");
     }
 
     @Test

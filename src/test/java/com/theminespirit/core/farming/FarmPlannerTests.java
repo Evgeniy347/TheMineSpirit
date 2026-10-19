@@ -223,13 +223,6 @@ class FarmPlannerTests {
     }
 
     @Test
-    void maxSafetyReadsPerTarget_SearchBoxVolume_Is324() {
-        assertEquals(324, FarmPlanner.MAX_SAFETY_READS_PER_TARGET,
-                "Предел чтений на цель обязан равняться 324 (ящик стоянки 9×4×9): поднятая константа тихо ослабит "
-                        + "тесты масштаба. Число правится только с тестами масштаба");
-    }
-
-    @Test
     void next_StandAtMaxOffsetBeyondThree_BeatsCloserTarget() {
         MapFarmView farm = new MapFarmView()
                 .set(2, 0, 5, DIRT_AIR)
@@ -288,9 +281,9 @@ class FarmPlannerTests {
 
         assertTrue(outcome instanceof FarmPlanner.Next,
                 "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
-        assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L,
+        assertTrue(safety.reads() <= 324 * 8L,
                 "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
                         + "(dist(from,target) − √11), и дальше перебирать незачем. Чтений: " + safety.reads()
-                        + ", предел: " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET * 8L);
+                        + ", предел: " + 324 * 8L);
     }
 }

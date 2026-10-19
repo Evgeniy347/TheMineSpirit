@@ -62,9 +62,6 @@ public final class BoardTuning {
     /** Проверка чаровальни раз в 500 тиков (25 с). */
     public static final long ENCHANT_CHECK_INTERVAL = 500;
 
-    /** Книг меньше — на доску задание «дополнить полки». */
-    public static final int ENCHANT_SHELVES_MIN = 4;
-
     /** Радиус передачи вещей между духами по умолчанию. */
     public static final int TRANSFER_RADIUS_BLOCKS = 32;
 
@@ -149,10 +146,6 @@ public final class BoardTuning {
 
     public static long enchantCheckInterval() {
         return interval("enchantCheckInterval", ENCHANT_CHECK_INTERVAL);
-    }
-
-    public static int enchantShelvesMin() {
-        return (int) interval("enchantShelvesMin", ENCHANT_SHELVES_MIN);
     }
 
     /** Радиус поиска духов-источников передачи: дальше передача не планируется. */

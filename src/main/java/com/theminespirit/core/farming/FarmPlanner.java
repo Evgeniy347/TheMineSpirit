@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Objects;
 
 public final class FarmPlanner {
-    public static final int MAX_SAFETY_READS_PER_TARGET = FarmStandSpots.MAX_SAFETY_READS;
-
     private static final int MAX_STAND_OFFSET_SQUARED = 11;
 
     private FarmPlanner() {

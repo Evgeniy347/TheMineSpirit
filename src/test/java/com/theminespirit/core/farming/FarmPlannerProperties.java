@@ -198,8 +198,8 @@ class FarmPlannerProperties {
 
         FarmPlanner.next(FarmJob.HARVEST, CropKind.ANY, FROM, candidates, farm, safety, hydration);
 
-        assertTrue(safety.reads() <= FarmPlanner.MAX_SAFETY_READS_PER_TARGET * candidates.size(),
-                "Планирование читает не более " + FarmPlanner.MAX_SAFETY_READS_PER_TARGET + " клеток на цель: "
+        assertTrue(safety.reads() <= 324 * candidates.size(),
+                "Планирование читает не более " + 324 + " клеток на цель: "
                         + "иначе перебор целей кладёт серверный тик. Чтений: " + safety.reads() + ", целей: "
                         + candidates.size());
     }

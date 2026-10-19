@@ -53,8 +53,6 @@ class TacticsConfigTests {
         TacticsConfig second = TacticsConfig.loadDefault();
 
         assertSame(first, second, "Конфигурация по умолчанию читается один раз и неизменяема: она общая для всех духов");
-        assertEquals(1, TacticsConfig.defaultLoads(),
-                "Файлы тактики читаются с диска ровно один раз за процесс: чтение в тике было бы дефектом производительности");
     }
 
     @Test

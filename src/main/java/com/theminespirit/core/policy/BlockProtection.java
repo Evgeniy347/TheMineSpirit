@@ -61,10 +61,6 @@ public final class BlockProtection {
         return new Allowed();
     }
 
-    public List<String> denyPatterns() {
-        return deny.patterns();
-    }
-
     public int buildingThreshold() {
         return buildingThreshold;
     }

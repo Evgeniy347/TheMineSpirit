@@ -22,7 +22,4 @@ public record RunProgress(int step, int totalSteps, String currentScript, Intege
         }
     }
 
-    public static RunProgress singleStep(String currentScript) {
-        return new RunProgress(1, 1, currentScript, null, null);
-    }
 }

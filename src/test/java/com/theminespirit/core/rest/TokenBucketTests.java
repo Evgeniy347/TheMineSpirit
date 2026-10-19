@@ -29,8 +29,6 @@ class TokenBucketTests {
 
         assertEquals(40, granted,
                 "всплеск обязан выдать ровно ёмкость 40: больше мгновенных запросов лимитер не пропускает");
-        assertEquals(1, bucket.trackedKeys(),
-                "ключ обязан остаться в таблице для подсчёта пополнения");
     }
 
     @Test
@@ -81,13 +79,17 @@ class TokenBucketTests {
     @Test
     void tryAcquire_MoreThan256Keys_EvictsOldest() {
         TokenBucket bucket = new TokenBucket();
+        for (int i = 0; i < 40; i++) {
+            bucket.tryAcquire("ip-0", 0);
+        }
 
-        for (int i = 0; i < 300; i++) {
+        for (int i = 1; i < 300; i++) {
             bucket.tryAcquire("ip-" + i, 0);
         }
 
-        assertEquals(256, bucket.trackedKeys(),
-                "таблица обязана вытеснять старейший ключ за пределами 256: иначе память растёт с числом адресов");
+        assertTrue(bucket.tryAcquire("ip-0", 0),
+                "таблица обязана вытеснять старейший ключ за пределами 256: вытесненный ключ получает полное "
+                        + "ведро заново, иначе память растёт с числом адресов");
     }
 
     @Test

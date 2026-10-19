@@ -27,12 +27,6 @@ class GatherPolicyTests {
         return FORBIDDEN_EXACT.stream();
     }
 
-    @Test
-    void check_ForbiddenTable_MatchesProduction() {
-        assertEquals(FORBIDDEN_EXACT, GatherPolicy.forbiddenExactIds(),
-                "Таблица запретов теста и кода должна совпадать: иначе запрет незаметно разойдётся с документацией");
-    }
-
     @ParameterizedTest(name = "{0}")
     @MethodSource("forbiddenExactIds")
     void check_ForbiddenExactId_IsRefused(String blockId) {

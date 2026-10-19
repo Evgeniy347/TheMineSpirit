@@ -76,12 +76,6 @@ public record TicketTarget(BlockCoord target, String schemeFile, String fenceBlo
                 transferTo, craftItem, count);
     }
 
-    public TicketTarget withKnowledge(ResourceKnowledge known) {
-        return new TicketTarget(target, schemeFile, fenceBlock, lureItem, supplyItem, supplyCount,
-                craterBlocks, toolCount, species, from, to, known, dropItems, transferFrom, transferTo,
-                craftItem, count);
-    }
-
     public TicketTarget withDrops(List<String> items) {
         return new TicketTarget(target, schemeFile, fenceBlock, lureItem, supplyItem, supplyCount,
                 craterBlocks, toolCount, species, from, to, knowledge, items, transferFrom, transferTo,

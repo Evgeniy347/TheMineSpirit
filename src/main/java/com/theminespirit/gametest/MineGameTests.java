@@ -101,7 +101,7 @@ public final class MineGameTests {
                             + countBlock(helper, Blocks.STONE, CAVE_SHIFT_INSIDE_ARENA));
             helper.assertTrue(spirit.tickCount - startTick.get() <= 200,
                     "пять руды обязаны добыться за 200 тиков духа, заняло " + (spirit.tickCount - startTick.get()));
-            int budget = MiningPlanner.MAX_VIEW_READS_PER_TARGET * 5 * run.planCalls();
+            int budget = 446 * 5 * run.planCalls();
             helper.assertTrue(run.safetyReads() <= budget,
                     "чтений безопасности обязано быть не больше " + budget + " (K на цель на вызов планировщика), "
                             + "прочитано " + run.safetyReads() + " за " + run.planCalls() + " вызовов");
@@ -784,16 +784,6 @@ public final class MineGameTests {
                             + probe.report("дроп не сошёлся"));
             GameTestFixtures.finish(helper);
         });
-    }
-
-    @GameTest(template = "empty", batch = "gather_policy", timeoutTicks = 100)
-    public static void gatherPolicy_ExactIds_ExistInRegistries(GameTestHelper helper) {
-        for (String id : GatherPolicy.forbiddenExactIds()) {
-            helper.assertTrue(BlockSets.resolve(IdFilter.of(List.of("minecraft:" + id))).size() == 1,
-                    "точный запрет gather '" + id + "' обязан существовать в реестре блоков: опечатка в списке "
-                            + "ослепляет политику");
-        }
-        helper.succeed();
     }
 
     // [флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам

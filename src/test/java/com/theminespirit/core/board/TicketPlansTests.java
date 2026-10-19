@@ -14,8 +14,6 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
-import com.theminespirit.core.planner.ResourceKnowledge;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
@@ -84,41 +82,8 @@ class TicketPlansTests {
 
     private static final List<BoardCase> PLANNED_CASES = List.of(CASE_SCRIPTS.keySet().toArray(new BoardCase[0]));
 
-    private static final ResourceKnowledge GATHER_EVERYTHING = new ResourceKnowledge() {
-        @Override
-        public boolean isGatherable(String item) {
-            return true;
-        }
-
-        @Override
-        public boolean isCraftable(String item) {
-            return false;
-        }
-
-        @Override
-        public int outputCount(String item) {
-            return 1;
-        }
-
-        @Override
-        public List<Ingredient> ingredientsFor(String item) {
-            return List.of();
-        }
-
-        @Override
-        public boolean isSmeltable(String item) {
-            return false;
-        }
-
-        @Override
-        public String smeltInputFor(String item) {
-            return item;
-        }
-    };
-
     private static TicketTarget target() {
-        return TicketTarget.at(new BlockCoord(10, 60, -5)).withSpecies(Species.SHEEP)
-                .withKnowledge(GATHER_EVERYTHING);
+        return TicketTarget.at(new BlockCoord(10, 60, -5)).withSpecies(Species.SHEEP);
     }
 
     private static TicketTarget fullTarget() {

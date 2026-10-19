@@ -81,8 +81,6 @@ class BoardTuningTests {
         assertEquals(8, BoardTuning.stockReadBudget(),
                 "Бюджет чтения склада — 8 контейнеров за пересборку: иначе снимок запасов "
                         + "читает склад целиком каждый интервал");
-        assertEquals(4, BoardTuning.enchantShelvesMin(),
-                "Полки дополняются при книгах меньше 4: иначе чаровальня ждёт полный ряд");
     }
 
     @Test
@@ -174,7 +172,6 @@ class BoardTuningTests {
                 (long) BoardTuning.CASE_FAIL_LIMIT,
                 (long) BoardTuning.TICKET_FAIL_LIMIT,
                 (long) BoardTuning.FENCE_WATCH_RADIUS,
-                BoardTuning.ENCHANT_CHECK_INTERVAL,
-                (long) BoardTuning.ENCHANT_SHELVES_MIN);
+                BoardTuning.ENCHANT_CHECK_INTERVAL);
     }
 }

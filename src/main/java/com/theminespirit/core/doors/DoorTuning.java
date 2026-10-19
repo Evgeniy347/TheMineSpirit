@@ -3,7 +3,6 @@ package com.theminespirit.core.doors;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class DoorTuning {
     public static final String RESOURCE = "data/theminespirit/doors/doors.json";
@@ -12,17 +11,11 @@ public final class DoorTuning {
             Set.of("eveningDayFraction", "closeAfterOpenTicks", "playerNearbyRadius", "settlementRadius",
                     "recheckIntervalTicks");
 
-    private static final AtomicInteger LOADS = new AtomicInteger();
-
     private DoorTuning() {
     }
 
     public static DoorRules loadDefault() {
         return DefaultHolder.INSTANCE;
-    }
-
-    public static int defaultLoads() {
-        return LOADS.get();
     }
 
     public static DoorRules parse(String json, String origin) {
@@ -102,7 +95,6 @@ public final class DoorTuning {
         private static final DoorRules INSTANCE = readDefault();
 
         private static DoorRules readDefault() {
-            LOADS.incrementAndGet();
             return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
         }
     }

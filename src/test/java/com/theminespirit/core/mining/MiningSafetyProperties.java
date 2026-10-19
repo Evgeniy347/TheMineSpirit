@@ -27,7 +27,7 @@ class MiningSafetyProperties {
         assertEquals(fluidOnFace(world), safety instanceof BreakSafety.Unsafe,
                 "Запрет ломки обязан совпадать с наличием жидкости на грани: иначе либо дух тонет, "
                         + "либо безопасная руда остаётся недобытой");
-        assertTrue(world.reads() <= MiningSafety.FACE_READS,
+        assertTrue(world.reads() <= 6,
                 "Проверка ломки читает не более 6 граней. Чтений: " + world.reads());
     }
 
@@ -43,8 +43,8 @@ class MiningSafetyProperties {
             assertTrue(MiningSafety.canStand(spot, world),
                     "Каждая выданная стоянка обязана проходить canStand: иначе дух встаёт в воду, огонь или без пола");
         }
-        assertTrue(reads <= StandSpots.MAX_VIEW_READS,
-                "Поиск стоянок обязан укладываться в предел чтений " + StandSpots.MAX_VIEW_READS
+        assertTrue(reads <= 440,
+                "Поиск стоянок обязан укладываться в предел чтений " + 440
                         + ": иначе планирование цели кладёт серверный тик. Чтений: " + reads);
     }
 

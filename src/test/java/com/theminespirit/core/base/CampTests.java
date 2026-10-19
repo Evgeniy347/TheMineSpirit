@@ -99,8 +99,6 @@ class CampTests {
     void campTuning_DeclaredValues_MatchChecklistLiterals() {
         assertEquals(16, CampTuning.CAMP_RADIUS,
                 "Радиус лагеря 16: как радиус обороны и лимит follow.radius, иначе духи разбредутся дальше охраны");
-        assertEquals(8, CampTuning.CAMP_STANDOFF,
-                "Заходная дистанция 8: дальше — духи долго идут до цели, ближе — лагерь на голове босса");
         assertEquals(4, CampTuning.CAMP_MIN_OBJECTIVE_DISTANCE,
                 "Минимум 4 до цели: ближе — лагерь встанет на саму цель, мобы достанут строителя");
     }

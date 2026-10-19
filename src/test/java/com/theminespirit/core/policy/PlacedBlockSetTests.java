@@ -75,8 +75,8 @@ class PlacedBlockSetTests {
         assertFalse(set.contains(inChunkZero(0)), "Самая старая позиция вытеснена");
         assertTrue(set.contains(inChunkZero(1)), "Вторая по возрасту осталась");
         assertTrue(set.contains(inChunkZero(4096)), "Новейшая позиция сохранена");
-        assertTrue(set.isOverflowed(inChunkZero(0)), "Вытеснение помечает чанк: для него действует эвристика «здание», а не только набор");
-        assertFalse(set.isOverflowed(new BlockCoord(16, 0, 0)), "Соседний чанк без вытеснений не помечен");
+        assertTrue(PlacedBlockCodec.encode(set).get(0).overflowed(),
+                "Вытеснение помечает чанк: для него действует эвристика «здание», а не только набор");
     }
 
     @Test
@@ -88,7 +88,7 @@ class PlacedBlockSetTests {
 
         assertEquals(4096, set.size(), "Ровно 4096 позиций помещаются целиком");
         assertTrue(set.contains(inChunkZero(0)), "Самая старая позиция при ровно 4096 ещё на месте");
-        assertFalse(set.isOverflowed(inChunkZero(0)), "Без вытеснения чанк не помечен");
+        assertFalse(PlacedBlockCodec.encode(set).get(0).overflowed(), "Без вытеснения чанк не помечен");
     }
 
     @Test
@@ -102,7 +102,7 @@ class PlacedBlockSetTests {
         }
 
         assertEquals(0, set.size(), "Все оставшиеся позиции удалены");
-        assertFalse(set.isOverflowed(inChunkZero(0)), "Пустой чанк забывается вместе с пометкой переполнения");
+        assertTrue(PlacedBlockCodec.encode(set).isEmpty(), "Пустой чанк забывается вместе с пометкой переполнения");
     }
 
     @Test

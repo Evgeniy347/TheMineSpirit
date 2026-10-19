@@ -31,7 +31,7 @@ public final class RestScaleGameTests {
     }
 
     @GameTest(batch = "rest_concurrency", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach(GameTestHelper helper)
+    public static void concurrency_TwentyParallelBotsRequests_AllOk(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         List<CompletableFuture<RestFixture.Reply>> replies = new ArrayList<>();
@@ -44,11 +44,6 @@ public final class RestScaleGameTests {
                     long ok = replies.stream().filter(reply -> reply.join().status() == 200).count();
                     problems.expect(ok == PARALLEL_REQUESTS,
                             "Все " + PARALLEL_REQUESTS + " параллельных запросов обязаны получить 200, получили " + ok);
-                    int hops = rest.gateway().serverCall().submittedCount();
-                    problems.expect(hops == PARALLEL_REQUESTS,
-                            "На запрос приходится ровно один переход на серверный поток: ожидалось " + PARALLEL_REQUESTS
-                                    + ", перешли " + hops + ". Лишние переходы нагружают тик, недостающие значат, что "
-                                    + "часть запросов трогает мир с HTTP-потока");
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);

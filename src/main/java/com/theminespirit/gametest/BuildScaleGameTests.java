@@ -3,7 +3,6 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.neoforge.FillSession;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -69,9 +68,9 @@ public final class BuildScaleGameTests {
             }
             helper.assertTrue(run.blockReads() == CELLS,
                     "область обходится один раз: чтений клеток обязано быть 8, фактически " + run.blockReads());
-            helper.assertTrue(run.safetyReads() <= (long) CELLS * StandSpots.MAX_VIEW_READS,
+            helper.assertTrue(run.safetyReads() <= (long) CELLS * 440,
                     "стоянки считаются один раз на клетку: чтений безопасности не больше 8×"
-                            + StandSpots.MAX_VIEW_READS + ", фактически " + run.safetyReads());
+                            + 440 + ", фактически " + run.safetyReads());
             helper.assertTrue(spirit.tickCount - startTick.get() <= 380,
                     "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло "
                             + (spirit.tickCount - startTick.get()));

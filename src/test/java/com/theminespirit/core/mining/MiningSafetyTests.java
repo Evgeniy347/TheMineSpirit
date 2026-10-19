@@ -59,7 +59,7 @@ class MiningSafetyTests {
 
         MiningSafety.canBreak(new BlockCoord(0, 0, 0), world);
 
-        assertEquals(MiningSafety.FACE_READS, world.reads(),
+        assertEquals(6, world.reads(),
                 "Ломка читает ровно 6 граней (без диагоналей): каждое лишнее чтение — нагрузка на серверный тик");
     }
 

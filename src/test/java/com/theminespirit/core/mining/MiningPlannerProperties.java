@@ -173,8 +173,8 @@ class MiningPlannerProperties {
 
         MiningPlanner.next(FROM, remaining, world);
 
-        assertTrue(world.reads() <= MiningPlanner.MAX_VIEW_READS_PER_TARGET * remaining.size(),
-                "Планирование читает не более " + MiningPlanner.MAX_VIEW_READS_PER_TARGET + " клеток на цель: "
+        assertTrue(world.reads() <= 446 * remaining.size(),
+                "Планирование читает не более " + 446 + " клеток на цель: "
                         + "иначе перебор целей кладёт серверный тик. Чтений: " + world.reads()
                         + ", целей: " + remaining.size());
     }

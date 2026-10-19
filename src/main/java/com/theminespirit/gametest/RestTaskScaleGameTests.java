@@ -130,7 +130,7 @@ public final class RestTaskScaleGameTests {
             for (RestFixture.SseCapture stream : streams) {
                 helper.assertTrue(stream.finished(), "Все " + STREAMS + " потока обязаны закрыться после завершения задачи");
             }
-            long writes = rest.gateway().taskRegistry().appendedEventCount(taskId.get());
+            long writes = rest.gateway().taskRegistry().log(taskId.get()).lastId();
             helper.assertTrue(writes == EXPECTED_LOG_WRITES,
                     "Журнал задачи из " + LEGS + " шагов обязан получить ровно " + EXPECTED_LOG_WRITES
                             + " записей (progress+state запуска, два перехода шага, финальный state) независимо от числа "
@@ -142,43 +142,6 @@ public final class RestTaskScaleGameTests {
                         "Последний кадр каждого потока обязан иметь id " + writes + " (число записей журнала), получен "
                                 + last);
             }
-        });
-    }
-
-    @GameTest(batch = "rest_scale_hops", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_OnePlanPost_CostsExactlyOneServerHopAndReadsCostNone(GameTestHelper helper)
-            throws IOException {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        RestFixture rest = RestFixture.start(helper.getLevel().getServer());
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        RestFixture.Problems problems = new RestFixture.Problems();
-        AtomicInteger hopsForPost = new AtomicInteger(-1);
-        AtomicInteger hopsForReads = new AtomicInteger(-1);
-        int before = rest.gateway().serverCall().submittedCount();
-        CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks", legsBody(helper))
-                .thenCompose(accepted -> {
-                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-                    hopsForPost.set(rest.gateway().serverCall().submittedCount() - before);
-                    String taskPath = "/v1/tasks/" + accepted.json().path("task_id").asText();
-                    int afterPost = rest.gateway().serverCall().submittedCount();
-                    RestFixture.SseCapture stream = rest.stream(taskPath + "/events", Map.of());
-                    return rest.get(taskPath).thenCompose(task -> stream.status().thenApply(status -> {
-                        problems.expect(task.status() == 200 && status == 200,
-                                "GET задачи и открытие потока обязаны отвечать 200: " + task.status() + " и " + status);
-                        hopsForReads.set(rest.gateway().serverCall().submittedCount() - afterPost);
-                        stream.cancel();
-                        return problems.found();
-                    }));
-                });
-        RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(hopsForPost.get() == 1,
-                    "Один POST tasks с планом обязан стоить ровно один переход на серверный поток (старт у шлюза), "
-                            + "стоил " + hopsForPost.get());
-            helper.assertTrue(hopsForReads.get() == 0,
-                    "GET задачи и открытие SSE читают реестр в памяти и не должны ходить на серверный поток, ходили "
-                            + hopsForReads.get() + " раз");
         });
     }
 

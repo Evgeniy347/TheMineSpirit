@@ -11,6 +11,7 @@ import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
+import com.theminespirit.core.observation.ScanRadius;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -529,7 +530,7 @@ class ScriptCatalogTests {
 
         ParamSpec radius = param(scan, "radius");
 
-        assertEquals((double) CatalogLimits.SCAN_RADIUS_MAX, radius.max(),
+        assertEquals((double) ScanRadius.MAX, radius.max(),
                 "Радиус scan ограничен ScanRadius.MAX: скан большего радиуса кладёт серверный тик");
         assertEquals(ParamType.STRING_LIST, param(scan, "filter").type(),
                 "filter в scan — список шаблонов id блоков");

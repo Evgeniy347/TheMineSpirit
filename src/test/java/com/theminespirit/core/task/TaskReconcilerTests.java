@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,11 +50,11 @@ class TaskReconcilerTests {
     @Test
     void reconcile_ProgressChange_AppendsOneProgressEventPerChange() {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-        long before = registry.appendedEventCount(taskId);
+        long before = registry.log(taskId).lastId();
 
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_TWO, null));
 
-        assertEquals(before + 1, registry.appendedEventCount(taskId),
+        assertEquals(before + 1, registry.log(taskId).lastId(),
                 "Смена шага и счётчика обязана дать ровно одно событие progress");
         assertEquals(STEP_TWO, record().progress(), "Запись обязана хранить последний прогресс");
     }
@@ -62,11 +63,11 @@ class TaskReconcilerTests {
     @Test
     void reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent() {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-        long before = registry.appendedEventCount(taskId);
+        long before = registry.log(taskId).lastId();
 
         reconcile(SpiritReading.living(RunStatus.RUNNING, new RunProgress(2, 2, null, null, null), null));
 
-        assertEquals(before, registry.appendedEventCount(taskId),
+        assertEquals(before, registry.log(taskId).lastId(),
                 "Момент между шагами sequence, когда следующий скрипт ещё не создан, не должен давать событие progress "
                         + "с current_script=null: клиент увидит шаг вместе с именем скрипта");
         assertEquals(STEP_ONE, record().progress(), "Запись обязана хранить последний прогресс с именем скрипта");
@@ -211,27 +212,30 @@ class TaskReconcilerTests {
     }
 
     @Test
-    void forgetUnobserved_TaskFinishedOutsideReconciler_DropsItsAbsenceCounter() {
-        reconcile(SpiritReading.absent());
-        reconcile(SpiritReading.absent());
-        assertEquals(1, reconciler.trackedAbsences(), "Пока дух отсутствует, счётчик отсутствия задачи ведётся");
+    void forgetUnobserved_UnobservedTask_DropsItsAbsenceCounter() {
+        for (int i = 0; i < TaskReconciler.ABSENT_GRACE_TICKS - 1; i++) {
+            reconcile(SpiritReading.absent());
+        }
 
-        registry.cancelIfActive(taskId);
-        reconciler.forgetUnobserved(registry.watchableRecords());
+        reconciler.forgetUnobserved(List.of());
+        reconcile(SpiritReading.absent());
 
-        assertEquals(0, reconciler.trackedAbsences(),
-                "Задача, закрытая мимо наблюдателя (DELETE), больше не наблюдается: её счётчик отсутствия обязан "
-                        + "исчезнуть, иначе карта растёт на каждую такую задачу до перезапуска сервера");
+        assertEquals(TaskState.ACCEPTED, record().state(),
+                "Задача, переставшая наблюдаться, начинает льготу заново: иначе её счётчик отсутствия жил бы "
+                        + "до перезапуска сервера и задача закрылась бы по чужому отсутствию");
     }
 
     @Test
     void forgetUnobserved_TaskStillObserved_KeepsItsAbsenceCounter() {
-        registry.markStarted(taskId);
+        for (int i = 0; i < TaskReconciler.ABSENT_GRACE_TICKS - 1; i++) {
+            reconcile(SpiritReading.absent());
+        }
+
+        reconciler.forgetUnobserved(List.of(record()));
         reconcile(SpiritReading.absent());
 
-        reconciler.forgetUnobserved(registry.watchableRecords());
-
-        assertEquals(1, reconciler.trackedAbsences(), "Наблюдаемая задача сохраняет счётчик: льготные 100 тиков идут");
+        assertEquals(TaskState.FAILED, record().state(),
+                "Наблюдаемая задача сохраняет счётчик: сотое отсутствие закрывает её, а не начинает льготу заново");
     }
 
     @Test

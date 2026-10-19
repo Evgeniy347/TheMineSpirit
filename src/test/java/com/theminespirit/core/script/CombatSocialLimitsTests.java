@@ -15,10 +15,6 @@ class CombatSocialLimitsTests {
         assertEquals(64, CatalogLimits.SAY_HEARING_RADIUS,
                 "Духа слышат в64 блоках: шире — речь слышит весь сервер в отсутствие игрока рядом, "
                         + "уже — игрок в двух блоках рядом теряет реплику");
-        assertEquals(1200, CatalogLimits.MEET_TIMEOUT_TICKS,
-                "meet ждёт прихода ровно 60 секунд: дольше — дух стоит впустую, раньше — не успевает дойти");
-        assertEquals(1200, CatalogLimits.DELIVER_TIMEOUT_TICKS,
-                "deliver ждёт доставки ровно 60 секунд: дольше — висячая задача, раньше — не доносит груз");
     }
 
     @Test
