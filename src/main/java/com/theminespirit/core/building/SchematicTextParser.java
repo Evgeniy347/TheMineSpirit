@@ -383,19 +383,21 @@ public final class SchematicTextParser {
         if ("front".equals(entrance)) {
             Schematic.Entry best = null;
             for (Schematic.Entry entry : schematic.blocks()) {
-                if (entry.dz() != 0
-                        || !SchematicBlocks.isEntranceBlock(entry.block())
+                if (!SchematicBlocks.isEntranceBlock(entry.block())
                         || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
                     continue;
                 }
-                if (best == null || entry.dy() < best.dy() || (entry.dy() == best.dy() && entry.dx() < best.dx())) {
+                if (best == null
+                        || entry.dz() < best.dz()
+                        || (entry.dz() == best.dz() && entry.dy() < best.dy())
+                        || (entry.dz() == best.dz() && entry.dy() == best.dy() && entry.dx() < best.dx())) {
                     best = entry;
                 }
             }
             if (best == null) {
                 throw error(
                         entranceLine,
-                        "entrance: front, но в первой строке слоёв нет двери или калитки: "
+                        "entrance: front, но в слоях нет двери или калитки: "
                                 + "поставьте дверь во фронт или укажите вход координатами x,y,z");
             }
             return Optional.of(new BlockCoord(best.dx(), best.dy(), best.dz()));

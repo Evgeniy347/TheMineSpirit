@@ -1,7 +1,6 @@
 package com.theminespirit.core.building;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
@@ -129,17 +128,45 @@ class EnchantingPowerTests {
     }
 
     @Test
-    void level_RealEnchantRoomV2_PrimaryTableStillThirty() {
+    void level_RealEnchantRoomV2_EachTableThirty() {
         Schematic schematic = load("enchant_room_v2");
 
-        int maxLevel = 0;
+        List<Integer> levels = new ArrayList<>();
         for (BlockCoord table : EnchantingPower.tables(schematic)) {
-            maxLevel = Math.max(maxLevel, EnchantingPower.level(schematic, table));
+            levels.add(EnchantingPower.level(schematic, table));
         }
 
-        assertTrue(
-                maxLevel == 30,
-                "Уровень 2 сохраняет рабочую чаровальню на 30: расширение здания не ломает кольцо полок, "
-                        + "лучший стол дал " + maxLevel);
+        assertEquals(
+                List.of(30, 30),
+                levels,
+                "Уровень 2 — два стола, у каждого 15 полок через клетку воздуха (владелец 19.10): второй стол без "
+                        + "полного кольца зачаровывал бы слабее, и расширение теряло бы смысл");
+    }
+
+    @Test
+    void upgrade_EnchantRoomV1ToV2_KeepsFirstRingInPlace() {
+        Schematic first = load("enchant_room_v1");
+        Schematic second = load("enchant_room_v2");
+
+        List<String> moved = new ArrayList<>();
+        for (Schematic.Entry entry : first.blocks()) {
+            if (!BOOKSHELF.equals(entry.block()) && !TABLE.equals(entry.block())) {
+                continue;
+            }
+            boolean kept = second.blocks().stream()
+                    .anyMatch(other -> other.dx() == entry.dx()
+                            && other.dy() == entry.dy()
+                            && other.dz() == entry.dz()
+                            && other.block().equals(entry.block()));
+            if (!kept) {
+                moved.add(entry.block() + "@" + entry.dx() + "," + entry.dy() + "," + entry.dz());
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                moved,
+                "Апгрейд чаровальни 1→2 строится на месте (входы совпадают): кольцо уровня 1 обязано остаться "
+                        + "там же, второе кольцо пристраивается рядом; иначе апгрейд ломает рабочий стол");
     }
 }

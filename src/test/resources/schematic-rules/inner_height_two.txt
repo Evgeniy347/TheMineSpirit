@@ -1,0 +1,37 @@
+# фикстура сторожа схем: inner_height_two
+type: storage
+size: 5x4x6   # Ш×В×Д
+entrance: 2,1,1
+legend:
+  '#': oak_planks
+  'T': torch
+  'p': oak_stairs[facing=south,half=bottom]
+layers:
+  - y0: |
+        p
+      #####
+      #####
+      #####
+      #####
+      #####
+  - y1: |
+        .
+      ##.##
+      #..T#
+      #...#
+      #...#
+      #####
+  - y2: |
+        .
+      ##.##
+      #...#
+      #...#
+      #...#
+      #####
+  - y3: |
+        .
+      #####
+      #####
+      #####
+      #####
+      #####

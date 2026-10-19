@@ -3,7 +3,7 @@ name: "Загон 9×9 (больше, забор и калитка)"
 type: farm
 stage: 1
 level: 3
-size: 9x1x9   # Ш×В×Д
+size: 9x2x9   # Ш×В×Д   # Ш×В×Д
 entrance: 4,0,0
 exemptions:
   - rule: roof
@@ -13,9 +13,11 @@ exemptions:
 legend:
   'F': oak_fence
   'G': oak_fence_gate
+  'L': oak_log[axis=y]
+  'T': torch
 layers:
-  - y0: |
-      FFFFGFFFF
+  - y0 забор, столбы по углам: |
+      LFFFGFFFL
       F.......F
       F.......F
       F.......F
@@ -23,4 +25,14 @@ layers:
       F.......F
       F.......F
       F.......F
-      FFFFFFFFF
+      LFFFFFFFL
+  - y1 факелы на угловых столбах: |
+      T       T
+
+
+
+
+
+
+
+      T       T

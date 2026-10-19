@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 
 /**
- * Жест работы с блоком: дух поворачивает голову и тело к блоку и машет рукой — как игрок при постановке и ломании.
+ * Жест работы с блоком: дух поворачивает голову к блоку (тело следует за головой ванильным BodyRotationControl) и машет рукой — как игрок при постановке и ломании.
  * Общий для стройки, шахты, рубки, копки и посадки: игрок видит, кто и над чем работает.
  */
 public final class SpiritGesture {
@@ -30,11 +30,6 @@ public final class SpiritGesture {
         double y = target.getY() + CENTER;
         double z = target.getZ() + CENTER;
         LookAngles angles = LookAngles.toward(x - spirit.getX(), y - spirit.getEyeY(), z - spirit.getZ());
-        if (spirit.getNavigation().isDone()) {
-            // mc: тело стоящего моба не поворачивается следом за головой больше чем на 75° — повернуть и тело.
-            spirit.setYRot(angles.yaw());
-            spirit.setYBodyRot(angles.yaw());
-        }
         spirit.setYHeadRot(angles.yaw());
         spirit.setXRot(angles.pitch());
         spirit.getLookControl().setLookAt(x, y, z, 180.0F, 180.0F);

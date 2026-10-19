@@ -3,7 +3,7 @@ name: "Загон 4×5 (забор 1 блок, калитка)"
 type: farm
 stage: 1
 level: 1
-size: 4x1x5   # Ш×В×Д
+size: 4x2x5   # Ш×В×Д   # Ш×В×Д
 entrance: 2,0,0
 exemptions:
   - rule: roof
@@ -13,10 +13,18 @@ exemptions:
 legend:
   'F': oak_fence
   'G': oak_fence_gate
+  'L': oak_log[axis=y]
+  'T': torch
 layers:
-  - y0: |
-      FFGF
+  - y0 забор, столбы по углам: |
+      LFGL
       F..F
       F..F
       F..F
-      FFFF
+      LFFL
+  - y1 факелы на угловых столбах: |
+      T  T
+
+
+
+      T  T

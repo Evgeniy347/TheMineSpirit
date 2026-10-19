@@ -162,7 +162,7 @@ public final class PresetBuildGameTests {
         });
     }
 
-    // [флак] 244 блока чаровальни дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
+    // [флак] 211 блоков чаровальни дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 24000)
     public static void preset_EnchantRoomV1FromLibrary_StandsWithFifteenShelves(GameTestHelper helper) {
@@ -176,12 +176,14 @@ public final class PresetBuildGameTests {
                 new ItemStack(Items.COBBLESTONE, 64),
                 new ItemStack(Items.STONE_BRICKS, 64),
                 new ItemStack(Items.STONE_BRICKS, 64),
-                new ItemStack(Items.STONE_BRICKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 8),
                 new ItemStack(Items.BOOKSHELF, 15),
                 new ItemStack(Items.ENCHANTING_TABLE, 1),
-                new ItemStack(Items.TORCH, 4));
+                new ItemStack(Items.TORCH, 4),
+                new ItemStack(Items.GLASS_PANE, 6),
+                new ItemStack(Items.OAK_DOOR, 1),
+                new ItemStack(Items.STONE_BRICK_STAIRS, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "enchant_room_v1", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -213,7 +215,9 @@ public final class PresetBuildGameTests {
         SpiritEntity spirit = spawnWith(
                 helper,
                 new BlockPos(4, 1, 6),
-                new ItemStack(Items.OAK_FENCE, 7),
+                new ItemStack(Items.OAK_FENCE, 5),
+                new ItemStack(Items.OAK_LOG, 2),
+                new ItemStack(Items.TORCH, 2),
                 new ItemStack(Items.OAK_FENCE_GATE, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "palisade_section", anchor), SETTLE_TICKS);
 

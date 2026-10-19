@@ -61,8 +61,7 @@ public final class DemoLayoutGameTests {
         return DemoPlacement.compute(
                 new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
                 new DemoPlacement.Look(lookDx, lookDz),
-                family.entry().x(),
-                family.entry().z(),
+                DemoPlacement.Door.of(family),
                 new DemoPlacement.Size(family.sizeX(), family.sizeY(), family.sizeZ()),
                 null);
     }

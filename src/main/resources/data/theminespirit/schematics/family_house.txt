@@ -7,7 +7,7 @@
 name: "Дом семьи на 3"
 type: housing
 stage: 1
-size: 9x8x9
+size: 9x8x10
 entrance: front
 legend:
   'c': cobblestone
@@ -28,8 +28,10 @@ legend:
   'N': wall_torch[facing=north]
   'E': wall_torch[facing=east]
   'W': wall_torch[facing=west]
+  'p': cobblestone_stairs[facing=south,half=bottom]
 layers:
   - y0 цоколь и пол: |
+          p
       ccccccccc
       c#######c
       c#######c
@@ -40,6 +42,7 @@ layers:
       c#######c
       ccccccccc
   - y1 стены, мебель: |
+          .
       L##LDL##L
       #FT....C#
       #.......#
@@ -50,6 +53,7 @@ layers:
       #.B.B.B.#
       L###L###L
   - y2 окна, факелы: |
+          .
       LGGLDLGGL
       #..S.S..#
       G.......G
@@ -60,6 +64,7 @@ layers:
       #..N.N..#
       L#G#L#G#L
   - y3 обвязка: |
+          .
       LxxxxxxxL
       z.......z
       z.......z
@@ -70,6 +75,7 @@ layers:
       z.......z
       LxxxxxxxL
   - y4 карниз крыши: |
+          .
       e#######w
       e#.....#w
       e#.....#w
@@ -80,6 +86,7 @@ layers:
       e#.....#w
       e#######w
   - y5 скат, окно во фронтоне: |
+          .
        e##G##w
        e#...#w
        e#...#w
@@ -90,6 +97,7 @@ layers:
        e#...#w
        e##G##w
   - y6 скат: |
+          .
         e###w
         e#.#w
         e#.#w
@@ -100,6 +108,7 @@ layers:
         e#.#w
         e###w
   - y7 конёк: |
+          .
          ezw
          ezw
          ezw

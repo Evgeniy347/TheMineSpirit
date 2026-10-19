@@ -162,24 +162,53 @@ class DemoPlacementTests {
     }
 
     @Test
+    void door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor() {
+        Preset family = loadReal().byId("family_house").orElseThrow();
+        DemoPlacement.Door door = DemoPlacement.Door.of(family);
+
+        DemoPlacement placement = DemoPlacement.compute(
+                new DemoPlacement.Anchor(10, 64, 10),
+                new DemoPlacement.Look(0, 1),
+                door,
+                new DemoPlacement.Size(family.sizeX(), family.sizeY(), family.sizeZ()),
+                null);
+
+        assertEquals(
+                new DemoPlacement.Door(4, 1, 0, -1, 1),
+                door,
+                "Дверь дома семьи — на северной стене тела, перед ней крыльцо в одну клетку со ступенькой");
+        assertEquals(
+                BuildRotation.NONE,
+                placement.rotation(),
+                "Вход на севере тела при взгляде на юг уже смотрит на игрока: поворачивать не нужно");
+        assertEquals(
+                new BlockCoord(6, 64, 11),
+                placement.origin(),
+                "Якорь — клетка перед крыльцом: ступенька встаёт на клетку дальше по взгляду, дверь — ещё на одну");
+    }
+
+    @Test
     void compute_EveryBuildingAndLook_ChestAndSpawnFitOnPlatform() {
         PresetLibrary library = loadReal();
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             for (DemoBuildings.Level level : building.levels()) {
                 Schematic schematic = SchematicResources.load(level.scheme());
-                BlockCoord entry = library.byId(level.scheme())
-                        .map(Preset::entry)
-                        .orElseGet(() -> new BlockCoord(schematic.sizeX() / 2, 0, 0));
+                Preset preset = library.byId(level.scheme()).orElseThrow();
+                DemoPlacement.Door door = DemoPlacement.Door.of(preset);
                 for (int[] look : LOOKS) {
                     DemoPlacement placement = DemoPlacement.compute(
                             new DemoPlacement.Anchor(0, 64, 0),
                             new DemoPlacement.Look(look[0], look[1]),
-                            entry.x(),
-                            entry.z(),
+                            door,
                             new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
                             null);
                     String where = building.id() + "/" + level.scheme() + " взгляд " + look[0] + "," + look[1];
                     BlockCoord front = new BlockCoord(0, 64, 0);
+                    boolean onWall = door.normalDx() != 0 || door.normalDz() != 0;
+                    assertTrue(
+                            !onWall || !inSchema(placement, schematic, front),
+                            where + ": клетка, куда смотрит игрок, обязана остаться перед крыльцом, вне схемы: "
+                                    + "иначе ступенька встаёт под ноги игроку и вход не к нему лицом");
                     assertPlatform(placement, schematic, where);
                     assertChest(placement, schematic, front, where);
                     assertSpawn(placement, schematic, where);

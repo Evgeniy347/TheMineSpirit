@@ -473,6 +473,8 @@ public final class BoardV2GameTests {
         SpiritEntity spirit = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
         spirit.getInventory().setItem(0, new ItemStack(Items.OAK_FENCE, 32));
         spirit.getInventory().setItem(1, new ItemStack(Items.OAK_FENCE_GATE, 4));
+        spirit.getInventory().setItem(2, new ItemStack(Items.OAK_LOG, 4));
+        spirit.getInventory().setItem(3, new ItemStack(Items.TORCH, 4));
         BlockPos oldOne = new BlockPos(1, 1, 5);
         BlockPos oldTwo = new BlockPos(2, 1, 5);
         BlockPos oldThree = new BlockPos(3, 1, 5);

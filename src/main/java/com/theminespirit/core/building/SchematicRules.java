@@ -14,7 +14,8 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Правила качества схем: стены, вход, крыша, высота, окна, дверь, опора, сундук и свет. Чистая проверка
+ * Правила качества схем: стены, вход и ступенька к нему, крыша, высота, окна, дверь, опора, сундуки (открываются,
+ * пары двойные) и свет. Чистая проверка
  * по блокам схемы без мира; применяется сторожем данных и тестами на фикстурах.
  */
 public final class SchematicRules {
@@ -27,7 +28,9 @@ public final class SchematicRules {
         DOOR("door"),
         SUPPORT("support"),
         CHEST_OPENABLE("chest_openable"),
-        LIGHT("light");
+        CHEST_PAIR("chest_pair"),
+        LIGHT("light"),
+        ENTRANCE_STEP("entrance_step");
 
         private final String id;
 
@@ -79,26 +82,42 @@ public final class SchematicRules {
         }
     }
 
+    private static final int ROOFED_HEIGHT = 3;
+    private static final int OPEN_HEIGHT = 2;
+
     private SchematicRules() {}
 
     public static List<Violation> check(Structure structure) {
         Objects.requireNonNull(structure, "Строение не может быть null: проверять нечего");
-        Map<BlockCoord, String> grid = grid(structure.schematic());
+        SchematicBody body = SchematicBody.of(structure.schematic(), structure.entry());
+        Structure walls = body.covers(structure.schematic())
+                ? structure
+                : new Structure(
+                        structure.id(),
+                        structure.type(),
+                        body.crop(structure.schematic()),
+                        body.local(structure.entry()));
+        Map<BlockCoord, String> grid = grid(walls.schematic());
         List<Violation> violations = new ArrayList<>();
-        checkClosedWalls(structure, grid, violations);
-        checkEntrance(structure, grid, violations);
-        checkRoof(structure, grid, violations);
-        checkInnerHeight(structure, grid, violations);
+        checkClosedWalls(walls, grid, violations);
+        checkEntrance(walls, grid, violations);
+        EntranceStep.problem(structure.schematic(), body, structure.entry())
+                .ifPresent(problem -> violations.add(new Violation(RuleId.ENTRANCE_STEP, problem)));
+        checkRoof(walls, grid, violations);
+        checkInnerHeight(walls, grid, violations);
         if (structure.type() == BuildingType.HOUSING) {
-            checkWindow(structure, grid, violations);
-            checkDoor(structure, grid, violations);
-            checkLight(grid, violations);
+            checkWindow(walls, grid, violations);
+            checkDoor(walls, grid, violations);
         }
-        checkSupport(grid, violations);
+        checkLight(walls.schematic(), violations);
+        Map<BlockCoord, String> full = grid(structure.schematic());
+        checkSupport(full, violations);
         if (violations.stream().noneMatch(violation -> violation.rule() == RuleId.SUPPORT)) {
-            checkMounting(structure.schematic(), grid, violations);
+            checkMounting(structure.schematic(), full, violations);
         }
-        checkChests(grid, violations);
+        checkChests(full, violations);
+        ChestPairs.problem(structure.schematic())
+                .ifPresent(problem -> violations.add(new Violation(RuleId.CHEST_PAIR, problem)));
         return List.copyOf(violations);
     }
 
@@ -114,7 +133,7 @@ public final class SchematicRules {
             Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
         Schematic schematic = structure.schematic();
         Set<BlockCoord> opening = entranceCells(structure);
-        int eave = eave(schematic, grid);
+        int eave = Math.min(eave(schematic, grid), wallTop(schematic, grid));
         for (int y = 0; y <= eave; y++) {
             for (BlockCoord cell : perimeter(schematic, y)) {
                 if (grid.containsKey(cell) || opening.contains(cell)) {
@@ -142,6 +161,18 @@ public final class SchematicRules {
             }
         }
         return eave;
+    }
+
+    private static int wallTop(Schematic schematic, Map<BlockCoord, String> grid) {
+        for (int y = schematic.sizeY() - 1; y >= 0; y--) {
+            for (BlockCoord cell : perimeter(schematic, y)) {
+                String block = grid.get(cell);
+                if (block != null && SchematicBlocks.lightLevel(block, Map.of()) == 0) {
+                    return y;
+                }
+            }
+        }
+        return -1;
     }
 
     private static Set<BlockCoord> entranceCells(Structure structure) {
@@ -256,11 +287,14 @@ public final class SchematicRules {
                 }
                 int ceiling = ceiling(grid, x, floor, schematic.sizeY(), z);
                 int height = (ceiling < 0 ? schematic.sizeY() : ceiling) - floor - 1;
-                if (height < 2) {
-                    violations.add(new Violation(
-                            RuleId.INNER_HEIGHT,
-                            "внутренняя высота " + height + " в клетке [" + x + ",*," + z
-                                    + "]: в дом ниже 2 блоков не войти"));
+                int required = ceiling < 0 ? OPEN_HEIGHT : ROOFED_HEIGHT;
+                if (height < required) {
+                    violations.add(
+                            new Violation(
+                                    RuleId.INNER_HEIGHT,
+                                    "внутренняя высота " + height + " в клетке [" + x + ",*," + z + "] меньше "
+                                            + required
+                                            + ": под крышей ниже 3 блоков тесно (владелец 19.10), без крыши ниже 2 — не пройти"));
                     return;
                 }
             }
@@ -321,14 +355,23 @@ public final class SchematicRules {
         violations.add(new Violation(RuleId.DOOR, "в проёме входа нет двери: проём пуст или занят не дверью"));
     }
 
-    private static void checkLight(Map<BlockCoord, String> grid, List<Violation> violations) {
-        for (String block : grid.values()) {
-            if (SchematicBlocks.isLightSource(block)) {
-                return;
-            }
+    private static void checkLight(Schematic schematic, List<Violation> violations) {
+        if (!SchematicLight.hasSource(schematic)) {
+            violations.add(new Violation(
+                    RuleId.LIGHT,
+                    "в постройке нет источника света: ночью внутри и у входа темно, появляются мобы — поставьте "
+                            + "факел или фонарь (у открытой постройки — по периметру или у входа)"));
+            return;
         }
-        violations.add(
-                new Violation(RuleId.LIGHT, "в жилье нет источника света: внутри темно и ночью " + "появляются мобы"));
+        List<BlockCoord> dark = SchematicLight.darkCells(schematic);
+        if (!dark.isEmpty()) {
+            BlockCoord first = dark.get(0);
+            violations.add(new Violation(
+                    RuleId.LIGHT,
+                    "внутри постройки " + dark.size() + " тёмных клеток (блочный свет 0), первая ["
+                            + first.x() + "," + first.y() + "," + first.z()
+                            + "]: там ночью появляются мобы — добавьте факел или фонарь ближе"));
+        }
     }
 
     private static void checkSupport(Map<BlockCoord, String> grid, List<Violation> violations) {

@@ -3,12 +3,19 @@ name: "Склад, уровень 1 (9 сундуков)"
 type: storage
 stage: 2
 level: 1
-size: 6x6x6   # Ш×В×Д
+size: 6x6x7   # Ш×В×Д
 entrance: 2,1,5
 legend:
   '#': oak_planks
   '=': oak_log
-  'H': chest
+  'c': chest[facing=east,type=left]
+  'd': chest[facing=east,type=right]
+  'f': chest[facing=south,type=left]
+  'g': chest[facing=south,type=right]
+  'i': chest[facing=west,type=left]
+  'j': chest[facing=west,type=right]
+  'N': wall_torch[facing=north]
+  'p': oak_stairs[facing=north,half=bottom]
 layers:
   - y0: |
       ######
@@ -17,27 +24,31 @@ layers:
       ######
       ######
       ######
+        p
   - y1: |
       ######
-      #=HH=#
-      #H..H#
-      #H..H#
+      #=gf=#
+      #c..j#
+      #d..i#
       #....#
       ##.###
+        .
   - y2: |
       ######
-      #=HH=#
-      #H..H#
-      #H..H#
-      #....#
+      #=gf=#
+      #c..j#
+      #d..i#
+      #N...#
       ##.###
+        .
   - y3: |
       ######
-      #=HH=#
-      #H..H#
-      #H..H#
+      #=gf=#
+      #c..j#
+      #d..i#
       #....#
       ######
+        .
   - y4: |
       ######
       #=..=#
@@ -45,6 +56,7 @@ layers:
       #....#
       #....#
       ######
+        .
   - y5: |
       ######
       ######
@@ -52,3 +64,4 @@ layers:
       ######
       ######
       ######
+        .

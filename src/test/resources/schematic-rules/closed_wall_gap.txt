@@ -1,30 +1,43 @@
 # фикстура сторожа схем: closed_wall_gap
 type: storage
-size: 5x4x5   # Ш×В×Д
-entrance: 2,1,0
+size: 5x5x6   # Ш×В×Д
+entrance: 2,1,1
 legend:
   '#': oak_planks
   'H': chest
+  'T': torch
+  'p': oak_stairs[facing=south,half=bottom]
 layers:
   - y0: |
+        p
       #####
       #####
       #####
       #####
       #####
   - y1: |
+        .
       ##.##
       #H..#
       ....#
-      #...#
+      #..T#
       #####
   - y2: |
+        .
       ##.##
       #...#
       #...#
       #...#
       #####
   - y3: |
+        .
+      ##.##
+      #...#
+      #...#
+      #...#
+      #####
+  - y4: |
+        .
       #####
       #####
       #####
