@@ -216,7 +216,9 @@ abstract class ContainerTask implements ScriptInstance {
                 runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
             }
-            case STUCK, TIMEOUT -> fail("дух не дошёл до контейнера: путь заблокирован или слишком далеко");
+            case STUCK, TIMEOUT ->
+                fail("дух не дошёл до контейнера: путь заблокирован или слишком далеко"
+                        + (approach.refusal() == null ? "" : " (" + approach.refusal() + ")"));
         }
     }
 

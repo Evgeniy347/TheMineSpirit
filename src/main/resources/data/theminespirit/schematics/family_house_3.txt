@@ -198,8 +198,8 @@ layers:
   - y7 второй этаж: |
         d  dttttd  d
        LhGGLhDEhLGGhL
-       hP       Oh  h
-      vh yyyyyy  h  hr
+       hP       O.  h
+      vh yyyyyy  .  hr
        G yyyyyy  h  G
        G yyyyyy  h  G
       vh         h  hr
@@ -213,12 +213,12 @@ layers:
       vh B   hY   ~~hr
        h B WVhYYY  Ph
        LhGGLhhhhLGGhL
-        n  n    n  n
+           n    n
   - y8: |
         d  d    d  d
        LhGGLhDEhLGGhL
-       h         h sh
-      vh         h  hr
+       h        s.  h
+      vh         .  hr
        G        zh  G
        G         h  G
       vhx        h  hr
@@ -232,7 +232,7 @@ layers:
       vh     hY     hr
        h     hYYY   h
        LhGGLhhhhLGGhL
-        n  n    n  n
+           n    n
   - y9: |
       
       ULhhhLhhhhLhhhLI

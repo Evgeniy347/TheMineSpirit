@@ -30,11 +30,13 @@ class DemoBuildingsTests {
         assertEquals(
                 List.of(
                         "family_house",
+                        "player_house",
                         "lamp",
                         "stone_house",
                         "storage_hut",
                         "storage",
                         "well",
+                        "plaza",
                         "palisade_section",
                         "pen",
                         "enchant_room",
@@ -145,6 +147,20 @@ class DemoBuildingsTests {
         assertTrue(
                 error.getMessage().contains("дважды"),
                 "Каталог с двумя постройками одного id обязан отвергаться с причиной, получено: " + error.getMessage());
+    }
+
+    @Test
+    void parse_IdOfDemoSubcommand_IsRejected() {
+        String json = "{\"buildings\":[{\"id\":\"city\",\"name\":\"Город\",\"type\":\"housing\",\"levels\":["
+                + "{\"level\":1,\"scheme\":\"x\"}]}]}";
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> DemoBuildings.parse(json, "тест"),
+                "Постройка с именем подкоманды обязана отвергаться: /spirit demo city затенила бы её");
+        assertTrue(
+                error.getMessage().contains("подкоманды"),
+                "Отказ обязан назвать конфликт с подкомандой, получено: " + error.getMessage());
     }
 
     @Test

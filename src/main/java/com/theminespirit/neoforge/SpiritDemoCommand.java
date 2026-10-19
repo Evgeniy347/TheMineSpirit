@@ -12,6 +12,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.CommandNode;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
+import com.theminespirit.core.building.DemoCity;
 import com.theminespirit.neoforge.demo.DemoRegistry;
 import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
@@ -21,7 +22,7 @@ import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
-/** {@code /spirit demo} — креативная демонстрация: подкоманда на каждую постройку, upgrade, list и stop. */
+/** {@code /spirit demo} — креативная демонстрация: подкоманда на каждую постройку, upgrade, city, list и stop. */
 final class SpiritDemoCommand {
     private static final List<String> ROTATIONS =
             List.of("none", "clockwise_90", "clockwise_180", "counterclockwise_90");
@@ -36,7 +37,16 @@ final class SpiritDemoCommand {
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("demo")
                 .then(literal("list").executes(SpiritDemoCommand::list))
-                .then(literal("stop").executes(SpiritDemoCommand::stop)));
+                .then(literal("stop").executes(SpiritDemoCommand::stop))
+                .then(literal("city")
+                        .executes(context -> city(context, DemoCity.MIN_LEVEL, null))
+                        .then(argument("stage", IntegerArgumentType.integer(DemoCity.MIN_LEVEL, DemoCity.MAX_LEVEL))
+                                .executes(context -> city(context, integer(context, "stage"), null))
+                                .then(argument("pos", BlockPosArgument.blockPos())
+                                        .executes(context -> city(
+                                                context,
+                                                integer(context, "stage"),
+                                                BlockPosArgument.getBlockPos(context, "pos")))))));
         for (CommandNode<CommandSourceStack> demo : spirit.getArguments()) {
             if ("demo".equals(demo.getName())) {
                 for (DemoBuildings.Building building : DemoBuildings.all()) {
@@ -110,6 +120,11 @@ final class SpiritDemoCommand {
             int to) {
         CommandSourceStack source = context.getSource();
         return DemoRegistry.get(source.getLevel()).start(source, building, level, pos, rotation, from, to);
+    }
+
+    private static int city(CommandContext<CommandSourceStack> context, int stage, BlockPos pos) {
+        CommandSourceStack source = context.getSource();
+        return DemoRegistry.get(source.getLevel()).startCity(source, stage, pos);
     }
 
     private static int level(CommandContext<CommandSourceStack> context) {

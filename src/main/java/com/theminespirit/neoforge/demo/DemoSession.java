@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -28,10 +29,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -191,8 +195,11 @@ final class DemoSession {
 
     private record Withdrawal(BlockPos chest, String item, int count) {}
 
+    // Решение владельца 20.10: материалы — в двойных сундуках (столбиком пар), сколько нужно; одиночный сундук —
+    // только если рядом с точкой сундука нет места под вторую половину.
     private List<BlockPos> fillChests(DemoPlan plan) {
         BlockCoord base = plan.placement().chest();
+        Direction partner = partnerSide(plan);
         List<BlockPos> filled = new ArrayList<>();
         ChestBlockEntity chest = null;
         int slot = 0;
@@ -201,9 +208,7 @@ final class DemoSession {
             int left = material.getValue();
             while (left > 0) {
                 if (chest == null || slot >= chest.getContainerSize()) {
-                    BlockPos pos = new BlockPos(base.x(), base.y() + filled.size(), base.z());
-                    chest = placeChest(pos, plan);
-                    filled.add(pos);
+                    chest = nextChest(plan, base, partner, filled);
                     slot = 0;
                 }
                 int take = Math.min(left, item.getDefaultMaxStackSize());
@@ -212,15 +217,65 @@ final class DemoSession {
             }
         }
         if (filled.isEmpty()) {
-            BlockPos pos = new BlockPos(base.x(), base.y(), base.z());
-            placeChest(pos, plan);
-            filled.add(pos);
+            nextChest(plan, base, partner, filled);
         }
         return List.copyOf(filled);
     }
 
-    private ChestBlockEntity placeChest(BlockPos pos, DemoPlan plan) {
-        level.setBlock(pos, Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
+    // Половины идут парами: нижняя пара — у точки сундука, следующая — над ней.
+    private ChestBlockEntity nextChest(
+            DemoPlan plan, BlockCoord base, @Nullable Direction partner, List<BlockPos> filled) {
+        int index = filled.size();
+        BlockPos main = new BlockPos(base.x(), base.y() + (partner == null ? index : index / 2), base.z());
+        if (partner == null) {
+            filled.add(main);
+            return placeChest(main, Blocks.CHEST.defaultBlockState(), plan);
+        }
+        Direction facing = partner.getCounterClockWise();
+        BlockState left = Blocks.CHEST
+                .defaultBlockState()
+                .setValue(ChestBlock.FACING, facing)
+                .setValue(ChestBlock.TYPE, ChestType.LEFT);
+        BlockState right = left.setValue(ChestBlock.TYPE, ChestType.RIGHT);
+        if (index % 2 == 0) {
+            BlockPos other = main.relative(partner);
+            level.setBlock(other, right, Block.UPDATE_ALL);
+            ChestBlockEntity first = placeChest(main, left, plan);
+            filled.add(main);
+            return first;
+        }
+        BlockPos other = main.relative(partner);
+        filled.add(other);
+        if (!(level.getBlockEntity(other) instanceof ChestBlockEntity second)) {
+            throw new IllegalStateException("Вторая половина сундука схемы '" + plan.scheme() + "' не поставлена в "
+                    + other.toShortString() + ": блок сундука не создал блочную сущность");
+        }
+        return second;
+    }
+
+    // Сторона второй половины: на площадке, вне постройки, не на месте духа и не на месте таблички (+x).
+    private static @Nullable Direction partnerSide(DemoPlan plan) {
+        BlockCoord base = plan.placement().chest();
+        BlockCoord spawn = plan.placement().spawn();
+        BlockCoord origin = plan.placement().origin();
+        for (Direction side : List.of(Direction.WEST, Direction.NORTH, Direction.SOUTH)) {
+            int x = base.x() + side.getStepX();
+            int z = base.z() + side.getStepZ();
+            boolean inBuilding = x >= origin.x()
+                    && x < origin.x() + plan.placement().sizeX()
+                    && z >= origin.z()
+                    && z < origin.z() + plan.placement().sizeZ();
+            boolean onPlatform = plan.placement().platform().contains(new BlockCoord(x, base.y(), z));
+            boolean onSpawn = x == spawn.x() && z == spawn.z();
+            if (!inBuilding && onPlatform && !onSpawn) {
+                return side;
+            }
+        }
+        return null;
+    }
+
+    private ChestBlockEntity placeChest(BlockPos pos, BlockState state, DemoPlan plan) {
+        level.setBlock(pos, state, Block.UPDATE_ALL);
         if (!(level.getBlockEntity(pos) instanceof ChestBlockEntity chest)) {
             throw new IllegalStateException("Сундук материалов схемы '" + plan.scheme() + "' не поставлен в "
                     + pos.toShortString() + ": блок сундука не создал блочную сущность");

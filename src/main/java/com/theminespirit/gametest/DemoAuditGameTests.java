@@ -3,27 +3,35 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
+import com.theminespirit.core.building.DemoPlacement;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
@@ -55,6 +63,25 @@ public final class DemoAuditGameTests {
     // входа, замер 9–16 подходов по поворотам; запас 2 подхода сверх худшего поворота.
     private static final int ENCHANT_HALL_MAX_PATH_BUILDS = 18;
     private static final int DOUBLE_CHEST_ROWS = 6;
+    // Дом семьи 3 (19.10) — два этажа, материалы заходами: замер 72–84 подхода по поворотам (20.10), запас 10 %.
+    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 93;
+    // Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
+    private static final int SPIRIT_SLOTS = 36;
+    // Схемы витрины, заход 2 (20.10), замер по поворотам: усадьба 185–188 (заходы, ~3200 блоков), дом игрока 31–39 и
+    // 51–82 (уровень 2), площадь 30–40 и 23–25 (уровень 2), колодец 4–9, фонари 1–2.
+    // Усадьба держит и запас поиска сундуков BuildSupplyTrip: её сундуки у входа в ~12 от середины стройки, при
+    // запасе 6 (20.10) стройка вставала на 22 блоках — «не хватило материала».
+    private static final int FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS = 207;
+    private static final int PLAYER_HOUSE_MAX_PATH_BUILDS = 44;
+    private static final int PLAZA_MAX_PATH_BUILDS = 45;
+    private static final int WELL2_MAX_PATH_BUILDS = 11;
+    private static final int LAMP_MAX_PATH_BUILDS = 3;
+    private static final int PLAZA2_MAX_PATH_BUILDS = 28;
+    private static final int PLAYER_HOUSE2_MAX_PATH_BUILDS = 90;
+    private static final int SUPPLY_RING = 2;
+    // Склад-хижина с двумя свободными слотами: 7 заходов к сундуку, замер 12 подходов (20.10), запас 3.
+    private static final int STORAGE_HUT_TRIPS_MAX_PATH_BUILDS = 15;
+    private static final int SUPPLY_SIDE_OFFSET = 3;
 
     private DemoAuditGameTests() {}
 
@@ -87,6 +114,20 @@ public final class DemoAuditGameTests {
         }
     }
 
+    // Материалы всей постройки влезают в инвентарь — выдаются сразу; не влезают (дом семьи 3 — ~56 стопок на
+    // 36 слотов) — лежат в сундуках, и дух ходит за ними заходами.
+    private static boolean fitsAtOnce(Schematic schematic) {
+        int stacks = 0;
+        for (Map.Entry<String, Integer> material :
+                PresetLibrary.countMaterials(schematic).entrySet()) {
+            if (BlockItems.hasBlockItem(material.getKey())) {
+                int max = BlockItems.itemFor(material.getKey()).getDefaultMaxStackSize();
+                stacks += (material.getValue() + max - 1) / max;
+            }
+        }
+        return stacks <= SPIRIT_SLOTS;
+    }
+
     private static void give(GameTestHelper helper, SpiritEntity spirit, Schematic schematic) {
         int slot = 0;
         for (Map.Entry<String, Integer> material :
@@ -103,6 +144,75 @@ public final class DemoAuditGameTests {
                 }
                 spirit.getInventory().setItem(slot++, new ItemStack(item, take));
                 left -= take;
+            }
+        }
+    }
+
+    // Решение владельца 20.10: материалы, не влезающие в инвентарь, — в двойных сундуках у края пола; дух сам
+    // ходит за ними порциями (BuildSupplyTrip), как в демо и в обычной стройке.
+    private record SupplyPoint(BlockPos base, Direction partner) {}
+
+    // Сундуки — у главного входа, как в демо: за ступенью, в стороне от линии подхода.
+    private static SupplyPoint supplyPoint(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
+        Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
+        DemoPlacement.Door door = DemoPlacement.Door.of(preset);
+        BuildRotation.Cell cell = rotation.rotate(door.x(), door.z(), schematic.sizeX(), schematic.sizeZ());
+        BuildRotation.DirectionVector out =
+                BuildRotation.rotateDirection(door.normalDx(), door.normalDz(), rotation.quarterTurns());
+        Direction partner = Direction.fromDelta(-out.dz(), 0, out.dx());
+        int frontX = ring + cell.x() + out.dx() * (door.porch() + ring);
+        int frontZ = ring + cell.z() + out.dz() * (door.porch() + ring);
+        return new SupplyPoint(
+                new BlockPos(
+                        frontX + partner.getStepX() * SUPPLY_SIDE_OFFSET,
+                        1,
+                        frontZ + partner.getStepZ() * SUPPLY_SIDE_OFFSET),
+                partner);
+    }
+
+    private static List<BlockPos> supplyChests(GameTestHelper helper, Schematic schematic, SupplyPoint point) {
+        BlockPos base = point.base();
+        Direction partner = point.partner();
+        BlockState leftHalf = Blocks.CHEST
+                .defaultBlockState()
+                .setValue(ChestBlock.FACING, partner.getCounterClockWise())
+                .setValue(ChestBlock.TYPE, ChestType.LEFT);
+        BlockState rightHalf = leftHalf.setValue(ChestBlock.TYPE, ChestType.RIGHT);
+        List<BlockPos> halves = new ArrayList<>();
+        Container chest = null;
+        int slot = 0;
+        for (Map.Entry<String, Integer> material :
+                PresetLibrary.countMaterials(schematic).entrySet()) {
+            if (!BlockItems.hasBlockItem(material.getKey())) {
+                continue;
+            }
+            Item item = BlockItems.itemFor(material.getKey());
+            int remaining = material.getValue();
+            while (remaining > 0) {
+                if (chest == null || slot >= chest.getContainerSize()) {
+                    int pair = halves.size() / 2;
+                    BlockPos main = base.above(pair);
+                    BlockPos half = halves.size() % 2 == 0 ? main : main.relative(partner);
+                    if (halves.size() % 2 == 0) {
+                        helper.setBlock(main.relative(partner), rightHalf);
+                        helper.setBlock(main, leftHalf);
+                    }
+                    halves.add(half);
+                    chest = (Container) helper.getBlockEntity(half);
+                    slot = 0;
+                }
+                int take = Math.min(remaining, item.getDefaultMaxStackSize());
+                chest.setItem(slot++, new ItemStack(item, take));
+                remaining -= take;
+            }
+        }
+        return halves;
+    }
+
+    private static void emptyChests(GameTestHelper helper, List<BlockPos> halves) {
+        for (BlockPos half : halves) {
+            if (helper.getBlockEntity(half) instanceof Container chest) {
+                chest.clearContent();
             }
         }
     }
@@ -136,36 +246,60 @@ public final class DemoAuditGameTests {
             BuildRotation rotation,
             int maxPathBuilds,
             AfterBuild after) {
+        audit(helper, building, level, rotation, maxPathBuilds, after, SPIRIT_SLOTS);
+    }
+
+    // freeSlots < 36 — инвентарь духа занят чужим, свободно freeSlots: стройка обязана идти порциями из сундуков.
+    private static void audit(
+            GameTestHelper helper,
+            String building,
+            int level,
+            BuildRotation rotation,
+            int maxPathBuilds,
+            AfterBuild after,
+            int freeSlots) {
         String scheme = DemoBuildings.require(building).level(level).scheme();
         Schematic schematic = SchematicResources.load(scheme);
         int clearHeight = clearHeight(schematic);
         GameTestFixtures.reset(helper, clearHeight);
-        int floorSize = floorSize(schematic);
+        // Заходы за материалами: дом отступает от края пола на кольцо с обеих сторон, чтобы дух обходил его кругом к
+        // сундукам и к дверям и не сходил с пола за край.
+        boolean atOnce = freeSlots >= SPIRIT_SLOTS && fitsAtOnce(schematic);
+        int ring = atOnce ? 0 : SUPPLY_RING;
+        int floorSize = floorSize(schematic) + 2 * ring;
         floor(helper, floorSize, clearHeight);
-        BlockPos anchor = helper.absolutePos(new BlockPos(0, 1, 0));
+        BlockPos anchor = helper.absolutePos(new BlockPos(ring, 1, ring));
         BlockCoord origin = new BlockCoord(anchor.getX(), anchor.getY(), anchor.getZ());
         preplaceWithoutItem(helper, schematic, origin, rotation);
+        SupplyPoint supply = atOnce ? null : supplyPoint(scheme, schematic, rotation, ring);
+        List<BlockPos> chests = supply == null ? List.of() : supplyChests(helper, schematic, supply);
         BuildAudit.Before before = BuildAudit.snapshot(helper.getLevel(), schematic, origin, rotation, 3);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), spawnOutside(schematic, rotation, floorSize));
+        // При заходах дух появляется у сундуков перед входом: путь от тыла вокруг большого дома длиннее поиска пути.
+        BlockPos spawn = supply == null
+                ? spawnOutside(schematic, rotation, floorSize)
+                : supply.base().relative(supply.partner().getOpposite(), SUPPLY_SIDE_OFFSET - 1);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), spawn);
         spirit.setDemo(true);
-        give(helper, spirit, schematic);
-        SpiritRun run = SpiritRun.launch(
-                helper,
-                spirit,
-                new ScriptCall(
-                        "build_schematic",
-                        Map.of(
-                                "file",
-                                scheme,
-                                "x",
-                                anchor.getX(),
-                                "y",
-                                anchor.getY(),
-                                "z",
-                                anchor.getZ(),
-                                "rotation",
-                                rotation.id())),
-                SETTLE_TICKS);
+        if (chests.isEmpty()) {
+            give(helper, spirit, schematic);
+        }
+        for (int slot = 0; slot < SPIRIT_SLOTS - freeSlots; slot++) {
+            spirit.getInventory().setItem(slot, new ItemStack(Items.STICK, Items.STICK.getDefaultMaxStackSize()));
+        }
+        ScriptCall call = new ScriptCall(
+                "build_schematic",
+                Map.of(
+                        "file",
+                        scheme,
+                        "x",
+                        anchor.getX(),
+                        "y",
+                        anchor.getY(),
+                        "z",
+                        anchor.getZ(),
+                        "rotation",
+                        rotation.id()));
+        SpiritRun run = SpiritRun.launch(helper, spirit, call, SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -188,6 +322,7 @@ public final class DemoAuditGameTests {
                             + " построений пути: дух ставит всё досягаемое с "
                             + "места, а не подходит к каждому блоку; фактически " + spirit.pathBuilds());
             after.check(helper, schematic, origin, rotation);
+            emptyChests(helper, chests);
             clearArea(helper, floorSize, clearHeight);
             GameTestFixtures.finish(helper, clearHeight);
         });
@@ -613,5 +748,233 @@ public final class DemoAuditGameTests {
     @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel2", timeoutTicks = 8000)
     public static void demo_FamilyHouseLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "family_house", 2, BuildRotation.COUNTERCLOCKWISE_90, FAMILY_HOUSE_LEVEL2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel3", timeoutTicks = 40000)
+    public static void demo_FamilyHouseLevel3None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 3, BuildRotation.NONE, FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel3", timeoutTicks = 40000)
+    public static void demo_FamilyHouseLevel3Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 3, BuildRotation.CLOCKWISE_90, FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel3", timeoutTicks = 40000)
+    public static void demo_FamilyHouseLevel3Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 3, BuildRotation.CLOCKWISE_180, FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel3", timeoutTicks = 40000)
+    public static void demo_FamilyHouseLevel3Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 3, BuildRotation.COUNTERCLOCKWISE_90, FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS);
+    }
+
+    // Решение владельца 20.10: в инвентаре два свободных слота — дух берёт порцию, ставит всё, что ею можно, и идёт
+    // за следующей; склад-хижина из 11 материалов строится заходами до конца.
+    // [флак] семь заходов к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+    @GameTest(template = "big_arena", batch = "demo_audit_trips", timeoutTicks = 8000)
+    public static void demo_StorageHutTwoFreeSlots_BuildsInPortions(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.NONE, STORAGE_HUT_TRIPS_MAX_PATH_BUILDS, (h, s, o, r) -> {}, 2);
+    }
+
+    // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+    // результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
+    public static void demo_FamilyHouseLevel4None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 4, BuildRotation.NONE, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+    // результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
+    public static void demo_FamilyHouseLevel4Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 4, BuildRotation.CLOCKWISE_90, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+    // результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
+    public static void demo_FamilyHouseLevel4Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 4, BuildRotation.CLOCKWISE_180, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+    // результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
+    public static void demo_FamilyHouseLevel4Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "family_house", 4, BuildRotation.COUNTERCLOCKWISE_90, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouse", timeoutTicks = 8000)
+    public static void demo_PlayerHouseLevel1None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 1, BuildRotation.NONE, PLAYER_HOUSE_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouse", timeoutTicks = 8000)
+    public static void demo_PlayerHouseLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 1, BuildRotation.CLOCKWISE_90, PLAYER_HOUSE_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouse", timeoutTicks = 8000)
+    public static void demo_PlayerHouseLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 1, BuildRotation.CLOCKWISE_180, PLAYER_HOUSE_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouse", timeoutTicks = 8000)
+    public static void demo_PlayerHouseLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 1, BuildRotation.COUNTERCLOCKWISE_90, PLAYER_HOUSE_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plaza", timeoutTicks = 4000)
+    public static void demo_PlazaLevel1None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 1, BuildRotation.NONE, PLAZA_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plaza", timeoutTicks = 4000)
+    public static void demo_PlazaLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 1, BuildRotation.CLOCKWISE_90, PLAZA_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plaza", timeoutTicks = 4000)
+    public static void demo_PlazaLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 1, BuildRotation.CLOCKWISE_180, PLAZA_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plaza", timeoutTicks = 4000)
+    public static void demo_PlazaLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 1, BuildRotation.COUNTERCLOCKWISE_90, PLAZA_MAX_PATH_BUILDS);
+    }
+
+    // [флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_welllevel2", timeoutTicks = 4000)
+    public static void demo_WellLevel2None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 2, BuildRotation.NONE, WELL2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_welllevel2", timeoutTicks = 4000)
+    public static void demo_WellLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 2, BuildRotation.CLOCKWISE_90, WELL2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_welllevel2", timeoutTicks = 4000)
+    public static void demo_WellLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 2, BuildRotation.CLOCKWISE_180, WELL2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_welllevel2", timeoutTicks = 4000)
+    public static void demo_WellLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "well", 2, BuildRotation.COUNTERCLOCKWISE_90, WELL2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel2", timeoutTicks = 1200)
+    public static void demo_LampLevel2None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 2, BuildRotation.NONE, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel2", timeoutTicks = 1200)
+    public static void demo_LampLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 2, BuildRotation.CLOCKWISE_90, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel2", timeoutTicks = 1200)
+    public static void demo_LampLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 2, BuildRotation.CLOCKWISE_180, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel2", timeoutTicks = 1200)
+    public static void demo_LampLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 2, BuildRotation.COUNTERCLOCKWISE_90, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel3", timeoutTicks = 1200)
+    public static void demo_LampLevel3None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 3, BuildRotation.NONE, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel3", timeoutTicks = 1200)
+    public static void demo_LampLevel3Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 3, BuildRotation.CLOCKWISE_90, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel3", timeoutTicks = 1200)
+    public static void demo_LampLevel3Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 3, BuildRotation.CLOCKWISE_180, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_lamplevel3", timeoutTicks = 1200)
+    public static void demo_LampLevel3Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "lamp", 3, BuildRotation.COUNTERCLOCKWISE_90, LAMP_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plazalevel2", timeoutTicks = 6000)
+    public static void demo_PlazaLevel2None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 2, BuildRotation.NONE, PLAZA2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plazalevel2", timeoutTicks = 6000)
+    public static void demo_PlazaLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 2, BuildRotation.CLOCKWISE_90, PLAZA2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plazalevel2", timeoutTicks = 6000)
+    public static void demo_PlazaLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 2, BuildRotation.CLOCKWISE_180, PLAZA2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_plazalevel2", timeoutTicks = 6000)
+    public static void demo_PlazaLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "plaza", 2, BuildRotation.COUNTERCLOCKWISE_90, PLAZA2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouselevel2", timeoutTicks = 12000)
+    public static void demo_PlayerHouseLevel2None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 2, BuildRotation.NONE, PLAYER_HOUSE2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouselevel2", timeoutTicks = 12000)
+    public static void demo_PlayerHouseLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 2, BuildRotation.CLOCKWISE_90, PLAYER_HOUSE2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouselevel2", timeoutTicks = 12000)
+    public static void demo_PlayerHouseLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 2, BuildRotation.CLOCKWISE_180, PLAYER_HOUSE2_MAX_PATH_BUILDS);
+    }
+
+    // [флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+    @GameTest(template = "big_arena", batch = "demo_audit_playerhouselevel2", timeoutTicks = 12000)
+    public static void demo_PlayerHouseLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "player_house", 2, BuildRotation.COUNTERCLOCKWISE_90, PLAYER_HOUSE2_MAX_PATH_BUILDS);
     }
 }

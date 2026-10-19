@@ -19,7 +19,15 @@
   "storage_v4",
   "family_house_1",
   "family_house_2",
-  "family_house_3"
+  "family_house_3",
+  "family_house_4",
+  "player_house_1",
+  "plaza_1",
+  "well_2",
+  "lamp_2",
+  "lamp_3",
+  "plaza_2",
+  "player_house_2"
  ],
  "planned": [
   {

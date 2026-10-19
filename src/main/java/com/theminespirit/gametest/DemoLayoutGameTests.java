@@ -22,6 +22,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -77,10 +79,18 @@ public final class DemoLayoutGameTests {
                         "Рядом с сундуком обязана стоять табличка с названием постройки (владелец 19.10): " + cell);
                 continue;
             }
+            // Материалы — в двойных сундуках (владелец 20.10): вторая половина стоит вплотную к клетке сундука.
+            boolean besideChest =
+                    Math.abs(cell.x() - chest.x()) + Math.abs(cell.z() - chest.z()) == 1 && cell.y() == chest.y();
             if (isChest) {
                 helper.assertTrue(
                         helper.getLevel().getBlockState(pos).is(Blocks.CHEST),
                         "Клетка сундука обязана держать сундук после подготовки площадки: " + cell);
+            } else if (besideChest && helper.getLevel().getBlockState(pos).is(Blocks.CHEST)) {
+                helper.assertTrue(
+                        helper.getLevel().getBlockState(pos).getValue(ChestBlock.TYPE) != ChestType.SINGLE,
+                        "Сундук рядом с клеткой сундука обязан быть второй половиной двойного, а не отдельным: "
+                                + cell);
             } else {
                 helper.assertTrue(
                         helper.getLevel().getBlockState(pos).isAir(),
@@ -107,6 +117,11 @@ public final class DemoLayoutGameTests {
             }
             if (cell.equals(placement.chest())) {
                 helper.assertTrue(state.is(Blocks.CHEST), "Сундук обязан остаться на площадке после стройки: " + cell);
+                continue;
+            }
+            boolean besideChest =
+                    Math.abs(cell.x() - chest.x()) + Math.abs(cell.z() - chest.z()) == 1 && cell.y() == chest.y();
+            if (besideChest && state.is(Blocks.CHEST) && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
                 continue;
             }
             String block = schema.get(cell);

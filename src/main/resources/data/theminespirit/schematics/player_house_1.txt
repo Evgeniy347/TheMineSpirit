@@ -1,0 +1,219 @@
+# player_house_1 — дом игрока, уровень 1 «первый каменный дом» (tasks/47-settlement, sketches-manor.md).
+# Общее жильё первых духов этапа 0: булыжник в дубовом каркасе, одна просторная комната под коньком,
+# 4 кровати, верстак, печь, бочка, два двойных сундука, стол со стульями. Окна 1×2 со ставнями, свес,
+# окно во фронтоне, ступень у двери и факелы снаружи.
+name: "Дом игрока, уровень 1 (первый каменный дом)"
+type: housing
+stage: 0
+level: 1
+size: 13x11x15   # Ш×В×Д
+entrance: 6,1,1
+legend:
+  'c': cobblestone
+  '#': oak_planks
+  'L': oak_log[axis=y]
+  'X': oak_log[axis=x]
+  'Z': oak_log[axis=z]
+  'e': oak_stairs[facing=east,half=bottom]
+  'w': oak_stairs[facing=west,half=bottom]
+  '_': oak_slab[type=bottom]
+  'G': glass_pane
+  'D': oak_door[facing=south,hinge=left]
+  'p': cobblestone_stairs[facing=south,half=bottom]
+  'F': furnace[facing=south]
+  'T': crafting_table
+  'b': barrel[facing=up]
+  'V': chest[facing=west,type=right]
+  'W': chest[facing=west,type=left]
+  'B': red_bed[facing=south]
+  't': oak_fence
+  'q': oak_pressure_plate
+  'g': oak_stairs[facing=east,half=bottom]
+  'h': oak_stairs[facing=west,half=bottom]
+  'P': potted_poppy
+  'O': potted_dandelion
+  'N': wall_torch[facing=north]
+  's': wall_torch[facing=south]
+  'x': wall_torch[facing=east]
+  'z': wall_torch[facing=west]
+  'd': oak_trapdoor[facing=north,half=bottom,open=true]
+  'n': oak_trapdoor[facing=south,half=bottom,open=true]
+  'v': oak_trapdoor[facing=west,half=bottom,open=true]
+  'r': oak_trapdoor[facing=east,half=bottom,open=true]
+layers:
+  - y0 цоколь и пол: |
+           ppp
+       ccccccccccc
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       c#########c
+       ccccccccccc
+            .
+  - y1 комната: |
+      
+       LcccLDLcccL
+       cFT      Vc
+       cb       Wc
+       c         c
+       c   htg   c
+       c         c
+       L         L
+       c        Vc
+       c        Wc
+       c         c
+       cB B   B Bc
+       cB B b B Bc
+       LccccLccccL
+            .
+  - y2: |
+        d d   d d
+       LcGcLDLcGcL
+       c  s   s  c
+      vcP        cr
+       G         G
+      vc    q    cr
+       c        zc
+       Lx        L
+       c         c
+      vc         cr
+       G         G
+      vc         cr
+       c   NO    c
+       LccGcLcGccL
+         n n n n
+  - y3: |
+        d dN Nd d
+       LcGcLXLcGcL
+       c         c
+      vc         cr
+       G         G
+      vc         cr
+       c         c
+       L         L
+       c         c
+      vc         cr
+       G         G
+      vc         cr
+       c         c
+       LccGcLcGccL
+         n n n n
+  - y4 обвязка и свес: |
+      e#         #w
+      eLXXXXXXXXXLw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eZ         Zw
+      eLXXXXXXXXXLw
+      e#         #w
+  - y5: |
+       e#       #w
+       e#########w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#       #w
+       e#########w
+       e#       #w
+  - y6: |
+        e#     #w
+        e#######w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#     #w
+        e#######w
+        e#     #w
+  - y7: |
+         e#   #w
+         e##G##w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e#   #w
+         e##G##w
+         e#   #w
+  - y8: |
+          e# #w
+          e###w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e# #w
+          e###w
+          e# #w
+  - y9: |
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+           e#w
+  - y10: |
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _
+            _

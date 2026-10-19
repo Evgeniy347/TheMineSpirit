@@ -1,0 +1,25 @@
+# lamp_2 — светильник, уровень 2 (catalog-2.md): еловый столб с забором на каменном основании, сверху фонарь.
+name: "Светильник, уровень 2 (фонарь на столбе)"
+type: infrastructure
+stage: 2
+level: 2
+requires: torch_post
+size: 2x4x1   # Ш×В×Д
+entrance: 1,0,0
+exemptions:
+  - rule: closed_walls
+    reason: "светильник 2×4×1 — не здание: замкнутого периметра стен у столба нет"
+legend:
+  'S': stone_bricks
+  'L': stripped_spruce_log[axis=y]
+  't': spruce_fence
+  'N': lantern[hanging=false]
+layers:
+  - y0: |
+      S.
+  - y1: |
+      L.
+  - y2: |
+      t.
+  - y3: |
+      N.

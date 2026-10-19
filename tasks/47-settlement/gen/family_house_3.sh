@@ -109,9 +109,9 @@ echo "set 5 6 0 H"; echo "set 5 9 0 H"
 echo "walls 7 9 1 14 1 16 h"; for x in 1 5 10 14; do echo "col 7 9 $x 1 L"; echo "col 7 9 $x 16 L"; done; for z in 9; do echo "col 7 9 1 $z L"; echo "col 7 9 14 $z L"; done
 echo "set 7 7 1 D"; echo "set 8 7 1 D"; echo "set 7 8 1 E"; echo "set 8 8 1 E"
 for y in 7 8; do for x in 3 4 11 12; do echo "set $y $x 1 G"; echo "set $y $x 16 G"; done; for z in 4 5 12 13; do echo "set $y 1 $z G"; echo "set $y 14 $z G"; done; done
-for y in 7 8; do for x in 2 5 10 13; do echo "set $y $x 0 d"; echo "set $y $x 17 n"; done; for z in 3 6 11 14; do echo "set $y 0 $z v"; echo "set $y 15 $z r"; done; done
+for y in 7 8; do for x in 2 5 10 13; do echo "set $y $x 0 d"; done; for x in 5 10; do echo "set $y $x 17 n"; done; for z in 3 6 11 14; do echo "set $y 0 $z v"; echo "set $y 15 $z r"; done; done
 # второй этаж: перегородки
-echo "box 7 9 11 11 2 7 h"; echo "box 7 9 2 10 9 9 h"; echo "box 7 8 5 5 9 9 ."; echo "box 7 9 7 7 10 15 h"
+echo "box 7 9 11 11 2 7 h"; echo "box 7 8 11 11 2 3 ."; echo "box 7 9 2 10 9 9 h"; echo "box 7 8 5 5 9 9 ."; echo "box 7 9 7 7 10 15 h"
 # спальня родителей
 echo "set 7 3 7 B"; echo "set 7 3 8 B"; echo "set 7 4 7 B"; echo "set 7 4 8 B"; echo "set 7 7 8 W"; echo "set 7 8 8 V"
 echo "box 7 7 3 8 3 5 y"; echo "set 7 2 2 P"; echo "set 7 10 2 O"; echo "set 7 10 7 b"; echo "set 8 2 6 x"; echo "set 8 10 4 z"
@@ -119,7 +119,7 @@ echo "box 7 7 3 8 3 5 y"; echo "set 7 2 2 P"; echo "set 7 10 2 O"; echo "set 7 1
 echo "set 7 3 14 B"; echo "set 7 3 15 B"; echo "set 7 5 15 W"; echo "set 7 6 15 V"; echo "box 7 7 3 5 11 12 m"; echo "set 7 6 10 A"; echo "set 8 2 10 x"
 # кабинет и холл
 echo "box 7 9 8 10 15 15 Y"; echo "box 7 8 8 8 13 14 Y"; echo "set 7 8 12 l"; echo "set 7 9 12 a"; echo "box 7 7 12 13 10 14 ~"; echo "set 7 13 15 P"; echo "set 8 13 10 z"; echo "set 8 9 10 s"
-echo "set 8 13 2 s"
+echo "set 8 10 2 s"
 # обвязка и крыша
 echo "walls 10 10 1 14 1 16 Z"; echo "box 10 10 1 14 1 1 X"; echo "box 10 10 1 14 16 16 X"; for x in 1 14; do for z in 1 16; do echo "set 10 $x $z L"; done; done
 echo "box 9 9 0 0 1 16 U"; echo "box 9 9 15 15 1 16 I"

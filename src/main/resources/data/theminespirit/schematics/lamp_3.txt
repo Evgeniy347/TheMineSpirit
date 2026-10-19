@@ -1,0 +1,26 @@
+# lamp_3 — светильник, уровень 3 (catalog-2.md): каменное основание, столб из тёмного дуба, кронштейн и фонарь
+# на цепи над обочиной.
+name: "Светильник, уровень 3 (фонарь на цепи)"
+type: infrastructure
+stage: 3
+level: 3
+requires: lamp_2
+size: 2x5x1   # Ш×В×Д
+entrance: 1,0,0
+legend:
+  'S': stone_bricks
+  'L': stripped_dark_oak_log[axis=y]
+  'X': stripped_dark_oak_log[axis=x]
+  'C': chain
+  'H': lantern[hanging=true]
+layers:
+  - y0: |
+      S.
+  - y1: |
+      L.
+  - y2: |
+      LH
+  - y3: |
+      LC
+  - y4: |
+      LX

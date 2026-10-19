@@ -1,0 +1,100 @@
+# well_2 — колодец, уровень 2 (catalog.md): каменный сруб 3×3 на площадке 5×5 из каменного кирпича,
+# двускатная крыша на четырёх бревенчатых столбах со свесом, фонарь на цепи над водой, котёл-ведро и цветы у сруба.
+name: "Колодец, уровень 2"
+type: infrastructure
+stage: 2
+level: 2
+requires: well
+size: 7x9x7   # Ш×В×Д
+entrance: 3,1,1
+exemptions:
+  - rule: closed_walls
+    reason: "колодец открыт: крыша стоит на четырёх столбах, сплошных стен нет по замыслу"
+legend:
+  'S': stone_bricks
+  'c': cobblestone_wall
+  'W': water
+  't': stripped_spruce_log[axis=y]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  '#': spruce_planks
+  'e': spruce_stairs[facing=east,half=bottom]
+  'w': spruce_stairs[facing=west,half=bottom]
+  '_': spruce_slab[type=bottom]
+  'C': chain
+  'H': lantern[hanging=true]
+  'u': water_cauldron[level=3]
+  'P': potted_poppy
+  'O': potted_dandelion
+layers:
+  - y0 площадка: |
+         p
+       SSSSS
+       SSSSS
+       SSWSS
+       SSSSS
+       SSSSS
+         .
+  - y1 сруб и столбы: |
+      
+       t   t
+        ccc
+       uc cP
+        ccc
+       t O t
+         .
+  - y2: |
+      
+       t   t
+      
+         H
+      
+       t   t
+         .
+  - y3: |
+      
+       t   t
+      
+         C
+      
+       t   t
+         .
+  - y4 потолок: |
+      
+       #####
+       #####
+       #####
+       #####
+       #####
+         .
+  - y5 крыша: |
+      e#   #w
+      e#####w
+      e#####w
+      e#####w
+      e#####w
+      e#####w
+      e#   #w
+  - y6: |
+       e# #w
+       e###w
+       e###w
+       e###w
+       e###w
+       e###w
+       e# #w
+  - y7: |
+        e#w
+        e#w
+        e#w
+        e#w
+        e#w
+        e#w
+        e#w
+  - y8: |
+         _
+         _
+         _
+         _
+         _
+         _
+         _

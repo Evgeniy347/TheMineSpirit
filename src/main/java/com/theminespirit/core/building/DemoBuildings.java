@@ -60,6 +60,8 @@ public final class DemoBuildings {
     public static final String CATALOG = PresetLibrary.SCHEMATICS_ROOT + "buildings.json";
     private static final Set<String> BUILDING_FIELDS = Set.of("id", "name", "type", "levels");
     private static final Set<String> LEVEL_FIELDS = Set.of("level", "scheme");
+    // Подкоманды /spirit demo, не являющиеся постройками.
+    private static final Set<String> RESERVED_IDS = Set.of("list", "stop", "city");
 
     private static final List<Building> ALL = parse(JsonResource.readClasspath(CATALOG), CATALOG);
 
@@ -83,6 +85,11 @@ public final class DemoBuildings {
                 levels.add(new Level(
                         JsonResource.integer(level.get("level"), origin, "номера уровня '" + id + "'"),
                         JsonResource.text(level.get("scheme"), origin, "схемы уровня '" + id + "'")));
+            }
+            if (RESERVED_IDS.contains(id)) {
+                throw new IllegalArgumentException(
+                        "Постройка '" + id + "' в " + origin + " заняла имя подкоманды " + "/spirit demo " + id
+                                + ": команда и постройка затенили бы друг друга; переименуйте постройку");
             }
             if (!ids.add(id)) {
                 throw new IllegalArgumentException("Постройка '" + id + "' объявлена в " + origin
