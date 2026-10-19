@@ -11,7 +11,6 @@ public final class RepairCalculator {
     public static final int PERCENT_MIN = 1;
     public static final int PERCENT_MAX = 100;
 
-    /** Прочность после ремонта наковальней материалом: плюс доля максимума, не выше максимума. */
     public static int anvilResult(int durability, int maxDurability, int repairPercent) {
         if (durability < 0) {
             throw new IllegalArgumentException("Прочность не может быть отрицательной: " + durability);

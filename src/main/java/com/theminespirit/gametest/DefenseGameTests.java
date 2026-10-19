@@ -49,11 +49,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 @SettlementSystems(coordinator = true)
 public final class DefenseGameTests {
-    /**
-     * Потолок набухания крипера в сцене «ударь и беги»: взрыв — не предмет проверки, а источник
-     * флака (дух с равной скоростью не всегда успевает выйти за 30-тиковый запал, а крипер без
-     * цели взрывается у держащего). Держим заряд ниже порога детонации, чтобы наблюдать цикл.
-     */
     private static final float SWELL_CAP = 0.5F;
 
     private DefenseGameTests() {
@@ -88,7 +83,6 @@ public final class DefenseGameTests {
         return plan.orders().stream().filter(order -> order.defender().equals(spirit.getUUID())).findFirst();
     }
 
-    /** Занятость духов сцены — факт падения: чужая задача доски срывает приказ обороны. */
     private static String taskFacts(SpiritEntity... spirits) {
         StringBuilder facts = new StringBuilder();
         for (SpiritEntity spirit : spirits) {

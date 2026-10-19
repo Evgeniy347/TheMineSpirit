@@ -16,7 +16,6 @@ public final class FishingNeeds {
     private FishingNeeds() {
     }
 
-    /** Годная к жарке рыба на складе: треска и лосось. Иглобрюх и тропическая в счёт не идут. */
     public static int cookableFish(Map<String, Integer> available) {
         if (available == null) {
             throw new IllegalArgumentException("Опись склада без карты не читается: пустой склад задают пустой картой");
@@ -31,7 +30,6 @@ public final class FishingNeeds {
         return total;
     }
 
-    /** Коптильню крафтят, когда годной к жарке рыбы набралось не меньше порога из данных. */
     public static boolean wantsSmoker(Map<String, Integer> available, FishingData data) {
         if (data == null) {
             throw new IllegalArgumentException(
@@ -40,10 +38,6 @@ public final class FishingNeeds {
         return cookableFish(available) >= data.smokerFish();
     }
 
-    /**
-     * Рыбалка как постоянное занятие: идти на рабочую точку, пока есть нехватка еды.
-     * Доля нехватки — из {@code FoodDemand.share}; ноль значит «еды хватает».
-     */
     public static boolean wantsFishing(double foodShare) {
         if (!Double.isFinite(foodShare) || foodShare < 0) {
             throw new IllegalArgumentException("Доля нехватки еды " + foodShare
@@ -52,10 +46,6 @@ public final class FishingNeeds {
         return foodShare > 0;
     }
 
-    /**
-     * Доля нехватки еды поселения по снимку склада: сколько сытности есть против нормы на души.
-     * Сытность берётся из таблицы еды, норма — из настроек интеллекта; ноль значит «еды хватает».
-     */
     public static double foodShare(Map<String, Integer> available, int population) {
         if (available == null) {
             throw new IllegalArgumentException("Опись склада без карты не читается: пустой склад задают пустой картой");

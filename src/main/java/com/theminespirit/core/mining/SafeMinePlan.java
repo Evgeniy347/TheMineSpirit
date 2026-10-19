@@ -27,10 +27,6 @@ public record SafeMinePlan(
     public static final int WORLD_MIN_Y = DescentPlan.WORLD_MIN_Y;
     public static final int WORLD_MAX_Y = DescentPlan.WORLD_MAX_Y;
 
-    /**
-     * Высота прохода лесенки: два блока для стоянки плюс блок над головой, иначе дух не пройдёт
-     * на ступень ниже — голова упрётся в потолок следующей ступени. Штольня идёт ровно в двух блоках.
-     */
     public static final int STAIRCASE_PASSAGE_HEIGHT = 3;
     public static final int TUNNEL_PASSAGE_HEIGHT = 2;
 
@@ -58,7 +54,6 @@ public record SafeMinePlan(
         }
     }
 
-    /** Спуск лесенкой: каждый следующий шаг на этаж ниже и на блок ближе по направлению. */
     public static SafeMinePlan staircase(SafetyView view, BlockCoord entry, DescentDirection direction,
             int targetY, int torchInterval) {
         requireView(view);
@@ -86,7 +81,6 @@ public record SafeMinePlan(
         return finish(entry, SafeMineMode.STAIRCASE, direction, torchInterval, steps, dangerReason);
     }
 
-    /** Горизонтальная штольня: этаж не меняется, каждый следующий шаг на блок вперёд. */
     public static SafeMinePlan tunnel(SafetyView view, BlockCoord entry, DescentDirection direction,
             int length, int torchInterval) {
         requireView(view);
@@ -161,10 +155,6 @@ public record SafeMinePlan(
         return new Step(new SafeMineStep(index, floor, stand, passage, List.copyOf(fill), fallingAbove, torch));
     }
 
-    /**
-     * Пол под ступенью: твёрдый или сыпучий держит ноги, жидкость планируется заложить,
-     * провал и прочие опасные блоки останавливают план — туда дух не шагает.
-     */
     private static String floorHazard(SafetyView view, int index, BlockCoord column, int floor, Set<BlockCoord> fill) {
         BlockCoord floorCell = new BlockCoord(column.x(), floor, column.z());
         Cell cell = view.cellAt(floorCell);

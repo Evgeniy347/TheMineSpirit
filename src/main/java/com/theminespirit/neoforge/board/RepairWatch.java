@@ -52,7 +52,6 @@ final class RepairWatch {
         }
     }
 
-    /** Наиболее изношенный предмет, который дух может починить имеющимися средствами. */
     private static Optional<String> repairableTool(SpiritEntity spirit) {
         SpiritInventory inventory = spirit.getInventory();
         int percent = RepairData.loadDefault().maxDurabilityPercent();

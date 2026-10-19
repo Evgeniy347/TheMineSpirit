@@ -72,7 +72,6 @@ public final class PresetLibrary {
         return presets;
     }
 
-    /** Запланированные уровни (пока без схемы): их описывает индекс, но построить по ним нечего. */
     public List<PlannedLevel> planned() {
         return planned;
     }
@@ -114,10 +113,6 @@ public final class PresetLibrary {
         return List.copyOf(found);
     }
 
-    /**
-     * Пути тел схем, названных в индексе, по порядку. Реестр таблиц дочитывает их тем же источником, что и индекс,
-     * поэтому датапак мира может переопределить любое тело, а не только список.
-     */
     public static List<String> bodyPaths(String indexJson, String origin) {
         JsonNode root = JsonResource.parse(indexJson, origin);
         List<JsonNode> entries = JsonResource.array(root.get("presets"), origin, "списка presets");
@@ -132,7 +127,6 @@ public final class PresetLibrary {
         return List.copyOf(paths);
     }
 
-    /** Разбирает индекс и ссылающиеся на него тела схем. {@code contents[0]} — индекс, дальше — тела по порядку. */
     public static PresetLibrary parse(List<LoadedContent> contents) {
         Objects.requireNonNull(contents, "Содержимое библиотеки не может быть null: разбирать нечего");
         if (contents.isEmpty()) {
@@ -239,11 +233,6 @@ public final class PresetLibrary {
         return null;
     }
 
-    /**
-     * Материалы считаются из блоков: одна запись на вид блока с числом, в порядке id для стабильного вывода.
-     * Вторая половина двери и изголовье кровати предмета не требуют: их ставит тот же предмет, что и первую часть.
-     * Ключ — id предмета: настенный факел и табличка ставятся обычным факелом и табличкой.
-     */
     public static Map<String, Integer> countMaterials(Schematic schematic) {
         Objects.requireNonNull(schematic, "Схема не может быть null: материалы считают из её блоков");
         Map<String, Integer> counts = new TreeMap<>();
@@ -264,7 +253,6 @@ public final class PresetLibrary {
         return "PresetLibrary[" + presets.size() + " пресетов]";
     }
 
-    /** Список id для сообщений об ошибке: помогает найти опечатку в имени файла тела. */
     public List<String> ids() {
         List<String> ids = new ArrayList<>(presets.size());
         for (Preset preset : presets) {

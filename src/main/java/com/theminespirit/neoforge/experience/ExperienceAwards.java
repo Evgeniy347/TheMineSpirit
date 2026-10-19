@@ -27,7 +27,6 @@ public final class ExperienceAwards {
         giveSplit(players, amount);
     }
 
-    /** Раздаёт накопленный пул текущим игрокам. Вызывается при входе игрока на сервер. */
     public static void flushPool(MinecraftServer server) {
         int pending = SettlementExperience.get(server).drain();
         if (pending <= 0) {

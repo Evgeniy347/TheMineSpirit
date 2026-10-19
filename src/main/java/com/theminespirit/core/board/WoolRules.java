@@ -98,7 +98,6 @@ public final class WoolRules {
         return !hasShears && iron >= shearsIron();
     }
 
-    /** Сколько шерсти выйдет из нитей, не трогая запас: партия — 4 нити за 1 шерсть. */
     public static int woolFromStrings(int strings) {
         if (strings < 0) {
             throw new IllegalArgumentException("Нитей " + strings + ": запас не бывает отрицательным");
@@ -137,7 +136,6 @@ public final class WoolRules {
         return requireColor(color) + "_bed";
     }
 
-    /** Цвет кровати: сначала белая, потом первый цвет, которого набралось на кровать. */
     public static Optional<String> bedColor(StockView stock) {
         Objects.requireNonNull(stock, "Склад не может быть null: цвет кровати считают по запасам");
         if (wool(stock, "white") >= bedWool()) {

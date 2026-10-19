@@ -44,13 +44,6 @@ public final class StockScan {
     private StockScan() {
     }
 
-    /**
-     * Обходит куб вокруг каждого центра в переданном порядке и возвращает найденные
-     * контейнеры, не прочитав больше {@code blockBudget} блоков и не выйдя за
-     * {@code heightBlocks} вверх и вниз. Порядок обхода центров задаёт вызывающий (адаптер
-     * крутит их между пересборками, чтобы бюджет видел разные сундуки); найденные контейнеры
-     * отсортированы по близости к центру, затем по координате — ближайшие читаются первыми.
-     */
     public static Result containers(List<BlockCoord> centers, int radiusBlocks, int heightBlocks,
             int blockBudget, Blocks blocks) {
         Objects.requireNonNull(centers, "centers не может быть null: обход идёт вокруг центров заявок");

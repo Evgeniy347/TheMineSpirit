@@ -110,12 +110,6 @@ final class PillarColumn {
         return Outcome.RUNNING;
     }
 
-    /**
-     * Клетка столба прижата к стволу, а тело духа 0.6 шириной: сдвиг к стволу больше
-     * {@link CellCentering#TOLERANCE} задевает бревно на прыжке, и подъём встаёт
-     * (флак chop_tree_tall: «не поднялся на 5-й блок за 200 тиков»). Каждый тик возвращаем духа
-     * в середину клетки столба, а не надеемся на разовый прицел перед стройкой.
-     */
     private void keepCentered() {
         double centerX = baseX + 0.5;
         double centerZ = baseZ + 0.5;

@@ -63,10 +63,6 @@ public final class ToolSet {
         return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
     }
 
-    /**
-     * Первый недостающий инструмент цепочки: деревянный набор обязан быть собран раньше
-     * каменного, поэтому наличие каменной кирки без деревянной не продвигает цепочку.
-     */
     public static Optional<BoardCase> nextMissing(Set<String> present) {
         Objects.requireNonNull(present, "present не может быть null: без запасов не понять, "
                 + "какого инструмента не хватает");
@@ -78,7 +74,6 @@ public final class ToolSet {
         return Optional.empty();
     }
 
-    /** Комплектов на поселение: не меньше фиксированного минимума и не меньше числа духов. */
     public static int count(Map<String, Integer> tools, int spirits) {
         Objects.requireNonNull(tools, "tools не может быть null: число комплектов читается из таблицы, "
                 + "пустую таблицу задают пустой картой");

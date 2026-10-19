@@ -51,14 +51,12 @@ public final class BreedingRules {
         return action(species, housed, penBuilt) == Action.CULL;
     }
 
-    /** Гейт разведения: корм вида на пару (минимум для сведения). */
     public static Map<String, Integer> breedingGate(Species species) {
         Objects.requireNonNull(species, "Вид гейта не может быть null: без него неизвестно, чем кормить пару");
         String feed = FeedTable.feedFor(species).get(0);
         return Map.of(feed, HerdCap.minBreed());
     }
 
-    /** Норма продуктов вида на одну голову: данные board ({@code products}). */
     public static Map<String, Integer> stockPerCapita(Species species) {
         Objects.requireNonNull(species, "Вид нормы не может быть null: без него неизвестно, что считать");
         Map<String, Integer> perCapita = DataTables.INSTANCE.board().current().products()
@@ -66,7 +64,6 @@ public final class BreedingRules {
         return perCapita == null ? Map.of() : perCapita;
     }
 
-    /** Запас продуктов вида на всё поголовье: норма на душу умножается на число голов. */
     public static Map<String, Integer> stockFor(Species species, int population) {
         Objects.requireNonNull(species, "Вид запаса не может быть null: без него неизвестно, что считать");
         if (population < 0) {

@@ -15,13 +15,9 @@ import java.util.Set;
  * не осталось тёмных клеток (блочный свет не выше порога спавна враждебных мобов).
  */
 public final class LightPlan {
-    /** Враждебные мобы в 1.21 спавнятся при блочном свете 0: клетка с таким светом считается тёмной. */
     public static final int MOB_SPAWN_LIGHT = 0;
-    /** Факел освещает свою клетку уровнем 14. */
     public static final int TORCH_LIGHT_LEVEL = 14;
-    /** За блок пути факел теряет 1 света: дальше этого расстояния света не остаётся. */
     public static final int TORCH_REACH = TORCH_LIGHT_LEVEL - 1;
-    /** Шаг простой сетки: реже этого клетка между линиями осталась бы вне досягаемости факела. */
     public static final int GRID_STEP = TORCH_REACH / 2;
 
     public record Plan(List<BlockCoord> torches, int darkRemaining, int darkTotal) {
@@ -73,7 +69,6 @@ public final class LightPlan {
         return new Plan(torches, uncovered.size(), dark.size());
     }
 
-    /** Простая сетка кандидатов: факел в клетке сетки, а если она занята — в ближайшей размещаемой рядом. */
     public static List<BlockCoord> grid(int centerX, int centerZ, int radius, List<LightCell> cells) {
         Objects.requireNonNull(cells, "Карта света не может быть null: по ней строится сетка");
         checkRadius(radius);

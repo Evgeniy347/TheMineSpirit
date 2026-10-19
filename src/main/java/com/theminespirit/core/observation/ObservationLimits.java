@@ -36,7 +36,6 @@ public record ObservationLimits(int maxGroundItems, int maxContainers, int maxCo
         return DEFAULTS;
     }
 
-    /** Текущая версия таблицы для потребителей: читается из держателя, поэтому /reload меняет числа на лету. */
     public static ObservationLimits loadDefault() {
         return DataTables.INSTANCE.observation().current();
     }

@@ -19,7 +19,6 @@ public final class BoardRegistry {
         return BY_LEVEL.computeIfAbsent(level, BoardService::create);
     }
 
-    /** Доска, если она уже создана: наблюдатель не создаёт доску ради чтения задания. */
     public static Optional<BoardService> peek(ServerLevel level) {
         return level == null ? Optional.empty() : Optional.ofNullable(BY_LEVEL.get(level));
     }

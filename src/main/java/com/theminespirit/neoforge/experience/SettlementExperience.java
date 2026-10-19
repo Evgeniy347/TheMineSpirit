@@ -50,7 +50,6 @@ public final class SettlementExperience extends SavedData {
         return pending;
     }
 
-    /** Добавляет опыт в пул и возвращает новое значение: без игроков опыт не теряется. */
     public int add(int amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Опыт " + amount + " отрицательный: в пул кладут только "
@@ -63,7 +62,6 @@ public final class SettlementExperience extends SavedData {
         return pending;
     }
 
-    /** Забирает весь накопленный опыт, обнуляя пул: вызывающий сам делит его между игроками. */
     public int drain() {
         int drained = pending;
         if (drained > 0) {

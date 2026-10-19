@@ -153,10 +153,6 @@ public final class BlockPlacer {
                 entity -> entity != spirit && !entity.isRemoved() && !entity.isSpectator());
     }
 
-    /**
-     * Опора — общее правило {@link BlockSupport} (то же проверяет сторож схем) и ванильное «выживет ли блок здесь»:
-     * настенный факел держится только стеной со стороны крепления. Верхняя половина двери стоит на нижней.
-     */
     static boolean hasSupport(Level level, BlockPos target, BlockState state) {
         if (upperHalfOnLower(level, target, state)) {
             return true;

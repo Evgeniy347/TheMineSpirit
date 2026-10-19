@@ -63,12 +63,10 @@ public final class JournalService {
         return journal.pending();
     }
 
-    /** Поставлено в журнал: каждый вызов {@link #record} — один переход статуса задания. */
     public int enqueued() {
         return journal.enqueued();
     }
 
-    /** Уже на диске: тест масштаба сверяет строки с числом переходов. */
     public int written() {
         return journal.written();
     }
@@ -77,7 +75,6 @@ public final class JournalService {
         return journal.last(limit);
     }
 
-    /** Восстановление ledger при старте; оборванный хвост виден в логе, а не теряется молча. */
     public int restore(BoardLedger ledger) {
         BoardJournal.LoadResult result = journal.load(ledger);
         if (result.failed()) {

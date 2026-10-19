@@ -30,7 +30,6 @@ public final class FishingSpots {
         return find(origin, view, data.minWidth(), data.minDepth(), SpotFilter.ALL);
     }
 
-    /** Рабочее место у воды: пятно крупнее разовой ловли, отобранное фильтром мира. */
     public static Optional<Spot> findWorkPoint(BlockCoord origin, WaterView view, FishingData data,
             SpotFilter filter) {
         Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них размер рабочей точки");

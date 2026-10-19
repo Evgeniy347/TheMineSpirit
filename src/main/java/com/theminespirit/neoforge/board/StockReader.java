@@ -112,7 +112,6 @@ public final class StockReader {
         };
     }
 
-    /** Крутит центры между пересборками: при жёстком бюджете разные пересборки видят разные сундуки. */
     private List<BlockCoord> rotate(List<BlockCoord> centers) {
         if (centers.size() <= 1) {
             return centers;
@@ -130,10 +129,6 @@ public final class StockReader {
         available.merge(shortId(StackMapper.itemId(stack)), stack.getCount(), Integer::sum);
     }
 
-    /**
-     * Контейнеры отдают полный id ({@code minecraft:oak_log}): без приведения к короткому виду
-     * гейт искал бы {@code oak_log} и не видел бы склад, выдавая задание добычи снова и снова.
-     */
     private static void add(Map<String, Integer> available, Stack stack) {
         available.merge(shortId(stack.item()), stack.count(), Integer::sum);
     }

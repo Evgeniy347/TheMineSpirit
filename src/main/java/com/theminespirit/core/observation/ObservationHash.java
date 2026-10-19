@@ -77,10 +77,6 @@ public final class ObservationHash {
         }
     }
 
-    /**
-     * В хэш входит только день/ночь, но не точный тик суток: тик растёт каждую секунду игры и ломал бы
-     * сравнение «мир не изменился», из-за чего стратег звал бы модель на каждый цикл.
-     */
     private static void appendTime(StringBuilder builder, WorldTime time) {
         if (time != null) {
             builder.append(time.day());

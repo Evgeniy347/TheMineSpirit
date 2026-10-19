@@ -27,7 +27,6 @@ public final class HerdCap {
         return herdValue("minBreed", DEFAULT_MIN_BREED);
     }
 
-    /** Лимит вида выбран: новых голов этого вида не ловим и загон не строим. */
     public static boolean reached(Species species, int housed, int caught) {
         Objects.requireNonNull(species, "Вид лимита не может быть null: без него неизвестно, "
                 + "чей запас считать");

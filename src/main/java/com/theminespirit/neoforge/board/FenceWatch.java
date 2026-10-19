@@ -63,7 +63,6 @@ public final class FenceWatch {
                 TicketTarget.at(target).withFenceBlock(blockId));
     }
 
-    /** Живые причины ремонта: клетка причины всё ещё не ограждение. Починенная уходит из набора. */
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
         Set<String> live = new HashSet<>();
         for (BoardTicket ticket : service.board().all()) {
@@ -88,7 +87,6 @@ public final class FenceWatch {
         return live;
     }
 
-    /** Причина задания ремонта — сломанная клетка: починенный забор уходит из живых причин. */
     static String fenceCause(BlockPos pos) {
         return "fence:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
     }
@@ -99,7 +97,6 @@ public final class FenceWatch {
                 || block instanceof IronBarsBlock;
     }
 
-    /** Задание ремонта адресуется сломанной клеткой: повторная поломка той же клетки — дубль. */
     static String fenceId(BlockPos pos) {
         return "repair_fence:" + pos.getX() + "," + pos.getY() + "," + pos.getZ();
     }

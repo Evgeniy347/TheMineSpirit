@@ -52,7 +52,6 @@ public record DemoPlacement(BuildRotation rotation, BlockCoord origin, BlockCoor
                 rotatedX, rotatedZ);
     }
 
-    /** Поворот, при котором вход смотрит на игрока; при входе в глубине схемы поворот не меняется. */
     public static BuildRotation chooseRotation(int entryX, int entryZ, int sizeX, int sizeZ,
             int lookDx, int lookDz) {
         if (lookDx == 0 && lookDz == 0) {

@@ -44,7 +44,6 @@ public final class EvergreenRules {
         return supplyThresholds().getOrDefault(item, 0);
     }
 
-    /** Нехватка до порога: сколько ещё нужно, чтобы склад держал постоянный запас. */
     public static int supplyShortfall(String item, int have) {
         if (have < 0) {
             throw new IllegalArgumentException("Наличие " + have + " отрицательное: склад не бывает "
@@ -53,11 +52,6 @@ public final class EvergreenRules {
         return Math.max(0, supplyThreshold(item) - have);
     }
 
-    /**
-     * Решение о выдаче адресному духу: задание без владельца доступно любому применимому,
-     * адресное — только своему. Неприменимый владелец не получает задание, но оно остаётся
-     * доступным другому, если владельца нет.
-     */
     public static boolean issuedTo(BoardTicket ticket, UUID spirit, EatNeed eat, SpiritView view) {
         Objects.requireNonNull(ticket, "Задание выдачи не может быть null: без него непонятно, что выдаём");
         Objects.requireNonNull(spirit, "Дух выдачи не может быть null: выдача идёт конкретному духу");

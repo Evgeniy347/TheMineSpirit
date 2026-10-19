@@ -62,12 +62,6 @@ public final class GameTestFilter {
         }
     }
 
-    /**
-     * Вешает на размеченные пачки включение доски/координатора и выключение после.
-     * Хуки пачек лежат в приватных картах реестра (их читает {@link GameTestBatch});
-     * добавляем в карты сами, потому что одна пара методов на пачку — это тот же бойлерплейт,
-     * от которого уходим. Существующий хук пачки (например, выключение мобов-целей) сохраняется.
-     */
     private static void installSettlementBatches() {
         Map<String, Settlement> batches = settlementBatches();
         if (batches.isEmpty()) {

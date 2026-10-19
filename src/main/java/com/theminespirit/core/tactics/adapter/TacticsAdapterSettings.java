@@ -58,7 +58,6 @@ public record TacticsAdapterSettings(int evalIntervalTicks, int maxEnemies, int 
         return DataTables.INSTANCE.adapter().current();
     }
 
-    /** Начальная версия для держателя: читается из classpath один раз за процесс. */
     public static TacticsAdapterSettings readFromClasspath() {
         return fromJson(readResource());
     }

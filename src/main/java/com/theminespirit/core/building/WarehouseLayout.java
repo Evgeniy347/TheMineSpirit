@@ -186,7 +186,6 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         return List.copyOf(signs);
     }
 
-    /** Внутренняя высота — клетки между полом (y=0) и крышей (верхний слой схемы без табличек). */
     private static int structuralHeight(Schematic schematic) {
         int roof = 0;
         for (Schematic.Entry entry : schematic.blocks()) {

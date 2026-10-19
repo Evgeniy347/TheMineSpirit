@@ -29,7 +29,6 @@ public final class RepairMaterials {
     private RepairMaterials() {
     }
 
-    /** Материал ремонта предмета или пусто, если тип не знает своего материала. */
     public static Optional<String> materialFor(String itemId) {
         if (itemId == null || itemId.isBlank()) {
             return Optional.empty();

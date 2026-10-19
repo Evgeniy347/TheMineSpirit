@@ -68,18 +68,15 @@ public final class CraterWatch {
                 TicketTarget.at(target).withCraterBlocks(need.values().stream().mapToInt(Integer::intValue).sum()));
     }
 
-    /** Живые причины воронок: профиль, в котором осталась хоть одна пустая клетка. */
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
         return service.craters().retainLive(pos ->
                 level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).isAir());
     }
 
-    /** Причина задания воронки — её клетка: засыпанная воронка уходит из живых причин. */
     static String craterCause(BlockPos center) {
         return "crater:" + center.getX() + ":" + center.getY() + ":" + center.getZ();
     }
 
-    /** Задание воронки адресуется её клеткой: повторный взрыв той же точки — дубль, а не второе задание. */
     static String craterId(BlockPos center) {
         return "crater:" + center.getX() + "," + center.getY() + "," + center.getZ();
     }

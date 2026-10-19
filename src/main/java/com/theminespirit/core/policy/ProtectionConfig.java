@@ -19,7 +19,6 @@ public final class ProtectionConfig {
         return DataTables.INSTANCE.protection().current();
     }
 
-    /** Чтение из classpath для начальной версии держателя: не заглядывает в сам держатель. */
     public static BlockProtection readClasspath() {
         return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
     }

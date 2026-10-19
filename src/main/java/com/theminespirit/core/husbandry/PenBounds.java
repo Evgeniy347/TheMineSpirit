@@ -25,7 +25,6 @@ public record PenBounds(BlockCoord center, int radius) {
         return nearestInside(pos, 0);
     }
 
-    /** Точка возврата приманкой: желаемый отступ от кромки, но не больше, чем позволяет радиус загона. */
     public BlockCoord lureTarget(BlockCoord pos, int preferredInset) {
         if (preferredInset < 0) {
             throw new IllegalArgumentException("Отступ возврата " + preferredInset

@@ -22,7 +22,6 @@ public record TacticsConfig(EnemyProfiles enemies, ScoreWeights weights, Rules r
                 ModesParser.parse(ConfigNode.root("modes.json", modesJson)));
     }
 
-    /** Начальная версия для держателя: читается один раз за процесс, счётчик {@link #defaultLoads()} это фиксирует. */
     public static TacticsConfig readFromClasspath() {
         LOADS.incrementAndGet();
         return fromJson(TacticsResources.read("enemies.json"), TacticsResources.read("weights.json"),

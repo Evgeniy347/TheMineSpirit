@@ -44,10 +44,6 @@ public final class ProtectionGate {
         return decideBreak(pos, state, true);
     }
 
-    /**
-     * Снос своей постройки: блок, поставленный духом, убирается даже из защищённого списка
-     * (калитки, двери, заборы). Чужое и природное по-прежнему проходит обычную защиту.
-     */
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
         if (spirit.level() instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             return new BlockProtection.Allowed();

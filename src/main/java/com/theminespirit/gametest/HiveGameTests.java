@@ -169,10 +169,6 @@ public final class HiveGameTests {
                 .setValue(BeehiveBlock.HONEY_LEVEL, 5);
     }
 
-    /**
-     * Пчела спокойна: не убита, не жалила и не выбрала цель. Улетевшая в улей пчела по ванили уходит из мира
-     * (DISCARDED) — это не гибель, а обычная жизнь улья, поэтому «жива» проверяем по причине удаления.
-     */
     private static boolean calm(Bee bee) {
         Entity.RemovalReason removal = bee.getRemovalReason();
         boolean unharmed = removal == null || removal == Entity.RemovalReason.DISCARDED;
