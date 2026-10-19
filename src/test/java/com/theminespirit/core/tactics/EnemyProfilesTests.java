@@ -10,25 +10,27 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EnemyProfilesTests {
     private static final List<String> REQUIRED_TYPES = List.of("zombie", "husk", "drowned", "skeleton", "stray",
             "spider", "cave_spider", "creeper", "witch", "enderman", "slime", "phantom", "pillager", "vindicator",
             "ravager", "blaze", "wither_skeleton", "piglin_brute", "warden");
     private static final Pattern KEY = Pattern.compile("minecraft:[a-z_]+");
-    private static String text;
-    private static EnemyProfiles profiles;
+    private String text;
+    private EnemyProfiles profiles;
 
     @BeforeAll
-    static void loadDefaultFile() {
+    void loadDefaultFile() {
         text = TacticsTexts.read("enemies.json");
         profiles = EnemyProfilesParser.parse(ConfigNode.root("enemies.json", text));
     }
 
-    private static EnemyProfile profile(String shortName) {
+    private EnemyProfile profile(String shortName) {
         return profiles.profile("minecraft:" + shortName);
     }
 

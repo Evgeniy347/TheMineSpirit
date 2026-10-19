@@ -13,14 +13,16 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UnprotectAreasTests {
     private static final String DIMENSION = "minecraft:overworld";
     private static final long NOW = 1_000_000L;
-    private static BlockProtection protection;
+    private BlockProtection protection;
 
     @BeforeAll
-    static void loadProtection() {
+    void loadProtection() {
         protection = ProtectionConfig.load();
     }
 
@@ -34,7 +36,7 @@ class UnprotectAreasTests {
         return list;
     }
 
-    private static BlockProtection.Decision check(UnprotectAreas areas, BlockCoord pos, long now) {
+    private BlockProtection.Decision check(UnprotectAreas areas, BlockCoord pos, long now) {
         boolean inUnprotectArea = areas.covers(DIMENSION, pos, now);
         return protection.check("minecraft:cobblestone", buildingNeighbours(), true, false, inUnprotectArea);
     }

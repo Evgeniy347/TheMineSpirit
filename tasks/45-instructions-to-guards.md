@@ -32,7 +32,7 @@
    Удалить раздел «Сборка» CONVENTIONS до строки-ссылки.
 8. [ ] **EncodingGuard**: исходники и данные — UTF-8 без BOM; `*.sh` без CR; `*.bat` — ASCII и CRLF. Удалить пункт из
    CONVENTIONS «Файлы».
-9. [ ] **TestHygieneGuard** (`src/test/java` и GameTest): нет `@Disabled`, `setAccessible(true)`/`getDeclared*` к
+9. [x] **TestHygieneGuard** (`src/test/java` и GameTest): нет `@Disabled`, `setAccessible(true)`/`getDeclared*` к
    private ради теста, изменяемых `static` полей (кроме `guards.SourceFiles`). Удалить «Запрещено в тестах» из TESTING.
 10. [ ] **GameTestHolderGuard**: каждый класс с `@GameTest` помечен `@GameTestHolder(ModIdentity.MOD_ID)` и
     `@PrefixGameTestTemplate(false)`; шаблон — из списка существующих `.nbt`. Удалить строку из TESTING «Сцены».
@@ -43,8 +43,8 @@
 
 12. [ ] Хук `commit-msg`: сообщение `fix:` с изменением JUnit-теста требует строку `prove-red: OK` в теле или
     приложенный вывод `scripts/prove-red.sh` (обсудить с владельцем). Удалить абзац из TESTING «Тест, который может упасть».
-13. [ ] Скрипт приёмки `scripts/lead/chkq.sh` — в репозитории; добавить проверку `scripts/testing/check-chkq.sh`
-    на фейковых ветках (конфликт → `CONFLICT`, красный unit → не сливать). Удалить пошаговое описание из LEAD-AGENT «Приёмка».
+13. [x] Скрипт приёмки `scripts/lead/chkq.sh` — в репозитории; добавить проверку `scripts/testing/check-chkq.sh`
+   на фейковых ветках (конфликт → `CONFLICT`, красный unit → не сливать). Удалить пошаговое описание из LEAD-AGENT «Приёмка».
 
 Порядок: 1–4 (документы, дешёвые), затем 5–11 (код; каждый сторож сначала прогоняется на текущем коде — число
 нарушений в отчёт, исправление нарушений тем же блоком), 12–13 по согласованию.
