@@ -119,7 +119,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поля 'building', 'from' и 'to' относятся только к RELOCATE_BUILDING: " + "у кейса " + boardCase
                             + " их быть не должно",
-                    Map.of("field", boardCase == BoardCase.RELOCATE_BUILDING ? FROM : BUILDING));
+                    Map.of("field", building.isPresent() ? BUILDING : from.isPresent() ? FROM : TO));
         }
     }
 

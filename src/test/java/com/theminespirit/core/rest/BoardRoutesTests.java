@@ -264,6 +264,17 @@ class BoardRoutesTests {
     }
 
     @Test
+    void post_RelocationFieldOnOtherCase_Returns400NamingThatField() {
+        RestResponse response = send("POST", "/v1/board/tasks", body(uuid(), ",\"to\":\"30,64,10\""));
+
+        assertEquals(400, response.status(), "Поле переноса у другого кейса обязано давать 400: " + response.body());
+        assertTrue(
+                response.body().contains("\"field\":\"to\""),
+                "400 обязан называть лишнее поле, которое прислал клиент (to), а не первое из списка: "
+                        + response.body());
+    }
+
+    @Test
     void post_RelocateWithoutPoints_Returns400() {
         String body =
                 "{\"request_id\":\"" + uuid() + "\",\"case\":\"RELOCATE_BUILDING\"," + "\"building\":\"BUILD_PEN\"}";
