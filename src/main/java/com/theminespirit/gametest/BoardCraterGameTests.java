@@ -193,7 +193,28 @@ public final class BoardCraterGameTests {
                             + ", статус " + spirit.taskStatus().map(Enum::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", дух в "
                             + helper.relativePos(spirit.blockPosition()) + ", земли "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT)
+                            + ", план "
+                            + spirit.currentPlan().map(Object::toString).orElse("нет")
+                            + ", центр " + center + ", дом "
+                            + spirit.home().map(Object::toString).orElse("нет")
+                            + ", задания доски "
+                            + board.board().all().stream()
+                                    .map(ticket -> ticket.id() + "→"
+                                            + board.board()
+                                                    .holderOf(ticket.id())
+                                                    .map(Object::toString)
+                                                    .orElse("-"))
+                                    .toList()
+                            + ", дух " + spirit.getUUID() + " в мире " + spirit.blockPosition() + " (точно "
+                            + spirit.position() + "), поворот " + helper.getTestRotation() + ", политика "
+                            + spirit.policies().verdict() + " владелец "
+                            + spirit.policies().owner()
+                            + ", тактика хочет " + spirit.tactics().wantsControl() + " исход "
+                            + spirit.tactics()
+                                    .lastOutcome()
+                                    .map(Object::toString)
+                                    .orElse("нет"));
             helper.assertTrue(
                     board.board().statusOf("board_test_crater_fill").orElse(null) == BoardStatus.DONE,
                     "После заделки задание закрыто как DONE, статус "
