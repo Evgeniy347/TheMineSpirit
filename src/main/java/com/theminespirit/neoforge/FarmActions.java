@@ -71,6 +71,7 @@ final class FarmActions {
         if (!result.consumesAction() || !level.getBlockState(ground).is(Blocks.FARMLAND)) {
             return false;
         }
+        SpiritGesture.workOn(spirit, ground);
         hoe.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         return true;
     }
@@ -82,7 +83,11 @@ final class FarmActions {
         }
         BlockPlaceContext context =
                 new BlockPlaceContext(level, null, InteractionHand.MAIN_HAND, seeds, topFace(ground));
-        return placing.place(context).consumesAction();
+        boolean planted = placing.place(context).consumesAction();
+        if (planted) {
+            SpiritGesture.workOn(spirit, ground.above());
+        }
+        return planted;
     }
 
     boolean plantOnSide(BlockPos support, Direction side, CropKind kind) {
@@ -92,7 +97,11 @@ final class FarmActions {
         }
         Direction facing = side.getOpposite();
         BlockPlaceContext context = new DirectionalPlaceContext(level, support.relative(side), facing, seeds, facing);
-        return placing.place(context).consumesAction();
+        boolean planted = placing.place(context).consumesAction();
+        if (planted) {
+            SpiritGesture.workOn(spirit, support.relative(side));
+        }
+        return planted;
     }
 
     boolean boneMeal(BlockPos crop) {
@@ -112,6 +121,7 @@ final class FarmActions {
             ItemStack drop = new ItemStack(Items.SWEET_BERRIES, count);
             BlockState aged = state.setValue(SweetBerryBushBlock.AGE, 1);
             level.setBlock(pos, aged, Block.UPDATE_ALL);
+            SpiritGesture.workOn(spirit, pos);
             ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
             entity.setPickUpDelay(0);
             level.addFreshEntity(entity);

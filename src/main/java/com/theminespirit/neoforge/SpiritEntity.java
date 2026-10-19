@@ -120,6 +120,14 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     @Override
+    public void aiStep() {
+        // mc: взмах руки анимируется только у мобов, которые сами двигают swingTime (как Monster.aiStep): без этого
+        // клиент получает пакет взмаха, но рука духа не опускается.
+        updateSwingTime();
+        super.aiStep();
+    }
+
+    @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
         applyPendingRestore();

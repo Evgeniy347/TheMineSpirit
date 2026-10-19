@@ -167,6 +167,7 @@ public final class BlockBreaker {
             return Progress.GONE;
         }
         elapsed++;
+        SpiritGesture.keepWorking(spirit, pos);
         if (elapsed >= requiredTicks) {
             complete(level);
             return Progress.BROKEN;

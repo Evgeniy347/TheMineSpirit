@@ -138,7 +138,7 @@ final class BuildSchematicScript implements ScriptInstance {
         if (!clear.isEmpty()) {
             return clearStep(clear);
         }
-        if (ticks - lastPlaceTick < BuildPace.intervalTicks()) {
+        if (ticks - lastPlaceTick < BuildPace.intervalTicks(spirit)) {
             return ScriptStatus.RUNNING;
         }
         List<Schematic.PlacedEntry> missing = new ArrayList<>();

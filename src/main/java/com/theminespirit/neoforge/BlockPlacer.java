@@ -12,7 +12,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -125,7 +124,7 @@ public final class BlockPlacer {
 
     private void announcePlaced(Level level, BlockPos target, BlockState state) {
         level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
-        spirit.swing(InteractionHand.MAIN_HAND, true);
+        SpiritGesture.workOn(spirit, target);
         SoundType sound = state.getSoundType(level, target, spirit);
         level.playSound(
                 null,
