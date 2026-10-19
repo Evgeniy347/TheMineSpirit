@@ -148,12 +148,11 @@ public final class RecipeKnowledgeGameTests {
                 "raw_iron обязан стать gatherable через знание «дроп ← руда» из drops.json: без него "
                         + "acquire iron_ingot с нуля падает с «не найден способ добычи»");
         helper.assertTrue(
-                knowledge.gatherBlockFor("raw_iron").equals("iron_ore"),
+                "iron_ore".equals(knowledge.gatherBlockFor("raw_iron")),
                 "gather для raw_iron обязан ломать железную руду, знания вернули "
                         + knowledge.gatherBlockFor("raw_iron"));
         helper.assertTrue(
-                knowledge.isGatherable("oak_log")
-                        && knowledge.gatherBlockFor("oak_log").equals("oak_log"),
+                knowledge.isGatherable("oak_log") && "oak_log".equals(knowledge.gatherBlockFor("oak_log")),
                 "блоки-предметы не должны пострадать от таблицы дропов: oak_log добывается как сам блок, "
                         + "gatherBlockFor вернул " + knowledge.gatherBlockFor("oak_log"));
         helper.succeed();
@@ -167,7 +166,7 @@ public final class RecipeKnowledgeGameTests {
         List<String> steps = FullCycleScene.scriptsOf(plan);
 
         helper.assertTrue(
-                steps.get(steps.size() - 1).equals("gather:iron_ore"),
+                "gather:iron_ore".equals(steps.get(steps.size() - 1)),
                 "план для сырого железа обязан закончиться сбором железной руды (один блок руды даёт один дроп), "
                         + "резолвер и PlanValidator не должны его отклонить, шаги: " + steps);
         helper.assertTrue(

@@ -54,7 +54,7 @@ public final class ResultGameTests {
                             + ", тело " + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
             helper.assertTrue(
-                    result.isTextual() && result.asText().equals("срублено деревьев 1 из 1"),
+                    result.isTextual() && "срублено деревьев 1 из 1".equals(result.asText()),
                     "Итог chop_tree в GET задачи обязан быть строкой «срублено деревьев 1 из 1», получено " + result);
         });
     }
@@ -115,12 +115,12 @@ public final class ResultGameTests {
                             + ": пустой поток означает, что задача завершилась раньше подписки, — проверять нечего");
             RestFixture.Frame last = frames.get(frames.size() - 1);
             helper.assertTrue(
-                    last.event().equals("state")
-                            && last.json().path("state").asText().equals("succeeded"),
+                    "state".equals(last.event())
+                            && "succeeded".equals(last.json().path("state").asText()),
                     "Завершающим кадром обязан быть state succeeded, получено " + last);
             JsonNode result = last.json().path("result");
             helper.assertTrue(
-                    result.isTextual() && result.asText().equals("срублено деревьев 1 из 1"),
+                    result.isTextual() && "срублено деревьев 1 из 1".equals(result.asText()),
                     "Финальный state обязан нести итог «срублено деревьев 1 из 1», получено " + result);
         });
     }
@@ -149,11 +149,11 @@ public final class ResultGameTests {
                             + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
             helper.assertTrue(
-                    result.isObject() && result.path("type").asText().equals("blocks"),
+                    result.isObject() && "blocks".equals(result.path("type").asText()),
                     "Итог scan_blocks обязан быть объектом с type=blocks, получено " + result);
             boolean oakLogs = false;
             for (JsonNode entry : result.path("blocks")) {
-                if (entry.path("item").asText().equals("minecraft:oak_log")
+                if ("minecraft:oak_log".equals(entry.path("item").asText())
                         && entry.path("count").asInt() == 3) {
                     oakLogs = true;
                 }
@@ -184,11 +184,11 @@ public final class ResultGameTests {
                             + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
             helper.assertTrue(
-                    result.isObject() && result.path("type").asText().equals("hazards"),
+                    result.isObject() && "hazards".equals(result.path("type").asText()),
                     "Итог sense_hazard обязан быть объектом с type=hazards, получено " + result);
             boolean water = false;
             for (JsonNode entry : result.path("hazards")) {
-                if (entry.path("type").asText().equals("water")) {
+                if ("water".equals(entry.path("type").asText())) {
                     water = true;
                 }
             }
@@ -218,7 +218,7 @@ public final class ResultGameTests {
                             + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
             helper.assertTrue(
-                    result.isObject() && result.path("type").asText().equals("located"),
+                    result.isObject() && "located".equals(result.path("type").asText()),
                     "Итог locate_block обязан быть объектом с type=located, получено " + result);
             JsonNode sightings = result.path("sightings");
             helper.assertTrue(
@@ -252,7 +252,7 @@ public final class ResultGameTests {
                             + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
             helper.assertTrue(
-                    result.isObject() && result.path("type").asText().equals("blocks"),
+                    result.isObject() && "blocks".equals(result.path("type").asText()),
                     "Итог обязан быть объектом с type=blocks, получено " + result);
             helper.assertTrue(
                     result.path("truncated").asBoolean(false),

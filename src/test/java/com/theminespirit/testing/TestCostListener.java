@@ -14,6 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import net.jqwik.api.Property;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
@@ -34,10 +35,10 @@ public final class TestCostListener implements TestExecutionListener {
             threadMx.isThreadCpuTimeSupported() && threadMx.isCurrentThreadCpuTimeSupported();
 
     private final Path csv;
-    private final ConcurrentHashMap<String, Long> startWall = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> startCpu = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> startGc = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Integer> classesAtTestStart = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> startWall = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> startCpu = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> startGc = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Integer> classesAtTestStart = new ConcurrentHashMap<>();
 
     public TestCostListener() {
         String configured = System.getProperty(CSV_PROPERTY);

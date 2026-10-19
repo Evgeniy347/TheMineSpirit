@@ -39,7 +39,7 @@ final class RoutePattern {
         if (!path.startsWith("/")) {
             return Optional.empty();
         }
-        if (path.equals("/")) {
+        if ("/".equals(path)) {
             return Optional.of(List.of());
         }
         List<String> segments = new ArrayList<>(Arrays.asList(path.substring(1).split("/", -1)));

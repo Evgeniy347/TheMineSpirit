@@ -12,7 +12,7 @@ public record ActivityCatalog(Map<ActivityId, Activity> adults, Map<ActivityId, 
     }
 
     public static ActivityCatalog adultsOnly(List<Activity> activities) {
-        EnumMap<ActivityId, Activity> adults = new EnumMap<>(ActivityId.class);
+        Map<ActivityId, Activity> adults = new EnumMap<>(ActivityId.class);
         for (Activity activity : activities) {
             if (activity == null) {
                 throw new IllegalArgumentException(

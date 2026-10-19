@@ -87,7 +87,7 @@ class ActivityAssignerProperties {
             @ForAll @LongRange(min = 0, max = 100000) long now) {
         ActivityPlan plan = ASSIGNER.assign(view, demands, ledger, now);
         Set<ActivityId> offered =
-                new HashSet<>(demands.stream().map(ActivityDemand::id).toList());
+                Set.copyOf(demands.stream().map(ActivityDemand::id).toList());
 
         for (ActivityAssignment assignment : plan.assignments()) {
             assertTrue(

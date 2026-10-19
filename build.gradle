@@ -7,6 +7,7 @@ plugins {
     id 'com.diffplug.spotless'
     id 'net.ltgt.errorprone'
     id 'checkstyle'
+    id 'pmd'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -274,11 +275,26 @@ checkstyle {
     ignoreFailures = false
 }
 
+// PMD — свои наборы config/pmd/main.xml и test.xml (выключенные правила и причины — там же).
+pmd {
+    toolVersion = pmd_version
+    consoleOutput = false
+    ignoreFailures = false
+    ruleSets = []
+}
+tasks.named('pmdMain', Pmd) {
+    ruleSetFiles = files('config/pmd/main.xml')
+}
+tasks.named('pmdTest', Pmd) {
+    ruleSetFiles = files('config/pmd/test.xml')
+}
+
 tasks.register('staticAnalysis') {
     group = 'verification'
     description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
     dependsOn tasks.named('spotlessCheck')
     dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
+    dependsOn tasks.named('pmdMain'), tasks.named('pmdTest')
 }
 
 tasks.named('check') {

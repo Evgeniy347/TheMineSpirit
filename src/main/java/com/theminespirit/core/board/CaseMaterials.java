@@ -44,7 +44,6 @@ public final class CaseMaterials {
                         queue.add(condition.elseStep());
                     }
                 }
-                default -> {}
             }
         }
         return Map.copyOf(need);

@@ -17,11 +17,11 @@ final class BotRoutes {
                 new Route("POST", "/v1/bots/{id}/observe", this::observe));
     }
 
-    private RestResponse list(RestRequest request, PathParams params) {
+    private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
         return RestResponse.ok(BotJson.listToJson(gateway.bots()));
     }
 
-    private RestResponse get(RestRequest request, PathParams params) {
+    private RestResponse get(RestRequest ignoredRequest, PathParams params) {
         String id = params.get("id");
         BotInfo bot = gateway.bot(id)
                 .orElseThrow(() -> new ApiException(

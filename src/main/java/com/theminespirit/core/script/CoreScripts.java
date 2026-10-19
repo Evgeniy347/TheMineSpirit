@@ -16,6 +16,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CoreScripts {
+    private static final String RADIUS = "radius";
+    private static final String FILTER = "filter";
+    private static final String SPECIES = "species";
+    private static final String TARGET = "target";
+    private static final String BLOCK = "block";
+    private static final String COUNT = "count";
+    private static final String NEAREST = "nearest";
+    private static final String DIRECTION = "direction";
+    private static final String CROP = "crop";
+    private static final String ITEM = "item";
+    private static final String CONTAINER = "container";
+
     private CoreScripts() {}
 
     public static ScriptCatalog defaultCatalog() {
@@ -54,20 +66,20 @@ public final class CoreScripts {
                         "просканировать мир вокруг духа",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius", false, ScanRadius.MIN, ScanRadius.MAX, ScanRadius.DEFAULT.value()),
-                                ParamSpec.textList("filter", false)),
+                                        RADIUS, false, ScanRadius.MIN, ScanRadius.MAX, ScanRadius.DEFAULT.value()),
+                                ParamSpec.textList(FILTER, false)),
                         List.of(),
                         List.of("обновлена карта блоков, сущностей и контейнеров")),
                 spec(
                         "scan_blocks",
                         "просканировать только блоки вокруг духа",
-                        List.of(perceptionRadius(), ParamSpec.textList("filter", false)),
+                        List.of(perceptionRadius(), ParamSpec.textList(FILTER, false)),
                         List.of(),
                         List.of("блоки по фильтру в радиусе найдены, сущности и контейнеры не собирались")),
                 spec(
                         "scan_entities",
                         "просканировать только сущности вокруг духа",
-                        List.of(perceptionRadius(), ParamSpec.textList("filter", false)),
+                        List.of(perceptionRadius(), ParamSpec.textList(FILTER, false)),
                         List.of(),
                         List.of("сущности по фильтру в радиусе найдены, блоки и контейнеры не собирались")),
                 spec(
@@ -79,14 +91,14 @@ public final class CoreScripts {
                 spec(
                         "locate_block",
                         "найти ближайший блок по фильтру",
-                        List.of(ParamSpec.textList("filter", true), perceptionRadius()),
+                        List.of(ParamSpec.textList(FILTER, true), perceptionRadius()),
                         List.of(),
                         List.of("позиция ближайшего блока найдена или сообщено, что блока нет")),
                 spec(
                         "locate_tree",
                         "найти ближайшее дерево заданной породы",
                         List.of(
-                                ParamSpec.enumeration("species", false, TreeSpecies.names(), TreeSpecies.ANY),
+                                ParamSpec.enumeration(SPECIES, false, TreeSpecies.names(), TreeSpecies.ANY),
                                 perceptionRadius()),
                         List.of(),
                         List.of("позиция ближайшего ствола найдена или сообщено, что дерева нет")),
@@ -179,9 +191,9 @@ public final class CoreScripts {
                         "follow",
                         "следовать за целью на расстоянии",
                         List.of(
-                                ParamSpec.text("target", true),
+                                ParamSpec.text(TARGET, true),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FOLLOW_RADIUS_MIN,
                                         CatalogLimits.FOLLOW_RADIUS_MAX,
@@ -192,9 +204,9 @@ public final class CoreScripts {
                         "escort",
                         "сопровождать и охранять цель, ожидая рядом с ней",
                         List.of(
-                                ParamSpec.text("target", true),
+                                ParamSpec.text(TARGET, true),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FOLLOW_RADIUS_MIN,
                                         CatalogLimits.FOLLOW_RADIUS_MAX,
@@ -239,20 +251,20 @@ public final class CoreScripts {
                         "goto_block",
                         "подойти к ближайшему блоку заданного вида",
                         List.of(
-                                ParamSpec.text("block", true),
+                                ParamSpec.text(BLOCK, true),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.NAV_RADIUS_MIN,
                                         CatalogLimits.NAV_RADIUS_MAX,
                                         CatalogLimits.NAV_RADIUS_DEFAULT),
-                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1)),
+                                ParamSpec.integer(COUNT, false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1)),
                         List.of("в радиусе есть подходящие блоки"),
                         List.of("дух в пределах досягаемости блока")),
                 spec(
                         "come_to_player",
                         "подойти к игроку",
-                        List.of(ParamSpec.text("player", false, "nearest")),
+                        List.of(ParamSpec.text("player", false, NEAREST)),
                         List.of("игрок на сервере"),
                         List.of("дух рядом с игроком")),
                 spec(
@@ -260,7 +272,7 @@ public final class CoreScripts {
                         "бродить вокруг старта",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.NAV_RADIUS_MIN,
                                         CatalogLimits.NAV_RADIUS_MAX,
@@ -278,7 +290,7 @@ public final class CoreScripts {
                         "обойти область по спирали и запомнить ресурсы и опасности",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.NAV_RADIUS_MIN,
                                         CatalogLimits.NAV_RADIUS_MAX,
@@ -295,7 +307,7 @@ public final class CoreScripts {
                         "keep_distance",
                         "держать дистанцию до цели",
                         List.of(
-                                ParamSpec.text("target", true),
+                                ParamSpec.text(TARGET, true),
                                 ParamSpec.integer(
                                         "distance",
                                         false,
@@ -406,7 +418,7 @@ public final class CoreScripts {
                                         true,
                                         CatalogLimits.BRIDGE_LENGTH_MIN,
                                         CatalogLimits.BRIDGE_LENGTH_MAX),
-                                ParamSpec.text("block", false, "")),
+                                ParamSpec.text(BLOCK, false, "")),
                         List.of("в инвентаре есть дешёвые блоки", "впереди нет лавы"),
                         List.of("мост поставлен, дух на другой стороне")),
                 spec(
@@ -423,10 +435,10 @@ public final class CoreScripts {
                         "chop_tree",
                         "срубить деревья",
                         List.of(
-                                ParamSpec.enumeration("species", false, TreeSpecies.names(), TreeSpecies.ANY),
-                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
+                                ParamSpec.enumeration(SPECIES, false, TreeSpecies.names(), TreeSpecies.ANY),
+                                ParamSpec.integer(COUNT, false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.CHOP_RADIUS_MIN,
                                         CatalogLimits.CHOP_RADIUS_MAX,
@@ -457,9 +469,9 @@ public final class CoreScripts {
                         "добыть жилу руды",
                         List.of(
                                 ParamSpec.enumeration("ore", false, OreKind.names(), "any"),
-                                ParamSpec.integer("count", false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
+                                ParamSpec.integer(COUNT, false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HARVEST_RADIUS_MIN,
                                         CatalogLimits.HARVEST_RADIUS_MAX,
@@ -494,7 +506,7 @@ public final class CoreScripts {
                         "dig_descent",
                         "спуститься в шахту вниз по тоннелю",
                         List.of(
-                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.enumeration(DIRECTION, true, DescentDirection.names()),
                                 ParamSpec.integer(
                                         "y",
                                         false,
@@ -509,7 +521,7 @@ public final class CoreScripts {
                         "dig_descent_widen",
                         "расширить существующий спуск в шахту по всей длине",
                         List.of(
-                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.enumeration(DIRECTION, true, DescentDirection.names()),
                                 ParamSpec.integer(
                                         "y",
                                         false,
@@ -524,7 +536,7 @@ public final class CoreScripts {
                         "place_descent_stairs",
                         "поставить ступеньки в спуске шахты",
                         List.of(
-                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.enumeration(DIRECTION, true, DescentDirection.names()),
                                 ParamSpec.integer(
                                         "y",
                                         false,
@@ -538,7 +550,7 @@ public final class CoreScripts {
                         "пройти безопасную шахту: спуск лесенкой или штольню с освещением",
                         List.of(
                                 ParamSpec.enumeration("mode", true, SafeMineMode.names()),
-                                ParamSpec.enumeration("direction", true, DescentDirection.names()),
+                                ParamSpec.enumeration(DIRECTION, true, DescentDirection.names()),
                                 ParamSpec.integer(
                                         "y",
                                         false,
@@ -570,10 +582,10 @@ public final class CoreScripts {
                         "gather",
                         "собрать блоки заданного типа",
                         List.of(
-                                ParamSpec.text("block", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(BLOCK, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HARVEST_RADIUS_MIN,
                                         CatalogLimits.HARVEST_RADIUS_MAX,
@@ -586,12 +598,12 @@ public final class CoreScripts {
                         "подобрать выпавшие предметы вокруг духа",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.DROP_RADIUS_MIN,
                                         CatalogLimits.DROP_RADIUS_MAX,
                                         CatalogLimits.DROP_RADIUS_DEFAULT),
-                                ParamSpec.textList("filter", false),
+                                ParamSpec.textList(FILTER, false),
                                 ParamSpec.enumeration("overflow", false, List.of("fail", "by_value"), "by_value")),
                         List.of("в инвентаре есть место"),
                         List.of(
@@ -601,9 +613,9 @@ public final class CoreScripts {
                         "harvest_crop",
                         "собрать урожай",
                         List.of(
-                                ParamSpec.enumeration("crop", false, CropKind.names(), "any"),
+                                ParamSpec.enumeration(CROP, false, CropKind.names(), "any"),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FARM_RADIUS_MIN,
                                         CatalogLimits.FARM_RADIUS_MAX,
@@ -615,15 +627,15 @@ public final class CoreScripts {
                         "plant_crop",
                         "посадить культуру",
                         List.of(
-                                ParamSpec.enumeration("crop", true, CropKind.plantableNames()),
+                                ParamSpec.enumeration(CROP, true, CropKind.plantableNames()),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FARM_RADIUS_MIN,
                                         CatalogLimits.FARM_RADIUS_MAX,
                                         CatalogLimits.FARM_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.COUNT_MIN,
                                         CatalogLimits.COUNT_MAX,
@@ -639,13 +651,13 @@ public final class CoreScripts {
                         "вспахать землю под грядку",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FARM_RADIUS_MIN,
                                         CatalogLimits.FARM_RADIUS_MAX,
                                         CatalogLimits.FARM_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.COUNT_MIN,
                                         CatalogLimits.COUNT_MAX,
@@ -656,15 +668,15 @@ public final class CoreScripts {
                         "bone_meal",
                         "подкормить посевы костной мукой",
                         List.of(
-                                ParamSpec.enumeration("crop", false, CropKind.names(), "any"),
+                                ParamSpec.enumeration(CROP, false, CropKind.names(), "any"),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FARM_RADIUS_MIN,
                                         CatalogLimits.FARM_RADIUS_MAX,
                                         CatalogLimits.FARM_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.COUNT_MIN,
                                         CatalogLimits.COUNT_MAX,
@@ -679,9 +691,9 @@ public final class CoreScripts {
                         "breed",
                         "свести пару животных",
                         List.of(
-                                ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.enumeration(SPECIES, true, Species.names()),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
@@ -698,15 +710,15 @@ public final class CoreScripts {
                         "feed",
                         "покормить стадо",
                         List.of(
-                                ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.enumeration(SPECIES, true, Species.names()),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
                                         CatalogLimits.HERD_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.HERD_COUNT_MIN,
                                         CatalogLimits.HERD_COUNT_MAX,
@@ -719,13 +731,13 @@ public final class CoreScripts {
                         "постричь овец",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
                                         CatalogLimits.HERD_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.HERD_COUNT_MIN,
                                         CatalogLimits.HERD_COUNT_MAX,
@@ -741,13 +753,13 @@ public final class CoreScripts {
                         "подоить коров",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
                                         CatalogLimits.HERD_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.HERD_COUNT_MIN,
                                         CatalogLimits.HERD_COUNT_MAX,
@@ -758,7 +770,7 @@ public final class CoreScripts {
                         "collect_eggs",
                         "собрать яйца в загоне",
                         List.of(ParamSpec.integer(
-                                "radius",
+                                RADIUS,
                                 false,
                                 CatalogLimits.HERD_RADIUS_MIN,
                                 CatalogLimits.HERD_RADIUS_MAX,
@@ -770,13 +782,13 @@ public final class CoreScripts {
                         "собрать соты или мёд из полного улья",
                         List.of(
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
                                         CatalogLimits.HERD_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.HERD_COUNT_MIN,
                                         CatalogLimits.HERD_COUNT_MAX,
@@ -791,7 +803,7 @@ public final class CoreScripts {
                         "cull",
                         "забить лишних голов",
                         List.of(
-                                ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.enumeration(SPECIES, true, Species.names()),
                                 ParamSpec.integer(
                                         "keep",
                                         false,
@@ -799,7 +811,7 @@ public final class CoreScripts {
                                         CatalogLimits.HERD_KEEP_MAX,
                                         CatalogLimits.HERD_KEEP_DEFAULT_CATTLE),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
@@ -810,9 +822,9 @@ public final class CoreScripts {
                         "herd_check",
                         "сосчитать стадо",
                         List.of(
-                                ParamSpec.enumeration("species", false, herdCheckValues(), Species.ALL),
+                                ParamSpec.enumeration(SPECIES, false, herdCheckValues(), Species.ALL),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_RADIUS_MIN,
                                         CatalogLimits.HERD_RADIUS_MAX,
@@ -823,15 +835,15 @@ public final class CoreScripts {
                         "hunt",
                         "забить диких животных",
                         List.of(
-                                ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.enumeration(SPECIES, true, Species.names()),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.HERD_HUNT_RADIUS_MIN,
                                         CatalogLimits.HERD_HUNT_RADIUS_MAX,
                                         CatalogLimits.HERD_HUNT_RADIUS_DEFAULT),
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.HERD_COUNT_MIN,
                                         CatalogLimits.HERD_COUNT_MAX,
@@ -842,9 +854,9 @@ public final class CoreScripts {
                         "capture",
                         "привести животное приманкой (корм в инвентаре) в загон у дома",
                         List.of(
-                                ParamSpec.enumeration("species", true, Species.names()),
+                                ParamSpec.enumeration(SPECIES, true, Species.names()),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.CAPTURE_RADIUS_MIN,
                                         CatalogLimits.CAPTURE_RADIUS_MAX,
@@ -860,7 +872,7 @@ public final class CoreScripts {
                         "ловить рыбу удочкой в открытой воде",
                         List.of(
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.COUNT_MIN,
                                         CatalogLimits.COUNT_MAX,
@@ -872,7 +884,7 @@ public final class CoreScripts {
                                         CatalogLimits.FISH_DURATION_MAX,
                                         CatalogLimits.FISH_DURATION_DEFAULT),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FISH_RADIUS_MIN,
                                         CatalogLimits.FISH_RADIUS_MAX,
@@ -886,13 +898,13 @@ public final class CoreScripts {
                         "поймать рыбу ведром в открытой воде",
                         List.of(
                                 ParamSpec.integer(
-                                        "count",
+                                        COUNT,
                                         false,
                                         CatalogLimits.COUNT_MIN,
                                         CatalogLimits.COUNT_MAX,
                                         CatalogLimits.FISH_COUNT_DEFAULT),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.FISH_RADIUS_MIN,
                                         CatalogLimits.FISH_RADIUS_MAX,
@@ -907,8 +919,8 @@ public final class CoreScripts {
                         "craft",
                         "скрафтить предмет",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 stationRadius()),
                         List.of("есть материалы и рецепт"),
                         List.of("предмет скрафчен")),
@@ -916,24 +928,24 @@ public final class CoreScripts {
                         "smelt",
                         "переплавить предмет",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 stationRadius()),
                         List.of("есть печь и топливо"),
                         List.of("предмет переплавлен")),
                 spec(
                         "equip",
                         "надеть предмет",
-                        List.of(ParamSpec.text("item", true)),
+                        List.of(ParamSpec.text(ITEM, true)),
                         List.of("предмет есть в инвентаре"),
                         List.of("предмет надет")),
                 spec(
                         "deposit",
                         "положить предметы в контейнер",
                         List.of(
-                                ParamSpec.text("container", false, "nearest"),
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(CONTAINER, false, NEAREST),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 containerRadius()),
                         List.of("контейнер доступен"),
                         List.of("предметы в контейнере", "контейнер отсортирован")),
@@ -941,29 +953,29 @@ public final class CoreScripts {
                         "withdraw",
                         "взять предметы из контейнера",
                         List.of(
-                                ParamSpec.text("container", false, "nearest"),
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(CONTAINER, false, NEAREST),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 containerRadius()),
                         List.of("контейнер доступен"),
                         List.of("предметы в инвентаре", "контейнер отсортирован")),
                 spec(
                         "eat",
                         "съесть еду из инвентаря (без item — лучшее по питательности)",
-                        List.of(ParamSpec.text("item", false)),
+                        List.of(ParamSpec.text(ITEM, false)),
                         List.of("в инвентаре есть еда"),
                         List.of("сытость духа выросла", "съеденное убрано из инвентаря")),
                 spec(
                         "sort_chest",
                         "рассортировать содержимое сундука",
-                        List.of(ParamSpec.text("container", false, "nearest"), containerRadius()),
+                        List.of(ParamSpec.text(CONTAINER, false, NEAREST), containerRadius()),
                         List.of("контейнер доступен"),
                         List.of("содержимое упорядочено")),
                 spec(
                         "unload",
                         "разгрузить лишнее на базе",
                         List.of(
-                                ParamSpec.text("container", false, "auto"),
+                                ParamSpec.text(CONTAINER, false, "auto"),
                                 containerRadius(),
                                 ParamSpec.bool("force", false, false)),
                         List.of("рядом есть допустимый контейнер"),
@@ -972,8 +984,8 @@ public final class CoreScripts {
                         "acquire",
                         "добыть предмет любым способом",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
                         List.of(),
                         List.of("предмет есть в инвентаре")));
     }
@@ -983,13 +995,13 @@ public final class CoreScripts {
                 spec(
                         "attack",
                         "атаковать цель",
-                        List.of(ParamSpec.text("target", false, "hostile")),
+                        List.of(ParamSpec.text(TARGET, false, "hostile")),
                         List.of("цель видима"),
                         List.of("цель атакована")),
                 spec(
                         "defend",
                         "защитить цель",
-                        List.of(ParamSpec.text("target", true)),
+                        List.of(ParamSpec.text(TARGET, true)),
                         List.of("цель существует"),
                         List.of("цель защищена")),
                 spec("retreat", "отступить", List.of(), List.of("есть путь отхода"), List.of("дух отступил")),
@@ -997,7 +1009,7 @@ public final class CoreScripts {
                         "disengage",
                         "выйти из боя: отойти на дистанцию и прекратить бой",
                         List.of(
-                                ParamSpec.text("target", false, DisengageParams.DEFAULT_TARGET),
+                                ParamSpec.text(TARGET, false, DisengageParams.DEFAULT_TARGET),
                                 ParamSpec.integer(
                                         "distance",
                                         false,
@@ -1011,7 +1023,7 @@ public final class CoreScripts {
                         "подняться столбом",
                         List.of(
                                 ParamSpec.integer("height", true, 1, CatalogLimits.COUNT_MAX, 1),
-                                ParamSpec.text("block", false, ""),
+                                ParamSpec.text(BLOCK, false, ""),
                                 ParamSpec.bool("down", false, false)),
                         List.of("есть материал для блоков"),
                         List.of("дух поднялся на высоту")),
@@ -1035,7 +1047,7 @@ public final class CoreScripts {
                         "place_block",
                         "поставить блок",
                         List.of(
-                                ParamSpec.text("block", true),
+                                ParamSpec.text(BLOCK, true),
                                 ParamSpec.integer(
                                         "x",
                                         true,
@@ -1065,7 +1077,7 @@ public final class CoreScripts {
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.LIGHT_RADIUS_MIN,
                                         CatalogLimits.LIGHT_RADIUS_MAX,
@@ -1080,7 +1092,7 @@ public final class CoreScripts {
                         "fill",
                         "заполнить область блоком",
                         List.of(
-                                ParamSpec.text("block", true),
+                                ParamSpec.text(BLOCK, true),
                                 ParamSpec.integer(
                                         "x1",
                                         true,
@@ -1165,7 +1177,7 @@ public final class CoreScripts {
                         "build_farm",
                         "разбить грядку прямоугольником: вспахать землю у воды и посадить культуру",
                         List.of(
-                                ParamSpec.enumeration("crop", true, CropKind.plotNames()),
+                                ParamSpec.enumeration(CROP, true, CropKind.plotNames()),
                                 ParamSpec.integer(
                                         "x1",
                                         true,
@@ -1196,7 +1208,7 @@ public final class CoreScripts {
                         "build_fence",
                         "огородить контур забором с калиткой",
                         List.of(
-                                ParamSpec.text("block", true),
+                                ParamSpec.text(BLOCK, true),
                                 ParamSpec.text("gate", false, ""),
                                 ParamSpec.textList("points", true)),
                         List.of("в инвентаре есть блоки забора и калитки"),
@@ -1228,15 +1240,15 @@ public final class CoreScripts {
                         "deliver",
                         "доставить предмет адресату",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.text("to", true)),
                         List.of("адресат существует"),
                         List.of("предмет доставлен")),
                 spec(
                         "meet",
                         "встретиться с целью",
-                        List.of(ParamSpec.text("target", true)),
+                        List.of(ParamSpec.text(TARGET, true)),
                         List.of("цель существует"),
                         List.of("дух рядом с целью")),
                 spec(
@@ -1295,7 +1307,7 @@ public final class CoreScripts {
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
                                 ParamSpec.integer(
-                                        "radius",
+                                        RADIUS,
                                         false,
                                         CatalogLimits.CAMP_RADIUS_MIN,
                                         CatalogLimits.CAMP_RADIUS_MAX,
@@ -1307,7 +1319,7 @@ public final class CoreScripts {
                         "repair_tool",
                         "починить инструмент: материалом на наковальне или двумя одинаковыми "
                                 + "повреждёнными в точиле (дешевле по опыту и материалу)",
-                        List.of(ParamSpec.text("item", true)),
+                        List.of(ParamSpec.text(ITEM, true)),
                         List.of(
                                 "в инвентаре есть повреждённый предмет; есть материал ремонта или второй такой же",
                                 "для ремонта материалом рядом есть наковальня"),
@@ -1361,8 +1373,8 @@ public final class CoreScripts {
                         "drop_to_player",
                         "бросить предмет к игроку или духу и оставить его на земле рядом",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.text("to", true)),
                         List.of("адресат существует", "предмета хватает в инвентаре"),
                         List.of("предмет выпал рядом с адресатом")));
@@ -1374,8 +1386,8 @@ public final class CoreScripts {
                         "give",
                         "передать предмет игроку или духу (то же, что deliver)",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.text("to", true)),
                         List.of("адресат существует", "предмета хватает в инвентаре"),
                         List.of("предмет передан адресату")),
@@ -1383,8 +1395,8 @@ public final class CoreScripts {
                         "take",
                         "взять предмет у игрока или духа в свой инвентарь",
                         List.of(
-                                ParamSpec.text("item", true),
-                                ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                                ParamSpec.text(ITEM, true),
+                                ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.text("from", true)),
                         List.of("источник существует", "у источника хватает предмета", "в инвентаре духа есть место"),
                         List.of("предмет перешёл к духу")),
@@ -1397,7 +1409,7 @@ public final class CoreScripts {
                 spec(
                         "swap_tool",
                         "сменить инструмент в руке на лучший для блока",
-                        List.of(ParamSpec.text("block", true)),
+                        List.of(ParamSpec.text(BLOCK, true)),
                         List.of("блок зарегистрирован", "в руке или инвентаре есть подходящий инструмент"),
                         List.of("в руке лучший целый инструмент для блока")),
                 spec(
@@ -1428,12 +1440,12 @@ public final class CoreScripts {
     }
 
     private static List<ScriptRequirement> pickaxeForBlock() {
-        return List.of(ScriptRequirement.pickaxe("block", PickaxeTiers.blockTiers(), ScriptRequirement.NO_TIER));
+        return List.of(ScriptRequirement.pickaxe(BLOCK, PickaxeTiers.blockTiers(), ScriptRequirement.NO_TIER));
     }
 
     private static ParamSpec perceptionRadius() {
         return ParamSpec.integer(
-                "radius",
+                RADIUS,
                 false,
                 CatalogLimits.PERCEPTION_RADIUS_MIN,
                 CatalogLimits.PERCEPTION_RADIUS_MAX,
@@ -1448,7 +1460,7 @@ public final class CoreScripts {
 
     private static ParamSpec stationRadius() {
         return ParamSpec.integer(
-                "radius",
+                RADIUS,
                 false,
                 CatalogLimits.STATION_RADIUS_MIN,
                 CatalogLimits.STATION_RADIUS_MAX,
@@ -1457,7 +1469,7 @@ public final class CoreScripts {
 
     private static ParamSpec containerRadius() {
         return ParamSpec.integer(
-                "radius",
+                RADIUS,
                 false,
                 CatalogLimits.CONTAINER_RADIUS_MIN,
                 CatalogLimits.CONTAINER_RADIUS_MAX,

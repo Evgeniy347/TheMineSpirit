@@ -121,7 +121,7 @@ public final class PerceptionLocateGameTests {
             assertSucceeded(helper, spirit, run, "locate_tree");
             Finding finding = spirit.finding().orElse(null);
             helper.assertTrue(
-                    finding != null && finding.script().equals("locate_tree") && finding.isEmpty(),
+                    finding != null && "locate_tree".equals(finding.script()) && finding.isEmpty(),
                     "поиск дерева при одних брёвнах столба без листвы обязан завершиться успехом с пустой находкой "
                             + "(«не найдено»), а не выдуманной позицией столба: " + finding);
             GameTestFixtures.finish(helper);
@@ -165,7 +165,7 @@ public final class PerceptionLocateGameTests {
             assertSucceeded(helper, spirit, run, "locate_block");
             Finding finding = spirit.finding().orElse(null);
             helper.assertTrue(
-                    finding != null && finding.script().equals("locate_block") && finding.isEmpty(),
+                    finding != null && "locate_block".equals(finding.script()) && finding.isEmpty(),
                     "поиск несуществующей руды обязан завершиться успехом с пустой находкой («не найдено»), а не "
                             + "ошибкой и не выдуманной позицией: " + finding);
             GameTestFixtures.finish(helper);

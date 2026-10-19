@@ -20,8 +20,8 @@ public final class OpenBlocks {
             return false;
         }
         String path = blockId.startsWith("minecraft:") ? blockId.substring("minecraft:".length()) : blockId;
-        return path.equals("stone")
-                || path.equals("deepslate")
+        return "stone".equals(path)
+                || "deepslate".equals(path)
                 || path.endsWith("_ore")
                 || path.endsWith("_log")
                 || path.endsWith("_stem")

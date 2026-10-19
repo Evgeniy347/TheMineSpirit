@@ -21,8 +21,10 @@ public record InventoryNormTable(
 
     public static final String RESOURCE = "data/theminespirit/inventory/inventory_norm.json";
 
+    private static final String OCCUPIED_CURVE = "occupied_curve";
+    private static final String EXTRA_CURVE = "extra_curve";
     private static final Set<String> ROOT_FIELDS = Set.of("demand", "release_free_slots");
-    private static final Set<String> DEMAND_FIELDS = Set.of("occupied_curve", "extra_curve");
+    private static final Set<String> DEMAND_FIELDS = Set.of(OCCUPIED_CURVE, EXTRA_CURVE);
     private static final Set<String> POINT_FIELDS = Set.of("at", "value");
 
     public record CurvePoint(double at, double value) {
@@ -40,8 +42,8 @@ public record InventoryNormTable(
 
     public InventoryNormTable {
         Objects.requireNonNull(origin, "Источник таблицы не может быть null: сообщение называет файл");
-        occupiedCurve = checkCurve(occupiedCurve, "occupied_curve");
-        extraCurve = checkCurve(extraCurve, "extra_curve");
+        occupiedCurve = checkCurve(occupiedCurve, OCCUPIED_CURVE);
+        extraCurve = checkCurve(extraCurve, EXTRA_CURVE);
         Objects.requireNonNull(
                 releaseFreeSlots,
                 "Пороги освобождения не могут быть null: " + "по ним решают, когда дух бросает задачу");
@@ -81,8 +83,8 @@ public record InventoryNormTable(
             throw new IllegalStateException("Файл '" + origin + "': у demand ожидается объект с кривыми спроса");
         }
         JsonResource.checkFields(demand, DEMAND_FIELDS, origin, "блока demand");
-        List<CurvePoint> occupied = parseCurve(demand.get("occupied_curve"), origin, "occupied_curve");
-        List<CurvePoint> extra = parseCurve(demand.get("extra_curve"), origin, "extra_curve");
+        List<CurvePoint> occupied = parseCurve(demand.get(OCCUPIED_CURVE), origin, OCCUPIED_CURVE);
+        List<CurvePoint> extra = parseCurve(demand.get(EXTRA_CURVE), origin, EXTRA_CURVE);
         Map<ActivityId, Integer> release = parseRelease(root.get("release_free_slots"), origin);
         try {
             return new InventoryNormTable(origin, occupied, extra, release);

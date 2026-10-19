@@ -204,9 +204,7 @@ public record WarehouseLayout(
     }
 
     private static boolean isChest(String block) {
-        return path(block).endsWith("_chest")
-                || path(block).equals("chest")
-                || path(block).equals("trapped_chest");
+        return path(block).endsWith("_chest") || "chest".equals(path(block)) || "trapped_chest".equals(path(block));
     }
 
     private static boolean isSign(String block) {

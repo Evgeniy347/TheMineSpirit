@@ -42,7 +42,7 @@ public final class DefenseProfileParser {
         Map<String, TargetClass> classes = new LinkedHashMap<>();
         for (Map.Entry<String, ConfigNode> entry : entries.entrySet()) {
             String key = entry.getKey();
-            if (!key.equals(DefenseProfile.DEFAULT_KEY)
+            if (!DefenseProfile.DEFAULT_KEY.equals(key)
                     && !TYPE_KEY.matcher(key).matches()) {
                 throw entry.getValue()
                         .fail(

@@ -128,7 +128,7 @@ class TacticsProperties {
     }
 
     private static boolean fightJustified(Situation situation, String rule) {
-        if (rule.equals(CORNERED)) {
+        if (CORNERED.equals(rule)) {
             return true;
         }
         return NO_ROUTE_FIGHT.contains(rule) && anyTargeting(situation);

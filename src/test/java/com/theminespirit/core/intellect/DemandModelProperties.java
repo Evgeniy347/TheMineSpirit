@@ -8,8 +8,8 @@ import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
@@ -36,7 +36,7 @@ class DemandModelProperties {
                 "Каждый id каталога встречается ровно раз: иначе часть работ не получит спроса");
         assertEquals(
                 first.size(),
-                new HashSet<>(first.stream().map(ActivityDemand::id).toList()).size(),
+                Set.copyOf(first.stream().map(ActivityDemand::id).toList()).size(),
                 "Повторов id в спросе нет: иначе одна деятельность займёт два места в очереди работ");
         for (int index = 1; index < first.size(); index++) {
             ActivityDemand prev = first.get(index - 1);

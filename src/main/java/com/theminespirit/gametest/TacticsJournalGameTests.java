@@ -59,7 +59,7 @@ public final class TacticsJournalGameTests {
     private static Optional<DecisionRecord> ignoreToFight(SpiritEntity spirit) {
         List<DecisionRecord> records = spirit.tactics().decisions(LIMIT);
         for (DecisionRecord record : records) {
-            if (record.changed().equals(DecisionSnapshot.DECISION)
+            if (DecisionSnapshot.DECISION.equals(record.changed())
                     && record.before().equals(TacticalOption.IGNORE.name())
                     && record.after().equals(TacticalOption.FIGHT.name())) {
                 return Optional.of(record);

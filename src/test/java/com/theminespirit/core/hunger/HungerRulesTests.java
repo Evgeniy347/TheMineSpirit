@@ -69,7 +69,7 @@ class HungerRulesTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<HungerRules> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("hunger")) {
+            if ("hunger".equals(definition.id())) {
                 return (TableDefinition<HungerRules>) definition;
             }
         }

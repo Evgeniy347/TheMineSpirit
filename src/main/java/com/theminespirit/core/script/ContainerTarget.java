@@ -10,10 +10,10 @@ public sealed interface ContainerTarget
     static ContainerTarget parse(String text) {
         Objects.requireNonNull(text, "Цель контейнера не может быть null: 'nearest', 'auto' или координаты x,y,z");
         String trimmed = text.strip();
-        if (trimmed.equalsIgnoreCase("nearest")) {
+        if ("nearest".equalsIgnoreCase(trimmed)) {
             return NEAREST;
         }
-        if (trimmed.equalsIgnoreCase("auto")) {
+        if ("auto".equalsIgnoreCase(trimmed)) {
             return AUTO;
         }
         String[] parts = trimmed.split(",", -1);
@@ -36,7 +36,7 @@ public sealed interface ContainerTarget
             throw new IllegalArgumentException("Координата " + name + " контейнера '" + origin + "' не число: '" + text
                     + "'. Формат цели — 'nearest' или x,y,z (например \"12,64,-7\")");
         }
-        if (name.equals("y")) {
+        if ("y".equals(name)) {
             if (value < CatalogLimits.WORLD_Y_MIN || value > CatalogLimits.WORLD_Y_MAX) {
                 throw new IllegalArgumentException("Координата y контейнера '" + origin + "' равна " + value
                         + " и вне мира [" + CatalogLimits.WORLD_Y_MIN + ", " + CatalogLimits.WORLD_Y_MAX

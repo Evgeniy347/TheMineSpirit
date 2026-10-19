@@ -29,16 +29,16 @@ public final class BoardRoutes {
                 new Route("DELETE", "/v1/board/tasks/{id}", this::cancel));
     }
 
-    private RestResponse list(RestRequest request, PathParams params) {
+    private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
         return RestResponse.ok(BoardJson.listJson(gateway.tasks()));
     }
 
-    private RestResponse log(RestRequest request, PathParams params) {
+    private RestResponse log(RestRequest request, PathParams ignoredParams) {
         BoardLogQuery query = BoardLogQuery.parse(request.query());
         return RestResponse.ok(BoardJson.logJson(gateway.log(query.limit())));
     }
 
-    private RestResponse create(RestRequest request, PathParams params) {
+    private RestResponse create(RestRequest request, PathParams ignoredParams) {
         BoardTaskRequest parsed = BoardTaskRequest.parse(request.body());
         String requestId = parsed.requestId().toString();
         String fingerprint = fingerprint(parsed);
@@ -65,7 +65,7 @@ public final class BoardRoutes {
         return RestResponse.json(202, response);
     }
 
-    private RestResponse cancel(RestRequest request, PathParams params) {
+    private RestResponse cancel(RestRequest ignoredRequest, PathParams params) {
         return RestResponse.ok(BoardJson.toJson(gateway.cancel(params.get("id"))));
     }
 

@@ -43,7 +43,7 @@ class TransferPlannerProperties {
     }
 
     private static int maxStackOf(String item) {
-        return item.equals("iron_pickaxe") ? 1 : 64;
+        return "iron_pickaxe".equals(item) ? 1 : 64;
     }
 
     @Property

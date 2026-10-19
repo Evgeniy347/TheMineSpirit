@@ -203,7 +203,7 @@ class DefenseProfileTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<DefenseProfile> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("priorities")) {
+            if ("priorities".equals(definition.id())) {
                 return (TableDefinition<DefenseProfile>) definition;
             }
         }

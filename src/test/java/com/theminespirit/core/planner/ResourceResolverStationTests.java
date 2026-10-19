@@ -159,9 +159,9 @@ class ResourceResolverStationTests {
         int total = 0;
         for (ScriptCall call : flatten(plan)) {
             boolean gathers =
-                    call.script().equals("gather") && call.params().get("block").equals(item);
+                    "gather".equals(call.script()) && call.params().get("block").equals(item);
             boolean crafts =
-                    call.script().equals("craft") && call.params().get("item").equals(item);
+                    "craft".equals(call.script()) && call.params().get("item").equals(item);
             if (gathers || crafts) {
                 total++;
             }

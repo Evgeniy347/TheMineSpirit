@@ -50,24 +50,23 @@ public final class RestServer {
     private final ClientRateLimit rateLimit = new ClientRateLimit();
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private RestServer(HttpServer httpServer, ExecutorService pool, Router router, Runnable onStop) {
+    private RestServer(HttpServer httpServer, Router router, Runnable onStop) {
         this.httpServer = httpServer;
-        this.pool = pool;
+        this.pool = Executors.newFixedThreadPool(RestTuning.HTTP_THREADS, new RestThreadFactory());
         this.router = router;
         this.onStop = onStop;
     }
 
     public static RestServer start(InetAddress address, int port, Router router, Runnable onStop) throws IOException {
-        ExecutorService pool = Executors.newFixedThreadPool(RestTuning.HTTP_THREADS, new RestThreadFactory());
+        HttpServer httpServer = HttpServer.create(new InetSocketAddress(address, port), 0);
+        RestServer server = new RestServer(httpServer, router, onStop);
         try {
-            HttpServer httpServer = HttpServer.create(new InetSocketAddress(address, port), 0);
-            RestServer server = new RestServer(httpServer, pool, router, onStop);
-            httpServer.setExecutor(pool);
+            httpServer.setExecutor(server.pool);
             httpServer.createContext("/", server::handle);
             httpServer.start();
             return server;
-        } catch (IOException | RuntimeException e) {
-            pool.shutdownNow();
+        } catch (RuntimeException e) {
+            server.pool.shutdownNow();
             throw e;
         }
     }
@@ -96,12 +95,10 @@ public final class RestServer {
     }
 
     private void handle(HttpExchange exchange) throws IOException {
-        try {
+        try (exchange) {
             write(exchange, answer(exchange));
         } catch (IOException e) {
             LOGGER.warn("REST-мост: ответ клиенту не отправлен (клиент закрыл соединение?): {}", e.toString());
-        } finally {
-            exchange.close();
         }
     }
 
@@ -182,8 +179,8 @@ public final class RestServer {
     }
 
     private static void writeStream(HttpExchange exchange, RestResponse response) {
-        SseStream stream = response.stream();
-        try (OutputStream out = exchange.getResponseBody()) {
+        try (SseStream stream = response.stream();
+                OutputStream out = exchange.getResponseBody()) {
             Headers headers = exchange.getResponseHeaders();
             headers.set("Content-Type", EVENT_STREAM_CONTENT_TYPE);
             headers.set("Cache-Control", "no-store");
@@ -191,8 +188,6 @@ public final class RestServer {
             LOGGER.debug("REST-мост: поток событий закрыт: {}", SseWriter.pump(stream, out));
         } catch (IOException e) {
             LOGGER.debug("REST-мост: поток событий не открыт или закрыт клиентом: {}", e.toString());
-        } finally {
-            stream.close();
         }
     }
 

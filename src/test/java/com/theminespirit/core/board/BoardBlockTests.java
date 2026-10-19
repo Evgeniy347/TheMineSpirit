@@ -99,7 +99,7 @@ class BoardBlockTests {
 
         List<BoardTicket> ready = board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
         assertTrue(
-                ready.stream().anyMatch(ticket -> ticket.id().equals(ID)),
+                ready.stream().anyMatch(ticket -> ID.equals(ticket.id())),
                 "Появившийся материал снимает блокировку: задание снова готово к выдаче");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),

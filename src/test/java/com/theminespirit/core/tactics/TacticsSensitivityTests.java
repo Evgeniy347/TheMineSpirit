@@ -38,7 +38,7 @@ class TacticsSensitivityTests {
 
     static List<String> flips(ScenarioFile.Scenario scenario, double shift) {
         TacticalOutcome base = outcome(CONFIG, scenario);
-        if (!base.trace().rule().equals(Decision.BY_SCORE)) {
+        if (!Decision.BY_SCORE.equals(base.trace().rule())) {
             return List.of();
         }
         List<String> flipped = new ArrayList<>();

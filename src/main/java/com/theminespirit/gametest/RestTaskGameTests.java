@@ -55,7 +55,7 @@ public final class RestTaskGameTests {
                             "POST tasks с планом goto обязан отвечать 202, получен " + accepted.status() + ": "
                                     + accepted.body());
                     problems.expect(
-                            json.path("state").asText().equals("accepted")
+                            "accepted".equals(json.path("state").asText())
                                     && json.path("bot").asText().equals(spirit.getStringUUID())
                                     && json.path("request_id").asText().equals(requestId),
                             "202 обязан нести state=accepted, bot и request_id запроса: " + accepted.body());
@@ -66,7 +66,7 @@ public final class RestTaskGameTests {
                                 "GET bots/{id} обязан показывать current_task=" + taskId + " из реестра, получено: "
                                         + bot.body());
                         problems.expect(
-                                bot.json().path("state").asText().equals("busy"),
+                                "busy".equals(bot.json().path("state").asText()),
                                 "Дух с запущенной задачей обязан быть busy: " + bot.body());
                         return rest.post(
                                         botPath + "/tasks",
@@ -186,7 +186,7 @@ public final class RestTaskGameTests {
                 });
         RestFixture.await(helper, rest, scenario, () -> {
             List<String> states = rest.gateway().taskRegistry().log(poller.taskId()).since(0).events().stream()
-                    .filter(event -> event.type().equals("state"))
+                    .filter(event -> "state".equals(event.type()))
                     .map(event -> event.data().get("state").toString())
                     .toList();
             helper.assertTrue(
@@ -199,7 +199,7 @@ public final class RestTaskGameTests {
                             + ", виденные " + poller.seen());
             JsonNode progress = poller.lastJson().path("progress");
             helper.assertTrue(
-                    progress.path("current_script").asText().equals("goto")
+                    "goto".equals(progress.path("current_script").asText())
                             && progress.path("step").asInt() == 1
                             && progress.path("total_steps").asInt() == 1,
                     "У завершённой задачи обязан остаться прогресс последнего шага 1 из 1 (goto): "

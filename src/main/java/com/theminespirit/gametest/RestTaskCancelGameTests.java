@@ -66,7 +66,10 @@ public final class RestTaskCancelGameTests {
                     return moved.thenCompose(walking -> rest.delete(taskPath)).thenCompose(first -> {
                         problems.expect(
                                 first.status() == 200
-                                        && first.json().path("state").asText().equals("cancelled"),
+                                        && "cancelled"
+                                                .equals(first.json()
+                                                        .path("state")
+                                                        .asText()),
                                 "DELETE идущей задачи обязан отвечать 200 со state=cancelled, получено "
                                         + first.status() + ": " + first.body());
                         return rest.delete(taskPath).thenCompose(second -> {
@@ -82,10 +85,10 @@ public final class RestTaskCancelGameTests {
                                 return rest.get(botPath).thenCompose(bot -> {
                                     problems.expect(
                                             bot.json().path("current_task").isNull()
-                                                    && bot.json()
-                                                            .path("state")
-                                                            .asText()
-                                                            .equals("idle"),
+                                                    && "idle"
+                                                            .equals(bot.json()
+                                                                    .path("state")
+                                                                    .asText()),
                                             "После отмены дух обязан быть idle без current_task: " + bot.body());
                                     return rest.onServer(() -> new Stopped(
                                             spirit.position(), helper.getLevel().getGameTime()));
@@ -149,10 +152,10 @@ public final class RestTaskCancelGameTests {
                             .thenCompose(deleted -> {
                                 problems.expect(
                                         deleted.status() == 200
-                                                && deleted.json()
-                                                        .path("state")
-                                                        .asText()
-                                                        .equals("cancelled"),
+                                                && "cancelled"
+                                                        .equals(deleted.json()
+                                                                .path("state")
+                                                                .asText()),
                                         "DELETE посреди добычи обязан отвечать 200 cancelled: " + deleted.body());
                                 return rest.onServer(() -> {
                                     quietSnapshot.set(worldSnapshot(helper, spirit));

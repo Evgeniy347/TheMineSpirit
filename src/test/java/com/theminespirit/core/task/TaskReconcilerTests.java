@@ -152,7 +152,7 @@ class TaskReconcilerTests {
         TaskEventLog.Catchup events = registry.log(taskId).since(0);
         assertTrue(
                 events.events().stream()
-                        .anyMatch(event -> event.type().equals(TaskEvent.TYPE_SCRIPT_FAILED)
+                        .anyMatch(event -> TaskEvent.TYPE_SCRIPT_FAILED.equals(event.type())
                                 && "goto".equals(event.data().get("script"))
                                 && "цель недостижима".equals(event.data().get("reason"))),
                 "Провал обязан дать script_failed с именем скрипта goto и причиной: " + events.events());
@@ -172,7 +172,7 @@ class TaskReconcilerTests {
         TaskEventLog.Catchup events = registry.log(taskId).since(0);
         assertTrue(
                 events.events().stream()
-                        .anyMatch(event -> event.type().equals(TaskEvent.TYPE_SCRIPT_FAILED)
+                        .anyMatch(event -> TaskEvent.TYPE_SCRIPT_FAILED.equals(event.type())
                                 && "goto".equals(event.data().get("script"))
                                 && "путь не найден".equals(event.data().get("reason"))),
                 "script_failed обязан назвать скрипт goto, даже если наблюдатель не видел его выполняющимся: "

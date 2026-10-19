@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class CoordinatorLifecycleTest {
+class CoordinatorLifecycleTest {
     @Test
-    public void registry_AfterClear_IsEmpty() {
+    void registry_AfterClear_IsEmpty() {
         CoordinatorRegistry.clear();
         assertEquals(0, CoordinatorRegistry.size(), "после очистки реестра координаторов нет: карта не течёт");
         assertEquals(

@@ -57,7 +57,7 @@ final class TraceBuilder {
         if (decision.excluded().contains(TacticalOption.FIGHT)) {
             return "бой вычеркнут правилами " + decision.excludingRules();
         }
-        if (!decision.rule().equals(Decision.BY_SCORE) && !decision.rule().equals(Decision.HELD)) {
+        if (!Decision.BY_SCORE.equals(decision.rule()) && !Decision.HELD.equals(decision.rule())) {
             return "решило правило " + decision.rule();
         }
         return topReasons(decision.option(), scores);

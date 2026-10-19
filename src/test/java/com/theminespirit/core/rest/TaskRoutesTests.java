@@ -150,7 +150,7 @@ class TaskRoutesTests {
     @MethodSource("table")
     void routes_Request_ReturnsExpectedStatusAndFragment(
             String method, String section, String body, int status, String fragment) {
-        String path = section.equals("tasks") ? "/v1/bots/" + BOT + "/tasks" : "/v1/plan";
+        String path = "tasks".equals(section) ? "/v1/bots/" + BOT + "/tasks" : "/v1/plan";
 
         RestResponse response = send(method, path, body);
 
@@ -667,13 +667,11 @@ class TaskRoutesTests {
                 "text/event-stream",
                 response.headers().get("Content-Type"),
                 "SSE обязана отдаваться с content-type text/event-stream");
-        try {
-            String frame = response.stream().nextFrame();
+        try (SseStream stream = response.stream()) {
+            String frame = stream.nextFrame();
             assertTrue(frame.startsWith("id: "), "Первый кадр обязан нести id: " + frame);
             assertTrue(frame.contains("event: state"), "Первый кадр обязан быть state: " + frame);
             assertTrue(frame.contains("\"state\":\"accepted\""), "Первый кадр обязан нести состояние: " + frame);
-        } finally {
-            response.stream().close();
         }
         assertEquals(0, slots.open(), "Закрытие потока обязано освобождать слот");
     }
@@ -728,15 +726,12 @@ class TaskRoutesTests {
                 opened.get().status(),
                 "HTTP-запрос обязан открывать поток событий: " + opened.get().body());
 
-        SseStream stream = opened.get().stream();
         List<String> frames = new ArrayList<>();
-        try {
+        try (SseStream stream = opened.get().stream()) {
             String frame;
             while ((frame = stream.nextFrame()) != null) {
                 frames.add(frame);
             }
-        } finally {
-            stream.close();
         }
         assertTrue(
                 frames.stream().anyMatch(frame -> frame.contains("\"state\":\"succeeded\"")),
@@ -796,8 +791,7 @@ class TaskRoutesTests {
     void events_StreamingStateAndCancellation_FrameFlow() throws Exception {
         String taskId = taskId(postTasks("\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}"));
         RestResponse response = send("GET", "/v1/tasks/" + taskId + "/events", "");
-        SseStream stream = response.stream();
-        try {
+        try (SseStream stream = response.stream()) {
             String first = stream.nextFrame();
             assertTrue(first.contains("event: state"), "Первый кадр обязана быть state: " + first);
 
@@ -816,8 +810,6 @@ class TaskRoutesTests {
                     "После отмены клиент обязан получить кадр state cancelled: " + cancelled);
 
             assertNull(stream.nextFrame(), "Закрытый журнал обязан завершать поток значением null");
-        } finally {
-            stream.close();
         }
     }
 

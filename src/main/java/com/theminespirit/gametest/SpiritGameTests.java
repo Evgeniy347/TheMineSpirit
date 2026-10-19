@@ -83,7 +83,7 @@ public final class SpiritGameTests {
                 "hash наблюдения обязан быть SHA-256 длиной 64: по нему bridge сравнивает картины мира");
         helper.assertTrue(
                 observation.entities().stream()
-                        .anyMatch(entity -> entity.type().equals(ModIdentity.MOD_ID + ":spirit")),
+                        .anyMatch(entity -> (ModIdentity.MOD_ID + ":spirit").equals(entity.type())),
                 "Скан обязан видеть самого духа в списке сущностей: без этого наблюдение не видит bot-а себя");
         helper.succeed();
     }

@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class ActivityTaskFactory {
+    private static final String RADIUS = "radius";
+
     private ActivityTaskFactory() {}
 
     public static Optional<TaskNode> taskFor(ActivityIntent intent) {
@@ -19,10 +21,10 @@ public final class ActivityTaskFactory {
         }
         String script = intent.script().get();
         Map<String, Object> params = switch (script) {
-            case "chop_tree" -> Map.of("species", "any", "count", 4, "radius", 16, "replant", true);
-            case "harvest_crop" -> Map.of("crop", "any", "radius", 8, "replant", true);
-            case "mine_vein" -> Map.of("ore", "any", "count", 8, "radius", 16);
-            case "unload" -> Map.of("container", "auto", "radius", 8, "force", false);
+            case "chop_tree" -> Map.of("species", "any", "count", 4, RADIUS, 16, "replant", true);
+            case "harvest_crop" -> Map.of("crop", "any", RADIUS, 8, "replant", true);
+            case "mine_vein" -> Map.of("ore", "any", "count", 8, RADIUS, 16);
+            case "unload" -> Map.of("container", "auto", RADIUS, 8, "force", false);
             case "wait" -> Map.of("ticks", 200);
             default -> intent.params();
         };

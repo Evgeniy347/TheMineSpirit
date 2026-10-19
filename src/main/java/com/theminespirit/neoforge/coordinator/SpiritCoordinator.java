@@ -346,7 +346,7 @@ public final class SpiritCoordinator {
             if (t.kind() == TargetSelector.Kind.SPIRIT && t.name().isPresent()) {
                 try {
                     tactics.setWard(UUID.fromString(t.name().get()));
-                } catch (Exception e) {
+                } catch (IllegalArgumentException notUuid) {
                     // игнорируем некорректный UUID цели
                 }
             }

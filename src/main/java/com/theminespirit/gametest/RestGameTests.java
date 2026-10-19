@@ -84,7 +84,7 @@ public final class RestGameTests {
                     "acquire реализован в SpiritScripts и должен обещаться ИИ в capabilities, получено " + ids);
             List<String> required = new ArrayList<>();
             for (JsonNode script : scripts) {
-                if (script.path("id").asText().equals("goto")) {
+                if ("goto".equals(script.path("id").asText())) {
                     script.path("params").path("required").forEach(name -> required.add(name.asText()));
                 }
             }
@@ -136,7 +136,8 @@ public final class RestGameTests {
                 .thenCompose(idle -> {
                     JsonNode bot = idle.json();
                     problems.expect(
-                            idle.status() == 200 && bot.path("state").asText().equals("idle"),
+                            idle.status() == 200
+                                    && "idle".equals(bot.path("state").asText()),
                             "Дух без задачи обязан иметь state=idle: " + idle.body());
                     problems.expect(
                             bot.path("position")
@@ -144,7 +145,7 @@ public final class RestGameTests {
                                     .equals("[" + spawned.getX() + "," + spawned.getY() + "," + spawned.getZ() + "]"),
                             "position обязана совпадать с блоком духа " + spawned + ": " + idle.body());
                     problems.expect(
-                            bot.path("dimension").asText().equals("minecraft:overworld"),
+                            "minecraft:overworld".equals(bot.path("dimension").asText()),
                             "dimension обязано называть измерение духа: " + idle.body());
                     problems.expect(
                             bot.path("current_task").isNull(),
@@ -157,7 +158,7 @@ public final class RestGameTests {
                 .thenCompose(started -> rest.get(path))
                 .thenApply(busy -> {
                     problems.expect(
-                            busy.json().path("state").asText().equals("busy"),
+                            "busy".equals(busy.json().path("state").asText()),
                             "Дух с идущей задачей goto обязан иметь state=busy: " + busy.body());
                     return problems.found();
                 });
@@ -173,7 +174,7 @@ public final class RestGameTests {
                     JsonNode error = unknown.json().path("error");
                     problems.expect(
                             unknown.status() == 404
-                                    && error.path("code").asText().equals("not_found"),
+                                    && "not_found".equals(error.path("code").asText()),
                             "Неизвестный UUID обязан давать 404 not_found: " + unknown.body());
                     problems.expect(
                             error.path("message").asText().contains(UNKNOWN_ID),
@@ -182,11 +183,11 @@ public final class RestGameTests {
                             error.path("details").isObject(), "details обязан быть объектом: " + unknown.body());
                     problems.expect(
                             notUuid.status() == 404
-                                    && notUuid.json()
-                                            .path("error")
-                                            .path("code")
-                                            .asText()
-                                            .equals("not_found"),
+                                    && "not_found"
+                                            .equals(notUuid.json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()),
                             "id не в формате UUID — тоже 404 not_found, а не 500: " + notUuid.body());
                     return problems.found();
                 });
@@ -369,7 +370,7 @@ public final class RestGameTests {
                                     + reply.body());
                     JsonNode error = reply.json().path("error");
                     problems.expect(
-                            error.path("code").asText().equals("not_found"),
+                            "not_found".equals(error.path("code").asText()),
                             "Код ошибки обязан быть not_found: " + reply.body());
                     problems.expect(
                             error.path("details").path("id").asText().equals(id),
@@ -520,40 +521,41 @@ public final class RestGameTests {
                     JsonNode broken = brokenJson.join().json().path("error");
                     problems.expect(
                             brokenJson.join().status() == 400
-                                    && broken.path("code").asText().equals("invalid_request")
+                                    && "invalid_request"
+                                            .equals(broken.path("code").asText())
                                     && broken.path("message").asText().contains("строка 2"),
                             "Неверный JSON обязан давать 400 invalid_request с позицией ошибки: "
                                     + brokenJson.join().body());
                     problems.expect(
                             oversized.join().status() == 400
-                                    && oversized
-                                            .join()
-                                            .json()
-                                            .path("error")
-                                            .path("code")
-                                            .asText()
-                                            .equals("invalid_request"),
+                                    && "invalid_request"
+                                            .equals(oversized
+                                                    .join()
+                                                    .json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()),
                             "Тело 2 МиБ обязано давать 400 invalid_request: "
                                     + oversized.join().body());
                     problems.expect(
                             unknownPath.join().status() == 404
-                                    && unknownPath
-                                            .join()
-                                            .json()
-                                            .path("error")
-                                            .path("code")
-                                            .asText()
-                                            .equals("not_found"),
+                                    && "not_found"
+                                            .equals(unknownPath
+                                                    .join()
+                                                    .json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()),
                             "Неизвестный путь обязан давать 404 not_found: "
                                     + unknownPath.join().body());
                     problems.expect(
                             wrongMethod.join().status() == 405
-                                    && wrongMethod
-                                            .join()
-                                            .headers()
-                                            .firstValue("Allow")
-                                            .orElse("")
-                                            .equals("GET"),
+                                    && "GET"
+                                            .equals(wrongMethod
+                                                    .join()
+                                                    .headers()
+                                                    .firstValue("Allow")
+                                                    .orElse("")),
                             "POST на /v1/bots обязан давать 405 с Allow: GET: "
                                     + wrongMethod.join().body() + " "
                                     + wrongMethod.join().headers());
@@ -577,12 +579,12 @@ public final class RestGameTests {
                     for (CompletableFuture<RestFixture.Reply> reply : replies) {
                         problems.expect(
                                 reply.join().status() == 400
-                                        && reply.join()
-                                                .json()
-                                                .path("error")
-                                                .path("code")
-                                                .asText()
-                                                .equals("invalid_request"),
+                                        && "invalid_request"
+                                                .equals(reply.join()
+                                                        .json()
+                                                        .path("error")
+                                                        .path("code")
+                                                        .asText()),
                                 "Тело 12 МиБ обязано дочитываться и давать 400 invalid_request, а не обрыв соединения: "
                                         + reply.join().body());
                     }
@@ -634,7 +636,8 @@ public final class RestGameTests {
                         "Среди записей есть «игнор → бой»: хаск напал, дух начал драться: " + reply.body());
                 change.ifPresent(record -> {
                     problems.expect(
-                            record.path("changed").asText().equals(DecisionSnapshot.DECISION),
+                            DecisionSnapshot.DECISION.equals(
+                                    record.path("changed").asText()),
                             "Запись называет сменившееся поле decision: " + reply.body());
                     problems.expect(
                             record.path("tick").asLong() > 0, "Запись несёт игровой тик решения: " + reply.body());

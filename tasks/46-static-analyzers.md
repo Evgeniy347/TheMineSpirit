@@ -19,7 +19,7 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 | Error Prone | compileJava ×3,5 (68–96 с) | 161 / 96 |
 | NullAway (`core`, main) | 33 с | 291 в 99 файлах |
 | Checkstyle, минимальный набор | 35 с | 261 / 25 (после настройки 206 / 0) |
-| PMD (после выключения неуместных) | ~59 с | ~925 / ~235 |
+| PMD (после выключения неуместных) | ~59 с | ~925 / ~235 (после настройки 481 / 193) |
 | SpotBugs (после выключения EI/MS_EXPOSE_REP) | 81 с | ~71 |
 
 ## Выключить в конфигурации (с причиной)
@@ -30,9 +30,18 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
   выключен: все 48 switch-операторов — по enum, их полноту держит Error Prone MissingCasesInEnumSwitch (проверено
   удалением case), а default отключил бы её. ParameterNumber — только main и без конструкторов record (как
   MethodShapeGuardTests); MethodLength в тестах не считает источники строк `static Stream …` (таблицы данных).
-- PMD: AvoidFieldNameMatchingMethodName (стиль аксессоров record), TestClassWithoutTestCases (GameTest в main),
+- PMD (наборы errorprone + bestpractices, `config/pmd/main.xml`, `test.xml`; причина — у каждого правила в файле):
+  AvoidFieldNameMatchingMethodName (стиль аксессоров record), TestClassWithoutTestCases (GameTest в main),
   UnitTestContainsTooManyAsserts, GuardLogStatement (slf4j `{}`), AvoidLiteralsInIfCondition, AvoidDuplicateLiterals
-  для тестов, NullAssignment (это NullAway), CompareObjectsWithEquals (это Error Prone ReferenceEquality).
+  для тестов, сцен GameTest и русского текста сообщений, NullAssignment (это NullAway), CompareObjectsWithEquals (это
+  Error Prone ReferenceEquality); после замера ещё: AvoidCatchingGenericException (граница отказа тика/REST/таблиц),
+  PreserveStackTrace (ошибка ввода → 400), AvoidBranchingStatementAsLastInLoop (охранные continue), UseVarargs
+  (массив — держатель результата), AvoidUsingHardCodedIP (0.0.0.0 по умолчанию, петля в сценах), UseProperClassLoader
+  (загрузчик мода NeoForge), NonSerializableClass (Java-сериализации нет), ReturnEmptyCollectionRatherThanNull (null
+  с @Nullable = «нет»). Настроены: CloseResource (мир и сервер Minecraft закрывает игра), AssignmentInOperand (`i++`,
+  цикл чтения), LooseCoupling (ListTag/NonNullList/Headers/IdentityHashMap), EmptyCatchBlock (с комментарием),
+  AvoidAccessibilityAlteration (кроме обвязки GameTest); в тестах — двойники потоков и коллекций, помощник
+  `rejected`, слушатель JUnit, сканеры сторожей, вывод TestCostReporter.
 - Error Prone: UnnecessaryLambda — EventBus NeoForge снимает слушателя только по тому же экземпляру;
   ImmutableEnumChecker — неизменяемость доказывает только Guava/@Immutable, а Block/Item — синглтоны реестра Minecraft.
 - NullAway — только main, `AnnotatedPackages=com.theminespirit.core` (тесты намеренно передают null).
@@ -51,8 +60,9 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 4. [x] Checkstyle минимальный: DeclarationOrder 197 → 0 (устойчивая перестановка членов, порядок инициализации
    статических полей сохранён), MethodLength (порог 80 по замеру: >40 — 266, >60 — 70, >80 — 19 в main) 19 → 0,
    ParameterNumber 8 → 0 (все — конструкторы record), MissingSwitchDefault — выключен (см. выше).
-5. [ ] PMD: свой ruleset.xml; LiteralsFirstInComparisons, CloseResource (ревью), AvoidDuplicateLiterals (main) и прочее —
-   3–4 блока по пакетам; храповик `maxFailures` до 0.
+5. [x] PMD: свои наборы `config/pmd/`; после настройки 481 main + 193 test → 0: LiteralsFirstInComparisons 209
+   (скрипт), AvoidDuplicateLiterals 86 ключей → константы, LooseCoupling 23, UnusedFormalParameter 19 (`ignored…` у
+   обработчиков по ссылке), ImplicitFunctionalInterface 15, ресурсы (try-with-resources), мелочь вручную.
 6. [ ] SpotBugs: ~71 после исключения EI/MS — 1–2 блока; фильтр только с постоянными причинами.
 7. [ ] ArchUnit: переписать `CoreIsolationTests` и регулярные сторожа зависимостей на правила ArchUnit.
 8. [ ] После каждого пункта — сторожа/абзацы, которые инструмент заменил, удалить (tasks/45, принцип AGENTS.md).

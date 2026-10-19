@@ -69,7 +69,7 @@ class BuildFarmParamsTests {
     void catalog_Farm_CropEnumExcludesSupportCrops() {
         ScriptSpec farm = CoreScripts.defaultCatalog().find("build_farm").orElseThrow();
         ParamSpec crop = farm.params().stream()
-                .filter(param -> param.name().equals("crop"))
+                .filter(param -> "crop".equals(param.name()))
                 .findFirst()
                 .orElseThrow();
 

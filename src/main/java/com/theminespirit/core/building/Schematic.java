@@ -94,7 +94,7 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, Lis
         if (path.endsWith("_sign")) {
             return 2;
         }
-        return path.equals("chest") || path.equals("trapped_chest") || path.endsWith("_chest") ? 1 : 0;
+        return "chest".equals(path) || "trapped_chest".equals(path) || path.endsWith("_chest") ? 1 : 0;
     }
 
     public record PlacedEntry(

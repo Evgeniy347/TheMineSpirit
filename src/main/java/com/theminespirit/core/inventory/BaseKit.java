@@ -166,7 +166,7 @@ public final class BaseKit {
                 values, "Таблица ценностей не может быть null: " + "по ней набор отличает лучшую кирку от худшей");
         List<Stack> stacks = new ArrayList<>(inventory.size());
         List<List<Integer>> byRule = new ArrayList<>(rules.size());
-        for (int index = 0; index < rules.size(); index++) {
+        for (KitRule ignored : rules) {
             byRule.add(new ArrayList<>());
         }
         int[] claimed = new int[inventory.size()];

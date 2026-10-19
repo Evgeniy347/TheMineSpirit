@@ -123,7 +123,7 @@ class DeciderProperties {
                         false,
                         decision.option() == excluded
                                 && verdict.decisive().isEmpty()
-                                && decision.rule().equals(Decision.BY_SCORE),
+                                && Decision.BY_SCORE.equals(decision.rule()),
                         "Вычеркнутый вариант " + excluded + " не может победить по счёту ни при каких весах"));
     }
 }

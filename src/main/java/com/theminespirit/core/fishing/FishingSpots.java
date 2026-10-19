@@ -19,6 +19,7 @@ public final class FishingSpots {
     }
 
     /** Отбор места по внешним правилам мира: близость к поселению, чужие постройки. */
+    @FunctionalInterface
     public interface SpotFilter {
         SpotFilter ALL = (stand, water) -> true;
 

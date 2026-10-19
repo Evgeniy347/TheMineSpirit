@@ -37,7 +37,7 @@ public final class PlanBudget {
 
     private static List<TaskNode> children(TaskNode node) {
         return switch (node) {
-            case ScriptCall call -> List.of();
+            case ScriptCall ignored -> List.of();
             case SequenceNode sequence -> sequence.steps();
             case FallbackNode fallback -> fallback.steps();
             case ParallelNode parallel -> parallel.steps();

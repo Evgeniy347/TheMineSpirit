@@ -198,7 +198,12 @@ class PlanValidatorRulesTests {
     @Test
     void waitScript_TicksInsideRange_IsAccepted() {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":3000}}";
-        PlanParser.parse(json, CATALOG);
+        TaskNode plan = PlanParser.parse(json, CATALOG);
+
+        assertEquals(
+                3000,
+                ((ScriptCall) plan).params().get("ticks"),
+                "wait на 3000 тиков внутри предела 6000 обязан приниматься как есть: иначе стратег не может ждать");
     }
 
     @Test

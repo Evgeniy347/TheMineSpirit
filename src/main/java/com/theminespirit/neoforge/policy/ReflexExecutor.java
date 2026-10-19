@@ -21,9 +21,9 @@ final class ReflexExecutor {
             }
             case ReflexAction.StepOutOfPortal step -> moveTo(spirit, step.cell());
             case ReflexAction.ReturnToZone back -> moveTo(spirit, back.cell());
-            case ReflexAction.Surface surface -> swimUp(spirit);
-            case ReflexAction.StopMoving stop -> release(spirit);
-            case ReflexAction.Eat eat -> spirit.hunger().eatBest();
+            case ReflexAction.Surface ignored -> swimUp(spirit);
+            case ReflexAction.StopMoving ignored -> release(spirit);
+            case ReflexAction.Eat ignored -> spirit.hunger().eatBest();
         }
     }
 

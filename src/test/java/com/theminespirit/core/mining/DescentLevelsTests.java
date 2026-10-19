@@ -138,7 +138,7 @@ class DescentLevelsTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<DescentLevels> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("descent_levels")) {
+            if ("descent_levels".equals(definition.id())) {
                 return (TableDefinition<DescentLevels>) definition;
             }
         }

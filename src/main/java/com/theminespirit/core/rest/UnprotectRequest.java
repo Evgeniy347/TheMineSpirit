@@ -29,6 +29,7 @@ public record UnprotectRequest(
         String reason,
         long ttlSeconds) {
 
+    private static final String FIELD = "field";
     private static final String REQUEST_ID = "request_id";
     private static final String DIMENSION = "dimension";
     private static final String MIN = "min";
@@ -47,12 +48,12 @@ public record UnprotectRequest(
         if (requestId == null) {
             throw invalid(
                     "Поле 'request_id' обязательно: идемпотентность снятия защиты держится на UUID клиента",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
         if (dimension == null || dimension.isBlank()) {
             throw invalid(
                     "Поле 'dimension' обязательно: область принадлежит одному миру, например minecraft:overworld",
-                    Map.of("field", DIMENSION));
+                    Map.of(FIELD, DIMENSION));
         }
         if (min == null || max == null) {
             throw invalid(
@@ -62,15 +63,15 @@ public record UnprotectRequest(
         if (grantedBy == null || grantedBy.isBlank()) {
             throw invalid(
                     "Поле 'granted_by' обязательно: по нему видно, кто попросил снять защиту",
-                    Map.of("field", GRANTED_BY));
+                    Map.of(FIELD, GRANTED_BY));
         }
         if (reason == null || reason.isBlank()) {
-            throw invalid("Поле 'reason' обязательно: по причине видно, зачем сняли защиту", Map.of("field", REASON));
+            throw invalid("Поле 'reason' обязательно: по причине видно, зачем сняли защиту", Map.of(FIELD, REASON));
         }
         if (ttlSeconds < 0) {
             throw invalid(
                     "Поле 'ttl_seconds' = " + ttlSeconds + " отрицательно: бессрочное разрешение задают нулём",
-                    Map.of("field", TTL_SECONDS));
+                    Map.of(FIELD, TTL_SECONDS));
         }
     }
 
@@ -100,7 +101,7 @@ public record UnprotectRequest(
             throw invalid(
                     "Поле 'request_id' обязательно и должно быть строкой-UUID: повтор запроса с тем же "
                             + "request_id возвращает прежнее разрешение",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
         try {
             return UUID.fromString(node.textValue());
@@ -108,7 +109,7 @@ public record UnprotectRequest(
             throw invalid(
                     "Поле 'request_id' = '" + node.textValue() + "' не является UUID: пример "
                             + "3f1c2d3e-0000-4000-8000-000000000000",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
     }
 
@@ -116,7 +117,7 @@ public record UnprotectRequest(
         if (node == null || !node.isTextual() || node.textValue().isBlank()) {
             throw invalid(
                     "Поле 'dimension' обязательно и должно быть непустой строкой вида minecraft:overworld",
-                    Map.of("field", DIMENSION));
+                    Map.of(FIELD, DIMENSION));
         }
         return node.textValue();
     }
@@ -126,7 +127,7 @@ public record UnprotectRequest(
             throw invalid(
                     "Поле '" + field + "' должно быть массивом из трёх целых [x, y, z], получено: "
                             + (node == null ? "нет" : node),
-                    Map.of("field", field));
+                    Map.of(FIELD, field));
         }
         int[] values = new int[3];
         for (int i = 0; i < 3; i++) {
@@ -134,7 +135,7 @@ public record UnprotectRequest(
             if (!value.isIntegralNumber() || !value.canConvertToInt()) {
                 throw invalid(
                         "Координата " + i + " в '" + field + "' обязана быть целым числом, получено: " + value,
-                        Map.of("field", field, "index", i));
+                        Map.of(FIELD, field, "index", i));
             }
             values[i] = value.intValue();
         }
@@ -143,7 +144,7 @@ public record UnprotectRequest(
 
     private static String text(JsonNode node, String field) {
         if (node == null || !node.isTextual() || node.textValue().isBlank()) {
-            throw invalid("Поле '" + field + "' обязательно и должно быть непустой строкой", Map.of("field", field));
+            throw invalid("Поле '" + field + "' обязательно и должно быть непустой строкой", Map.of(FIELD, field));
         }
         return node.textValue();
     }
@@ -155,7 +156,7 @@ public record UnprotectRequest(
         if (!node.isIntegralNumber() || !node.canConvertToLong()) {
             throw invalid(
                     "Поле 'ttl_seconds' должно быть целым числом секунд, получено: " + node,
-                    Map.of("field", TTL_SECONDS));
+                    Map.of(FIELD, TTL_SECONDS));
         }
         return node.longValue();
     }
@@ -194,7 +195,7 @@ public record UnprotectRequest(
             if (!FIELDS.contains(name)) {
                 throw invalid(
                         "Неизвестное поле '" + name + "' в POST policy unprotect: допустимы " + FIELDS,
-                        Map.of("field", name, "allowed", FIELDS));
+                        Map.of(FIELD, name, "allowed", FIELDS));
             }
         }
     }

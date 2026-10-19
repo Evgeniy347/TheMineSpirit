@@ -28,7 +28,7 @@ public final class PlacedBlockSet {
     private int size;
 
     static final class Chunk {
-        final LinkedHashSet<Long> positions = new LinkedHashSet<>();
+        final Set<Long> positions = new LinkedHashSet<>();
         boolean overflowed;
     }
 

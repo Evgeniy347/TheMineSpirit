@@ -82,7 +82,6 @@ public final class TaskStarter {
                     }
                 }
             }
-            default -> throw new IllegalStateException("Неизвестный вердикт допуска задачи: " + admission);
         }
         spirit.startTask(task);
         issued.put(id, new Issued(script, spirit.taskGeneration()));

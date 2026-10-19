@@ -13,6 +13,7 @@ import java.util.Optional;
  * составной таблицы парсер получает содержимое всех файлов, а сама таблица в реестре — одна строка.
  */
 public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T> parser, Expander expander) {
+    @FunctionalInterface
     public interface Parser<T> {
         T parse(List<LoadedContent> contents);
     }
@@ -22,6 +23,7 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
      * индекс перечисляет файлы тел, и они читаются тем же источником, что и сам индекс, — тогда /reload
      * и датапак мира переопределяют и индекс, и любое тело.
      */
+    @FunctionalInterface
     public interface Expander {
         List<String> extraPaths(LoadedContent index);
 
@@ -63,6 +65,7 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
         return new TableDefinition<>(id, List.of(resourcePath), parser, expander);
     }
 
+    @FunctionalInterface
     public interface SingleParser<T> {
         T parse(String json, String origin);
     }

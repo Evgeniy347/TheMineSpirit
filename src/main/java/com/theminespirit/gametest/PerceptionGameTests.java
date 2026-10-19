@@ -114,7 +114,7 @@ public final class PerceptionGameTests {
                             + result.entities().stream().map(EntityRef::type).toList()
                             + ". Овцы или дух в результате значат, что фильтр не применяется к сущностям");
             helper.assertTrue(
-                    result.entities().stream().allMatch(entity -> entity.type().equals("minecraft:cow")),
+                    result.entities().stream().allMatch(entity -> "minecraft:cow".equals(entity.type())),
                     "в результате должны быть только коровы, а там: "
                             + result.entities().stream().map(EntityRef::type).toList());
             helper.assertTrue(

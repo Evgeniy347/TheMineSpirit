@@ -1,10 +1,11 @@
 package com.theminespirit.core.tactics;
 
 import java.util.EnumMap;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 public final class FactMap {
-    private final EnumMap<FactName, Object> values = new EnumMap<>(FactName.class);
+    private final Map<FactName, Object> values = new EnumMap<>(FactName.class);
 
     private FactMap() {}
 

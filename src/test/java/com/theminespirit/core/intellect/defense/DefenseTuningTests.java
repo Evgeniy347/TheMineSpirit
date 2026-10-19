@@ -37,8 +37,8 @@ class DefenseTuningTests {
     @Test
     void lowHpFraction_HealThreshold_MatchesIntellect() {
         assertEquals(
-                IntellectTuning.loadDefault().healFraction(),
                 DefenseTuning.LOW_HP_FRACTION,
+                IntellectTuning.loadDefault().healFraction(),
                 "Порог отхода обороны совпадает с порогом лечения интеллекта: иначе один слой лечит, а второй "
                         + "дерётся тем же духом");
     }
@@ -94,8 +94,8 @@ class DefenseTuningTests {
     @Test
     void minDps_TacticsFloor_MatchesScales() {
         assertEquals(
-                TacticsConfig.loadDefault().weights().scales().minDps(),
                 DefenseTuning.MIN_DPS,
+                TacticsConfig.loadDefault().weights().scales().minDps(),
                 "Пол урона обороны совпадает с тактическим: иначе сила сектора и запас победы считают по-разному");
     }
 

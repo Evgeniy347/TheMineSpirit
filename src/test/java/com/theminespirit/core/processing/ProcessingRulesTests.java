@@ -97,7 +97,7 @@ class ProcessingRulesTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<ProcessingRules> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("processing")) {
+            if ("processing".equals(definition.id())) {
                 return (TableDefinition<ProcessingRules>) definition;
             }
         }

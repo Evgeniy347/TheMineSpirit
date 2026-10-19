@@ -110,13 +110,13 @@ public final class StockCatalog {
             if (SEED_IDS.contains(id)) {
                 seeds += count;
             }
-            if (id.equals(CHARCOAL_ID)) {
+            if (CHARCOAL_ID.equals(id)) {
                 charcoal += count;
             }
             if (id.endsWith(PLANKS_SUFFIX)) {
                 planks += count;
             }
-            if (id.equals(STICK_ID)) {
+            if (STICK_ID.equals(id)) {
                 sticks += count;
             }
             if (CookableFoods.isRaw(id)) {

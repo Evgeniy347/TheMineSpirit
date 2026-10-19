@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-public class SpiritRolesTests {
+class SpiritRolesTests {
     @Test
-    public void classify_NoScriptNoPlan_IsDefender() {
+    void classify_NoScriptNoPlan_IsDefender() {
         assertEquals(
                 SpiritRole.DEFENDER,
                 SpiritRoles.classify(Optional.empty(), false),
@@ -16,7 +16,7 @@ public class SpiritRolesTests {
     }
 
     @Test
-    public void classify_NoScriptButActivePlan_IsIdleNotDefender() {
+    void classify_NoScriptButActivePlan_IsIdleNotDefender() {
         assertEquals(
                 SpiritRole.IDLE,
                 SpiritRoles.classify(Optional.empty(), true),
@@ -25,7 +25,7 @@ public class SpiritRolesTests {
     }
 
     @Test
-    public void classify_WorkerScript_IsWorker() {
+    void classify_WorkerScript_IsWorker() {
         assertEquals(
                 SpiritRole.WORKER,
                 SpiritRoles.classify(Optional.of("chop_tree"), true),
@@ -33,7 +33,7 @@ public class SpiritRolesTests {
     }
 
     @Test
-    public void classify_BuildingScript_IsBuilding() {
+    void classify_BuildingScript_IsBuilding() {
         assertEquals(
                 SpiritRole.BUILDING,
                 SpiritRoles.classify(Optional.of("build_schematic"), true),
@@ -41,7 +41,7 @@ public class SpiritRolesTests {
     }
 
     @Test
-    public void classify_OtherScript_IsIdle() {
+    void classify_OtherScript_IsIdle() {
         assertEquals(
                 SpiritRole.IDLE,
                 SpiritRoles.classify(Optional.of("close_door"), true),
@@ -49,7 +49,7 @@ public class SpiritRolesTests {
     }
 
     @Test
-    public void classify_NullScript_ThrowsWithReason() {
+    void classify_NullScript_ThrowsWithReason() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SpiritRoles.classify(null, false),

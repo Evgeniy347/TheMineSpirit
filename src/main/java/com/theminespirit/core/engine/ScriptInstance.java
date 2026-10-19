@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
+@FunctionalInterface
 public interface ScriptInstance {
     record Progress(int done, int target) {
         public Progress {

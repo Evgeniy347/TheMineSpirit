@@ -36,7 +36,7 @@ class LocateQueryProperties {
 
     @Property
     void container_SpeciesGivenForNonTree_IsRejected(@ForAll("species") String species) {
-        if (species.equals(LocateQuery.ANY_SPECIES)) {
+        if (LocateQuery.ANY_SPECIES.equals(species)) {
             return;
         }
         assertThrows(

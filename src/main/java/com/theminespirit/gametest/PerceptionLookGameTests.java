@@ -123,7 +123,7 @@ public final class PerceptionLookGameTests {
                 status == ScriptStatus.SUCCEEDED
                         && finding != null
                         && finding.sightings().size() == 1
-                        && finding.sightings().get(0).kind().equals("unloaded"),
+                        && "unloaded".equals(finding.sightings().get(0).kind()),
                 "look_at на клетку в незагруженном чанке обязан завершиться успехом и сообщить пропуск (unloaded), "
                         + "а не воздух: статус " + status + ", находка " + finding);
         helper.assertTrue(

@@ -204,7 +204,7 @@ class FirstToolsChainTests {
         if (!call.script().equals(script)) {
             return false;
         }
-        Object name = call.params().get(script.equals("gather") ? "block" : "item");
+        Object name = call.params().get("gather".equals(script) ? "block" : "item");
         return item.equals(name);
     }
 

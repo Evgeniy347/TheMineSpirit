@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class TaskRoutes {
+    private static final String TASK_ID = "task_id";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final TaskRegistry registry;
@@ -91,7 +92,7 @@ public final class TaskRoutes {
             taskId = registry.reserve(bot, parsed.goal());
         } catch (TaskRegistry.BusyException busy) {
             throw new ApiException(
-                    ErrorCode.CONFLICT, ErrorText.of(busy), Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
+                    ErrorCode.CONFLICT, ErrorText.of(busy), Map.of("bot", busy.bot(), TASK_ID, busy.activeTaskId()));
         }
         long generation;
         try {
@@ -105,11 +106,11 @@ public final class TaskRoutes {
         return taskId;
     }
 
-    private RestResponse get(RestRequest request, PathParams params) {
+    private RestResponse get(RestRequest ignoredRequest, PathParams params) {
         return RestResponse.ok(TaskJson.toJson(knownTask(params.get("id"))));
     }
 
-    private RestResponse delete(RestRequest request, PathParams params) {
+    private RestResponse delete(RestRequest ignoredRequest, PathParams params) {
         String taskId = params.get("id");
         TaskRecord record = knownTask(taskId);
         if (record.active()) {
@@ -127,7 +128,7 @@ public final class TaskRoutes {
                         ErrorCode.NOT_FOUND,
                         "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при "
                                 + "перезапуске",
-                        Map.of("task_id", taskId)));
+                        Map.of(TASK_ID, taskId)));
         if (!slots.tryAcquire()) {
             throw new ApiException(
                     ErrorCode.RATE_LIMITED,
@@ -147,7 +148,7 @@ public final class TaskRoutes {
         }
     }
 
-    private RestResponse plan(RestRequest request, PathParams params) {
+    private RestResponse plan(RestRequest request, PathParams ignoredParams) {
         JsonNode root;
         try {
             root = MAPPER.readTree(request.body());
@@ -195,7 +196,7 @@ public final class TaskRoutes {
                 .orElseThrow(() -> new ApiException(
                         ErrorCode.NOT_FOUND,
                         "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при перезапуске",
-                        Map.of("task_id", taskId)));
+                        Map.of(TASK_ID, taskId)));
     }
 
     private static String canonicalBotId(String raw) {
@@ -209,7 +210,7 @@ public final class TaskRoutes {
     private static long lastEventId(RestRequest request) {
         String header = null;
         for (Map.Entry<String, String> entry : request.headers().entrySet()) {
-            if (entry.getKey().equalsIgnoreCase("last-event-id")) {
+            if ("last-event-id".equalsIgnoreCase(entry.getKey())) {
                 header = entry.getValue();
                 break;
             }
@@ -234,7 +235,7 @@ public final class TaskRoutes {
 
     private static String acceptedJson(String taskId, String bot, String requestId) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("task_id", taskId);
+        body.put(TASK_ID, taskId);
         body.put("bot", bot);
         body.put("state", TaskState.ACCEPTED.wire());
         body.put("request_id", requestId);

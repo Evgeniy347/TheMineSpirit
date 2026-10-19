@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class CapabilitiesJson {
+    private static final String TYPE = "type";
+
     private CapabilitiesJson() {}
 
     public static String toJson(ScriptCatalog catalog) {
@@ -30,7 +32,7 @@ public final class CapabilitiesJson {
             }
         }
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("type", "object");
+        params.put(TYPE, "object");
         params.put("properties", properties);
         params.put("required", required);
         Map<String, Object> script = new LinkedHashMap<>();
@@ -59,21 +61,21 @@ public final class CapabilitiesJson {
         Map<String, Object> schema = new LinkedHashMap<>();
         switch (param.type()) {
             case INT -> {
-                schema.put("type", "integer");
+                schema.put(TYPE, "integer");
                 putBounds(schema, param, true);
             }
             case DOUBLE -> {
-                schema.put("type", "number");
+                schema.put(TYPE, "number");
                 putBounds(schema, param, false);
             }
-            case STRING -> schema.put("type", "string");
+            case STRING -> schema.put(TYPE, "string");
             case STRING_LIST -> {
-                schema.put("type", "array");
-                schema.put("items", Map.of("type", "string"));
+                schema.put(TYPE, "array");
+                schema.put("items", Map.of(TYPE, "string"));
             }
-            case BOOL -> schema.put("type", "boolean");
+            case BOOL -> schema.put(TYPE, "boolean");
             case ENUM -> {
-                schema.put("type", "string");
+                schema.put(TYPE, "string");
                 schema.put("enum", param.values());
             }
         }

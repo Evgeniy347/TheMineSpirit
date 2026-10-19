@@ -99,12 +99,12 @@ public final class RestScaleGameTests {
                             .count();
                     long limited = replies.stream()
                             .filter(reply -> reply.join().status() == 429
-                                    && reply.join()
-                                            .json()
-                                            .path("error")
-                                            .path("code")
-                                            .asText()
-                                            .equals("rate_limited"))
+                                    && "rate_limited"
+                                            .equals(reply.join()
+                                                    .json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()))
                             .count();
                     problems.expect(
                             ok == FIVE_OBSERVES - 1 && limited == 1,

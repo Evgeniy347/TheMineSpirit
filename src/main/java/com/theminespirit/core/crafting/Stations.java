@@ -33,7 +33,7 @@ public final class Stations {
         if (colon >= 0) {
             normalized = normalized.substring(colon + 1);
         }
-        return normalized.startsWith("cooked_") || normalized.equals("baked_potato");
+        return normalized.startsWith("cooked_") || "baked_potato".equals(normalized);
     }
 
     public static List<String> smeltingCandidates(String product) {

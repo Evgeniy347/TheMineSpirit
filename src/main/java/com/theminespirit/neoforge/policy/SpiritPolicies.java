@@ -240,8 +240,8 @@ public final class SpiritPolicies {
         }
         String key = reflex.policy() + ":" + reflex.action().getClass().getSimpleName();
         reflexTicks = key.equals(reflexKey) ? reflexTicks + 1 : 1;
-        reflexKey = key;
         if (reflexTicks < REFLEX_TIMEOUT_TICKS) {
+            reflexKey = key;
             return candidate;
         }
         LOGGER.warn(

@@ -17,6 +17,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
 final class SpiritUnprotectCommand {
+    private static final String COLUMN = " | ";
     private static final String DEFAULT_REASON = "по просьбе игрока";
 
     private SpiritUnprotectCommand() {}
@@ -78,8 +79,15 @@ final class SpiritUnprotectCommand {
         }
         for (UnprotectArea area : areas) {
             source.sendSuccess(
-                    () -> Component.literal(area.id() + " | " + format(area) + " | " + area.grantedBy() + " | "
-                            + area.reason() + " | " + until(area)),
+                    () -> Component.literal(area.id()
+                            + COLUMN
+                            + format(area)
+                            + COLUMN
+                            + area.grantedBy()
+                            + COLUMN
+                            + area.reason()
+                            + COLUMN
+                            + until(area)),
                     false);
         }
         source.sendSuccess(() -> Component.literal("Разрешённых областей: " + areas.size()), false);

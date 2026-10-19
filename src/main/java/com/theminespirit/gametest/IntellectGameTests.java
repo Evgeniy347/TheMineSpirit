@@ -126,7 +126,7 @@ public final class IntellectGameTests {
                         + intellect.decision().orElseThrow().refusals());
         helper.assertTrue(
                 spirit.currentTaskScript()
-                        .map(script -> !script.equals("mine_vein"))
+                        .map(script -> !"mine_vein".equals(script))
                         .orElse(true),
                 "Задача mine_vein одинокому шахтёру не выдаётся");
         spirit.discard();
@@ -159,8 +159,7 @@ public final class IntellectGameTests {
         helper.assertTrue(
                 List.of(first, second).stream()
                         .anyMatch(spirit -> spirit.currentPlan()
-                                .map(plan -> plan instanceof ScriptCall call
-                                        && call.script().equals("mine_vein"))
+                                .map(plan -> plan instanceof ScriptCall call && "mine_vein".equals(call.script()))
                                 .orElse(false)),
                 "Хотя бы один шахтёр получает задачу mine_vein");
         first.discard();
@@ -248,7 +247,7 @@ public final class IntellectGameTests {
                 intellect
                         .expeditions()
                         .lastDispatch()
-                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                        .map(dispatch -> "mine_vein".equals(dispatch.script())
                                 && new HashSet<>(dispatch.team()).equals(new HashSet<>(team)))
                         .orElse(false),
                 "С набором команда идёт в шахту: диспетч mine_vein на ту же команду");
@@ -264,15 +263,14 @@ public final class IntellectGameTests {
                 leader.currentPlan()
                         .map(plan -> plan instanceof SequenceNode sequence
                                 && sequence.steps().stream()
-                                        .anyMatch(step -> step instanceof ScriptCall call
-                                                && call.script().equals("mine_vein")))
+                                        .anyMatch(step ->
+                                                step instanceof ScriptCall call && "mine_vein".equals(call.script())))
                         .orElse(false),
                 "Ведущий копает: у него в плане mine_vein, фактически "
                         + leader.currentPlan().map(Object::toString).orElse("нет"));
         helper.assertTrue(
                 partner.currentPlan()
-                        .map(plan ->
-                                plan instanceof ScriptCall call && call.script().equals("follow"))
+                        .map(plan -> plan instanceof ScriptCall call && "follow".equals(call.script()))
                         .orElse(false),
                 "Напарник идёт рядом: он следует за ведущим, фактически "
                         + partner.currentPlan().map(Object::toString).orElse("нет"));
@@ -280,8 +278,8 @@ public final class IntellectGameTests {
                 leader.currentPlan()
                         .map(plan -> plan instanceof SequenceNode sequence
                                 && sequence.steps().stream()
-                                        .anyMatch(step -> step instanceof ScriptCall call
-                                                && call.script().equals("return_home")))
+                                        .anyMatch(step ->
+                                                step instanceof ScriptCall call && "return_home".equals(call.script())))
                         .orElse(false),
                 "После шахты ведущий возвращается на базу: план — шахта, затем возврат домой");
         spirits.forEach(SpiritEntity::discard);
@@ -350,7 +348,7 @@ public final class IntellectGameTests {
             helper.assertTrue(
                     spirits.get(0)
                             .currentTaskScript()
-                            .map(script -> script.equals("wait"))
+                            .map(script -> "wait".equals(script))
                             .orElse(false),
                     "Чужую задачу wait интеллект не отбирает: иначе сцены соседних тестов ломаются");
             helper.assertTrue(
@@ -428,7 +426,7 @@ public final class IntellectGameTests {
                 helper.assertTrue(
                         spirits.stream()
                                 .allMatch(spirit -> spirit.currentTaskScript()
-                                        .map(script -> script.equals("wait"))
+                                        .map(script -> "wait".equals(script))
                                         .orElse(false)),
                         "Ждём свои задачи ожидания: вердикт ARM нужен духу без оружия, а не пустому");
                 husk[0] = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 5));
@@ -470,7 +468,7 @@ public final class IntellectGameTests {
                     helper.assertTrue(
                             spirits.get(1)
                                     .currentTaskScript()
-                                    .map(script -> script.equals("withdraw") || script.equals("equip"))
+                                    .map(script -> "withdraw".equals(script) || "equip".equals(script))
                                     .orElse(false),
                             "Приказ «за оружием» превращается в задачу withdraw/equip: иначе вердикт остался на бумаге");
                     husk[0].discard();
@@ -540,7 +538,7 @@ public final class IntellectGameTests {
                 intellect
                         .expeditions()
                         .lastDispatch()
-                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                        .map(dispatch -> "mine_vein".equals(dispatch.script())
                                 && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
                         .orElse(false),
                 "Команда без игрока идёт сама добывать: диспетч mine_vein на ту же команду, иначе уход молча");
@@ -590,7 +588,7 @@ public final class IntellectGameTests {
                 helper.assertTrue(
                         spirits.stream()
                                 .anyMatch(spirit -> spirit.currentTaskScript()
-                                        .map(script -> script.equals("follow"))
+                                        .map(script -> "follow".equals(script))
                                         .orElse(false)),
                         "Подошедший игрок ведёт команду: согласился — идут за ним");
                 spirits.forEach(SpiritEntity::discard);
@@ -655,7 +653,7 @@ public final class IntellectGameTests {
                 intellect
                         .expeditions()
                         .lastDispatch()
-                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                        .map(dispatch -> "mine_vein".equals(dispatch.script())
                                 && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
                         .orElse(false),
                 "После ожидания команда идёт добывать: диспетч mine_vein на ту же команду");
@@ -703,7 +701,7 @@ public final class IntellectGameTests {
                 intellect
                         .expeditions()
                         .lastDispatch()
-                        .map(dispatch -> dispatch.script().equals("mine_vein")
+                        .map(dispatch -> "mine_vein".equals(dispatch.script())
                                 && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
                         .orElse(false),
                 "Молчащая команда идёт добывать: диспетч mine_vein на ту же команду");

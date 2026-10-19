@@ -47,6 +47,20 @@ public record IntellectTuning(
 
     public static final String RESOURCE = "data/theminespirit/tactics/intellect.json";
 
+    private static final String MAX_FIGHTERS = "maxFighters";
+    private static final String FORAGE_WITHDRAW_COUNT = "forageWithdrawCount";
+    private static final String FORAGE_WITHDRAW_RADIUS = "forageWithdrawRadius";
+    private static final String FORAGE_HUNT_RADIUS = "forageHuntRadius";
+    private static final String FORAGE_HUNT_COUNT = "forageHuntCount";
+    private static final String FORAGE_FISH_RADIUS = "forageFishRadius";
+    private static final String FORAGE_FISH_COUNT = "forageFishCount";
+    private static final String FORAGE_FISH_DURATION = "forageFishDuration";
+    private static final String ORE_TARGET = "oreTarget";
+    private static final String IRON_TARGET = "ironTarget";
+    private static final String WEAPON_TARGET = "weaponTarget";
+    private static final String TEAM_MIN = "teamMin";
+    private static final String TEAM_MAX = "teamMax";
+    private static final String INVITE_MAX_EXTENDS = "inviteMaxExtends";
     private static final Set<String> FIELDS = Set.of(
             "demandIntervalTicks",
             "minSwitchTicks",
@@ -56,28 +70,28 @@ public record IntellectTuning(
             "workCrowdPenalty",
             "maxDemand",
             "fleeMargin",
-            "maxFighters",
+            MAX_FIGHTERS,
             "foodDays",
             "foodRation",
             "foodChildRation",
             "foodDemandMin",
             "foodDemandMax",
-            "forageWithdrawCount",
-            "forageWithdrawRadius",
-            "forageHuntRadius",
-            "forageHuntCount",
-            "forageFishRadius",
-            "forageFishCount",
-            "forageFishDuration",
-            "oreTarget",
-            "ironTarget",
-            "weaponTarget",
-            "teamMin",
-            "teamMax",
+            FORAGE_WITHDRAW_COUNT,
+            FORAGE_WITHDRAW_RADIUS,
+            FORAGE_HUNT_RADIUS,
+            FORAGE_HUNT_COUNT,
+            FORAGE_FISH_RADIUS,
+            FORAGE_FISH_COUNT,
+            FORAGE_FISH_DURATION,
+            ORE_TARGET,
+            IRON_TARGET,
+            WEAPON_TARGET,
+            TEAM_MIN,
+            TEAM_MAX,
             "inviteTtlTicks",
             "inviteRepeatTicks",
             "inviteExtendTicks",
-            "inviteMaxExtends",
+            INVITE_MAX_EXTENDS,
             "strategicTtlTicks",
             "healFraction",
             "armedDps");
@@ -117,24 +131,24 @@ public record IntellectTuning(
             throw new IllegalArgumentException("Порог лечения " + healFraction + " вне (0, 1): это доля здоровья, "
                     + "при которой дух идёт лечиться, а не дерётся");
         }
-        requirePositive("maxFighters", maxFighters);
-        requirePositive("forageWithdrawCount", forageWithdrawCount);
-        requirePositive("forageWithdrawRadius", forageWithdrawRadius);
-        requirePositive("forageHuntRadius", forageHuntRadius);
-        requirePositive("forageHuntCount", forageHuntCount);
-        requirePositive("forageFishRadius", forageFishRadius);
-        requirePositive("forageFishCount", forageFishCount);
-        requirePositive("forageFishDuration", forageFishDuration);
-        requirePositive("oreTarget", oreTarget);
-        requirePositive("ironTarget", ironTarget);
-        requirePositive("weaponTarget", weaponTarget);
-        requirePositive("teamMin", teamMin);
-        requirePositive("teamMax", teamMax);
+        requirePositive(MAX_FIGHTERS, maxFighters);
+        requirePositive(FORAGE_WITHDRAW_COUNT, forageWithdrawCount);
+        requirePositive(FORAGE_WITHDRAW_RADIUS, forageWithdrawRadius);
+        requirePositive(FORAGE_HUNT_RADIUS, forageHuntRadius);
+        requirePositive(FORAGE_HUNT_COUNT, forageHuntCount);
+        requirePositive(FORAGE_FISH_RADIUS, forageFishRadius);
+        requirePositive(FORAGE_FISH_COUNT, forageFishCount);
+        requirePositive(FORAGE_FISH_DURATION, forageFishDuration);
+        requirePositive(ORE_TARGET, oreTarget);
+        requirePositive(IRON_TARGET, ironTarget);
+        requirePositive(WEAPON_TARGET, weaponTarget);
+        requirePositive(TEAM_MIN, teamMin);
+        requirePositive(TEAM_MAX, teamMax);
         if (teamMax < teamMin) {
             throw new IllegalArgumentException("Предел команды " + teamMin + ".." + teamMax + ": максимум меньше "
                     + "минимума, экспедицию нельзя собрать ни при каком составе");
         }
-        requirePositive("inviteMaxExtends", inviteMaxExtends);
+        requirePositive(INVITE_MAX_EXTENDS, inviteMaxExtends);
     }
 
     public static IntellectTuning defaults() {
@@ -168,28 +182,28 @@ public record IntellectTuning(
                     decimal(root, origin, "workCrowdPenalty"),
                     decimal(root, origin, "maxDemand"),
                     decimal(root, origin, "fleeMargin"),
-                    JsonResource.integer(root.get("maxFighters"), origin, "maxFighters"),
+                    JsonResource.integer(root.get(MAX_FIGHTERS), origin, MAX_FIGHTERS),
                     decimal(root, origin, "foodDays"),
                     decimal(root, origin, "foodRation"),
                     decimal(root, origin, "foodChildRation"),
                     decimal(root, origin, "foodDemandMin"),
                     decimal(root, origin, "foodDemandMax"),
-                    JsonResource.integer(root.get("forageWithdrawCount"), origin, "forageWithdrawCount"),
-                    JsonResource.integer(root.get("forageWithdrawRadius"), origin, "forageWithdrawRadius"),
-                    JsonResource.integer(root.get("forageHuntRadius"), origin, "forageHuntRadius"),
-                    JsonResource.integer(root.get("forageHuntCount"), origin, "forageHuntCount"),
-                    JsonResource.integer(root.get("forageFishRadius"), origin, "forageFishRadius"),
-                    JsonResource.integer(root.get("forageFishCount"), origin, "forageFishCount"),
-                    JsonResource.integer(root.get("forageFishDuration"), origin, "forageFishDuration"),
-                    JsonResource.integer(root.get("oreTarget"), origin, "oreTarget"),
-                    JsonResource.integer(root.get("ironTarget"), origin, "ironTarget"),
-                    JsonResource.integer(root.get("weaponTarget"), origin, "weaponTarget"),
-                    JsonResource.integer(root.get("teamMin"), origin, "teamMin"),
-                    JsonResource.integer(root.get("teamMax"), origin, "teamMax"),
+                    JsonResource.integer(root.get(FORAGE_WITHDRAW_COUNT), origin, FORAGE_WITHDRAW_COUNT),
+                    JsonResource.integer(root.get(FORAGE_WITHDRAW_RADIUS), origin, FORAGE_WITHDRAW_RADIUS),
+                    JsonResource.integer(root.get(FORAGE_HUNT_RADIUS), origin, FORAGE_HUNT_RADIUS),
+                    JsonResource.integer(root.get(FORAGE_HUNT_COUNT), origin, FORAGE_HUNT_COUNT),
+                    JsonResource.integer(root.get(FORAGE_FISH_RADIUS), origin, FORAGE_FISH_RADIUS),
+                    JsonResource.integer(root.get(FORAGE_FISH_COUNT), origin, FORAGE_FISH_COUNT),
+                    JsonResource.integer(root.get(FORAGE_FISH_DURATION), origin, FORAGE_FISH_DURATION),
+                    JsonResource.integer(root.get(ORE_TARGET), origin, ORE_TARGET),
+                    JsonResource.integer(root.get(IRON_TARGET), origin, IRON_TARGET),
+                    JsonResource.integer(root.get(WEAPON_TARGET), origin, WEAPON_TARGET),
+                    JsonResource.integer(root.get(TEAM_MIN), origin, TEAM_MIN),
+                    JsonResource.integer(root.get(TEAM_MAX), origin, TEAM_MAX),
                     integer(root, origin, "inviteTtlTicks"),
                     integer(root, origin, "inviteRepeatTicks"),
                     integer(root, origin, "inviteExtendTicks"),
-                    JsonResource.integer(root.get("inviteMaxExtends"), origin, "inviteMaxExtends"),
+                    JsonResource.integer(root.get(INVITE_MAX_EXTENDS), origin, INVITE_MAX_EXTENDS),
                     integer(root, origin, "strategicTtlTicks"),
                     decimal(root, origin, "healFraction"),
                     decimal(root, origin, "armedDps"));
@@ -208,30 +222,33 @@ public record IntellectTuning(
 
     private static void requireTicks(String name, long ticks) {
         if (ticks < 1) {
-            throw new IllegalArgumentException("Поле " + name + " = " + ticks
-                    + ": интервал считается в тиках, он обязан быть не меньше 1, иначе действие повторяется "
-                    + "каждый тик или срок уже истёк при рождении");
+            throw invalid(
+                    name,
+                    ticks,
+                    ": интервал считается в тиках, он обязан быть не меньше 1, иначе действие повторяется "
+                            + "каждый тик или срок уже истёк при рождении");
         }
     }
 
     private static void requirePositive(String name, int value) {
         if (value < 1) {
-            throw new IllegalArgumentException("Поле " + name + " = " + value
-                    + ": счётчик или цель обязаны быть не меньше 1, иначе задача недостижима");
+            throw invalid(name, value, ": счётчик или цель обязаны быть не меньше 1, иначе задача недостижима");
         }
     }
 
     private static void requirePositive(String name, double value) {
         if (!Double.isFinite(value) || value <= 0) {
-            throw new IllegalArgumentException("Поле " + name + " = " + value
-                    + ": значение обязано быть конечным и больше 0, иначе расчёт вырождается");
+            throw invalid(name, value, ": значение обязано быть конечным и больше 0, иначе расчёт вырождается");
         }
     }
 
     private static void requireNonNegative(String name, double value) {
         if (!Double.isFinite(value) || value < 0) {
-            throw new IllegalArgumentException("Поле " + name + " = " + value
-                    + ": значение обязано быть конечным и не меньше 0, иначе шкала спроса ломается");
+            throw invalid(name, value, ": значение обязано быть конечным и не меньше 0, иначе шкала спроса ломается");
         }
+    }
+
+    private static IllegalArgumentException invalid(String name, Object value, String why) {
+        return new IllegalArgumentException("Поле " + name + " = " + value + why);
     }
 }

@@ -123,7 +123,7 @@ class OverflowPolicyTests {
                 decision.action(),
                 "Излишек железа вне квоты набора уходит: причина " + decision.reason());
         assertTrue(
-                !inventory.get(decision.slot()).item().equals("bread"),
+                !"bread".equals(inventory.get(decision.slot()).item()),
                 "Норма еды не выбрасывается даже когда её на базе много: хлеб защищён базовым "
                         + "набором, а складская цена не может отнять квоту");
     }

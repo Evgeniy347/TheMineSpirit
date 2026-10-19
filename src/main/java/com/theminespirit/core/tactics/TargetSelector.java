@@ -43,10 +43,10 @@ public final class TargetSelector {
         if (colon >= 0) {
             String prefix = text.substring(0, colon).toLowerCase(Locale.ROOT);
             String value = text.substring(colon + 1);
-            if (prefix.equals("player")) {
+            if ("player".equals(prefix)) {
                 return new Target(Kind.PLAYER, Optional.of(namedValue("player", value)));
             }
-            if (prefix.equals("spirit")) {
+            if ("spirit".equals(prefix)) {
                 String uuid = namedValue("spirit", value);
                 try {
                     UUID.fromString(uuid);

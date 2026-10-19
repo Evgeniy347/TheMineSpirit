@@ -84,11 +84,11 @@ public final class ExploreScript implements ScriptInstance {
         }
         if (!walking) {
             survey(route.get(index));
-            if (!beginPoint(route.get(index))) {
+            walking = beginPoint(route.get(index));
+            if (!walking) {
                 index++;
                 return ScriptStatus.RUNNING;
             }
-            walking = true;
         }
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
@@ -187,13 +187,13 @@ public final class ExploreScript implements ScriptInstance {
                     if (kind == null) {
                         continue;
                     }
-                    if (kind.equals("ore") && !ore) {
+                    if ("ore".equals(kind) && !ore) {
                         ore = record(MemoryType.RESOURCE, kind, pos);
-                    } else if (kind.equals("tree") && !tree) {
+                    } else if ("tree".equals(kind) && !tree) {
                         tree = record(MemoryType.RESOURCE, kind, pos);
-                    } else if (kind.equals("water") && !water) {
+                    } else if ("water".equals(kind) && !water) {
                         water = record(MemoryType.RESOURCE, kind, pos);
-                    } else if (kind.equals("lava") && !lava) {
+                    } else if ("lava".equals(kind) && !lava) {
                         lava = record(MemoryType.DANGER, kind, pos);
                     }
                 }
@@ -292,16 +292,16 @@ public final class ExploreScript implements ScriptInstance {
             return null;
         }
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
-        if (id.endsWith("_ore") || id.equals("ancient_debris")) {
+        if (id.endsWith("_ore") || "ancient_debris".equals(id)) {
             return "ore";
         }
-        if (id.endsWith("_log") || id.endsWith("_wood") || id.equals("mushroom_stem")) {
+        if (id.endsWith("_log") || id.endsWith("_wood") || "mushroom_stem".equals(id)) {
             return "tree";
         }
-        if (id.equals("water") || id.equals("bubble_column")) {
+        if ("water".equals(id) || "bubble_column".equals(id)) {
             return "water";
         }
-        if (id.equals("lava")) {
+        if ("lava".equals(id)) {
             return "lava";
         }
         return null;

@@ -27,7 +27,7 @@ final class SpiritInviteCommand {
         ServerLevel level = context.getSource().getLevel();
         String expedition = StringArgumentType.getString(context, "expedition");
         String answer = StringArgumentType.getString(context, "answer");
-        if (!answer.equals("wait") && !answer.equals("go") && !answer.equals("join")) {
+        if (!"wait".equals(answer) && !"go".equals(answer) && !"join".equals(answer)) {
             context.getSource()
                     .sendFailure(Component.literal("Ответ '" + answer
                             + "' непонятен: годится wait (подождите +60с), go (идите без меня) или join (иду с вами)"));

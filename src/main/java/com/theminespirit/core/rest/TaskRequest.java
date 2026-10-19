@@ -19,6 +19,7 @@ public record TaskRequest(
         UUID requestId, @Nullable String goal, @Nullable JsonNode plan, Map<String, Object> params) {
     public static final int MAX_GOAL_LENGTH = 500;
 
+    private static final String FIELD = "field";
     private static final String REQUEST_ID = "request_id";
     private static final String GOAL = "goal";
     private static final String PLAN = "plan";
@@ -100,7 +101,7 @@ public record TaskRequest(
             if (!FIELDS.contains(name)) {
                 throw invalid(
                         "Неизвестное поле '" + name + "' в POST tasks: допустимы " + FIELDS,
-                        Map.of("field", name, "allowed", FIELDS));
+                        Map.of(FIELD, name, "allowed", FIELDS));
             }
         }
     }
@@ -110,7 +111,7 @@ public record TaskRequest(
             throw invalid(
                     "Поле 'request_id' обязательно и должно быть строкой-UUID: повтор запроса с тем же "
                             + "request_id возвращает прежнюю задачу",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
         try {
             return UUID.fromString(node.textValue());
@@ -118,20 +119,20 @@ public record TaskRequest(
             throw invalid(
                     "Поле 'request_id' = '" + node.textValue() + "' не является UUID: пример "
                             + "3f1c2d3e-0000-4000-8000-000000000000",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
     }
 
     private static String goal(JsonNode node) {
         if (!node.isTextual()) {
-            throw invalid("Поле 'goal' должно быть строкой, получено: " + node.getNodeType(), Map.of("field", GOAL));
+            throw invalid("Поле 'goal' должно быть строкой, получено: " + node.getNodeType(), Map.of(FIELD, GOAL));
         }
         String text = node.textValue();
         if (text.length() > MAX_GOAL_LENGTH) {
             throw invalid(
                     "Цель длиннее " + MAX_GOAL_LENGTH + " символов (" + text.length()
                             + "): опишите цель короче или передайте план",
-                    Map.of("field", GOAL, "max_length", MAX_GOAL_LENGTH));
+                    Map.of(FIELD, GOAL, "max_length", MAX_GOAL_LENGTH));
         }
         return text;
     }
@@ -140,7 +141,7 @@ public record TaskRequest(
         if (!node.isObject()) {
             throw invalid(
                     "Поле 'plan' должно быть JSON-объектом дерева задач, получено: " + node.getNodeType(),
-                    Map.of("field", PLAN));
+                    Map.of(FIELD, PLAN));
         }
         return node;
     }
@@ -149,7 +150,7 @@ public record TaskRequest(
         if (!node.isObject()) {
             throw invalid(
                     "Поле 'params' должно быть JSON-объектом строк и целых, получено: " + node.getNodeType(),
-                    Map.of("field", PARAMS));
+                    Map.of(FIELD, PARAMS));
         }
         Map<String, Object> result = new LinkedHashMap<>();
         Iterator<String> names = node.fieldNames();
@@ -163,7 +164,7 @@ public record TaskRequest(
             } else {
                 throw invalid(
                         "Параметр '" + name + "' обязан быть строкой или целым, получено: " + value,
-                        Map.of("field", PARAMS, "param", name));
+                        Map.of(FIELD, PARAMS, "param", name));
             }
         }
         return Map.copyOf(result);

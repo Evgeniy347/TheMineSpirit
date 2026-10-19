@@ -109,7 +109,7 @@ class RepairDataTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<RepairData> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("repair")) {
+            if ("repair".equals(definition.id())) {
                 return (TableDefinition<RepairData>) definition;
             }
         }

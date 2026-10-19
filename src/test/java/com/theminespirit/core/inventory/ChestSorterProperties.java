@@ -52,8 +52,8 @@ class ChestSorterProperties {
                 || item.endsWith("sword")
                 || item.endsWith("helmet")
                 || item.endsWith("chestplate")
-                || item.equals("bucket")
-                || item.equals("crafting_table")) {
+                || "bucket".equals(item)
+                || "crafting_table".equals(item)) {
             return 1;
         }
         return 64;

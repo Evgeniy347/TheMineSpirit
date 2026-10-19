@@ -117,7 +117,13 @@ class TicketPlansTests {
         for (BoardCase boardCase : PLANNED_CASES) {
             TaskNode plan = TicketPlans.plan(boardCase, fullTarget());
 
-            PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+            TaskNode validated = PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+
+            assertEquals(
+                    collectScripts(plan),
+                    collectScripts(validated),
+                    "План случая " + boardCase + " обязан проходить каталог скриптов теми же шагами: иначе доска "
+                            + "выдаст духу задание, которое валидатор отвергнет или перестроит при запуске");
         }
     }
 
@@ -715,7 +721,6 @@ class TicketPlansTests {
                         queue.add(condition.elseStep());
                     }
                 }
-                default -> {}
             }
         }
         throw new AssertionError("В плане нет вызова скрипта " + script + ": без него задание не работает");
@@ -760,7 +765,6 @@ class TicketPlansTests {
                         queue.add(condition.elseStep());
                     }
                 }
-                default -> throw new IllegalArgumentException("Неизвестный узел плана: " + node);
             }
         }
         return scripts;

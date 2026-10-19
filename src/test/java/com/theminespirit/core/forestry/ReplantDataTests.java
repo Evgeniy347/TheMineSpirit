@@ -138,7 +138,7 @@ class ReplantDataTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<ReplantData> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("replant")) {
+            if ("replant".equals(definition.id())) {
                 return (TableDefinition<ReplantData>) definition;
             }
         }

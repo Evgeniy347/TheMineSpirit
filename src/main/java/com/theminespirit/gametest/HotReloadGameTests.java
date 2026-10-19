@@ -92,8 +92,8 @@ public final class HotReloadGameTests {
         int before = DataTables.INSTANCE.armor().current().checkIntervalTicks();
         try {
             reloadFromDatapack(helper, "{ это не json ");
-            boolean reported = DataReload.lastReload().stream()
-                    .anyMatch(report -> report.id().equals("armor") && report.failed());
+            boolean reported =
+                    DataReload.lastReload().stream().anyMatch(report -> "armor".equals(report.id()) && report.failed());
             helper.assertTrue(
                     reported,
                     "битый armor_table.json обязан попасть в отчёт перезагрузки ошибкой: иначе ошибка не видна");
@@ -121,9 +121,9 @@ public final class HotReloadGameTests {
         packs.add(new PathPackResources(
                 new PackLocationInfo("file/" + PACK, Component.literal(PACK), PackSource.WORLD, Optional.empty()),
                 packDir(helper)));
-        MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs);
-        DataReload.reloadFrom(manager);
-        manager.close();
+        try (MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs)) {
+            DataReload.reloadFrom(manager);
+        }
     }
 
     private static void writeDatapack(GameTestHelper helper, String armorJson) {

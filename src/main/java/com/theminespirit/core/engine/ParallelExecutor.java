@@ -167,7 +167,7 @@ final class ParallelExecutor extends NodeExecutor {
     TaskProgress buildProgress() {
         if (children.isEmpty()) {
             List<TaskProgress.ParallelChild> pending = new ArrayList<>(steps.size());
-            for (int i = 0; i < steps.size(); i++) {
+            for (TaskNode ignored : steps) {
                 pending.add(new TaskProgress.ParallelChild(ScriptStatus.RUNNING, null, null));
             }
             return new TaskProgress.ParallelAt(pending);

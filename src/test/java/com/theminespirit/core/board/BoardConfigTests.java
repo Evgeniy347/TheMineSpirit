@@ -442,8 +442,8 @@ class BoardConfigTests {
                 "Пустые таблицы допустимы: недостающее добирают значения по умолчанию из "
                         + "BoardRules, BoardPriorities и BoardTuning");
         assertEquals(
-                BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
                 100,
+                BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
                 "Без строки в таблице работает приоритет по умолчанию: доска не падает на пустом файле");
     }
 }

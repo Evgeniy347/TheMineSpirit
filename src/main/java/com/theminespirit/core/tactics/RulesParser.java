@@ -9,9 +9,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 final class RulesParser {
+    private static final String WHEN = "when";
+    private static final String DECISION = "decision";
+    private static final String NO_ROUTE = "noRoute";
+    private static final String FROM = "from";
     private static final Pattern ID = Pattern.compile("[a-z][a-z0-9_]*");
     private static final String[] SECTIONS = {"hard", "actions", "modeTransitions", "states", "retreat"};
-    private static final String[] PRIORITY_RULE = {"id", "priority", "when", "then"};
+    private static final String[] PRIORITY_RULE = {"id", "priority", WHEN, "then"};
     private static final int MAX_PRIORITY = 1000;
 
     private final Set<String> ids = new HashSet<>();
@@ -51,7 +55,7 @@ final class RulesParser {
             rules.add(new HardRule(
                     claimId(item.get("id")),
                     item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
-                    ConditionParser.parse(item.get("when")),
+                    ConditionParser.parse(item.get(WHEN)),
                     hardEffect(item.get("then"))));
         }
         requireClosingNoRouteRule(section, rules);
@@ -71,26 +75,26 @@ final class RulesParser {
     }
 
     private static HardEffect hardEffect(ConfigNode then) {
-        then.fields(new String[] {}, "decision", "exclude", "noRoute");
-        int effects = (then.has("decision") ? 1 : 0) + (then.has("exclude") ? 1 : 0) + (then.has("noRoute") ? 1 : 0);
+        then.fields(new String[] {}, DECISION, "exclude", NO_ROUTE);
+        int effects = (then.has(DECISION) ? 1 : 0) + (then.has("exclude") ? 1 : 0) + (then.has(NO_ROUTE) ? 1 : 0);
         if (effects != 1) {
             throw then.fail(
                     "нужно ровно одно из полей decision, exclude и noRoute",
                     "правило либо решает (decision), либо вычёркивает варианты (exclude), либо подменяет RETREAT, когда "
                             + "отступать некуда (noRoute)");
         }
-        if (then.has("noRoute")) {
-            TacticalOption option = then.get("noRoute").enumValue(TacticalOption.class);
+        if (then.has(NO_ROUTE)) {
+            TacticalOption option = then.get(NO_ROUTE).enumValue(TacticalOption.class);
             if (option == TacticalOption.RETREAT) {
-                throw then.get("noRoute")
+                throw then.get(NO_ROUTE)
                         .fail(
                                 "подмена RETREAT на RETREAT",
                                 "noRoute заменяет отход, которому некуда идти: допустимы FIGHT и IGNORE");
             }
             return new HardEffect.NoRoute(option);
         }
-        if (then.has("decision")) {
-            return new HardEffect.Decide(then.get("decision").enumValue(TacticalOption.class));
+        if (then.has(DECISION)) {
+            return new HardEffect.Decide(then.get(DECISION).enumValue(TacticalOption.class));
         }
         Set<TacticalOption> excluded = EnumSet.noneOf(TacticalOption.class);
         for (ConfigNode item : then.get("exclude").nonEmptyItems()) {
@@ -107,7 +111,7 @@ final class RulesParser {
             rules.add(new ActionRule(
                     claimId(item.get("id")),
                     item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
-                    ConditionParser.parse(item.get("when")),
+                    ConditionParser.parse(item.get(WHEN)),
                     then.get("action").enumValue(TacticalAction.class)));
         }
         requireClosingRules(section, rules);
@@ -131,12 +135,12 @@ final class RulesParser {
     private List<ModeTransition> modeTransitions(ConfigNode section) {
         List<ModeTransition> transitions = new ArrayList<>();
         for (ConfigNode item : section.items()) {
-            item.fields(new String[] {"id", "from", "to", "when"});
+            item.fields(new String[] {"id", FROM, "to", WHEN});
             transitions.add(new ModeTransition(
                     claimId(item.get("id")),
-                    enums(item.get("from"), CombatMode.class),
+                    enums(item.get(FROM), CombatMode.class),
                     item.get("to").enumValue(CombatMode.class),
-                    ConditionParser.parse(item.get("when"))));
+                    ConditionParser.parse(item.get(WHEN))));
         }
         return transitions;
     }
@@ -144,16 +148,16 @@ final class RulesParser {
     private List<StateTransition> states(ConfigNode section) {
         List<StateTransition> transitions = new ArrayList<>();
         for (ConfigNode item : section.nonEmptyItems()) {
-            item.fields(new String[] {"id", "from", "to", "when"}, "decision");
-            Optional<TacticalOption> decision = item.has("decision")
-                    ? Optional.of(item.get("decision").enumValue(TacticalOption.class))
+            item.fields(new String[] {"id", FROM, "to", WHEN}, DECISION);
+            Optional<TacticalOption> decision = item.has(DECISION)
+                    ? Optional.of(item.get(DECISION).enumValue(TacticalOption.class))
                     : Optional.empty();
             transitions.add(new StateTransition(
                     claimId(item.get("id")),
-                    enums(item.get("from"), TacticalState.class),
+                    enums(item.get(FROM), TacticalState.class),
                     item.get("to").enumValue(TacticalState.class),
                     decision,
-                    ConditionParser.parse(item.get("when"))));
+                    ConditionParser.parse(item.get(WHEN))));
         }
         return transitions;
     }

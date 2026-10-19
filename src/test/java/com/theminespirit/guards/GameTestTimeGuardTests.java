@@ -84,7 +84,7 @@ class GameTestTimeGuardTests {
     private static List<String> offendersIn(Map<Path, String> sources) {
         List<String> offenders = new ArrayList<>();
         sources.forEach((file, text) -> {
-            if (file.getFileName().toString().equals(HELPER)) {
+            if (HELPER.equals(file.getFileName().toString())) {
                 return;
             }
             String[] lines = text.split("\n", -1);

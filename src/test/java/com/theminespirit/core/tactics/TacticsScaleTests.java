@@ -113,8 +113,7 @@ class TacticsScaleTests {
         Situation crowd = fullCrowd();
         TacticsMemory memory = Memories.fresh(crowd);
         TacticalOutcome expected = engine.step(crowd, memory, 5);
-        ExecutorService pool = Executors.newFixedThreadPool(8);
-        try {
+        try (ExecutorService pool = Executors.newFixedThreadPool(8)) {
             List<Future<TacticalOutcome>> results = new ArrayList<>();
             for (int i = 0; i < 64; i++) {
                 results.add(pool.submit(() -> engine.step(crowd, memory, 5)));
@@ -125,8 +124,6 @@ class TacticsScaleTests {
                         result.get(),
                         "Чтение общей конфигурации из разных потоков не меняет результат: конфигурация неизменяема");
             }
-        } finally {
-            pool.shutdownNow();
         }
     }
 }

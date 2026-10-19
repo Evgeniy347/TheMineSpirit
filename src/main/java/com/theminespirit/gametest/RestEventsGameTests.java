@@ -64,15 +64,15 @@ public final class RestEventsGameTests {
                     "Content-Type потока обязан быть text/event-stream, получен "
                             + stream.get().contentType());
             helper.assertTrue(
-                    !frames.isEmpty() && frames.get(0).event().equals("state"),
+                    !frames.isEmpty() && "state".equals(frames.get(0).event()),
                     "Первым кадром обязан идти текущий state, получено " + frames);
             helper.assertTrue(
-                    frames.stream().anyMatch(frame -> frame.event().equals("progress")),
+                    frames.stream().anyMatch(frame -> "progress".equals(frame.event())),
                     "Между шагами sequence обязан прийти хотя бы один progress, кадры " + frames);
             RestFixture.Frame last = frames.get(frames.size() - 1);
             helper.assertTrue(
-                    last.event().equals("state")
-                            && last.json().path("state").asText().equals("succeeded"),
+                    "state".equals(last.event())
+                            && "succeeded".equals(last.json().path("state").asText()),
                     "Завершающим кадром обязан быть state succeeded, получено " + last);
             long previous = -1;
             for (RestFixture.Frame frame : frames.subList(1, frames.size())) {
@@ -103,7 +103,7 @@ public final class RestEventsGameTests {
         RestFixture.await(helper, rest, scenario, () -> {
             if (second.get() == null) {
                 RestFixture.Frame progress = first.get().frames().stream()
-                        .filter(frame -> frame.event().equals("progress"))
+                        .filter(frame -> "progress".equals(frame.event()))
                         .findFirst()
                         .orElse(null);
                 helper.assertTrue(
@@ -136,8 +136,8 @@ public final class RestEventsGameTests {
             }
             RestFixture.Frame last = frames.get(frames.size() - 1);
             helper.assertTrue(
-                    last.event().equals("state")
-                            && last.json().path("state").asText().equals("succeeded"),
+                    "state".equals(last.event())
+                            && "succeeded".equals(last.json().path("state").asText()),
                     "Продолжение обязано дойти до завершающего state succeeded, получено " + last);
         });
     }
@@ -169,19 +169,19 @@ public final class RestEventsGameTests {
                                     : stream.get().lines()));
             List<RestFixture.Frame> frames = stream.get().frames();
             JsonNode failed = frames.stream()
-                    .filter(frame -> frame.event().equals("script_failed"))
+                    .filter(frame -> "script_failed".equals(frame.event()))
                     .findFirst()
                     .map(RestFixture.Frame::json)
                     .orElse(null);
             helper.assertTrue(failed != null, "Провал goto обязан дать кадр script_failed, кадры " + frames);
             helper.assertTrue(
-                    failed.path("script").asText().equals("goto")
+                    "goto".equals(failed.path("script").asText())
                             && !failed.path("reason").asText().isBlank(),
                     "script_failed обязан называть скрипт goto и причину, получено " + failed);
             RestFixture.Frame last = frames.get(frames.size() - 1);
             helper.assertTrue(
-                    last.event().equals("state")
-                            && last.json().path("state").asText().equals("failed"),
+                    "state".equals(last.event())
+                            && "failed".equals(last.json().path("state").asText()),
                     "Завершающим кадром обязан быть state failed, получено " + last);
         });
     }
@@ -315,7 +315,11 @@ public final class RestEventsGameTests {
                                 "429 обязан нести Retry-After в целых секундах (минимум 1), получено '" + retryAfter
                                         + "'");
                         problems.expect(
-                                reply.json().path("error").path("code").asText().equals("rate_limited"),
+                                "rate_limited"
+                                        .equals(reply.json()
+                                                .path("error")
+                                                .path("code")
+                                                .asText()),
                                 "429 обязан нести код rate_limited: " + reply.body());
                     }
                     return problems.found();

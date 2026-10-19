@@ -33,7 +33,7 @@ public final class SettlementExperience extends SavedData {
         return overworld.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
 
-    private static SettlementExperience load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static SettlementExperience load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementExperience data = new SettlementExperience();
         data.pending = tag.getInt(PENDING_KEY);
         return data;

@@ -166,7 +166,7 @@ class ResourceResolverProperties {
     }
 
     private static boolean needsStation(ScriptCall call, String station, ResourceKnowledge knowledge) {
-        boolean crafts = call.script().equals("craft") || call.script().equals("smelt");
+        boolean crafts = "craft".equals(call.script()) || "smelt".equals(call.script());
         return crafts
                 && knowledge
                         .stationFor(String.valueOf(call.params().get("item")))
@@ -175,8 +175,8 @@ class ResourceResolverProperties {
     }
 
     private static boolean producesItem(ScriptCall call, String item) {
-        return (call.script().equals("gather") && item.equals(call.params().get("block")))
-                || (call.script().equals("craft") && item.equals(call.params().get("item")));
+        return ("gather".equals(call.script()) && item.equals(call.params().get("block")))
+                || ("craft".equals(call.script()) && item.equals(call.params().get("item")));
     }
 
     private static TaskNode finalStep(TaskNode plan) {
@@ -259,7 +259,7 @@ class ResourceResolverProperties {
             crafts.put("oven", List.of(new Ingredient(item(0), 2)));
             stations.put("oven", "bench");
             for (String crafted : crafts.keySet()) {
-                if (!crafted.equals("oven") && crafted.hashCode() % 2 == 0) {
+                if (!"oven".equals(crafted) && crafted.hashCode() % 2 == 0) {
                     stations.put(crafted, "bench");
                 }
             }

@@ -15,7 +15,8 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
     public static final String RESOURCE = "data/theminespirit/intellect/outside.json";
     public static final int MIN_PARTY = 2;
 
-    private static final Set<String> FIELDS = Set.of("partyMin", "escortRadius", "mineKit");
+    private static final String MINE_KIT = "mineKit";
+    private static final Set<String> FIELDS = Set.of("partyMin", "escortRadius", MINE_KIT);
     private static final Set<String> NEED_FIELDS = Set.of("match", "category", "count");
     private static final OutsideRules DEFAULTS = new OutsideRules(
             MIN_PARTY,
@@ -55,7 +56,7 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
         JsonResource.checkFields(root, FIELDS, origin, "outside.json");
         int partyMin = JsonResource.integer(root.get("partyMin"), origin, "partyMin");
         double escortRadius = JsonResource.decimal(root.get("escortRadius"), origin, "escortRadius");
-        List<Need> kit = parseKit(root.get("mineKit"), origin);
+        List<Need> kit = parseKit(root.get(MINE_KIT), origin);
         try {
             return new OutsideRules(partyMin, escortRadius, kit);
         } catch (IllegalArgumentException error) {
@@ -64,14 +65,14 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
     }
 
     private static List<Need> parseKit(JsonNode node, String origin) {
-        List<JsonNode> items = JsonResource.array(node, origin, "mineKit");
+        List<JsonNode> items = JsonResource.array(node, origin, MINE_KIT);
         List<Need> kit = new ArrayList<>(items.size());
         for (JsonNode item : items) {
             if (!item.isObject()) {
                 throw new IllegalStateException(
                         "Файл '" + origin + "': у mineKit элемент не объект с полями match, category, count");
             }
-            JsonResource.checkFields(item, NEED_FIELDS, origin, "mineKit");
+            JsonResource.checkFields(item, NEED_FIELDS, origin, MINE_KIT);
             List<String> match =
                     item.has("match") ? JsonResource.strings(item.get("match"), origin, "match набора шахты") : null;
             String category = item.has("category")

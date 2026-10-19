@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<ruleset name="the-mine-spirit-main"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>
+    PMD для production (tasks/46 п.5): категории errorprone и bestpractices. Выключенные правила — с причиной ниже;
+    стиль и форматирование держат Spotless и Checkstyle, null — NullAway, сравнение ссылок — Error Prone.
+  </description>
+
+  <rule ref="category/java/errorprone.xml">
+    <!-- Аксессоры в стиле record (name() у поля name) — принятый в проекте стиль, а не путаница имён. -->
+    <exclude name="AvoidFieldNameMatchingMethodName"/>
+    <!-- GameTest-классы *GameTests лежат в main и не содержат JUnit-тестов: правило считает их пустыми тестами. -->
+    <exclude name="TestClassWithoutTestCases"/>
+    <!-- null в core держит NullAway (@Nullable JSpecify): присваивание null там явно разрешено типом. -->
+    <exclude name="NullAssignment"/>
+    <!-- Сравнение ссылок проверяет Error Prone ReferenceEquality, который знает реестровые синглтоны Minecraft. -->
+    <exclude name="CompareObjectsWithEquals"/>
+    <!-- Пороговые числа в if — читаемые границы из таблиц и тюнинга; магические числа вынесены в константы. -->
+    <exclude name="AvoidLiteralsInIfCondition"/>
+    <!-- Граница отказа: сбой одного скрипта, запроса REST или таблицы не роняет тик сервера, а становится отказом
+         задачи/ответом 500/старой таблицей. Молчаливый catch запрещает SilentCatchGuardTests. -->
+    <exclude name="AvoidCatchingGenericException"/>
+    <!-- Java-сериализацию проект не использует (сохранение — NBT и JSON); enum сериализуется по имени. -->
+    <exclude name="NonSerializableClass"/>
+    <!-- В NeoForge классы и ресурсы мода видит загрузчик класса мода; контекстный загрузчик потока — чужой. -->
+    <exclude name="UseProperClassLoader"/>
+    <exclude name="AssignmentInOperand"/>
+    <exclude name="EmptyCatchBlock"/>
+    <exclude name="AvoidDuplicateLiterals"/>
+    <exclude name="CloseResource"/>
+    <!-- null-возврат в core разрешён только с @Nullable (NullAway) и значит «нет» в отличие от «пусто»: поле JSON
+         опускается, клетка не на краю, необязательного поля нет. -->
+    <exclude name="ReturnEmptyCollectionRatherThanNull"/>
+    <!-- Поиск первого подходящего: охранные continue и return в конце цикла читаются лучше вложенного if. -->
+    <exclude name="AvoidBranchingStatementAsLastInLoop"/>
+  </rule>
+
+  <!-- Повтор ключа JSON или параметра — риск опечатки в одном из мест: константа. Не считаем: аннотации
+       (@GameTest(template, batch)); сцены GameTest — тесты, хоть и в main: таблица и текст сообщения повторяются
+       намеренно; русский текст сообщений — проза для человека, а не ключ: кусок «Поле '» в константе читается хуже. -->
+  <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+    <properties>
+      <property name="skipAnnotations" value="true"/>
+      <!-- PMD пишет литерал в сообщении с экранированием \uXXXX: кириллица — \u04xx. -->
+      <property name="violationSuppressRegex" value=".*\\u04[0-9a-f]{2}.*"/>
+      <property name="violationSuppressXPath"
+                value="ancestor::CompilationUnit/PackageDeclaration[@Name = 'com.theminespirit.gametest']"/>
+    </properties>
+  </rule>
+
+  <!-- Мир и сервер Minecraft (Level, ServerLevel, MinecraftServer) закрывает сама игра: мод их только читает. -->
+  <rule ref="category/java/errorprone.xml/CloseResource">
+    <properties>
+      <property name="allowedResourceTypes"
+                value="net.minecraft.world.level.Level,net.minecraft.server.level.ServerLevel,net.minecraft.server.MinecraftServer,net.minecraft.gametest.framework.GameTestServer"/>
+    </properties>
+  </rule>
+
+  <!-- counter++ в выражении и цикл чтения while ((x = next()) != null) — обычные идиомы Java. -->
+  <rule ref="category/java/errorprone.xml/AssignmentInOperand">
+    <properties>
+      <property name="allowIncrementDecrement" value="true"/>
+      <property name="allowWhile" value="true"/>
+    </properties>
+  </rule>
+
+  <!-- Пустой catch допустим только с комментарием-причиной (её же требует SilentCatchGuardTests). -->
+  <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+    <properties>
+      <property name="allowCommentedBlocks" value="true"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml">
+    <!-- Ошибка разбора ввода (число, JSON) переводится в ответ 400 или сообщение для человека с полным текстом:
+         стек NumberFormatException — следствие ввода, а не сбой кода. -->
+    <exclude name="PreserveStackTrace"/>
+    <!-- Массив в параметре у нас — изменяемый держатель результата или упакованные данные, а не список
+         аргументов: varargs исказил бы смысл вызова. -->
+    <exclude name="UseVarargs"/>
+    <!-- Адрес привязки REST по умолчанию 0.0.0.0 (LAN, решение владельца) и петля 127.0.0.1 в сценах — не зашитый
+         адрес чужого сервера. -->
+    <exclude name="AvoidUsingHardCodedIP"/>
+    <exclude name="AvoidAccessibilityAlteration"/>
+    <exclude name="LooseCoupling"/>
+    <!-- Логирование slf4j с {} не строит строку при выключенном уровне: охрана isDebugEnabled() не нужна. -->
+    <exclude name="GuardLogStatement"/>
+  </rule>
+
+  <!-- Рефлексия в обход доступа запрещена, кроме обвязки GameTest (тестовый код в main): фильтр пачек меняет
+       закрытые списки тестов Minecraft, у которых нет API. -->
+  <rule ref="category/java/bestpractices.xml/AvoidAccessibilityAlteration">
+    <properties>
+      <property name="violationSuppressXPath"
+                value="ancestor::CompilationUnit/PackageDeclaration[@Name = 'com.theminespirit.gametest']"/>
+    </properties>
+  </rule>
+
+  <!-- Тип объявления — интерфейс коллекции. Исключения: типы API Minecraft и JDK, чьи собственные методы нужны
+       (ListTag.getCompound, NonNullList, Headers HTTP-сервера); IdentityHashMap объявляется явно — сравнение по
+       ссылке, этого требует Error Prone IdentityHashMapUsage. -->
+  <rule ref="category/java/bestpractices.xml/LooseCoupling">
+    <properties>
+      <property name="allowedTypes"
+                value="java.util.Properties,java.util.IdentityHashMap,net.minecraft.nbt.ListTag,net.minecraft.core.NonNullList,com.sun.net.httpserver.Headers"/>
+    </properties>
+  </rule>
+</ruleset>

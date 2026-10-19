@@ -100,10 +100,9 @@ class MethodShapeGuardTests {
             throw new UncheckedIOException("Сторож не смог прочитать исходники в " + root, error);
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
-        JavacTask task = (JavacTask) compiler.getTask(
-                null, manager, null, List.of("-proc:none"), null, manager.getJavaFileObjectsFromPaths(files));
-        try {
+        try (StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null)) {
+            JavacTask task = (JavacTask) compiler.getTask(
+                    null, manager, null, List.of("-proc:none"), null, manager.getJavaFileObjectsFromPaths(files));
             List<Violation> found = inspect(task, exceptions);
             return found.stream()
                     .map(violation -> violation.file() + ":" + violation.line() + " " + violation.owner()
@@ -164,7 +163,7 @@ class MethodShapeGuardTests {
                     List<String> names = new ArrayList<>();
                     for (VariableTree parameter : node.getParameters()) {
                         names.add(parameter.getName().toString());
-                        if (parameter.getType().toString().equals("boolean")) {
+                        if ("boolean".equals(parameter.getType().toString())) {
                             booleans++;
                         }
                     }

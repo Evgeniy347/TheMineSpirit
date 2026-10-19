@@ -44,7 +44,7 @@ public final class CookableFoods {
         return item != null
                 && (COOKED.contains(item)
                         || item.startsWith("minecraft:cooked_")
-                        || item.equals("minecraft:baked_potato"));
+                        || "minecraft:baked_potato".equals(item));
     }
 
     public static Optional<String> cooked(String raw) {

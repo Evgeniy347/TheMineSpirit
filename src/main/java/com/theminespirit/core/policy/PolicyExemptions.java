@@ -12,12 +12,12 @@ public final class PolicyExemptions {
 
     private final Set<PolicyId> exemptions;
 
-    private PolicyExemptions(EnumSet<PolicyId> exemptions) {
+    private PolicyExemptions(Set<PolicyId> exemptions) {
         this.exemptions = Set.copyOf(exemptions);
     }
 
     public static PolicyExemptions of(PolicyId... ids) {
-        EnumSet<PolicyId> chosen = EnumSet.noneOf(PolicyId.class);
+        Set<PolicyId> chosen = EnumSet.noneOf(PolicyId.class);
         for (PolicyId id : ids) {
             Objects.requireNonNull(
                     id, "Политика в списке исключений не может быть null: проверьте вызов PolicyExemptions.of");
@@ -48,7 +48,7 @@ public final class PolicyExemptions {
         if (exemptions.isEmpty()) {
             return other;
         }
-        EnumSet<PolicyId> merged = EnumSet.copyOf(exemptions);
+        Set<PolicyId> merged = EnumSet.copyOf(exemptions);
         merged.addAll(other.exemptions);
         return new PolicyExemptions(merged);
     }

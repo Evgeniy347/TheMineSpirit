@@ -7,7 +7,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.InvalidFieldException;
 import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,7 +110,7 @@ public record DefenseProfile(
                 throw new InvalidFieldException(
                         field, field + " для " + entry.getKey() + " пуст: отряд без порядка целей бьёт кого попало");
             }
-            Set<TargetClass> seen = new HashSet<>();
+            Set<TargetClass> seen = EnumSet.noneOf(TargetClass.class);
             for (TargetClass cls : entry.getValue()) {
                 if (cls == null || !seen.add(cls)) {
                     throw new InvalidFieldException(

@@ -825,12 +825,12 @@ class AcquireScriptTests {
     private static final class FuelAwareKnowledge implements ResourceKnowledge {
         @Override
         public boolean isGatherable(String item) {
-            return item.equals("raw_iron") || item.equals("coal") || item.equals("cobblestone");
+            return "raw_iron".equals(item) || "coal".equals(item) || "cobblestone".equals(item);
         }
 
         @Override
         public boolean isCraftable(String item) {
-            return item.equals("furnace");
+            return "furnace".equals(item);
         }
 
         @Override
@@ -845,7 +845,7 @@ class AcquireScriptTests {
 
         @Override
         public boolean isSmeltable(String item) {
-            return item.equals("iron_ingot");
+            return "iron_ingot".equals(item);
         }
 
         @Override
@@ -855,12 +855,12 @@ class AcquireScriptTests {
 
         @Override
         public Optional<String> stationFor(String item) {
-            return item.equals("iron_ingot") ? Optional.of("furnace") : Optional.empty();
+            return "iron_ingot".equals(item) ? Optional.of("furnace") : Optional.empty();
         }
 
         @Override
         public int burnTicks(String item) {
-            return item.equals("coal") ? 1600 : 0;
+            return "coal".equals(item) ? 1600 : 0;
         }
     }
 

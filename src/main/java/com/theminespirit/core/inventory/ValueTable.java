@@ -14,10 +14,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class ValueTable {
     public static final int VALUE_LIMIT = 100_000;
 
+    private static final String MATCH = "match";
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/item_values.json";
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "default", "categories");
-    private static final Set<String> RULE_FIELDS = Set.of("match", "value");
-    private static final Set<String> CATEGORY_FIELDS = Set.of("name", "match");
+    private static final Set<String> RULE_FIELDS = Set.of(MATCH, "value");
+    private static final Set<String> CATEGORY_FIELDS = Set.of("name", MATCH);
 
     private final String origin;
     private final List<ValueRule> rules;
@@ -132,7 +133,7 @@ public final class ValueTable {
                                 + ": отрицательная ценность правила делает выбор «самое дешёвое» бессмысленным");
             }
             rules.add(rule(
-                    JsonResource.strings(ruleNode.get("match"), origin, "поля match правила №" + index),
+                    JsonResource.strings(ruleNode.get(MATCH), origin, "поля match правила №" + index),
                     value,
                     origin,
                     "правила №" + index));
@@ -158,7 +159,7 @@ public final class ValueTable {
             String name = JsonResource.text(categoryNode.get("name"), origin, "поля name категории №" + index);
             categories.add(category(
                     name,
-                    JsonResource.strings(categoryNode.get("match"), origin, "поля match категории №" + index),
+                    JsonResource.strings(categoryNode.get(MATCH), origin, "поля match категории №" + index),
                     origin,
                     "категории №" + index));
             names.add(name);
@@ -234,7 +235,7 @@ public final class ValueTable {
     }
 
     private static boolean subsumes(String wide, String narrow) {
-        if (wide.equals(narrow) || wide.equals("*")) {
+        if (wide.equals(narrow) || "*".equals(wide)) {
             return true;
         }
         return narrow.indexOf('*') < 0 && IdFilter.of(List.of(wide)).matches(narrow);

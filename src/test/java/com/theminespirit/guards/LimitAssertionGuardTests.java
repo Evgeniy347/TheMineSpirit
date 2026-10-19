@@ -133,9 +133,9 @@ class LimitAssertionGuardTests {
                 return false;
             }
             String token = matcher.group();
-            if (token.equals("true")
-                    || token.equals("false")
-                    || token.equals("null")
+            if ("true".equals(token)
+                    || "false".equals(token)
+                    || "null".equals(token)
                     || token.startsWith("\"")
                     || token.startsWith("'")
                     || Character.isDigit(token.charAt(0))) {

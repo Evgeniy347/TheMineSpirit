@@ -77,7 +77,7 @@ class DocsMapGuardTests {
 
         assertEquals(
                 List.of(),
-                brokenLinks(links, path -> path.equals("docs/a.md")),
+                brokenLinks(links, path -> "docs/a.md".equals(path)),
                 "Сторож ложно срабатывает: якорь, внешняя ссылка и локальный якорь не проверяются как пути, "
                         + "а существующий путь не битый");
     }
@@ -103,7 +103,7 @@ class DocsMapGuardTests {
         maps.put(README.toString(), read(README));
         try (Stream<Path> files = Files.walk(DOCS)) {
             for (Path file : files.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().equals("README.md"))
+                    .filter(path -> "README.md".equals(path.getFileName().toString()))
                     .toList()) {
                 maps.put(file.toString(), read(file));
             }

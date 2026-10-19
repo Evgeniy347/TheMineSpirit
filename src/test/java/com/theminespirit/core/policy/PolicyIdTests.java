@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.EnumSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PolicyIdTests {
     @Test
     void values_ContainsAllExpectedPolicies_ExactlyEleven() {
-        EnumSet<PolicyId> expected = EnumSet.of(
+        Set<PolicyId> expected = EnumSet.of(
                 PolicyId.LAVA_FIRE,
                 PolicyId.DROP,
                 PolicyId.WATER,

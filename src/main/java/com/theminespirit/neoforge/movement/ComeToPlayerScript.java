@@ -38,7 +38,7 @@ public final class ComeToPlayerScript implements ScriptInstance {
             player = findPlayer();
             if (player == null) {
                 return fail(
-                        playerName.equals(NEAREST)
+                        NEAREST.equals(playerName)
                                 ? "на сервере нет игрока, к которому можно подойти"
                                 : "игрок '" + playerName + "' не найден на сервере");
             }
@@ -89,7 +89,7 @@ public final class ComeToPlayerScript implements ScriptInstance {
             return null;
         }
         spirit.countEntityQuery();
-        if (playerName.equals(NEAREST)) {
+        if (NEAREST.equals(playerName)) {
             return (ServerPlayer) level.getNearestPlayer(spirit, -1.0);
         }
         for (ServerPlayer candidate : level.players()) {

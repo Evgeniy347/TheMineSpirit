@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -21,7 +22,7 @@ class ActivityLedgerProperties {
                 .ofMinSize(1)
                 .ofMaxSize(5)
                 .map(list -> {
-                    LinkedHashSet<UUID> unique = new LinkedHashSet<>(list);
+                    Set<UUID> unique = new LinkedHashSet<>(list);
                     return List.copyOf(unique);
                 });
     }

@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<ruleset name="the-mine-spirit-test"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>
+    PMD для тестов (tasks/46 п.5): тот же набор, что config/pmd/main.xml, и выключения, уместные только в тестах.
+  </description>
+
+  <rule ref="category/java/errorprone.xml">
+    <!-- Аксессоры в стиле record (name() у поля name) — принятый в проекте стиль, а не путаница имён. -->
+    <exclude name="AvoidFieldNameMatchingMethodName"/>
+    <!-- GameTest-классы *GameTests лежат в main и не содержат JUnit-тестов: правило считает их пустыми тестами. -->
+    <exclude name="TestClassWithoutTestCases"/>
+    <!-- null в core держит NullAway (@Nullable JSpecify): присваивание null там явно разрешено типом. -->
+    <exclude name="NullAssignment"/>
+    <!-- Сравнение ссылок проверяет Error Prone ReferenceEquality, который знает реестровые синглтоны Minecraft. -->
+    <exclude name="CompareObjectsWithEquals"/>
+    <!-- Пороговые числа в if — читаемые границы из таблиц и тюнинга; магические числа вынесены в константы. -->
+    <exclude name="AvoidLiteralsInIfCondition"/>
+    <!-- Граница отказа: сбой одного скрипта, запроса REST или таблицы не роняет тик сервера, а становится отказом
+         задачи/ответом 500/старой таблицей. Молчаливый catch запрещает SilentCatchGuardTests. -->
+    <exclude name="AvoidCatchingGenericException"/>
+    <!-- Java-сериализацию проект не использует (сохранение — NBT и JSON); enum сериализуется по имени. -->
+    <exclude name="NonSerializableClass"/>
+    <!-- В NeoForge классы и ресурсы мода видит загрузчик класса мода; контекстный загрузчик потока — чужой. -->
+    <exclude name="UseProperClassLoader"/>
+    <exclude name="AssignmentInOperand"/>
+    <exclude name="EmptyCatchBlock"/>
+    <!-- Строка таблицы и текст сообщения повторяются в тестах намеренно: тест читается без перехода к константе. -->
+    <exclude name="AvoidDuplicateLiterals"/>
+    <exclude name="CloseResource"/>
+    <!-- null-возврат в core разрешён только с @Nullable (NullAway) и значит «нет» в отличие от «пусто». -->
+    <exclude name="ReturnEmptyCollectionRatherThanNull"/>
+    <!-- Поиск первого подходящего: охранные continue и return в конце цикла читаются лучше вложенного if. -->
+    <exclude name="AvoidBranchingStatementAsLastInLoop"/>
+  </rule>
+
+  <!-- counter++ в выражении и цикл чтения while ((x = next()) != null) — обычные идиомы Java. -->
+  <rule ref="category/java/errorprone.xml/AssignmentInOperand">
+    <properties>
+      <property name="allowIncrementDecrement" value="true"/>
+      <property name="allowWhile" value="true"/>
+    </properties>
+  </rule>
+
+  <!-- Пустой catch допустим только с комментарием-причиной (её же требует SilentCatchGuardTests). -->
+  <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+    <properties>
+      <property name="allowCommentedBlocks" value="true"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml">
+    <!-- Ошибка разбора ввода (число, JSON) переводится в ответ 400 или сообщение для человека с полным текстом:
+         стек NumberFormatException — следствие ввода, а не сбой кода. -->
+    <exclude name="PreserveStackTrace"/>
+    <!-- Массив в параметре у нас — изменяемый держатель результата или упакованные данные, а не список
+         аргументов: varargs исказил бы смысл вызова. -->
+    <exclude name="UseVarargs"/>
+    <!-- Адрес привязки REST по умолчанию 0.0.0.0 (LAN, решение владельца) и петля 127.0.0.1 в сценах — не зашитый
+         адрес чужого сервера. -->
+    <exclude name="AvoidUsingHardCodedIP"/>
+    <exclude name="LooseCoupling"/>
+    <!-- Логирование slf4j с {} не строит строку при выключенном уровне: охрана isDebugEnabled() не нужна. -->
+    <exclude name="GuardLogStatement"/>
+    <!-- Тест проверяет один сценарий несколькими утверждениями; имя subject_Condition_Expected держит сторож. -->
+    <exclude name="UnitTestContainsTooManyAsserts"/>
+    <exclude name="UnitTestShouldIncludeAssert"/>
+    <exclude name="UnitTestShouldUseTestAnnotation"/>
+    <exclude name="AvoidReassigningLoopVariables"/>
+    <!-- TestCostReporter — консольная утилита отчёта о цене тестов: её вывод и есть stdout. -->
+    <exclude name="SystemPrintln"/>
+  </rule>
+
+  <!-- Мир и сервер Minecraft (Level, ServerLevel, MinecraftServer) закрывает сама игра: мод их только читает. -->
+  <!-- В тестах ещё и двойники потоков (ScriptedStream, RecordingOutput) и проверяемый TaskEventStream: тест сам
+       проверяет, кто и когда их закрывает. -->
+  <rule ref="category/java/errorprone.xml/CloseResource">
+    <properties>
+      <property name="allowedResourceTypes"
+                value="net.minecraft.world.level.Level,net.minecraft.server.level.ServerLevel,net.minecraft.server.MinecraftServer,net.minecraft.gametest.framework.GameTestServer,com.theminespirit.core.rest.SseWriterTests.ScriptedStream,com.theminespirit.core.rest.SseWriterTests.RecordingOutput,com.theminespirit.core.rest.TaskEventStream"/>
+    </properties>
+  </rule>
+
+
+  <!-- Тип объявления — интерфейс коллекции. Исключения: типы API Minecraft и JDK, чьи собственные методы нужны
+       (ListTag.getCompound, NonNullList, Headers HTTP-сервера); IdentityHashMap объявляется явно — сравнение по
+       ссылке, этого требует Error Prone IdentityHashMapUsage. -->
+  <!-- В тестах ещё и счётчики-двойники коллекций: тест читает их счётчик обращений. -->
+  <rule ref="category/java/bestpractices.xml/LooseCoupling">
+    <properties>
+      <property name="allowedTypes"
+                value="java.util.Properties,java.util.IdentityHashMap,net.minecraft.nbt.ListTag,net.minecraft.core.NonNullList,com.sun.net.httpserver.Headers,com.theminespirit.core.farming.FarmPlannerTests$CountingLookups,com.theminespirit.core.farming.HydrationTests$CountingWater,com.theminespirit.core.inventory.TransferPlannerTests$CountingSlots"/>
+    </properties>
+  </rule>
+
+  <!-- Утверждение может жить в помощнике теста: rejected(...) проверяет отказ разбора. -->
+  <rule ref="category/java/bestpractices.xml/UnitTestShouldIncludeAssert">
+    <properties>
+      <property name="extraAssertMethodNames" value="rejected"/>
+    </properties>
+  </rule>
+
+  <!-- Переопределение слушателя JUnit Platform (testPlanExecutionStarted) — не тест. -->
+  <rule ref="category/java/bestpractices.xml/UnitTestShouldUseTestAnnotation">
+    <properties>
+      <property name="violationSuppressXPath" value="self::MethodDeclaration[@Overridden = true()]"/>
+    </properties>
+  </rule>
+
+  <!-- Сканеры текста в сторожах перескакивают литералы и комментарии, двигая индекс цикла. -->
+  <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables">
+    <properties>
+      <property name="forReassign" value="allow"/>
+    </properties>
+  </rule>
+</ruleset>

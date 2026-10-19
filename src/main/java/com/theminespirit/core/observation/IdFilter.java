@@ -70,7 +70,7 @@ public final class IdFilter {
                         + pattern.charAt(i) + "': разрешены a-z, 0-9, _ : . / - и подстановка *");
             }
         }
-        return pattern.equals(ANY_PATTERN) ? pattern : qualify(pattern);
+        return ANY_PATTERN.equals(pattern) ? pattern : qualify(pattern);
     }
 
     private static String qualify(String id) {

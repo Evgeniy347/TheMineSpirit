@@ -117,7 +117,8 @@ class AcquireSuppliesTests {
             }
 
             @Override
-            public List<ScriptCall> withdraw(String item, int maxCount) {
+            public List<ScriptCall> withdraw(String item, int requested) {
+                int maxCount = requested;
                 Objects.requireNonNull(item, "item не может быть null: перенос идёт по имени предмета");
                 List<ScriptCall> steps = new ArrayList<>();
                 for (Map.Entry<String, Map<String, Integer>> chest : chests.entrySet()) {

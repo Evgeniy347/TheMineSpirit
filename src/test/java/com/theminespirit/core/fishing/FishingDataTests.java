@@ -172,7 +172,7 @@ class FishingDataTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<FishingData> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("fishing")) {
+            if ("fishing".equals(definition.id())) {
                 return (TableDefinition<FishingData>) definition;
             }
         }

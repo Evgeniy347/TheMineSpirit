@@ -16,7 +16,7 @@ public record ScoreWeights(
     public static final double MAX_WEIGHT = 10;
 
     public ScoreWeights {
-        EnumMap<Factor, Map<TacticalOption, Double>> rows = new EnumMap<>(Factor.class);
+        Map<Factor, Map<TacticalOption, Double>> rows = new EnumMap<>(Factor.class);
         for (Factor factor : Factor.values()) {
             Map<TacticalOption, Double> row = matrix.get(factor);
             if (row == null || row.size() != TacticalOption.values().length) {

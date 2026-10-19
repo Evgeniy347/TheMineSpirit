@@ -19,8 +19,8 @@ class SafeMinePlanProperties {
         }
         BlockCoord entry = new BlockCoord(3, entryY, -5);
         CellWorld world = new CellWorld();
-        for (int floor = entryY - 1, index = 0; floor >= targetY; floor--, index++) {
-            world.set(3 + index, floor, -5, Cell.SOLID);
+        for (int floor = entryY - 1; floor >= targetY; floor--) {
+            world.set(3 + (entryY - 1 - floor), floor, -5, Cell.SOLID);
         }
 
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, targetY, 4);

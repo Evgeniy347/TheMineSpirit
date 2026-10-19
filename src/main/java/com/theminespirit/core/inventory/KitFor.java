@@ -17,9 +17,11 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class KitFor {
-    private static final Set<String> ROOT_FIELDS = Set.of("activities", "child");
-    private static final Set<String> ACTIVITY_FIELDS = Set.of("scripts", "rules");
-    private static final Set<String> CHILD_FIELDS = Set.of("rules");
+    private static final String CHILD = "child";
+    private static final String RULES = "rules";
+    private static final Set<String> ROOT_FIELDS = Set.of("activities", CHILD);
+    private static final Set<String> ACTIVITY_FIELDS = Set.of("scripts", RULES);
+    private static final Set<String> CHILD_FIELDS = Set.of(RULES);
 
     private final String origin;
     private final List<Activity> activities;
@@ -59,8 +61,7 @@ public final class KitFor {
         List<String> names = new ArrayList<>();
         activitiesNode.fieldNames().forEachRemaining(names::add);
         List<Activity> activities = new ArrayList<>(names.size());
-        for (int index = 0; index < names.size(); index++) {
-            String name = names.get(index);
+        for (String name : names) {
             JsonNode value = activitiesNode.get(name);
             if (!value.isObject()) {
                 throw new IllegalStateException(
@@ -73,7 +74,7 @@ public final class KitFor {
                 throw new IllegalStateException("Файл '" + origin + "': у деятельности '" + name
                         + "' пустой список scripts: деятельность без скриптов не узнаётся в задачах духа");
             }
-            activities.add(new Activity(name, scripts, parseRules(value.get("rules"), origin, name)));
+            activities.add(new Activity(name, scripts, parseRules(value.get(RULES), origin, name)));
         }
         List<Activity> byName = new ArrayList<>();
         for (Activity activity : activities) {
@@ -85,7 +86,7 @@ public final class KitFor {
             }
             byName.add(activity);
         }
-        List<KitRule> childRules = parseRules(childRulesNode(root, origin).get("rules"), origin, "child");
+        List<KitRule> childRules = parseRules(childRulesNode(root, origin).get(RULES), origin, CHILD);
         List<String> childNeverGiveAway = JsonResource.optionalStrings(
                 childRulesNode(root, origin).get("never_give_away"), origin, "списка never_give_away child");
         return new KitFor(origin, byName, childRules, childNeverGiveAway);
@@ -185,12 +186,12 @@ public final class KitFor {
     }
 
     private static JsonNode childRulesNode(JsonNode root, String origin) {
-        JsonNode node = root.get("child");
+        JsonNode node = root.get(CHILD);
         if (node == null || !node.isObject()) {
             throw new IllegalStateException("Файл '" + origin
                     + "' без объекта child: без детского набора ребёнок носил бы весь взрослый набор");
         }
-        JsonResource.checkFields(node, CHILD_FIELDS, origin, "child");
+        JsonResource.checkFields(node, CHILD_FIELDS, origin, CHILD);
         return node;
     }
 

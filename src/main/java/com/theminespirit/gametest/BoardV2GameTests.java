@@ -571,7 +571,7 @@ public final class BoardV2GameTests {
                 "После уровня 1 ставится уровень 2 (кольцо 15 полок), фактически " + levelTwo);
         helper.assertTrue(
                 board.board().claimable(new StockView(Map.of()), now + 2).stream()
-                        .noneMatch(ticket -> ticket.id().equals("enchant_room_2")),
+                        .noneMatch(ticket -> "enchant_room_2".equals(ticket.id())),
                 "Без полок/книг уровень 2 не выдаётся: гейт держит полки");
         helper.assertTrue(
                 board.board().statusOf("enchant_room_2").orElse(null) == BoardStatus.WAITING_RESOURCES,
@@ -584,7 +584,7 @@ public final class BoardV2GameTests {
                         + active(board, BoardCase.ENCHANT_ROOM));
         helper.assertTrue(
                 board.board().claimable(new StockView(Map.of("bookshelf", 15)), now + 3).stream()
-                        .anyMatch(ticket -> ticket.id().equals("enchant_room_2")),
+                        .anyMatch(ticket -> "enchant_room_2".equals(ticket.id())),
                 "С 15 полками уровень 2 выходит из гейта: книг хватает на кольцо");
         helper.assertTrue(
                 board.board().claim("enchant_room_2", spirit.getUUID(), now + 3) != BoardOutcome.NOT_FOUND,
@@ -866,9 +866,9 @@ public final class BoardV2GameTests {
                 new PackLocationInfo(
                         "file/" + packName, Component.literal(packName), PackSource.WORLD, Optional.empty()),
                 pack));
-        MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs);
-        DataReload.reloadFrom(manager);
-        manager.close();
+        try (MultiPackResourceManager manager = new MultiPackResourceManager(PackType.SERVER_DATA, packs)) {
+            DataReload.reloadFrom(manager);
+        }
     }
 
     private static Path packDir(GameTestHelper helper, String packName) {

@@ -20,6 +20,6 @@ public record Decision(
     }
 
     public DecisionSource source() {
-        return rule.equals(BY_SCORE) || rule.equals(HELD) ? DecisionSource.SCORE : DecisionSource.RULE;
+        return BY_SCORE.equals(rule) || HELD.equals(rule) ? DecisionSource.SCORE : DecisionSource.RULE;
     }
 }

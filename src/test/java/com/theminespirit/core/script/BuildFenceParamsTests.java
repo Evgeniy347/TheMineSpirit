@@ -86,7 +86,7 @@ class BuildFenceParamsTests {
         assertEquals(
                 "",
                 fence.params().stream()
-                        .filter(param -> param.name().equals("gate"))
+                        .filter(param -> "gate".equals(param.name()))
                         .findFirst()
                         .orElseThrow()
                         .defaultValue(),
@@ -94,7 +94,7 @@ class BuildFenceParamsTests {
         assertEquals(
                 CatalogLimits.SHELTER_SIDE_MAX,
                 shelter.params().stream()
-                        .filter(param -> param.name().equals("side"))
+                        .filter(param -> "side".equals(param.name()))
                         .findFirst()
                         .orElseThrow()
                         .defaultValue(),

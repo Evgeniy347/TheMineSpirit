@@ -23,8 +23,8 @@ class CombatTuningTests {
     @Test
     void combatTuning_DangerRadius_MatchesDefensivePursuitRadius() {
         assertEquals(
-                DEFENSIVE.pursuit(0),
                 CombatTuning.DANGER_RADIUS,
+                DEFENSIVE.pursuit(0),
                 "Радиус опасности обязан совпадать с преследованием оборонительного режима из modes.json: "
                         + "это один и тот же рубеж «дальше — не догоняют», и расхождение сделало бы бегство "
                         + "ложным (враги в зоне, а дух считает себя спасшимся)");

@@ -27,7 +27,7 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public FeedTable {
         Objects.requireNonNull(feeds, "Таблица кормов не может быть null: без неё неизвестно, чем кормить стадо");
-        EnumMap<Species, List<String>> checked = new EnumMap<>(Species.class);
+        Map<Species, List<String>> checked = new EnumMap<>(Species.class);
         for (Species species : Species.all()) {
             List<String> foods = feeds.get(species);
             if (foods == null || foods.isEmpty()) {

@@ -191,7 +191,6 @@ class RelocatePlanTests {
                         queue.add(condition.elseStep());
                     }
                 }
-                default -> throw new IllegalArgumentException("Неизвестный узел плана: " + node);
             }
         }
         return scripts;

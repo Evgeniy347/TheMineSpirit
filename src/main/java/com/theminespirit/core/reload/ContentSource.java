@@ -8,6 +8,7 @@ import java.util.Optional;
  * Источник содержимого таблиц на момент перезагрузки. Ядро не знает про ресурс-менеджер NeoForge: адаптер
  * передаёт реализацию, читающую json из серверных ресурсов (мод и датапаки мира). Для тестов — карта.
  */
+@FunctionalInterface
 public interface ContentSource {
     Optional<LoadedContent> read(String resourcePath);
 

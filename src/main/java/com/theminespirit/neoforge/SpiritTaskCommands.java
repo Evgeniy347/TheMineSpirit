@@ -34,22 +34,24 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
 final class SpiritTaskCommands {
+    private static final String SPIRITS = "spirits";
+
     private SpiritTaskCommands() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("goal")
-                .then(argument("spirits", EntityArgument.entities())
+                .then(argument(SPIRITS, EntityArgument.entities())
                         .then(argument("goal", StringArgumentType.greedyString())
                                 .executes(SpiritTaskCommands::goal))));
         spirit.then(literal("status")
-                .then(argument("spirits", EntityArgument.entities()).executes(SpiritTaskCommands::status)));
+                .then(argument(SPIRITS, EntityArgument.entities()).executes(SpiritTaskCommands::status)));
         spirit.then(literal("cancel")
-                .then(argument("spirits", EntityArgument.entities()).executes(SpiritTaskCommands::cancel)));
+                .then(argument(SPIRITS, EntityArgument.entities()).executes(SpiritTaskCommands::cancel)));
     }
 
     private static int goal(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
+        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
         String text = StringArgumentType.getString(ctx, "goal");
         List<SpiritEntity> spirits = filterSpirits(selected);
         if (spirits.isEmpty()) {
@@ -123,7 +125,7 @@ final class SpiritTaskCommands {
 
     private static int status(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
+        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
         List<SpiritEntity> spirits = filterSpirits(selected);
         if (spirits.isEmpty()) {
             source.sendFailure(Component.literal("Среди выбранных сущностей нет духа: статус смотреть нечего"));
@@ -146,7 +148,7 @@ final class SpiritTaskCommands {
 
     private static int cancel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, "spirits");
+        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
         List<SpiritEntity> spirits = filterSpirits(selected);
         if (spirits.isEmpty()) {
             source.sendFailure(Component.literal("Среди выбранных сущностей нет духа: отменять нечего"));

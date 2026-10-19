@@ -41,8 +41,7 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String frame = stream.nextFrame();
 
             assertTrue(frame.startsWith("id: 2\n"), "Свежий кадр обязан стоять на позиции журнала: " + frame);
@@ -51,8 +50,6 @@ class TaskEventStreamTests {
             assertTrue(
                     frame.contains("\"current_script\":\"goto\""),
                     "Кадр state обязан нести текущий прогресс: " + frame);
-        } finally {
-            stream.close();
         }
     }
 
@@ -62,13 +59,10 @@ class TaskEventStreamTests {
         log.append(events(TaskEvent.TYPE_PROGRESS, 3));
         log.close();
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
             assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с кадром state: " + state);
             assertNull(stream.nextFrame(), "Закрытый журнал обязан завершать поток сразу после state");
-        } finally {
-            stream.close();
         }
     }
 
@@ -77,16 +71,13 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger())) {
             String frame = stream.nextFrame();
             assertTrue(
                     frame.startsWith("id: 2\n"),
                     "После Last-Event-ID=1 обязана прийти только более поздняя запись: " + frame);
             log.close();
             assertNull(stream.nextFrame(), "Догнав журнал, поток обязан завершиться");
-        } finally {
-            stream.close();
         }
     }
 
@@ -95,8 +86,7 @@ class TaskEventStreamTests {
         TaskEventLog log = new TaskEventLog();
         log.append(events(TaskEvent.TYPE_PROGRESS, 2));
 
-        TaskEventStream stream = fresh(RUNNING, log, 50, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 50, new AtomicInteger())) {
             String state = stream.nextFrame();
             assertTrue(
                     state.startsWith("id: 2\n") && state.contains("event: state"),
@@ -109,8 +99,6 @@ class TaskEventStreamTests {
                     next.startsWith("id: 3\n") && next.contains("event: progress"),
                     "После state поток обязан продолжаться с позиции журнала и отдать новое событие id 3, а не "
                             + "ждать id > 50 и слать одни кипалайвы: " + next);
-        } finally {
-            stream.close();
         }
     }
 
@@ -124,8 +112,7 @@ class TaskEventStreamTests {
         log.append(bulk);
         long newest = log.lastId();
 
-        TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger())) {
             String state = stream.nextFrame();
             assertTrue(state.contains("event: state"), "При потере окна обязана прийти текущая state: " + state);
             long stateId = Long.parseLong(state.split("\n", 2)[0].substring(4));
@@ -138,8 +125,6 @@ class TaskEventStreamTests {
                     stateId < id,
                     "id кадров обязаны расти и после state при потере окна: клиент, запомнивший id кадра state, "
                             + "не должен получить меньший id следом: state " + stateId + ", затем " + id);
-        } finally {
-            stream.close();
         }
     }
 
@@ -147,8 +132,7 @@ class TaskEventStreamTests {
     void nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment() throws Exception {
         TaskEventLog log = new TaskEventLog();
 
-        TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger());
-        try {
+        try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
             assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с state: " + state);
             String keepalive = stream.nextFrame();
@@ -156,8 +140,6 @@ class TaskEventStreamTests {
                     ": keepalive\n\n",
                     keepalive,
                     "Тишина обязана отбиваться кипалайв-комментарием, а не рвать соединение");
-        } finally {
-            stream.close();
         }
     }
 

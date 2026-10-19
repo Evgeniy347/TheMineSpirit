@@ -668,7 +668,7 @@ class BoardTests {
                 board.statusOf("mine_1"),
                 "Завершённое задание читается со статусом DONE");
         assertTrue(
-                board.all().stream().anyMatch(ticket -> ticket.id().equals("mine_1")),
+                board.all().stream().anyMatch(ticket -> "mine_1".equals(ticket.id())),
                 "Завершённое задание видно в all(): DONE — отметка выполнения на доске, " + "а не удалённая строка");
         assertTrue(
                 board.ledger().has(BoardCase.BUILD_MINE, 1),
@@ -705,7 +705,7 @@ class BoardTests {
         assertEquals(
                 List.of(),
                 board.claimable(new StockView(Map.of()), 0).stream()
-                        .filter(ticket -> ticket.id().equals("mine_2"))
+                        .filter(ticket -> "mine_2".equals(ticket.id()))
                         .toList(),
                 "Уровень 2 не выдаётся раньше уровня 1: уровень не прыгает");
         board.claim("mine_1", SPIRIT_ONE, 0);
@@ -714,7 +714,7 @@ class BoardTests {
         assertEquals(
                 List.of(levelTwo),
                 board.claimable(new StockView(Map.of()), 0).stream()
-                        .filter(ticket -> ticket.id().equals("mine_2"))
+                        .filter(ticket -> "mine_2".equals(ticket.id()))
                         .toList(),
                 "Зависимое от building:BUILD_MINE:1 выдаётся после выполнения уровня 1: условие "
                         + "считается по живому DONE-заданию");

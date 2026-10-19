@@ -39,13 +39,13 @@ final class EnemyProfilesParser {
     }
 
     private static boolean isDefault(EnemyProfile profile) {
-        return profile.type().equals(EnemyProfiles.DEFAULT_KEY);
+        return EnemyProfiles.DEFAULT_KEY.equals(profile.type());
     }
 
     private static EnemyProfile profile(ConfigNode item) {
         ConfigNode type = item.get("type");
         String key = type.text();
-        if (!key.equals(EnemyProfiles.DEFAULT_KEY) && !TYPE_KEY.matcher(key).matches()) {
+        if (!EnemyProfiles.DEFAULT_KEY.equals(key) && !TYPE_KEY.matcher(key).matches()) {
             throw type.fail(
                     "ключ '" + key + "' не подходит под шаблон minecraft:[a-z_]+ или default",
                     "тип врага — id сущности вида minecraft:zombie");

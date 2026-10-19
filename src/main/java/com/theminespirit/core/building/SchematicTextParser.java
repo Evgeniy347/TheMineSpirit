@@ -178,7 +178,7 @@ public final class SchematicTextParser {
                             + "текст в кавычках");
         }
         String id = block.group(1).contains(":") ? block.group(1) : "minecraft:" + block.group(1);
-        if (SchematicBlocks.path(id).equals("air")) {
+        if ("air".equals(SchematicBlocks.path(id))) {
             throw error(line, "воздух в легенде не задаётся: для обязательной пустоты есть символ '.'");
         }
         Map<String, String> state = new LinkedHashMap<>();
@@ -380,7 +380,7 @@ public final class SchematicTextParser {
         if (entrance == null) {
             return Optional.empty();
         }
-        if (entrance.equals("front")) {
+        if ("front".equals(entrance)) {
             Schematic.Entry best = null;
             for (Schematic.Entry entry : schematic.blocks()) {
                 if (entry.dz() != 0

@@ -34,8 +34,7 @@ public final class StrengthDirector {
                     return;
                 }
                 var current = spirit.currentTaskScript();
-                if (current.isPresent()
-                        && (current.get().equals("withdraw") || current.get().equals("equip"))) {
+                if (current.isPresent() && ("withdraw".equals(current.get()) || "equip".equals(current.get()))) {
                     return;
                 }
                 starter.start(

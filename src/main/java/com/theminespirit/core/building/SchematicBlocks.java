@@ -156,7 +156,7 @@ public final class SchematicBlocks {
 
     public static boolean isWindow(String blockId) {
         String path = path(blockId);
-        return path.equals("glass") || path.endsWith("_glass") || path.endsWith("_pane");
+        return "glass".equals(path) || path.endsWith("_glass") || path.endsWith("_pane");
     }
 
     public static boolean isDoor(String blockId) {
@@ -208,7 +208,7 @@ public final class SchematicBlocks {
 
     public static boolean isChest(String blockId) {
         String path = path(blockId);
-        return path.equals("chest") || path.equals("trapped_chest");
+        return "chest".equals(path) || "trapped_chest".equals(path);
     }
 
     public static boolean isLightSource(String blockId) {

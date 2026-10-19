@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -33,7 +34,7 @@ public final class SourceFiles {
 
     private static Map<Path, String> readJava(Path root) {
         try (Stream<Path> files = Files.walk(root)) {
-            TreeMap<Path, String> sources = new TreeMap<>();
+            SortedMap<Path, String> sources = new TreeMap<>();
             for (Path file :
                     files.filter(path -> path.toString().endsWith(".java")).toList()) {
                 sources.put(file, Files.readString(file));

@@ -50,7 +50,7 @@ public final class SpecCatalog<T> {
                 throw new IllegalArgumentException(missingMessage.replace("{id}", id));
             }
         }
-        LinkedHashMap<String, T> selected = new LinkedHashMap<>();
+        Map<String, T> selected = new LinkedHashMap<>();
         for (Map.Entry<String, T> entry : byId.entrySet()) {
             if (ids.contains(entry.getKey())) {
                 selected.put(entry.getKey(), entry.getValue());

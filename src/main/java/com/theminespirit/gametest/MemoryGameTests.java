@@ -114,7 +114,7 @@ public final class MemoryGameTests {
             assertSucceeded(helper, spirit, run, "recall_all");
             Finding finding = spirit.finding().orElse(null);
             helper.assertTrue(
-                    finding != null && finding.script().equals("recall_all"),
+                    finding != null && "recall_all".equals(finding.script()),
                     "последним ответом обязан быть ответ recall_all: " + finding);
             List<String> names =
                     finding.sightings().stream().map(Sighting::label).sorted().toList();
@@ -123,8 +123,7 @@ public final class MemoryGameTests {
                     "recall_all по типу resource обязан вернуть ровно coal и iron, а вернул " + names
                             + ": точки других типов (опасность, база) попали в ответ или ресурсы потеряны");
             helper.assertTrue(
-                    finding.sightings().stream()
-                            .allMatch(sighting -> sighting.kind().equals("resource")),
+                    finding.sightings().stream().allMatch(sighting -> "resource".equals(sighting.kind())),
                     "все точки ответа обязаны быть типа resource: " + finding.sightings());
             helper.assertTrue(
                     spirit.memory().all().size() == 4,
@@ -151,7 +150,7 @@ public final class MemoryGameTests {
             assertSucceeded(helper, spirit, run, "remember, forget и recall");
             Finding finding = spirit.finding().orElse(null);
             helper.assertTrue(
-                    finding != null && finding.script().equals("recall") && finding.isEmpty(),
+                    finding != null && "recall".equals(finding.script()) && finding.isEmpty(),
                     "после forget recall обязан отвечать «не найдено» (пустая находка), а ответил: " + finding);
             helper.assertTrue(
                     spirit.memory().all().isEmpty(),

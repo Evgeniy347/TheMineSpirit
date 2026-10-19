@@ -18,13 +18,11 @@ public final class RestRequest {
         Objects.requireNonNull(query, "query не может быть null: пустой запрос задают пустой картой");
         Objects.requireNonNull(headers, "headers не может быть null: пустой набор задают пустой картой");
         Objects.requireNonNull(body, "body не может быть null: пустое тело задают пустым массивом");
-        query = Map.copyOf(query);
-        headers = Map.copyOf(headers);
         this.method = method;
         this.path = path;
-        this.query = query;
-        this.headers = headers;
-        this.body = body;
+        this.query = Map.copyOf(query);
+        this.headers = Map.copyOf(headers);
+        this.body = body.clone();
     }
 
     public String method() {
@@ -44,7 +42,7 @@ public final class RestRequest {
     }
 
     public byte[] body() {
-        return body;
+        return body.clone();
     }
 
     @Override

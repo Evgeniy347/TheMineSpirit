@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 public final class PlanJson {
+    private static final String TYPE = "type";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private PlanJson() {}
@@ -38,7 +39,7 @@ public final class PlanJson {
 
     private static ObjectNode scriptToJson(ScriptCall call) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "script");
+        node.put(TYPE, "script");
         node.put("script", call.script());
         node.set("params", paramsToJson(call.params()));
         return node;
@@ -46,7 +47,7 @@ public final class PlanJson {
 
     private static ObjectNode stepsToJson(String type, List<TaskNode> steps) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", type);
+        node.put(TYPE, type);
         ArrayNode array = node.putArray("steps");
         for (TaskNode step : steps) {
             array.add(toJsonNode(step));
@@ -62,7 +63,7 @@ public final class PlanJson {
 
     private static ObjectNode repeatToJson(RepeatNode repeat) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "repeat");
+        node.put(TYPE, "repeat");
         node.put("times", repeat.times());
         node.set("step", toJsonNode(repeat.step()));
         return node;
@@ -70,7 +71,7 @@ public final class PlanJson {
 
     private static ObjectNode conditionToJson(ConditionNode condition) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("type", "condition");
+        node.put(TYPE, "condition");
         node.put("check", condition.check());
         node.set("params", paramsToJson(condition.params()));
         node.set("then", toJsonNode(condition.thenStep()));

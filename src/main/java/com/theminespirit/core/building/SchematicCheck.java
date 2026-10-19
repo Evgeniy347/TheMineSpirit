@@ -1,7 +1,7 @@
 package com.theminespirit.core.building;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -54,11 +54,11 @@ public final class SchematicCheck {
                 header.type().orElseThrow(),
                 document.schematic(),
                 header.entrance().orElseThrow());
-        Set<SchematicRules.RuleId> excused = new HashSet<>();
+        Set<SchematicRules.RuleId> excused = EnumSet.noneOf(SchematicRules.RuleId.class);
         for (SchematicDocument.Exemption exemption : document.exemptions()) {
             excused.add(exemption.rule());
         }
-        Set<SchematicRules.RuleId> used = new HashSet<>();
+        Set<SchematicRules.RuleId> used = EnumSet.noneOf(SchematicRules.RuleId.class);
         List<String> unexcused = new ArrayList<>();
         for (SchematicRules.Violation violation : SchematicRules.check(structure)) {
             if (excused.contains(violation.rule())) {

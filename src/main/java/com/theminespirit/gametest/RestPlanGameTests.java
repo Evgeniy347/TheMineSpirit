@@ -118,11 +118,11 @@ public final class RestPlanGameTests {
                 .thenApply(missing -> {
                     problems.expect(
                             missing.status() == 400
-                                    && missing.json()
-                                            .path("error")
-                                            .path("code")
-                                            .asText()
-                                            .equals("invalid_request"),
+                                    && "invalid_request"
+                                            .equals(missing.json()
+                                                    .path("error")
+                                                    .path("code")
+                                                    .asText()),
                             "POST /v1/plan без поля plan обязан отвечать 400 invalid_request: " + missing.status() + " "
                                     + missing.body());
                     int hops = rest.gateway().serverCall().submittedCount() - hopsBefore;
@@ -149,7 +149,8 @@ public final class RestPlanGameTests {
             RestFixture.Problems problems, RestFixture.Reply reply, String mention, String scenario) {
         problems.expect(
                 reply.status() == 422
-                        && reply.json().path("error").path("code").asText().equals("invalid_plan"),
+                        && "invalid_plan"
+                                .equals(reply.json().path("error").path("code").asText()),
                 scenario + ": ожидался 422 invalid_plan, получено " + reply.status() + " " + reply.body());
         problems.expect(
                 reply.json().path("error").path("message").asText().contains(mention),

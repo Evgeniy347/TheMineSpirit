@@ -24,6 +24,13 @@ import org.jspecify.annotations.Nullable;
  */
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
+    private static final String BLOCK = "block";
+    private static final String ITEM = "item";
+    private static final String COUNT = "count";
+    private static final String CONTAINER = "container";
+    private static final String NEAREST = "nearest";
+    private static final String SPECIES = "species";
+    private static final String RADIUS = "radius";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
@@ -178,7 +185,7 @@ public final class TicketPlans {
                         new ScriptCall(
                                 "fill",
                                 Map.of(
-                                        "block",
+                                        BLOCK,
                                         "minecraft:cobblestone",
                                         "x1",
                                         target.target().x() - MINE_STEPS_SIZE,
@@ -245,7 +252,7 @@ public final class TicketPlans {
                 : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", "dirt", "count", Math.min(blocks, CatalogLimits.COUNT_MAX))),
+                new ScriptCall("acquire", Map.of(ITEM, "dirt", COUNT, Math.min(blocks, CatalogLimits.COUNT_MAX))),
                 fillArea(target, "dirt", CRATER_FILL_RADIUS));
     }
 
@@ -271,13 +278,13 @@ public final class TicketPlans {
 
     private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
-                new ScriptCall("withdraw", Map.of("container", "nearest", "item", feed, "count", 1)),
+                new ScriptCall("withdraw", Map.of(CONTAINER, NEAREST, ITEM, feed, COUNT, 1)),
                 new ScriptCall(
                         "capture",
                         Map.of(
-                                "species",
+                                SPECIES,
                                 species.name().toLowerCase(Locale.ROOT),
-                                "radius",
+                                RADIUS,
                                 CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
@@ -285,7 +292,7 @@ public final class TicketPlans {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(
-                        "craft", Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
+                        "craft", Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
     private static TaskNode fishWorkPoint(TicketTarget target) {
@@ -294,9 +301,12 @@ public final class TicketPlans {
                 new ScriptCall(
                         "fish",
                         Map.of(
-                                "count", CatalogLimits.FISH_COUNT_DEFAULT,
-                                "duration_ticks", CatalogLimits.FISH_DURATION_DEFAULT,
-                                "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
+                                COUNT,
+                                CatalogLimits.FISH_COUNT_DEFAULT,
+                                "duration_ticks",
+                                CatalogLimits.FISH_DURATION_DEFAULT,
+                                RADIUS,
+                                CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
@@ -319,7 +329,7 @@ public final class TicketPlans {
             steps.add(new ScriptCall(
                     "place_block",
                     Map.of(
-                            "block",
+                            BLOCK,
                             "minecraft:torch",
                             "x",
                             target.target().x() + offset[0],
@@ -355,24 +365,16 @@ public final class TicketPlans {
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", item, "count", batch)),
+                new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)),
                 new ScriptCall(
                         "deposit",
-                        Map.of(
-                                "container",
-                                "nearest",
-                                "item",
-                                item,
-                                "count",
-                                batch,
-                                "radius",
-                                SUPPLY_CONTAINER_RADIUS)));
+                        Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)));
     }
 
     private static TaskNode collectDrops(TicketTarget target) {
         Map<String, Object> params = target.dropItems().isEmpty()
-                ? Map.of("radius", CatalogLimits.DROP_RADIUS_DEFAULT)
-                : Map.of("radius", CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
+                ? Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT)
+                : Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
     }
 
@@ -380,7 +382,7 @@ public final class TicketPlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of("item", item, "count", batch)));
+        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {
@@ -416,7 +418,7 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
                     + "чинит конкретный изношенный предмет, без имени чинить нечего");
         }
-        return new ScriptCall("repair_tool", Map.of("item", target.craftItem()));
+        return new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem()));
     }
 
     private static TaskNode breedAnimals(TicketTarget target) {
@@ -424,9 +426,9 @@ public final class TicketPlans {
         return new ScriptCall(
                 "breed",
                 Map.of(
-                        "species",
+                        SPECIES,
                         species.name().toLowerCase(Locale.ROOT),
-                        "radius",
+                        RADIUS,
                         CatalogLimits.HERD_RADIUS_DEFAULT,
                         "pairs",
                         CatalogLimits.HERD_PAIRS_DEFAULT));
@@ -436,11 +438,7 @@ public final class TicketPlans {
         Species species = target.species() == null ? Species.COW : target.species();
         return new ScriptCall(
                 "cull",
-                Map.of(
-                        "species",
-                        species.name().toLowerCase(Locale.ROOT),
-                        "radius",
-                        CatalogLimits.HERD_RADIUS_DEFAULT));
+                Map.of(SPECIES, species.name().toLowerCase(Locale.ROOT), RADIUS, CatalogLimits.HERD_RADIUS_DEFAULT));
     }
 
     private static TaskNode shearSheep(TicketTarget target) {
@@ -450,13 +448,13 @@ public final class TicketPlans {
                 new ScriptCall(
                         "shear",
                         Map.of(
-                                "radius", WoolRules.shearRadius(),
-                                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+                                RADIUS, WoolRules.shearRadius(),
+                                COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
     private static TaskNode harvestHive() {
         return new ScriptCall(
-                "harvest_hive", Map.of("radius", HiveRules.hiveRadius(), "count", CatalogLimits.HIVE_COUNT_DEFAULT));
+                "harvest_hive", Map.of(RADIUS, HiveRules.hiveRadius(), COUNT, CatalogLimits.HIVE_COUNT_DEFAULT));
     }
 
     private static TaskNode placeBeehive(TicketTarget target) {
@@ -466,7 +464,7 @@ public final class TicketPlans {
                 craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
                 new ScriptCall(
                         "place_block",
-                        Map.of("block", HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));
+                        Map.of(BLOCK, HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));
     }
 
     private static TaskNode huntWildSheep(TicketTarget target) {
@@ -476,9 +474,9 @@ public final class TicketPlans {
                 new ScriptCall(
                         "hunt",
                         Map.of(
-                                "species", Species.SHEEP.name().toLowerCase(Locale.ROOT),
-                                "radius", WoolRules.wildSheepRadius(),
-                                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+                                SPECIES, Species.SHEEP.name().toLowerCase(Locale.ROOT),
+                                RADIUS, WoolRules.wildSheepRadius(),
+                                COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
     private static String bedItem(TicketTarget target) {
@@ -530,11 +528,11 @@ public final class TicketPlans {
         return new SequenceNode(List.of(
                 gotoPoint(from),
                 demolishBox(from, radius),
-                new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX)),
+                new ScriptCall("collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX)),
                 gotoPoint(to),
                 new ScriptCall(
                         "unload",
-                        Map.of("container", "auto", "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
+                        Map.of(CONTAINER, "auto", RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
     }
 
     private static <T> T relocation(@Nullable T value, String field) {
@@ -570,19 +568,18 @@ public final class TicketPlans {
         int count = Math.min(target.supplyCount(), CatalogLimits.COUNT_MAX);
         if (target.transferFrom() != null) {
             return new ScriptCall(
-                    "deliver",
-                    Map.of("item", target.supplyItem(), "count", count, "to", "spirit:" + target.transferTo()));
+                    "deliver", Map.of(ITEM, target.supplyItem(), COUNT, count, "to", "spirit:" + target.transferTo()));
         }
         return new ScriptCall(
                 "withdraw",
                 Map.of(
-                        "container",
-                        "nearest",
-                        "item",
+                        CONTAINER,
+                        NEAREST,
+                        ITEM,
                         target.supplyItem(),
-                        "count",
+                        COUNT,
                         count,
-                        "radius",
+                        RADIUS,
                         CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
@@ -594,13 +591,13 @@ public final class TicketPlans {
         return new ScriptCall(
                 "withdraw",
                 Map.of(
-                        "container",
-                        "nearest",
-                        "item",
+                        CONTAINER,
+                        NEAREST,
+                        ITEM,
                         target.supplyItem(),
-                        "count",
+                        COUNT,
                         RESTOCK_FOOD_COUNT,
-                        "radius",
+                        RADIUS,
                         CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
@@ -622,7 +619,7 @@ public final class TicketPlans {
         return new ScriptCall(
                 "fill",
                 Map.of(
-                        "block",
+                        BLOCK,
                         block,
                         "x1",
                         target.target().x() - radius,

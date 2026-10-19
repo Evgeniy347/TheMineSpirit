@@ -29,11 +29,11 @@ public final class PolicyRoutes {
                 new Route("DELETE", "/v1/policy/unprotect/{id}", this::revoke));
     }
 
-    private RestResponse list(RestRequest request, PathParams params) {
+    private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
         return RestResponse.ok(PolicyJson.listJson(gateway.areas()));
     }
 
-    private RestResponse grant(RestRequest request, PathParams params) {
+    private RestResponse grant(RestRequest request, PathParams ignoredParams) {
         UnprotectRequest parsed = UnprotectRequest.parse(request.body());
         String requestId = parsed.requestId().toString();
         String fingerprint = fingerprint(parsed);
@@ -66,7 +66,7 @@ public final class PolicyRoutes {
         return gateway.grant(request);
     }
 
-    private RestResponse revoke(RestRequest request, PathParams params) {
+    private RestResponse revoke(RestRequest ignoredRequest, PathParams params) {
         String id = params.get("id");
         UnprotectArea removed = gateway.revoke(id);
         if (removed == null) {

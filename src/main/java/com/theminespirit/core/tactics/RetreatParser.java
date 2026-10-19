@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 final class RetreatParser {
+    private static final String WHEN = "when";
+    private static final String FACT = "fact";
+    private static final String PER_UNIT = "perUnit";
+
     private RetreatParser() {}
 
     static RetreatTable parse(ConfigNode node, Function<ConfigNode, String> claimId) {
@@ -14,7 +18,7 @@ final class RetreatParser {
         for (ConfigNode item : node.get("methods").nonEmptyItems()) {
             entries.add(entry(item, claimId));
         }
-        ConfigNode help = node.get("callHelp").fields(new String[] {"when"});
+        ConfigNode help = node.get("callHelp").fields(new String[] {WHEN});
         ConfigNode rally = node.get("rally")
                 .fields(new String[] {"rallyRadius", "callRadius", "callMinEnemies", "callIntervalTicks", "helpRadius"
                 });
@@ -24,7 +28,7 @@ final class RetreatParser {
                 rally.get("callMinEnemies").integer(),
                 rally.get("callIntervalTicks").integer(),
                 rally.get("helpRadius").integer()));
-        return new RetreatTable(entries, early(help.get("when")), tuning);
+        return new RetreatTable(entries, early(help.get(WHEN)), tuning);
     }
 
     private static RetreatEntry entry(ConfigNode item, Function<ConfigNode, String> claimId) {
@@ -34,15 +38,15 @@ final class RetreatParser {
             throw item.get("method")
                     .fail("способ NONE нельзя описывать", "NONE означает: ничего не подошло, и выбирается сам");
         }
-        ConfigNode utility = item.get("utility").fields(new String[] {"base"}, "fact", "perUnit");
-        if (utility.has("fact") != utility.has("perUnit")) {
+        ConfigNode utility = item.get("utility").fields(new String[] {"base"}, FACT, PER_UNIT);
+        if (utility.has(FACT) != utility.has(PER_UNIT)) {
             throw utility.fail("поля fact и perUnit задаются вместе", "полезность = base + perUnit × значение факта");
         }
         List<RetreatEntry.Bonus> bonuses = new ArrayList<>();
         for (ConfigNode bonus : item.get("bonus").items()) {
-            bonus.fields(new String[] {"when", "add"});
+            bonus.fields(new String[] {WHEN, "add"});
             bonuses.add(new RetreatEntry.Bonus(
-                    early(bonus.get("when")), bonus.get("add").number(-1, 1)));
+                    early(bonus.get(WHEN)), bonus.get("add").number(-1, 1)));
         }
         return new RetreatEntry(
                 claimId.apply(item.get("id")),
@@ -50,15 +54,15 @@ final class RetreatParser {
                 early(item.get("requires")),
                 utility.get("base").number(0, 1),
                 utilityFact(utility),
-                utility.has("perUnit") ? utility.get("perUnit").number(-1, 1) : 0,
+                utility.has(PER_UNIT) ? utility.get(PER_UNIT).number(-1, 1) : 0,
                 bonuses);
     }
 
     private static Optional<FactName> utilityFact(ConfigNode utility) {
-        if (!utility.has("fact")) {
+        if (!utility.has(FACT)) {
             return Optional.empty();
         }
-        ConfigNode node = utility.get("fact");
+        ConfigNode node = utility.get(FACT);
         FactName fact = FactName.byKey(node.text())
                 .orElseThrow(
                         () -> node.fail("неизвестный факт '" + node.text() + "'", "имя берётся из каталога фактов"));

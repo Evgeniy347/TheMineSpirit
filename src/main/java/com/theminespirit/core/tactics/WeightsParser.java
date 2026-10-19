@@ -2,7 +2,7 @@ package com.theminespirit.core.tactics;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +66,7 @@ final class WeightsParser {
 
     private static List<TacticalOption> tieBreak(ConfigNode node) {
         List<TacticalOption> order = new ArrayList<>();
-        Set<TacticalOption> seen = new HashSet<>();
+        Set<TacticalOption> seen = EnumSet.noneOf(TacticalOption.class);
         for (ConfigNode item : node.nonEmptyItems()) {
             TacticalOption option = item.enumValue(TacticalOption.class);
             if (!seen.add(option)) {

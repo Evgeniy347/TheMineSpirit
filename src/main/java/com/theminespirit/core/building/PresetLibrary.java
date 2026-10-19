@@ -28,8 +28,9 @@ import org.jspecify.annotations.Nullable;
 public final class PresetLibrary {
     public static final String INDEX_ID = "presets";
     public static final String SCHEMATICS_ROOT = "data/theminespirit/schematics/";
+    private static final String PRESETS = "presets";
     private static final int INDEX_VERSION = 2;
-    private static final Set<String> ROOT_FIELDS = Set.of("version", "presets", "planned");
+    private static final Set<String> ROOT_FIELDS = Set.of("version", PRESETS, "planned");
     private static final Set<String> PLANNED_FIELDS = Set.of("level", "name", "requires");
     private static final Set<String> ENTRANCE_SUFFIXES = Set.of("_door", "_fence_gate", "_trapdoor", "_gate");
 
@@ -116,7 +117,7 @@ public final class PresetLibrary {
 
     public static List<String> bodyPaths(String indexJson, String origin) {
         JsonNode root = JsonResource.parse(indexJson, origin);
-        List<JsonNode> entries = JsonResource.array(root.get("presets"), origin, "списка presets");
+        List<JsonNode> entries = JsonResource.array(root.get(PRESETS), origin, "списка presets");
         List<String> paths = new ArrayList<>(entries.size());
         for (JsonNode entry : entries) {
             if (!entry.isTextual() || entry.asText().isBlank()) {
@@ -141,7 +142,7 @@ public final class PresetLibrary {
             throw new IllegalStateException("Файл '" + index.origin() + "': версия индекса " + version + ", ожидается "
                     + INDEX_VERSION + ": индекс другой версии читается иначе");
         }
-        List<JsonNode> entries = JsonResource.array(root.get("presets"), index.origin(), "списка presets");
+        List<JsonNode> entries = JsonResource.array(root.get(PRESETS), index.origin(), "списка presets");
         if (entries.size() != contents.size() - 1) {
             throw new IllegalStateException("Файл '" + index.origin() + "': в индексе " + entries.size()
                     + " пресетов, а тел схем прочитано " + (contents.size() - 1)

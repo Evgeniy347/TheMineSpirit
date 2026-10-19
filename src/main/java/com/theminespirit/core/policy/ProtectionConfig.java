@@ -10,7 +10,9 @@ import java.util.Set;
 public final class ProtectionConfig {
     public static final String RESOURCE = "data/theminespirit/policy/protection.json";
 
-    private static final Set<String> FIELDS = Set.of("deny", "natural", "buildingThreshold", "maxUnprotectVolume");
+    private static final String DENY = "deny";
+    private static final String NATURAL = "natural";
+    private static final Set<String> FIELDS = Set.of(DENY, NATURAL, "buildingThreshold", "maxUnprotectVolume");
 
     private ProtectionConfig() {}
 
@@ -25,12 +27,12 @@ public final class ProtectionConfig {
     public static BlockProtection parse(String json, String origin) {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "protection.json");
-        List<String> deny = JsonResource.strings(root.get("deny"), origin, "deny");
-        List<String> natural = JsonResource.strings(root.get("natural"), origin, "natural");
+        List<String> deny = JsonResource.strings(root.get(DENY), origin, DENY);
+        List<String> natural = JsonResource.strings(root.get(NATURAL), origin, NATURAL);
         int threshold = JsonResource.integer(root.get("buildingThreshold"), origin, "buildingThreshold");
         int maxUnprotectVolume = JsonResource.integer(root.get("maxUnprotectVolume"), origin, "maxUnprotectVolume");
-        IdFilter denyFilter = filter(deny, origin, "deny");
-        IdFilter naturalFilter = filter(natural, origin, "natural");
+        IdFilter denyFilter = filter(deny, origin, DENY);
+        IdFilter naturalFilter = filter(natural, origin, NATURAL);
         BlockProtection protection;
         try {
             protection = new BlockProtection(denyFilter, naturalFilter, threshold, maxUnprotectVolume);

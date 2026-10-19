@@ -21,6 +21,7 @@ class EnvScannerTests {
     private static final int BUDGET = TacticsAdapterSettings.defaults().factChunkBudget();
     private static final int BIG_BUDGET = 5000;
 
+    @FunctionalInterface
     interface Check {
         void verify(String name, EnvReading reading);
     }

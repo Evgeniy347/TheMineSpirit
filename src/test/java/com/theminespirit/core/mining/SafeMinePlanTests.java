@@ -14,8 +14,8 @@ class SafeMinePlanTests {
     private static CellWorld safeStaircase(BlockCoord entry, int targetY) {
         CellWorld world = new CellWorld();
         int entryFloor = entry.y() - 1;
-        for (int floor = entryFloor, index = 0; floor >= targetY; floor--, index++) {
-            world.set(entry.x() + index, floor, entry.z(), Cell.SOLID);
+        for (int floor = entryFloor; floor >= targetY; floor--) {
+            world.set(entry.x() + (entryFloor - floor), floor, entry.z(), Cell.SOLID);
         }
         return world;
     }

@@ -530,14 +530,14 @@ class DeadCodeGuardTests {
             if (method && name.equals(frame.name())) {
                 continue;
             }
-            if (!method && name.equals("serialVersionUID")) {
+            if (!method && "serialVersionUID".equals(name)) {
                 continue;
             }
             String text = matcher.group();
             if (text.contains("@Override")
                     || text.contains("@SubscribeEvent")
                     || text.contains("@JsonProperty")
-                    || (method && name.equals("main") && type.trim().equals("void"))) {
+                    || (method && "main".equals(name) && "void".equals(type.trim()))) {
                 continue;
             }
             declarations.add(declaration(path, code, token.offset(), method ? "method" : "field", frame.name(), name));
@@ -576,17 +576,17 @@ class DeadCodeGuardTests {
         List<int[]> headers = new ArrayList<>();
         for (int index = 0; index + 2 < tokens.size(); index++) {
             Token keyword = tokens.get(index);
-            if (!keyword.text().equals("record")
+            if (!"record".equals(keyword.text())
                     || !tokens.get(index + 1).identifier()
-                    || !tokens.get(index + 2).text().equals("(")) {
+                    || !"(".equals(tokens.get(index + 2).text())) {
                 continue;
             }
             int depth = 0;
             for (int inner = index + 2; inner < tokens.size(); inner++) {
                 String text = tokens.get(inner).text();
-                if (text.equals("(")) {
+                if ("(".equals(text)) {
                     depth++;
-                } else if (text.equals(")")) {
+                } else if (")".equals(text)) {
                     depth--;
                     if (depth == 0) {
                         headers.add(new int[] {
@@ -611,24 +611,24 @@ class DeadCodeGuardTests {
             frames[index] = stack.peek();
             if (token.identifier()
                     && isTypeKeyword(token.text())
-                    && (index == 0 || !tokens.get(index - 1).text().equals("."))) {
+                    && (index == 0 || !".".equals(tokens.get(index - 1).text()))) {
                 if (index + 1 < tokens.size() && tokens.get(index + 1).identifier()) {
                     pendingName = tokens.get(index + 1).text();
-                    pendingEnum = token.text().equals("enum");
-                    pendingAnnotation = token.text().equals("interface")
+                    pendingEnum = "enum".equals(token.text());
+                    pendingAnnotation = "interface".equals(token.text())
                             && index > 0
-                            && tokens.get(index - 1).text().equals("@");
+                            && "@".equals(tokens.get(index - 1).text());
                 }
-            } else if (token.text().equals("{") && pendingName != null) {
+            } else if ("{".equals(token.text()) && pendingName != null) {
                 stack.push(new Frame(Kind.TYPE, pendingName, pendingEnum, pendingAnnotation));
                 pendingName = null;
-            } else if (token.text().equals("{")) {
+            } else if ("{".equals(token.text())) {
                 stack.push(new Frame(Kind.BLOCK, "", false, false));
-            } else if (token.text().equals("}")) {
+            } else if ("}".equals(token.text())) {
                 if (!stack.isEmpty()) {
                     stack.pop();
                 }
-            } else if (token.text().equals(";")
+            } else if (";".equals(token.text())
                     && !stack.isEmpty()
                     && stack.peek().kind() == Kind.TYPE
                     && stack.peek().isEnum()
@@ -640,7 +640,7 @@ class DeadCodeGuardTests {
     }
 
     private static boolean isTypeKeyword(String text) {
-        return text.equals("class") || text.equals("interface") || text.equals("enum") || text.equals("record");
+        return "class".equals(text) || "interface".equals(text) || "enum".equals(text) || "record".equals(text);
     }
 
     private static String strip(String source) {

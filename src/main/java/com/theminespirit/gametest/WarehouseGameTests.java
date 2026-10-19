@@ -129,7 +129,7 @@ public final class WarehouseGameTests {
             int blocked = 0;
             List<String> missing = new ArrayList<>();
             for (Schematic.PlacedEntry entry : schematic.entries(absolute(helper, anchor))) {
-                if (!entry.block().equals("minecraft:chest")) {
+                if (!"minecraft:chest".equals(entry.block())) {
                     continue;
                 }
                 chests++;

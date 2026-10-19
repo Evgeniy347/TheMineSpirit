@@ -287,7 +287,8 @@ class SucceedWhenReturnGuardTests {
         return clean.toString();
     }
 
-    private static int blankUntil(StringBuilder clean, String text, int i, char end, boolean block) {
+    private static int blankUntil(StringBuilder clean, String text, int from, char end, boolean block) {
+        int i = from;
         while (i < text.length()) {
             char c = text.charAt(i);
             if (block && end == '*' && c == '*' && i + 1 < text.length() && text.charAt(i + 1) == '/') {
@@ -305,7 +306,8 @@ class SucceedWhenReturnGuardTests {
         return i;
     }
 
-    private static int blankQuoted(StringBuilder clean, String text, int i, char quote) {
+    private static int blankQuoted(StringBuilder clean, String text, int from, char quote) {
+        int i = from;
         while (i < text.length()) {
             char c = text.charAt(i);
             if (c == '\n') {

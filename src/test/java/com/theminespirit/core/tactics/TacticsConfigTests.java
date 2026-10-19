@@ -19,10 +19,10 @@ class TacticsConfigTests {
             "{\"fact\": \"env.homeReachable\", \"op\": \"==\", \"value\": true}";
 
     private static TacticsConfig load(String file, String text) {
-        String enemies = file.equals("enemies.json") ? text : TacticsTexts.read("enemies.json");
-        String weights = file.equals("weights.json") ? text : TacticsTexts.read("weights.json");
-        String rules = file.equals("rules.json") ? text : TacticsTexts.read("rules.json");
-        String modes = file.equals("modes.json") ? text : TacticsTexts.read("modes.json");
+        String enemies = "enemies.json".equals(file) ? text : TacticsTexts.read("enemies.json");
+        String weights = "weights.json".equals(file) ? text : TacticsTexts.read("weights.json");
+        String rules = "rules.json".equals(file) ? text : TacticsTexts.read("rules.json");
+        String modes = "modes.json".equals(file) ? text : TacticsTexts.read("modes.json");
         return TacticsConfig.fromJson(enemies, weights, rules, modes);
     }
 

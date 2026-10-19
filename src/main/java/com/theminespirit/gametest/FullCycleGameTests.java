@@ -134,7 +134,7 @@ public final class FullCycleGameTests {
                 Collections.frequency(steps, "craft:crafting_table") == 1,
                 "верстак в плане ровно один (станция на план, а не на каждый крафт): " + steps);
         helper.assertTrue(
-                steps.get(steps.size() - 1).equals("craft:wooden_pickaxe"),
+                "craft:wooden_pickaxe".equals(steps.get(steps.size() - 1)),
                 "план резолвера заканчивается крафтом кирки: " + steps);
         SpiritRun run = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
 

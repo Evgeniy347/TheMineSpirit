@@ -88,7 +88,7 @@ public final class RestLifecycle {
                 .orElse(null);
     }
 
-    private static void onStopping(ServerStoppingEvent event) {
+    private static void onStopping(ServerStoppingEvent ignoredEvent) {
         if (server != null) {
             server.stop();
             server = null;
@@ -96,7 +96,7 @@ public final class RestLifecycle {
         }
     }
 
-    private static void onStopped(ServerStoppedEvent event) {
+    private static void onStopped(ServerStoppedEvent ignoredEvent) {
         if (index != null) {
             index.unregister(gameBus);
             index = null;

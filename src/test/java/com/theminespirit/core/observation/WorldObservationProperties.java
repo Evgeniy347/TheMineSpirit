@@ -74,9 +74,9 @@ class WorldObservationProperties {
 
     private static List<ItemCount> entries(List<Integer> raw, String prefix) {
         List<ItemCount> result = new ArrayList<>();
-        for (int i = 0; i < raw.size(); i++) {
-            int count = Math.floorMod(raw.get(i), MAX_COUNT) + 1;
-            String name = prefix + Math.floorMod(raw.get(i) * 131542391, 4);
+        for (int value : raw) {
+            int count = Math.floorMod(value, MAX_COUNT) + 1;
+            String name = prefix + Math.floorMod(value * 131542391, 4);
             result.add(new ItemCount(name, count));
         }
         return result;
@@ -84,8 +84,7 @@ class WorldObservationProperties {
 
     private static List<EntityRef> entities(List<Integer> raw) {
         List<EntityRef> result = new ArrayList<>();
-        for (int i = 0; i < raw.size(); i++) {
-            int v = raw.get(i);
+        for (int v : raw) {
             String id = Math.floorMod(v, 4) == 0 ? null : "uuid_" + v;
             result.add(new EntityRef("entity_" + Math.floorMod(v, 3), coord(v), id, Math.floorMod(v, 100) / 10.0));
         }
@@ -94,8 +93,7 @@ class WorldObservationProperties {
 
     private static List<ContainerRef> containers(List<Integer> raw) {
         List<ContainerRef> result = new ArrayList<>();
-        for (int i = 0; i < raw.size(); i++) {
-            int v = raw.get(i);
+        for (int v : raw) {
             String id = Math.floorMod(v, 3) == 0 ? null : "cid_" + v;
             result.add(new ContainerRef("container_" + Math.floorMod(v, 2), coord(v * 17), id));
         }

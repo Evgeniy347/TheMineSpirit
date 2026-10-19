@@ -3,6 +3,7 @@ package com.theminespirit.core.task;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.theminespirit.core.engine.RunProgress;
 import java.util.List;
@@ -24,7 +25,7 @@ class TaskEventDiffTests {
 
     private static TaskEvent stateEvent(TaskRecord previous, TaskRecord current) {
         return TaskEventDiff.between(previous, current).stream()
-                .filter(event -> event.type().equals(TaskEvent.TYPE_STATE))
+                .filter(event -> TaskEvent.TYPE_STATE.equals(event.type()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("переход обязан дать state-событие"));
     }
@@ -160,7 +161,7 @@ class TaskEventDiffTests {
                             event.data().get("reason"),
                             "script_failed обязан нести причину провала (" + label + ")");
                 }
-                default -> assertTrue(false, "Неизвестный тип события " + event.type());
+                default -> fail("Неизвестный тип события " + event.type());
             }
         }
     }

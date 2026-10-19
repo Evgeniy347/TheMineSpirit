@@ -25,6 +25,8 @@ import net.minecraft.server.level.ServerPlayer;
 public final class ExpeditionController {
     public static final double AGREE_RADIUS = 4.0;
 
+    private static final String FOLLOW = "follow";
+    private static final String RETURN_HOME = "return_home";
     private static final int PARTNER_RADIUS = 3;
     private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
@@ -143,10 +145,10 @@ public final class ExpeditionController {
         boolean launched = false;
         for (SpiritEntity spirit : team(members, expedition)) {
             launched |= starter.start(
-                    spirit, "follow", new ScriptCall("follow", Map.of("target", guideName, "radius", 3)), now);
+                    spirit, FOLLOW, new ScriptCall(FOLLOW, Map.of("target", guideName, "radius", 3)), now);
         }
         if (launched) {
-            lastDispatch = new Dispatch("follow", List.copyOf(expedition.team()), now);
+            lastDispatch = new Dispatch(FOLLOW, List.copyOf(expedition.team()), now);
         }
         return launched;
     }
@@ -170,13 +172,13 @@ public final class ExpeditionController {
                         spirit,
                         "mine_vein",
                         new SequenceNode(List.of(
-                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall("return_home", Map.of()))),
+                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of()))),
                         now);
             } else {
                 launched |= starter.start(
                         spirit,
-                        "follow",
-                        new ScriptCall("follow", Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
+                        FOLLOW,
+                        new ScriptCall(FOLLOW, Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
                         now);
             }
         }
@@ -223,10 +225,10 @@ public final class ExpeditionController {
             if (spirit == null) {
                 continue;
             }
-            if (spirit.currentTaskScript().map("return_home"::equals).orElse(false)) {
+            if (spirit.currentTaskScript().map(RETURN_HOME::equals).orElse(false)) {
                 continue;
             }
-            allReturning &= starter.start(spirit, "return_home", new ScriptCall("return_home", Map.of()), now);
+            allReturning &= starter.start(spirit, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
         }
         if (allReturning) {
             missionTeam = List.of();

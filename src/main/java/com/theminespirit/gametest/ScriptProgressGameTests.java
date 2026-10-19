@@ -127,8 +127,7 @@ public final class ScriptProgressGameTests {
             helper.assertTrue(!seen.isEmpty(), "Пока goto идёт, прогресс задачи обязан быть доступен");
             for (RunProgress progress : seen) {
                 helper.assertTrue(
-                        (progress.currentScript() == null
-                                        || progress.currentScript().equals("goto"))
+                        (progress.currentScript() == null || "goto".equals(progress.currentScript()))
                                 && progress.done() == null
                                 && progress.target() == null,
                         "У goto нет счётчика: ожидалось goto (или ещё не созданный скрипт) без done/target, получено "

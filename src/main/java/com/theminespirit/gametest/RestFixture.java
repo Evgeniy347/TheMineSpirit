@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -125,10 +126,7 @@ final class RestFixture {
         }
 
         void cancel() {
-            Stream<String> open = body.get();
-            if (open != null) {
-                open.close();
-            }
+            Optional.ofNullable(body.get()).ifPresent(Stream::close);
         }
 
         private void read(HttpResponse<Stream<String>> response) {

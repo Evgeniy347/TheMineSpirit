@@ -23,7 +23,7 @@ public final class PlacedBlockCodec {
             this.chunkX = chunkX;
             this.chunkZ = chunkZ;
             this.overflowed = overflowed;
-            this.positions = positions;
+            this.positions = positions.clone();
         }
 
         public int chunkX() {
@@ -39,7 +39,7 @@ public final class PlacedBlockCodec {
         }
 
         public long[] positions() {
-            return positions;
+            return positions.clone();
         }
 
         @Override

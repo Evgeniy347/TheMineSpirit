@@ -107,7 +107,7 @@ public final class BoardFenceGameTests {
                 "Сломанный природный камень — не ограждение: задание " + stoneId + " поднялось зря");
         List<String> queue = board.board().claimable(new StockView(Map.of()), now).stream()
                 .map(BoardTicket::id)
-                .filter(id -> id.equals(repairId) || id.equals("board_test_build_low"))
+                .filter(id -> id.equals(repairId) || "board_test_build_low".equals(id))
                 .toList();
         helper.assertTrue(
                 List.of(repairId, "board_test_build_low").equals(queue),

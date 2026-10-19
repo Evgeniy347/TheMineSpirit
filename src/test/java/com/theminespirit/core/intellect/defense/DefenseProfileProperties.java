@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.EnemyProfile;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Combinators;
@@ -61,7 +61,7 @@ class DefenseProfileProperties {
             List<TargetClass> order = DefenseProfileTests.PROFILE.orderFor(role, archerPresent);
 
             assertEquals(
-                    new HashSet<>(order).size(),
+                    Set.copyOf(order).size(),
                     order.size(),
                     "Порядок целей без дублей: повтор ломает тай-брейк, и цель выбирается случайно");
             assertTrue(

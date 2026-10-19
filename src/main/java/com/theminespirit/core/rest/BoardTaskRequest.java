@@ -40,6 +40,8 @@ public record BoardTaskRequest(
         Optional<BlockCoord> from,
         Optional<BlockCoord> to) {
 
+    private static final String FIELD = "field";
+    private static final String ALLOWED = "allowed";
     private static final String REQUEST_ID = "request_id";
     private static final String CASE = "case";
     private static final String ASSIGNEE = "assignee";
@@ -83,25 +85,25 @@ public record BoardTaskRequest(
             throw new ApiException(
                     ErrorCode.INVALID_REQUEST,
                     "request_id обязателен: идемпотентность постановки держится на UUID клиента",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
         if (boardCase == null) {
             throw new ApiException(
                     ErrorCode.INVALID_REQUEST,
                     "Поле 'case' обязательно: без кейса доска не знает приоритет, гейт и план задания",
-                    Map.of("field", CASE, "allowed", caseNames()));
+                    Map.of(FIELD, CASE, ALLOWED, caseNames()));
         }
         if (level < 1) {
             throw invalid(
                     "Поле 'level' = " + level + " меньше 1: первая постройка ставится "
                             + "уровнем 1, отсутствующий уровень задают единицей",
-                    Map.of("field", LEVEL));
+                    Map.of(FIELD, LEVEL));
         }
         if (cause == null || cause.isBlank()) {
             throw invalid(
                     "Поле 'cause' пусто: по причине пересборка проверяет актуальность, "
                             + "постоянное задание задают причиной always",
-                    Map.of("field", CAUSE));
+                    Map.of(FIELD, CAUSE));
         }
         Objects.requireNonNull(assignee, "assignee не может быть null: без владельца задают Optional.empty()");
         requiredItems = Map.copyOf(requiredItems == null ? Map.of() : requiredItems);
@@ -113,7 +115,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Кейс TRANSFER_ITEM ставит доска по нехватке ингредиентов у крафтера: "
                             + "вручную он не принимается, иначе план не знает ни предмета, ни получателя",
-                    Map.of("field", CASE, "case", boardCase.name()));
+                    Map.of(FIELD, CASE, "case", boardCase.name()));
         }
         if (boardCase == BoardCase.RELOCATE_BUILDING) {
             requireRelocation(building, from, to);
@@ -121,7 +123,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поля 'building', 'from' и 'to' относятся только к RELOCATE_BUILDING: " + "у кейса " + boardCase
                             + " их быть не должно",
-                    Map.of("field", building.isPresent() ? BUILDING : from.isPresent() ? FROM : TO));
+                    Map.of(FIELD, building.isPresent() ? BUILDING : from.isPresent() ? FROM : TO));
         }
     }
 
@@ -131,13 +133,13 @@ public record BoardTaskRequest(
             throw invalid(
                     "Перенос требует полей 'building' (что переносим), 'from' и 'to' (точки): "
                             + "без них неизвестно, какую постройку сносить и где ставить",
-                    Map.of("allowed", List.of(BUILDING, FROM, TO)));
+                    Map.of(ALLOWED, List.of(BUILDING, FROM, TO)));
         }
         if (from.orElseThrow().equals(to.orElseThrow())) {
             throw invalid(
                     "Перенос из точки " + from.orElseThrow() + " в ту же точку: "
                             + "сносить и строить на одном месте нечего",
-                    Map.of("field", TO));
+                    Map.of(FIELD, TO));
         }
         try {
             RelocatePlan.assertMovable(building.orElseThrow());
@@ -164,7 +166,7 @@ public record BoardTaskRequest(
                             + "\"requiredItems\":{\"oak_log\":16},\"dependsOn\":[\"…\"],\"level\":1,"
                             + "\"cause\":\"always\"}, получено: "
                             + (root == null ? "пустое тело" : root.getNodeType()),
-                    Map.of("allowed", FIELDS));
+                    Map.of(ALLOWED, FIELDS));
         }
         rejectUnknownFields(root);
         UUID requestId = requestId(root.get(REQUEST_ID));
@@ -186,7 +188,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'request_id' обязательно и должно быть строкой-UUID: повтор запроса с тем же "
                             + "request_id возвращает прежнее задание",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
         try {
             return UUID.fromString(node.textValue());
@@ -194,7 +196,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'request_id' = '" + node.textValue() + "' не является UUID: пример "
                             + "3f1c2d3e-0000-4000-8000-000000000000",
-                    Map.of("field", REQUEST_ID));
+                    Map.of(FIELD, REQUEST_ID));
         }
     }
 
@@ -202,7 +204,7 @@ public record BoardTaskRequest(
         if (node == null || !node.isTextual()) {
             throw invalid(
                     "Поле 'case' обязательно и должно быть строкой-кейсом: " + caseNames(),
-                    Map.of("field", CASE, "allowed", caseNames()));
+                    Map.of(FIELD, CASE, ALLOWED, caseNames()));
         }
         try {
             return BoardCase.valueOf(node.textValue().toUpperCase(Locale.ROOT));
@@ -210,7 +212,7 @@ public record BoardTaskRequest(
             throw new ApiException(
                     ErrorCode.INVALID_PLAN,
                     "Кейс '" + node.textValue() + "' не известен доске: допустимы " + caseNames(),
-                    Map.of("field", CASE, "allowed", caseNames()));
+                    Map.of(FIELD, CASE, ALLOWED, caseNames()));
         }
     }
 
@@ -222,7 +224,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'assignee' должно быть строкой-UUID или отсутствовать: пустое значение значит "
                             + "«любой свободный дух», получено: " + node.getNodeType(),
-                    Map.of("field", ASSIGNEE));
+                    Map.of(FIELD, ASSIGNEE));
         }
         try {
             return Optional.of(UUID.fromString(node.textValue()));
@@ -230,7 +232,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'assignee' = '" + node.textValue() + "' не является UUID: адресный владелец "
                             + "задаётся UUID духа",
-                    Map.of("field", ASSIGNEE));
+                    Map.of(FIELD, ASSIGNEE));
         }
     }
 
@@ -242,7 +244,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'requiredItems' должно быть JSON-объектом «предмет: количество», получено: "
                             + node.getNodeType(),
-                    Map.of("field", REQUIRED_ITEMS));
+                    Map.of(FIELD, REQUIRED_ITEMS));
         }
         Map<String, Integer> items = new LinkedHashMap<>();
         Iterator<String> names = node.fieldNames();
@@ -252,12 +254,12 @@ public record BoardTaskRequest(
             if (name.isBlank()) {
                 throw invalid(
                         "Предмет в 'requiredItems' назван пустой строкой: укажите id предмета, " + "например oak_log",
-                        Map.of("field", REQUIRED_ITEMS));
+                        Map.of(FIELD, REQUIRED_ITEMS));
             }
             if (!value.isIntegralNumber() || !value.canConvertToInt() || value.intValue() < 0) {
                 throw invalid(
                         "Количество предмета '" + name + "' обязано быть неотрицательным целым, получено: " + value,
-                        Map.of("field", REQUIRED_ITEMS, "item", name));
+                        Map.of(FIELD, REQUIRED_ITEMS, "item", name));
             }
             items.put(name, value.intValue());
         }
@@ -271,7 +273,7 @@ public record BoardTaskRequest(
         if (!node.isArray()) {
             throw invalid(
                     "Поле 'dependsOn' должно быть массивом id заданий, получено: " + node.getNodeType(),
-                    Map.of("field", DEPENDS_ON));
+                    Map.of(FIELD, DEPENDS_ON));
         }
         List<String> ids = new ArrayList<>();
         for (JsonNode element : node) {
@@ -279,7 +281,7 @@ public record BoardTaskRequest(
                 throw invalid(
                         "Каждая зависимость в 'dependsOn' обязана быть непустой строкой-id задания, " + "получено: "
                                 + element,
-                        Map.of("field", DEPENDS_ON));
+                        Map.of(FIELD, DEPENDS_ON));
             }
             ids.add(element.textValue());
         }
@@ -293,13 +295,13 @@ public record BoardTaskRequest(
         if (!node.isIntegralNumber() || !node.canConvertToInt()) {
             throw invalid(
                     "Поле 'level' должно быть целым числом уровня постройки, получено: " + node.getNodeType(),
-                    Map.of("field", LEVEL));
+                    Map.of(FIELD, LEVEL));
         }
         int level = node.intValue();
         if (level < 1) {
             throw invalid(
                     "Поле 'level' = " + level + " меньше 1: первая постройка ставится " + "уровнем 1",
-                    Map.of("field", LEVEL));
+                    Map.of(FIELD, LEVEL));
         }
         return level;
     }
@@ -311,14 +313,14 @@ public record BoardTaskRequest(
         if (!node.isTextual()) {
             throw invalid(
                     "Поле 'building' должно быть строкой-кейсом постройки, получено: " + node.getNodeType(),
-                    Map.of("field", BUILDING, "allowed", caseNames()));
+                    Map.of(FIELD, BUILDING, ALLOWED, caseNames()));
         }
         try {
             return Optional.of(BoardCase.valueOf(node.textValue().toUpperCase(Locale.ROOT)));
         } catch (IllegalArgumentException unknown) {
             throw invalid(
                     "Кейс постройки '" + node.textValue() + "' неизвестен: допустимы " + caseNames(),
-                    Map.of("field", BUILDING, "allowed", caseNames()));
+                    Map.of(FIELD, BUILDING, ALLOWED, caseNames()));
         }
     }
 
@@ -329,13 +331,13 @@ public record BoardTaskRequest(
         if (!node.isTextual()) {
             throw invalid(
                     "Поле '" + field + "' должно быть строкой координат \"x,y,z\", получено: " + node.getNodeType(),
-                    Map.of("field", field));
+                    Map.of(FIELD, field));
         }
         String[] parts = node.textValue().split(",", -1);
         if (parts.length != 3) {
             throw invalid(
                     "Поле '" + field + "' = '" + node.textValue() + "' не тройка координат: " + "пример \"10,64,-3\"",
-                    Map.of("field", field));
+                    Map.of(FIELD, field));
         }
         try {
             return Optional.of(new BlockCoord(
@@ -346,7 +348,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле '" + field + "' = '" + node.textValue() + "' содержит не целое число: "
                             + "пример \"10,64,-3\"",
-                    Map.of("field", field));
+                    Map.of(FIELD, field));
         }
     }
 
@@ -358,7 +360,7 @@ public record BoardTaskRequest(
             throw invalid(
                     "Поле 'cause' обязано быть непустой строкой-ключом причины "
                             + "(«always» для постоянных), получено: " + node,
-                    Map.of("field", CAUSE));
+                    Map.of(FIELD, CAUSE));
         }
         return node.textValue();
     }
@@ -397,7 +399,7 @@ public record BoardTaskRequest(
             if (!FIELDS.contains(name)) {
                 throw invalid(
                         "Неизвестное поле '" + name + "' в POST board tasks: допустимы " + FIELDS,
-                        Map.of("field", name, "allowed", FIELDS));
+                        Map.of(FIELD, name, ALLOWED, FIELDS));
             }
         }
     }

@@ -67,7 +67,7 @@ class NeedsOfPlanProperties {
                 "coal",
                 "diamond");
         return Combinators.combine(scripts, items).as((script, item) -> (TaskNode)
-                (script.equals("gather")
+                ("gather".equals(script)
                         ? new ScriptCall(script, Map.of("block", item, "count", 1))
                         : new ScriptCall(script, Map.of("item", item, "count", 1))));
     }

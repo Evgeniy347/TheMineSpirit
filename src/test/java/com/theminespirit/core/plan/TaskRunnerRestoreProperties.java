@@ -133,7 +133,7 @@ class TaskRunnerRestoreProperties {
         RecordingInstance(String id, Map<String, Object> params, List<String> recorder) {
             this.id = id;
             this.recorder = recorder;
-            this.fails = id.equals("say") && FAIL_TEXT.equals(params.get("text"));
+            this.fails = "say".equals(id) && FAIL_TEXT.equals(params.get("text"));
         }
 
         @Override

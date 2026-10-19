@@ -203,7 +203,7 @@ class IntellectTuningTests {
                 IntellectTuning.RESOURCE,
                 new LoadedContent("{ \"failBackoffTicks\": 10 ", "broken datapack", TableStatus.Source.DATAPACK)));
         TableRegistry.Report report = registry.reload(broken).stream()
-                .filter(entry -> entry.id().equals("intellect"))
+                .filter(entry -> "intellect".equals(entry.id()))
                 .findFirst()
                 .orElseThrow();
 
@@ -288,7 +288,7 @@ class IntellectTuningTests {
     @SuppressWarnings("unchecked")
     private static TableDefinition<IntellectTuning> registeredDefinition() {
         for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
-            if (definition.id().equals("intellect")) {
+            if ("intellect".equals(definition.id())) {
                 return (TableDefinition<IntellectTuning>) definition;
             }
         }

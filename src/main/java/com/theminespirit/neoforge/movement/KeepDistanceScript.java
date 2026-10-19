@@ -42,7 +42,8 @@ public final class KeepDistanceScript implements ScriptInstance {
             approach.tick();
             return ScriptStatus.RUNNING;
         }
-        if (cooldown-- > 0) {
+        if (cooldown > 0) {
+            cooldown--;
             return ScriptStatus.RUNNING;
         }
         cooldown = DECISION_PERIOD_TICKS - 1;
