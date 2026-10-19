@@ -206,11 +206,9 @@ public final class SpiritCoordinator {
         }
         directives.keySet().removeAll(callers);
         Set<UUID> assisted = new HashSet<>();
-        for (AssistOrder assist : plan.assists()) {
-            assisted.add(assist.helper());
-        }
         Set<UUID> urgent = new HashSet<>();
         for (AssistOrder assist : plan.assists()) {
+            assisted.add(assist.helper());
             if (assist.urgent()) {
                 urgent.add(assist.helper());
             }
@@ -226,76 +224,83 @@ public final class SpiritCoordinator {
             }
         }
         for (UUID id : new ArrayList<>(directives.keySet())) {
-            CombatDirective d = directives.get(id);
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
-            if (spirit == null || spirit.isRemoved()) {
-                continue;
+            if (spirit != null && !spirit.isRemoved()) {
+                applyDirective(spirit, id, directives.get(id), urgent, forced, posts);
             }
-            if (lastUrgent.contains(id) && !urgent.contains(id)) {
-                lastUrgent.remove(id);
-                lastDirectives.remove(id);
-                lastForced.remove(id);
-                spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
-                spirit.tactics().clearGuardZone();
-                spirit.tactics().setWard(null);
-                if (spirit.currentTaskScript().isPresent()) {
-                    continue;
-                }
-            }
-            if (urgent.contains(id)) {
-                CombatDirective last = lastDirectives.get(id);
-                if (last == null || !last.equals(d) || !Objects.equals(lastForced.get(id), forced.get(id))) {
-                    applyDirectiveToSpirit(spirit, d, forced.get(id), posts.get(id));
-                    lastDirectives.put(id, d);
-                    lastUrgent.add(id);
-                    if (forced.get(id) != null) {
-                        lastForced.put(id, forced.get(id));
-                    } else {
-                        lastForced.remove(id);
-                    }
-                }
-                continue;
-            }
+        }
+        releaseDropped(directives);
+    }
+
+    private void applyDirective(
+            SpiritEntity spirit,
+            UUID id,
+            CombatDirective d,
+            Set<UUID> urgent,
+            Map<UUID, String> forced,
+            Map<UUID, Point> posts) {
+        if (lastUrgent.contains(id) && !urgent.contains(id)) {
+            lastUrgent.remove(id);
+            lastDirectives.remove(id);
+            lastForced.remove(id);
+            spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
+            spirit.tactics().clearGuardZone();
+            spirit.tactics().setWard(null);
             if (spirit.currentTaskScript().isPresent()) {
-                CombatDirective ours = lastDirectives.get(id);
-                CombatDirective current = spirit.tactics().activeDirective().orElse(null);
-                if (ours != null && ours.mode() == CombatMode.AGGRESSIVE && ours.equals(current)) {
-                    lastDirectives.remove(id);
-                    lastForced.remove(id);
-                    lastUrgent.remove(id);
-                    spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
-                    spirit.tactics().setWard(null);
-                    Point post = posts.get(id);
-                    if (post != null) {
-                        spirit.tactics()
-                                .setGuardZone(
-                                        new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int)
-                                                Math.floor(post.z())),
-                                        CoordinatorTuning.DEFENSE_POST_RADIUS);
-                    }
-                    continue;
-                }
-                lastDirectives.remove(id);
-                lastForced.remove(id);
-                lastUrgent.remove(id);
-                continue;
+                return;
             }
+        }
+        if (urgent.contains(id)) {
             CombatDirective last = lastDirectives.get(id);
             if (last == null || !last.equals(d) || !Objects.equals(lastForced.get(id), forced.get(id))) {
                 applyDirectiveToSpirit(spirit, d, forced.get(id), posts.get(id));
                 lastDirectives.put(id, d);
-                if (urgent.contains(id)) {
-                    lastUrgent.add(id);
-                } else {
-                    lastUrgent.remove(id);
-                }
-                if (forced.get(id) != null) {
-                    lastForced.put(id, forced.get(id));
-                } else {
-                    lastForced.remove(id);
-                }
+                lastUrgent.add(id);
+                rememberForced(id, forced.get(id));
+            }
+            return;
+        }
+        if (spirit.currentTaskScript().isPresent()) {
+            yieldToTask(spirit, id, posts.get(id));
+            return;
+        }
+        CombatDirective last = lastDirectives.get(id);
+        if (last == null || !last.equals(d) || !Objects.equals(lastForced.get(id), forced.get(id))) {
+            applyDirectiveToSpirit(spirit, d, forced.get(id), posts.get(id));
+            lastDirectives.put(id, d);
+            lastUrgent.remove(id);
+            rememberForced(id, forced.get(id));
+        }
+    }
+
+    private void rememberForced(UUID id, String forcedTargetId) {
+        if (forcedTargetId != null) {
+            lastForced.put(id, forcedTargetId);
+        } else {
+            lastForced.remove(id);
+        }
+    }
+
+    private void yieldToTask(SpiritEntity spirit, UUID id, Point post) {
+        CombatDirective ours = lastDirectives.get(id);
+        CombatDirective current = spirit.tactics().activeDirective().orElse(null);
+        lastDirectives.remove(id);
+        lastForced.remove(id);
+        lastUrgent.remove(id);
+        if (ours != null && ours.mode() == CombatMode.AGGRESSIVE && ours.equals(current)) {
+            spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
+            spirit.tactics().setWard(null);
+            if (post != null) {
+                spirit.tactics()
+                        .setGuardZone(
+                                new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int)
+                                        Math.floor(post.z())),
+                                CoordinatorTuning.DEFENSE_POST_RADIUS);
             }
         }
+    }
+
+    private void releaseDropped(Map<UUID, CombatDirective> directives) {
         for (UUID id : new ArrayList<>(lastDirectives.keySet())) {
             if (directives.containsKey(id)) {
                 continue;

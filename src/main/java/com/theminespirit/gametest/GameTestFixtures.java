@@ -42,12 +42,6 @@ import net.minecraft.world.phys.Vec3;
 final class GameTestFixtures {
     static final int FLOOR_SIZE = 9;
 
-    static Optional<String> taskSnapshot(SpiritEntity spirit) {
-        CompoundTag tag = new CompoundTag();
-        spirit.saveWithoutId(tag);
-        return SpiritTaskStore.read(tag);
-    }
-
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
     private static final int SWEEP_MARGIN = 48;
@@ -59,6 +53,12 @@ final class GameTestFixtures {
     private static final Map<GameTestInfo, TimeRestore> TIME_HOLDS = new ConcurrentHashMap<>();
 
     private GameTestFixtures() {}
+
+    static Optional<String> taskSnapshot(SpiritEntity spirit) {
+        CompoundTag tag = new CompoundTag();
+        spirit.saveWithoutId(tag);
+        return SpiritTaskStore.read(tag);
+    }
 
     static void reset(GameTestHelper helper) {
         reset(helper, CLEAR_HEIGHT);

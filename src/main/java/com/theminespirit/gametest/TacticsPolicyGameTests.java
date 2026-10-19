@@ -38,14 +38,7 @@ public final class TacticsPolicyGameTests {
     public static void lava_BesideFightingSpirit_TacticsFrozenTaskRunningAndTacticsResumesAfterTenQuietTicks(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
-        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
-        spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
-        spirit.tactics().setCombatMode(CombatMode.DEFENSIVE);
-        spirit.startTask(new ScriptCall("wait", Map.of("ticks", WAIT_TICKS)));
-        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(7, 1, 5));
-        husk.getAttribute(Attributes.MAX_HEALTH).setBaseValue(TOUGH_HUSK_HEALTH);
-        husk.setHealth(TOUGH_HUSK_HEALTH);
-        husk.setTarget(spirit);
+        SpiritEntity spirit = spawnWaitingSpiritFacingToughHusk(helper);
         boolean[] lavaPlaced = {false};
         int[] frozenSteps = {-1};
         int[] overriddenTicks = {0};
@@ -63,13 +56,7 @@ public final class TacticsPolicyGameTests {
             if (spirit.policies().verdict() instanceof PolicyVerdict.Reflex) {
                 lastReflexTick[0] = spirit.tickCount;
             }
-            String state = spirit.policies().owner() + "/"
-                    + spirit.policies().verdict().getClass().getSimpleName() + "/ctl="
-                    + spirit.tactics().wantsControl();
-            if (!state.equals(lastState[0])) {
-                history.append(spirit.tickCount).append(':').append(state).append(' ');
-                lastState[0] = state;
-            }
+            appendStateChange(spirit, history, lastState);
             if (!lavaPlaced[0] && spirit.tactics().combat().strikes() >= 1) {
                 BlockPos beside = BlockPos.containing(helper.relativeVec(spirit.position()))
                         .offset(0, -1, -1);
@@ -83,14 +70,7 @@ public final class TacticsPolicyGameTests {
                 if (frozenSteps[0] < 0) {
                     frozenSteps[0] = spirit.tactics().stepCalls();
                 }
-                helper.assertTrue(
-                        spirit.tactics().stepCalls() == frozenSteps[0],
-                        "пока политика владеет тиком, TacticsEngine.step не зовут: было " + frozenSteps[0] + ", стало "
-                                + spirit.tactics().stepCalls());
-                helper.assertTrue(
-                        brain.isSuspended() && spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
-                        "во время рефлекса задача приостановлена, но RUNNING: статус "
-                                + spirit.taskStatus().orElse(null));
+                assertTacticsFrozenTaskRunning(helper, spirit, brain, frozenSteps);
             } else if (frozenSteps[0] >= 0
                     && resumedStepAt[0] < 0
                     && spirit.tactics().stepCalls() > frozenSteps[0]) {
@@ -110,17 +90,7 @@ public final class TacticsPolicyGameTests {
             helper.assertTrue(
                     policyReason[0] != null && policyReason[0].startsWith("LAVA_FIRE"),
                     "при рефлексе причина приостановки — политика LAVA_FIRE: «" + policyReason[0] + "»");
-            helper.assertTrue(
-                    resumedStepAt[0] >= 0,
-                    "тактика ещё не вернулась к оценке: владелец "
-                            + spirit.policies().owner()
-                            + ", рефлекс " + spirit.policies().verdict() + ", оценок "
-                            + spirit.tactics().stepCalls() + " при замороженных "
-                            + frozenSteps[0] + ", хочет управление "
-                            + spirit.tactics().wantsControl() + ", сбоев "
-                            + spirit.tactics().failures() + ", позиция " + helper.relativeVec(spirit.position())
-                            + ", ударов "
-                            + spirit.tactics().combat().strikes() + ", история " + history);
+            assertTacticsResumed(helper, spirit, resumedStepAt, frozenSteps, history);
             helper.assertTrue(
                     resumedStepAt[0] - lastReflexTick[0] >= QUIET_TICKS
                             && resumedStepAt[0] - lastReflexTick[0] <= RESUME_LIMIT_TICKS,
@@ -129,6 +99,55 @@ public final class TacticsPolicyGameTests {
             helper.assertTrue(!(spirit.policies().verdict() instanceof PolicyVerdict.Reflex), "рефлекс закончился");
             TacticsScene.finish(helper, spirit);
         });
+    }
+
+    private static SpiritEntity spawnWaitingSpiritFacingToughHusk(GameTestHelper helper) {
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
+        spirit.tactics().setCombatMode(CombatMode.DEFENSIVE);
+        spirit.startTask(new ScriptCall("wait", Map.of("ticks", WAIT_TICKS)));
+        Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(7, 1, 5));
+        husk.getAttribute(Attributes.MAX_HEALTH).setBaseValue(TOUGH_HUSK_HEALTH);
+        husk.setHealth(TOUGH_HUSK_HEALTH);
+        husk.setTarget(spirit);
+        return spirit;
+    }
+
+    private static void appendStateChange(SpiritEntity spirit, StringBuilder history, String[] lastState) {
+        String state = spirit.policies().owner() + "/"
+                + spirit.policies().verdict().getClass().getSimpleName() + "/ctl="
+                + spirit.tactics().wantsControl();
+        if (!state.equals(lastState[0])) {
+            history.append(spirit.tickCount).append(':').append(state).append(' ');
+            lastState[0] = state;
+        }
+    }
+
+    private static void assertTacticsFrozenTaskRunning(
+            GameTestHelper helper, SpiritEntity spirit, SpiritBrain brain, int[] frozenSteps) {
+        helper.assertTrue(
+                spirit.tactics().stepCalls() == frozenSteps[0],
+                "пока политика владеет тиком, TacticsEngine.step не зовут: было " + frozenSteps[0] + ", стало "
+                        + spirit.tactics().stepCalls());
+        helper.assertTrue(
+                brain.isSuspended() && spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+                "во время рефлекса задача приостановлена, но RUNNING: статус "
+                        + spirit.taskStatus().orElse(null));
+    }
+
+    private static void assertTacticsResumed(
+            GameTestHelper helper, SpiritEntity spirit, int[] resumedStepAt, int[] frozenSteps, StringBuilder history) {
+        helper.assertTrue(
+                resumedStepAt[0] >= 0,
+                "тактика ещё не вернулась к оценке: владелец "
+                        + spirit.policies().owner()
+                        + ", рефлекс " + spirit.policies().verdict() + ", оценок "
+                        + spirit.tactics().stepCalls() + " при замороженных "
+                        + frozenSteps[0] + ", хочет управление "
+                        + spirit.tactics().wantsControl() + ", сбоев "
+                        + spirit.tactics().failures() + ", позиция " + helper.relativeVec(spirit.position())
+                        + ", ударов "
+                        + spirit.tactics().combat().strikes() + ", история " + history);
     }
 
     @GameTest(template = "arena", batch = "tactics_policy_explosive", timeoutTicks = 300)

@@ -18,15 +18,18 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 | Spotless + palantir | 4–21 с | 1688 файлов меняются (автоматически) |
 | Error Prone | compileJava ×3,5 (68–96 с) | 161 / 96 |
 | NullAway (`core`, main) | 33 с | 291 в 99 файлах |
-| Checkstyle, минимальный набор | 35 с | 261 / 25 |
+| Checkstyle, минимальный набор | 35 с | 261 / 25 (после настройки 206 / 0) |
 | PMD (после выключения неуместных) | ~59 с | ~925 / ~235 |
 | SpotBugs (после выключения EI/MS_EXPOSE_REP) | 81 с | ~71 |
 
 ## Выключить в конфигурации (с причиной)
 
-- Checkstyle: не `google_checks`, а минимальный набор — DeclarationOrder, ParameterNumber (max 7), MethodLength,
-  MissingSwitchDefault, EqualsHashCode. Indentation/LineLength/ImportOrder — работа форматтера; MissingJavadoc
-  противоречит правилу «без Javadoc»; имена тестов `subject_Condition_Expected` — наше правило.
+- Checkstyle: не `google_checks`, а минимальный набор — DeclarationOrder, ParameterNumber (max 7), MethodLength (80),
+  EqualsHashCode. Indentation/LineLength/ImportOrder — работа форматтера; MissingJavadoc
+  противоречит правилу «без Javadoc»; имена тестов `subject_Condition_Expected` — наше правило. MissingSwitchDefault
+  выключен: все 48 switch-операторов — по enum, их полноту держит Error Prone MissingCasesInEnumSwitch (проверено
+  удалением case), а default отключил бы её. ParameterNumber — только main и без конструкторов record (как
+  MethodShapeGuardTests); MethodLength в тестах не считает источники строк `static Stream …` (таблицы данных).
 - PMD: AvoidFieldNameMatchingMethodName (стиль аксессоров record), TestClassWithoutTestCases (GameTest в main),
   UnitTestContainsTooManyAsserts, GuardLogStatement (slf4j `{}`), AvoidLiteralsInIfCondition, AvoidDuplicateLiterals
   для тестов, NullAssignment (это NullAway), CompareObjectsWithEquals (это Error Prone ReferenceEquality).
@@ -45,8 +48,9 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
    `-Xep:<Check>:OFF` по ещё не исправленным, до пустого.
 3. [x] NullAway в `core`: `@Nullable` (JSpecify) там, где null реально бывает, иначе убрать null; 3–4 блока по подпакетам
    (engine+script; task+board; observation+tactics+intellect; rest и прочее).
-4. [ ] Checkstyle минимальный: DeclarationOrder 200 (перестановка), MissingSwitchDefault 49, ParameterNumber 35
-   (объект-параметр, согласовать с MethodShapeGuard), MethodLength — порог ближе к ~40 строк CONVENTIONS (решить по замеру).
+4. [x] Checkstyle минимальный: DeclarationOrder 197 → 0 (устойчивая перестановка членов, порядок инициализации
+   статических полей сохранён), MethodLength (порог 80 по замеру: >40 — 266, >60 — 70, >80 — 19 в main) 19 → 0,
+   ParameterNumber 8 → 0 (все — конструкторы record), MissingSwitchDefault — выключен (см. выше).
 5. [ ] PMD: свой ruleset.xml; LiteralsFirstInComparisons, CloseResource (ревью), AvoidDuplicateLiterals (main) и прочее —
    3–4 блока по пакетам; храповик `maxFailures` до 0.
 6. [ ] SpotBugs: ~71 после исключения EI/MS — 1–2 блока; фильтр только с постоянными причинами.

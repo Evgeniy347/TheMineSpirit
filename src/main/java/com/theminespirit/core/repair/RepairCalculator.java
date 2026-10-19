@@ -3,12 +3,12 @@ package com.theminespirit.core.repair;
 import java.util.Objects;
 
 public final class RepairCalculator {
-    private RepairCalculator() {}
-
     public static final int GRINDSTONE_BONUS_PERCENT = 5;
     public static final int ANVIL_REPAIR_PERCENT = 25;
     public static final int PERCENT_MIN = 1;
     public static final int PERCENT_MAX = 100;
+
+    private RepairCalculator() {}
 
     public static int anvilResult(int durability, int maxDurability, int repairPercent) {
         if (durability < 0) {

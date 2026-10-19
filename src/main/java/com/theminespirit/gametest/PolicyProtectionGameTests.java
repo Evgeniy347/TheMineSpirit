@@ -585,43 +585,14 @@ public final class PolicyProtectionGameTests {
                     phase[0] = 3;
                 }
                 case 3 -> {
-                    if (status == RunStatus.FAILED) {
-                        helper.assertTrue(
-                                false,
-                                "после снятия защиты gather обязан собрать булыжник, а не упасть: "
-                                        + spirit.taskFailureReason().orElse(""));
-                    }
-                    if (status == RunStatus.SUCCEEDED) {
-                        helper.assertTrue(
-                                cobbleCount(helper, heap) == 0,
-                                "после снятия защиты gather обязан собрать весь булыжник постройки");
-                        markHeap(helper, heap);
-                        helper.assertTrue(
-                                cobbleCount(helper, heap) == 8,
-                                "после сбора постройка обязана быть восстановлена для третьей проверки");
-                        helper.assertTrue(
-                                service.remove(areaId[0]), "снятие разрешения обязано найти область " + areaId[0]);
-                        phase[0] = 4;
-                    }
+                    checkCollectedThenRemoveGrant(helper, spirit, status, service, heap, areaId, phase);
                 }
                 case 4 -> {
                     spirit.startTask(gather);
                     phase[0] = 5;
                 }
                 case 5 -> {
-                    if (status == RunStatus.SUCCEEDED) {
-                        helper.assertTrue(
-                                false, "после remove защита обязана вернуться и gather не смеет собрать постройку");
-                    }
-                    if (status == RunStatus.FAILED) {
-                        helper.assertTrue(
-                                spirit.taskFailureReason().orElse("").contains("пропущено защищённых: 8"),
-                                "после remove gather обязан снова пропустить все 8 блоков: "
-                                        + spirit.taskFailureReason().orElse(""));
-                        helper.assertTrue(
-                                cobbleCount(helper, heap) == 8, "после remove постройка обязана остаться целой");
-                        phase[0] = 6;
-                    }
+                    checkRefusedAgainAfterRemove(helper, spirit, status, heap, phase);
                 }
                 default -> {}
             }
@@ -631,5 +602,47 @@ public final class PolicyProtectionGameTests {
             helper.assertTrue(phase[0] == 6, "gather со снятием защиты не дошёл до конца: фаза " + phase[0]);
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static void checkCollectedThenRemoveGrant(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            RunStatus status,
+            UnprotectService service,
+            BlockPos heap,
+            String[] areaId,
+            int[] phase) {
+        if (status == RunStatus.FAILED) {
+            helper.assertTrue(
+                    false,
+                    "после снятия защиты gather обязан собрать булыжник, а не упасть: "
+                            + spirit.taskFailureReason().orElse(""));
+        }
+        if (status == RunStatus.SUCCEEDED) {
+            helper.assertTrue(
+                    cobbleCount(helper, heap) == 0,
+                    "после снятия защиты gather обязан собрать весь булыжник постройки");
+            markHeap(helper, heap);
+            helper.assertTrue(
+                    cobbleCount(helper, heap) == 8,
+                    "после сбора постройка обязана быть восстановлена для третьей проверки");
+            helper.assertTrue(service.remove(areaId[0]), "снятие разрешения обязано найти область " + areaId[0]);
+            phase[0] = 4;
+        }
+    }
+
+    private static void checkRefusedAgainAfterRemove(
+            GameTestHelper helper, SpiritEntity spirit, RunStatus status, BlockPos heap, int[] phase) {
+        if (status == RunStatus.SUCCEEDED) {
+            helper.assertTrue(false, "после remove защита обязана вернуться и gather не смеет собрать постройку");
+        }
+        if (status == RunStatus.FAILED) {
+            helper.assertTrue(
+                    spirit.taskFailureReason().orElse("").contains("пропущено защищённых: 8"),
+                    "после remove gather обязан снова пропустить все 8 блоков: "
+                            + spirit.taskFailureReason().orElse(""));
+            helper.assertTrue(cobbleCount(helper, heap) == 8, "после remove постройка обязана остаться целой");
+            phase[0] = 6;
+        }
     }
 }

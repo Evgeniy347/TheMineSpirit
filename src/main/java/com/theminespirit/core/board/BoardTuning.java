@@ -67,6 +67,8 @@ public final class BoardTuning {
             "transferRadiusBlocks",
             "transferMaxCount");
 
+    private BoardTuning() {}
+
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
     }
@@ -132,8 +134,6 @@ public final class BoardTuning {
     public static int transferMaxCount() {
         return (int) interval("transferMaxCount", TRANSFER_MAX_COUNT);
     }
-
-    private BoardTuning() {}
 
     private static long interval(String key, long fallback) {
         Long value = DataTables.INSTANCE.board().current().intervals().get(key);

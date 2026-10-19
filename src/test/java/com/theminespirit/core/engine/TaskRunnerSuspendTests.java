@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Test;
 
 class TaskRunnerSuspendTests {
     private static final class Probe implements ScriptInstance {
-        private final int total;
-        private final PolicyExemptions exemptions;
         int ticks;
         int suspends;
         int resumes;
         int cancels;
+        private final int total;
+        private final PolicyExemptions exemptions;
 
         Probe(int total, PolicyExemptions exemptions) {
             this.total = total;

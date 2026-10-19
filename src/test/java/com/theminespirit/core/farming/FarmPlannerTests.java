@@ -62,8 +62,8 @@ class FarmPlannerTests {
     }
 
     static final class CountingLookups extends AbstractSet<BlockCoord> {
-        private final Set<BlockCoord> cells;
         int lookups;
+        private final Set<BlockCoord> cells;
 
         CountingLookups(Set<BlockCoord> cells) {
             this.cells = cells;

@@ -35,10 +35,6 @@ public final class AnimalLifecycle {
                 shortId(FeedTable.feedFor(species).get(0)));
     }
 
-    private static String shortId(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
-    }
-
     private AnimalLifecycle(Board board, String prefix, String lureItem) {
         this.board = Objects.requireNonNull(
                 board, "board не может быть null: доска — " + "канал постановки и снятия заданий цикла");
@@ -52,6 +48,10 @@ public final class AnimalLifecycle {
         }
         this.prefix = prefix;
         this.lureItem = lureItem;
+    }
+
+    private static String shortId(String item) {
+        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     public void captured(String captureId) {

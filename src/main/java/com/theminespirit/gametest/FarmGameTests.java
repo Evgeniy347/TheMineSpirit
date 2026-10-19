@@ -67,11 +67,11 @@ public final class FarmGameTests {
     private static final BlockPos TILL_SPIRIT = new BlockPos(5, 1, 7);
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
-    private FarmGameTests() {}
-
     private static final String MELON_BATCH = "farm_fruit_melon";
     private static final String PUMPKIN_BATCH = "farm_fruit_pumpkin";
     private static final String COCOA_BATCH = "farm_cocoa";
+
+    private FarmGameTests() {}
 
     @GameTest(template = "empty", batch = "farm_reach_guard", timeoutTicks = 20)
     public static void farmTuningReach_ExceedingBlockBreakerReach_IsRejected(GameTestHelper helper) {

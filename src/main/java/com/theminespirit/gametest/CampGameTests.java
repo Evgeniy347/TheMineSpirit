@@ -32,8 +32,6 @@ public final class CampGameTests {
     private static final int ARRIVE_LIMIT_TICKS = 100;
     private static final double ARRIVE_DISTANCE = RetreatPlanner.HOME_ARRIVAL;
 
-    private CampGameTests() {}
-
     // Отход camp_retreat_* проверяет выбор цели между домом и лагерем и не испытывает поселение.
     // Лагерь без дома делает духа поселением координатора: тот ставит ему оборону GUARD_AREA и через
     // интеллект выдаёт работу (рубка), а исходная задача «wait» терялась — отход оставался без приказа
@@ -43,6 +41,8 @@ public final class CampGameTests {
     private static final String RETREAT_HOME_BATCH = "camp_retreat_home";
     private static final String RETREAT_SCRIPT_BATCH = "camp_retreat_script";
     private static final String RETREAT_NONE_BATCH = "camp_retreat_none";
+
+    private CampGameTests() {}
 
     private static Camp campAt(GameTestHelper helper, BlockPos relative, double radius) {
         BlockPos absolute = helper.absolutePos(relative);

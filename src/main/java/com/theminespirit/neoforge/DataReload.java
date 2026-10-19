@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 public final class DataReload {
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    private static volatile List<TableRegistry.Report> lastReload = List.of();
+
     private DataReload() {}
 
     public static void register(AddReloadListenerEvent event) {
@@ -47,8 +49,6 @@ public final class DataReload {
             }
         }
     }
-
-    private static volatile List<TableRegistry.Report> lastReload = List.of();
 
     public static List<TableRegistry.Report> lastReload() {
         return lastReload;

@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class FishingSpots {
+    private FishingSpots() {}
+
     public record Spot(BlockCoord stand, BlockCoord water) {
         public Spot {
             Objects.requireNonNull(stand, "Стоянка у воды не может быть null: с неё дух забрасывает удочку");
@@ -18,12 +20,10 @@ public final class FishingSpots {
 
     /** Отбор места по внешним правилам мира: близость к поселению, чужие постройки. */
     public interface SpotFilter {
-        boolean allow(BlockCoord stand, BlockCoord water);
-
         SpotFilter ALL = (stand, water) -> true;
-    }
 
-    private FishingSpots() {}
+        boolean allow(BlockCoord stand, BlockCoord water);
+    }
 
     public static Optional<Spot> find(BlockCoord origin, WaterView view, FishingData data) {
         Objects.requireNonNull(data, "Данные рыбалки не могут быть null: в них порог площади и глубины");

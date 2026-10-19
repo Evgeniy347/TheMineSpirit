@@ -210,26 +210,13 @@ public final class DefenseGameTests {
         helper.onEachTick(() -> {
             long tick = helper.getTick();
             if (creeper.isAlive()) {
-                creeper.setTarget(armored);
-                if (creeper.getSwelling(1.0F) >= SWELL_CAP) {
-                    creeper.setSwellDir(-1);
-                }
-                maxSwell[0] = Math.max(maxSwell[0], creeper.getSwelling(1.0F));
-                creeperTarget[0] = armored.equals(creeper.getTarget())
-                        ? "броня"
-                        : naked.equals(creeper.getTarget()) ? "без брони" : String.valueOf(creeper.getTarget());
+                holdCreeperOnArmored(creeper, armored, naked, maxSwell, creeperTarget);
             }
             if (firstSwell[0] < 0 && creeper.isAlive() && creeper.getSwelling(1.0F) > 0.0F) {
                 firstSwell[0] = tick;
             }
-            if (firstReflex[0] < 0 && armored.policies().verdict() instanceof PolicyVerdict.Reflex reflex) {
-                firstReflex[0] = tick;
-                reflexText[0] = reflex.policy() + ": " + reflex.reason();
-            }
-            if (nakedReflex[0] < 0 && naked.policies().verdict() instanceof PolicyVerdict.Reflex reflex) {
-                nakedReflex[0] = tick;
-                nakedReflexText[0] = reflex.policy() + ": " + reflex.reason();
-            }
+            noteFirstReflex(tick, armored, firstReflex, reflexText);
+            noteFirstReflex(tick, naked, nakedReflex, nakedReflexText);
             if (creeperGone[0] < 0 && !creeper.isAlive()) {
                 creeperGone[0] = tick;
             }
@@ -245,40 +232,14 @@ public final class DefenseGameTests {
                     creeper.equals(armored.getTarget()),
                     "Мечник в железной броне идёт на крипера первым: иначе «ударь и беги» делает слабый и " + "гибнет; "
                             + duel);
-            DefensePlan duelPlan = coordinatorOf(helper, armored).defense().lastPlan();
-            if (orderOf(duelPlan, naked)
-                    .map(order -> order.target().isEmpty()
-                            || !order.target()
-                                    .get()
-                                    .id()
-                                    .equals(creeper.getUUID().toString()))
-                    .orElse(false)) {
+            if (nakedOrderedOffCreeper(helper, armored, naked, creeper)) {
                 nakedHolds[0] = true;
             }
             helper.assertTrue(
                     nakedHolds[0],
                     "Мечник без брони на крипера не идёт: иначе приказ подвёл слабого первым вместо "
                             + "бронированного; " + taskFacts(armored, naked));
-            double distance = armored.distanceTo(creeper);
-            if (creeper.getSwelling(1.0F) > 0.0F) {
-                swelled[0] = true;
-            }
-            if (swelled[0] && distance >= 7.0) {
-                retreated[0] = true;
-            }
-            if (retreated[0] && distance < 6.5) {
-                approachedAgain[0] = true;
-            }
-            helper.assertTrue(
-                    swelled[0],
-                    "Крипер набухает рядом с духом в броне: иначе сближения не было и проверять нечего; " + duel);
-            helper.assertTrue(
-                    retreated[0],
-                    "При набухании дух отходит за радиус взрыва: рефлекс ExplosionAvoidance не перебит приказом; "
-                            + duel);
-            helper.assertTrue(
-                    approachedAgain[0],
-                    "Дух возвращается для нового удара: «ударь и беги» — цикл, а не бесконечный отход; " + duel);
+            assertStrikeAndRetreatCycle(helper, armored, creeper, duel, swelled, retreated, approachedAgain);
             helper.assertTrue(
                     armored.isAlive() && naked.isAlive(),
                     "Оба мечника пережили крипера: иначе дух стоял вплотную и поймал взрыв");
@@ -286,6 +247,63 @@ public final class DefenseGameTests {
             armored.discard();
             TacticsScene.finish(helper, naked);
         });
+    }
+
+    private static void holdCreeperOnArmored(
+            Creeper creeper, SpiritEntity armored, SpiritEntity naked, float[] maxSwell, String[] creeperTarget) {
+        creeper.setTarget(armored);
+        if (creeper.getSwelling(1.0F) >= SWELL_CAP) {
+            creeper.setSwellDir(-1);
+        }
+        maxSwell[0] = Math.max(maxSwell[0], creeper.getSwelling(1.0F));
+        creeperTarget[0] = armored.equals(creeper.getTarget())
+                ? "броня"
+                : naked.equals(creeper.getTarget()) ? "без брони" : String.valueOf(creeper.getTarget());
+    }
+
+    private static void noteFirstReflex(long tick, SpiritEntity spirit, long[] firstTick, String[] text) {
+        if (firstTick[0] < 0 && spirit.policies().verdict() instanceof PolicyVerdict.Reflex reflex) {
+            firstTick[0] = tick;
+            text[0] = reflex.policy() + ": " + reflex.reason();
+        }
+    }
+
+    private static boolean nakedOrderedOffCreeper(
+            GameTestHelper helper, SpiritEntity armored, SpiritEntity naked, Creeper creeper) {
+        DefensePlan duelPlan = coordinatorOf(helper, armored).defense().lastPlan();
+        return orderOf(duelPlan, naked)
+                .map(order -> order.target().isEmpty()
+                        || !order.target().get().id().equals(creeper.getUUID().toString()))
+                .orElse(false);
+    }
+
+    private static void assertStrikeAndRetreatCycle(
+            GameTestHelper helper,
+            SpiritEntity armored,
+            Creeper creeper,
+            String duel,
+            boolean[] swelled,
+            boolean[] retreated,
+            boolean[] approachedAgain) {
+        double distance = armored.distanceTo(creeper);
+        if (creeper.getSwelling(1.0F) > 0.0F) {
+            swelled[0] = true;
+        }
+        if (swelled[0] && distance >= 7.0) {
+            retreated[0] = true;
+        }
+        if (retreated[0] && distance < 6.5) {
+            approachedAgain[0] = true;
+        }
+        helper.assertTrue(
+                swelled[0],
+                "Крипер набухает рядом с духом в броне: иначе сближения не было и проверять нечего; " + duel);
+        helper.assertTrue(
+                retreated[0],
+                "При набухании дух отходит за радиус взрыва: рефлекс ExplosionAvoidance не перебит приказом; " + duel);
+        helper.assertTrue(
+                approachedAgain[0],
+                "Дух возвращается для нового удара: «ударь и беги» — цикл, а не бесконечный отход; " + duel);
     }
 
     @GameTest(template = "arena", batch = "defense_redistribute", timeoutTicks = 400)

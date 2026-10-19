@@ -20,6 +20,8 @@ class MiningPlannerProperties {
     private static final BlockCoord FROM = new BlockCoord(0, 0, 0);
     private static final Cell[] CELLS = Cell.values();
 
+    private static final int WIDE = 8;
+
     @Property
     void next_RandomInput_ReturnedTargetIsSafeWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -95,8 +97,6 @@ class MiningPlannerProperties {
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
                         + "со стоянкой на смещении до 3. Цели: " + remaining);
     }
-
-    private static final int WIDE = 8;
 
     private static CellWorld denseWorld(Random random, List<BlockCoord> targets) {
         CellWorld world = new CellWorld();

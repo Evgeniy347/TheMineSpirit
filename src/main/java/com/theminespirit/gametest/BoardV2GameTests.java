@@ -220,6 +220,15 @@ public final class BoardV2GameTests {
         Path log = journalPath(helper, "relevance");
         BoardService board = isolated(level, log);
         long now = level.getGameTime();
+        assertBuriedCraterDetaches(helper, level, board, now);
+
+        assertMineLevelTwoWaitsGate(helper, level, board, now);
+        close(board, log, helper);
+        helper.succeed();
+    }
+
+    private static void assertBuriedCraterDetaches(
+            GameTestHelper helper, ServerLevel level, BoardService board, long now) {
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
         List<BlockCoord> profile = new ArrayList<>();
         for (int dx = 0; dx < 3; dx++) {
@@ -266,7 +275,10 @@ public final class BoardV2GameTests {
                 detached,
                 "Снятие по актуальности обязано оставить запись DETACHED в журнале: иначе причина "
                         + "исчезновения задания не видна");
+    }
 
+    private static void assertMineLevelTwoWaitsGate(
+            GameTestHelper helper, ServerLevel level, BoardService board, long now) {
         SpiritEntity spirit = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
         board.rebuild(level, now + 2);
         helper.assertTrue(
@@ -310,8 +322,6 @@ public final class BoardV2GameTests {
                 afterStone == BoardStatus.ASSIGNED || afterStone == BoardStatus.PENDING,
                 "После добычи 32 камня уровень 2 обязан выйти из гейта, статус " + afterStone);
         board.cancel(level, "mine_level_2");
-        close(board, log, helper);
-        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
@@ -331,6 +341,48 @@ public final class BoardV2GameTests {
         cowTwo.setNoAi(true);
         pig.setNoAi(true);
 
+        assertCapturesAndPensParallel(helper, level, board, spirit, cowTwo, now);
+
+        completeTicket(board, "cow_pen", spirit, now);
+        completeTicket(board, "pig_pen", spirit, now);
+        board.completePen("cow_pen");
+        board.completePen("pig_pen");
+        BoardTicket cowLure = board.board().find("cow_lure").orElse(null);
+        BoardTicket pigLure = board.board().find("pig_lure").orElse(null);
+        helper.assertTrue(
+                cowLure != null && pigLure != null,
+                "У каждого вида своя приманка: корова " + cowLure + ", свинья " + pigLure);
+        helper.assertTrue(
+                Map.of("wheat", 1).equals(cowLure.requiredItems()),
+                "Корову приманивают пшеницей, фактически " + cowLure.requiredItems());
+        helper.assertTrue(
+                Map.of("carrot", 1).equals(pigLure.requiredItems()),
+                "Свинью приманивают морковью, фактически " + pigLure.requiredItems()
+                        + ": приманка чужого вида увела бы животное не в тот загон");
+        helper.assertTrue(
+                cowLure.cause().contains(":cow:") && pigLure.cause().contains(":pig:"),
+                "Причина приманки — животное своего вида: " + cowLure.cause() + " / " + pigLure.cause());
+
+        HerdWatch.tick(level, board, List.of(spirit), now + 1);
+        BoardTicket breed = board.board().find("cow_breed").orElse(null);
+        helper.assertTrue(
+                breed != null && breed.boardCase() == BoardCase.BREED_ANIMALS,
+                "Две коровы в загоне разрешают разведение, фактически " + breed
+                        + ": разведение без пары или без загона не ставится");
+        helper.assertTrue(
+                breed.requiredItems().getOrDefault("minecraft:wheat", 0) == HerdCap.minBreed(),
+                "Гейт разведения — корм на пару (" + HerdCap.minBreed() + " пшеницы), фактически "
+                        + breed.requiredItems());
+
+        assertHerdLimitHolds(helper, level, board, spirit, cowOne, cowTwo, now);
+
+        drainForeignTickets(board);
+        close(board, log, helper);
+        helper.succeed();
+    }
+
+    private static void assertCapturesAndPensParallel(
+            GameTestHelper helper, ServerLevel level, BoardService board, SpiritEntity spirit, Cow cowTwo, long now) {
         HerdWatch.tick(level, board, List.of(spirit), now);
         String cowCapture = captureId(board, BoardCase.CAPTURE_ANIMAL, "cow");
         String pigCapture = captureId(board, BoardCase.CAPTURE_ANIMAL, "pig");
@@ -373,38 +425,16 @@ public final class BoardV2GameTests {
                 cowPen != null && cowPen.level() == 1 && pigPen != null && pigPen.level() == 1,
                 "Оба загона ставятся уровнем 1: коровий " + cowPen + ", свиной " + pigPen);
         assertPenLevelOne(helper, absolute(helper, new BlockPos(4, 1, 4)));
+    }
 
-        completeTicket(board, "cow_pen", spirit, now);
-        completeTicket(board, "pig_pen", spirit, now);
-        board.completePen("cow_pen");
-        board.completePen("pig_pen");
-        BoardTicket cowLure = board.board().find("cow_lure").orElse(null);
-        BoardTicket pigLure = board.board().find("pig_lure").orElse(null);
-        helper.assertTrue(
-                cowLure != null && pigLure != null,
-                "У каждого вида своя приманка: корова " + cowLure + ", свинья " + pigLure);
-        helper.assertTrue(
-                Map.of("wheat", 1).equals(cowLure.requiredItems()),
-                "Корову приманивают пшеницей, фактически " + cowLure.requiredItems());
-        helper.assertTrue(
-                Map.of("carrot", 1).equals(pigLure.requiredItems()),
-                "Свинью приманивают морковью, фактически " + pigLure.requiredItems()
-                        + ": приманка чужого вида увела бы животное не в тот загон");
-        helper.assertTrue(
-                cowLure.cause().contains(":cow:") && pigLure.cause().contains(":pig:"),
-                "Причина приманки — животное своего вида: " + cowLure.cause() + " / " + pigLure.cause());
-
-        HerdWatch.tick(level, board, List.of(spirit), now + 1);
-        BoardTicket breed = board.board().find("cow_breed").orElse(null);
-        helper.assertTrue(
-                breed != null && breed.boardCase() == BoardCase.BREED_ANIMALS,
-                "Две коровы в загоне разрешают разведение, фактически " + breed
-                        + ": разведение без пары или без загона не ставится");
-        helper.assertTrue(
-                breed.requiredItems().getOrDefault("minecraft:wheat", 0) == HerdCap.minBreed(),
-                "Гейт разведения — корм на пару (" + HerdCap.minBreed() + " пшеницы), фактически "
-                        + breed.requiredItems());
-
+    private static void assertHerdLimitHolds(
+            GameTestHelper helper,
+            ServerLevel level,
+            BoardService board,
+            SpiritEntity spirit,
+            Cow cowOne,
+            Cow cowTwo,
+            long now) {
         int activeCaptures = activeCaptures(board, "cow");
         cowOne.discard();
         cowTwo.discard();
@@ -428,15 +458,6 @@ public final class BoardV2GameTests {
                 "Пятая корова при четырёх не порождает новый CAPTURE_ANIMAL: было активно "
                         + activeCaptures + ", стало " + activeCaptures(board, "cow")
                         + ": сверх лимита стадо не растёт");
-
-        for (BoardTicket ticket : board.board().all()) {
-            BoardStatus status = board.board().statusOf(ticket.id()).orElse(null);
-            if (status != BoardStatus.DONE && status != BoardStatus.CANCELLED) {
-                board.board().cancel(ticket.id());
-            }
-        }
-        close(board, log, helper);
-        helper.succeed();
     }
 
     // [флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
@@ -595,6 +616,28 @@ public final class BoardV2GameTests {
         BoardService board = isolated(level, log);
         UUID holder = UUID.randomUUID();
         long now = level.getGameTime();
+        assertDoneRecordedWithCurrentHash(helper, board, log, holder, now, beforeHash);
+        try {
+            reloadBoard(helper, changed, packName);
+            assertDoneRecordedWithNewHash(helper, board, log, holder, now, beforeHash);
+        } finally {
+            DataTables.INSTANCE
+                    .board()
+                    .replace(
+                            savedConfig,
+                            savedStatus.source(),
+                            savedStatus.origin(),
+                            savedStatus.hash(),
+                            Clock.systemUTC());
+            deleteTree(pack);
+        }
+        assertLedgerSurvivesRestart(helper, level, board, log);
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    private static void assertDoneRecordedWithCurrentHash(
+            GameTestHelper helper, BoardService board, Path log, UUID holder, long now, String beforeHash) {
         board.submit(
                 new BoardTicket(
                         "journal_build",
@@ -616,47 +659,42 @@ public final class BoardV2GameTests {
                 beforeHash.equals(first.configHash()),
                 "Строка несёт текущий configHash " + beforeHash + ", фактически " + first.configHash()
                         + ": без версии конфигурации журнал несравним со временем");
-        try {
-            reloadBoard(helper, changed, packName);
-            String afterHash = ConfigStamp.current();
-            helper.assertTrue(
-                    !beforeHash.equals(afterHash),
-                    "Изменённый board.json обязан дать новый hash: было " + beforeHash + ", стало " + afterHash);
-            board.submit(
-                    new BoardTicket(
-                            "journal_after_reload",
-                            BoardCase.BUILD_PEN,
-                            Optional.of(holder),
-                            65,
-                            now + 1,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))));
-            board.board().claim("journal_after_reload", holder, now + 1);
-            board.board().complete("journal_after_reload");
-            board.journal().flushAll();
-            BoardLogEntry second = entryOf(log, "journal_after_reload");
-            helper.assertTrue(second != null, "Новое задание после перезагрузки обязано попасть в журнал");
-            helper.assertTrue(
-                    afterHash.equals(second.configHash()),
-                    "Новая строка несёт новый hash " + afterHash + ", фактически " + second.configHash()
-                            + ": старые и новые правила должны различаться");
-            helper.assertTrue(
-                    !beforeHash.equals(second.configHash()),
-                    "Старый hash не переписан: новые записи идут с новой версией конфигурации");
-        } finally {
-            DataTables.INSTANCE
-                    .board()
-                    .replace(
-                            savedConfig,
-                            savedStatus.source(),
-                            savedStatus.origin(),
-                            savedStatus.hash(),
-                            Clock.systemUTC());
-            deleteTree(pack);
-        }
+    }
+
+    private static void assertDoneRecordedWithNewHash(
+            GameTestHelper helper, BoardService board, Path log, UUID holder, long now, String beforeHash) {
+        String afterHash = ConfigStamp.current();
+        helper.assertTrue(
+                !beforeHash.equals(afterHash),
+                "Изменённый board.json обязан дать новый hash: было " + beforeHash + ", стало " + afterHash);
+        board.submit(
+                new BoardTicket(
+                        "journal_after_reload",
+                        BoardCase.BUILD_PEN,
+                        Optional.of(holder),
+                        65,
+                        now + 1,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))));
+        board.board().claim("journal_after_reload", holder, now + 1);
+        board.board().complete("journal_after_reload");
+        board.journal().flushAll();
+        BoardLogEntry second = entryOf(log, "journal_after_reload");
+        helper.assertTrue(second != null, "Новое задание после перезагрузки обязано попасть в журнал");
+        helper.assertTrue(
+                afterHash.equals(second.configHash()),
+                "Новая строка несёт новый hash " + afterHash + ", фактически " + second.configHash()
+                        + ": старые и новые правила должны различаться");
+        helper.assertTrue(
+                !beforeHash.equals(second.configHash()),
+                "Старый hash не переписан: новые записи идут с новой версией конфигурации");
+    }
+
+    private static void assertLedgerSurvivesRestart(
+            GameTestHelper helper, ServerLevel level, BoardService board, Path log) {
         board.close();
         JournalService journal = new JournalService(log);
         Board restored = new Board(
@@ -676,8 +714,6 @@ public final class BoardV2GameTests {
                 "После рестарта ledger обязан помнить и загон из новой версии конфигурации");
         restarted.close();
         delete(log);
-        GameTestFixtures.finish(helper);
-        helper.succeed();
     }
 
     private static void drainForeignTickets(BoardService board) {

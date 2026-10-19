@@ -23,6 +23,7 @@ final class TacticsScene {
     static final float LOW_HP = 4.0F;
     static final int FOREVER = 1_000_000;
     static final long NOON = 6000;
+    static final int SETTLE_TICKS = 60;
     private static final int SWEEP_MARGIN = 45;
     private static final int SWEEP_DEPTH = 8;
     private static final int SWEEP_HEIGHT = 24;
@@ -51,8 +52,6 @@ final class TacticsScene {
         mob.setNoAi(true);
         return mob;
     }
-
-    static final int SETTLE_TICKS = 60;
 
     static PolicyScene ambush(
             GameTestHelper helper, SpiritEntity spirit, Mob enemy, BlockPos attackFrom, boolean ai, float health) {

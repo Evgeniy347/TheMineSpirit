@@ -6,6 +6,7 @@ plugins {
     id 'idea'
     id 'com.diffplug.spotless'
     id 'net.ltgt.errorprone'
+    id 'checkstyle'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -266,10 +267,18 @@ spotless {
     }
 }
 
+// Checkstyle — минимальный набор config/checkstyle/checkstyle.xml (что в него не входит и почему — там же).
+checkstyle {
+    toolVersion = checkstyle_version
+    maxWarnings = 0
+    ignoreFailures = false
+}
+
 tasks.register('staticAnalysis') {
     group = 'verification'
     description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
     dependsOn tasks.named('spotlessCheck')
+    dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
 }
 
 tasks.named('check') {

@@ -33,6 +33,15 @@ public final class UnloadScript extends ContainerTask {
         this(spirit, params, -1, 0, null);
     }
 
+    private UnloadScript(
+            SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent, String activity) {
+        super(spirit, params.container(), params.radius());
+        this.params = params;
+        this.protectedSlot = protectedSlot;
+        this.reservePercent = reservePercent;
+        this.activity = activity;
+    }
+
     public static UnloadScript relief(SpiritEntity spirit, int protectedSlot) {
         return reliefFor(spirit, protectedSlot, null);
     }
@@ -44,15 +53,6 @@ public final class UnloadScript extends ContainerTask {
                 protectedSlot,
                 WarehouseSpace.MIN_FREE_PERCENT,
                 activity);
-    }
-
-    private UnloadScript(
-            SpiritEntity spirit, UnloadParams params, int protectedSlot, int reservePercent, String activity) {
-        super(spirit, params.container(), params.radius());
-        this.params = params;
-        this.protectedSlot = protectedSlot;
-        this.reservePercent = reservePercent;
-        this.activity = activity;
     }
 
     @Override

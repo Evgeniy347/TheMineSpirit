@@ -25,6 +25,9 @@ import net.minecraft.server.level.ServerPlayer;
 public final class ExpeditionController {
     public static final double AGREE_RADIUS = 4.0;
 
+    private static final int PARTNER_RADIUS = 3;
+    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
+
     private final TaskStarter starter;
     private final Invitation invitation = new Invitation();
     private Dispatch lastDispatch;
@@ -36,9 +39,6 @@ public final class ExpeditionController {
     private List<UUID> missionTeam = List.of();
     private UUID missionLeader;
     private String refusal;
-
-    private static final int PARTNER_RADIUS = 3;
-    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
     public ExpeditionController(TaskStarter starter) {
         if (starter == null) {

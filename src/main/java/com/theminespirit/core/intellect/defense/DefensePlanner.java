@@ -24,27 +24,7 @@ public final class DefensePlanner {
             List<EnemyFact> enemies,
             EnemyProfiles profiles,
             DefenseProfile profile) {
-        if (state == null) {
-            throw new IllegalArgumentException("state не может быть null: точка обороны берётся из состояния");
-        }
-        if (defenders == null) {
-            throw new IllegalArgumentException("defenders не может быть null: нет защитников — пустой список");
-        }
-        if (enemies == null) {
-            throw new IllegalArgumentException("enemies не может быть null: нет врагов — пустой список");
-        }
-        if (profiles == null) {
-            throw new IllegalArgumentException("profiles не может быть null: сила врага берётся из enemies.json");
-        }
-        if (profile == null) {
-            throw new IllegalArgumentException("profile не может быть null: цели выбираются по таблице приоритетов");
-        }
-        if (defenders.stream().anyMatch(defender -> defender == null)) {
-            throw new IllegalArgumentException("defenders содержит null: защитник без снимка приказ не получит");
-        }
-        if (enemies.stream().anyMatch(enemy -> enemy == null)) {
-            throw new IllegalArgumentException("enemies содержит null: враг без факта в план не попадёт");
-        }
+        requireInputs(state, defenders, enemies, profiles, profile);
         if (state.defendedPoint().isEmpty()) {
             return new DefensePlan(Optional.empty(), List.of(), List.of());
         }
@@ -106,6 +86,35 @@ public final class DefensePlanner {
                     decision.reason()));
         }
         return new DefensePlan(Optional.of(center), posts, List.copyOf(orders));
+    }
+
+    private static void requireInputs(
+            CoordinatorState state,
+            List<DefenderCapability> defenders,
+            List<EnemyFact> enemies,
+            EnemyProfiles profiles,
+            DefenseProfile profile) {
+        if (state == null) {
+            throw new IllegalArgumentException("state не может быть null: точка обороны берётся из состояния");
+        }
+        if (defenders == null) {
+            throw new IllegalArgumentException("defenders не может быть null: нет защитников — пустой список");
+        }
+        if (enemies == null) {
+            throw new IllegalArgumentException("enemies не может быть null: нет врагов — пустой список");
+        }
+        if (profiles == null) {
+            throw new IllegalArgumentException("profiles не может быть null: сила врага берётся из enemies.json");
+        }
+        if (profile == null) {
+            throw new IllegalArgumentException("profile не может быть null: цели выбираются по таблице приоритетов");
+        }
+        if (defenders.stream().anyMatch(defender -> defender == null)) {
+            throw new IllegalArgumentException("defenders содержит null: защитник без снимка приказ не получит");
+        }
+        if (enemies.stream().anyMatch(enemy -> enemy == null)) {
+            throw new IllegalArgumentException("enemies содержит null: враг без факта в план не попадёт");
+        }
     }
 
     private static void assignLoneCreeper(

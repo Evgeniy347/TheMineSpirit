@@ -119,6 +119,11 @@ public final class BlockPlacer {
                     "блок " + blockId + " в " + target.toShortString()
                             + " не держится и сразу исчез: настенному блоку нужна стена со стороны крепления");
         }
+        announcePlaced(level, target, state);
+        return new Started(target.immutable());
+    }
+
+    private void announcePlaced(Level level, BlockPos target, BlockState state) {
         level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
         spirit.swing(InteractionHand.MAIN_HAND, true);
         SoundType sound = state.getSoundType(level, target, spirit);
@@ -136,7 +141,6 @@ public final class BlockPlacer {
                 PlacedBlocksData.get(server).markSpirit(second);
             }
         }
-        return new Started(target.immutable());
     }
 
     private static boolean firstOfTwoParts(BlockState state) {

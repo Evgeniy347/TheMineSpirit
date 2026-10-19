@@ -158,6 +158,13 @@ public final class SpiritScripts {
 
     private static Map<String, Function<SpiritEntity, ScriptFactory>> implemented() {
         Map<String, Function<SpiritEntity, ScriptFactory>> table = new LinkedHashMap<>();
+        putSensingMovementAndCombat(table);
+        putExchangeFarmingAndInventory(table);
+        putBuildingMiningAndAcquire(table);
+        return table;
+    }
+
+    private static void putSensingMovementAndCombat(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
         table.put("scan", spirit -> params -> new ScanScript(spirit, ScanParams.from(params)));
         table.put("scan_blocks", spirit -> params -> new ScanScript(spirit, PerceptionParams.blocks(params)));
         table.put("scan_entities", spirit -> params -> new ScanScript(spirit, PerceptionParams.entities(params)));
@@ -200,6 +207,9 @@ public final class SpiritScripts {
         table.put("retreat", spirit -> observing(params -> new RetreatScript(spirit, RetreatParams.from(params))));
         table.put(
                 "disengage", spirit -> observing(params -> new DisengageScript(spirit, DisengageParams.from(params))));
+    }
+
+    private static void putExchangeFarmingAndInventory(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
         table.put("deliver", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
         table.put(
                 "drop_to_player", spirit -> params -> new DropToPlayerScript(spirit, DropToPlayerParams.from(params)));
@@ -238,6 +248,9 @@ public final class SpiritScripts {
         table.put("unload", spirit -> params -> new UnloadScript(spirit, UnloadParams.from(params)));
         table.put("equip", spirit -> params -> new EquipScript(spirit, EquipParams.from(params)));
         table.put("repair_tool", spirit -> params -> new RepairScript(spirit, RepairParams.from(params)));
+    }
+
+    private static void putBuildingMiningAndAcquire(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
         table.put("pillar_up", spirit -> params -> new PillarUpScript(spirit, PillarUpParams.from(params)));
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
@@ -280,7 +293,6 @@ public final class SpiritScripts {
                     conditionCatalog(),
                     new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
         });
-        return table;
     }
 
     public static ScriptRegistry registryFor(SpiritEntity spirit) {

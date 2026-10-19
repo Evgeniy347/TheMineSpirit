@@ -57,72 +57,82 @@ public final class IntellectScaleGameTests {
             SpiritCoordinator coordinator = CoordinatorRegistry.get(helper.getLevel(), key);
             SettlementIntellect intellect = coordinator.intellect();
             long now = helper.getLevel().getGameTime();
-            for (SpiritEntity spirit : spirits) {
-                String id = spirit.getUUID().toString();
-                long gen = spirit.taskGeneration();
-                Long prev = lastGen.put(id, gen);
-                boolean restarted = prev != null && gen != prev;
-                boolean empty = spirit.currentTaskScript().isEmpty();
-                boolean failed = spirit.taskStatus()
-                        .map(status -> status == RunStatus.FAILED)
-                        .orElse(false);
-                if (empty && failed && !failTick.containsKey(id)) {
-                    failTick.put(id, now);
-                }
-                if (restarted && failTick.containsKey(id) && startedScript(spirit)) {
-                    helper.assertTrue(
-                            now - failTick.get(id)
-                                    >= IntellectTuning.loadDefault().failBackoffTicks(),
-                            "Дух " + id + " получил работу через " + (now - failTick.get(id))
-                                    + " тиков после провала вместо 200: откат не держит");
-                    failTick.remove(id);
-                }
-            }
+            assertBackoffHolds(helper, spirits, failTick, lastGen, now);
             long elapsed = now - started;
             if (elapsed >= OBSERVED_TICKS) {
-                helper.assertTrue(
-                        intellect.decideCalls() >= 2,
-                        "Интеллект пересчитал спрос дважды: иначе бюджеты делить не на что");
-                helper.assertTrue(
-                        intellect.decideCalls() * IntellectTuning.loadDefault().demandIntervalTicks()
-                                <= elapsed + IntellectTuning.loadDefault().demandIntervalTicks(),
-                        "Пересчётов не больше одного на 100 тиков: иначе снимок собирается каждый тик");
-                helper.assertTrue(
-                        intellect.entityQueries() <= intellect.decideCalls(),
-                        "Запросов сущностей не больше числа пересчётов: один сбор врагов на решение");
-                helper.assertTrue(
-                        StockReader.STOCK_READ_BUDGET == 4096,
-                        "Бюджет чтений запасов 4096: число в тесте, факт — из production");
-                helper.assertTrue(
-                        intellect.stockReads() <= StockReader.STOCK_READ_BUDGET * intellect.decideCalls(),
-                        "Чтений запасов не больше бюджета на число пересборок: иначе тик читает полмира");
-                helper.assertTrue(
-                        IntellectTuning.loadDefault().failBackoffTicks() == 200,
-                        "Откат провала 200 тиков: число в тесте, факт — из production");
-                helper.assertTrue(
-                        intellect.taskFailures() >= SPIRITS,
-                        "Провалов не меньше числа духов: иначе механизм отката вообще не включался");
-                helper.assertTrue(
-                        intellect.taskFailures()
-                                <= SPIRITS
-                                        * (OBSERVED_TICKS
-                                                / IntellectTuning.loadDefault().failBackoffTicks()),
-                        "Провалов не больше пяти окон отката на духа: иначе задачи перезапускаются без отката");
-                helper.assertTrue(
-                        intellect.taskStarts()
-                                <= SPIRITS
-                                        * (1
-                                                + OBSERVED_TICKS
-                                                        / IntellectTuning.loadDefault()
-                                                                .demandIntervalTicks()),
-                        "Назначений не больше одного на духа за период спроса: иначе дёргаем задачи каждый тик");
-                helper.assertTrue(
-                        intellect.view().orElseThrow().population() == SPIRITS,
-                        "В снимке все " + SPIRITS + " духов: иначе решение делят без части поселения");
+                assertIntellectBudgets(helper, intellect, elapsed);
                 spirits.forEach(SpiritEntity::discard);
                 TacticsScene.finish(helper, spirits.get(0));
             }
         });
+    }
+
+    private static void assertBackoffHolds(
+            GameTestHelper helper,
+            List<SpiritEntity> spirits,
+            Map<String, Long> failTick,
+            Map<String, Long> lastGen,
+            long now) {
+        for (SpiritEntity spirit : spirits) {
+            String id = spirit.getUUID().toString();
+            long gen = spirit.taskGeneration();
+            Long prev = lastGen.put(id, gen);
+            boolean restarted = prev != null && gen != prev;
+            boolean empty = spirit.currentTaskScript().isEmpty();
+            boolean failed = spirit.taskStatus()
+                    .map(status -> status == RunStatus.FAILED)
+                    .orElse(false);
+            if (empty && failed && !failTick.containsKey(id)) {
+                failTick.put(id, now);
+            }
+            if (restarted && failTick.containsKey(id) && startedScript(spirit)) {
+                helper.assertTrue(
+                        now - failTick.get(id) >= IntellectTuning.loadDefault().failBackoffTicks(),
+                        "Дух " + id + " получил работу через " + (now - failTick.get(id))
+                                + " тиков после провала вместо 200: откат не держит");
+                failTick.remove(id);
+            }
+        }
+    }
+
+    private static void assertIntellectBudgets(GameTestHelper helper, SettlementIntellect intellect, long elapsed) {
+        helper.assertTrue(
+                intellect.decideCalls() >= 2, "Интеллект пересчитал спрос дважды: иначе бюджеты делить не на что");
+        helper.assertTrue(
+                intellect.decideCalls() * IntellectTuning.loadDefault().demandIntervalTicks()
+                        <= elapsed + IntellectTuning.loadDefault().demandIntervalTicks(),
+                "Пересчётов не больше одного на 100 тиков: иначе снимок собирается каждый тик");
+        helper.assertTrue(
+                intellect.entityQueries() <= intellect.decideCalls(),
+                "Запросов сущностей не больше числа пересчётов: один сбор врагов на решение");
+        helper.assertTrue(
+                StockReader.STOCK_READ_BUDGET == 4096,
+                "Бюджет чтений запасов 4096: число в тесте, факт — из production");
+        helper.assertTrue(
+                intellect.stockReads() <= StockReader.STOCK_READ_BUDGET * intellect.decideCalls(),
+                "Чтений запасов не больше бюджета на число пересборок: иначе тик читает полмира");
+        helper.assertTrue(
+                IntellectTuning.loadDefault().failBackoffTicks() == 200,
+                "Откат провала 200 тиков: число в тесте, факт — из production");
+        helper.assertTrue(
+                intellect.taskFailures() >= SPIRITS,
+                "Провалов не меньше числа духов: иначе механизм отката вообще не включался");
+        helper.assertTrue(
+                intellect.taskFailures()
+                        <= SPIRITS
+                                * (OBSERVED_TICKS
+                                        / IntellectTuning.loadDefault().failBackoffTicks()),
+                "Провалов не больше пяти окон отката на духа: иначе задачи перезапускаются без отката");
+        helper.assertTrue(
+                intellect.taskStarts()
+                        <= SPIRITS
+                                * (1
+                                        + OBSERVED_TICKS
+                                                / IntellectTuning.loadDefault().demandIntervalTicks()),
+                "Назначений не больше одного на духа за период спроса: иначе дёргаем задачи каждый тик");
+        helper.assertTrue(
+                intellect.view().orElseThrow().population() == SPIRITS,
+                "В снимке все " + SPIRITS + " духов: иначе решение делят без части поселения");
     }
 
     private static boolean startedScript(SpiritEntity spirit) {

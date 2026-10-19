@@ -3,8 +3,6 @@ package com.theminespirit.core.script;
 import com.theminespirit.core.observation.ScanRadius;
 
 public final class CatalogLimits {
-    private CatalogLimits() {}
-
     // docs/api/README.md: count 1..256
     public static final int COUNT_MIN = 1;
     public static final int COUNT_MAX = 256;
@@ -211,4 +209,6 @@ public final class CatalogLimits {
     public static final int DISENGAGE_DISTANCE_MIN = 1;
     public static final int DISENGAGE_DISTANCE_MAX = 16;
     public static final int DISENGAGE_DISTANCE_DEFAULT = 5;
+
+    private CatalogLimits() {}
 }

@@ -10,9 +10,9 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class BaseKit {
+    static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
     private static final Set<String> ROOT_FIELDS = Set.of("rules", "never_give_away");
-    static final Set<String> RULE_FIELDS = Set.of("match", "category", "keep", "mode");
 
     private final String origin;
     private final List<KitRule> rules;

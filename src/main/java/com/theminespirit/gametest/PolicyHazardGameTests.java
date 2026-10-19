@@ -33,6 +33,16 @@ public final class PolicyHazardGameTests {
     private static final BlockPos GOTO_START = new BlockPos(1, 1, 4);
     private static final BlockPos GOTO_TARGET = new BlockPos(8, 1, 4);
 
+    private static final List<PathType> CLOSED_TYPES = List.of(
+            PathType.LAVA,
+            PathType.DAMAGE_FIRE,
+            PathType.DANGER_FIRE,
+            PathType.DAMAGE_OTHER,
+            PathType.DANGER_OTHER,
+            PathType.DAMAGE_CAUTIOUS,
+            PathType.DANGER_POWDER_SNOW,
+            PathType.POWDER_SNOW);
+
     private PolicyHazardGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
@@ -274,16 +284,6 @@ public final class PolicyHazardGameTests {
     public static void cliffOfTwoBlocks_GotoDownward_DescendsAndArrives(GameTestHelper helper) {
         cliff(helper, 2, RunStatus.SUCCEEDED);
     }
-
-    private static final List<PathType> CLOSED_TYPES = List.of(
-            PathType.LAVA,
-            PathType.DAMAGE_FIRE,
-            PathType.DANGER_FIRE,
-            PathType.DAMAGE_OTHER,
-            PathType.DANGER_OTHER,
-            PathType.DAMAGE_CAUTIOUS,
-            PathType.DANGER_POWDER_SNOW,
-            PathType.POWDER_SNOW);
 
     @GameTest(template = "arena", batch = "policy_path_table", timeoutTicks = 20)
     public static void pathTable_RealSpirit_BlocksEveryHazardPathType(GameTestHelper helper) {

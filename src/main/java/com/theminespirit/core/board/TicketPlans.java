@@ -23,6 +23,7 @@ import org.jspecify.annotations.Nullable;
  * goto/acquire/fill/capture/build_schematic/withdraw/dig_area/clear_area/deliver.
  */
 public final class TicketPlans {
+    public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
@@ -41,8 +42,6 @@ public final class TicketPlans {
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
-
-    public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
     private TicketPlans() {}
 

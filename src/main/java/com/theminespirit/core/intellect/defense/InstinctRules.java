@@ -19,31 +19,7 @@ public final class InstinctRules {
             List<DefenderCapability> allies,
             Set<UUID> busy,
             DefenseProfile profile) {
-        if (self == null) {
-            throw new IllegalArgumentException("self не может быть null: стойка выбирается конкретному духу");
-        }
-        if (target == null) {
-            throw new IllegalArgumentException("target не может быть null: инстинкт действует поверх цели");
-        }
-        if (enemies == null) {
-            throw new IllegalArgumentException("enemies не может быть null: нет врагов — пустой список");
-        }
-        if (allies == null) {
-            throw new IllegalArgumentException("allies не может быть null: нет союзников — пустой список");
-        }
-        if (busy == null) {
-            throw new IllegalArgumentException("busy не может быть null: нет занятых — пустое множество");
-        }
-        if (profile == null) {
-            throw new IllegalArgumentException(
-                    "profile не может быть null: класс скелета рядом считается по таблице приоритетов");
-        }
-        if (enemies.stream().anyMatch(enemy -> enemy == null)) {
-            throw new IllegalArgumentException("enemies содержит null: враг без факта не проверяется");
-        }
-        if (allies.stream().anyMatch(ally -> ally == null)) {
-            throw new IllegalArgumentException("allies содержит null: союзник без снимка не проверяется");
-        }
+        requireInputs(self, target, enemies, allies, busy, profile);
         boolean wounded = self.hpFraction() < DefenseTuning.LOW_HP_FRACTION;
         if (wounded && self.heal()) {
             return new InstinctDecision(
@@ -115,6 +91,40 @@ public final class InstinctRules {
                 Optional.empty(),
                 Optional.empty(),
                 "ближний бой с выбранной целью");
+    }
+
+    private static void requireInputs(
+            DefenderCapability self,
+            RankedTarget target,
+            List<EnemyFact> enemies,
+            List<DefenderCapability> allies,
+            Set<UUID> busy,
+            DefenseProfile profile) {
+        if (self == null) {
+            throw new IllegalArgumentException("self не может быть null: стойка выбирается конкретному духу");
+        }
+        if (target == null) {
+            throw new IllegalArgumentException("target не может быть null: инстинкт действует поверх цели");
+        }
+        if (enemies == null) {
+            throw new IllegalArgumentException("enemies не может быть null: нет врагов — пустой список");
+        }
+        if (allies == null) {
+            throw new IllegalArgumentException("allies не может быть null: нет союзников — пустой список");
+        }
+        if (busy == null) {
+            throw new IllegalArgumentException("busy не может быть null: нет занятых — пустое множество");
+        }
+        if (profile == null) {
+            throw new IllegalArgumentException(
+                    "profile не может быть null: класс скелета рядом считается по таблице приоритетов");
+        }
+        if (enemies.stream().anyMatch(enemy -> enemy == null)) {
+            throw new IllegalArgumentException("enemies содержит null: враг без факта не проверяется");
+        }
+        if (allies.stream().anyMatch(ally -> ally == null)) {
+            throw new IllegalArgumentException("allies содержит null: союзник без снимка не проверяется");
+        }
     }
 
     private static Optional<EnemyFact> nearestSkeleton(Point self, List<EnemyFact> enemies, DefenseProfile profile) {

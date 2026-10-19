@@ -19,7 +19,36 @@ public final class CoreScripts {
     private CoreScripts() {}
 
     public static ScriptCatalog defaultCatalog() {
-        return ScriptCatalog.of(List.of(
+        List<ScriptSpec> specs = new ArrayList<>();
+        specs.addAll(perceptionSpecs());
+        specs.addAll(memorySpecs());
+        specs.addAll(travelSpecs());
+        specs.addAll(navigationSpecs());
+        specs.addAll(terrainSpecs());
+        specs.addAll(waterAndFleeSpecs());
+        specs.addAll(forestryAndMiningSpecs());
+        specs.addAll(descentSpecs());
+        specs.addAll(gatheringSpecs());
+        specs.addAll(cropCareSpecs());
+        specs.addAll(breedingSpecs());
+        specs.addAll(animalProduceSpecs());
+        specs.addAll(huntingSpecs());
+        specs.addAll(fishingSpecs());
+        specs.addAll(itemSpecs());
+        specs.addAll(combatAndClimbSpecs());
+        specs.addAll(placementSpecs());
+        specs.addAll(fillAndClearSpecs());
+        specs.addAll(buildSpecs());
+        specs.addAll(structureSpecs());
+        specs.addAll(socialSpecs());
+        specs.addAll(campSpecs());
+        specs.addAll(interactionSpecs());
+        specs.addAll(exchangeSpecs());
+        return ScriptCatalog.of(specs);
+    }
+
+    private static List<ScriptSpec> perceptionSpecs() {
+        return List.of(
                 spec(
                         "scan",
                         "просканировать мир вокруг духа",
@@ -83,7 +112,11 @@ public final class CoreScripts {
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
                         List.of(),
-                        List.of("описание клетки получено, чанк не загружался")),
+                        List.of("описание клетки получено, чанк не загружался")));
+    }
+
+    private static List<ScriptSpec> memorySpecs() {
+        return List.of(
                 spec(
                         "remember",
                         "запомнить точку под именем",
@@ -120,7 +153,11 @@ public final class CoreScripts {
                         "забыть точку по имени",
                         List.of(ParamSpec.text("name", true)),
                         List.of(),
-                        List.of("точки с таким именем в памяти нет")),
+                        List.of("точки с таким именем в памяти нет")));
+    }
+
+    private static List<ScriptSpec> travelSpecs() {
+        return List.of(
                 spec(
                         "goto",
                         "пройти к заданной точке",
@@ -193,7 +230,11 @@ public final class CoreScripts {
                                         CatalogLimits.NAV_PATROL_LOOPS_MAX,
                                         CatalogLimits.NAV_PATROL_LOOPS_DEFAULT)),
                         List.of("маршрут задан"),
-                        List.of("маршрут пройден")),
+                        List.of("маршрут пройден")));
+    }
+
+    private static List<ScriptSpec> navigationSpecs() {
+        return List.of(
                 spec(
                         "goto_block",
                         "подойти к ближайшему блоку заданного вида",
@@ -262,7 +303,11 @@ public final class CoreScripts {
                                         CatalogLimits.NAV_KEEP_DISTANCE_MAX,
                                         CatalogLimits.NAV_KEEP_DISTANCE_DEFAULT)),
                         List.of("цель существует"),
-                        List.of("дух держит дистанцию до цели")),
+                        List.of("дух держит дистанцию до цели")));
+    }
+
+    private static List<ScriptSpec> terrainSpecs() {
+        return List.of(
                 spec(
                         "walk_careful",
                         "осторожно пройти к точке",
@@ -319,7 +364,11 @@ public final class CoreScripts {
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
                         List.of("цель за водой или на воде"),
-                        List.of("дух переплыл к точке, не утонув")),
+                        List.of("дух переплыл к точке, не утонув")));
+    }
+
+    private static List<ScriptSpec> waterAndFleeSpecs() {
+        return List.of(
                 spec(
                         "cross_water",
                         "переправиться через воду вплавь (мост в переправе не строится)",
@@ -365,7 +414,11 @@ public final class CoreScripts {
                         "убежать от угрозы",
                         List.of(),
                         List.of("поблизости есть угроза"),
-                        List.of("дух вне опасности")),
+                        List.of("дух вне опасности")));
+    }
+
+    private static List<ScriptSpec> forestryAndMiningSpecs() {
+        return List.of(
                 spec(
                         "chop_tree",
                         "срубить деревья",
@@ -432,7 +485,11 @@ public final class CoreScripts {
                                 ParamSpec.integer(
                                         "size", true, CatalogLimits.DIG_SIZE_MIN, CatalogLimits.DIG_SIZE_MAX)),
                         List.of(),
-                        List.of("блоки области удалены")),
+                        List.of("блоки области удалены")));
+    }
+
+    private static List<ScriptSpec> descentSpecs() {
+        return List.of(
                 spec(
                         "dig_descent",
                         "спуститься в шахту вниз по тоннелю",
@@ -504,7 +561,11 @@ public final class CoreScripts {
                         List.of(
                                 "проход 1×2 пройден до целевого этажа или заданной длины",
                                 "опасные клетки заложены блоком из инвентаря, сыпучее осыпано и выкопано",
-                                "проход освещён факелами через интервал")),
+                                "проход освещён факелами через интервал")));
+    }
+
+    private static List<ScriptSpec> gatheringSpecs() {
+        return List.of(
                 spec(
                         "gather",
                         "собрать блоки заданного типа",
@@ -568,7 +629,11 @@ public final class CoreScripts {
                                         CatalogLimits.COUNT_MAX,
                                         CatalogLimits.PLANT_COUNT_DEFAULT)),
                         List.of("есть семена", "есть подготовленная земля"),
-                        List.of("культура посажена")),
+                        List.of("культура посажена")));
+    }
+
+    private static List<ScriptSpec> cropCareSpecs() {
+        return List.of(
                 spec(
                         "till",
                         "вспахать землю под грядку",
@@ -605,7 +670,11 @@ public final class CoreScripts {
                                         CatalogLimits.COUNT_MAX,
                                         CatalogLimits.BONE_MEAL_COUNT_DEFAULT)),
                         List.of("есть костная мука", "посевы растут"),
-                        List.of("посевы подкормлены")),
+                        List.of("посевы подкормлены")));
+    }
+
+    private static List<ScriptSpec> breedingSpecs() {
+        return List.of(
                 spec(
                         "breed",
                         "свести пару животных",
@@ -662,7 +731,11 @@ public final class CoreScripts {
                                         CatalogLimits.HERD_COUNT_MAX,
                                         CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
                         List.of("есть ножницы", "овцы с шерстью"),
-                        List.of("овцы пострижены", "шерсть подобрана")),
+                        List.of("овцы пострижены", "шерсть подобрана")));
+    }
+
+    private static List<ScriptSpec> animalProduceSpecs() {
+        return List.of(
                 spec(
                         "milk",
                         "подоить коров",
@@ -709,7 +782,11 @@ public final class CoreScripts {
                                         CatalogLimits.HERD_COUNT_MAX,
                                         CatalogLimits.HIVE_COUNT_DEFAULT)),
                         List.of("есть ножницы или стеклянная бутылка", "под ульем костёр или материалы для него"),
-                        List.of("соты или мёд в инвентаре", "пчёлы целы")),
+                        List.of("соты или мёд в инвентаре", "пчёлы целы")));
+    }
+
+    private static List<ScriptSpec> huntingSpecs() {
+        return List.of(
                 spec(
                         "cull",
                         "забить лишних голов",
@@ -773,7 +850,11 @@ public final class CoreScripts {
                                         CatalogLimits.CAPTURE_RADIUS_MAX,
                                         CatalogLimits.CAPTURE_RADIUS_DEFAULT)),
                         List.of("в радиусе есть животное вида", "в инвентаре есть дешёвые блоки"),
-                        List.of("животное внутри кольца", "слабое место наращено")),
+                        List.of("животное внутри кольца", "слабое место наращено")));
+    }
+
+    private static List<ScriptSpec> fishingSpecs() {
+        return List.of(
                 spec(
                         "fish",
                         "ловить рыбу удочкой в открытой воде",
@@ -817,7 +898,11 @@ public final class CoreScripts {
                                         CatalogLimits.FISH_RADIUS_MAX,
                                         CatalogLimits.FISH_RADIUS_DEFAULT)),
                         List.of("в инвентаре есть пустое ведро", "в радиусе есть рыба в воде"),
-                        List.of("рыба в вёдрах", "поймано не больше предела из данных")),
+                        List.of("рыба в вёдрах", "поймано не больше предела из данных")));
+    }
+
+    private static List<ScriptSpec> itemSpecs() {
+        return List.of(
                 spec(
                         "craft",
                         "скрафтить предмет",
@@ -890,7 +975,11 @@ public final class CoreScripts {
                                 ParamSpec.text("item", true),
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX)),
                         List.of(),
-                        List.of("предмет есть в инвентаре")),
+                        List.of("предмет есть в инвентаре")));
+    }
+
+    private static List<ScriptSpec> combatAndClimbSpecs() {
+        return List.of(
                 spec(
                         "attack",
                         "атаковать цель",
@@ -937,7 +1026,11 @@ public final class CoreScripts {
                         "влезть по лестнице, лиане или строительным лесам вверх или вниз",
                         List.of(ParamSpec.bool("down", false, false)),
                         List.of("рядом есть колонна из лестниц, лиан или строительных лесов"),
-                        List.of("дух дошёл до конца колонны: вверх — до верхней ступени, вниз — до нижней")),
+                        List.of("дух дошёл до конца колонны: вверх — до верхней ступени, вниз — до нижней")));
+    }
+
+    private static List<ScriptSpec> placementSpecs() {
+        return List.of(
                 spec(
                         "place_block",
                         "поставить блок",
@@ -978,7 +1071,11 @@ public final class CoreScripts {
                                         CatalogLimits.LIGHT_RADIUS_MAX,
                                         CatalogLimits.LIGHT_RADIUS_DEFAULT)),
                         List.of("в области есть куда ставить факелы", "в инвентаре есть факелы"),
-                        List.of("на земле не осталось тёмных клеток", "итог называет, сколько факелов не хватило")),
+                        List.of("на земле не осталось тёмных клеток", "итог называет, сколько факелов не хватило")));
+    }
+
+    private static List<ScriptSpec> fillAndClearSpecs() {
+        return List.of(
                 spec(
                         "fill",
                         "заполнить область блоком",
@@ -1036,7 +1133,11 @@ public final class CoreScripts {
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
                                 ParamSpec.bool("demolish", false, false)),
                         List.of(),
-                        List.of("область очищена")),
+                        List.of("область очищена")));
+    }
+
+    private static List<ScriptSpec> buildSpecs() {
+        return List.of(
                 spec(
                         "build_schematic",
                         "построить схему из файла",
@@ -1086,7 +1187,11 @@ public final class CoreScripts {
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
                         List.of("есть мотыга", "рядом с прямоугольником есть вода", "есть семена культуры"),
-                        List.of("земля прямоугольника вспахана там, где хватает воды", "культура посажена")),
+                        List.of("земля прямоугольника вспахана там, где хватает воды", "культура посажена")));
+    }
+
+    private static List<ScriptSpec> structureSpecs() {
+        return List.of(
                 spec(
                         "build_fence",
                         "огородить контур забором с калиткой",
@@ -1114,7 +1219,11 @@ public final class CoreScripts {
                         List.of(
                                 "воронка задана id или позицией и запомнена событием взрыва",
                                 "в инвентаре или ближнем сундуке есть земля"),
-                        List.of("пустоты воронки засыпаны до уровня земли", "итог называет засыпанное и нехватку")),
+                        List.of("пустоты воронки засыпаны до уровня земли", "итог называет засыпанное и нехватку")));
+    }
+
+    private static List<ScriptSpec> socialSpecs() {
+        return List.of(
                 spec(
                         "deliver",
                         "доставить предмет адресату",
@@ -1148,7 +1257,11 @@ public final class CoreScripts {
                         "лечь спать в кровать",
                         List.of(),
                         List.of("ночь, дух внутри поселения и не в обороне", "в поселении есть свободная кровать"),
-                        List.of("дух спит в кровати и просыпается утром, при угрозе или уроне")),
+                        List.of("дух спит в кровати и просыпается утром, при угрозе или уроне")));
+    }
+
+    private static List<ScriptSpec> campSpecs() {
+        return List.of(
                 spec(
                         "close_door",
                         "подойти к двери и закрыть её",
@@ -1199,7 +1312,11 @@ public final class CoreScripts {
                                 "в инвентаре есть повреждённый предмет; есть материал ремонта или второй такой же",
                                 "для ремонта материалом рядом есть наковальня"),
                         List.of("предмет починен: наковальня добавляет 25% максимума за материал, "
-                                + "точило — сумму прочности + 5% и теряет зачарования")),
+                                + "точило — сумму прочности + 5% и теряет зачарования")));
+    }
+
+    private static List<ScriptSpec> interactionSpecs() {
+        return List.of(
                 spec(
                         "use_block",
                         "нажать или переключить блок (рычаг, кнопка, дверь)",
@@ -1248,7 +1365,11 @@ public final class CoreScripts {
                                 ParamSpec.integer("count", true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 ParamSpec.text("to", true)),
                         List.of("адресат существует", "предмета хватает в инвентаре"),
-                        List.of("предмет выпал рядом с адресатом")),
+                        List.of("предмет выпал рядом с адресатом")));
+    }
+
+    private static List<ScriptSpec> exchangeSpecs() {
+        return List.of(
                 spec(
                         "give",
                         "передать предмет игроку или духу (то же, что deliver)",
@@ -1284,7 +1405,7 @@ public final class CoreScripts {
                         "выпить зелье из инвентаря по типу",
                         List.of(ParamSpec.text("type", true)),
                         List.of("в инвентаре есть зелье этого типа"),
-                        List.of("эффекты зелья применены", "зелье убрано из инвентаря"))));
+                        List.of("эффекты зелья применены", "зелье убрано из инвентаря")));
     }
 
     private static ScriptSpec spec(

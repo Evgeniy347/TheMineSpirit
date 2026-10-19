@@ -22,6 +22,12 @@ final class MovementScene {
     static final double REACH = 4.5;
     static final double EYE_HEIGHT = 1.62;
 
+    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow/keep_distance/come
+    // берут первого игрока с таким именем: чужой (в т.ч. протёкший из соседней сцены) игрок уводит духа к
+    // чужой цели, скрипт не доходит и висит RUNNING до тайм-аута. Уникальное имя теста и снятие игрока при
+    // любом исходе даёт GameTestFixtures.mockPlayer (образец — RestFixture.mockPlayer).
+    private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
+
     private MovementScene() {}
 
     static void prepare(GameTestHelper helper) {
@@ -89,12 +95,6 @@ final class MovementScene {
                 + ", дом=" + spirit.home().map(Object::toString).orElse("нет")
                 + ", лагерь=" + spirit.camp().map(Object::toString).orElse("нет");
     }
-
-    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow/keep_distance/come
-    // берут первого игрока с таким именем: чужой (в т.ч. протёкший из соседней сцены) игрок уводит духа к
-    // чужой цели, скрипт не доходит и висит RUNNING до тайм-аута. Уникальное имя теста и снятие игрока при
-    // любом исходе даёт GameTestFixtures.mockPlayer (образец — RestFixture.mockPlayer).
-    private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
 
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
         return GameTestFixtures.mockPlayer(helper, relative, "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());

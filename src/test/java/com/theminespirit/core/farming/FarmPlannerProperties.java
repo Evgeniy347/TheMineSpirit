@@ -26,6 +26,8 @@ class FarmPlannerProperties {
     private static final Above[] ABOVES = {Above.AIR, Above.WEED, Above.BLOCKED};
     private static final CropKind[] CROPS = {CropKind.WHEAT, CropKind.CARROT, CropKind.POTATO, CropKind.BEETROOT};
 
+    private static final int WIDE = 8;
+
     @Property
     void next_RandomInput_ReturnedTargetIsEligibleWithStand(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
@@ -89,8 +91,6 @@ class FarmPlannerProperties {
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
                         + "со стоянкой на смещении до √11. Цели: " + candidates);
     }
-
-    private static final int WIDE = 8;
 
     private static MapFarmView tillableFarm(Random random) {
         MapFarmView farm = new MapFarmView();

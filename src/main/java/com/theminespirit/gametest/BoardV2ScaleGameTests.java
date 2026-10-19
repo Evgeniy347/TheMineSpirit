@@ -64,6 +64,29 @@ public final class BoardV2ScaleGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         ServerLevel level = helper.getLevel();
+        List<SpiritEntity> spirits = spawnSpiritGrid(helper);
+        List<Animal> animals = spawnFrozenAnimals(helper);
+        BoardService board = BoardRegistry.get(level);
+        drainForeignTickets(board);
+        long now = level.getGameTime();
+        submitCraters(helper, board, now);
+        submitRelocate(helper, board, now);
+
+        Baseline base = Baseline.of(board);
+
+        helper.succeedWhen(() -> {
+            for (SpiritEntity spirit : spirits) {
+                helper.assertTrue(
+                        spirit.tickCount >= OBSERVED_TICKS,
+                        "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
+            }
+            board.journal().flushAll();
+            assertCountersWithinPeriod(helper, board, base);
+            discardScene(helper, level, board, spirits, animals);
+        });
+    }
+
+    private static List<SpiritEntity> spawnSpiritGrid(GameTestHelper helper) {
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int row = 0; row < 5; row++) {
             for (int column = 0; column < 4; column++) {
@@ -74,6 +97,10 @@ public final class BoardV2ScaleGameTests {
                 spirits.add(spirit);
             }
         }
+        return spirits;
+    }
+
+    private static List<Animal> spawnFrozenAnimals(GameTestHelper helper) {
         List<Animal> animals = new ArrayList<>();
         animals.add(helper.spawn(EntityType.COW, new BlockPos(7, 1, 7)));
         animals.add(helper.spawn(EntityType.PIG, new BlockPos(7, 1, 8)));
@@ -81,9 +108,10 @@ public final class BoardV2ScaleGameTests {
         for (Animal animal : animals) {
             animal.setNoAi(true);
         }
-        BoardService board = BoardRegistry.get(level);
-        drainForeignTickets(board);
-        long now = level.getGameTime();
+        return animals;
+    }
+
+    private static void submitCraters(GameTestHelper helper, BoardService board, long now) {
         for (int crater = 0; crater < CRATERS; crater++) {
             BlockPos hole = new BlockPos(crater, 0, 8);
             helper.setBlock(hole, Blocks.AIR);
@@ -103,6 +131,9 @@ public final class BoardV2ScaleGameTests {
                             Map.of("dirt", 9)),
                     TicketTarget.at(cell));
         }
+    }
+
+    private static void submitRelocate(GameTestHelper helper, BoardService board, long now) {
         BlockCoord from = absolute(helper, new BlockPos(2, 1, 6));
         BlockCoord to = absolute(helper, new BlockPos(4, 1, 1));
         board.submit(
@@ -117,78 +148,71 @@ public final class BoardV2ScaleGameTests {
                         List.of(),
                         Map.of()),
                 TicketTarget.at(to).withRelocate(from, to).withScheme("pen_4x5"));
+    }
 
-        int baseRebuilds = board.rebuilds();
-        int baseClaims = board.claims();
-        int baseRetains = board.retains();
-        int baseScans = board.herdScans();
-        long baseReads = board.stockBlockReads();
-        int baseEnqueued = board.journal().enqueued();
+    private static void assertCountersWithinPeriod(GameTestHelper helper, BoardService board, Baseline base) {
+        int rebuilds = board.rebuilds() - base.rebuilds();
+        int claims = board.claims() - base.claims();
+        int retains = board.retains() - base.retains();
+        int scans = board.herdScans() - base.scans();
+        long reads = board.stockBlockReads() - base.reads();
+        int enqueued = board.journal().enqueued() - base.enqueued();
+        int maxRebuilds = (int) (OBSERVED_TICKS / BoardTuning.boardIntervalTicks()) + 1;
+        long maxReads = (long) BoardTuning.stockBlockBudget() * maxRebuilds;
+        int maxScans = (int) (OBSERVED_TICKS / BoardTuning.herdScanIntervalTicks()) + 1;
+        long maxClaims = (long) maxRebuilds * SPIRITS * BoardTuning.maxActivePerSpirit();
+        helper.assertTrue(
+                rebuilds > 0 && claims > 0 && enqueued > 0,
+                "доска обязана работать, иначе предел ничего не доказывает: пересборок " + rebuilds + ", выдач "
+                        + claims + ", записей журнала " + enqueued);
+        helper.assertTrue(
+                rebuilds <= maxRebuilds,
+                "пересборок за " + OBSERVED_TICKS + " тиков не больше " + maxRebuilds
+                        + " (раз в " + BoardTuning.boardIntervalTicks() + " тиков), было "
+                        + rebuilds + ": доска не пересобирается каждый тик");
+        helper.assertTrue(
+                reads <= maxReads,
+                "чтений блоков складом не больше " + maxReads + " (бюджет " + BoardTuning.stockBlockBudget() + " × "
+                        + maxRebuilds + "), было " + reads);
+        helper.assertTrue(
+                scans <= maxScans,
+                "сканов животных не больше " + maxScans + " (раз в "
+                        + BoardTuning.herdScanIntervalTicks() + " тиков), было " + scans
+                        + ": тяжёлый scan_entities не идёт каждый тик");
+        helper.assertTrue(
+                retains <= rebuilds,
+                "проверок актуальности не больше пересборок: " + retains + " при " + rebuilds
+                        + " — retain каждый тик взвинтил бы счётчики и чтение профилей воронок");
+        helper.assertTrue(
+                retains == rebuilds, "ровно одна проверка актуальности на пересборку: " + retains + " при " + rebuilds);
+        helper.assertTrue(
+                claims <= maxClaims, "выдач не больше " + maxClaims + " (свободные духи × пересборки), было " + claims);
+        helper.assertTrue(
+                board.journal().written() == board.journal().enqueued(),
+                "строк журнала ровно по числу переходов: на диске "
+                        + board.journal().written()
+                        + ", переходов " + board.journal().enqueued()
+                        + ": потерянная или задвоенная строка ломает журнал");
+    }
 
-        helper.succeedWhen(() -> {
-            for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(
-                        spirit.tickCount >= OBSERVED_TICKS,
-                        "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
+    private static void discardScene(
+            GameTestHelper helper,
+            ServerLevel level,
+            BoardService board,
+            List<SpiritEntity> spirits,
+            List<Animal> animals) {
+        for (BoardTicket ticket : board.board().all()) {
+            if (ticket.id().startsWith("scale_")) {
+                board.cancel(level, ticket.id());
             }
-            board.journal().flushAll();
-            int rebuilds = board.rebuilds() - baseRebuilds;
-            int claims = board.claims() - baseClaims;
-            int retains = board.retains() - baseRetains;
-            int scans = board.herdScans() - baseScans;
-            long reads = board.stockBlockReads() - baseReads;
-            int enqueued = board.journal().enqueued() - baseEnqueued;
-            int maxRebuilds = (int) (OBSERVED_TICKS / BoardTuning.boardIntervalTicks()) + 1;
-            long maxReads = (long) BoardTuning.stockBlockBudget() * maxRebuilds;
-            int maxScans = (int) (OBSERVED_TICKS / BoardTuning.herdScanIntervalTicks()) + 1;
-            long maxClaims = (long) maxRebuilds * SPIRITS * BoardTuning.maxActivePerSpirit();
-            helper.assertTrue(
-                    rebuilds > 0 && claims > 0 && enqueued > 0,
-                    "доска обязана работать, иначе предел ничего не доказывает: пересборок " + rebuilds + ", выдач "
-                            + claims + ", записей журнала " + enqueued);
-            helper.assertTrue(
-                    rebuilds <= maxRebuilds,
-                    "пересборок за " + OBSERVED_TICKS + " тиков не больше " + maxRebuilds
-                            + " (раз в " + BoardTuning.boardIntervalTicks() + " тиков), было "
-                            + rebuilds + ": доска не пересобирается каждый тик");
-            helper.assertTrue(
-                    reads <= maxReads,
-                    "чтений блоков складом не больше " + maxReads + " (бюджет " + BoardTuning.stockBlockBudget() + " × "
-                            + maxRebuilds + "), было " + reads);
-            helper.assertTrue(
-                    scans <= maxScans,
-                    "сканов животных не больше " + maxScans + " (раз в "
-                            + BoardTuning.herdScanIntervalTicks() + " тиков), было " + scans
-                            + ": тяжёлый scan_entities не идёт каждый тик");
-            helper.assertTrue(
-                    retains <= rebuilds,
-                    "проверок актуальности не больше пересборок: " + retains + " при " + rebuilds
-                            + " — retain каждый тик взвинтил бы счётчики и чтение профилей воронок");
-            helper.assertTrue(
-                    retains == rebuilds,
-                    "ровно одна проверка актуальности на пересборку: " + retains + " при " + rebuilds);
-            helper.assertTrue(
-                    claims <= maxClaims,
-                    "выдач не больше " + maxClaims + " (свободные духи × пересборки), было " + claims);
-            helper.assertTrue(
-                    board.journal().written() == board.journal().enqueued(),
-                    "строк журнала ровно по числу переходов: на диске "
-                            + board.journal().written()
-                            + ", переходов " + board.journal().enqueued()
-                            + ": потерянная или задвоенная строка ломает журнал");
-            for (BoardTicket ticket : board.board().all()) {
-                if (ticket.id().startsWith("scale_")) {
-                    board.cancel(level, ticket.id());
-                }
-            }
-            for (SpiritEntity spirit : spirits) {
-                spirit.discard();
-            }
-            for (Animal animal : animals) {
-                animal.discard();
-            }
-            GameTestFixtures.finish(helper);
-        });
+        }
+        for (SpiritEntity spirit : spirits) {
+            spirit.discard();
+        }
+        for (Animal animal : animals) {
+            animal.discard();
+        }
+        GameTestFixtures.finish(helper);
     }
 
     private static void drainForeignTickets(BoardService board) {
@@ -200,5 +224,17 @@ public final class BoardV2ScaleGameTests {
     private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {
         BlockPos pos = helper.absolutePos(relative);
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private record Baseline(int rebuilds, int claims, int retains, int scans, long reads, int enqueued) {
+        static Baseline of(BoardService board) {
+            return new Baseline(
+                    board.rebuilds(),
+                    board.claims(),
+                    board.retains(),
+                    board.herdScans(),
+                    board.stockBlockReads(),
+                    board.journal().enqueued());
+        }
     }
 }

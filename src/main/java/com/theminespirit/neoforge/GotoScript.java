@@ -22,16 +22,16 @@ public final class GotoScript implements ScriptInstance {
         this(spirit, params, PathMode.NORMAL);
     }
 
-    public static GotoScript careful(SpiritEntity spirit, WalkCarefulParams params) {
-        return new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()), PathMode.CAREFUL);
-    }
-
     private GotoScript(SpiritEntity spirit, GotoParams params, PathMode mode) {
         this.spirit = spirit;
         this.mode = mode;
         this.target = new Vec3(params.x() + 0.5, params.y(), params.z() + 0.5);
         this.approach = new Approach(spirit);
         this.approach.begin(target, ARRIVAL_TOLERANCE, mode);
+    }
+
+    public static GotoScript careful(SpiritEntity spirit, WalkCarefulParams params) {
+        return new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()), PathMode.CAREFUL);
     }
 
     @Override

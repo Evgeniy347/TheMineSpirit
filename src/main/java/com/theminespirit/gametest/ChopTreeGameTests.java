@@ -62,6 +62,20 @@ public final class ChopTreeGameTests {
     private static final int SETTLE_TICKS = 1;
     private static final int TOOL_SLOT = 0;
 
+    private static final int HUT_POST_LOGS = 12;
+    private static final int TALL_TREE_LOGS = 60;
+    // Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
+    // вокруг ствола плюс повторное чтение почвы под основанием после обхода.
+    private static final long MEASURED_TREE_READS = 559;
+    // Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
+    // Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
+    // чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
+    // (1620) такое чтение ещё пропускает.
+    private static final long MAX_TREE_READS = 838;
+    private static final int SECTION_POSITIONS = 16 * 16 * 16;
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
+
     private ChopTreeGameTests() {}
 
     @GameTest(template = "empty", batch = "chop_registry", timeoutTicks = 20)
@@ -1188,8 +1202,54 @@ public final class ChopTreeGameTests {
     @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);
+        Map<BlockState, Boolean> table = blockClassificationTable();
+
+        LevelTreeView view = new LevelTreeView(helper.getLevel(), Set.of(Blocks.OAK_LOG));
+        int index = 0;
+        for (Map.Entry<BlockState, Boolean> entry : table.entrySet()) {
+            BlockPos cell = new BlockPos(index % PLATFORM, 1, index / PLATFORM);
+            helper.getLevel().setBlock(helper.absolutePos(cell), entry.getKey(), Block.UPDATE_CLIENTS);
+            BlockPos absolute = helper.absolutePos(cell);
+            BlockCoord coord = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+            helper.assertTrue(
+                    view.isArtificial(coord) == entry.getValue(),
+                    "блок " + entry.getKey() + (entry.getValue() ? " — постройка" : " — естественный")
+                            + ": LevelTreeView.isArtificial вернул " + view.isArtificial(coord)
+                            + ". Таблица решает, что дух не тронет; ошибка в сторону «естественный» ломает стены игрока, "
+                            + "в сторону «постройка» оставляет настоящие деревья стоять");
+            int answers = (view.isLog(coord) ? 1 : 0)
+                    + (view.isNaturalLeaves(coord) ? 1 : 0)
+                    + (view.isSoil(coord) ? 1 : 0)
+                    + (view.isArtificial(coord) ? 1 : 0);
+            helper.assertTrue(
+                    answers <= 1, "блок " + entry.getKey() + " не может быть двумя видами сразу, ответов " + answers);
+            index++;
+        }
+        helper.assertTrue(
+                view.isLog(coordOf(helper, table, Blocks.OAK_LOG)),
+                "дубовое бревно при запрошенной породе oak — бревно");
+        helper.assertTrue(
+                !view.isLog(coordOf(helper, table, Blocks.BIRCH_LOG)),
+                "берёзовое бревно при запрошенной породе oak не бревно рубки, но и не постройка");
+        clearField(helper);
+        helper.succeed();
+    }
+
+    private static Map<BlockState, Boolean> blockClassificationTable() {
         Map<BlockState, Boolean> table = new LinkedHashMap<>();
-        for (Block built : List.of(
+        for (Block built : builtBlocks()) {
+            table.put(built.defaultBlockState(), true);
+        }
+        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true), true);
+        for (Block natural : naturalBlocks()) {
+            table.put(natural.defaultBlockState(), false);
+        }
+        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false), false);
+        return table;
+    }
+
+    private static List<Block> builtBlocks() {
+        return List.of(
                 Blocks.OAK_PLANKS,
                 Blocks.OAK_DOOR,
                 Blocks.GLASS,
@@ -1246,11 +1306,11 @@ public final class ChopTreeGameTests {
                 Blocks.RAIL,
                 Blocks.POWERED_RAIL,
                 Blocks.DETECTOR_RAIL,
-                Blocks.ACTIVATOR_RAIL)) {
-            table.put(built.defaultBlockState(), true);
-        }
-        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true), true);
-        for (Block natural : List.of(
+                Blocks.ACTIVATOR_RAIL);
+    }
+
+    private static List<Block> naturalBlocks() {
+        return List.of(
                 Blocks.DIRT,
                 Blocks.GRASS_BLOCK,
                 Blocks.STONE,
@@ -1267,40 +1327,7 @@ public final class ChopTreeGameTests {
                 Blocks.BIRCH_LOG,
                 Blocks.OAK_LOG,
                 Blocks.MANGROVE_ROOTS,
-                Blocks.COCOA)) {
-            table.put(natural.defaultBlockState(), false);
-        }
-        table.put(Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false), false);
-
-        LevelTreeView view = new LevelTreeView(helper.getLevel(), Set.of(Blocks.OAK_LOG));
-        int index = 0;
-        for (Map.Entry<BlockState, Boolean> entry : table.entrySet()) {
-            BlockPos cell = new BlockPos(index % PLATFORM, 1, index / PLATFORM);
-            helper.getLevel().setBlock(helper.absolutePos(cell), entry.getKey(), Block.UPDATE_CLIENTS);
-            BlockPos absolute = helper.absolutePos(cell);
-            BlockCoord coord = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
-            helper.assertTrue(
-                    view.isArtificial(coord) == entry.getValue(),
-                    "блок " + entry.getKey() + (entry.getValue() ? " — постройка" : " — естественный")
-                            + ": LevelTreeView.isArtificial вернул " + view.isArtificial(coord)
-                            + ". Таблица решает, что дух не тронет; ошибка в сторону «естественный» ломает стены игрока, "
-                            + "в сторону «постройка» оставляет настоящие деревья стоять");
-            int answers = (view.isLog(coord) ? 1 : 0)
-                    + (view.isNaturalLeaves(coord) ? 1 : 0)
-                    + (view.isSoil(coord) ? 1 : 0)
-                    + (view.isArtificial(coord) ? 1 : 0);
-            helper.assertTrue(
-                    answers <= 1, "блок " + entry.getKey() + " не может быть двумя видами сразу, ответов " + answers);
-            index++;
-        }
-        helper.assertTrue(
-                view.isLog(coordOf(helper, table, Blocks.OAK_LOG)),
-                "дубовое бревно при запрошенной породе oak — бревно");
-        helper.assertTrue(
-                !view.isLog(coordOf(helper, table, Blocks.BIRCH_LOG)),
-                "берёзовое бревно при запрошенной породе oak не бревно рубки, но и не постройка");
-        clearField(helper);
-        helper.succeed();
+                Blocks.COCOA);
     }
 
     @GameTest(template = FIELD, batch = "tree_view_unloaded_cell", timeoutTicks = 40)
@@ -1538,20 +1565,6 @@ public final class ChopTreeGameTests {
         }
         return false;
     }
-
-    private static final int HUT_POST_LOGS = 12;
-    private static final int TALL_TREE_LOGS = 60;
-    // Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
-    // вокруг ствола плюс повторное чтение почвы под основанием после обхода.
-    private static final long MEASURED_TREE_READS = 559;
-    // Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
-    // Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
-    // чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
-    // (1620) такое чтение ещё пропускает.
-    private static final long MAX_TREE_READS = 838;
-    private static final int SECTION_POSITIONS = 16 * 16 * 16;
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int BIG_BUILDING_LOGS = 7 * 7 * 7;
 
     private static void buildPlankHutOnLedge(GameTestHelper helper, int x, int z) {
         for (int dx = 0; dx < 3; dx++) {

@@ -131,8 +131,8 @@ class HydrationTests {
     }
 
     static final class CountingWater extends AbstractSet<BlockCoord> {
-        private final Set<BlockCoord> cells = new HashSet<>();
         int lookups;
+        private final Set<BlockCoord> cells = new HashSet<>();
 
         @Override
         public boolean contains(Object cell) {
