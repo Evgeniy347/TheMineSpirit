@@ -1,0 +1,305 @@
+# player_house_2 — дом игрока, уровень 2 (catalog.md, sketches-manor.md): этап 2, кровати духов переехали в дома
+# семей. Низ — булыжник, верх — еловые доски в каркасе из ободранной ели, цоколь из каменного кирпича; двойная
+# дверь под козырьком с фонарями, окна 2×2 со ставнями. Зал с камином и креслами, прихожая у двери, стол,
+# книжные полки, два двойных сундука; сзади — спальня игрока и гостевая. Крыша из тёмного дуба, окна во фронтонах.
+name: "Дом игрока, уровень 2"
+type: housing
+stage: 2
+level: 2
+requires: player_house_1
+size: 18x14x17   # Ш×В×Д
+entrance: 8,1,1
+legend:
+  'S': stone_bricks
+  'c': cobblestone
+  '$': spruce_planks
+  '#': dark_oak_planks
+  'L': stripped_spruce_log[axis=y]
+  'X': stripped_spruce_log[axis=x]
+  'Z': stripped_spruce_log[axis=z]
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  '_': dark_oak_slab[type=bottom]
+  'G': glass_pane
+  'D': spruce_door[facing=south,hinge=left]
+  'E': spruce_door[facing=south,hinge=right]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  'Q': bricks
+  'f': campfire[lit=true]
+  'g': spruce_stairs[facing=east,half=bottom]
+  'h': spruce_stairs[facing=west,half=bottom]
+  'i': spruce_stairs[facing=north,half=bottom]
+  'R': spruce_stairs[facing=south,half=bottom]
+  't': spruce_fence
+  'q': spruce_pressure_plate
+  '~': red_carpet
+  'm': brown_carpet
+  'B': red_bed[facing=south]
+  'C': blue_bed[facing=south]
+  'b': barrel[facing=up]
+  'F': furnace[facing=east]
+  'T': crafting_table
+  'V': chest[facing=north,type=right]
+  'W': chest[facing=north,type=left]
+  'O': bookshelf
+  'P': potted_poppy
+  '9': potted_azure_bluet
+  '0': potted_red_tulip
+  'H': lantern[hanging=true]
+  'd': spruce_trapdoor[facing=north,half=bottom,open=true]
+  'n': spruce_trapdoor[facing=south,half=bottom,open=true]
+  'v': spruce_trapdoor[facing=west,half=bottom,open=true]
+  'r': spruce_trapdoor[facing=east,half=bottom,open=true]
+layers:
+  - y0 цоколь и пол: |
+              pp
+       SSSSSSSSSSSSSSSS
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$S
+       SSSSSSSSSSSSSSSS
+               .
+  - y1 зал и комнаты: |
+      
+       LcccccLDELcccccL
+       cb   b mm b    c
+       c ~~~~~mm     Oc
+       cQ~g~~~mmtttg Oc
+       f ~~~~~mmtttg Oc
+       cQ~g~~~mmtttg Oc
+       c ~~~~~mm     Oc
+       LFWV   mm  WV TL
+       c$$..$$$$$..$$$c
+       c~~~~~O$Ommmmmmc
+       c~~~~~~$mmmmmmmc
+       c~~~~~~$mmmmmmmc
+       c~B~~~~$mmmmmCmc
+       cbB~WV~$mbmmmCbc
+       LccccccLLccccccL
+               .
+  - y2: |
+        d  d      d  d
+       LcGGccLDELccGGcL
+       cP        9    c
+      vc              cr
+       GQ       qqq   G
+       G        qqq   G
+      vcQ       qqq  Ocr
+       c             Oc
+       L              L
+       c$$..$$$$$..$$$c
+      vc     O$O      cr
+       G      $       G
+       G      $       G
+      vc      $       cr
+       c0     $      Pc
+       LccGGccLLccGGccL
+         n  n    n  n
+  - y3: |
+        d  d H  H d  d
+       L$GG$$LXXL$$GG$L
+       $              $
+      v$              $r
+       GQ             G
+       G              G
+      v$Q             $r
+       $              $
+       L              L
+       $$$..$$$$$..$$$$
+      v$      $       $r
+       G      $       G
+       G      $       G
+      v$      $       $r
+       $      $       $
+       L$$GG$$LL$$GG$$L
+         n  n    n  n
+  - y4: |
+             ####
+       L$$$$$L$$L$$$$$L
+       $              $
+       $              $
+       $              $
+       $              $
+       $              $
+       $              $
+       L              L
+       $$$..$$$$$..$$$$
+       $      $       $
+       $      $       $
+       $      $       $
+       $      $       $
+       $      $       $
+       L$$$$$$LL$$$$$$L
+               .
+  - y5 обвязка и свес: |
+      e#     ____     #w
+      eLXXXXXXXXXXXXXXLw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eZ              Zw
+      eLXXXXXXXXXXXXXXLw
+      e#              #w
+  - y6: |
+       e#            #w
+       e##############w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e#            #w
+       e##############w
+       e#            #w
+  - y7: |
+        e#          #w
+        e############w
+        e#          #w
+        e#          #w
+        e#          #w
+        e#H        H#w
+        e#          #w
+        e#          #w
+        e#          #w
+        e#          #w
+        e#          #w
+        e#          #w
+        e#H        H#w
+        e#          #w
+        e#          #w
+        e############w
+        e#          #w
+  - y8: |
+         e#        #w
+         e####GG####w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e#        #w
+         e####GG####w
+         e#        #w
+  - y9: |
+          e#      #w
+          e###GG###w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e#      #w
+          e###GG###w
+          e#      #w
+  - y10: |
+           e#    #w
+           e######w
+           e#    #w
+           e#    #w
+           e#    #w
+           e#H  H#w
+           e#    #w
+           e#    #w
+           e#    #w
+           e#    #w
+           e#    #w
+           e#    #w
+           e#H  H#w
+           e#    #w
+           e#    #w
+           e######w
+           e#    #w
+  - y11: |
+            e#  #w
+            e####w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e#  #w
+            e####w
+            e#  #w
+  - y12: |
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+             e##w
+  - y13: |
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew
+              ew

@@ -120,7 +120,7 @@ final class BuildSupplyTrip {
         return free;
     }
 
-    // Сундуки у площадки: от середины постройки на полразмера плюс обычный радиус поиска контейнера.
+    // Сундуки у площадки: от середины постройки на полразмера плюс обычный радиус поиска контейнера (8).
     private static List<BlockPos> containers(SpiritEntity spirit, SchematicSite site) {
         int minX = Integer.MAX_VALUE;
         int minZ = Integer.MAX_VALUE;
@@ -138,7 +138,7 @@ final class BuildSupplyTrip {
             return List.of();
         }
         BlockPos centre = new BlockPos((minX + maxX) / 2, y, (minZ + maxZ) / 2);
-        int radius = (Math.max(maxX - minX, maxZ - minZ) + 1) / 2 + CatalogLimits.CONTAINER_RADIUS_MAX;
+        int radius = (Math.max(maxX - minX, maxZ - minZ) + 1) / 2 + CatalogLimits.CONTAINER_RADIUS_DEFAULT;
         BlockLocator.Search search =
                 BlockLocator.search(spirit.level(), centre, radius, ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();

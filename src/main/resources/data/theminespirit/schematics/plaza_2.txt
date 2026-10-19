@@ -1,0 +1,122 @@
+# plaza_2 — площадь, уровень 2 (catalog-2.md, sketches-wall-plaza.md): мощение булыжником с узором из каменного
+# кирпича, колодец в центре, четыре скамьи лицом к колодцу, клумбы, фонари на столбах по углам, колокол на столбе
+# и доска заданий.
+name: "Площадь, уровень 2"
+type: social
+stage: 2
+level: 2
+requires: plaza_1
+size: 19x4x20   # Ш×В×Д
+entrance: 9,1,2
+exemptions:
+  - rule: closed_walls
+    reason: "площадь открыта: стен нет по замыслу, это мощёный двор с колодцем"
+  - rule: roof
+    reason: "площадь под открытым небом по замыслу"
+legend:
+  'c': cobblestone
+  'S': stone_bricks
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  'M': grass_block
+  'W': water
+  'L': stripped_spruce_log[axis=y]
+  't': spruce_fence
+  'N': lantern[hanging=false]
+  'T': torch
+  'l': lectern[facing=south]
+  'b': barrel[facing=up]
+  'B': bell[attachment=floor,facing=south]
+  'g': spruce_stairs[facing=east,half=bottom]
+  'h': spruce_stairs[facing=west,half=bottom]
+  'i': spruce_stairs[facing=north,half=bottom]
+  'R': spruce_stairs[facing=south,half=bottom]
+  'o': poppy
+  'A': azure_bluet
+  'J': cornflower
+  'O': oxeye_daisy
+  'P': potted_poppy
+layers:
+  - y0 мощение: |
+             ppppp
+      SSSSSSSSSSSSSSSSSSS
+      ScccccccccccccccccS
+      ScScccccccccccccScS
+      SccScccccccccccSccS
+      ScccSSSSSSSSSSScccS
+      ScMMScccccccccSMMcS
+      ScMMScccccccccSMMcS
+      ScccScccccccccScccS
+      ScccScccSSScccScccS
+      ScccScccSWScccScccS
+      ScccScccSSScccScccS
+      ScccScccccccccScccS
+      ScMMScccccccccSMMcS
+      ScMMScccccccccSMMcS
+      ScccSSSSSSSSSSScccS
+      SccScccccccccccSccS
+      ScScccccccccccccScS
+      ScccccccccccccccccS
+      SSSSSSSSSSSSSSSSSSS
+  - y1 колодец, скамьи и столбы: |
+      
+      
+       L               L
+      
+          L  b l b  b
+      
+        PA    iii    oP
+        JO           JO
+      
+           h  S S  g
+           h       g
+           h  S S  g
+      
+        oA           oA
+        PO    RRR    JP
+      
+      
+         P  P     P  P
+       L               L
+               .
+  - y2: |
+      
+      
+       t               t
+      
+          B         P
+      
+      
+      
+      
+              T T
+      
+              T T
+      
+      
+      
+      
+      
+      
+       t               t
+               .
+  - y3: |
+      
+      
+       N               N
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+       N               N
+               .
