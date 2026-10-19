@@ -1,0 +1,6 @@
+{
+  "minDistance": 1.5,
+  "keepDistance": 2.5,
+  "maxStep": 2,
+  "checkIntervalTicks": 5
+}

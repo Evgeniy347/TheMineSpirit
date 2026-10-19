@@ -12,16 +12,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
@@ -106,7 +107,7 @@ public final class BlockPlacer {
         level.setBlock(target, state, Block.UPDATE_ALL);
         if (firstOfTwoParts(state)) {
             state.getBlock().setPlacedBy(level, target, state, spirit, used);
-        } else {
+        } else if (!pairedChestHalf(state)) {
             BlockState updated = Block.updateFromNeighbourShapes(state, level, target);
             if (!updated.equals(state)) {
                 level.setBlock(target, updated, Block.UPDATE_ALL);
@@ -123,9 +124,15 @@ public final class BlockPlacer {
         return new Started(target.immutable());
     }
 
+    // mc: ChestBlock.updateShape сбрасывает половину двойного сундука в SINGLE, пока соседа нет; пара из схемы
+    // ставится по одной половине, и вторая половина сама соединит первую.
+    static boolean pairedChestHalf(BlockState state) {
+        return state.hasProperty(ChestBlock.TYPE) && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE;
+    }
+
     private void announcePlaced(Level level, BlockPos target, BlockState state) {
         level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
-        spirit.swing(InteractionHand.MAIN_HAND, true);
+        SpiritGesture.workOn(spirit, target);
         SoundType sound = state.getSoundType(level, target, spirit);
         level.playSound(
                 null,

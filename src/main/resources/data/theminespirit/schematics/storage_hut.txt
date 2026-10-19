@@ -5,7 +5,7 @@
 name: "Склад-хижина"
 type: storage
 stage: 1
-size: 5x5x5
+size: 5x6x6
 entrance: front
 legend:
   'c': cobblestone
@@ -18,32 +18,45 @@ legend:
   'e': oak_stairs[facing=east,half=bottom]
   'w': oak_stairs[facing=west,half=bottom]
   'N': wall_torch[facing=north]
+  'p': cobblestone_stairs[facing=south,half=bottom]
 layers:
   - y0 цоколь и пол: |
+        p
       ccccc
       c###c
       c###c
       c###c
       ccccc
   - y1 стены, сундуки: |
+        .
       L#D#L
       #...#
       #...#
       #C.C#
       L###L
   - y2 окна, факел: |
+        .
       L#D#L
       #...#
       G...G
       #.N.#
       L###L
-  - y3 карниз крыши: |
+  - y3 верх стен: |
+        .
+      L###L
+      #...#
+      #...#
+      #...#
+      L###L
+  - y4 карниз крыши: |
+        .
       e###w
       e#.#w
       e#.#w
       e#.#w
       e###w
-  - y4 конёк: |
+  - y5 конёк: |
+        .
        ezw
        ezw
        ezw

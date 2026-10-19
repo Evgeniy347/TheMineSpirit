@@ -25,6 +25,12 @@ class SpiritReachTests {
                 10,
                 data.placeIntervalTicks(),
                 "Темп постановки — примерно 2 блока в секунду (решение владельца 18.10): 10 тиков между блоками");
+        assertEquals(
+                2,
+                data.intervalTicks(true),
+                "Темп демо-стройки — 10 блоков в секунду (решение владельца 19.10): 2 тика между блоками; темп "
+                        + "обычной игры при этом не меняется");
+        assertEquals(10, data.intervalTicks(false), "Обычная стройка обязана идти темпом placeIntervalTicks");
     }
 
     @Test
@@ -80,7 +86,8 @@ class SpiritReachTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> BuildData.parse(
-                        "{\"reachHorizontal\":3,\"reachUp\":15,\"reachDown\":3,\"placeIntervalTicks\":0}", "тест"),
+                        "{\"reachHorizontal\":3,\"reachUp\":15,\"reachDown\":3,\"placeIntervalTicks\":0,\"demoPlaceIntervalTicks\":2}",
+                        "тест"),
                 "Нулевой интервал постановки обязан отвергаться: дух ставил бы весь дом за тик");
 
         assertTrue(error.getMessage().contains("placeIntervalTicks"), "Ошибка называет поле: " + error.getMessage());

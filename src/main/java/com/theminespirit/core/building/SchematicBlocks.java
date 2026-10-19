@@ -102,26 +102,30 @@ public final class SchematicBlocks {
             "_wart",
             "_chorus_flower");
 
-    private static final Set<String> LIGHT_SOURCES = Set.of(
-            "torch",
-            "wall_torch",
-            "soul_torch",
-            "soul_wall_torch",
-            "lantern",
-            "soul_lantern",
-            "glowstone",
-            "sea_lantern",
-            "shroomlight",
-            "jack_o_lantern",
-            "campfire",
-            "soul_campfire",
-            "fire",
-            "soul_fire",
-            "beacon",
-            "conduit",
-            "end_rod",
-            "magma_block",
-            "lava");
+    private static final Map<String, Integer> LIGHT_LEVELS = Map.ofEntries(
+            Map.entry("torch", 14),
+            Map.entry("wall_torch", 14),
+            Map.entry("soul_torch", 10),
+            Map.entry("soul_wall_torch", 10),
+            Map.entry("redstone_torch", 7),
+            Map.entry("redstone_wall_torch", 7),
+            Map.entry("lantern", 15),
+            Map.entry("soul_lantern", 10),
+            Map.entry("glowstone", 15),
+            Map.entry("sea_lantern", 15),
+            Map.entry("shroomlight", 15),
+            Map.entry("jack_o_lantern", 15),
+            Map.entry("campfire", 15),
+            Map.entry("soul_campfire", 10),
+            Map.entry("fire", 15),
+            Map.entry("soul_fire", 10),
+            Map.entry("beacon", 15),
+            Map.entry("conduit", 15),
+            Map.entry("end_rod", 14),
+            Map.entry("magma_block", 3),
+            Map.entry("lava", 15));
+
+    private static final int CANDLE_LIGHT = 3;
 
     private static final String[][] WALL_VARIANTS = {
         {"wall_torch", "torch"},
@@ -211,11 +215,40 @@ public final class SchematicBlocks {
         return "chest".equals(path) || "trapped_chest".equals(path);
     }
 
-    public static boolean isLightSource(String blockId) {
+    public static int lightLevel(String blockId, Map<String, String> state) {
+        Objects.requireNonNull(state, "Состояние блока не может быть null: пустое задаётся пустой картой");
         String path = path(blockId);
-        return LIGHT_SOURCES.contains(path)
-                || path.endsWith("_torch")
-                || path.endsWith("_lantern")
-                || path.endsWith("_candle");
+        if ("false".equals(state.get("lit"))) {
+            return 0;
+        }
+        if (path.endsWith("_candle") || "candle".equals(path)) {
+            return "true".equals(state.get("lit"))
+                    ? CANDLE_LIGHT * Integer.parseInt(state.getOrDefault("candles", "1"))
+                    : 0;
+        }
+        return LIGHT_LEVELS.getOrDefault(path, 0);
+    }
+
+    public static boolean blocksLight(String blockId) {
+        String path = path(blockId);
+        if (path.endsWith("_slab") || path.endsWith("_stairs")) {
+            return true;
+        }
+        return isFullBlock(blockId)
+                && !isWindow(blockId)
+                && !isChest(blockId)
+                && !"enchanting_table".equals(path)
+                && !path.endsWith("_leaves")
+                && !path.endsWith("ice")
+                && !LIGHT_LEVELS.containsKey(path);
+    }
+
+    public static boolean isSpawnSurface(String blockId) {
+        String path = path(blockId);
+        return isFullBlock(blockId)
+                && !isWindow(blockId)
+                && !isChest(blockId)
+                && !"enchanting_table".equals(path)
+                && !path.endsWith("_leaves");
     }
 }

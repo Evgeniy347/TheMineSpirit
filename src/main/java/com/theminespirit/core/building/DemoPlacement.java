@@ -36,17 +36,26 @@ public record DemoPlacement(
 
     public static DemoPlacement compute(
             Anchor anchor, Look look, int entryX, int entryZ, Size size, @Nullable BuildRotation explicit) {
+        int[] normal = entryNormal(entryX, entryZ, size.x(), size.z());
+        Door door =
+                normal == null ? new Door(entryX, entryZ, 0, 0, 0) : new Door(entryX, entryZ, normal[0], normal[1], 0);
+        return compute(anchor, look, door, size, explicit);
+    }
+
+    public static DemoPlacement compute(
+            Anchor anchor, Look look, Door door, Size size, @Nullable BuildRotation explicit) {
+        int entryX = door.x();
+        int entryZ = door.z();
         if (size.x() < 1 || size.y() < 1 || size.z() < 1) {
             throw new IllegalArgumentException("Размер постройки " + size.x() + "×" + size.y() + "×" + size.z()
                     + ": стороны обязаны быть хотя бы 1");
         }
-        BuildRotation rotation =
-                explicit == null ? chooseRotation(entryX, entryZ, size.x(), size.z(), look.dx(), look.dz()) : explicit;
+        BuildRotation rotation = explicit == null ? chooseRotation(door.normalDx(), door.normalDz(), look) : explicit;
         int rotatedX = rotation.rotatedSizeX(size.x(), size.z());
         int rotatedZ = rotation.rotatedSizeZ(size.x(), size.z());
         BuildRotation.Cell entry = rotation.rotate(entryX, entryZ, size.x(), size.z());
-        int originX = anchor.x() + look.dx() - entry.x();
-        int originZ = anchor.z() + look.dz() - entry.z();
+        int originX = anchor.x() + look.dx() * (1 + door.porch()) - entry.x();
+        int originZ = anchor.z() + look.dz() * (1 + door.porch()) - entry.z();
         int pad = BuildTuning.DEMO_PLATFORM_PADDING;
         Frame frame = new Frame(anchor.x(), anchor.z(), originX, originZ, rotatedX, rotatedZ, pad);
         BuildBox platform = BuildBox.of(
@@ -84,6 +93,16 @@ public record DemoPlacement(
         if (normal == null) {
             return BuildRotation.NONE;
         }
+        return chooseRotation(normal[0], normal[1], new Look(lookDx, lookDz));
+    }
+
+    private static BuildRotation chooseRotation(int normalDx, int normalDz, Look look) {
+        int lookDx = look.dx();
+        int lookDz = look.dz();
+        if ((lookDx == 0 && lookDz == 0) || (normalDx == 0 && normalDz == 0)) {
+            return BuildRotation.NONE;
+        }
+        int[] normal = {normalDx, normalDz};
         int wantedDx = -lookDx;
         int wantedDz = -lookDz;
         for (int quarter = 0; quarter < 4; quarter++) {
@@ -214,6 +233,26 @@ public record DemoPlacement(
     public record Look(int dx, int dz) {}
 
     public record Size(int x, int y, int z) {}
+
+    public record Door(int x, int z, int normalDx, int normalDz, int porch) {
+        public static Door of(Preset preset) {
+            BlockCoord entry = preset.entry();
+            SchematicBody.Normal normal = SchematicBody.of(preset.schematic(), entry)
+                    .outwardNormal(entry)
+                    .orElse(new SchematicBody.Normal(0, 0));
+            int porch = 0;
+            if (normal.dz() < 0) {
+                porch = entry.z();
+            } else if (normal.dz() > 0) {
+                porch = preset.sizeZ() - 1 - entry.z();
+            } else if (normal.dx() < 0) {
+                porch = entry.x();
+            } else if (normal.dx() > 0) {
+                porch = preset.sizeX() - 1 - entry.x();
+            }
+            return new Door(entry.x(), entry.z(), normal.dx(), normal.dz(), porch);
+        }
+    }
 
     private record Frame(int anchorX, int anchorZ, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {}
 

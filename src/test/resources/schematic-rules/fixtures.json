@@ -68,6 +68,53 @@
    "expect": [
     "light"
    ]
+  },
+  {
+   "file": "valid_double_chest"
+  },
+  {
+   "file": "chest_pair_single",
+   "expect": [
+    "chest_pair"
+   ]
+  },
+  {
+   "file": "chest_pair_mismatch",
+   "expect": [
+    "chest_pair"
+   ]
+  },
+  {
+   "file": "entrance_jump",
+   "expect": [
+    "entrance_step"
+   ]
+  },
+  {
+   "file": "entrance_step_backwards",
+   "expect": [
+    "entrance_step"
+   ]
+  },
+  {
+   "file": "storage_dark_end",
+   "expect": [
+    "light"
+   ]
+  },
+  {
+   "file": "inner_height_two",
+   "expect": [
+    "inner_height"
+   ]
+  },
+  {
+   "file": "pen_without_light",
+   "expect": [
+    "roof",
+    "inner_height",
+    "light"
+   ]
   }
  ]
 }

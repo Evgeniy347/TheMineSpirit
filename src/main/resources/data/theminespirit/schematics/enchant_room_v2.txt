@@ -1,19 +1,24 @@
-# enchant_room_v2 — перенесено из JSON (чеклист 43); '.' — клетка обязана быть воздухом
-name: "Чаровальня, уровень 2 (больше: второй стол и запас полок)"
+# enchant_room_v2 — зал на два стола: кольцо уровня 1 остаётся на месте, справа пристроено второе кольцо,
+# общий с первым столбец полок; у каждого стола 15 полок через клетку воздуха. Проход вдоль входной стены
+# ведёт к проёмам обоих колец.
+name: "Чаровальня, уровень 2 (два стола по 15 полок)"
 type: craft
 stage: 2
 level: 2
 requires: enchant_room_v1
-size: 11x4x9   # Ш×В×Д
-entrance: 5,1,8
+size: 11x5x9   # Ш×В×Д
+entrance: 3,1,7
 legend:
   'S': stone_bricks
   '#': oak_planks
+  'G': glass_pane
   'K': bookshelf
   'E': enchanting_table
   'T': torch
+  'D': oak_door[facing=north,hinge=left]
+  'p': stone_brick_stairs[facing=north,half=bottom]
 layers:
-  - y0: |
+  - y0 пол: |
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
@@ -22,28 +27,38 @@ layers:
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
-      SSSSSSSSSSS
-  - y1: |
+         p
+  - y1 два кольца полок, столы: |
+      ###########
+      #KKKKKKKKK#
+      #K...K...K#
+      #K.E.K.E.K#
+      #K...K...K#
+      #KK.KKK.KK#
+      #.........#
+      ###D#######
+         .
+  - y2 окна, факелы на полках: |
+      ##G#G#G#G##
+      #T...T...T#
+      G.........G
+      #.........#
+      G.........G
+      #T...T...T#
+      #.........#
+      ###D###G###
+         .
+  - y3 верх стен: |
       ###########
       #.........#
-      #..KKKKK..#
-      #..K...K..#
-      #..K.E.KE.#
-      #..K...K..#
-      #..KK.KK..#
-      #..KK.....#
-      #####.#####
-  - y2: |
+      #.........#
+      #.........#
+      #.........#
+      #.........#
+      #.........#
       ###########
-      #.........#
-      #..T......#
-      #.........#
-      #.........#
-      #.........#
-      #..T......#
-      #.........#
-      #####.#####
-  - y3: |
+         .
+  - y4 потолок: |
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
@@ -52,4 +67,4 @@ layers:
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
-      SSSSSSSSSSS
+         .

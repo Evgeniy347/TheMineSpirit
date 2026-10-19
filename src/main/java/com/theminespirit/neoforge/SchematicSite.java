@@ -175,7 +175,8 @@ final class SchematicSite {
         BlockState wanted = wanted(entry);
         level.setBlock(target, wanted, Block.UPDATE_ALL);
         if (!wanted.hasProperty(BlockStateProperties.BED_PART)
-                && !wanted.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
+                && !wanted.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                && !BlockPlacer.pairedChestHalf(wanted)) {
             BlockState updated = Block.updateFromNeighbourShapes(wanted, level, target);
             if (!updated.equals(wanted)) {
                 level.setBlock(target, updated, Block.UPDATE_ALL);

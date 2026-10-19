@@ -1,0 +1,14 @@
+# фикстура сторожа схем: pen_without_light
+type: farm
+size: 5x1x5   # Ш×В×Д
+entrance: 2,0,0
+legend:
+  'F': oak_fence
+  'G': oak_fence_gate
+layers:
+  - y0: |
+      FFGFF
+      F...F
+      F...F
+      F...F
+      FFFFF

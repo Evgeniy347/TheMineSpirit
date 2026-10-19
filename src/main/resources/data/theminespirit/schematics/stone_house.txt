@@ -6,7 +6,7 @@
 name: "Простой каменный дом"
 type: housing
 stage: 2
-size: 7x7x7
+size: 7x7x8
 entrance: front
 legend:
   'c': cobblestone
@@ -22,8 +22,10 @@ legend:
   'w': cobblestone_stairs[facing=west,half=bottom]
   'S': wall_torch[facing=south]
   'N': wall_torch[facing=north]
+  'p': cobblestone_stairs[facing=south,half=bottom]
 layers:
   - y0 цоколь и пол: |
+         p
       ccccccc
       c#####c
       c#####c
@@ -32,6 +34,7 @@ layers:
       c#####c
       ccccccc
   - y1 стены, мебель: |
+         .
       c##D##c
       #F_...#
       #....h#
@@ -40,6 +43,7 @@ layers:
       #B.C.B#
       c#####c
   - y2 окна, факелы: |
+         .
       cG#D#Gc
       #.S.S.#
       #.....#
@@ -48,6 +52,7 @@ layers:
       #..N..#
       c#G#G#c
   - y3 верх стен: |
+         .
       c#####c
       #.....#
       #.....#
@@ -56,6 +61,7 @@ layers:
       #.....#
       c#####c
   - y4 карниз крыши: |
+         .
       e##G##w
       e#...#w
       e#...#w
@@ -64,6 +70,7 @@ layers:
       e#...#w
       e##G##w
   - y5 скат: |
+         .
        e###w
        e#.#w
        e#.#w
@@ -72,6 +79,7 @@ layers:
        e#.#w
        e###w
   - y6 конёк: |
+         .
         ecw
         ecw
         ecw

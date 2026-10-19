@@ -5,7 +5,6 @@ import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockItems;
 import java.util.ArrayList;
@@ -34,14 +33,12 @@ final class DemoPlanner {
                         + "' не найдена в библиотеке пресетов: проверьте presets.json и файл "
                         + chosen.scheme() + ".txt (/spirit tables)"));
         Schematic schematic = preset.schematic();
-        BlockCoord entry = preset.entry();
         String name = preset.name();
         Map<String, Integer> materials = preset.materials();
         DemoPlacement placement = DemoPlacement.compute(
                 new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
                 new DemoPlacement.Look(lookDx, lookDz),
-                entry.x(),
-                entry.z(),
+                DemoPlacement.Door.of(preset),
                 new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
                 rotation);
         List<DemoPlan.Placement> preplaced = new ArrayList<>();

@@ -2,7 +2,7 @@
 name: "Колодец 3×3"
 type: infrastructure
 stage: 1
-size: 3x2x3   # Ш×В×Д
+size: 3x3x3   # Ш×В×Д   # Ш×В×Д
 entrance: 1,1,1
 exemptions:
   - rule: closed_walls
@@ -11,11 +11,10 @@ exemptions:
     reason: "вход колодца — клетка над водой в центре, а не дверь на внешней грани: это спуск к воде"
   - rule: roof
     reason: "колодец открыт сверху по замыслу: крыши нет, к воде должен быть доступ"
-  - rule: inner_height
-    reason: "шахта колодца уходит вниз, вода у дна: внутренней высоты в схеме нет"
 legend:
   'C': cobblestone
   'W': water
+  'T': torch
 layers:
   - y0: |
       CCC
@@ -25,3 +24,7 @@ layers:
       C.C
       ...
       C.C
+  - y2 факелы на угловых столбах: |
+      T T
+
+      T T

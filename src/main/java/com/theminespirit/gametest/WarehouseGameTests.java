@@ -111,7 +111,9 @@ public final class WarehouseGameTests {
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_LOG, 16),
-                new ItemStack(Items.CHEST, 18));
+                new ItemStack(Items.CHEST, 18),
+                new ItemStack(Items.OAK_STAIRS, 1),
+                new ItemStack(Items.TORCH, 1));
         // Пол схемы (dy=0) ложится на землю, как у DemoPlacement: якорь в слое пола арены занял бы клетки
         // пола камнем, и строгая стройка считает их непостроенными.
         BlockPos anchor = new BlockPos(1, 1, 1);

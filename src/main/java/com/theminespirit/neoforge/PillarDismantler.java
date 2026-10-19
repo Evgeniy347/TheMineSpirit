@@ -58,6 +58,7 @@ final class PillarDismantler {
             }
             Item item = state.getBlock().asItem();
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            SpiritGesture.workOn(spirit, pos);
             unmark(pos);
             if (!Items.AIR.equals(item)) {
                 ItemStack leftover = spirit.getInventory().addItem(new ItemStack(item));

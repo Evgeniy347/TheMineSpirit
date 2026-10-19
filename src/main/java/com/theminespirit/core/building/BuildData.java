@@ -6,17 +6,28 @@ import java.util.Set;
 
 /**
  * Числа стройки из горячей таблицы {@code building/build.json}: досягаемость духа и темп постановки
- * (решение владельца 18.10: «примерно 2 блока в секунду, взмах руки и звук обязательны»).
+ * (решение владельца 18.10: «примерно 2 блока в секунду, взмах руки и звук обязательны»). Демо-стройка
+ * ({@code /spirit demo}) идёт своим темпом {@code demoPlaceIntervalTicks} (владелец 19.10: 10 блоков в секунду),
+ * темп обычной игры от него не зависит.
  */
-public record BuildData(SpiritReach reach, int placeIntervalTicks) {
+public record BuildData(SpiritReach reach, int placeIntervalTicks, int demoPlaceIntervalTicks) {
     public static final String RESOURCE = "data/theminespirit/building/build.json";
-    private static final Set<String> FIELDS = Set.of("reachHorizontal", "reachUp", "reachDown", "placeIntervalTicks");
+    private static final Set<String> FIELDS =
+            Set.of("reachHorizontal", "reachUp", "reachDown", "placeIntervalTicks", "demoPlaceIntervalTicks");
 
     public BuildData {
         if (placeIntervalTicks < 1) {
             throw new IllegalArgumentException(
                     "placeIntervalTicks = " + placeIntervalTicks + ": между постановками хотя бы 1 тик");
         }
+        if (demoPlaceIntervalTicks < 1) {
+            throw new IllegalArgumentException("demoPlaceIntervalTicks = " + demoPlaceIntervalTicks
+                    + ": между постановками демо-стройки хотя бы 1 тик");
+        }
+    }
+
+    public int intervalTicks(boolean demo) {
+        return demo ? demoPlaceIntervalTicks : placeIntervalTicks;
     }
 
     public static BuildData parse(String json, String origin) {
@@ -28,7 +39,9 @@ public record BuildData(SpiritReach reach, int placeIntervalTicks) {
                     JsonResource.integer(root.get("reachUp"), origin, "reachUp"),
                     JsonResource.integer(root.get("reachDown"), origin, "reachDown"));
             return new BuildData(
-                    reach, JsonResource.integer(root.get("placeIntervalTicks"), origin, "placeIntervalTicks"));
+                    reach,
+                    JsonResource.integer(root.get("placeIntervalTicks"), origin, "placeIntervalTicks"),
+                    JsonResource.integer(root.get("demoPlaceIntervalTicks"), origin, "demoPlaceIntervalTicks"));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }

@@ -1,31 +1,43 @@
 # фикстура сторожа схем: house_without_light
 type: housing
-size: 5x4x5   # Ш×В×Д
-entrance: 2,1,0
+size: 5x5x6   # Ш×В×Д
+entrance: 2,1,1
 legend:
   '#': oak_planks
   'D': oak_door
   'P': glass_pane
+  'p': oak_stairs[facing=south,half=bottom]
 layers:
   - y0: |
+        p
       #####
       #####
       #####
       #####
       #####
   - y1: |
+        .
       ##D##
       #...#
       #...#
       #...#
       #####
   - y2: |
+        .
       ##D##
       #...#
       P...#
       #...#
       #####
   - y3: |
+        .
+      #####
+      #...#
+      #...#
+      #...#
+      #####
+  - y4: |
+        .
       #####
       #####
       #####

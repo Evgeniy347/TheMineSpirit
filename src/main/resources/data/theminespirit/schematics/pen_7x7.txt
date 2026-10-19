@@ -2,7 +2,7 @@
 name: "Загон 7×7 (забор + калитка)"
 type: farm
 stage: 1
-size: 7x1x7   # Ш×В×Д
+size: 7x2x7   # Ш×В×Д   # Ш×В×Д
 entrance: 3,0,0
 exemptions:
   - rule: roof
@@ -12,12 +12,22 @@ exemptions:
 legend:
   'F': oak_fence
   'G': oak_fence_gate
+  'L': oak_log[axis=y]
+  'T': torch
 layers:
-  - y0: |
-      FFFGFFF
+  - y0 забор, столбы по углам: |
+      LFFGFFL
       F.....F
       F.....F
       F.....F
       F.....F
       F.....F
-      FFFFFFF
+      LFFFFFL
+  - y1 факелы на угловых столбах: |
+      T     T
+
+
+
+
+
+      T     T
