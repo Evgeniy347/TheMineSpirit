@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
@@ -12,10 +13,16 @@ import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.engine.ConditionRegistry;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.BuildSchematicParams;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +35,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 /**
  * Стройка по схеме с места: сначала очищается обязательный воздух и чужие блоки в клетках схемы,
@@ -38,6 +46,7 @@ import net.minecraft.world.phys.Vec3;
 final class BuildSchematicScript implements ScriptInstance {
     private static final int MAX_FINISH_WAITS = 200;
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     private final SpiritEntity spirit;
     private final Level level;
     private final SchematicSite site;
@@ -66,6 +75,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private String lastRefusal = "";
+    private TaskRunner supplyRunner;
+    private int trips;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -91,6 +102,26 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         ticks++;
         refreshShare();
+        if (supplyRunner != null) {
+            RunStatus supply = supplyRunner.tick();
+            if (supply == RunStatus.RUNNING) {
+                return ScriptStatus.RUNNING;
+            }
+            if (supply != RunStatus.SUCCEEDED) {
+                LOGGER.info(
+                        "Стройка {}: заход {} за материалами закончился {}: {}; дух {}",
+                        buildKey,
+                        trips,
+                        supply,
+                        supplyRunner.failureReason().orElse("причина не названа"),
+                        feet());
+            }
+            // После захода — заново: клетки, отложенные без опоры или без стоянки, теперь могут стать доступны.
+            supplyRunner = null;
+            blocked.clear();
+            refusals.clear();
+            standsRetried = false;
+        }
         if (breaking != null) {
             return breakTick();
         }
@@ -142,6 +173,7 @@ final class BuildSchematicScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
+        List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
         boolean waitingForeign = false;
         for (Schematic.PlacedEntry entry : site.primaries()) {
             if (site.matches(entry) && site.secondPartMatches(entry)) {
@@ -158,7 +190,22 @@ final class BuildSchematicScript implements ScriptInstance {
                 site.repairState(entry);
                 return ScriptStatus.RUNNING;
             }
+            if (BlockItems.hasBlockItem(entry.block())
+                    && BlockItems.countIn(spirit.getInventory(), entry.block()) == 0) {
+                unsupplied.add(entry);
+                continue;
+            }
             missing.add(entry);
+        }
+        // Решение владельца 20.10: дух ставит всё, на что хватает взятого, и только потом идёт за следующей
+        // порцией. Нехватка — отказ «не хватило материала», когда взятым больше нечего ставить.
+        if (!unsupplied.isEmpty()) {
+            // Пока часть материала не взята, цели — только клетки с опорой: висящие над невзятым ждут захода,
+            // иначе их без стоянки отметили бы недоступными.
+            missing.removeIf(entry -> !site.supported(entry));
+        }
+        if (missing.isEmpty() && !unsupplied.isEmpty()) {
+            return noMaterial(unsupplied.get(0).block());
         }
         if (missing.isEmpty()) {
             return waitingForeign && ++finishWaits <= MAX_FINISH_WAITS ? ScriptStatus.RUNNING : finish();
@@ -169,6 +216,10 @@ final class BuildSchematicScript implements ScriptInstance {
             (SchematicBlocks.isEntranceBlock(entry.block()) ? entrances : main).add(entry);
         }
         boolean lastStep = main.isEmpty();
+        // Двери — последним шагом, когда всё остальное стоит: без материала на стены сперва заход за ним.
+        if (lastStep && unsupplied.stream().anyMatch(entry -> !SchematicBlocks.isEntranceBlock(entry.block()))) {
+            return noMaterial(unsupplied.get(0).block());
+        }
         List<Schematic.PlacedEntry> targets = ownFirst(lastStep ? entrances : main);
         return placeStep(targets, lastStep);
     }
@@ -240,13 +291,7 @@ final class BuildSchematicScript implements ScriptInstance {
             case BlockPlacer.Refused refused -> {
                 lastRefusal = refused.reason() + ": " + refused.message();
                 if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
-                    failed++;
-                    tally.failed();
-                    int have = BlockItems.countIn(spirit.getInventory(), entry.block());
-                    int needed = countMissing(entry.block());
-                    tally.supplies(placed + have, Math.max(needed - have, 0));
-                    return Optional.of(fail("не хватило материала '" + entry.block() + "': поставлено " + placed
-                            + " из " + site.primaries().size() + "; нужно " + needed + ", есть " + have));
+                    return Optional.of(noMaterial(entry.block()));
                 }
                 int attempts = refusals.merge(cell, 1, Integer::sum);
                 if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
@@ -383,6 +428,37 @@ final class BuildSchematicScript implements ScriptInstance {
         return String.join(", ", shown);
     }
 
+    private ScriptStatus noMaterial(String blockId) {
+        if (trips < BuildSupplyTrip.MAX_TRIPS) {
+            List<ScriptCall> steps = BuildSupplyTrip.plan(spirit, site);
+            if (!steps.isEmpty()) {
+                trips++;
+                LOGGER.info(
+                        "Стройка {}: заход {} за материалами ({} шагов withdraw), поставлено {} из {}, не хватило '{}'",
+                        buildKey,
+                        trips,
+                        steps.size(),
+                        placed,
+                        site.primaries().size(),
+                        blockId);
+                approach.cancel();
+                approachStand = null;
+                supplyRunner = TaskRunner.start(
+                        new SequenceNode(new ArrayList<TaskNode>(steps)),
+                        SpiritScripts.registryFor(spirit),
+                        ConditionRegistry.of(Map.of()));
+                return ScriptStatus.RUNNING;
+            }
+        }
+        failed++;
+        tally.failed();
+        int have = BlockItems.countIn(spirit.getInventory(), blockId);
+        int needed = countMissing(blockId);
+        tally.supplies(placed + have, Math.max(needed - have, 0));
+        return fail("не хватило материала '" + blockId + "': поставлено " + placed + " из "
+                + site.primaries().size() + "; нужно " + needed + ", есть " + have);
+    }
+
     private int countMissing(String blockId) {
         int total = 0;
         for (Schematic.PlacedEntry entry : site.primaries()) {
@@ -398,6 +474,13 @@ final class BuildSchematicScript implements ScriptInstance {
         outcome = ScriptStatus.FAILED;
         cancel();
         return outcome;
+    }
+
+    private void stopSupply() {
+        if (supplyRunner != null) {
+            supplyRunner.cancel();
+            supplyRunner = null;
+        }
     }
 
     private void leaveSquad() {
@@ -419,6 +502,7 @@ final class BuildSchematicScript implements ScriptInstance {
 
     @Override
     public void cancel() {
+        stopSupply();
         approach.cancel();
         breaker.cancel();
         breaking = null;
@@ -428,6 +512,7 @@ final class BuildSchematicScript implements ScriptInstance {
 
     @Override
     public void suspend() {
+        stopSupply();
         approach.suspend();
         breaker.cancel();
         breaking = null;
