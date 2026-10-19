@@ -33,7 +33,7 @@ class PresetLibraryTests {
                 .append("  'D': oak_door[facing=north]\nlayers:\n");
         for (int y = 0; y < rows.length; y++) {
             text.append("  - y").append(y).append(": |\n");
-            for (String row : rows[y].split("/")) {
+            for (String row : rows[y].split("/", -1)) {
                 text.append("      ").append(row).append('\n');
             }
         }

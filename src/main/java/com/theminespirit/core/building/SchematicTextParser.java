@@ -182,7 +182,7 @@ public final class SchematicTextParser {
         }
         Map<String, String> state = new LinkedHashMap<>();
         if (block.group(2) != null && !block.group(2).isBlank()) {
-            for (String pair : block.group(2).split(",")) {
+            for (String pair : block.group(2).split(",", -1)) {
                 Matcher property = STATE_PAIR.matcher(pair.trim());
                 if (!property.matches()) {
                     throw error(line, "свойство '" + pair.trim() + "' не по формату: ожидается имя=значение строчными");

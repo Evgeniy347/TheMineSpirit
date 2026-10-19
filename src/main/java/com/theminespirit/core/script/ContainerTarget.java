@@ -16,7 +16,7 @@ public sealed interface ContainerTarget
         if (trimmed.equalsIgnoreCase("auto")) {
             return AUTO;
         }
-        String[] parts = trimmed.split(",");
+        String[] parts = trimmed.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Контейнер '" + text + "' задан неверно: ожидалось 'nearest', "
                     + "'auto' или координаты блока x,y,z (например \"12,64,-7\"). Получено " + parts.length

@@ -31,6 +31,14 @@ class FillCraterParamsTests {
     }
 
     @Test
+    void from_TrailingCommaPosition_Throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> FillCraterParams.from(Map.of("crater", "10,64,-5,")),
+                "Позиция с хвостовой запятой — опечатка, а не «x,y,z»: молча принятая, она прячет лишнюю координату");
+    }
+
+    @Test
     void from_MissingParam_Throws() {
         assertThrows(
                 IllegalArgumentException.class,

@@ -78,6 +78,7 @@ class ContainerTargetTests {
                 "30000001,0,0",
                 "-30000001,0,0",
                 "12.5,64,-7",
+                "12,64,-7,",
                 "12, sixty-four,-7",
                 "nearest, 1,2"
             })

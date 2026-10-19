@@ -135,7 +135,7 @@ public final class FallbackPlanner implements Planner {
 
     private static List<String> tokenize(String text) {
         List<String> tokens = new ArrayList<>();
-        for (String token : text.strip().toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+")) {
+        for (String token : text.strip().toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+", -1)) {
             if (!token.isEmpty()) {
                 tokens.add(token);
             }

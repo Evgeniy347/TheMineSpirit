@@ -13,7 +13,7 @@ public final class QueryString {
         if (raw == null || raw.isEmpty()) {
             return query;
         }
-        for (String pair : raw.split("&")) {
+        for (String pair : raw.split("&", -1)) {
             if (pair.isEmpty()) {
                 continue;
             }

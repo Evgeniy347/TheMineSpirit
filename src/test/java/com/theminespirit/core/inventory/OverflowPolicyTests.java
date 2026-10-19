@@ -425,7 +425,7 @@ class OverflowPolicyTests {
 
     private static List<Stack> inventory(String spec) {
         List<Stack> slots = new ArrayList<>();
-        for (String part : spec.split(";")) {
+        for (String part : spec.split(";", -1)) {
             if (part.isBlank()) {
                 continue;
             }
@@ -444,8 +444,8 @@ class OverflowPolicyTests {
     }
 
     private static Stack stack(String spec) {
-        String[] parts = spec.split("#");
-        String[] name = parts[0].split(":");
+        String[] parts = spec.split("#", -1);
+        String[] name = parts[0].split(":", -1);
         int variant = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
         int count = Integer.parseInt(name[1]);
         int maxStack = name.length > 2 ? Integer.parseInt(name[2]) : 64;

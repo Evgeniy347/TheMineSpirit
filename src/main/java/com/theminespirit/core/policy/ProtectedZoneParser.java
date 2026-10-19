@@ -26,7 +26,7 @@ public final class ProtectedZoneParser {
 
     private static ProtectedZone parseLine(int index, String line) {
         Objects.requireNonNull(line, "Строка защищённой зоны №" + (index + 1) + " пуста (null)");
-        String[] parts = line.trim().split("\\s+");
+        String[] parts = line.trim().split("\\s+", -1);
         if (parts.length != PARTS) {
             throw bad(index, line, "ожидается 7 частей «измерение x1 y1 z1 x2 y2 z2», найдено " + parts.length);
         }

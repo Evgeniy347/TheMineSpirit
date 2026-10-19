@@ -69,6 +69,16 @@ class BuildFenceParamsTests {
     }
 
     @Test
+    void from_TrailingCommaPoint_IsRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BuildFenceParams.from(
+                        Map.of("block", "oak_fence", "points", List.of("0,64,0", "4,64,0,", "4,64,4"))),
+                "Точка с хвостовой запятой «4,64,0,» — опечатка, а не x,y,z: молча принятая, она прячет "
+                        + "пропущенную или лишнюю координату");
+    }
+
+    @Test
     void catalog_FenceAndShelter_DeclareSafeDefaults() {
         ScriptSpec fence = CoreScripts.defaultCatalog().find("build_fence").orElseThrow();
         ScriptSpec shelter = CoreScripts.defaultCatalog().find("build_shelter").orElseThrow();

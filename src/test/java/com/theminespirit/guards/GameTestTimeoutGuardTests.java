@@ -421,7 +421,7 @@ class GameTestTimeoutGuardTests {
     }
 
     private static boolean hasJustification(String text, int annotationStart) {
-        String[] lines = text.substring(0, annotationStart).split("\n");
+        String[] lines = text.substring(0, annotationStart).split("\n", -1);
         for (int i = lines.length - 1; i >= Math.max(0, lines.length - 12); i--) {
             String line = lines[i].trim();
             if (line.startsWith("/*") || line.startsWith("*") || line.startsWith("//")) {

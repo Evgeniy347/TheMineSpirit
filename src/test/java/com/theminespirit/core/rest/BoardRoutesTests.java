@@ -275,6 +275,20 @@ class BoardRoutesTests {
     }
 
     @Test
+    void post_RelocatePointWithTrailingComma_Returns400() {
+        String body = "{\"request_id\":\"" + uuid() + "\",\"case\":\"RELOCATE_BUILDING\","
+                + "\"building\":\"BUILD_PEN\",\"from\":\"10,64,-3,\",\"to\":\"30,64,10\"}";
+
+        RestResponse response = send("POST", "/v1/board/tasks", body);
+
+        assertEquals(
+                400,
+                response.status(),
+                "Точка «10,64,-3,» с хвостовой запятой — не тройка координат, а опечатка: " + response.body());
+        assertEquals(0, gateway.size(), "Отклонённый перенос не должен ставить задание");
+    }
+
+    @Test
     void post_RelocateWithoutPoints_Returns400() {
         String body =
                 "{\"request_id\":\"" + uuid() + "\",\"case\":\"RELOCATE_BUILDING\"," + "\"building\":\"BUILD_PEN\"}";

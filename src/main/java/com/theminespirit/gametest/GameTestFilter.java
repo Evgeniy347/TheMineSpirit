@@ -164,7 +164,7 @@ public final class GameTestFilter {
 
     private static List<String> parseFilters(String raw) {
         List<String> filters = new ArrayList<>();
-        for (String part : raw.split(",")) {
+        for (String part : raw.split(",", -1)) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {
                 filters.add(trimmed.toLowerCase(Locale.ROOT));

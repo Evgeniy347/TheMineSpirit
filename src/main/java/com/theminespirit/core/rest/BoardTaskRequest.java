@@ -328,7 +328,7 @@ public record BoardTaskRequest(
                     "Поле '" + field + "' должно быть строкой координат \"x,y,z\", получено: " + node.getNodeType(),
                     Map.of("field", field));
         }
-        String[] parts = node.textValue().split(",");
+        String[] parts = node.textValue().split(",", -1);
         if (parts.length != 3) {
             throw invalid(
                     "Поле '" + field + "' = '" + node.textValue() + "' не тройка координат: " + "пример \"10,64,-3\"",

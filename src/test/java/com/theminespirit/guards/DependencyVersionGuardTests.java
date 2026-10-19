@@ -248,7 +248,7 @@ class DependencyVersionGuardTests {
 
     private static void checkVersion(
             String coordinate, Map<String, String> properties, int line, List<String> offenders) {
-        String[] parts = coordinate.split(":");
+        String[] parts = coordinate.split(":", -1);
         if (parts.length < 3 || parts[2].isBlank()) {
             return;
         }
@@ -317,7 +317,7 @@ class DependencyVersionGuardTests {
 
     private static Map<String, String> parseProperties(String properties) {
         Map<String, String> values = new LinkedHashMap<>();
-        for (String line : properties.split("\n")) {
+        for (String line : properties.split("\n", -1)) {
             String trimmed = line.trim();
             if (trimmed.isEmpty() || trimmed.startsWith("#")) {
                 continue;
@@ -333,7 +333,7 @@ class DependencyVersionGuardTests {
     }
 
     private static String groupArtifact(String coordinate) {
-        String[] parts = coordinate.split(":");
+        String[] parts = coordinate.split(":", -1);
         return parts.length < 2 ? coordinate : parts[0] + ":" + parts[1];
     }
 

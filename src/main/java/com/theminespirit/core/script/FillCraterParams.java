@@ -40,7 +40,7 @@ public sealed interface FillCraterParams {
     }
 
     private static FillCraterParams byPosition(String value) {
-        String[] parts = value.split(",");
+        String[] parts = value.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Параметр 'crater' = '" + value + "' не UUID и не позиция "
                     + "«x,y,z»: укажите id воронки или три целых координаты через запятую");

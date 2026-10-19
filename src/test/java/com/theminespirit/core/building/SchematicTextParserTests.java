@@ -44,6 +44,14 @@ class SchematicTextParserTests {
         return assertThrows(IllegalStateException.class, () -> parse(text), why);
     }
 
+    @Test
+    void parse_TrailingCommaInBlockState_IsRejected() {
+        rejected(
+                box("  'B': white_bed[facing=north,]\n", "B./B."),
+                "Свойство после хвостовой запятой пустое: состояние «facing=north,» — опечатка, молча принятая "
+                        + "она прячет потерянное свойство блока");
+    }
+
     private static String box(String legend, String... layers) {
         StringBuilder text = new StringBuilder("size: 2x")
                 .append(layers.length)

@@ -46,7 +46,7 @@ public record BuildFenceParams(String block, String gate, List<BlockCoord> point
     }
 
     private static BlockCoord parsePoint(String text) {
-        String[] parts = text.split(",");
+        String[] parts = text.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException(
                     "Точка забора '" + text + "' не в формате \"x,y,z\": " + "три координаты через запятую");
