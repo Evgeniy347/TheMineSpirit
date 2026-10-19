@@ -32,42 +32,40 @@ import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 
 class MethodShapeGuardTests {
-    private static final int MAX_PARAMETERS = 8;
     private static final int MAX_BOOLEAN_PARAMETERS = 3;
     private static final Map<String, String> EXCEPTIONS = Map.ofEntries();
 
     @Test
-    void productionMethods_TooManyParametersOrBooleanFlags_AreAbsent() {
+    void productionMethods_ThreeBooleanFlags_AreAbsent() {
         List<String> found = violations(SourceFiles.MAIN, EXCEPTIONS);
 
         assertEquals(
                 List.of(),
                 found,
-                "У метода 3+ boolean-параметра или 8+ параметров: по вызову не видно, что означают флаги, "
-                        + "а длинный список легко перепутать местами. Как надо: флаги одного смысла — "
-                        + "enum/тип, длинный список — объект-параметр. Внешний контракт (override "
-                        + "Minecraft/NeoForge) — только в EXCEPTIONS с причиной. Нарушители (файл:строка)");
+                "У метода 3+ boolean-параметра: по вызову не видно, что означают флаги. Как надо: флаги одного "
+                        + "смысла — enum/тип. Внешний контракт (override Minecraft/NeoForge) — только в EXCEPTIONS "
+                        + "с причиной; длинный список параметров (8+) ловит Checkstyle ParameterNumber. "
+                        + "Нарушители (файл:строка)");
     }
 
     @Test
-    void methodShapePattern_BooleanFlagsAndLongList_AreReported() {
+    void methodShapePattern_ThreeBooleanFlags_AreReported() {
         String sample = """
                         class Sample {
                             boolean flags(boolean first, boolean second, boolean third) { return first; }
-                            void wide(int a, int b, int c, int d, int e, int f, int g, int h) { }
                             void narrow(boolean first, boolean second, int value) { }
                         }
                         """;
 
         assertEquals(
-                List.of("2 Sample.flags", "3 Sample.wide"),
+                List.of("2 Sample.flags"),
                 violationsOf(sample),
-                "Сторож ослеп: 3 boolean-параметра и 8 параметров обязаны находиться, 2 boolean — нет");
+                "Сторож ослеп: 3 boolean-параметра обязаны находиться, 2 boolean — нет");
     }
 
     @Test
     void methodShapePattern_RecordCanonicalConstructor_IsClean() {
-        String sample = "record Point(int x, int y, int z, int level, int kind, int meta, int light, int sky) { }\n";
+        String sample = "record Flags(boolean north, boolean south, boolean east) { }\n";
 
         assertEquals(
                 List.of(),
@@ -78,9 +76,9 @@ class MethodShapeGuardTests {
     @Test
     void methodShapePattern_RecordDelegatingConstructor_IsClean() {
         String sample = """
-                        record Point(int x, int y, int z, int level, int kind, int meta, int light, int sky) {
-                            Point(int x, int y, int z) {
-                                this(x, y, z, 0, 0, 0, 15, 15);
+                        record Flags(boolean north, boolean south, boolean east, boolean west) {
+                            Flags(boolean north, boolean south, boolean east) {
+                                this(north, south, east, false);
                             }
                         }
                         """;
@@ -171,9 +169,8 @@ class MethodShapeGuardTests {
                     boolean record = owner.getKind() == Tree.Kind.RECORD;
                     boolean canonical = constructor && record && names.equals(componentNames(owner));
                     boolean delegates = constructor && record && delegatesToCanonical(node);
-                    boolean tooWide = parameters >= MAX_PARAMETERS;
                     boolean tooManyFlags = booleans >= MAX_BOOLEAN_PARAMETERS;
-                    if ((tooWide || tooManyFlags) && !canonical && !delegates) {
+                    if (tooManyFlags && !canonical && !delegates) {
                         String key = key(node, owner, file);
                         seen.add(key);
                         if (!exceptions.containsKey(key)) {

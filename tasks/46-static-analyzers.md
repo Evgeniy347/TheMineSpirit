@@ -1,5 +1,7 @@
 # Чеклист 46. Строгие статические анализаторы (владелец 19.10)
 
+Статус: все пункты выполнены в ветке `opus/work`, ждёт приёмки.
+
 Решение владельца: анализаторы роняют сборку; все ошибки и предупреждения — техдолг до нуля; временный список
 нарушений — только на время разбора и сокращается до пустого. Неуместные для проекта правила выключаются в
 конфигурации набора с причиной (не точечным подавлением). Версии выбрал главный агент (поручение владельца):
@@ -70,8 +72,11 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 6. [x] SpotBugs: 296 main + 78 test; после исключений из списка выше 16 + 4 → 0. Настоящий баг: use_block на
    закрытой калитке падал NPE (игрок null) — fix с GameTest. Прочее: замок вместо static synchronized, volatile
    generation, Double.compare для ничьей, публикация DoorWatchService после регистрации, entrySet, awaitNanos.
-7. [ ] ArchUnit: переписать `CoreIsolationTests` и регулярные сторожа зависимостей на правила ArchUnit.
-8. [ ] После каждого пункта — сторожа/абзацы, которые инструмент заменил, удалить (tasks/45, принцип AGENTS.md).
+7. [x] ArchUnit: `guards/ArchitectureGuardTests` — core без Minecraft/NeoForge, core/rest без HTTP JDK, клиентские
+   классы только в neoforge/client (новое), проверка самого правила на образце; `CoreIsolationTests` и
+   `RestCoreHttpGuardTests` удалены.
+8. [x] Заменённое удалено: часть «8+ параметров» `MethodShapeGuardTests` (Checkstyle ParameterNumber; осталось 3+
+   boolean), `CoreIsolationTests`, `RestCoreHttpGuardTests`; раздел «Сборка» `docs/CONVENTIONS.md` — до ссылок.
 
 Время сборки: Error Prone — главная цена (×3,5 компиляции); если мешает исполнителям — измерить с `workers.max`
 и решить с владельцем (например, Error Prone только в `check`, а не в каждой компиляции).

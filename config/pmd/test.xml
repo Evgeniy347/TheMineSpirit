@@ -87,11 +87,12 @@
   <!-- Тип объявления — интерфейс коллекции. Исключения: типы API Minecraft и JDK, чьи собственные методы нужны
        (ListTag.getCompound, NonNullList, Headers HTTP-сервера); IdentityHashMap объявляется явно — сравнение по
        ссылке, этого требует Error Prone IdentityHashMapUsage. -->
-  <!-- В тестах ещё и счётчики-двойники коллекций: тест читает их счётчик обращений. -->
+  <!-- В тестах ещё и счётчики-двойники коллекций (тест читает их счётчик обращений) и JavaClasses — его
+       принимают правила ArchUnit. -->
   <rule ref="category/java/bestpractices.xml/LooseCoupling">
     <properties>
       <property name="allowedTypes"
-                value="java.util.Properties,java.util.IdentityHashMap,net.minecraft.nbt.ListTag,net.minecraft.core.NonNullList,com.sun.net.httpserver.Headers,com.theminespirit.core.farming.FarmPlannerTests$CountingLookups,com.theminespirit.core.farming.HydrationTests$CountingWater,com.theminespirit.core.inventory.TransferPlannerTests$CountingSlots"/>
+                value="java.util.Properties,java.util.IdentityHashMap,net.minecraft.nbt.ListTag,net.minecraft.core.NonNullList,com.sun.net.httpserver.Headers,com.theminespirit.core.farming.FarmPlannerTests$CountingLookups,com.theminespirit.core.farming.HydrationTests$CountingWater,com.theminespirit.core.inventory.TransferPlannerTests$CountingSlots,com.tngtech.archunit.core.domain.JavaClasses"/>
     </properties>
   </rule>
 

@@ -163,6 +163,8 @@ dependencies {
     testImplementation "org.junit.platform:junit-platform-launcher"
 
     testImplementation "net.jqwik:jqwik:${jqwik_version}"
+    // Архитектурные правила зависимостей пакетов (tasks/46 п.7)
+    testImplementation "com.tngtech.archunit:archunit:${archunit_version}"
 
     errorprone "com.google.errorprone:error_prone_core:${errorprone_version}"
     errorprone "com.uber.nullaway:nullaway:${nullaway_version}"
