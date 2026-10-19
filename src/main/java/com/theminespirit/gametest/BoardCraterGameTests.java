@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
@@ -74,10 +75,8 @@ public final class BoardCraterGameTests {
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
         spirit.setHome(home);
         ServerLevel level = helper.getLevel();
-        Creeper creeper = helper.spawn(EntityType.CREEPER, new BlockPos(2, 1, 2));
-        creeper.setNoAi(true);
-        Pig pig = helper.spawn(EntityType.PIG, new BlockPos(6, 1, 6));
-        pig.setNoAi(true);
+        Creeper creeper = Objects.requireNonNull(EntityType.CREEPER.create(level), "крипер-источник взрыва не создан");
+        Pig pig = Objects.requireNonNull(EntityType.PIG.create(level), "свинья-источник взрыва не создана");
         int farX = home.x() + 100_000;
         int farZ = home.z() + 100_000;
         NeoForge.EVENT_BUS.post(new ExplosionEvent.Detonate(
