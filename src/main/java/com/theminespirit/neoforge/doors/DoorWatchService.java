@@ -48,8 +48,9 @@ public final class DoorWatchService {
             throw new IllegalStateException(
                     "DoorWatchService уже зарегистрирован: второй экземпляр удвоил бы задачи духам");
         }
-        instance = new DoorWatchService();
-        NeoForge.EVENT_BUS.register(instance);
+        DoorWatchService service = new DoorWatchService();
+        NeoForge.EVENT_BUS.register(service);
+        instance = service;
     }
 
     static DoorWatchService instance() {

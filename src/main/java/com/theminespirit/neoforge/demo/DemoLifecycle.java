@@ -18,9 +18,6 @@ public final class DemoLifecycle {
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {
-        if (event.getServer() == null) {
-            return;
-        }
         for (ServerLevel level : event.getServer().getAllLevels()) {
             DemoRegistry.get(level).tick();
         }

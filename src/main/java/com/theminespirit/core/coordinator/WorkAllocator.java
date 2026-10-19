@@ -48,7 +48,7 @@ public final class WorkAllocator {
                 double score =
                         spirit.pos().distanceTo(anchorOf(target)) + crowdPenalty * assigned.getOrDefault(target, 0L);
                 if (score < bestScore
-                        || (score == bestScore
+                        || (Double.compare(score, bestScore) == 0
                                 && best != null
                                 && target.anchor().compareTo(best.anchor()) < 0)) {
                     best = target;

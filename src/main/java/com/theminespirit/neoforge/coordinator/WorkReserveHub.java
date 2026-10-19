@@ -15,14 +15,17 @@ import net.minecraft.world.level.Level;
 
 public final class WorkReserveHub {
     private static final Map<Level, WorkReservations> TABLES = new WeakHashMap<>();
+    private static final Object LOCK = new Object();
 
     private WorkReserveHub() {}
 
-    public static synchronized WorkReservations leasesFor(Level level) {
-        if (level == null) {
-            throw new IllegalArgumentException("level не может быть null: реестр броней привязан к уровню");
+    public static WorkReservations leasesFor(Level level) {
+        synchronized (LOCK) {
+            if (level == null) {
+                throw new IllegalArgumentException("level не может быть null: реестр броней привязан к уровню");
+            }
+            return TABLES.computeIfAbsent(level, ignored -> new WorkReservations());
         }
-        return TABLES.computeIfAbsent(level, ignored -> new WorkReservations());
     }
 
     public static boolean reserve(SpiritEntity spirit, WorkTarget target) {

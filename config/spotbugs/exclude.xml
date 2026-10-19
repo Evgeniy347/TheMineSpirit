@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs (tasks/46 п.6): исключаются только правила целиком (или для тестов целиком), с причиной.
+  Точечных подавлений по классу или методу нет.
+-->
+<FindBugsFilter>
+  <!-- EI_EXPOSE_REP, EI_EXPOSE_REP2, MS_EXPOSE_REP, EI_EXPOSE_STATIC_REP2: SpotBugs считает изменяемой любую
+       коллекцию и любой не-final тип. Выборка из 22 мест (п.6): record и поля держат неизменяемые копии
+       (List.copyOf, Stream.toList, Map.of), а сущности и шина Minecraft (SpiritEntity, ServerLevel, IEventBus)
+       передаются по ссылке намеренно — копия мира невозможна. Массивы копируются явно (RestRequest,
+       PlacedBlockCodec — PMD ArrayIsStoredDirectly). -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MS_EXPOSE_REP,EI_EXPOSE_STATIC_REP2"/>
+  </Match>
+  <!-- NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE: повторный вызов аксессора после проверки на null
+       (if (p.min() != null) p.min().longValue()). Аксессоры record стабильны; null-контракт core держит NullAway,
+       который так же считает путь из аксессоров без аргументов стабильным. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+  </Match>
+  <!-- VA_FORMAT_STRING_USES_NEWLINE: перевод строки в формате — часть текста (JSON в текстовом блоке, строка CSV);
+       %n дал бы CRLF на Windows и другой файл на другой машине. -->
+  <Match>
+    <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+  </Match>
+</FindBugsFilter>

@@ -155,7 +155,7 @@ public final class ActivityAssigner {
             double score = demand.demand() - tuning.crowdPenalty() * taken.getOrDefault(demand.id(), 0);
             if (best == null
                     || score > bestScore
-                    || (score == bestScore && demand.id().compareTo(best) < 0)) {
+                    || (Double.compare(score, bestScore) == 0 && demand.id().compareTo(best) < 0)) {
                 best = demand.id();
                 bestScore = score;
             }

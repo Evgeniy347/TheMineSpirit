@@ -180,9 +180,10 @@ class BreedingRulesTests {
                 smaller.keySet(),
                 larger.keySet(),
                 "Состав продуктов не зависит от поголовья: у вида одни и те же продукты");
-        for (String item : smaller.keySet()) {
+        for (Map.Entry<String, Integer> entry : smaller.entrySet()) {
+            String item = entry.getKey();
             assertTrue(
-                    larger.get(item) >= smaller.get(item),
+                    larger.get(item) >= entry.getValue(),
                     "Запас растёт с поголовьем: " + item + " при " + population + " голов не больше, " + "чем при "
                             + (population + 1));
         }

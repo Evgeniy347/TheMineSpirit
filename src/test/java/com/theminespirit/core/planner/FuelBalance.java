@@ -75,7 +75,7 @@ final class FuelBalance {
                 int count = number(call);
                 accumulator.smelts += count;
                 accumulator.cook += count * (long) COOK_TICKS;
-                accumulator.fuelAhead &= accumulator.burn >= accumulator.cook;
+                accumulator.fuelAhead = accumulator.fuelAhead && accumulator.burn >= accumulator.cook;
                 return;
             }
             if ("gather".equals(call.script())) {

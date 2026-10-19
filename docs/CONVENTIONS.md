@@ -31,7 +31,7 @@
 - Строгие анализаторы (`staticAnalysis`, tasks/46) роняют полный `scripts/test.sh unit` и хук pre-commit; формат —
   Spotless + palantir-java-format, исправление — `./gradlew spotlessApply`; Checkstyle (`config/checkstyle/`) —
   порядок объявлений, не больше 7 параметров, метод не длиннее 80 строк; PMD (`config/pmd/`) — ошибки и практики,
-  выключенные правила — там же с причиной.
+  выключенные правила — там же с причиной; SpotBugs (`config/spotbugs/`) — байткод, исключения правил там же.
 - Error Prone — в каждой компиляции (полная ×4: ~21 → ~85 с, инкрементальная ~13 с); выключенные проверки — в
   `build.gradle` с причиной, точечных подавлений нет.
 - В `core` null — только через `@Nullable` (JSpecify), проверяет NullAway; полные таблицы читаются через

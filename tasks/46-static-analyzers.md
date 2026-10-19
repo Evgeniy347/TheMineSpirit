@@ -20,7 +20,7 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 | NullAway (`core`, main) | 33 с | 291 в 99 файлах |
 | Checkstyle, минимальный набор | 35 с | 261 / 25 (после настройки 206 / 0) |
 | PMD (после выключения неуместных) | ~59 с | ~925 / ~235 (после настройки 481 / 193) |
-| SpotBugs (после выключения EI/MS_EXPOSE_REP) | 81 с | ~71 |
+| SpotBugs (после выключения EI/MS_EXPOSE_REP) | 81 с | ~71 (стало 296 / 78 без исключений) |
 
 ## Выключить в конфигурации (с причиной)
 
@@ -45,7 +45,11 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 - Error Prone: UnnecessaryLambda — EventBus NeoForge снимает слушателя только по тому же экземпляру;
   ImmutableEnumChecker — неизменяемость доказывает только Guava/@Immutable, а Block/Item — синглтоны реестра Minecraft.
 - NullAway — только main, `AnnotatedPackages=com.theminespirit.core` (тесты намеренно передают null).
-- SpotBugs EI_EXPOSE_REP/REP2/MS_EXPOSE_REP — после проверки выборки 20 шт. (record + неизменяемые копии).
+- SpotBugs (`config/spotbugs/exclude.xml`, `exclude-test.xml`): EI_EXPOSE_REP/REP2/MS_EXPOSE_REP/EI_EXPOSE_STATIC_REP2 —
+  выборка 22 мест: неизменяемые копии и намеренные ссылки на сущности/шину Minecraft; NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE
+  — повторный вызов аксессора после проверки на null (null держит NullAway); VA_FORMAT_STRING_USES_NEWLINE — `
+` в
+  JSON/CSV, `%n` дал бы CRLF; в тестах — Random с зерном, значение в assertThrows, однопоточные двойники.
 
 ## Порядок (каждый пункт — блок, сборка падает только на НОВЫХ нарушениях, временный список → 0)
 
@@ -63,7 +67,9 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 5. [x] PMD: свои наборы `config/pmd/`; после настройки 481 main + 193 test → 0: LiteralsFirstInComparisons 209
    (скрипт), AvoidDuplicateLiterals 86 ключей → константы, LooseCoupling 23, UnusedFormalParameter 19 (`ignored…` у
    обработчиков по ссылке), ImplicitFunctionalInterface 15, ресурсы (try-with-resources), мелочь вручную.
-6. [ ] SpotBugs: ~71 после исключения EI/MS — 1–2 блока; фильтр только с постоянными причинами.
+6. [x] SpotBugs: 296 main + 78 test; после исключений из списка выше 16 + 4 → 0. Настоящий баг: use_block на
+   закрытой калитке падал NPE (игрок null) — fix с GameTest. Прочее: замок вместо static synchronized, volatile
+   generation, Double.compare для ничьей, публикация DoorWatchService после регистрации, entrySet, awaitNanos.
 7. [ ] ArchUnit: переписать `CoreIsolationTests` и регулярные сторожа зависимостей на правила ArchUnit.
 8. [ ] После каждого пункта — сторожа/абзацы, которые инструмент заменил, удалить (tasks/45, принцип AGENTS.md).
 

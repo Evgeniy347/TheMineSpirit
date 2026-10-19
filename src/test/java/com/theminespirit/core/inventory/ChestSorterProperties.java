@@ -65,9 +65,10 @@ class ChestSorterProperties {
         Map<String, Integer> before = countsByKind(slots);
         Map<String, Integer> after = countsByKind(layout);
 
-        for (String kind : before.keySet()) {
+        for (Map.Entry<String, Integer> entry : before.entrySet()) {
+            String kind = entry.getKey();
             assertEquals(
-                    before.get(kind),
+                    entry.getValue(),
                     after.get(kind),
                     "Сортировка только переставляет и сливает стопки: пары «предмет+вариант» '" + kind
                             + "' было " + before.get(kind) + ", стало " + after.get(kind) + ". Исходные слоты "

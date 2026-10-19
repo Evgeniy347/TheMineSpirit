@@ -6,6 +6,10 @@ final class EngineCounters {
 
     private EngineCounters() {}
 
+    static void recordSnapshotVisit() {
+        snapshotVisits++;
+    }
+
     static void reset() {
         snapshotVisits = 0;
         executorCreations = 0;

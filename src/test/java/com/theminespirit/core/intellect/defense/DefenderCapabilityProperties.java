@@ -47,11 +47,12 @@ class DefenderCapabilityProperties {
     @Property
     void role_AnyInput_Deterministic(@ForAll("capabilities") DefenderCapability capability) {
         DefenderRole before = capability.role();
-        capability.frontRank();
+        double rank = capability.frontRank();
 
         assertEquals(
                 before,
                 capability.role(),
-                "Роль зависит только от флага лука: иначе приказы лучнику и мечнику перемешаются между тиками");
+                "Роль зависит только от флага лука, а не от расчёта ранга фронта (" + rank + "): иначе приказы "
+                        + "лучнику и мечнику перемешаются между тиками");
     }
 }

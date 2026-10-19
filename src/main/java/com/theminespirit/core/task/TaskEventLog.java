@@ -93,7 +93,7 @@ public final class TaskEventLog {
     }
 
     public ReadResult awaitAfter(long lastId, Duration timeout) throws InterruptedException {
-        long deadline = System.nanoTime() + timeout.toNanos();
+        long remaining = timeout.toNanos();
         lock.lock();
         try {
             while (true) {
@@ -105,11 +105,10 @@ public final class TaskEventLog {
                 if (closed) {
                     return ReadResult.closed();
                 }
-                long remaining = deadline - System.nanoTime();
                 if (remaining <= 0) {
                     return ReadResult.timeout();
                 }
-                changed.awaitNanos(remaining);
+                remaining = changed.awaitNanos(remaining);
             }
         } finally {
             lock.unlock();

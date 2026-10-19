@@ -13,6 +13,7 @@ public final class PolicyConfig {
     public static final String FILE_NAME = "theminespirit-policy.toml";
 
     private static final String EXAMPLE_ZONE = "minecraft:overworld 0 0 0 0 0 0";
+    private static final Object LOCK = new Object();
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> PROTECTED_ZONES;
 
@@ -43,13 +44,15 @@ public final class PolicyConfig {
         modEventBus.addListener(ModConfigEvent.Reloading.class, PolicyConfig::onConfig);
     }
 
-    public static synchronized ProtectedZones zones() {
-        List<String> raw = List.copyOf(PROTECTED_ZONES.get());
-        if (!raw.equals(parsedFrom)) {
-            parsed = ProtectedZoneParser.parse(raw);
-            parsedFrom = raw;
+    public static ProtectedZones zones() {
+        synchronized (LOCK) {
+            List<String> raw = List.copyOf(PROTECTED_ZONES.get());
+            if (!raw.equals(parsedFrom)) {
+                parsed = ProtectedZoneParser.parse(raw);
+                parsedFrom = raw;
+            }
+            return parsed;
         }
-        return parsed;
     }
 
     private static void onConfig(ModConfigEvent event) {

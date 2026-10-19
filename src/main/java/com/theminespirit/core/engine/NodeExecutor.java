@@ -29,7 +29,7 @@ abstract class NodeExecutor {
     }
 
     final TaskProgress snapshot() {
-        EngineCounters.snapshotVisits++;
+        EngineCounters.recordSnapshotVisit();
         return buildProgress();
     }
 
