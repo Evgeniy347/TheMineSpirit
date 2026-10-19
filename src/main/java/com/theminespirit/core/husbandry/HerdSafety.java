@@ -11,14 +11,14 @@ public final class HerdSafety {
     private HerdSafety() {
     }
 
-    public static Optional<String> dangerReason(boolean inLava, boolean onFire, boolean inWater) {
-        if (inLava) {
+    public static Optional<String> dangerReason(Hazards hazards) {
+        if (hazards.inLava()) {
             return Optional.of("в лаве");
         }
-        if (onFire) {
+        if (hazards.onFire()) {
             return Optional.of("в огне");
         }
-        if (inWater) {
+        if (hazards.inWater()) {
             return Optional.of("в воде");
         }
         return Optional.empty();
@@ -41,5 +41,8 @@ public final class HerdSafety {
         long dy = (long) to.y() - from.y();
         long dz = (long) to.z() - from.z();
         return (double) dx * dx + dy * dy + dz * dz;
+    }
+
+    public record Hazards(boolean inLava, boolean onFire, boolean inWater) {
     }
 }

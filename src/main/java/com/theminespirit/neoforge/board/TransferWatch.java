@@ -54,9 +54,7 @@ public final class TransferWatch {
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = at(crafter);
         List<TransferSource> sources = sources(spirits, mapper, recipes, crafter.getUUID());
-        List<TransferOrder> orders = TransferPlanner.planForCraft(craftItem.orElseThrow(), crafter.getUUID(), crafterAt,
-                stacks(crafter.getInventory(), mapper), ingredients, sources, warehouse(stock, spirits, mapper),
-                InventoryTables.values(), BoardTuning.transferRadiusBlocks(), BoardTuning.transferMaxCount());
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(craftItem.orElseThrow(), crafter.getUUID(), crafterAt, stacks(crafter.getInventory(), mapper), ingredients, sources, warehouse(stock, spirits, mapper), InventoryTables.values(), BoardTuning.transferRadiusBlocks(), BoardTuning.transferMaxCount()));
         boolean active = hasActiveTransfer(service, craftTicket.id());
         if (orders.isEmpty()) {
             return active;

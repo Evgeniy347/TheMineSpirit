@@ -349,8 +349,7 @@ public final class HerdSession {
             state = State.PICK;
             return;
         }
-        Optional<String> danger = HerdSafety.dangerReason(current.isInLava(), current.isOnFire(),
-                current.isInWater());
+        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(current.isInLava(), current.isOnFire(), current.isInWater()));
         if (danger.isPresent()) {
             skipped++;
             handledIds.add(currentId);

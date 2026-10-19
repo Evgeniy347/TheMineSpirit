@@ -37,8 +37,8 @@ class RepairCalculatorProperties {
             @ForAll boolean materialAvailable,
             @ForAll boolean secondToolAvailable) {
         assertNotEquals(RepairMethod.GRINDSTONE,
-                RepairCalculator.chooseMethod(RepairCosts.defaults(), materialAvailable, secondToolAvailable,
-                        true, true),
+                RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                        new RepairCalculator.Availability(materialAvailable, secondToolAvailable, true, true)),
                 "зачарованный предмет не должен попадать в точило ни при каких флагах: чары потерялись бы");
     }
 
@@ -49,8 +49,8 @@ class RepairCalculatorProperties {
             @ForAll boolean secondToolAvailable,
             @ForAll boolean enchanted) {
         assertEquals(RepairMethod.NONE,
-                RepairCalculator.chooseMethod(new RepairCosts(1, xpWeight, 10), materialAvailable,
-                        secondToolAvailable, enchanted, false),
+                RepairCalculator.chooseMethod(new RepairCosts(1, xpWeight, 10),
+                        new RepairCalculator.Availability(materialAvailable, secondToolAvailable, enchanted, false)),
                 "крепкий предмет не чинится ни одним способом: ресурс тратился бы впустую");
     }
 
@@ -58,7 +58,7 @@ class RepairCalculatorProperties {
     void chooseMethod_BothWaysAvailable_ChoosesCheaper(
             @ForAll @IntRange(min = 0, max = 100) int xpWeight) {
         RepairCosts costs = new RepairCosts(1, xpWeight, 10);
-        RepairMethod method = RepairCalculator.chooseMethod(costs, true, true, false, true);
+        RepairMethod method = RepairCalculator.chooseMethod(costs, new RepairCalculator.Availability(true, true, false, true));
         RepairMethod cheaper = costs.anvilCost() <= costs.toolCost() ? RepairMethod.ANVIL : RepairMethod.GRINDSTONE;
 
         assertEquals(cheaper, method,

@@ -30,8 +30,7 @@ final class DemoPlanner {
         BlockCoord entry = preset.entry();
         String name = preset.name();
         Map<String, Integer> materials = preset.materials();
-        DemoPlacement placement = DemoPlacement.compute(anchor.getX(), anchor.getY(), anchor.getZ(), lookDx, lookDz,
-                entry.x(), entry.z(), schematic.sizeX(), schematic.sizeY(), schematic.sizeZ(), rotation);
+        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()), new DemoPlacement.Look(lookDx, lookDz), entry.x(), entry.z(), new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()), rotation);
         List<DemoPlan.Placement> preplaced = new ArrayList<>();
         for (Schematic.PlacedEntry placed : schematic.entries(placement.origin(), placement.rotation())) {
             if (!BlockItems.hasBlockItem(placed.block())) {

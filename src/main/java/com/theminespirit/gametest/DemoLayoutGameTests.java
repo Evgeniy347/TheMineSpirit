@@ -57,8 +57,10 @@ public final class DemoLayoutGameTests {
 
     private static DemoPlacement placement(BlockPos anchor, int lookDx, int lookDz) {
         Preset family = DataTables.INSTANCE.presets().current().byId("family_house").orElseThrow();
-        return DemoPlacement.compute(anchor.getX(), anchor.getY(), anchor.getZ(), lookDx, lookDz,
-                family.entry().x(), family.entry().z(), family.sizeX(), family.sizeY(), family.sizeZ(), null);
+        return DemoPlacement.compute(
+                new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
+                new DemoPlacement.Look(lookDx, lookDz), family.entry().x(), family.entry().z(),
+                new DemoPlacement.Size(family.sizeX(), family.sizeY(), family.sizeZ()), null);
     }
 
     private static void assertPlatformPrepared(GameTestHelper helper, DemoPlacement placement) {

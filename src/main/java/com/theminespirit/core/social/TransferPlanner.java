@@ -74,9 +74,17 @@ public final class TransferPlanner {
         return List.copyOf(orders);
     }
 
-    public static List<TransferOrder> planForCraft(String craftItem, UUID crafter, BlockCoord at,
-            List<Stack> inventory, List<Ingredient> ingredients, List<TransferSource> sources,
-            Map<String, Integer> warehouse, ValueTable values, int radius, int maxCount) {
+    public static List<TransferOrder> planForCraft(CraftRequest request) {
+        String craftItem = request.craftItem();
+        UUID crafter = request.crafter();
+        BlockCoord at = request.at();
+        List<Stack> inventory = request.inventory();
+        List<Ingredient> ingredients = request.ingredients();
+        List<TransferSource> sources = request.sources();
+        Map<String, Integer> warehouse = request.warehouse();
+        ValueTable values = request.values();
+        int radius = request.radius();
+        int maxCount = request.maxCount();
         if (craftItem == null || craftItem.isBlank()) {
             throw new IllegalArgumentException("Предмет крафта пуст: без него неясно, чьи ингредиенты "
                     + "собирает передача");
@@ -142,5 +150,10 @@ public final class TransferPlanner {
     }
 
     private record Candidate(TransferSource source, int surplus, double distance) {
+    }
+
+    public record CraftRequest(String craftItem, UUID crafter, BlockCoord at, List<Stack> inventory,
+            List<Ingredient> ingredients, List<TransferSource> sources, Map<String, Integer> warehouse,
+            ValueTable values, int radius, int maxCount) {
     }
 }

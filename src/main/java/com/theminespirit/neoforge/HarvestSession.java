@@ -105,17 +105,16 @@ public final class HarvestSession {
     private int ticks;
     private int entityQueries;
 
-    private HarvestSession(SpiritEntity spirit, HarvestTargets targets, WorkKind kind, String label, int count,
-            int radius, boolean skipWithoutTool, boolean vein) {
+    private HarvestSession(SpiritEntity spirit, Spec spec) {
         this.spirit = spirit;
         this.level = spirit.level();
-        this.targets = targets;
-        this.kind = kind;
-        this.label = label;
-        this.count = count;
-        this.radius = radius;
-        this.skipWithoutTool = skipWithoutTool;
-        this.vein = vein;
+        this.targets = spec.targets();
+        this.kind = spec.kind();
+        this.label = spec.label();
+        this.count = spec.count();
+        this.radius = spec.radius();
+        this.skipWithoutTool = spec.skipWithoutTool();
+        this.vein = spec.vein();
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
@@ -123,13 +122,15 @@ public final class HarvestSession {
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
-        return new HarvestSession(spirit, new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
-                WorkKind.VEIN, ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true);
+        return new HarvestSession(spirit, new Spec(
+                new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
+                WorkKind.VEIN, ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true));
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
-        return new HarvestSession(spirit, new GatherTargets(spirit.level(), spirit.blockPosition(), radius,
-                IdFilter.of(List.of(block))), WorkKind.GATHER, block, count, radius, IdFilter.isPattern(block), false);
+        return new HarvestSession(spirit, new Spec(
+                new GatherTargets(spirit.level(), spirit.blockPosition(), radius, IdFilter.of(List.of(block))),
+                WorkKind.GATHER, block, count, radius, IdFilter.isPattern(block), false));
     }
 
     public Outcome tick() {
@@ -642,5 +643,9 @@ public final class HarvestSession {
 
     private static BlockPos toPos(BlockCoord coord) {
         return new BlockPos(coord.x(), coord.y(), coord.z());
+    }
+
+    private record Spec(HarvestTargets targets, WorkKind kind, String label, int count, int radius,
+            boolean skipWithoutTool, boolean vein) {
     }
 }

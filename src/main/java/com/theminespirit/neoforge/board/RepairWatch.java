@@ -70,8 +70,8 @@ final class RepairWatch {
             Optional<String> material = RepairMaterials.materialFor(itemId);
             boolean materialAvailable = material.isPresent() && countMaterial(inventory, material.orElseThrow()) > 0;
             boolean secondAvailable = hasSecondDamaged(inventory, itemId, slot);
-            RepairMethod method = RepairCalculator.chooseMethod(costs, materialAvailable, secondAvailable,
-                    isEnchanted(stack), true);
+            RepairMethod method = RepairCalculator.chooseMethod(costs,
+                    new RepairCalculator.Availability(materialAvailable, secondAvailable, isEnchanted(stack), true));
             if (method != RepairMethod.NONE) {
                 return Optional.of(itemId);
             }

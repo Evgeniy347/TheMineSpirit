@@ -26,29 +26,29 @@ public record DemoPlacement(BuildRotation rotation, BlockCoord origin, BlockCoor
         Objects.requireNonNull(floorBox, "Объём пола не может быть null: без него фундамент не выровняется");
     }
 
-    public static DemoPlacement compute(int anchorX, int anchorY, int anchorZ, int lookDx, int lookDz,
-            int entryX, int entryZ, int sizeX, int sizeY, int sizeZ, BuildRotation explicit) {
-        if (sizeX < 1 || sizeY < 1 || sizeZ < 1) {
-            throw new IllegalArgumentException("Размер постройки " + sizeX + "×" + sizeY + "×" + sizeZ
+    public static DemoPlacement compute(Anchor anchor, Look look, int entryX, int entryZ, Size size,
+            BuildRotation explicit) {
+        if (size.x() < 1 || size.y() < 1 || size.z() < 1) {
+            throw new IllegalArgumentException("Размер постройки " + size.x() + "×" + size.y() + "×" + size.z()
                     + ": стороны обязаны быть хотя бы 1");
         }
         BuildRotation rotation = explicit == null
-                ? chooseRotation(entryX, entryZ, sizeX, sizeZ, lookDx, lookDz)
+                ? chooseRotation(entryX, entryZ, size.x(), size.z(), look.dx(), look.dz())
                 : explicit;
-        int rotatedX = rotation.rotatedSizeX(sizeX, sizeZ);
-        int rotatedZ = rotation.rotatedSizeZ(sizeX, sizeZ);
-        BuildRotation.Cell entry = rotation.rotate(entryX, entryZ, sizeX, sizeZ);
-        int originX = anchorX + lookDx - entry.x();
-        int originZ = anchorZ + lookDz - entry.z();
+        int rotatedX = rotation.rotatedSizeX(size.x(), size.z());
+        int rotatedZ = rotation.rotatedSizeZ(size.x(), size.z());
+        BuildRotation.Cell entry = rotation.rotate(entryX, entryZ, size.x(), size.z());
+        int originX = anchor.x() + look.dx() - entry.x();
+        int originZ = anchor.z() + look.dz() - entry.z();
         int pad = BuildTuning.DEMO_PLATFORM_PADDING;
-        BuildBox platform = BuildBox.of(originX - pad, anchorY, originZ - pad,
-                originX + rotatedX - 1 + pad, anchorY + sizeY - 1 + pad, originZ + rotatedZ - 1 + pad);
-        BuildBox floor = BuildBox.of(originX - pad, anchorY - 1, originZ - pad,
-                originX + rotatedX - 1 + pad, anchorY - 1, originZ + rotatedZ - 1 + pad);
-        BlockCoord chest = pickChest(anchorX, anchorY, anchorZ, lookDx, lookDz, originX, originZ,
-                rotatedX, rotatedZ, pad);
-        BlockCoord spawn = pickSpawn(anchorX, anchorY, anchorZ, originX, originZ, rotatedX, rotatedZ, pad, chest);
-        return new DemoPlacement(rotation, new BlockCoord(originX, anchorY, originZ), chest, spawn, platform, floor,
+        Frame frame = new Frame(anchor.x(), anchor.z(), originX, originZ, rotatedX, rotatedZ, pad);
+        BuildBox platform = BuildBox.of(originX - pad, anchor.y(), originZ - pad,
+                originX + rotatedX - 1 + pad, anchor.y() + size.y() - 1 + pad, originZ + rotatedZ - 1 + pad);
+        BuildBox floor = BuildBox.of(originX - pad, anchor.y() - 1, originZ - pad,
+                originX + rotatedX - 1 + pad, anchor.y() - 1, originZ + rotatedZ - 1 + pad);
+        BlockCoord chest = pickChest(anchor, look, frame);
+        BlockCoord spawn = pickSpawn(anchor, frame, chest);
+        return new DemoPlacement(rotation, new BlockCoord(originX, anchor.y(), originZ), chest, spawn, platform, floor,
                 rotatedX, rotatedZ);
     }
 
@@ -72,14 +72,14 @@ public record DemoPlacement(BuildRotation rotation, BlockCoord origin, BlockCoor
         return BuildRotation.NONE;
     }
 
-    private static BlockCoord pickChest(int anchorX, int anchorY, int anchorZ, int lookDx, int lookDz,
-            int originX, int originZ, int rotatedX, int rotatedZ, int pad) {
-        int frontX = anchorX;
-        int frontZ = anchorZ;
-        int doorX = anchorX + lookDx;
-        int doorZ = anchorZ + lookDz;
-        int perpX = -lookDz == 0 && lookDx == 0 ? 1 : -lookDz;
-        int perpZ = lookDx;
+    private static BlockCoord pickChest(Anchor anchor, Look look, Frame frame) {
+        int frontX = anchor.x();
+        int frontZ = anchor.z();
+        int doorX = anchor.x() + look.dx();
+        int doorZ = anchor.z() + look.dz();
+        Entrance entrance = new Entrance(frontX, frontZ, doorX, doorZ, look);
+        int perpX = -look.dz() == 0 && look.dx() == 0 ? 1 : -look.dz();
+        int perpZ = look.dx();
         int[][] preferred = {
                 {frontX + perpX * 2, frontZ + perpZ * 2},
                 {frontX - perpX * 2, frontZ - perpZ * 2},
@@ -87,84 +87,80 @@ public record DemoPlacement(BuildRotation rotation, BlockCoord origin, BlockCoor
                 {doorX - perpX * 3, doorZ - perpZ * 3},
         };
         for (int[] cell : preferred) {
-            if (chestFits(cell[0], cell[1], frontX, frontZ, doorX, doorZ, lookDx, lookDz, originX, originZ,
-                    rotatedX, rotatedZ, pad)) {
-                return new BlockCoord(cell[0], anchorY, cell[1]);
+            if (chestFits(cell[0], cell[1], entrance, frame)) {
+                return new BlockCoord(cell[0], anchor.y(), cell[1]);
             }
         }
-        for (BlockCoord cell : platformByDistance(anchorX, anchorZ, originX, originZ, rotatedX, rotatedZ, pad)) {
-            if (chestFits(cell.x(), cell.z(), frontX, frontZ, doorX, doorZ, lookDx, lookDz, originX, originZ,
-                    rotatedX, rotatedZ, pad)) {
-                return new BlockCoord(cell.x(), anchorY, cell.z());
+        for (BlockCoord cell : platformByDistance(frame)) {
+            if (chestFits(cell.x(), cell.z(), entrance, frame)) {
+                return new BlockCoord(cell.x(), anchor.y(), cell.z());
             }
         }
         throw new IllegalArgumentException("На площадке нет места под сундук: вход " + frontX + "," + frontZ
                 + " и подход к нему заняли весь запас вокруг постройки");
     }
 
-    private static BlockCoord pickSpawn(int anchorX, int anchorY, int anchorZ, int originX, int originZ,
-            int rotatedX, int rotatedZ, int pad, BlockCoord chest) {
-        if (spawnFits(anchorX, anchorZ, originX, originZ, rotatedX, rotatedZ, pad)
-                && (anchorX != chest.x() || anchorZ != chest.z())) {
-            return new BlockCoord(anchorX, anchorY, anchorZ);
+    private static BlockCoord pickSpawn(Anchor anchor, Frame frame, BlockCoord chest) {
+        if (spawnFits(anchor.x(), anchor.z(), frame)
+                && (anchor.x() != chest.x() || anchor.z() != chest.z())) {
+            return new BlockCoord(anchor.x(), anchor.y(), anchor.z());
         }
-        for (BlockCoord cell : platformByDistance(anchorX, anchorZ, originX, originZ, rotatedX, rotatedZ, pad)) {
-            if (spawnFits(cell.x(), cell.z(), originX, originZ, rotatedX, rotatedZ, pad)
+        for (BlockCoord cell : platformByDistance(frame)) {
+            if (spawnFits(cell.x(), cell.z(), frame)
                     && (cell.x() != chest.x() || cell.z() != chest.z())) {
-                return new BlockCoord(cell.x(), anchorY, cell.z());
+                return new BlockCoord(cell.x(), anchor.y(), cell.z());
             }
         }
         throw new IllegalArgumentException("На площадке нет свободной клетки для духа: сундук и схема заняли всё");
     }
 
-    private static boolean chestFits(int x, int z, int frontX, int frontZ, int doorX, int doorZ,
-            int lookDx, int lookDz, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {
-        return onPlatform(x, z, originX, originZ, rotatedX, rotatedZ, pad)
-                && !inFootprint(x, z, originX, originZ, rotatedX, rotatedZ)
-                && chebyshev(x, z, frontX, frontZ) >= 2
-                && chebyshev(x, z, doorX, doorZ) >= 2
-                && !onApproach(x, z, doorX, doorZ, lookDx, lookDz);
+    private static boolean chestFits(int x, int z, Entrance entrance, Frame frame) {
+        return onPlatform(x, z, frame)
+                && !inFootprint(x, z, frame)
+                && chebyshev(x, z, entrance.frontX(), entrance.frontZ()) >= 2
+                && chebyshev(x, z, entrance.doorX(), entrance.doorZ()) >= 2
+                && !onApproach(x, z, entrance);
     }
 
-    private static boolean spawnFits(int x, int z, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {
-        return onPlatform(x, z, originX, originZ, rotatedX, rotatedZ, pad)
-                && !inFootprint(x, z, originX, originZ, rotatedX, rotatedZ);
+    private static boolean spawnFits(int x, int z, Frame frame) {
+        return onPlatform(x, z, frame)
+                && !inFootprint(x, z, frame);
     }
 
-    private static boolean onPlatform(int x, int z, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {
-        return x >= originX - pad && x <= originX + rotatedX - 1 + pad
-                && z >= originZ - pad && z <= originZ + rotatedZ - 1 + pad;
+    private static boolean onPlatform(int x, int z, Frame frame) {
+        return x >= frame.originX() - frame.pad() && x <= frame.originX() + frame.rotatedX() - 1 + frame.pad()
+                && z >= frame.originZ() - frame.pad() && z <= frame.originZ() + frame.rotatedZ() - 1 + frame.pad();
     }
 
-    private static boolean inFootprint(int x, int z, int originX, int originZ, int rotatedX, int rotatedZ) {
-        return x >= originX && x <= originX + rotatedX - 1
-                && z >= originZ && z <= originZ + rotatedZ - 1;
+    private static boolean inFootprint(int x, int z, Frame frame) {
+        return x >= frame.originX() && x <= frame.originX() + frame.rotatedX() - 1
+                && z >= frame.originZ() && z <= frame.originZ() + frame.rotatedZ() - 1;
     }
 
-    private static boolean onApproach(int x, int z, int doorX, int doorZ, int lookDx, int lookDz) {
-        if (lookDx == 0 && lookDz == 0) {
+    private static boolean onApproach(int x, int z, Entrance entrance) {
+        Look look = entrance.look();
+        if (look.dx() == 0 && look.dz() == 0) {
             return false;
         }
-        if (lookDx != 0) {
-            return z == doorZ && (x - doorX) * lookDx < 0;
+        if (look.dx() != 0) {
+            return z == entrance.doorZ() && (x - entrance.doorX()) * look.dx() < 0;
         }
-        return x == doorX && (z - doorZ) * lookDz < 0;
+        return x == entrance.doorX() && (z - entrance.doorZ()) * look.dz() < 0;
     }
 
     private static int chebyshev(int x, int z, int otherX, int otherZ) {
         return Math.max(Math.abs(x - otherX), Math.abs(z - otherZ));
     }
 
-    private static List<BlockCoord> platformByDistance(int anchorX, int anchorZ, int originX, int originZ,
-            int rotatedX, int rotatedZ, int pad) {
+    private static List<BlockCoord> platformByDistance(Frame frame) {
         List<BlockCoord> cells = new ArrayList<>();
-        for (int x = originX - pad; x <= originX + rotatedX - 1 + pad; x++) {
-            for (int z = originZ - pad; z <= originZ + rotatedZ - 1 + pad; z++) {
+        for (int x = frame.originX() - frame.pad(); x <= frame.originX() + frame.rotatedX() - 1 + frame.pad(); x++) {
+            for (int z = frame.originZ() - frame.pad(); z <= frame.originZ() + frame.rotatedZ() - 1 + frame.pad(); z++) {
                 cells.add(new BlockCoord(x, 0, z));
             }
         }
-        cells.sort(Comparator.comparingInt((BlockCoord cell) -> chebyshev(cell.x(), cell.z(), anchorX, anchorZ))
-                .thenComparingInt(cell -> chebyshev(cell.x(), cell.z(), originX, originZ))
+        cells.sort(Comparator.comparingInt((BlockCoord cell) -> chebyshev(cell.x(), cell.z(), frame.anchorX(), frame.anchorZ()))
+                .thenComparingInt(cell -> chebyshev(cell.x(), cell.z(), frame.originX(), frame.originZ()))
                 .thenComparingInt(BlockCoord::x).thenComparingInt(BlockCoord::z));
         return cells;
     }
@@ -183,5 +179,20 @@ public record DemoPlacement(BuildRotation rotation, BlockCoord origin, BlockCoor
             return new int[] {1, 0};
         }
         return null;
+    }
+
+    public record Anchor(int x, int y, int z) {
+    }
+
+    public record Look(int dx, int dz) {
+    }
+
+    public record Size(int x, int y, int z) {
+    }
+
+    private record Frame(int anchorX, int anchorZ, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {
+    }
+
+    private record Entrance(int frontX, int frontZ, int doorX, int doorZ, Look look) {
     }
 }

@@ -74,11 +74,13 @@ public final class BlockProtection {
     }
 
     public Decision check(String blockId, List<String> neighbours, boolean playerPlaced, boolean inProtectedZone) {
-        return check(blockId, neighbours, playerPlaced, inProtectedZone, false);
+        return check(blockId, neighbours, new Placement(playerPlaced, inProtectedZone, false));
     }
 
-    public Decision check(String blockId, List<String> neighbours, boolean playerPlaced, boolean inProtectedZone,
-            boolean unprotectArea) {
+    public Decision check(String blockId, List<String> neighbours, Placement placement) {
+        boolean playerPlaced = placement.playerPlaced();
+        boolean inProtectedZone = placement.inProtectedZone();
+        boolean unprotectArea = placement.unprotectArea();
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
         Objects.requireNonNull(neighbours, "Список соседей не может быть null: по нему отличают постройку от природы");
         if (neighbours.size() != NEIGHBOUR_COUNT) {
@@ -116,8 +118,10 @@ public final class BlockProtection {
         return new Allowed();
     }
 
-    public Decision checkUse(List<String> neighbours, boolean playerPlaced, boolean inProtectedZone,
-            boolean unprotectArea) {
+    public Decision checkUse(List<String> neighbours, Placement placement) {
+        boolean playerPlaced = placement.playerPlaced();
+        boolean inProtectedZone = placement.inProtectedZone();
+        boolean unprotectArea = placement.unprotectArea();
         Objects.requireNonNull(neighbours, "Список соседей не может быть null: по нему отличают постройку от природы");
         if (neighbours.size() != NEIGHBOUR_COUNT) {
             throw new IllegalArgumentException("Соседей " + neighbours.size() + ", ожидается " + NEIGHBOUR_COUNT
@@ -145,5 +149,8 @@ public final class BlockProtection {
                     + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
         }
         return new Allowed();
+    }
+
+    public record Placement(boolean playerPlaced, boolean inProtectedZone, boolean unprotectArea) {
     }
 }

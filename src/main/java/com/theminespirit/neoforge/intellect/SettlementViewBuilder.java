@@ -30,9 +30,15 @@ public final class SettlementViewBuilder {
     private SettlementViewBuilder() {
     }
 
-    public static SettlementView build(List<SpiritSnapshot> snapshots, List<SpiritEntity> members,
-            StockLots lots, Optional<Point> home, List<EnemyFact> enemies, Forage forage, ServerLevel level,
-            long tick) {
+    public static SettlementView build(Input input) {
+        List<SpiritSnapshot> snapshots = input.snapshots();
+        List<SpiritEntity> members = input.members();
+        StockLots lots = input.lots();
+        Optional<Point> home = input.home();
+        List<EnemyFact> enemies = input.enemies();
+        Forage forage = input.forage();
+        ServerLevel level = input.level();
+        long tick = input.tick();
         if (snapshots == null || members == null || lots == null || home == null || enemies == null
                 || forage == null || level == null) {
             throw new IllegalArgumentException(
@@ -78,5 +84,9 @@ public final class SettlementViewBuilder {
                     InventoryNorm.fill(mapper.map(spirit.getInventory()), kit, needs, values));
         }
         return Map.copyOf(fills);
+    }
+
+    public record Input(List<SpiritSnapshot> snapshots, List<SpiritEntity> members, StockLots lots,
+            Optional<Point> home, List<EnemyFact> enemies, Forage forage, ServerLevel level, long tick) {
     }
 }

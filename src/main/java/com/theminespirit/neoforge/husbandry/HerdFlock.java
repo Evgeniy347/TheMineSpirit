@@ -149,8 +149,7 @@ final class HerdFlock {
         if (animal == null || animal.isRemoved()) {
             return true;
         }
-        Optional<String> danger = HerdSafety.dangerReason(animal.isInLava(), animal.isOnFire(),
-                animal.isInWater());
+        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(animal.isInLava(), animal.isOnFire(), animal.isInWater()));
         if (danger.isPresent()) {
             session.skipped++;
             session.handledIds.add(ref.id());

@@ -94,8 +94,8 @@ public final class RepairScript implements ScriptInstance {
         boolean damaged = RepairCalculator.damagedEnoughToRepair(durability, maxDurability, percent);
         Optional<String> material = RepairMaterials.materialFor(itemId);
         boolean materialAvailable = material.isPresent() && countMaterial(inventory, material.orElseThrow()) > 0;
-        RepairMethod method = RepairCalculator.chooseMethod(RepairCosts.defaults(), materialAvailable,
-                secondSlot >= 0, enchanted, damaged);
+        RepairMethod method = RepairCalculator.chooseMethod(RepairCosts.defaults(),
+                new RepairCalculator.Availability(materialAvailable, secondSlot >= 0, enchanted, damaged));
         if (method == RepairMethod.NONE) {
             fail(nothingReason(durability, maxDurability, percent, enchanted, materialAvailable, secondSlot));
             return null;

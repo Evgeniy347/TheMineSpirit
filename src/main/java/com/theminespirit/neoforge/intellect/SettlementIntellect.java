@@ -91,8 +91,7 @@ public final class SettlementIntellect {
         SettlementScanner.Scan scan =
                 SettlementScanner.scan(level, members, snapshots, home, stocks.containerFood());
         entityQueries++;
-        SettlementView view = SettlementViewBuilder.build(snapshots, members, stocks.lots(), home, scan.enemies(),
-                scan.forage(), level, tick);
+        SettlementView view = SettlementViewBuilder.build(new SettlementViewBuilder.Input(snapshots, members, stocks.lots(), home, scan.enemies(), scan.forage(), level, tick));
         lastView = view;
         intellect.trackEnemies(scan.enemies());
         intellect.trackWeaponStock(stocks.lots().weapons() > 0);

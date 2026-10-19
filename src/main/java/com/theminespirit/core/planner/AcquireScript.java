@@ -51,8 +51,7 @@ public final class AcquireScript implements ScriptInstance {
     private boolean suspendedBeforeStart;
 
     public AcquireScript(String item, int count, ResourceKnowledge knowledge, AcquireSupplies supplies,
-            ScriptCatalog catalog, ConditionCatalog conditions, Supplier<ScriptRegistry> registry,
-            ConditionRegistry conditionRegistry) {
+            ScriptCatalog catalog, ConditionCatalog conditions, Registries registries) {
         if (item == null || item.isBlank()) {
             throw new IllegalArgumentException("Предмет для acquire пуст: без id скрипт не знает, что добыть");
         }
@@ -70,10 +69,10 @@ public final class AcquireScript implements ScriptInstance {
                 + "не пройдёт валидацию");
         this.conditions = Objects.requireNonNull(conditions, "conditions не может быть null: без каталога "
                 + "проверок подплан не пройдёт валидацию");
-        this.registry = Objects.requireNonNull(registry, "registry не может быть null: реестр скриптов отдаётся "
-                + "лениво, иначе регистрация acquire упирается в саму себя");
-        this.conditionRegistry = Objects.requireNonNull(conditionRegistry, "conditionRegistry не может быть null: "
-                + "без реестра проверок вложенный раннер не выберет ветку");
+        this.registry = Objects.requireNonNull(registries.registry(), "registry не может быть null: реестр скриптов "
+                + "отдаётся лениво, иначе регистрация acquire упирается в саму себя");
+        this.conditionRegistry = Objects.requireNonNull(registries.conditionRegistry(), "conditionRegistry не может "
+                + "быть null: без реестра проверок вложенный раннер не выберет ветку");
     }
 
     @Override
@@ -300,5 +299,8 @@ public final class AcquireScript implements ScriptInstance {
 
     int attempts() {
         return attempts;
+    }
+
+    public record Registries(Supplier<ScriptRegistry> registry, ConditionRegistry conditionRegistry) {
     }
 }

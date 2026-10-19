@@ -66,8 +66,8 @@ public final class ActivityAssigner {
             if (current.isEmpty() && spirit.workTarget().isPresent()) {
                 continue;
             }
-            ActivityId chosen = choose(spirit, view, demands, demandById, taken, current, now, defenders,
-                    defendersNeeded);
+            ChoiceContext context = new ChoiceContext(demands, demandById, taken, current, now, defendersNeeded);
+            ActivityId chosen = choose(spirit, view, context, defenders);
             if (chosen == null) {
                 continue;
             }
@@ -81,9 +81,13 @@ public final class ActivityAssigner {
         return new ActivityPlan(assignments, dropped);
     }
 
-    private ActivityId choose(SpiritSnapshot spirit, SettlementView view, List<ActivityDemand> demands,
-            Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken, Optional<ActivityAssignment> current,
-            long now, int defenders, int defendersNeeded) {
+    private ActivityId choose(SpiritSnapshot spirit, SettlementView view, ChoiceContext context, int defenders) {
+        List<ActivityDemand> demands = context.demands();
+        Map<ActivityId, Double> demandById = context.demandById();
+        Map<ActivityId, Integer> taken = context.taken();
+        Optional<ActivityAssignment> current = context.current();
+        long now = context.now();
+        int defendersNeeded = context.defendersNeeded();
         IntellectTuning tuning = IntellectTuning.loadDefault();
         boolean threatened = spirit.threatsNear() > 0 || spirit.attacked();
         boolean defendOffered = demandById.containsKey(ActivityId.DEFEND);
@@ -154,5 +158,9 @@ public final class ActivityAssigner {
             }
         }
         return demandById;
+    }
+
+    private record ChoiceContext(List<ActivityDemand> demands, Map<ActivityId, Double> demandById,
+            Map<ActivityId, Integer> taken, Optional<ActivityAssignment> current, long now, int defendersNeeded) {
     }
 }

@@ -65,13 +65,15 @@ public final class ProtectionGate {
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         BlockProtection.Decision decision;
         if (tended) {
-            decision = PROTECTION.check(blockId(state), Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID), false,
-                    inProtectedZone, unprotectArea);
+            decision = PROTECTION.check(blockId(state),
+                    Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
+                    new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
         } else if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
             boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
-            decision = PROTECTION.check(blockId(state), neighbours(level, pos), placedByPlayer, inProtectedZone, unprotectArea);
+            decision = PROTECTION.check(blockId(state), neighbours(level, pos),
+                    new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
@@ -118,7 +120,8 @@ public final class ProtectionGate {
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
-        return PROTECTION.checkUse(neighbours(level, pos), placedByPlayer, inProtectedZone, unprotectArea);
+        return PROTECTION.checkUse(neighbours(level, pos),
+                new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
     }
 
     public BlockProtection.Decision checkPortalTarget(BlockCoord target) {

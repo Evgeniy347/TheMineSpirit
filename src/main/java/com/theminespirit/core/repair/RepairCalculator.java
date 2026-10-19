@@ -48,8 +48,11 @@ public final class RepairCalculator {
         return (long) durability * 100 <= (long) maxDurabilityPercent * maxDurability;
     }
 
-    public static RepairMethod chooseMethod(RepairCosts costs, boolean materialAvailable,
-            boolean secondToolAvailable, boolean enchanted, boolean damagedEnough) {
+    public static RepairMethod chooseMethod(RepairCosts costs, Availability availability) {
+        boolean materialAvailable = availability.materialAvailable();
+        boolean secondToolAvailable = availability.secondToolAvailable();
+        boolean enchanted = availability.enchanted();
+        boolean damagedEnough = availability.damagedEnough();
         Objects.requireNonNull(costs, "Стоимость способов ремонта не задана: без неё не выбрать, "
                 + "что дешевле — материал с опытом или второй инструмент");
         if (!damagedEnough) {
@@ -68,5 +71,9 @@ public final class RepairCalculator {
             return RepairMethod.ANVIL;
         }
         return costs.anvilCost() <= costs.toolCost() ? RepairMethod.ANVIL : RepairMethod.GRINDSTONE;
+    }
+
+    public record Availability(boolean materialAvailable, boolean secondToolAvailable, boolean enchanted,
+            boolean damagedEnough) {
     }
 }

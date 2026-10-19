@@ -49,7 +49,7 @@ class BlockProtectionUseTests {
     @MethodSource("table")
     void checkUse_Table_RefusesOnlyPlayerMechanisms(String name, List<String> neighbours, boolean placed,
             boolean zone, boolean unprotectArea, PolicyId refusedBy) {
-        BlockProtection.Decision decision = protection.checkUse(neighbours, placed, zone, unprotectArea);
+        BlockProtection.Decision decision = protection.checkUse(neighbours, new BlockProtection.Placement(placed, zone, unprotectArea));
 
         if (refusedBy == null) {
             assertInstanceOf(BlockProtection.Allowed.class, decision,
@@ -65,7 +65,7 @@ class BlockProtectionUseTests {
 
     @Test
     void checkUse_DeniedByBreakList_IsStillUsable() {
-        BlockProtection.Decision decision = protection.checkUse(around(0, "", "minecraft:stone"), false, false, false);
+        BlockProtection.Decision decision = protection.checkUse(around(0, "", "minecraft:stone"), new BlockProtection.Placement(false, false, false));
 
         assertInstanceOf(BlockProtection.Allowed.class, decision,
                 "Использовать рычаг — не ломать его: чёрный список защиты (deny) на нажатие не распространяется, "
@@ -75,13 +75,13 @@ class BlockProtectionUseTests {
     @Test
     void checkUse_WrongNeighbourCount_IsRejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> protection.checkUse(List.of("minecraft:air"), false, false, false),
+                () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false, false)),
                 "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3");
     }
 
     @Test
     void checkUse_NullNeighbours_IsRejected() {
-        assertThrows(NullPointerException.class, () -> protection.checkUse(null, false, false, false),
+        assertThrows(NullPointerException.class, () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
                 "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать");
     }
 }

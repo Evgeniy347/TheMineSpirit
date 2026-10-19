@@ -40,14 +40,13 @@ public final class NightLeash {
         return horizontalDistance(position, home) <= radius;
     }
 
-    public boolean armedNext(boolean evening, boolean armed, boolean insideSettlement) {
-        return evening && (armed || insideSettlement);
+    public boolean armedNext(ArmedState state) {
+        return state.evening() && (state.armed() || state.insideSettlement());
     }
 
-    public Decision checkTarget(BlockCoord target, BlockCoord home, int radius, boolean evening,
-            boolean insideSinceEvening, boolean followingPlayer) {
+    public Decision checkTarget(BlockCoord target, BlockCoord home, int radius, TargetState state) {
         Objects.requireNonNull(target, "Цель не может быть null: проверяется, лежит ли она в поселении");
-        if (!evening || !insideSinceEvening || followingPlayer || home == null) {
+        if (!state.evening() || !state.insideSinceEvening() || state.followingPlayer() || home == null) {
             return new Allowed();
         }
         if (insideSettlement(target, home, radius)) {
@@ -72,5 +71,11 @@ public final class NightLeash {
         double dx = first.x() - second.x();
         double dz = first.z() - second.z();
         return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    public record ArmedState(boolean evening, boolean armed, boolean insideSettlement) {
+    }
+
+    public record TargetState(boolean evening, boolean insideSinceEvening, boolean followingPlayer) {
     }
 }
