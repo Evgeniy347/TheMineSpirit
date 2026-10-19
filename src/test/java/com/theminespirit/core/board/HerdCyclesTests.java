@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,7 +44,8 @@ class HerdCyclesTests {
 
         assertTrue(active(board, "cow_pen") && active(board, "pig_pen"),
                 "У каждого вида свой загон: два вида — два независимых цикла, а не одна машина");
-        assertNotEquals("cow_pen", "pig_pen",
+        assertEquals(List.of("cow_pen", "pig_pen"),
+                board.all().stream().map(ticket -> ticket.id()).sorted().toList(),
                 "id заданий видов различаются префиксом: иначе второй вид затирал бы задания первого");
     }
 

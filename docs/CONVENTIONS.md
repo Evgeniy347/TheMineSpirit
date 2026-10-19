@@ -32,9 +32,8 @@
 ## Сборка
 
 - `-Xlint:all -Werror`: предупреждение — ошибка; `@SuppressWarnings` — точечно, с причиной рядом.
-- Версии зависимостей — только в `gradle.properties` (менять — решение пользователя). `src/generated/` — только datagen.
-- Сторонняя библиотека объявляется трижды: `implementation`, `additionalRuntimeClasspath`, `jarJar` (образец — Jackson
-  в `build.gradle`); без второго падает dev-запуск, без третьего — сервер игрока.
+- Версии зависимостей и три конфигурации библиотеки — сторож `DependencyVersionGuardTests`; `src/generated/` —
+  только datagen (менять версии — решение пользователя).
 
 ## Производительность
 
@@ -50,7 +49,7 @@
 
 ## Файлы
 
-- Исходники — UTF-8 без BOM; `*.sh` — LF, `*.bat` — CRLF и ASCII (`.gitattributes`). После `sed -i` проверь
-  `git diff --stat`. Перед созданием файла проверь, что имя свободно.
+- Кодировки и переводы строк — сторож `EncodingGuardTests`. После `sed -i` проверь `git diff --stat`. Перед
+  созданием файла проверь, что имя свободно.
 - Временное — только в `temp-scripts/` и `TestResults/` (игнорируются Git, не `git add -f`); удалять только своё.
   Постоянные скрипты — в `scripts/` со строкой в README.

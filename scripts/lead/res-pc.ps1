@@ -1,4 +1,4 @@
-﻿# Ресурсы ПК: печатает строки только при проблеме — мало свободной памяти, перегруз CPU,
+# Ресурсы ПК: печатает строки только при проблеме — мало свободной памяти, перегруз CPU,
 # долгоживущий процесс bash/sh/python/java, который ест CPU, когда исполнителей opencode нет.
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $os = Get-CimInstance Win32_OperatingSystem

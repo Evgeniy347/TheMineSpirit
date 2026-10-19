@@ -16,7 +16,7 @@
 
 ## GameTest: сцены
 
-- Класс помечен `@GameTestHolder(ModIdentity.MOD_ID)` и `@PrefixGameTestTemplate(false)`. Шаблоны —
+- Класс с `@GameTest` и шаблон — сторож `GameTestHolderGuardTests`. Шаблоны в
   `data/theminespirit/structure/*.nbt`: `empty` 3×3×3, `arena` 11×8×11 (пол 9×9, дух стоит и ходит),
   `mine_arena` 11×16×11. Сцена с духом — в своей пачке (`batch = …`), время — по тикам духа (`SpiritRun`).
 - Мир между пачками не чистится: каждая сцена со спавном начинается с `GameTestFixtures.reset`/`sweepEntities`,
@@ -40,7 +40,7 @@
 - Имя: `subject_Condition_ExpectedResult` (сторож `TestNamingGuardTests`).
 - Сообщение assertion (по-русски, сторож `AssertionMessageGuardTests`): какой контракт, что сломается, что
   перепроверить при осознанной смене. `!= null` и «не упало» — не проверка (`WeakAssertionGuardTests`).
-- В проверке предела ожидание — число в тесте, факт — из production; литерал против литерала — не проверка.
+- Проверка предела — сторож `LimitAssertionGuardTests`.
 
 ## Тест, который может упасть
 

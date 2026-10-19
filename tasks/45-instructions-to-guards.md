@@ -27,16 +27,16 @@
    (метка, например `// mc:`/`// lib:`). Удалить список запретов из CONVENTIONS «Комментарии».
 6. [ ] **MethodShapeGuard**: метод с ≥ 3 параметрами `boolean` или ≥ 8 параметрами — нарушение (кроме record-канонических
    конструкторов и явного списка исключений). Удалить соответствующие строки из CONVENTIONS «Класс делает одно дело».
-7. [ ] **DependencyVersionGuard**: в `build.gradle` нет литералов версий зависимостей (только `${…_version}` из
+7. [x] **DependencyVersionGuard**: в `build.gradle` нет литералов версий зависимостей (только `${…_version}` из
    `gradle.properties`); сторонняя библиотека объявлена в `implementation`, `additionalRuntimeClasspath` и `jarJar`.
    Удалить раздел «Сборка» CONVENTIONS до строки-ссылки.
-8. [ ] **EncodingGuard**: исходники и данные — UTF-8 без BOM; `*.sh` без CR; `*.bat` — ASCII и CRLF. Удалить пункт из
+8. [x] **EncodingGuard**: исходники и данные — UTF-8 без BOM; `*.sh` без CR; `*.bat` — ASCII и CRLF. Удалить пункт из
    CONVENTIONS «Файлы».
 9. [x] **TestHygieneGuard** (`src/test/java` и GameTest): нет `@Disabled`, `setAccessible(true)`/`getDeclared*` к
    private ради теста, изменяемых `static` полей (кроме `guards.SourceFiles`). Удалить «Запрещено в тестах» из TESTING.
-10. [ ] **GameTestHolderGuard**: каждый класс с `@GameTest` помечен `@GameTestHolder(ModIdentity.MOD_ID)` и
+10. [x] **GameTestHolderGuard**: каждый класс с `@GameTest` помечен `@GameTestHolder(ModIdentity.MOD_ID)` и
     `@PrefixGameTestTemplate(false)`; шаблон — из списка существующих `.nbt`. Удалить строку из TESTING «Сцены».
-11. [ ] **LimitAssertionGuard**: assertion, сравнивающий литерал с литералом (`assertEquals(24, 24)`), — нарушение;
+11. [x] **LimitAssertionGuard**: assertion, сравнивающий литерал с литералом (`assertEquals(24, 24)`), — нарушение;
     проверка предела берёт факт из production. Удалить строку из TESTING «Имя и сообщение».
 
 ## Процесс
