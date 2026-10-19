@@ -78,7 +78,9 @@ public final class LookAtScript implements ScriptInstance {
                 .getEntities(
                         (Entity) null,
                         new AABB(pos),
-                        e -> !e.isRemoved() && e != spirit && e.blockPosition().equals(pos))
+                        e -> !e.isRemoved()
+                                && !e.equals(spirit)
+                                && e.blockPosition().equals(pos))
                 .stream()
                 .map(entity -> EntityType.getKey(entity.getType()).toString())
                 .toList();

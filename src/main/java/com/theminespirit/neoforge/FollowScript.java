@@ -145,7 +145,8 @@ final class FollowScript implements ScriptInstance {
             List<SpiritEntity> nearby = serverLevel.getEntitiesOfClass(
                     SpiritEntity.class, spirit.getBoundingBox().inflate(COMPANION_SEARCH_RADIUS));
             companion = nearby.stream()
-                    .filter(other -> other != spirit && other.getStringUUID().equals(params.target()))
+                    .filter(other ->
+                            !other.equals(spirit) && other.getStringUUID().equals(params.target()))
                     .findFirst()
                     .orElse(null);
         }

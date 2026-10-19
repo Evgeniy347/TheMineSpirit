@@ -167,7 +167,7 @@ public final class SpiritGear {
                 stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
         double[] total = {HAND_DAMAGE};
         modifiers.forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
-            if (attribute.value() == Attributes.ATTACK_DAMAGE.value()
+            if (attribute.value().equals(Attributes.ATTACK_DAMAGE.value())
                     && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
                 total[0] += modifier.amount();
             }

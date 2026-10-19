@@ -77,7 +77,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
     private final DropMagnet magnet = new DropMagnet(this);
-    private SpiritBrain brain;
+    private SpiritBrain spiritBrain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
     private Finding finding;
@@ -131,8 +131,8 @@ public final class SpiritEntity extends PathfinderMob {
         policies.tick();
         if (demo) {
             tactics.pause();
-            if (brain != null) {
-                brain.tick();
+            if (spiritBrain != null) {
+                spiritBrain.tick();
             }
             return;
         }
@@ -141,8 +141,8 @@ public final class SpiritEntity extends PathfinderMob {
             return;
         }
         tactics.tick();
-        if (brain != null && (!strategyOwned() || brain.observesWhileTacticsOwns())) {
-            brain.tick();
+        if (spiritBrain != null && (!strategyOwned() || spiritBrain.observesWhileTacticsOwns())) {
+            spiritBrain.tick();
         }
     }
 
@@ -288,7 +288,7 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<SpiritBrain> brainIfPresent() {
-        return Optional.ofNullable(brain);
+        return Optional.ofNullable(spiritBrain);
     }
 
     @Override
@@ -322,8 +322,8 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     private String taskJsonForSave() {
-        if (brain != null) {
-            String json = brain.snapshot().map(this::encodeForSave).orElse(null);
+        if (spiritBrain != null) {
+            String json = spiritBrain.snapshot().map(this::encodeForSave).orElse(null);
             if (json != null) {
                 return json;
             }
@@ -452,7 +452,7 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public long taskGeneration() {
-        return brain == null ? SpiritReading.UNKNOWN_GENERATION : brain.generation();
+        return spiritBrain == null ? SpiritReading.UNKNOWN_GENERATION : spiritBrain.generation();
     }
 
     public void cancelTask() {
@@ -460,11 +460,11 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<RunStatus> taskStatus() {
-        return brain == null ? Optional.empty() : brain.status();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.status();
     }
 
     public Optional<TaskNode> currentPlan() {
-        return brain == null ? Optional.empty() : brain.plan();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.plan();
     }
 
     public Optional<String> currentActivity() {
@@ -500,7 +500,7 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<String> currentTaskScript() {
-        return brain == null ? Optional.empty() : brain.currentScript();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.currentScript();
     }
 
     public boolean isFollowingPlayer() {
@@ -510,19 +510,19 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public Optional<RunProgress> taskProgress() {
-        return brain == null ? Optional.empty() : brain.progress();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.progress();
     }
 
     public Optional<RunProgress> taskFailedAt() {
-        return brain == null ? Optional.empty() : brain.failedAt();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.failedAt();
     }
 
     public Optional<String> taskFailureReason() {
-        return brain == null ? Optional.empty() : brain.failureReason();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.failureReason();
     }
 
     public Optional<ScriptResult> taskResult() {
-        return brain == null ? Optional.empty() : brain.successResult();
+        return spiritBrain == null ? Optional.empty() : spiritBrain.successResult();
     }
 
     public Optional<WorldObservation> observation() {
@@ -554,10 +554,10 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     private SpiritBrain brain() {
-        if (brain == null) {
-            brain = new SpiritBrain(this);
+        if (spiritBrain == null) {
+            spiritBrain = new SpiritBrain(this);
         }
-        return brain;
+        return spiritBrain;
     }
 
     public void countPathBuild() {

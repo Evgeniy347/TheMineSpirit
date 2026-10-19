@@ -788,7 +788,7 @@ class BoardTests {
             String id = "op_" + random.nextInt(300);
             switch (op) {
                 case 0 -> {
-                    BoardCase boardCase = BoardCase.values()[random.nextInt(BoardCase.values().length)];
+                    BoardCase boardCase = List.of(BoardCase.values()).get(random.nextInt(BoardCase.values().length));
                     board.submit(new BoardTicket(
                             id,
                             boardCase,

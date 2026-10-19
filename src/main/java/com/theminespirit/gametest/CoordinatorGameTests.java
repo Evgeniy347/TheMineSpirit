@@ -209,7 +209,7 @@ public final class CoordinatorGameTests {
             if (!engaged[0]
                     && (husk.isDeadOrDying()
                             || husk.isRemoved()
-                            || defenders.stream().anyMatch(defender -> defender.getTarget() == husk))) {
+                            || defenders.stream().anyMatch(defender -> husk.equals(defender.getTarget())))) {
                 engaged[0] = true;
             }
             if (!attacked[0]) {
@@ -250,8 +250,9 @@ public final class CoordinatorGameTests {
                 victim[0].discard();
                 removed[0] = true;
             }
-            List<SpiritEntity> rest =
-                    defenders.stream().filter(defender -> defender != victim[0]).toList();
+            List<SpiritEntity> rest = defenders.stream()
+                    .filter(defender -> !defender.equals(victim[0]))
+                    .toList();
             List<Point> posts = postsOf(rest);
             helper.assertTrue(
                     posts.size() == 3,
@@ -332,7 +333,7 @@ public final class CoordinatorGameTests {
             }
             List<SpiritEntity> helpers = new ArrayList<>();
             for (SpiritEntity defender : defenders) {
-                if (defender != victim[0] && defender.tactics().combatMode() == CombatMode.PROTECT) {
+                if (!defender.equals(victim[0]) && defender.tactics().combatMode() == CombatMode.PROTECT) {
                     helpers.add(defender);
                 }
             }
@@ -356,7 +357,7 @@ public final class CoordinatorGameTests {
                         "Помощник защищает атакованного: иначе приказ помощи ведёт не к тому духу");
             }
             for (SpiritEntity defender : defenders) {
-                if (defender == victim[0] || !helpers.contains(defender)) {
+                if (defender.equals(victim[0]) || !helpers.contains(defender)) {
                     helper.assertTrue(
                             postsOf(List.of(defender)).stream()
                                     .anyMatch(post -> post.equals(postsBefore.get(defender))),

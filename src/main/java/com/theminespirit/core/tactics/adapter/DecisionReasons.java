@@ -25,7 +25,7 @@ public final class DecisionReasons {
         }
         factors.sort(Comparator.comparingDouble(ReasonFactor::weight)
                 .reversed()
-                .thenComparingInt(factor -> Factor.valueOf(factor.factor()).ordinal()));
+                .thenComparing(factor -> Factor.valueOf(factor.factor())));
         return List.copyOf(factors.subList(0, Math.min(TOP_FACTORS, factors.size())));
     }
 
@@ -33,7 +33,7 @@ public final class DecisionReasons {
         return totals.entrySet().stream()
                 .filter(entry -> entry.getKey() != chosen)
                 .max(Comparator.<Map.Entry<TacticalOption, Double>>comparingDouble(Map.Entry::getValue)
-                        .thenComparingInt(entry -> entry.getKey().ordinal()))
+                        .thenComparing(Map.Entry::getKey))
                 .map(Map.Entry::getKey)
                 .orElse(chosen);
     }

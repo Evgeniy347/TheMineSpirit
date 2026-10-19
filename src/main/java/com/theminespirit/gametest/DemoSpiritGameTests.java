@@ -86,7 +86,7 @@ public final class DemoSpiritGameTests {
         helper.runAfterDelay(OBSERVED_TICKS, () -> {
             Zombie hunter = zombie.get();
             helper.assertTrue(
-                    hunter != null && hunter.getTarget() != spirit,
+                    hunter != null && !spirit.equals(hunter.getTarget()),
                     "Зомби в трёх блоках не имеет права брать демо-духа целью: иначе демонстрацию прерывает бой, "
                             + "а цель зомби " + (hunter == null ? "зомби не появился" : hunter.getTarget()));
             helper.assertTrue(

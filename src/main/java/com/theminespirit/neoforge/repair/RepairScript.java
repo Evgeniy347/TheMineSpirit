@@ -198,7 +198,7 @@ public final class RepairScript implements ScriptInstance {
             ItemStack stack = inventory.getItem(index);
             if (stack.isEmpty()
                     || stack.getDamageValue() <= 0
-                    || stack.getItem() != item
+                    || !stack.is(item)
                     || !filter.matches(itemId(stack))
                     || isEnchanted(stack)) {
                 continue;
@@ -260,7 +260,7 @@ public final class RepairScript implements ScriptInstance {
         int left = count;
         for (int slot = 0; slot < inventory.getContainerSize() && left > 0; slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (stack.isEmpty() || stack.getItem() != item) {
+            if (stack.isEmpty() || !stack.is(item)) {
                 continue;
             }
             int taken = Math.min(left, stack.getCount());

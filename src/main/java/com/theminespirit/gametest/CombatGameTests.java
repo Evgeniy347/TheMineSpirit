@@ -63,7 +63,8 @@ public final class CombatGameTests {
                 "активный приказ обязан быть виден скрипту после applyDirective");
         tactics.setForcedTarget(husk);
         helper.assertTrue(
-                spirit.getTarget() == husk, "принудительная цель обязана встать духу, цель: " + spirit.getTarget());
+                husk.equals(spirit.getTarget()),
+                "принудительная цель обязана встать духу, цель: " + spirit.getTarget());
 
         tactics.clearDirective();
         helper.assertTrue(
@@ -173,7 +174,7 @@ public final class CombatGameTests {
                 found.isPresent(),
                 "игрок по имени обязан находиться, игрок: " + player.getName().getString());
         helper.assertTrue(
-                found.get() == player, "найден должен быть ровно тот игрок, что искали, найден: " + found.get());
+                player.equals(found.get()), "найден должен быть ровно тот игрок, что искали, найден: " + found.get());
         TacticsScene.finish(helper, spirit);
         helper.succeed();
     }
@@ -187,7 +188,8 @@ public final class CombatGameTests {
         Optional<LivingEntity> found =
                 ScriptTargetResolver.resolve(spirit, TargetSelector.parse("spirit:" + other.getUUID()));
         helper.assertTrue(found.isPresent(), "дух по UUID обязан находиться, UUID: " + other.getUUID());
-        helper.assertTrue(found.get() == other, "найден должен быть ровно тот дух, что искали, найден: " + found.get());
+        helper.assertTrue(
+                other.equals(found.get()), "найден должен быть ровно тот дух, что искали, найден: " + found.get());
         TacticsScene.finish(helper, spirit);
         helper.succeed();
     }
@@ -202,7 +204,7 @@ public final class CombatGameTests {
         Optional<LivingEntity> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse("hostile"));
         helper.assertTrue(found.isPresent(), "враждебный моб обязан находиться, мобов: 2, найдено пусто");
         helper.assertTrue(
-                found.get() == near,
+                near.equals(found.get()),
                 "ближайший враждебный обязан выбираться первым, найден: " + found.get() + " вместо " + near
                         + ", дальние: " + far);
         TacticsScene.finish(helper, spirit);

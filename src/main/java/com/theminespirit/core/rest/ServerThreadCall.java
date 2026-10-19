@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ServerThreadCall {
@@ -18,6 +19,7 @@ public final class ServerThreadCall {
     private final Executor serverThread;
     private final AtomicInteger submitted = new AtomicInteger();
     private final Object stopLock = new Object();
+    private final CompletableFuture<Void> stopSignal = new CompletableFuture<>();
     private boolean stopping;
 
     public ServerThreadCall(Executor serverThread) {
@@ -51,36 +53,29 @@ public final class ServerThreadCall {
     public void stop() {
         synchronized (stopLock) {
             stopping = true;
-            stopLock.notifyAll();
         }
+        stopSignal.complete(null);
     }
 
     public <T> T await(CompletableFuture<T> future, Duration timeout) {
-        future.whenComplete((value, error) -> {
-            synchronized (stopLock) {
-                stopLock.notifyAll();
-            }
-        });
-        long deadline = System.nanoTime() + timeout.toNanos();
-        synchronized (stopLock) {
-            while (!future.isDone()) {
-                if (stopping) {
-                    future.cancel(false);
-                    throw stoppingError();
-                }
-                long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
-                if (remainingMillis <= 0) {
-                    future.cancel(false);
-                    throw timeoutError(timeout);
-                }
-                try {
-                    stopLock.wait(remainingMillis);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ApiException(
-                            ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
-                }
-            }
+        try {
+            CompletableFuture.anyOf(future, stopSignal)
+                    .exceptionally(failure -> null)
+                    .get(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(false);
+            throw timeoutError(timeout);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException(
+                    "anyOf после exceptionally не завершается исключением: исход задачи разбирает result", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
+        }
+        if (!future.isDone()) {
+            future.cancel(false);
+            throw stoppingError();
         }
         return result(future);
     }

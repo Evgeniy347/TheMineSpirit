@@ -24,7 +24,7 @@ public final class BlockStates {
         Block block = location == null
                 ? null
                 : BuiltInRegistries.BLOCK.getOptional(location).orElse(null);
-        if (block == null || block == Blocks.AIR) {
+        if (block == null || Blocks.AIR.equals(block)) {
             throw new IllegalArgumentException("Неизвестный блок '" + blockId + "': такого id нет в реестре блоков");
         }
         return block;

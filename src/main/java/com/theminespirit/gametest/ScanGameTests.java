@@ -293,9 +293,9 @@ public final class ScanGameTests {
                     "отменённый scan обязан иметь статус CANCELLED, фактически "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             helper.assertTrue(
-                    spirit.observation().orElse(null) == firstObservation[0],
+                    firstObservation[0].equals(spirit.observation().orElse(null)),
                     "отменённый scan не должен писать частичное наблюдение: прежнее наблюдение обязано "
-                            + "остаться тем же объектом");
+                            + "остаться прежним");
             GameTestFixtures.finish(helper);
         });
     }

@@ -40,7 +40,7 @@ public final class SpiritSnapshotReader {
         Level level = spirit.level();
         AABB box = spirit.getBoundingBox().inflate(THREAT_RADIUS);
         List<LivingEntity> near =
-                level.getEntitiesOfClass(LivingEntity.class, box, entity -> entity != spirit && entity.isAlive());
+                level.getEntitiesOfClass(LivingEntity.class, box, entity -> !entity.equals(spirit) && entity.isAlive());
         int threatsNear = 0;
         Set<UUID> attackers = new HashSet<>();
         for (LivingEntity entity : near) {
@@ -49,7 +49,7 @@ public final class SpiritSnapshotReader {
                     && entity.distanceTo(spirit) <= THREAT_RADIUS) {
                 threatsNear++;
             }
-            if (entity instanceof Mob mob && mob.getTarget() == spirit) {
+            if (entity instanceof Mob mob && spirit.equals(mob.getTarget())) {
                 attackers.add(mob.getUUID());
             }
         }

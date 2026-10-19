@@ -53,7 +53,7 @@ public final class PolicyConfig {
     }
 
     private static void onConfig(ModConfigEvent event) {
-        if (event.getConfig().getSpec() == SPEC) {
+        if (SPEC.equals(event.getConfig().getSpec())) {
             zones();
         }
     }

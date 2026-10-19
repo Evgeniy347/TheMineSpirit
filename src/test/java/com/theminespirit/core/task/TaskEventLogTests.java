@@ -63,7 +63,7 @@ class TaskEventLogTests {
                         for (int i = 0; i < total; i++) {
                             log.append(events(1, TaskEvent.TYPE_PROGRESS));
                             if (i % 10 == 0) {
-                                Thread.yield();
+                                Thread.onSpinWait();
                             }
                         }
                         log.close();

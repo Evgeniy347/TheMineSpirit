@@ -119,7 +119,7 @@ public final class WorldFactCollector {
                 .getEntitiesOfClass(
                         LivingEntity.class,
                         spirit.getBoundingBox().inflate(radius),
-                        entity -> entity != spirit
+                        entity -> !entity.equals(spirit)
                                 && entity.isAlive()
                                 && (entity instanceof Enemy
                                         || entity instanceof SpiritEntity
@@ -183,7 +183,7 @@ public final class WorldFactCollector {
     }
 
     private static EnemyFact enemyFact(SpiritEntity spirit, LivingEntity enemy, String id, boolean visible) {
-        boolean targetingSelf = enemy instanceof Mob mob && mob.getTarget() == spirit;
+        boolean targetingSelf = enemy instanceof Mob mob && spirit.equals(mob.getTarget());
         String type = BuiltInRegistries.ENTITY_TYPE.getKey(enemy.getType()).toString();
         double hp = Mth.clamp(enemy.getHealth() / enemy.getMaxHealth(), 0.0F, 1.0F);
         double armor = Mth.clamp(enemy.getArmorValue(), 0, 20);
@@ -222,7 +222,8 @@ public final class WorldFactCollector {
         if (!(entity instanceof LivingEntity ward) || !ward.isAlive()) {
             return Optional.empty();
         }
-        boolean threatened = enemies.stream().anyMatch(enemy -> enemy instanceof Mob mob && mob.getTarget() == ward);
+        boolean threatened =
+                enemies.stream().anyMatch(enemy -> enemy instanceof Mob mob && ward.equals(mob.getTarget()));
         return Optional.of(new OrdersBuilder.Ward(point(ward.position()), threatened));
     }
 

@@ -159,7 +159,7 @@ final class GameTestFixtures {
     private static boolean clearable(GameTestHelper helper, Entity entity) {
         Vec3 at = entity.position();
         for (Map.Entry<GameTestInfo, AABB> scene : ACTIVE_SCENES.entrySet()) {
-            if (scene.getKey() != helper.testInfo && scene.getValue().contains(at)) {
+            if (!scene.getKey().equals(helper.testInfo) && scene.getValue().contains(at)) {
                 return false;
             }
         }

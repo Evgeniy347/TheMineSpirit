@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -353,7 +354,7 @@ public final class RestGameTests {
         helper.onEachTick(() -> {
             if (!discarded.get() && rest.gateway().observeActiveCount() > 0) {
                 discarded.set(true);
-                CompletableFuture.runAsync(spirit::discard, minecraft);
+                minecraft.execute(spirit::discard);
             }
         });
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -387,12 +388,11 @@ public final class RestGameTests {
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));
         String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
         AtomicBoolean stopped = new AtomicBoolean();
-        AtomicBoolean replied = new AtomicBoolean();
         AtomicInteger callsAtStop = new AtomicInteger(-1);
         AtomicInteger ticksAfterReply = new AtomicInteger();
         CompletableFuture<List<String>> done = new CompletableFuture<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
+        CompletableFuture<Void> replied = rest.post(path, "{\"radius\":32}".getBytes(StandardCharsets.UTF_8))
                 .thenAcceptAsync(
                         reply -> {
                             problems.expect(
@@ -409,7 +409,6 @@ public final class RestGameTests {
                                             .asText()
                                             .contains("останавливается"),
                                     "Сообщение обязано называть остановку сервера: " + reply.body());
-                            replied.set(true);
                         },
                         minecraft);
         helper.onEachTick(() -> {
@@ -417,7 +416,8 @@ public final class RestGameTests {
                 stopped.set(true);
                 rest.server().stop();
                 callsAtStop.set(rest.gateway().observeTickCalls());
-            } else if (stopped.get() && replied.get() && !done.isDone() && ticksAfterReply.incrementAndGet() >= 10) {
+            } else if (stopped.get() && replied.isDone() && !done.isDone() && ticksAfterReply.incrementAndGet() >= 10) {
+                replied.join();
                 int callsAfterWait = rest.gateway().observeTickCalls();
                 problems.expect(
                         callsAfterWait == callsAtStop.get(),
@@ -605,15 +605,18 @@ public final class RestGameTests {
         String path = "/v1/spirits/" + spirit.getStringUUID() + "/decisions?limit=5";
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> served = new CompletableFuture<>();
-        AtomicBoolean asked = new AtomicBoolean();
+        AtomicReference<CompletableFuture<Void>> asked = new AtomicReference<>();
         helper.onEachTick(() -> {
-            if (asked.get()
+            CompletableFuture<Void> request = asked.get();
+            if (request != null && request.isCompletedExceptionally()) {
+                served.completeExceptionally(request.exceptionNow());
+            }
+            if (request != null
                     || !scene.started()
                     || spirit.tactics().decisions(JOURNAL_LIMIT).isEmpty()) {
                 return;
             }
-            asked.set(true);
-            rest.get(path).thenAccept(reply -> {
+            asked.set(rest.get(path).thenAccept(reply -> {
                 problems.expect(
                         reply.status() == 200, "GET /v1/spirits/{id}/decisions обязан отвечать 200: " + reply.body());
                 JsonNode root = reply.json();
@@ -658,7 +661,7 @@ public final class RestGameTests {
                             "Запись называет, чем дух дерётся: " + reply.body());
                 });
                 served.complete(problems.found());
-            });
+            }));
         });
         RestFixture.await(helper, rest, served, () -> TacticsScene.finish(helper, spirit));
     }

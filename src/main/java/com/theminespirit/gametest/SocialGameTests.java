@@ -260,7 +260,7 @@ public final class SocialGameTests {
         int[] reloadedAt = {-1};
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("wait", Map.of("ticks", 40)), 10);
         helper.onEachTick(() -> {
-            if (saved.get() || holder.get() != spirit) {
+            if (saved.get() || !spirit.equals(holder.get())) {
                 return;
             }
             if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING && run.spiritTicks() >= 20) {
@@ -311,7 +311,7 @@ public final class SocialGameTests {
                 new ScriptCall("deliver", Map.of("item", "cobblestone", "count", 3, "to", "player:RestartTarget")),
                 10);
         helper.onEachTick(() -> {
-            if (saved.get() || holder.get() != spirit) {
+            if (saved.get() || !spirit.equals(holder.get())) {
                 return;
             }
             if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING && run.spiritTicks() >= 8) {

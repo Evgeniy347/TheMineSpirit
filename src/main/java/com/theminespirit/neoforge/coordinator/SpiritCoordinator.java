@@ -89,7 +89,7 @@ public final class SpiritCoordinator {
             spirit.tactics().helpCall().ifPresent(helpCalls::add);
             entityQueries += CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
         }
-        expireStale(snapshots, tick);
+        expireStale(snapshots);
         reservations.expire(tick);
         Optional<Point> defendedPoint = defendedPoint(members);
         double radius = defendedPoint.isPresent() ? CoordinatorTuning.DEFENSE_RADIUS : 0;
@@ -132,8 +132,7 @@ public final class SpiritCoordinator {
         return new Point(x / members.size(), y / members.size(), z / members.size());
     }
 
-    private void expireStale(List<SpiritSnapshot> snapshots, long tick) {
-
+    private void expireStale(List<SpiritSnapshot> snapshots) {
         List<UUID> seen = snapshots.stream().map(SpiritSnapshot::id).toList();
         List<UUID> toRelease = new ArrayList<>();
         for (UUID owner : new ArrayList<>(reservationsOwners())) {

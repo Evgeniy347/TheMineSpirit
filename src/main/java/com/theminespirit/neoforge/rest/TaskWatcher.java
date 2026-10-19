@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -23,7 +24,7 @@ public final class TaskWatcher {
     private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
     private final AtomicBoolean closed = new AtomicBoolean();
     private volatile int lastTickPolls;
-    private volatile long totalPolls;
+    private final AtomicLong totalPolls = new AtomicLong();
 
     public TaskWatcher(IEventBus bus, SpiritIndex index, TaskRegistry registry) {
         this.bus = bus;
@@ -38,7 +39,7 @@ public final class TaskWatcher {
     }
 
     public long totalPolls() {
-        return totalPolls;
+        return totalPolls.get();
     }
 
     public void close() {
@@ -50,7 +51,7 @@ public final class TaskWatcher {
     private void tick() {
         List<TaskRecord> active = registry.watchableRecords();
         lastTickPolls = active.size();
-        totalPolls += active.size();
+        totalPolls.addAndGet(active.size());
         for (TaskRecord record : active) {
             reconciler.reconcile(record, read(record.bot()));
         }

@@ -30,7 +30,8 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 - PMD: AvoidFieldNameMatchingMethodName (стиль аксессоров record), TestClassWithoutTestCases (GameTest в main),
   UnitTestContainsTooManyAsserts, GuardLogStatement (slf4j `{}`), AvoidLiteralsInIfCondition, AvoidDuplicateLiterals
   для тестов, NullAssignment (это NullAway), CompareObjectsWithEquals (это Error Prone ReferenceEquality).
-- Error Prone: UnnecessaryLambda — EventBus NeoForge снимает слушателя только по тому же экземпляру.
+- Error Prone: UnnecessaryLambda — EventBus NeoForge снимает слушателя только по тому же экземпляру;
+  ImmutableEnumChecker — неизменяемость доказывает только Guava/@Immutable, а Block/Item — синглтоны реестра Minecraft.
 - NullAway — только main, `AnnotatedPackages=com.theminespirit.core` (тесты намеренно передают null).
 - SpotBugs EI_EXPOSE_REP/REP2/MS_EXPOSE_REP — после проверки выборки 20 шт. (record + неизменяемые копии).
 
@@ -38,7 +39,7 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
 
 1. [x] Spotless: один механический коммит `spotlessApply` + `.git-blame-ignore-revs`, `spotlessCheck` в `check`.
    Только после слияния параллельных веток (иначе конфликты в 1688 файлах).
-2. [ ] Error Prone: подключить; патч `-XepPatchChecks` всех найденных, кроме UnnecessaryLambda и StringSplitter (Guava),
+2. [x] Error Prone: подключить; патч `-XepPatchChecks` всех найденных, кроме UnnecessaryLambda и StringSplitter (Guava),
    с ревью диффа (~200); руками — ReferenceEquality через `stack.is(item)`/`state.is(block)`, StringSplitter через
    `split(regex, -1)`, EnumOrdinal, ReturnValueIgnored (`BoardConfig.java:256`) и прочие (~60). Временный список —
    `-Xep:<Check>:OFF` по ещё не исправленным, до пустого.

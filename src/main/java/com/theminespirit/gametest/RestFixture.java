@@ -78,13 +78,14 @@ final class RestFixture {
         private final CompletableFuture<Integer> status = new CompletableFuture<>();
         private final CompletableFuture<Void> finished = new CompletableFuture<>();
         private volatile String contentType;
+        private volatile CompletableFuture<?> connection = CompletableFuture.completedFuture(null);
 
         CompletableFuture<Integer> status() {
             return status;
         }
 
         boolean finished() {
-            return finished.isDone();
+            return finished.isDone() || connection.isCompletedExceptionally();
         }
 
         CompletableFuture<Void> whenFinished() {
@@ -184,7 +185,7 @@ final class RestFixture {
     }
 
     static InetAddress loopback() throws UnknownHostException {
-        return InetAddress.getLoopbackAddress();
+        return InetAddress.getByAddress(new byte[] {127, 0, 0, 1});
     }
 
     static RestFixture start(MinecraftServer minecraft) throws IOException {
@@ -265,14 +266,15 @@ final class RestFixture {
         HttpRequest.Builder request = HttpRequest.newBuilder(uri(path)).GET();
         headers.forEach(request::header);
         SseCapture capture = new SseCapture();
-        client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofLines()).whenComplete((response, error) -> {
-            if (error != null) {
-                capture.status.completeExceptionally(error);
-                capture.finished.completeExceptionally(error);
-                return;
-            }
-            readers.execute(() -> capture.read(response));
-        });
+        capture.connection = client.sendAsync(request.build(), HttpResponse.BodyHandlers.ofLines())
+                .whenComplete((response, error) -> {
+                    if (error != null) {
+                        capture.status.completeExceptionally(error);
+                        capture.finished.completeExceptionally(error);
+                        return;
+                    }
+                    readers.execute(() -> capture.read(response));
+                });
         return capture;
     }
 

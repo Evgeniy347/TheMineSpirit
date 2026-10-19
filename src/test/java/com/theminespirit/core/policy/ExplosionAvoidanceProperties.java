@@ -43,7 +43,7 @@ class ExplosionAvoidanceProperties {
     private static List<ThreatFact> randomThreats(Random random, int count) {
         List<ThreatFact> facts = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            ThreatType type = ThreatType.values()[random.nextInt(ThreatType.values().length)];
+            ThreatType type = List.of(ThreatType.values()).get(random.nextInt(ThreatType.values().length));
             BlockCoord pos = new BlockCoord(random.nextInt(21), 1, random.nextInt(21));
             facts.add(new ThreatFact(type, pos, random.nextInt(4) == 0));
         }

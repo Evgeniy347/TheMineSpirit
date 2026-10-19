@@ -684,8 +684,9 @@ class TaskRoutesTests {
         registry.observe(taskId, TaskState.RUNNING, null, null);
         CountDownLatch slotsLocked = new CountDownLatch(1);
         CountDownLatch proceed = new CountDownLatch(1);
+        SseSlots lockedSlots = slots;
         Thread locker = new Thread(() -> {
-            synchronized (slots) {
+            synchronized (lockedSlots) {
                 slotsLocked.countDown();
                 try {
                     proceed.await();

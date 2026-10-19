@@ -67,7 +67,7 @@ public final class ScriptTargetResolver {
                 .getEntitiesOfClass(
                         LivingEntity.class,
                         spirit.getBoundingBox().inflate(radius),
-                        entity -> entity != spirit
+                        entity -> !entity.equals(spirit)
                                 && entity.isAlive()
                                 && fits.test(entity)
                                 && entity.distanceTo(spirit) <= radius)

@@ -263,7 +263,7 @@ public final class ExploreScript implements ScriptInstance {
                 .getEntitiesOfClass(
                         SpiritEntity.class,
                         spirit.getBoundingBox().inflate(PARTY_RADIUS),
-                        other -> other != spirit && other.isAlive())
+                        other -> !other.equals(spirit) && other.isAlive())
                 .size();
         return 1 + nearby;
     }

@@ -30,6 +30,8 @@
 - `-Xlint:all -Werror`: предупреждение — ошибка; `@SuppressWarnings` — точечно, с причиной рядом.
 - Строгие анализаторы (`staticAnalysis`, tasks/46) роняют полный `scripts/test.sh unit` и хук pre-commit; формат —
   Spotless + palantir-java-format, исправление — `./gradlew spotlessApply`.
+- Error Prone — в каждой компиляции (полная ×4: ~21 → ~85 с, инкрементальная ~13 с); выключенные проверки — в
+  `build.gradle` с причиной, точечных подавлений нет.
 - Версии зависимостей и три конфигурации библиотеки — сторож `DependencyVersionGuardTests`; `src/generated/` —
   только datagen (менять версии — решение пользователя).
 

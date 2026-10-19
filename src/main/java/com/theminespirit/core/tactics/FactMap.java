@@ -1,9 +1,9 @@
 package com.theminespirit.core.tactics;
 
-import java.util.Arrays;
+import java.util.EnumMap;
 
 public final class FactMap {
-    private final Object[] values = new Object[FactName.values().length];
+    private final EnumMap<FactName, Object> values = new EnumMap<>(FactName.class);
 
     private FactMap() {}
 
@@ -40,7 +40,7 @@ public final class FactMap {
             throw new IllegalArgumentException("Факт " + name.key() + " имеет тип " + name.type() + ", а запрошен "
                     + expected + ": проверьте тип значения в условии");
         }
-        return values[name.ordinal()];
+        return values.get(name);
     }
 
     private void putSelf(SelfFacts self) {
@@ -97,32 +97,32 @@ public final class FactMap {
     }
 
     private void put(FactName name, double value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     private void put(FactName name, boolean value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     private void put(FactName name, String value) {
-        values[name.ordinal()] = value;
+        values.put(name, value);
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof FactMap map && Arrays.equals(values, map.values);
+        return other instanceof FactMap map && values.equals(map.values);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(values);
+        return values.hashCode();
     }
 
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder("FactMap{");
         for (FactName name : FactName.values()) {
-            text.append(name.key()).append('=').append(values[name.ordinal()]).append(' ');
+            text.append(name.key()).append('=').append(values.get(name)).append(' ');
         }
         return text.append('}').toString();
     }

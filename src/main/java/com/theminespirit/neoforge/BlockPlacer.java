@@ -166,7 +166,7 @@ public final class BlockPlacer {
         return level.getEntitiesOfClass(
                 LivingEntity.class,
                 new AABB(target),
-                entity -> entity != spirit && !entity.isRemoved() && !entity.isSpectator());
+                entity -> !entity.equals(spirit) && !entity.isRemoved() && !entity.isSpectator());
     }
 
     static boolean hasSupport(Level level, BlockPos target, BlockState state) {

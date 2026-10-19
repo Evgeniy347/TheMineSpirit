@@ -123,7 +123,7 @@ public final class HusbandryCullGameTests {
             HusbandryGameTests.assertSucceeded(helper, spirit, "трое диких обязаны забиться");
             List<Pig> pigs = HusbandryGameTests.alive(helper, Pig.class);
             helper.assertTrue(
-                    pigs.size() == 1 && pigs.get(0) == own,
+                    pigs.size() == 1 && pigs.get(0).equals(own),
                     "жива обязана остаться ровно своя свинья внутри домашнего круга, а диких — не остаться: "
                             + "фактически живых " + pigs.size() + ", своя жива: " + own.isAlive());
             int pork = GameTestFixtures.countInInventory(spirit.getInventory(), Items.PORKCHOP);

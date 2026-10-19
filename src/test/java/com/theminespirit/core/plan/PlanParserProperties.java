@@ -56,8 +56,10 @@ class PlanParserProperties {
         String json = tree.toString();
         try {
             PlanParser.parse(json, CATALOG);
-        } catch (PlanValidationException expected) {
         } catch (RuntimeException other) {
+            if (other instanceof PlanValidationException) {
+                return;
+            }
             fail(
                     "парсер плана на любом JSON-дереве обязан бросать только PlanValidationException, а упал с "
                             + other.getClass().getSimpleName() + ": " + other.getMessage()

@@ -227,25 +227,15 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
     // Предупреждения компилятора — ошибки сборки (правило проекта: docs/CONVENTIONS.md)
-    options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing'] + (System.getProperty('tms.noWerror') ? ['-Xmaxwarns', '10000'] : ['-Werror']))
+    options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
     // Error Prone (tasks/46): его предупреждения тоже ошибки через -Werror. Выключенные проверки — с причиной.
     options.errorprone {
         disableWarningsInGeneratedCode = true
         // EventBus NeoForge снимает слушателя только по тому же экземпляру: лямбда в поле — намеренно.
         disable('UnnecessaryLambda')
-        def tmsPatch = System.getProperty('tms.epPatch')
-        if (tmsPatch) {
-            errorproneArgs.addAll(["-XepPatchChecks:${tmsPatch}", '-XepPatchLocation:IN_PLACE'])
-        }
-        // ВРЕМЕННЫЙ список (tasks/46 п.2): проверки, чьи нарушения ещё исправляются; к концу пункта — пуст.
-        ['ReferenceEquality', 'StringSplitter', 'FutureReturnValueIgnored', 'EnumOrdinal', 'ArrayRecordComponent',
-         'ImmutableEnumChecker', 'UnusedVariable', 'NonAtomicVolatileUpdate', 'HidingField', 'BadInstanceof',
-         'AlreadyChecked', 'ThreadPriorityCheck', 'SynchronizeOnNonFinalField', 'EmptyCatch', 'AvoidCommonTypeNames',
-         'ReturnValueIgnored'].each { disable(it) }
-        def tmsOff = System.getProperty('tms.epOff')
-        if (tmsOff) {
-            tmsOff.split(',').each { disable(it) }
-        }
+        // Неизменяемость enum-полей EP доказывает только для Guava/@Immutable: в core Guava нет, а Block/Item —
+        // неизменяемые синглтоны реестра Minecraft без аннотаций; проверка давала бы только ложные срабатывания.
+        disable('ImmutableEnumChecker')
     }
 }
 

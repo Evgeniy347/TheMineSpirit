@@ -72,7 +72,7 @@ public final class RecipeCurator {
         for (IngredientSpec ingredient : recipe.ingredients()) {
             for (String source : ingredient.alternatives()) {
                 for (RecipeSpec candidate : craftsByOutput.getOrDefault(source, List.of())) {
-                    if (candidate != recipe && consumes(candidate, recipe.outputItem())) {
+                    if (!candidate.equals(recipe) && consumes(candidate, recipe.outputItem())) {
                         return true;
                     }
                 }

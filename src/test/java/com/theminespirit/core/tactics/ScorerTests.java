@@ -169,8 +169,9 @@ class ScorerTests {
         ScoreWeights weights = SpecWeights.withBiasZero();
         Map<Factor, Double> base = new EnumMap<>(Factor.class);
         Map<Factor, Double> doubled = new EnumMap<>(Factor.class);
+        int index = 0;
         for (Factor factor : Factor.values()) {
-            double value = (factor.ordinal() % 5 - 2) / 3.0;
+            double value = (index++ % 5 - 2) / 3.0;
             base.put(factor, value);
             doubled.put(factor, 2 * value);
         }

@@ -218,8 +218,7 @@ public final class HusbandryProduceGameTests {
             helper.assertTrue(
                     sheep.size() == 1 && !sheep.get(0).isSheared(),
                     "без ножниц овца обязана остаться нетронутой и с шерстью");
-            helper.assertTrue(
-                    helper.getBlockState(new BlockPos(6, 1, 6)).getBlock() == before, "при отказе мир не меняется");
+            helper.assertTrue(helper.getBlockState(new BlockPos(6, 1, 6)).is(before), "при отказе мир не меняется");
             GameTestFixtures.finish(helper);
         });
     }

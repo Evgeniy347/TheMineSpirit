@@ -165,7 +165,7 @@ public final class SleepGameTests {
                 .getEntitiesOfClass(
                         LivingEntity.class,
                         spirit.getBoundingBox().inflate(16.0),
-                        entity -> entity != spirit && entity.isAlive() && entity instanceof Enemy)
+                        entity -> !entity.equals(spirit) && entity.isAlive() && entity instanceof Enemy)
                 .size();
         boolean night =
                 SleepRule.isNight(SleepRule.dayFraction(helper.getLevel().getDayTime()));

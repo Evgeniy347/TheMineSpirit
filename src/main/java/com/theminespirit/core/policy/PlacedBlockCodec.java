@@ -2,6 +2,7 @@ package com.theminespirit.core.policy;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +12,54 @@ import java.util.Set;
 public final class PlacedBlockCodec {
     private PlacedBlockCodec() {}
 
-    public record ChunkEntry(int chunkX, int chunkZ, boolean overflowed, long[] positions) {
-        public ChunkEntry {
+    public static final class ChunkEntry {
+        private final int chunkX;
+        private final int chunkZ;
+        private final boolean overflowed;
+        private final long[] positions;
+
+        public ChunkEntry(int chunkX, int chunkZ, boolean overflowed, long[] positions) {
             Objects.requireNonNull(positions, "Позиции чанка не могут быть null: пустой чанк в набор не записывают");
+            this.chunkX = chunkX;
+            this.chunkZ = chunkZ;
+            this.overflowed = overflowed;
+            this.positions = positions;
+        }
+
+        public int chunkX() {
+            return chunkX;
+        }
+
+        public int chunkZ() {
+            return chunkZ;
+        }
+
+        public boolean overflowed() {
+            return overflowed;
+        }
+
+        public long[] positions() {
+            return positions;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof ChunkEntry other
+                    && chunkX == other.chunkX
+                    && chunkZ == other.chunkZ
+                    && overflowed == other.overflowed
+                    && Arrays.equals(positions, other.positions);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(chunkX, chunkZ, overflowed) + Arrays.hashCode(positions);
+        }
+
+        @Override
+        public String toString() {
+            return "ChunkEntry[" + "chunkX=" + chunkX + ", " + "chunkZ=" + chunkZ + ", " + "overflowed=" + overflowed
+                    + ", " + "positions=" + Arrays.toString(positions) + "]";
         }
     }
 

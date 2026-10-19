@@ -1,9 +1,11 @@
 package com.theminespirit.core.building;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Сетка символов слоёв → блоки и клетки воздуха. Двухчастные блоки пишутся одним символом в обеих клетках:
@@ -121,5 +123,53 @@ final class SchematicGrid {
         return Map.copyOf(copy);
     }
 
-    private record Surface(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks, String origin) {}
+    private static final class Surface {
+        private final char[][][] grid;
+        private final boolean[][][] done;
+        private final List<Schematic.Entry> blocks;
+        private final String origin;
+
+        private Surface(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks, String origin) {
+            this.grid = grid;
+            this.done = done;
+            this.blocks = blocks;
+            this.origin = origin;
+        }
+
+        private char[][][] grid() {
+            return grid;
+        }
+
+        private boolean[][][] done() {
+            return done;
+        }
+
+        private List<Schematic.Entry> blocks() {
+            return blocks;
+        }
+
+        private String origin() {
+            return origin;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Surface other
+                    && Arrays.deepEquals(grid, other.grid)
+                    && Arrays.deepEquals(done, other.done)
+                    && Objects.equals(blocks, other.blocks)
+                    && Objects.equals(origin, other.origin);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(blocks, origin) + Arrays.deepHashCode(grid) + Arrays.deepHashCode(done);
+        }
+
+        @Override
+        public String toString() {
+            return "Surface[" + "grid=" + Arrays.deepToString(grid) + ", " + "done=" + Arrays.deepToString(done) + ", "
+                    + "blocks=" + blocks + ", " + "origin=" + origin + "]";
+        }
+    }
 }

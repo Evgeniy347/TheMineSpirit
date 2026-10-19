@@ -158,7 +158,7 @@ final class HerdBreedFeed {
 
     void feedOne() {
         Item feed = flock.feedItem(session.wanted.get(0));
-        boolean baby = session.current instanceof AgeableMob ageable && ageable.isBaby();
+        boolean baby = session.current != null && session.current.isBaby();
         boolean eaten;
         if (baby) {
             eaten = session.actions.feedBaby((AgeableMob) session.current, feed);

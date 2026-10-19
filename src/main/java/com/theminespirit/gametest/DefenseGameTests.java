@@ -215,9 +215,9 @@ public final class DefenseGameTests {
                     creeper.setSwellDir(-1);
                 }
                 maxSwell[0] = Math.max(maxSwell[0], creeper.getSwelling(1.0F));
-                creeperTarget[0] = creeper.getTarget() == armored
+                creeperTarget[0] = armored.equals(creeper.getTarget())
                         ? "броня"
-                        : creeper.getTarget() == naked ? "без брони" : String.valueOf(creeper.getTarget());
+                        : naked.equals(creeper.getTarget()) ? "без брони" : String.valueOf(creeper.getTarget());
             }
             if (firstSwell[0] < 0 && creeper.isAlive() && creeper.getSwelling(1.0F) > 0.0F) {
                 firstSwell[0] = tick;
@@ -242,7 +242,7 @@ public final class DefenseGameTests {
                     + ", крипера нет@" + creeperGone[0] + ", дистанции " + armored.distanceTo(creeper) + "/"
                     + naked.distanceTo(creeper) + ", " + taskFacts(armored, naked);
             helper.assertTrue(
-                    armored.getTarget() == creeper,
+                    creeper.equals(armored.getTarget()),
                     "Мечник в железной броне идёт на крипера первым: иначе «ударь и беги» делает слабый и " + "гибнет; "
                             + duel);
             DefensePlan duelPlan = coordinatorOf(helper, armored).defense().lastPlan();
@@ -418,7 +418,7 @@ public final class DefenseGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
-                    melee.getTarget() == skeleton,
+                    skeleton.equals(melee.getTarget()),
                     "Без лучника мечник сближается со скелетом, а не бьёт зомби: иначе обстрел без ответа");
             DefensePlan plan = coordinatorOf(helper, melee).defense().lastPlan();
             helper.assertTrue(
@@ -477,8 +477,8 @@ public final class DefenseGameTests {
                     && hurtOrder.get().handOff().isPresent()) {
                 UUID holderId = hurtOrder.get().defender();
                 SpiritEntity holder = holderId.equals(first.getUUID()) ? first : second;
-                SpiritEntity ally = holder == first ? second : first;
-                if (ally.getTarget() == zombie) {
+                SpiritEntity ally = first.equals(holder) ? second : first;
+                if (zombie.equals(ally.getTarget())) {
                     handedOff[0] = true;
                 }
                 helper.assertTrue(

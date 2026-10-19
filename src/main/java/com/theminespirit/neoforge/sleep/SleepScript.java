@@ -137,7 +137,7 @@ public final class SleepScript implements ScriptInstance {
                 .getEntitiesOfClass(
                         LivingEntity.class,
                         box,
-                        entity -> entity != spirit && entity.isAlive() && entity instanceof Enemy)
+                        entity -> !entity.equals(spirit) && entity.isAlive() && entity instanceof Enemy)
                 .isEmpty();
     }
 

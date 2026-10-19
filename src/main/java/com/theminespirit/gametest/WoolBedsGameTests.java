@@ -217,7 +217,7 @@ public final class WoolBedsGameTests {
             HusbandryGameTests.assertSucceeded(helper, spirit, "три дикие овцы обязаны забиться");
             List<Sheep> sheep = HusbandryGameTests.alive(helper, Sheep.class);
             helper.assertTrue(
-                    sheep.size() == 1 && sheep.get(0) == own,
+                    sheep.size() == 1 && sheep.get(0).equals(own),
                     "жива обязана остаться ровно своя овца домашнего круга, фактически живых " + sheep.size()
                             + ", своя жива: " + own.isAlive());
             helper.assertTrue(

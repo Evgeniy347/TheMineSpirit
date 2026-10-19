@@ -199,7 +199,7 @@ class ServerThreadCallTests {
         waiter.setDaemon(true);
         waiter.start();
 
-        // Ждём условием, а не сном: ожидальец обязан встать в wait на stopLock.
+        // Ждём условием, а не сном: ожидальец обязан встать в ожидание задачи.
         // Граница — число итераций, а не миллисекунды: под нагрузкой планировщик
         // отдаёт поток позже, итерации со счётчиком это переживают, а sleep — нет.
         int spins = 0;
@@ -207,11 +207,11 @@ class ServerThreadCallTests {
         while (state != Thread.State.TIMED_WAITING && state != Thread.State.WAITING) {
             if (++spins > 10_000_000) {
                 waiter.interrupt();
-                throw new AssertionError("Ожидальец за " + spins + " итераций не встал в wait на stopLock: "
+                throw new AssertionError("Ожидальец за " + spins + " итераций не встал в ожидание задачи: "
                         + "без этого stop() не будит, а проверяет пустоту — "
                         + "смотри ServerThreadCall.await и запускающий его поток");
             }
-            Thread.yield();
+            Thread.onSpinWait();
             state = waiter.getState();
         }
         call.stop();
@@ -219,7 +219,7 @@ class ServerThreadCallTests {
 
         assertFalse(
                 waiter.isAlive(),
-                "Остановка сервера обязана будить ждущий запрос через stopLock.notifyAll: "
+                "Остановка сервера обязана будить ждущий запрос через сигнал остановки: "
                         + "само-пробуждение по тайм-ауту исключено (WITHOUT_TIMEOUT), поэтому живой "
                         + "ожидальец означает, что stop() его не разбудил и запрос висит");
         Throwable thrown = failure.get();

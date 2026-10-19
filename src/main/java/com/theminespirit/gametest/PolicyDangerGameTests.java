@@ -240,7 +240,7 @@ public final class PolicyDangerGameTests {
             run.assertStarted();
             helper.assertTrue(run.spiritTicks() >= 100, "ещё не прошло 100 тиков, тик духа " + run.spiritTicks());
             helper.assertTrue(
-                    spirit.level().dimension() == home && !spirit.isRemoved(),
+                    spirit.level().dimension().equals(home) && !spirit.isRemoved(),
                     "дух не должен переходить через портал: измерение "
                             + spirit.level().dimension().location());
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
@@ -279,7 +279,7 @@ public final class PolicyDangerGameTests {
             helper.assertTrue(run.spiritTicks() >= 40, "ещё не прошло 40 тиков наблюдения за духом после отказа");
             BlockPos cell = BlockPos.containing(helper.relativeVec(spirit.position()));
             helper.assertTrue(
-                    cell.getZ() <= 2 && spirit.level().dimension() == home,
+                    cell.getZ() <= 2 && spirit.level().dimension().equals(home),
                     "после отказа дух не должен идти к порталу: клетка " + cell.toShortString() + ", измерение "
                             + spirit.level().dimension().location());
             GameTestFixtures.finish(helper);

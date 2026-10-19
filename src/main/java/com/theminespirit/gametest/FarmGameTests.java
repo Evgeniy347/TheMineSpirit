@@ -106,7 +106,7 @@ public final class FarmGameTests {
                             + registryMax + "): иначе зрелое сочтут недозрелым или наоборот");
             Item plantItem = CropRegistry.plantItem(kind);
             helper.assertTrue(
-                    plantItem instanceof BlockItem placing && placing.getBlock() == block,
+                    plantItem instanceof BlockItem placing && placing.getBlock().equals(block),
                     "посадочный предмет " + kind.plantItem() + " обязан ставить блок " + kind.blockId()
                             + ": иначе посадка и пересадка посадят другой вид");
             CropRegistry.produceItem(kind);
@@ -1460,7 +1460,7 @@ public final class FarmGameTests {
                     "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
             int produce = GameTestFixtures.countInInventory(spirit.getInventory(), produceItem);
             int plant = GameTestFixtures.countInInventory(spirit.getInventory(), plantItem);
-            if (produceItem == plantItem) {
+            if (produceItem.equals(plantItem)) {
                 helper.assertTrue(
                         plant >= initial,
                         "посадочный предмет и урожай — один предмет: после пересадки пяти клеток не меньше исходных "
@@ -1683,7 +1683,7 @@ public final class FarmGameTests {
     private static int changedBlocks(GameTestHelper helper, Map<BlockPos, Block> before) {
         int changed = 0;
         for (Map.Entry<BlockPos, Block> entry : before.entrySet()) {
-            if (helper.getBlockState(entry.getKey()).getBlock() != entry.getValue()) {
+            if (!helper.getBlockState(entry.getKey()).is(entry.getValue())) {
                 changed++;
             }
         }

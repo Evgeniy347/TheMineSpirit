@@ -344,7 +344,8 @@ public final class RestTaskGameTests {
         private final AtomicReference<String> path = new AtomicReference<>();
         private final AtomicReference<String> latest = new AtomicReference<>();
         private final AtomicReference<JsonNode> lastJson = new AtomicReference<>(MissingNode.getInstance());
-        private final AtomicBoolean inFlight = new AtomicBoolean();
+        private final AtomicReference<CompletableFuture<Void>> inFlight =
+                new AtomicReference<>(CompletableFuture.completedFuture(null));
         private final AtomicLong terminalSeenAt = new AtomicLong(-1);
         private final AtomicReference<String> taskId = new AtomicReference<>();
 
@@ -390,21 +391,20 @@ public final class RestTaskGameTests {
                                 record -> terminalSeenAt.set(helper.getLevel().getGameTime()));
             }
             String target = path.get();
-            if (target == null || !inFlight.compareAndSet(false, true)) {
+            CompletableFuture<Void> previous = inFlight.get();
+            if (target == null || !previous.isDone()) {
                 return;
             }
-            rest.get(target).whenComplete((reply, error) -> {
-                try {
-                    if (reply != null && reply.status() == 200) {
-                        String state = reply.json().path("state").asText();
-                        seen.add(state);
-                        latest.set(state);
-                        lastJson.set(reply.json());
-                    }
-                } finally {
-                    inFlight.set(false);
+            previous.join();
+            inFlight.set(rest.get(target).handle((reply, error) -> {
+                if (reply != null && reply.status() == 200) {
+                    String state = reply.json().path("state").asText();
+                    seen.add(state);
+                    latest.set(state);
+                    lastJson.set(reply.json());
                 }
-            });
+                return null;
+            }));
         }
     }
 

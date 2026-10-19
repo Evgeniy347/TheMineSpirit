@@ -50,7 +50,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     public static RecipeKnowledge of(RecipeManager manager, HolderLookup.Provider registries) {
         Objects.requireNonNull(manager, "manager не может быть null: рецепты берутся у сервера");
         Cached current = cache;
-        if (current == null || current.manager() != manager) {
+        if (current == null || !manager.equals(current.manager())) {
             current = new Cached(manager, buildIndex(manager, registries));
             cache = current;
         }

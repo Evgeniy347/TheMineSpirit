@@ -2,6 +2,7 @@ package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -193,7 +194,48 @@ public final class BaseKit {
         return -1;
     }
 
-    private record Grouping(List<Stack> stacks, List<List<Integer>> byRule, int[] claimed) {}
+    private static final class Grouping {
+        private final List<Stack> stacks;
+        private final List<List<Integer>> byRule;
+        private final int[] claimed;
+
+        private Grouping(List<Stack> stacks, List<List<Integer>> byRule, int[] claimed) {
+            this.stacks = stacks;
+            this.byRule = byRule;
+            this.claimed = claimed;
+        }
+
+        private List<Stack> stacks() {
+            return stacks;
+        }
+
+        private List<List<Integer>> byRule() {
+            return byRule;
+        }
+
+        private int[] claimed() {
+            return claimed;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Grouping other
+                    && Objects.equals(stacks, other.stacks)
+                    && Objects.equals(byRule, other.byRule)
+                    && Arrays.equals(claimed, other.claimed);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(stacks, byRule) + Arrays.hashCode(claimed);
+        }
+
+        @Override
+        public String toString() {
+            return "Grouping[" + "stacks=" + stacks + ", " + "byRule=" + byRule + ", " + "claimed="
+                    + Arrays.toString(claimed) + "]";
+        }
+    }
 
     private static List<KitRule> parseRules(JsonNode node, String origin) {
         if (node == null || !node.isArray() || node.isEmpty()) {

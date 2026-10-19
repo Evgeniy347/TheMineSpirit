@@ -22,7 +22,7 @@ public final class ItemIds {
         if (location == null) {
             return Optional.empty();
         }
-        return BuiltInRegistries.ITEM.getOptional(location).filter(item -> item != Items.AIR);
+        return BuiltInRegistries.ITEM.getOptional(location).filter(item -> !Items.AIR.equals(item));
     }
 
     public static String normalize(String id) {

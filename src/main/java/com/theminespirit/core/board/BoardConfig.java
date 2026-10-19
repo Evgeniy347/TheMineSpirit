@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 /**
  * Живые числа доски: приоритеты кейсов, модификаторы приоритета и интервалы. Читается из
@@ -120,7 +120,7 @@ public record BoardConfig(
     }
 
     private static Map<String, Integer> integers(
-            JsonNode node, String origin, String field, Function<String, ?> known, boolean allowNegative) {
+            JsonNode node, String origin, String field, Consumer<String> known, boolean allowNegative) {
         Map<String, Integer> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -151,7 +151,7 @@ public record BoardConfig(
         return values;
     }
 
-    private static Map<String, Long> longs(JsonNode node, String origin, String field, Function<String, ?> known) {
+    private static Map<String, Long> longs(JsonNode node, String origin, String field, Consumer<String> known) {
         Map<String, Long> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -263,9 +263,9 @@ public record BoardConfig(
         return key;
     }
 
-    private static void checkKey(Function<String, ?> known, String key, String origin, String field) {
+    private static void checkKey(Consumer<String> known, String key, String origin, String field) {
         try {
-            known.apply(key);
+            known.accept(key);
         } catch (IllegalArgumentException unknown) {
             throw new IllegalStateException(
                     "Поле '" + field + "' в '" + origin + "': ключ '" + key

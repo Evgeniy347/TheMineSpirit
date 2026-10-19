@@ -33,7 +33,7 @@ class EncodingGuardTests {
             Files.walkFileTree(root, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    return dir != root
+                    return !dir.equals(root)
                                     && SKIP_DIRECTORIES.contains(
                                             dir.getFileName().toString())
                             ? FileVisitResult.SKIP_SUBTREE

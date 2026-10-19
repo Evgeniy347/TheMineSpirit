@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -68,146 +70,146 @@ class DeadCodeGuardTests {
             "this",
             "super");
 
-    private static final List<Exception> OPEN_TASKS = List.of(
-            new Exception(
+    private static final List<Exemption> OPEN_TASKS = List.of(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeCapture",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#completeLure",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskFailures",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskStarts",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#retreatExecutor",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/Board.java|method|Board#caseDetached",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/Board.java|method|Board#casePauseTicks",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/Board.java|method|Board#pendingFor",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BoardLedger.java|method|BoardLedger#keys",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#breedingAvailable",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#cullNeeded",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#stockFor",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BuildingLevels.java|method|BuildingLevels#hasLevels",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/HerdCap.java|method|HerdCap#canCapture",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/board/HiveRules.java|method|HiveRules#placementReady",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/building/PillarPlan.java|method|PillarPlan#dismantle",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/building/PresetLibrary.java|method|PresetLibrary#byStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/building/PresetLibrary.java|method|PresetLibrary#byTypeAndStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/building/WarehouseLayout.java|method|WarehouseLayout#stacksWithoutSign",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/coordinator/SettlementGroups.java|method|SettlementGroups#partition",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/crafting/Stations.java|method|Stations#preferredSmeltingStation",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/farming/Hydration.java|field|Hydration#MAX_LOOKUPS",
                     "Заготовка под открытую задачу: todo.md → «Фермерство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/forestry/TreeCandidates.java|method|TreeCandidates#isKnown",
                     "Заготовка под открытую задачу: todo.md → «Лесничество»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/husbandry/PenBounds.java|method|PenBounds#escapedOf",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/intellect/ActivityCatalog.java|method|ActivityCatalog#forChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/intellect/Forage.java|method|Forage#hasWater",
                     "Заготовка под открытую задачу: todo.md → «Рыболовство»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/inventory/BaseKit.java|method|BaseKit#isSatisfiedBy",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/inventory/ContainerSnapshot.java|method|ContainerSnapshot#hasFreeSlot",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/inventory/OverflowTuning.java|method|OverflowTuning#effectiveStackValue",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/perception/HazardFacts.java|method|HazardFacts#hasDrop",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/perception/HazardFacts.java|method|HazardFacts#hasLava",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/perception/HazardFacts.java|method|HazardFacts#hasWater",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/pickup/PickupSpot.java|method|PickupSpot#forDrop",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/social/TransferOrder.java|method|TransferOrder#fromWarehouse",
                     "Заготовка под открытую задачу: todo.md → «Экономика и логистика»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/LayerOrder.java|field|LayerOrder#INTERRUPTED_LAYER_RESUMES",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/SafePointChoice.java|field|SafePointChoice#NO_CAMP",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/SpiritTargets.java|method|SpiritTargets#attacksSpirits",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/TacticsEngine.java|method|TacticsEngine#totalRules",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/adapter/CoreFactCollector.java|method|CoreFactCollector#withDefaultSettings",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/adapter/RetreatTracker.java|method|RetreatTracker#progressTicks",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exception(
+            new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"));
 
@@ -261,7 +263,7 @@ class DeadCodeGuardTests {
                     "watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty",
                     "наблюдатель задач для теста масштаба: ровно один опрос на активную задачу за тик"));
 
-    private static final List<Exception> EXCEPTIONS = exceptions();
+    private static final List<Exemption> EXCEPTIONS = exceptions();
 
     @Test
     void productionSources_EveryDeclaration_IsReferencedOrEntryPoint() {
@@ -284,7 +286,7 @@ class DeadCodeGuardTests {
             }
             offenders.add(finding.describe());
         }
-        for (Exception exception : EXCEPTIONS) {
+        for (Exemption exception : EXCEPTIONS) {
             boolean found = findings.stream().anyMatch(finding -> finding.key().equals(exception.key()));
             if (!found) {
                 stale.add(exception.key() + " — " + exception.reason());
@@ -408,10 +410,10 @@ class DeadCodeGuardTests {
         return sources;
     }
 
-    private static List<Exception> exceptions() {
-        List<Exception> all = new ArrayList<>(OPEN_TASKS);
+    private static List<Exemption> exceptions() {
+        List<Exemption> all = new ArrayList<>(OPEN_TASKS);
         for (Probe probe : SCALE_PROBES) {
-            all.add(new Exception(probe.key(), "Проба теста " + probe.test() + ": " + probe.reason()));
+            all.add(new Exemption(probe.key(), "Проба теста " + probe.test() + ": " + probe.reason()));
         }
         return List.copyOf(all);
     }
@@ -781,9 +783,50 @@ class DeadCodeGuardTests {
         }
     }
 
-    private record Parsed(List<Token> tokens, List<Declaration> declarations, boolean[] ignored) {}
+    private static final class Parsed {
+        private final List<Token> tokens;
+        private final List<Declaration> declarations;
+        private final boolean[] ignored;
+
+        private Parsed(List<Token> tokens, List<Declaration> declarations, boolean[] ignored) {
+            this.tokens = tokens;
+            this.declarations = declarations;
+            this.ignored = ignored;
+        }
+
+        private List<Token> tokens() {
+            return tokens;
+        }
+
+        private List<Declaration> declarations() {
+            return declarations;
+        }
+
+        private boolean[] ignored() {
+            return ignored;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Parsed other
+                    && Objects.equals(tokens, other.tokens)
+                    && Objects.equals(declarations, other.declarations)
+                    && Arrays.equals(ignored, other.ignored);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(tokens, declarations) + Arrays.hashCode(ignored);
+        }
+
+        @Override
+        public String toString() {
+            return "Parsed[" + "tokens=" + tokens + ", " + "declarations=" + declarations + ", " + "ignored="
+                    + Arrays.toString(ignored) + "]";
+        }
+    }
 
     private record Probe(String key, String test, String reason) {}
 
-    private record Exception(String key, String reason) {}
+    private record Exemption(String key, String reason) {}
 }

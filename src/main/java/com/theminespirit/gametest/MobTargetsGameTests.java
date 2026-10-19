@@ -44,7 +44,7 @@ public final class MobTargetsGameTests {
         if (target == null) {
             return "null";
         }
-        String who = target == ownSpirit ? "свой дух" : "чужая цель";
+        String who = ownSpirit.equals(target) ? "свой дух" : "чужая цель";
         return who + " " + target.getType().getDescriptionId() + " uuid=" + target.getUUID() + " pos="
                 + target.blockPosition().toShortString();
     }
@@ -63,7 +63,7 @@ public final class MobTargetsGameTests {
             target = describeTarget(mob.getTarget(), null);
             hurtBy = String.valueOf(mob.getLastHurtByMob());
         }
-        boolean targetingSelf = entity instanceof Mob mob && mob.getTarget() == spirit;
+        boolean targetingSelf = entity instanceof Mob mob && spirit.equals(mob.getTarget());
         return entity.getType().getDescriptionId() + "@"
                 + entity.blockPosition().toShortString() + " цель=" + target + " бил=" + hurtBy + " targetingSelf="
                 + targetingSelf;
@@ -106,7 +106,7 @@ public final class MobTargetsGameTests {
                     helper.getTick() <= OBSERVED_TICKS,
                     "зомби обязан взять духа целью за " + OBSERVED_TICKS + " тиков, прошло " + helper.getTick());
             helper.assertTrue(
-                    zombie.getTarget() == spirit,
+                    spirit.equals(zombie.getTarget()),
                     "зомби в шести блоках от духа без игроков рядом обязан сам выбрать духа целью, а его цель "
                             + zombie.getTarget());
             GameTestFixtures.finish(helper);
@@ -197,7 +197,7 @@ public final class MobTargetsGameTests {
         helper.succeedWhen(() -> {
             Spider current = spider.get();
             helper.assertTrue(
-                    current != null && current.getTarget() == spirit,
+                    current != null && spirit.equals(current.getTarget()),
                     "Паук ночью рядом с духом обязан сам выбрать духа целью за " + OBSERVED_TICKS
                             + " тиков, а его цель " + (current == null ? "ещё не заспавнен" : current.getTarget()));
             GameTestFixtures.finish(helper);
