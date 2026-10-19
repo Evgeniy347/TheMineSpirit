@@ -159,7 +159,11 @@ public final class BoardCraterGameTests {
                             + board.board().holderOf("board_test_crater_fill").orElse(null));
             helper.assertTrue(countHoles(helper) == 0,
                     "С землёй воронка 3×3 заделана ровно: осталось " + countHoles(helper)
-                            + " пустот на уровне пола");
+                            + " пустот на уровне пола; задача духа " + spirit.currentTaskScript().orElse("нет")
+                            + ", статус " + spirit.taskStatus().map(Enum::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет") + ", дух в "
+                            + helper.relativePos(spirit.blockPosition()) + ", земли "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
             helper.assertTrue(board.board().statusOf("board_test_crater_fill").orElse(null)
                             == BoardStatus.DONE,
                     "После заделки задание закрыто как DONE, статус "
