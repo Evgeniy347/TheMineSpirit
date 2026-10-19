@@ -432,6 +432,28 @@ class BoardTests {
     }
 
     @Test
+    void pendingFor_EqualUuidOtherInstance_FindsTicket() {
+        Board board = boardAt(0);
+        BoardTicket mine = new BoardTicket(
+                "build_1",
+                BoardCase.BUILD_HOUSE,
+                Optional.of(SPIRIT_ONE),
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        board.submit(mine);
+
+        assertEquals(
+                List.of(mine),
+                board.pendingFor(UUID.fromString(SPIRIT_ONE.toString())),
+                "Владелец задания сравнивается по значению UUID, а не по экземпляру: после перезагрузки доски "
+                        + "и духа UUID — разные объекты с тем же значением, и дух терял бы свои задания");
+    }
+
+    @Test
     void pendingFor_Returns_SpiritTickets() {
         Board board = boardAt(0);
         BoardTicket mine = new BoardTicket(

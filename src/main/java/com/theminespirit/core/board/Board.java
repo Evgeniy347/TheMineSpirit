@@ -318,7 +318,7 @@ public final class Board {
             if ((status == BoardStatus.PENDING
                             || status == BoardStatus.WAITING_RESOURCES
                             || status == BoardStatus.ASSIGNED)
-                    && ticket.assignee().orElse(null) == spirit) {
+                    && ticket.assignee().filter(spirit::equals).isPresent()) {
                 pending.add(ticket);
             }
         }
@@ -353,7 +353,7 @@ public final class Board {
     }
 
     private boolean holds(BoardTicket ticket, UUID spirit) {
-        return ticket.assignee().orElse(null) == spirit || spirit.equals(claimAssignees.get(ticket.id()));
+        return ticket.assignee().filter(spirit::equals).isPresent() || spirit.equals(claimAssignees.get(ticket.id()));
     }
 
     private static boolean conditionsChanged(BoardTicket before, BoardTicket after) {
