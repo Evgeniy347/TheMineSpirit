@@ -30,11 +30,11 @@ class DemoBuildingsTests {
         assertEquals(
                 List.of(
                         "family_house",
+                        "lamp",
                         "stone_house",
                         "storage_hut",
                         "storage",
                         "well",
-                        "torch_post",
                         "palisade_section",
                         "pen",
                         "enchant_room",
@@ -130,5 +130,34 @@ class DemoBuildingsTests {
                 IllegalArgumentException.class,
                 () -> DemoBuildings.require("pen").level(4),
                 "Четвёртого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой");
+    }
+
+    @Test
+    void parse_DuplicateId_IsRejected() {
+        String json = "{\"buildings\":[{\"id\":\"a\",\"name\":\"А\",\"type\":\"housing\",\"levels\":[{\"level\":1,"
+                + "\"scheme\":\"x\"}]},{\"id\":\"a\",\"name\":\"Б\",\"type\":\"housing\",\"levels\":[{\"level\":1,"
+                + "\"scheme\":\"y\"}]}]}";
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> DemoBuildings.parse(json, "тест"),
+                "Каталог с ошибкой обязан отвергаться при разборе, а не молча");
+        assertTrue(
+                error.getMessage().contains("дважды"),
+                "Каталог с двумя постройками одного id обязан отвергаться с причиной, получено: " + error.getMessage());
+    }
+
+    @Test
+    void parse_UnknownType_IsRejected() {
+        String json = "{\"buildings\":[{\"id\":\"a\",\"name\":\"А\",\"type\":\"castle\",\"levels\":[{\"level\":1,"
+                + "\"scheme\":\"x\"}]}]}";
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> DemoBuildings.parse(json, "тест"),
+                "Каталог с ошибкой обязан отвергаться при разборе, а не молча");
+        assertTrue(
+                error.getMessage().contains("castle"),
+                "Неизвестный тип постройки обязан называться в отказе, получено: " + error.getMessage());
     }
 }

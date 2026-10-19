@@ -53,7 +53,8 @@ public final class SchematicCheck {
                 id,
                 header.type().orElseThrow(),
                 document.schematic(),
-                header.entrance().orElseThrow());
+                header.entrance().orElseThrow(),
+                header.level());
         Set<SchematicRules.RuleId> excused = EnumSet.noneOf(SchematicRules.RuleId.class);
         for (SchematicDocument.Exemption exemption : document.exemptions()) {
             excused.add(exemption.rule());

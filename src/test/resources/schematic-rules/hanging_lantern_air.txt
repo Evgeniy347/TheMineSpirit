@@ -1,0 +1,46 @@
+# фикстура сторожа схем: hanging_lantern_air
+type: storage
+size: 5x5x6   # Ш×В×Д
+entrance: 2,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door
+  'T': torch
+  'p': oak_stairs[facing=south,half=bottom]
+  'L': lantern[hanging=true]
+layers:
+  - y0: |
+        p
+      #####
+      #####
+      #####
+      #####
+      #####
+  - y1: |
+        .
+      ##D##
+      #...#
+      #...#
+      #...#
+      #####
+  - y2: |
+        .
+      ##D##
+      #...#
+      #.L.#
+      #...#
+      #####
+  - y3: |
+        .
+      #####
+      #...#
+      #...#
+      #...#
+      #####
+  - y4: |
+        .
+      #####
+      #####
+      #####
+      #####
+      #####

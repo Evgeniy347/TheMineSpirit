@@ -39,7 +39,20 @@ public final class SchematicBlocks {
             "lava_cauldron",
             "powder_snow_cauldron",
             "campfire",
-            "soul_campfire");
+            "soul_campfire",
+            "ladder",
+            "bell",
+            "lectern",
+            "poppy",
+            "dandelion",
+            "cornflower",
+            "allium",
+            "azure_bluet",
+            "oxeye_daisy",
+            "blue_orchid",
+            "lily_of_the_valley",
+            "azalea",
+            "snow");
 
     private static final List<String> NON_FULL_SUFFIXES = List.of(
             "_fence",
@@ -250,5 +263,39 @@ public final class SchematicBlocks {
                 && !isChest(blockId)
                 && !"enchanting_table".equals(path)
                 && !path.endsWith("_leaves");
+    }
+
+    public static boolean isHanging(String blockId, Map<String, String> state) {
+        Objects.requireNonNull(state, "Состояние блока не может быть null: пустое задаётся пустой картой");
+        String path = path(blockId);
+        if ("chain".equals(path)) {
+            return "y".equals(state.getOrDefault("axis", "y"));
+        }
+        return path.endsWith("lantern") && "true".equals(state.get("hanging"));
+    }
+
+    public static boolean holdsHanging(String blockId) {
+        String path = path(blockId);
+        return isFullBlock(blockId)
+                || "chain".equals(path)
+                || path.endsWith("_fence")
+                || path.endsWith("_wall")
+                || path.endsWith("_slab")
+                || path.endsWith("_stairs");
+    }
+
+    public static boolean isCenterPost(String blockId) {
+        String path = path(blockId);
+        return path.endsWith("_fence") || path.endsWith("_wall");
+    }
+
+    public static boolean standsOnCenter(String blockId) {
+        String path = path(blockId);
+        return path.endsWith("_pressure_plate")
+                || path.endsWith("lantern")
+                || path.endsWith("candle")
+                || "torch".equals(path)
+                || "flower_pot".equals(path)
+                || path.startsWith("potted_");
     }
 }

@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.tree.CommandNode;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.neoforge.demo.DemoRegistry;
@@ -35,21 +36,14 @@ final class SpiritDemoCommand {
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("demo")
                 .then(literal("list").executes(SpiritDemoCommand::list))
-                .then(literal("stop").executes(SpiritDemoCommand::stop))
-                .then(building("family_house"))
-                .then(building("stone_house"))
-                .then(building("storage_hut"))
-                .then(building("storage"))
-                .then(building("well"))
-                .then(building("torch_post"))
-                .then(building("palisade_section"))
-                .then(building("pen"))
-                .then(building("enchant_room"))
-                .then(building("mine_entrance")));
-    }
-
-    private static LiteralArgumentBuilder<CommandSourceStack> building(String id) {
-        return building(DemoBuildings.require(id));
+                .then(literal("stop").executes(SpiritDemoCommand::stop)));
+        for (CommandNode<CommandSourceStack> demo : spirit.getArguments()) {
+            if ("demo".equals(demo.getName())) {
+                for (DemoBuildings.Building building : DemoBuildings.all()) {
+                    demo.addChild(building(building).build());
+                }
+            }
+        }
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> building(DemoBuildings.Building building) {

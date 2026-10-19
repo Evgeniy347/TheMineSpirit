@@ -1,14 +1,18 @@
 package com.theminespirit.core.building;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
- * Каталог построек демо-стройки: id подкоманды, название и уровни с файлами схем. Список фиксирован
- * (креативная демонстрация), тело схемы и материалы берутся из библиотеки пресетов по имени файла.
+ * Каталог семей построек (данные {@code schematics/buildings.json}): id подкоманды демо, название, тип и уровни
+ * с файлами схем; тело схемы и материалы берутся из библиотеки пресетов по имени файла.
  *
  * <p>У постройки без уровней один уровень {@code 0}; у загона уровни 1–3, у чаровальни 1–2.
  */
@@ -53,44 +57,42 @@ public final class DemoBuildings {
         }
     }
 
-    private static final List<Building> ALL = List.of(
-            new Building("family_house", "Дом семьи", BuildingType.HOUSING, List.of(new Level(0, "family_house"))),
-            new Building("stone_house", "Каменный дом", BuildingType.HOUSING, List.of(new Level(0, "stone_house"))),
-            new Building("storage_hut", "Склад-хижина", BuildingType.STORAGE, List.of(new Level(0, "storage_hut"))),
-            new Building(
-                    "storage",
-                    "Склад",
-                    BuildingType.STORAGE,
-                    List.of(
-                            new Level(1, "storage_v1"),
-                            new Level(2, "storage_v2"),
-                            new Level(3, "storage_v3"),
-                            new Level(4, "storage_v4"))),
-            new Building("well", "Колодец", BuildingType.INFRASTRUCTURE, List.of(new Level(0, "well"))),
-            new Building(
-                    "torch_post", "Факельный столб", BuildingType.INFRASTRUCTURE, List.of(new Level(0, "torch_post"))),
-            new Building(
-                    "palisade_section",
-                    "Палисад-секция",
-                    BuildingType.DEFENSE,
-                    List.of(new Level(0, "palisade_section"))),
-            new Building(
-                    "pen",
-                    "Загон",
-                    BuildingType.FARM,
-                    List.of(new Level(1, "pen_4x5"), new Level(2, "pen_7x7"), new Level(3, "pen_9x9"))),
-            new Building(
-                    "enchant_room",
-                    "Чаровальня",
-                    BuildingType.CRAFT,
-                    List.of(new Level(1, "enchant_room_v1"), new Level(2, "enchant_room_v2"))),
-            new Building(
-                    "mine_entrance",
-                    "Вход в шахту",
-                    BuildingType.INFRASTRUCTURE,
-                    List.of(new Level(1, "mine_entrance_v1"))));
+    public static final String CATALOG = PresetLibrary.SCHEMATICS_ROOT + "buildings.json";
+    private static final Set<String> BUILDING_FIELDS = Set.of("id", "name", "type", "levels");
+    private static final Set<String> LEVEL_FIELDS = Set.of("level", "scheme");
+
+    private static final List<Building> ALL = parse(JsonResource.readClasspath(CATALOG), CATALOG);
 
     private DemoBuildings() {}
+
+    public static List<Building> parse(String json, String origin) {
+        JsonNode root = JsonResource.parse(json, origin);
+        JsonResource.checkFields(root, Set.of("buildings"), origin, "каталога построек");
+        List<Building> buildings = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        for (JsonNode item : JsonResource.array(root.get("buildings"), origin, "списка buildings")) {
+            JsonResource.checkFields(item, BUILDING_FIELDS, origin, "постройки каталога");
+            String id = JsonResource.text(item.get("id"), origin, "поля id постройки");
+            String typeId = JsonResource.text(item.get("type"), origin, "поля type постройки '" + id + "'");
+            BuildingType type = BuildingType.byId(typeId)
+                    .orElseThrow(() -> new IllegalArgumentException("У постройки '" + id + "' в " + origin
+                            + " неизвестный тип '" + typeId + "': по нему не найти правила качества"));
+            List<Level> levels = new ArrayList<>();
+            for (JsonNode level : JsonResource.array(item.get("levels"), origin, "уровней постройки '" + id + "'")) {
+                JsonResource.checkFields(level, LEVEL_FIELDS, origin, "уровня постройки '" + id + "'");
+                levels.add(new Level(
+                        JsonResource.integer(level.get("level"), origin, "номера уровня '" + id + "'"),
+                        JsonResource.text(level.get("scheme"), origin, "схемы уровня '" + id + "'")));
+            }
+            if (!ids.add(id)) {
+                throw new IllegalArgumentException("Постройка '" + id + "' объявлена в " + origin
+                        + " дважды: подкоманда /spirit demo взяла бы одну из них наугад");
+            }
+            buildings.add(new Building(
+                    id, JsonResource.text(item.get("name"), origin, "названия '" + id + "'"), type, levels));
+        }
+        return List.copyOf(buildings);
+    }
 
     public static List<Building> all() {
         return ALL;

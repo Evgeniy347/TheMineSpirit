@@ -2,6 +2,8 @@ package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -13,10 +15,12 @@ import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,6 +30,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
@@ -37,12 +42,16 @@ final class DemoSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int DEMO_WAIT_TICKS = 100;
     private static final int WITHDRAW_RADIUS = 8;
+    private static final int MAX_ROUNDS = 20;
+    private static final String NO_MATERIAL = "не хватило материала";
 
     private final ServerLevel level;
     private final SpiritEntity spirit;
     private final List<DemoPlan> plans;
     private final UUID owner;
     private int index;
+    private int round;
+    private List<BlockPos> chests = List.of();
 
     DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner) {
         this.level = level;
@@ -66,7 +75,7 @@ final class DemoSession {
 
     void begin() {
         prepare(plans.get(0));
-        spirit.startTask(node(0));
+        spirit.startTask(node(0, withdrawals(plans.get(0))));
     }
 
     boolean tick() {
@@ -83,31 +92,35 @@ final class DemoSession {
             if (index + 1 < plans.size()) {
                 index++;
                 prepare(plans.get(index));
-                spirit.startTask(node(index));
+                spirit.startTask(node(index, withdrawals(plans.get(index))));
                 return true;
             }
             spirit.discard();
             return false;
         }
-        announce(spirit.taskFailureReason().orElse("стройка не удалась"));
+        String reason = spirit.taskFailureReason().orElse("стройка не удалась");
+        if (reason.contains(NO_MATERIAL) && round < MAX_ROUNDS) {
+            List<Withdrawal> next = withdrawals(plans.get(index));
+            if (!next.isEmpty()) {
+                round++;
+                spirit.startTask(node(index, next));
+                return true;
+            }
+        }
+        announce(reason);
         abort();
         spirit.discard();
         return false;
     }
 
-    private TaskNode node(int planIndex) {
+    private TaskNode node(int planIndex, List<Withdrawal> withdrawals) {
         DemoPlan plan = plans.get(planIndex);
         List<TaskNode> steps = new ArrayList<>();
-        if (planIndex == 0) {
+        if (planIndex == 0 && round == 0) {
             steps.add(new ScriptCall("say", params("text", "Начинаю стройку: " + plan.name())));
         }
-        for (Map.Entry<String, Integer> material : plan.materials().entrySet()) {
-            int left = material.getValue();
-            while (left > 0) {
-                int take = Math.min(left, CatalogLimits.COUNT_MAX);
-                steps.add(new ScriptCall("withdraw", withdrawParams(plan, material.getKey(), take)));
-                left -= take;
-            }
+        for (Withdrawal withdrawal : withdrawals) {
+            steps.add(new ScriptCall("withdraw", withdrawParams(withdrawal)));
         }
         steps.add(new ScriptCall("build_schematic", buildParams(plan)));
         if (planIndex == plans.size() - 1) {
@@ -123,12 +136,12 @@ final class DemoSession {
         return params;
     }
 
-    private static Map<String, Object> withdrawParams(DemoPlan plan, String item, int count) {
+    private static Map<String, Object> withdrawParams(Withdrawal withdrawal) {
         Map<String, Object> params = new HashMap<>();
-        BlockCoord chest = plan.placement().chest();
-        params.put("container", chest.x() + "," + chest.y() + "," + chest.z());
-        params.put("item", item);
-        params.put("count", count);
+        BlockPos chest = withdrawal.chest();
+        params.put("container", chest.getX() + "," + chest.getY() + "," + chest.getZ());
+        params.put("item", withdrawal.item());
+        params.put("count", withdrawal.count());
         params.put("radius", WITHDRAW_RADIUS);
         return params;
     }
@@ -146,7 +159,8 @@ final class DemoSession {
     private void prepare(DemoPlan plan) {
         clearVolume(plan);
         flattenFloor(plan);
-        fillChest(plan);
+        round = 0;
+        chests = fillChests(plan);
     }
 
     private void clearVolume(DemoPlan plan) {
@@ -175,29 +189,103 @@ final class DemoSession {
         }
     }
 
-    private void fillChest(DemoPlan plan) {
-        BlockCoord chestCoord = plan.placement().chest();
-        BlockPos chestPos = new BlockPos(chestCoord.x(), chestCoord.y(), chestCoord.z());
-        level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
-        if (!(level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest)) {
-            throw new IllegalStateException("Сундук материалов не поставлен в " + chestPos.toShortString()
-                    + ": блок сундука не создал блочную сущность");
-        }
+    private record Withdrawal(BlockPos chest, String item, int count) {}
+
+    private List<BlockPos> fillChests(DemoPlan plan) {
+        BlockCoord base = plan.placement().chest();
+        List<BlockPos> filled = new ArrayList<>();
+        ChestBlockEntity chest = null;
         int slot = 0;
         for (Map.Entry<String, Integer> material : plan.materials().entrySet()) {
             Item item = BlockItems.itemFor(material.getKey());
             int left = material.getValue();
             while (left > 0) {
-                if (slot >= chest.getContainerSize()) {
-                    throw new IllegalStateException("Сундук не вмещает материалы схемы '" + plan.scheme()
-                            + "': нужно больше " + chest.getContainerSize() + " стопок");
+                if (chest == null || slot >= chest.getContainerSize()) {
+                    BlockPos pos = new BlockPos(base.x(), base.y() + filled.size(), base.z());
+                    chest = placeChest(pos, plan);
+                    filled.add(pos);
+                    slot = 0;
                 }
                 int take = Math.min(left, item.getDefaultMaxStackSize());
                 chest.setItem(slot++, new ItemStack(item, take));
                 left -= take;
             }
         }
-        chest.setChanged();
+        if (filled.isEmpty()) {
+            BlockPos pos = new BlockPos(base.x(), base.y(), base.z());
+            placeChest(pos, plan);
+            filled.add(pos);
+        }
+        return List.copyOf(filled);
+    }
+
+    private ChestBlockEntity placeChest(BlockPos pos, DemoPlan plan) {
+        level.setBlock(pos, Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
+        if (!(level.getBlockEntity(pos) instanceof ChestBlockEntity chest)) {
+            throw new IllegalStateException("Сундук материалов схемы '" + plan.scheme() + "' не поставлен в "
+                    + pos.toShortString() + ": блок сундука не создал блочную сущность");
+        }
+        if (pos.getY() == plan.placement().chest().y()) {
+            placeSign(pos, plan.name());
+        }
+        return chest;
+    }
+
+    private void placeSign(BlockPos chest, String name) {
+        BlockPos pos = chest.offset(1, 0, 0);
+        if (!level.getBlockState(pos).isAir()) {
+            return;
+        }
+        level.setBlock(pos, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
+        if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
+            sign.setText(sign.getFrontText().setMessage(0, Component.literal(name)), true);
+            sign.setChanged();
+        }
+    }
+
+    // Духу хватает слотов не на всё: каждый заход берёт то, чего в мире ещё нет, сколько влезет в инвентарь.
+    private List<Withdrawal> withdrawals(DemoPlan plan) {
+        Map<Item, Integer> need = new LinkedHashMap<>();
+        for (Schematic.PlacedEntry entry : plan.entries()) {
+            if (SchematicBlocks.isSecondaryPart(entry.block(), entry.state())
+                    || !BlockItems.hasBlockItem(entry.block())) {
+                continue;
+            }
+            BlockPos pos =
+                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+            if (!level.getBlockState(pos).is(BlockStates.blockFor(entry.block()))) {
+                need.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
+            }
+        }
+        int freeSlots = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (stack.isEmpty()) {
+                freeSlots++;
+            } else {
+                need.computeIfPresent(
+                        stack.getItem(), (item, count) -> count > stack.getCount() ? count - stack.getCount() : null);
+            }
+        }
+        List<Withdrawal> picked = new ArrayList<>();
+        for (BlockPos pos : chests) {
+            if (!(level.getBlockEntity(pos) instanceof ChestBlockEntity chest)) {
+                continue;
+            }
+            for (int slot = 0; slot < chest.getContainerSize() && freeSlots > 0; slot++) {
+                ItemStack stack = chest.getItem(slot);
+                Integer wanted = stack.isEmpty() ? null : need.get(stack.getItem());
+                if (wanted == null || wanted <= 0) {
+                    continue;
+                }
+                int take = Math.min(Math.min(wanted, stack.getCount()), CatalogLimits.COUNT_MAX);
+                picked.add(new Withdrawal(
+                        pos, BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), take));
+                need.put(stack.getItem(), wanted - take);
+                freeSlots -= (take + stack.getMaxStackSize() - 1) / stack.getMaxStackSize();
+            }
+        }
+        return List.copyOf(picked);
     }
 
     private static Rotation mcRotation(BuildRotation rotation) {
