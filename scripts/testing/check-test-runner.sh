@@ -57,6 +57,23 @@ echo "    at com.example.Fail.test2(Fail.java:10)"
 exit 1
 FAKE
 
+# Тесты зелёные, анализатор красный: XML без падений, gradle выходит 1; аргументы пишет в файл
+cat >"$work/bin/unit-static-fail" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >"${FAKE_ARGS_FILE:?}"
+mkdir -p TestResults/unit/xml
+cat >TestResults/unit/xml/TEST-com.example.Success.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.Success" tests="3" failures="0" errors="0" skipped="0">
+  <testcase name="test1" classname="com.example.Success"/>
+</testsuite>
+XML
+echo "* What went wrong:"
+echo "Execution failed for task ':spotlessJavaCheck'."
+echo "BUILD FAILED"
+exit 1
+FAKE
+
 # Ошибка компиляции
 cat >"$work/bin/unit-build-error" <<'FAKE'
 #!/usr/bin/env bash
@@ -109,6 +126,15 @@ code=$?
     && echo "$out" | grep -q "полный лог:" \
     && ok "unit-fail: код=1, счётчик + первая ошибка + путь к логу" \
     || fail "unit-fail: код=$code, вывод: $out"
+
+export THEMINESPIRIT_GRADLEW="$work/bin/unit-static-fail"
+export FAKE_ARGS_FILE="$work/static-args"
+out=$(bash scripts/test.sh unit 2>&1)
+code=$?
+[ "$code" = 1 ] && echo "$out" | grep -q "FAIL static: 3 тестов зелёные"     && echo "$out" | grep -q "spotlessJavaCheck"     && grep -q "staticAnalysis --continue" "$work/static-args"     && ok "unit-static-fail: полный прогон гоняет staticAnalysis, красный анализатор при зелёных тестах — код=1"     || fail "unit-static-fail: код=$code, аргументы: $(cat "$work/static-args" 2>/dev/null), вывод: $out"
+out=$(bash scripts/test.sh unit --tests 'com.example.*' 2>&1)
+grep -q "staticAnalysis" "$work/static-args"     && fail "unit-static-fail: прогон с --tests не должен гонять staticAnalysis: $(cat "$work/static-args")"     || ok "unit-static-fail: прогон с --tests идёт без анализаторов"
+unset FAKE_ARGS_FILE
 
 export THEMINESPIRIT_GRADLEW="$work/bin/unit-build-error"
 out=$(bash scripts/test.sh unit 2>&1)

@@ -2,8 +2,9 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'jacoco'
-    id 'net.neoforged.moddev' version '2.0.148'
+    id 'net.neoforged.moddev'
     id 'idea'
+    id 'com.diffplug.spotless'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -224,6 +225,26 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
     // Предупреждения компилятора — ошибки сборки (правило проекта: docs/CONVENTIONS.md)
     options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
+}
+
+// Строгие анализаторы (tasks/46-static-analyzers.md): нарушение роняет сборку, временных списков нет.
+// staticAnalysis — все проверки, кроме компилятора; входит в check и в полный scripts/test.sh unit (хук pre-commit).
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        // Отступ 4, как в проекте; google-java-format отвергнут (отступ 2). Исправление — ./gradlew spotlessApply.
+        palantirJavaFormat(palantir_java_format_version)
+    }
+}
+
+tasks.register('staticAnalysis') {
+    group = 'verification'
+    description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
+    dependsOn tasks.named('spotlessCheck')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('staticAnalysis')
 }
 
 // Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).

@@ -20,28 +20,72 @@ import org.junit.jupiter.api.Test;
 class DependencyVersionGuardTests {
     private static final Path BUILD = Path.of("build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");
+    private static final Path SETTINGS = Path.of("settings.gradle");
     private static final List<String> LIBRARY_CONFIGS =
             List.of("implementation", "additionalRuntimeClasspath", "jarJar");
     private static final Set<String> KNOWN_CONFIGS = Set.of(
-            "implementation", "additionalRuntimeClasspath", "jarJar", "api", "compileOnly",
-            "compileOnlyApi", "runtimeOnly", "localRuntime", "annotationProcessor",
-            "testImplementation", "testRuntimeOnly");
+            "implementation",
+            "additionalRuntimeClasspath",
+            "jarJar",
+            "api",
+            "compileOnly",
+            "compileOnlyApi",
+            "runtimeOnly",
+            "localRuntime",
+            "annotationProcessor",
+            "testImplementation",
+            "testRuntimeOnly",
+            "errorprone");
     private static final Pattern DEPENDENCIES_BLOCK = Pattern.compile("\\bdependencies\\s*\\{");
-    private static final Pattern DECLARATION = Pattern.compile(
-            "(?m)^\\s*(\\w+)\\s*(?:\\(\\s*)?(?:platform\\s*\\(\\s*)?[\"']([^\"']+)[\"']");
+    private static final Pattern DECLARATION =
+            Pattern.compile("(?m)^\\s*(\\w+)\\s*(?:\\(\\s*)?(?:platform\\s*\\(\\s*)?[\"']([^\"']+)[\"']");
     private static final Pattern PROPERTY_VERSION = Pattern.compile("^\\$\\{([A-Za-z0-9_.]+)}$");
+    private static final Pattern PLUGINS_BLOCK = Pattern.compile("(?m)^\\s*plugins\\s*\\{");
+    private static final Pattern PLUGIN_VERSION =
+            Pattern.compile("(?m)^\\s*id\\s+['\"]([^'\"]+)['\"]\\s+version\\s+['\"]([^'\"]+)['\"]");
+    private static final Pattern TOOL_VERSION_LITERAL =
+            Pattern.compile("(?m)^\\s*(toolVersion\\s*=|palantirJavaFormat\\s*\\()\\s*['\"]([^'\"]*)['\"]");
 
     @Test
     void buildGradle_CurrentDependencies_KeepVersionsInPropertiesAndThreeConfigs() {
         String build = read(BUILD);
         String properties = read(PROPERTIES);
 
-        assertEquals(List.of(), offendersOf(build, properties),
+        assertEquals(
+                List.of(),
+                offendersOf(build, properties),
                 "Версии зависимостей и объявления библиотек живут в одном месте: литерал версии в build.gradle "
                         + "повторяет число и расходится с gradle.properties; библиотека без "
                         + "additionalRuntimeClasspath не находится в dev-запуске, без jarJar — на сервере игрока. "
                         + "Версию держи в gradle.properties, библиотеку объявляй в implementation, "
                         + "additionalRuntimeClasspath и jarJar. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители");
+    }
+
+    @Test
+    void buildScripts_PluginAndToolVersions_LiveInProperties() {
+        assertEquals(
+                List.of(),
+                pluginOffendersOf(read(BUILD), read(SETTINGS), read(PROPERTIES)),
+                "Версии плагинов и инструментов сборки живут в gradle.properties: build.gradle объявляет плагин "
+                        + "без версии, settings.gradle → pluginManagement подставляет ${…_version}, toolVersion "
+                        + "и форматтер берут свойство. Литерал расходится с gradle.properties и обходит выбор "
+                        + "версий пользователем. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители");
+    }
+
+    @Test
+    void pluginParser_LiteralVersions_AreReported() {
+        String build = "plugins {\n    id 'com.example.plugin' version '1.0'\n}\n"
+                + "checkstyle {\n    toolVersion = '10.0'\n}\n";
+        String settings = "pluginManagement {\n    plugins {\n        id 'com.example.other' version '2.0'\n"
+                + "        id 'com.example.third' version \"${missing_version}\"\n    }\n}\n";
+
+        List<String> offenders = pluginOffendersOf(build, settings, "");
+
+        assertEquals(
+                4,
+                offenders.size(),
+                "Сторож ослеп: версия плагина в build.gradle, литерал в pluginManagement, несуществующее свойство "
+                        + "и литерал toolVersion — четыре нарушения: " + offenders);
     }
 
     @Test
@@ -54,23 +98,24 @@ class DependencyVersionGuardTests {
 
         List<String> offenders = offendersOf(build, "");
 
-        assertTrue(offenders.stream().anyMatch(line -> line.contains("литерал версии")),
+        assertTrue(
+                offenders.stream().anyMatch(line -> line.contains("литерал версии")),
                 "Сторож ослеп: версия 1.2.3 в build.gradle должна попадать в нарушители: " + offenders);
     }
 
     @Test
     void dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported() {
-        String build = "dependencies {\n"
-                + "    implementation \"com.example:lib:${lib_version}\"\n"
-                + "}\n";
+        String build = "dependencies {\n" + "    implementation \"com.example:lib:${lib_version}\"\n" + "}\n";
         String properties = "lib_version=1.2.3\n";
 
         List<String> offenders = offendersOf(build, properties);
 
-        assertTrue(offenders.stream().anyMatch(line -> line.contains("additionalRuntimeClasspath")),
+        assertTrue(
+                offenders.stream().anyMatch(line -> line.contains("additionalRuntimeClasspath")),
                 "Сторож ослеп: библиотека без additionalRuntimeClasspath не попадёт в dev-запуск, "
                         + "но нарушение не найдено: " + offenders);
-        assertTrue(offenders.stream().anyMatch(line -> line.contains("jarJar")),
+        assertTrue(
+                offenders.stream().anyMatch(line -> line.contains("jarJar")),
                 "Сторож ослеп: библиотека без jarJar не попадёт на сервер игрока, но нарушение не найдено: "
                         + offenders);
     }
@@ -85,7 +130,9 @@ class DependencyVersionGuardTests {
                 + "}\n";
         String properties = "jackson_version=2.18.2\n";
 
-        assertEquals(List.of(), offendersOf(build, properties),
+        assertEquals(
+                List.of(),
+                offendersOf(build, properties),
                 "Сторож ложно срабатывает: jackson-core приходит транзитивно и объявлен в jarJar рядом "
                         + "с прямой библиотекой той же группы — это законное объявление");
     }
@@ -100,9 +147,10 @@ class DependencyVersionGuardTests {
 
         List<String> offenders = offendersOf(build, "");
 
-        assertTrue(offenders.stream().anyMatch(line -> line.contains("missing_version")),
-                "Сторож ослеп: версия из несуществующего свойства gradle.properties должна попадать "
-                        + "в нарушители: " + offenders);
+        assertTrue(
+                offenders.stream().anyMatch(line -> line.contains("missing_version")),
+                "Сторож ослеп: версия из несуществующего свойства gradle.properties должна попадать " + "в нарушители: "
+                        + offenders);
     }
 
     private static List<String> offendersOf(String build, String properties) {
@@ -136,8 +184,49 @@ class DependencyVersionGuardTests {
         return offenders;
     }
 
-    private static void checkVersion(String coordinate, Map<String, String> properties, int line,
-            List<String> offenders) {
+    private static List<String> pluginOffendersOf(String build, String settings, String properties) {
+        Map<String, String> values = parseProperties(properties);
+        List<String> offenders = new ArrayList<>();
+        Matcher buildPlugin = PLUGIN_VERSION.matcher(blockBody(build, PLUGINS_BLOCK));
+        while (buildPlugin.find()) {
+            offenders.add("build.gradle — плагин " + buildPlugin.group(1) + " с версией «" + buildPlugin.group(2)
+                    + "»: версия плагина — в settings.gradle → pluginManagement через свойство");
+        }
+        int management = settings.indexOf("pluginManagement");
+        String managed = management < 0 ? "" : blockBody(settings.substring(management), PLUGINS_BLOCK);
+        Matcher settingsPlugin = PLUGIN_VERSION.matcher(managed);
+        while (settingsPlugin.find()) {
+            String version = settingsPlugin.group(2);
+            Matcher property = PROPERTY_VERSION.matcher(version);
+            if (!property.matches()) {
+                offenders.add("settings.gradle — плагин " + settingsPlugin.group(1) + ": литерал версии «" + version
+                        + "», нужна ${…_version} из gradle.properties");
+            } else if (!values.containsKey(property.group(1))) {
+                offenders.add("settings.gradle — свойство " + property.group(1)
+                        + " не найдено в gradle.properties: сборка упадёт на подстановке");
+            }
+        }
+        Matcher tool = TOOL_VERSION_LITERAL.matcher(build);
+        while (tool.find()) {
+            offenders.add(
+                    "build.gradle:" + SourceFiles.lineOf(build, tool.start()) + " — литерал версии «" + tool.group(2)
+                            + "» в " + tool.group(1).trim() + ": версия инструмента — свойство gradle.properties");
+        }
+        return offenders;
+    }
+
+    private static String blockBody(String text, Pattern opening) {
+        Matcher matcher = opening.matcher(text);
+        if (!matcher.find()) {
+            return "";
+        }
+        int open = text.indexOf('{', matcher.start());
+        int end = matchingBrace(text, open);
+        return end < 0 ? text.substring(open + 1) : text.substring(open + 1, end);
+    }
+
+    private static void checkVersion(
+            String coordinate, Map<String, String> properties, int line, List<String> offenders) {
         String[] parts = coordinate.split(":");
         if (parts.length < 3 || parts[2].isBlank()) {
             return;
@@ -176,8 +265,8 @@ class DependencyVersionGuardTests {
         }
     }
 
-    private static void require(String coordinate, String from, String to, Set<String> present,
-            List<String> offenders) {
+    private static void require(
+            String coordinate, String from, String to, Set<String> present, List<String> offenders) {
         if (!present.contains(coordinate)) {
             offenders.add("build.gradle — " + coordinate + " объявлена в " + from + ", но не в " + to
                     + ": без additionalRuntimeClasspath падает dev-запуск, без jarJar — сервер игрока");
@@ -214,7 +303,9 @@ class DependencyVersionGuardTests {
             }
             int equals = trimmed.indexOf('=');
             if (equals > 0) {
-                values.put(trimmed.substring(0, equals).trim(), trimmed.substring(equals + 1).trim());
+                values.put(
+                        trimmed.substring(0, equals).trim(),
+                        trimmed.substring(equals + 1).trim());
             }
         }
         return values;
@@ -244,8 +335,8 @@ class DependencyVersionGuardTests {
         try {
             return Files.readString(path);
         } catch (IOException e) {
-            throw new UncheckedIOException("Сторож не смог прочитать " + path
-                    + ": тесты запускаются из корня проекта", e);
+            throw new UncheckedIOException(
+                    "Сторож не смог прочитать " + path + ": тесты запускаются из корня проекта", e);
         }
     }
 }
