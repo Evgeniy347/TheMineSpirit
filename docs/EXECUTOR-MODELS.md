@@ -15,6 +15,16 @@
 
 Бесплатные `opencode/*-free` с ПК упираются в лимит на клиента, Zen free из domovoy недоступны — не использовать.
 
+## Модели стратега (agents/strategist, бесплатные opencode)
+
+Таблицу читает тест стратега: умолчания `STRATEGIST_MODEL`/`STRATEGIST_MODEL_FALLBACK` обязаны быть здесь рабочими
+и не идти через платную подписку.
+
+| Модель | Работает | Где |
+|---|---|---|
+| longcat-2.5-preview-free | да | стратег по умолчанию |
+| nemotron-3-ultra-free | да | запасная модель стратега |
+
 ## DeepSeek API
 
 Баланс — `GET https://api.deepseek.com/user/balance` с ключом из `~/.local/share/opencode/auth.json` (ключ не печатать).
