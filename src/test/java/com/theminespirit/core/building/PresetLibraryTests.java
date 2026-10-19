@@ -52,13 +52,14 @@ class PresetLibraryTests {
     }
 
     @Test
-    void parse_RealIndex_LoadsAllNineteenPresets() {
+    void parse_RealIndex_LoadsAllPresets() {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                19,
+                25,
                 library.size(),
-                "Библиотека обязана прочитать все девятнадцать пресетов, включая три уровня дома семьи, два уровня чаровальни, "
+                "Библиотека обязана прочитать все двадцать пять пресетов, включая четыре уровня дома семьи, дом игрока, "
+                        + "площадь, колодец 2, светильники 2–3, два уровня чаровальни, "
                         + "четыре уровня склада и загоны трёх уровней: без них стратегу не из чего "
                         + "составлять планировку поселения");
         assertEquals(
@@ -81,7 +82,13 @@ class PresetLibraryTests {
                         "storage_v4",
                         "family_house_1",
                         "family_house_2",
-                        "family_house_3"),
+                        "family_house_3",
+                        "family_house_4",
+                        "player_house_1",
+                        "plaza_1",
+                        "well_2",
+                        "lamp_2",
+                        "lamp_3"),
                 library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
@@ -210,9 +217,9 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                List.of("palisade_section", "torch_post", "mine_entrance_v1"),
+                List.of("palisade_section", "torch_post", "mine_entrance_v1", "player_house_1", "plaza_1"),
                 library.byStage(0).stream().map(Preset::id).toList(),
-                "Этап 0 «лагерь выживания» — палисад, факелы и вход в шахту: по этапу стратег решает, "
+                "Этап 0 «лагерь выживания» — палисад, факелы, вход в шахту, первый каменный дом и площадь: по этапу стратег решает, "
                         + "что строить сейчас");
     }
 
@@ -272,9 +279,9 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                19,
+                25,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из девятнадцати пресетов: пропуск тела оставил бы пресет без схемы");
+                "Индекс обязан назвать по телу на каждый из двадцати пяти пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",
                 paths.get(2),

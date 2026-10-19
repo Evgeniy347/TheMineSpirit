@@ -25,22 +25,33 @@ final class DemoPlanner {
             int lookDz,
             BuildRotation rotation) {
         DemoBuildings.Level chosen = building.level(level);
-        Preset preset = DataTables.INSTANCE
-                .presets()
-                .current()
-                .byId(chosen.scheme())
-                .orElseThrow(() -> new IllegalArgumentException("Постройка '" + chosen.scheme()
-                        + "' не найдена в библиотеке пресетов: проверьте presets.json и файл "
-                        + chosen.scheme() + ".txt (/spirit tables)"));
+        Preset preset = preset(chosen);
         Schematic schematic = preset.schematic();
-        String name = preset.name();
-        Map<String, Integer> materials = preset.materials();
         DemoPlacement placement = DemoPlacement.compute(
                 new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
                 new DemoPlacement.Look(lookDx, lookDz),
                 DemoPlacement.Door.of(preset),
                 new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
                 rotation);
+        return plan(chosen, placement);
+    }
+
+    static Preset preset(DemoBuildings.Level chosen) {
+        return DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(chosen.scheme())
+                .orElseThrow(() -> new IllegalArgumentException("Постройка '" + chosen.scheme()
+                        + "' не найдена в библиотеке пресетов: проверьте presets.json и файл "
+                        + chosen.scheme() + ".txt (/spirit tables)"));
+    }
+
+    // Участок уже разложен (витрина city раскладывает улицу сама): сундук, блоки без предмета и материалы.
+    static DemoPlan plan(DemoBuildings.Level chosen, DemoPlacement placement) {
+        Preset preset = preset(chosen);
+        Schematic schematic = preset.schematic();
+        String name = preset.name();
+        Map<String, Integer> materials = preset.materials();
         List<DemoPlan.Placement> preplaced = new ArrayList<>();
         List<Schematic.PlacedEntry> entries = schematic.entries(placement.origin(), placement.rotation());
         for (Schematic.PlacedEntry placed : entries) {

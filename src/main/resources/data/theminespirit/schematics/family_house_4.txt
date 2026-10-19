@@ -1,0 +1,643 @@
+# family_house_4 — дом семьи, уровень 4 «усадьба» (tasks/47-settlement, catalog.md, style.md «4 нарядно»).
+# Цоколь и веранда из гладкого камня, низ — кирпич, верх — кальцит в каркасе из ободранного тёмного дуба,
+# вальмовая крыша из глубинной плитки со свесом, карнизом и слуховыми окнами. Вход-арка шириной 4 с двойной
+# дверью, ступени во всю ширину веранды, над верандой — балкон с перилами; эркер в гостиной, потолок 6,
+# парадная лестница шириной 2; гостиная с камином, столовая, кабинет-библиотека, кухня; наверху спальни
+# родителей и детей, кладовая, светёлка. Сзади — второй вход в сад за оградой.
+name: "Дом семьи, уровень 4 (усадьба)"
+type: housing
+stage: 4
+level: 4
+requires: family_house_3
+size: 22x21x26   # Ш×В×Д
+entrance: 10,1,3
+legend:
+  'S': smooth_stone
+  'w': bricks
+  'K': calcite
+  'L': stripped_dark_oak_log[axis=y]
+  'X': stripped_dark_oak_log[axis=x]
+  'Z': stripped_dark_oak_log[axis=z]
+  '$': spruce_planks
+  '#': dark_oak_planks
+  '1': deepslate_tile_stairs[facing=east,half=bottom]
+  '2': deepslate_tile_stairs[facing=west,half=bottom]
+  '3': deepslate_tile_stairs[facing=south,half=bottom]
+  '4': deepslate_tile_stairs[facing=north,half=bottom]
+  '5': deepslate_tile_stairs[facing=east,half=top]
+  '6': deepslate_tile_stairs[facing=west,half=top]
+  '7': deepslate_tile_stairs[facing=south,half=top]
+  '8': deepslate_tile_stairs[facing=north,half=top]
+  '_': deepslate_tile_slab[type=bottom]
+  'G': glass_pane
+  'D': dark_oak_door[facing=south,hinge=left]
+  'E': dark_oak_door[facing=south,hinge=right]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  'R': spruce_stairs[facing=south,half=bottom]
+  'g': spruce_stairs[facing=east,half=bottom]
+  'h': spruce_stairs[facing=west,half=bottom]
+  'i': spruce_stairs[facing=north,half=bottom]
+  'U': brick_stairs[facing=west,half=top]
+  'I': brick_stairs[facing=east,half=top]
+  'f': campfire[lit=true]
+  't': dark_oak_fence
+  'a': dark_oak_fence_gate[facing=south]
+  'q': dark_oak_pressure_plate
+  '~': red_carpet
+  'm': white_carpet
+  'c': light_gray_carpet
+  'B': red_bed[facing=south]
+  'C': blue_bed[facing=south]
+  'b': barrel[facing=up]
+  'F': furnace[facing=east]
+  'k': smoker[facing=east]
+  'u': water_cauldron[level=3]
+  'T': crafting_table
+  'V': chest[facing=north,type=right]
+  'W': chest[facing=north,type=left]
+  'j': chest[facing=south,type=right]
+  'Q': chest[facing=south,type=left]
+  'O': bookshelf
+  'l': lectern[facing=north]
+  'P': potted_poppy
+  '9': potted_azure_bluet
+  '0': potted_red_tulip
+  'H': lantern[hanging=true]
+  'N': lantern[hanging=false]
+  'x': wall_torch[facing=east]
+  'z': wall_torch[facing=west]
+  's': wall_torch[facing=south]
+  'n': wall_torch[facing=north]
+  'd': dark_oak_trapdoor[facing=north,half=bottom,open=true]
+  'v': dark_oak_trapdoor[facing=west,half=bottom,open=true]
+  'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
+  'e': dark_oak_trapdoor[facing=south,half=bottom,open=true]
+  'y': composter
+layers:
+  - y0 цоколь, веранда и сад: |
+       pppppppppppppppppppp
+       SSSSSSSSSSSSSSSSSSSS
+       SSSSSSSSSSSSSSSSSSSS
+       SSSSSSSSSSSSSSSSSSSS
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       S$$$$$$$$$$$$$$$$$$S
+       SSSSSSSSSSSSSSSSSSSS
+       t        SS        t
+       t 0   0  SS  0   0yt
+       tP9P9P9P9SS P9P9P9 t
+       t       NSSN       t
+       tttttttttaattttttttt
+  - y1 первый этаж: |
+      
+      
+      
+       LwwwwwLwGDEGwLwwwwwL
+       wP   Ow0c~~cPw9  OOw
+       w~~~~~.cc~~cc.cccc w
+       w~~~~~.cc~~cc.cccc w
+       ww~~~~wcc~~ccwcccc w
+       f~~~~~wcc~~chwcccc w
+       Lw~~~~wcc~~chwcccc L
+       w i i wcc~~cbwcccc w
+       w    bwcc~~ccwOOOOOw
+       www..wwRR~~  ww..www
+       wmmmmmwww~~  wmmmmFw
+       LmRRRmwww~~  wmttmkL
+       wmtttmwww~~  wmttmkw
+       wmtttmwww~~  .mmmmuw
+       wmiiimwww~~  .mmmmTw
+       wmmmmmwww~~  wmmmmbw
+       wbbmmOw  ~~  wWVb bw
+       LwwwwwLwwDEwwLwwwwwL
+      
+      
+      
+      
+                 .
+  - y2: |
+      
+      
+        d  d         d  d
+       LwGGwwLwGDEGwLwGGwwL
+       w    Ow      w   OOwr
+       w     .      .     G
+       w     .      .     G
+       ww    w      w     wr
+       w     w      w     w
+       Lw    w      w     L
+       w     w      w     w
+       w    0w      wOOOOOw
+       www..ww      ww..www
+       w     wRR    w     w
+      vL     www    w qq  Lr
+       G qqq www    w qq  G
+       G qqq www    .     G
+      vw     www    .     wr
+       w     www    w     w
+       wP   Ow      w    Pw
+       LwwGGwLwwDEwwLGGwwwL
+         e  e       e  e
+      
+      
+      
+                 .
+  - y3: |
+      
+      
+        d  d         d  d
+       LwGGwwLwGXXGwLwGGwwL
+       w     w      w   OOwr
+       w     .      .     G
+       w     .      .     G
+       ww    w      w     wr
+       w     w      w     w
+       Lw    w      w     L
+       w     w      w     w
+       w     w      wOOOOOw
+       www..ww      ww..www
+       w     w      w     w
+      vL     wRR    w     Lr
+       G     www    w     G
+       G     www    .     G
+      vw     www    .     wr
+       w     www    w     w
+       w     w      w     w
+       LwwGGwLwwwwwwLGGwwwL
+         e  e       e  e
+      
+      
+      
+                 .
+  - y4: |
+      
+      
+        d  d         d  d
+       LwGGwwLwUGGIwLwGGwwL
+       w     w      w     wr
+       w     .      .     G
+       w     .      .     G
+       w     w      w     wr
+       w     w      w     w
+       L     w      w     L
+       w     w      w     w
+       w     w      w     w
+       www..ww      ww..www
+       w     w      w     w
+      vL     w      w     Lr
+       G     wRR    w     G
+       G     www    .     G
+      vw     www    .     wr
+       w     www    w     w
+       w     w      w     w
+       LwwGGwLwwwwwwLGGwwwL
+         e  e       e  e
+      
+      
+      
+                 .
+  - y5: |
+      
+      
+      
+       LwwwwwLwwwwwwLwwwwwL
+       w     w      w     w
+       w     .      .     w
+       w     .      .     w
+       w     w      w     w
+       w     w      w     w
+       L     w      w     L
+       w     w      w     w
+       w     w      w     w
+       www..ww      ww..www
+       w     w      w     w
+       L     w      w     L
+       w     w      w     w
+       w     wRR    .     w
+       w     www    .     w
+       w     www    w     w
+       w     w      w     w
+       LwwwwwLwwwwwwLwwwwwL
+      
+      
+      
+      
+                 .
+  - y6: |
+      
+      
+               H  H
+       LwwwwwLwwwwwwLwwwwwL
+       w     w      w     w
+       w     .      .     w
+       w     .H H H .     w
+       w  H  w      w  H  w
+       w     w      w     w
+       L     w      w H   L
+       w  H  w      w     w
+       w     w      w     w
+       www..ww      ww..www
+       w     w  H   w     w
+       L     w      w     L
+       w  H  w      w     w
+       w     w      .  H  w
+       w H   wRR    .     w
+       w     www  H w     w
+       w     w      w     w
+       LwwwwwLwwwwwwLwwwwwL
+      
+      
+      
+      
+                 .
+  - y7 перекрытие и балкон: |
+      
+              ######
+              ######
+       LXXXXXXXXXXXXXXXXXXL
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$..$$$$$$$$$$Z
+       Z$$$$$$RR$$$$$$$$$$Z
+       Z$$$$$$$$$$$$$$$$$$Z
+       LXXXXXXXXXXXXXXXXXXL
+      
+      
+      
+      
+                 .
+  - y8 второй этаж: |
+      
+              tttttt
+        d  d  t    t d  d
+       LKGGKKLKGDEGKLKGGKKL
+      vK   jQKccccccKjQ jQKr
+       G~~~~~.cccccc.     G
+       G~~~~~.cccccc.ccccbG
+      vK~~~~~KccccccKccccbKr
+       K~~~~~KccccccKccccbK
+       L~~~~~KccccccKccccbL
+       K BB  KccccccKccccbK
+       KbBBb Ktt    K    bK
+       KKKKKKK  tcccKKKKKKK
+       KbmmmmK  tcccKP~~~OK
+      vLmmmmmK  tcccK~~~~OLr
+       GmmmmmK  tcccK~~~~OG
+       GmmmmmK  tcccK~~~~OG
+      vKmmmmmK  tccc.~~~~OKr
+       KC    .   ccc.~~~~OK
+       KC WV .   cccK    OK
+       LKKGGKLKKGGKKLGGKKKL
+         e  e       e  e
+      
+      
+      
+                 .
+  - y9: |
+      
+              N    N
+        d  d         d  d
+       LKGGKKLKGDEGKLKGGKKL
+      vK     K      K     Kr
+       G     .      .     G
+       G     .      .    bG
+      vKx    K      K    bKr
+       K     K      K    bK
+       L     Kx    zKx   bL
+       K     K      K    bK
+       KP  9 K      K    bK
+       KKKKKKK      KKKKKKK
+       K0    K      K    OK
+      vL     K      K    OLr
+       G     K      Kx   OG
+       G     K      K    OG
+      vKx    K      .    OKr
+       K     .      .    OK
+       K     .    n K    OK
+       LKKGGKLKKGGKKLGGKKKL
+         e  e       e  e
+      
+      
+      
+                 .
+  - y10: |
+      
+      
+       77777777777777777777
+      5LKKKKKLKKKKKKLKKKKKL6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5L     K      K     L6
+      5K     K      K     K6
+      5K     K      K     K6
+      5KKKKKKK      KKKKKKK6
+      5K     K      K     K6
+      5L     K      K     L6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5K     K      K     K6
+      5LKKKKKLKKKKKKLKKKKKL6
+       88888888888888888888
+      
+      
+      
+                 .
+  - y11 обвязка и крыша: |
+      
+      
+      .33333333333333333333.
+      1LXXXXXXXXXXXXXXXXXXL2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1Z                  Z2
+      1LXXXXXXXXXXXXXXXXXXL2
+      .44444444444444444444.
+      
+      
+      
+                 .
+  - y12: |
+      
+      
+      
+       13333333333333333332
+       1##################2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1#                #2
+       1##################2
+       14444444444444444442
+      
+      
+      
+      
+                 .
+  - y13: |
+      
+      
+      
+      
+        1333333#GG#3333332
+        1#######..#######2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#              #2
+        1#######..#######2
+        1444444#GG#4444442
+      
+      
+      
+      
+      
+                 .
+  - y14: |
+      
+      
+      
+      
+               ####
+         1333333333333332
+         1##############2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1#            #2
+         1##############2
+         1444444444444442
+               ####
+      
+      
+      
+      
+      
+                 .
+  - y15: |
+      
+      
+      
+      
+      
+      
+          13333333333332
+          1############2
+          1#          #2
+          1#          #2
+          1#          #2
+          1#          #2
+          1#          #2
+          1#          #2
+          1#          #2
+          1#          #2
+          1############2
+          14444444444442
+      
+      
+      
+      
+      
+      
+      
+                 .
+  - y16: |
+      
+      
+      
+      
+      
+      
+      
+           133333333332
+           1##########2
+           1#   H    #2
+           1#        #2
+           1#        #2
+           1#H      H#2
+           1#        #2
+           1#    H   #2
+           1##########2
+           144444444442
+      
+      
+      
+      
+      
+      
+      
+      
+                 .
+  - y17: |
+      
+      
+      
+      
+      
+      
+      
+      
+            1333333332
+            1########2
+            1#      #2
+            1#      #2
+            1#      #2
+            1#      #2
+            1########2
+            1444444442
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .
+  - y18: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+             13333332
+             1######2
+             1#    #2
+             1#    #2
+             1######2
+             14444442
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .
+  - y19: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              133332
+              1####2
+              1####2
+              144442
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .
+  - y20: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+               1332
+               1442
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .

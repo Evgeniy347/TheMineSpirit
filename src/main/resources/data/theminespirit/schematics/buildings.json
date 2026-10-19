@@ -2,16 +2,20 @@
  "buildings": [
   {"id": "family_house", "name": "Дом семьи", "type": "housing", "levels": [
    {"level": 1, "scheme": "family_house_1"}, {"level": 2, "scheme": "family_house_2"},
-   {"level": 3, "scheme": "family_house_3"}]},
+   {"level": 3, "scheme": "family_house_3"}, {"level": 4, "scheme": "family_house_4"}]},
+  {"id": "player_house", "name": "Дом игрока", "type": "housing", "levels": [
+   {"level": 1, "scheme": "player_house_1"}]},
   {"id": "lamp", "name": "Светильник", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "torch_post"}]},
+   {"level": 1, "scheme": "torch_post"}, {"level": 2, "scheme": "lamp_2"}, {"level": 3, "scheme": "lamp_3"}]},
   {"id": "stone_house", "name": "Каменный дом", "type": "housing", "levels": [{"level": 0, "scheme": "stone_house"}]},
   {"id": "storage_hut", "name": "Склад-хижина", "type": "storage", "levels": [{"level": 0, "scheme": "storage_hut"}]},
   {"id": "storage", "name": "Склад", "type": "storage", "levels": [
    {"level": 1, "scheme": "storage_v1"}, {"level": 2, "scheme": "storage_v2"},
    {"level": 3, "scheme": "storage_v3"}, {"level": 4, "scheme": "storage_v4"}]},
   {"id": "well", "name": "Колодец", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "well"}]},
+   {"level": 1, "scheme": "well"}, {"level": 2, "scheme": "well_2"}]},
+  {"id": "plaza", "name": "Площадь", "type": "social", "levels": [
+   {"level": 1, "scheme": "plaza_1"}]},
   {"id": "palisade_section", "name": "Палисад-секция", "type": "defense", "levels": [
    {"level": 0, "scheme": "palisade_section"}]},
   {"id": "pen", "name": "Загон", "type": "farm", "levels": [

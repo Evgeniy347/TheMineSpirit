@@ -3,8 +3,12 @@ package com.theminespirit.neoforge.demo;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
+import com.theminespirit.core.building.DemoCity;
+import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.GroundAnchor;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
@@ -67,26 +71,11 @@ public final class DemoService {
             source.sendFailure(Component.literal("Демо-стройка не начата: " + refused.getMessage()));
             return 0;
         }
-        SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
-        if (spirit == null) {
-            source.sendFailure(Component.literal(
-                    "Дух не создан: тип сущности " + ModEntities.SPIRIT.getId() + " не зарегистрирован"));
+        String refused = launch(plans, player == null ? null : player.getUUID());
+        if (refused != null) {
+            source.sendFailure(Component.literal(refused));
             return 0;
         }
-        DemoSession session = new DemoSession(level, spirit, plans, player == null ? null : player.getUUID());
-        spirit.setDemo(true);
-        spirit.setInvulnerable(true);
-        BlockCoord spawn = plans.get(0).placement().spawn();
-        spirit.moveTo(spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5);
-        level.addFreshEntity(spirit);
-        try {
-            session.begin();
-        } catch (IllegalStateException failure) {
-            spirit.discard();
-            source.sendFailure(Component.literal("Демо-стройка не начата: " + failure.getMessage()));
-            return 0;
-        }
-        sessions.add(session);
         LOGGER.info(
                 "Демо-стройка '{}' начата в {}: {}",
                 building.id(),
@@ -97,6 +86,103 @@ public final class DemoService {
                         + ". Дух пишет ход в чат; отменить — /spirit demo stop"),
                 true);
         return 1;
+    }
+
+    // Витрина /spirit demo city N: постройки этапа N - 1 вдоль улицы от точки старта по взгляду игрока, по духу на
+    // постройку, все строят одновременно.
+    public int startCity(CommandSourceStack source, int cityLevel, BlockPos explicit) {
+        ServerPlayer player = source.getPlayer();
+        if (player != null) {
+            stopOwnedBy(player.getUUID());
+        }
+        Optional<BlockPos> resolved = anchor(source, explicit);
+        if (resolved.isEmpty()) {
+            source.sendFailure(Component.literal(
+                    "Не нашёл, где строить улицу: посмотрите на площадку или укажите координаты x y z"));
+            return 0;
+        }
+        BlockPos start = resolved.orElseThrow();
+        int lookDx = player == null ? 0 : player.getDirection().getStepX();
+        int lookDz = player == null ? 1 : player.getDirection().getStepZ();
+        List<DemoPlan> plans = new ArrayList<>();
+        try {
+            List<DemoCity.Pick> picks = DemoCity.pick(DemoBuildings.all(), DemoService::stageOf, cityLevel);
+            List<DemoCity.Plot> plots = new ArrayList<>();
+            for (DemoCity.Pick pick : picks) {
+                Preset preset = DemoPlanner.preset(pick.level());
+                plots.add(new DemoCity.Plot(
+                        DemoPlacement.Door.of(preset),
+                        new DemoPlacement.Size(preset.sizeX(), preset.sizeY(), preset.sizeZ())));
+            }
+            List<DemoPlacement> placements = DemoCity.layout(
+                    new DemoPlacement.Anchor(start.getX(), start.getY(), start.getZ()),
+                    new DemoPlacement.Look(lookDx, lookDz),
+                    plots);
+            for (int i = 0; i < picks.size(); i++) {
+                plans.add(DemoPlanner.plan(picks.get(i).level(), placements.get(i)));
+            }
+        } catch (IllegalArgumentException refused) {
+            source.sendFailure(Component.literal("Витрина не начата: " + refused.getMessage()));
+            return 0;
+        }
+        if (plans.isEmpty()) {
+            source.sendFailure(Component.literal(
+                    "Витрина " + cityLevel + " пуста: в каталоге нет построек этапа " + (cityLevel - 1)));
+            return 0;
+        }
+        int started = 0;
+        for (DemoPlan plan : plans) {
+            String refused = launch(List.of(plan), player == null ? null : player.getUUID());
+            if (refused != null) {
+                source.sendFailure(Component.literal(plan.name() + ": " + refused));
+            } else {
+                started++;
+            }
+        }
+        int total = started;
+        LOGGER.info(
+                "Витрина {} начата в {}: {} построек из {}",
+                cityLevel,
+                level.dimension().location(),
+                total,
+                plans.size());
+        source.sendSuccess(
+                () -> Component.literal("Витрина этапа " + (cityLevel - 1) + ": строится " + total + " построек — "
+                        + String.join(", ", plans.stream().map(DemoPlan::name).toList())
+                        + ". Отменить — /spirit demo stop"),
+                true);
+        return total;
+    }
+
+    private static int stageOf(String scheme) {
+        return DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .map(Preset::stage)
+                .orElse(Integer.MAX_VALUE);
+    }
+
+    // Дух на одну сессию; null — начато, иначе причина отказа для чата.
+    private String launch(List<DemoPlan> plans, UUID owner) {
+        SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
+        if (spirit == null) {
+            return "Дух не создан: тип сущности " + ModEntities.SPIRIT.getId() + " не зарегистрирован";
+        }
+        DemoSession session = new DemoSession(level, spirit, plans, owner);
+        spirit.setDemo(true);
+        spirit.setInvulnerable(true);
+        BlockCoord spawn = plans.get(0).placement().spawn();
+        spirit.moveTo(spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5);
+        level.addFreshEntity(spirit);
+        try {
+            session.begin();
+        } catch (IllegalStateException failure) {
+            spirit.discard();
+            return "Демо-стройка не начата: " + failure.getMessage();
+        }
+        sessions.add(session);
+        return null;
     }
 
     public void tick() {
@@ -144,9 +230,16 @@ public final class DemoService {
                 throw new IllegalArgumentException("Улучшение задано 'с " + upgradeFrom + " на " + upgradeTo
                         + "': нужен старший уровень выше младшего (например, 1 2)");
             }
-            return List.of(
-                    DemoPlanner.plan(building, upgradeFrom, anchor, lookDx, lookDz, rotation),
-                    DemoPlanner.plan(building, upgradeTo, anchor, lookDx, lookDz, rotation));
+            // Улучшение показывает каждый шаг: upgrade 1 4 — уровни 1, 2, 3, 4 по очереди (уровни из каталога).
+            List<DemoPlan> steps = new ArrayList<>();
+            steps.add(DemoPlanner.plan(building, upgradeFrom, anchor, lookDx, lookDz, rotation));
+            for (DemoBuildings.Level step : building.levels()) {
+                if (step.level() > upgradeFrom && step.level() < upgradeTo) {
+                    steps.add(DemoPlanner.plan(building, step.level(), anchor, lookDx, lookDz, rotation));
+                }
+            }
+            steps.add(DemoPlanner.plan(building, upgradeTo, anchor, lookDx, lookDz, rotation));
+            return steps;
         }
         return List.of(DemoPlanner.plan(building, levelRequested, anchor, lookDx, lookDz, rotation));
     }
@@ -185,8 +278,8 @@ public final class DemoService {
         if (plans.size() == 1) {
             return plans.get(0).name() + " (" + plans.get(0).scheme() + ")";
         }
-        return plans.get(0).name() + " (" + plans.get(0).scheme() + " → "
-                + plans.get(1).scheme() + ")";
+        return plans.get(0).name() + " ("
+                + String.join(" → ", plans.stream().map(DemoPlan::scheme).toList()) + ")";
     }
 
     private record PlanRequest(
