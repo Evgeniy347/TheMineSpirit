@@ -63,7 +63,7 @@ public final class Router {
 
     private static RestResponse notFound(RestRequest request) {
         return ErrorJson.response(new ApiException(ErrorCode.NOT_FOUND,
-                "Путь '" + request.path() + "' не найден: проверьте адрес по docs/API.md, например GET /v1/bots"));
+                "Путь '" + request.path() + "' не найден: проверьте адрес по docs/api/README.md, например GET /v1/bots"));
     }
 
     private static RestResponse methodNotAllowed(RestRequest request, Set<String> allowed) {

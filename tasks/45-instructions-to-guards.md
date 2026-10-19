@@ -8,16 +8,16 @@
 
 ## Документы и план
 
-1. [ ] **DocsSizeGuard**: `AGENTS.md`, `README.md`, `docs/**/*.md`, `tasks/*.md` — не длиннее 200 строк.
+1. [x] **DocsSizeGuard**: `AGENTS.md`, `README.md`, `docs/**/*.md`, `tasks/*.md` — не длиннее 200 строк.
    Сейчас нарушают: `docs/API.md` (730), `docs/TACTICS.md` (311), `docs/research/{colony-economy,llm-agents-skills,
    millenaire-classic,bot-api-bridge}.md` (206–287). Раздробить: `docs/api/` (README-карта + разделы; стратег
    `agents/strategist/prompt.py` и его тесты, `ApiCatalogGuardTests`, ссылки в коде берут «Формат плана» из нового
    пути), `docs/tactics/`, research — по темам. Удалить из AGENTS.md строку про предел (останется ссылка на сторож).
-2. [ ] **DocsMapGuard**: каждый `docs/**/*.md` и `scripts/**` упомянут в карте README; ссылки `[..](путь)` в AGENTS.md,
+2. [x] **DocsMapGuard**: каждый `docs/**/*.md` и `scripts/**` упомянут в карте README; ссылки `[..](путь)` в AGENTS.md,
    README и docs ведут на существующие файлы. Удалить из AGENTS.md/README фразу «попадает в карту тем же коммитом».
-3. [ ] **TodoProgressGuard**: в `todo.md` нет строк `- [x]`; строка «Прогресс: сделано N из M (P %)» согласована:
+3. [x] **TodoProgressGuard**: в `todo.md` нет строк `- [x]`; строка «Прогресс: сделано N из M (P %)» согласована:
    M = N + число `- [ ]`, P = ⌊100·N/M⌋. Удалить из `todo.md` и LEAD-AGENT.md объяснение ручного счётчика.
-4. [ ] **TasksDoneGuard**: в `tasks/` нет чеклиста, где все пункты отмечены (принятый чеклист удаляется);
+4. [x] **TasksDoneGuard**: в `tasks/` нет чеклиста, где все пункты отмечены (принятый чеклист удаляется);
    у каждого чеклиста есть хотя бы один открытый пункт или пометка «ждёт приёмки (ветка …)».
 
 ## Код

@@ -121,7 +121,7 @@ class V1RoutesTests {
         RestResponse response = send(gateway(), "POST", "/v1/bots/" + IDLE_ID + "/observe", "{}");
 
         assertEquals(OBSERVATION.toJson(), response.body(),
-                "Ответ observe — наблюдение в формате docs/API.md без обёрток: так его читает ИИ-планировщик");
+                "Ответ observe — наблюдение в формате docs/api/README.md без обёрток: так его читает ИИ-планировщик");
     }
 
     @Test

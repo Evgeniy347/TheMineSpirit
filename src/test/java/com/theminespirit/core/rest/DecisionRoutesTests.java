@@ -96,7 +96,7 @@ class DecisionRoutesTests {
                 response.body(),
                 "Журнал решений — контракт REST: bot, limit и записи с тиком, духом, полем, «было → стало», "
                         + "причиной (правило или факторы с весами) и ключевыми фактами. ИИ-агент читает его как "
-                        + "объяснение, почему дух так поступил (docs/API.md → GET /v1/spirits/{id}/decisions)");
+                        + "объяснение, почему дух так поступил (docs/api/README.md → GET /v1/spirits/{id}/decisions)");
     }
 
     @Test

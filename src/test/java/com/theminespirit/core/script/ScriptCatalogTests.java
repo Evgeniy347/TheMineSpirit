@@ -53,7 +53,7 @@ class ScriptCatalogTests {
 
         assertEquals(List.of("scan", "follow"), subset.all().stream().map(ScriptSpec::id).toList(),
                 "Скрипты подкаталога обязаны идти в порядке полного каталога, а не набора: /v1/capabilities "
-                        + "перечисляет их в порядке каталога (docs/API.md), а IMPLEMENTED-таблица даёт другой порядок. "
+                        + "перечисляет их в порядке каталога (docs/api/README.md), а IMPLEMENTED-таблица даёт другой порядок. "
                         + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору");
     }
 

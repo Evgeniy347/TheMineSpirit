@@ -29,7 +29,7 @@ def run_smoke(config: Config, brain, fixtures_dir: Path, runs: int = 2, out=prin
     catalog = Catalog.from_capabilities(capabilities)
     policy = load_policy(config.policy_path)
     limits = PlanLimits(max_nodes=config.max_nodes, max_root_steps=config.max_root_steps)
-    prompter = Prompter(APP_DIR, config.repo_root / "docs" / "API.md", policy, limits)
+    prompter = Prompter(APP_DIR, config.repo_root / "docs" / "api" / "plan.md", policy, limits)
     fake = FakeRest(capabilities).start()
     client = RestClient(fake.url, rps=1000, timeout=10)
     results = []

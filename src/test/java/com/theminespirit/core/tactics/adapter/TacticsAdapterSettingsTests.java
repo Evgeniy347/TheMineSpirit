@@ -26,7 +26,7 @@ class TacticsAdapterSettingsTests {
                         defaults.journalMaxPerSecond()),
                 "Умолчания адаптера: снятие фактов раз в 10 тиков, не более 16 врагов, радиус поиска 32, бюджет 64 "
                         + "чтения блока, удержание отхода 200 тиков, журнал на 32 записи не чаще одной в секунду. "
-                        + "Изменили число — обновите adapter.json и docs/TACTICS.md");
+                        + "Изменили число — обновите adapter.json и docs/tactics/README.md");
         assertEquals(TacticsAdapterSettings.defaults(), TacticsAdapterSettings.loadDefault(),
                 "adapter.json обязан повторять умолчания: иначе числа кода и данных разойдутся молча");
     }

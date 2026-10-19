@@ -30,12 +30,13 @@
 | Файл | Область | Репозитории |
 |---|---|---|
 | [navigation-movement.md](navigation-movement.md) | Навигация, движение, добыча | baritone, altoclef |
-| [colony-economy.md](colony-economy.md) | Работы, склад, снабжение, экономика | minecolonies |
+| [colony-economy/README.md](colony-economy/README.md) | Работы, склад, снабжение, экономика | minecolonies |
 | [npc-ai-commands.md](npc-ai-commands.md) | Цели NPC, черты, команды, патруль | citizens |
-| [llm-agents-skills.md](llm-agents-skills.md) | Наблюдение, промпты, память, навыки, куррикулум, верификация | mindcraft, mc_aiplayer, mc-ai-agent-mod, voyager |
-| [bot-api-bridge.md](bot-api-bridge.md) | REST/MCP-мосты и игровые примитивы | mineflayer, minecraft-mcp-server, minecraft-mcp |
-| [millenaire-classic.md](millenaire-classic.md) | Деревни, экономика, торговля, квесты, культуры, стройка (классика) | Kinniken/Millenaire |
+| [llm-agents-skills/README.md](llm-agents-skills/README.md) | Наблюдение, промпты, память, навыки, куррикулум, верификация | mindcraft, mc_aiplayer, mc-ai-agent-mod, voyager |
+| [bot-api-bridge/README.md](bot-api-bridge/README.md) | REST/MCP-мосты и игровые примитивы | mineflayer, minecraft-mcp-server, minecraft-mcp |
+| [millenaire-classic/README.md](millenaire-classic/README.md) | Деревни, экономика, торговля, квесты, культуры, стройка (классика) | Kinniken/Millenaire |
 | [millenaire-modern.md](millenaire-modern.md) | То же на NeoForge 1.21.1 и в rewrite | Leviaria/Millenaire, WangMioG/Millenaire-rewrite |
+| [test-performance.md](test-performance.md) | Производительность JUnit и GameTest: замеры и рекомендации | инструменты сборки |
 
 ## Самое ценное по областям
 
@@ -72,7 +73,7 @@
 ### API-мосты и примитивы (mineflayer, MCP)
 - Mineflayer — паритет примитивов: blockAt/findBlock(s), dig/place, inventory/equip/toss, chest/furnace, craft/recipesFor, nearestEntity/attack, health/food/oxygen, chat, bed; отдельные модули pathfinder/pvp/auto-eat/tool/collectblock/armor-manager.
 - MCP-протокол: JSON-RPC 2.0 + Bearer + discovery (`server.json`) + `timeoutMs`/`request_id`; `tools/list` строить из `/v1/capabilities`.
-- Наш `docs/API.md` (REST `/v1`) — первичен; MCP — вторичный адаптер (P6); ядро `core` не знает про HTTP и MCP; формат JSON плана и наблюдения (Jackson) — часть контракта ядра.
+- Наш `docs/api/README.md` (REST `/v1`) — первичен; MCP — вторичный адаптер (P6); ядро `core` не знает про HTTP и MCP; формат JSON плана и наблюдения (Jackson) — часть контракта ядра.
 
 ### Деревни, экономика, квесты (Millénaire)
 - **Данные решают всё**: культуры/работы/магазины/товары/квесты/цели — декларативны, не код.

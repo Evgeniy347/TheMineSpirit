@@ -265,7 +265,7 @@ class TaskRegistryTests {
                         + "\"goal\":\"срубить деревья вокруг\","
                         + "\"progress\":{\"step\":2,\"total_steps\":2,\"current_script\":\"chop_tree\","
                         + "\"done\":3,\"target\":5},\"result\":null,\"error\":null}",
-                json, "JSON задачи — контракт docs/API.md: порядок и состав полей фиксированы");
+                json, "JSON задачи — контракт docs/api/README.md: порядок и состав полей фиксированы");
     }
 
     @Test

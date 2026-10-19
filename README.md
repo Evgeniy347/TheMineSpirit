@@ -2,8 +2,7 @@
 
 Мод для Minecraft **1.21.1** на **NeoForge 21.1.257** (Java 21, Gradle + ModDevGradle).
 
-Это единственный README проекта и карта всех инструкций и скриптов. При добавлении, переносе
-или удалении документа или скрипта карта обновляется в том же изменении.
+Это единственный README проекта и карта всех инструкций и скриптов (карту и ссылки держит `DocsMapGuardTests`).
 
 ## Команды
 
@@ -78,7 +77,7 @@
 ## REST-мост
 
 Внешний ИИ-агент управляет духами по HTTP: мост живёт внутри мода и поднимается при старте выделенного сервера.
-Контракт — [docs/API.md](docs/API.md). Реализованы все конечные точки: `capabilities`, `bots`, `bots/{id}`, `observe`, задачи, события и `plan`.
+Контракт — [docs/api/README.md](docs/api/README.md). Реализованы все конечные точки: `capabilities`, `bots`, `bots/{id}`, `observe`, задачи, события и `plan`.
 
 Конфиг — `serverconfig/theminespirit-rest.toml` (в каталоге мира, создаётся при первом запуске сервера):
 
@@ -127,11 +126,11 @@ curl -s -X DELETE $H/v1/tasks/t-1        # отмена, повтор безоп
 Те же записи держатся в памяти (последние 32 на духа) и доступны двумя способами:
 
 ```bash
-curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit=5'   # для ИИ-агента, docs/API.md
+curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit=5'   # для ИИ-агента, docs/api/README.md
 /spirit decisions <дух>                                                  # последние 5 записей в чат
 ```
 
-Подробнее — docs/TACTICS.md → «Адаптер в игре» (журнал решений).
+Подробнее — docs/tactics/README.md → «Адаптер в игре» (журнал решений).
 
 ## Документация
 
@@ -144,8 +143,8 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git |
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода (только по согласованию) |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md), [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | главный агент, приёмка, модели-исполнители |
-| [docs/API.md](docs/API.md) | контракт REST-сервиса духов, формат плана и построек |
-| [docs/TACTICS.md](docs/TACTICS.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
+| [docs/api/README.md](docs/api/README.md) | контракт REST-сервиса духов, формат плана и построек |
+| [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
 | [docs/research/README.md](docs/research/README.md) | карта знаний о похожих проектах и лицензиях |
 | [opencode.json](opencode.json) | настройки opencode в проекте |
 
@@ -161,6 +160,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux) |
 | [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; сводка в Telegram раз в 5 мин |
+| [scripts/opencode-pick-model.sh](scripts/opencode-pick-model.sh) | выбор бесплатной модели opencode по свежим сбоям и загрузке |
 | [scripts/strategist.sh](scripts/strategist.sh) | надзор агента-стратега (`start/stop/status/once/smoke/logs`) |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
 | [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `res-pc.ps1`, `keepawake.ps1` |

@@ -40,7 +40,7 @@ final class ConditionParser {
     private static FactName fact(ConfigNode node) {
         String key = node.text();
         return FactName.byKey(key).orElseThrow(() -> node.fail("неизвестный факт '" + key + "'",
-                "имя берётся из каталога фактов (docs/TACTICS.md), возможна опечатка"));
+                "имя берётся из каталога фактов (docs/tactics/README.md), возможна опечатка"));
     }
 
     private static Atom numAtom(FactName fact, Comparison op, ConfigNode opNode, ConfigNode value) {

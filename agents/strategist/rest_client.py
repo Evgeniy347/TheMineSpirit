@@ -1,4 +1,4 @@
-"""Клиент REST мода (docs/API.md) на urllib: тайм-ауты, ApiError, повторы только GET, лимитер, Retry-After."""
+"""Клиент REST мода (docs/api/README.md) на urllib: тайм-ауты, ApiError, повторы только GET, лимитер, Retry-After."""
 
 from __future__ import annotations
 
