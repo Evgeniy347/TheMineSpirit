@@ -97,7 +97,7 @@ public final class SpiritBrain {
     }
 
     public Optional<TaskNode> plan() {
-        return runner == null ? Optional.empty() : Optional.of(runner.plan());
+        return runner == null ? Optional.empty() : runner.plan();
     }
 
     public Optional<String> failureReason() {

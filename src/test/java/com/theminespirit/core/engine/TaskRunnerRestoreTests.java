@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -186,6 +187,18 @@ class TaskRunnerRestoreTests {
         assertEquals(RunStatus.CANCELLED, cancelled.tick(), "отменённая задача не оживает");
 
         assertEquals(0, creations.get(), "терминальный снимок не создаёт ни одного экземпляра скрипта");
+    }
+
+    @Test
+    void restore_FailedSnapshotWithoutPlan_ReportsNoPlan() {
+        TaskRunner failed =
+                TaskRunner.restore(terminal(RunStatus.FAILED, "не удалось сохранить задачу"), registry(), conditions());
+
+        assertEquals(
+                Optional.empty(),
+                failed.plan(),
+                "Завершённый снимок не несёт план (так пишет и сохранение после сбоя): восстановленная задача "
+                        + "обязана отвечать «плана нет», а не null — иначе запрос плана духа падает NPE");
     }
 
     private static TaskSnapshot terminal(RunStatus status, String reason) {
