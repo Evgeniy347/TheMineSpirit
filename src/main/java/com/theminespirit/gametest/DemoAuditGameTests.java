@@ -69,6 +69,8 @@ public final class DemoAuditGameTests {
     private static final int SPIRIT_SLOTS = 36;
     // Схемы витрины, заход 2 (20.10), замер по поворотам: усадьба 185–188 (заходы, ~3200 блоков), дом игрока 31–39 и
     // 51–82 (уровень 2), площадь 30–40 и 23–25 (уровень 2), колодец 4–9, фонари 1–2.
+    // Усадьба держит и запас поиска сундуков BuildSupplyTrip: её сундуки у входа в ~12 от середины стройки, при
+    // запасе 6 (20.10) стройка вставала на 22 блоках — «не хватило материала».
     private static final int FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS = 207;
     private static final int PLAYER_HOUSE_MAX_PATH_BUILDS = 44;
     private static final int PLAZA_MAX_PATH_BUILDS = 45;

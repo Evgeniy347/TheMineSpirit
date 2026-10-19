@@ -29,8 +29,9 @@ final class BuildSupplyTrip {
     // Заходов на одну стройку: дом уровня 4 — ~100 стопок на 36 слотов; больше — стройка не продвигается.
     static final int MAX_TRIPS = 32;
     private static final int SEARCH_SLICES = 8;
-    // Площадка демо шире постройки на 5 (сундук стоит на ней); дальше — чужие сундуки соседних строек.
-    private static final int SEARCH_MARGIN = 6;
+    // Площадка демо шире постройки на 5, сундук аудита — за ступенью у входа; при 6 усадьба не находила свои
+    // сундуки, дальше 8 — чужие сундуки соседних строек.
+    private static final int SEARCH_MARGIN = 8;
 
     private BuildSupplyTrip() {}
 
