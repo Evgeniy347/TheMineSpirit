@@ -13,16 +13,18 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlockProtectionTests {
-    private static BlockProtection protection;
+    private BlockProtection protection;
 
     @BeforeAll
-    static void loadProtection() {
+    void loadProtection() {
         protection = ProtectionConfig.load();
     }
 
