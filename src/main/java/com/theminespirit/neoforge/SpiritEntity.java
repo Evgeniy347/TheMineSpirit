@@ -77,6 +77,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
     private final DropMagnet magnet = new DropMagnet(this);
+    private final PersonalSpaceKeeper personalSpace = new PersonalSpaceKeeper(this);
     private SpiritBrain spiritBrain;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
@@ -137,6 +138,7 @@ public final class SpiritEntity extends PathfinderMob {
         NightLeashGate.arm(this);
         magnet.tick();
         policies.tick();
+        personalSpace.tick();
         if (demo) {
             tactics.pause();
             if (spiritBrain != null) {

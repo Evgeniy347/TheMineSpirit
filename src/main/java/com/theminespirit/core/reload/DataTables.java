@@ -29,6 +29,7 @@ import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
+import com.theminespirit.core.movement.PersonalSpace;
 import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.pickup.MagnetRules;
@@ -85,6 +86,7 @@ public final class DataTables {
     private final TableHolder<MagnetRules> magnet;
     private final TableHolder<FishingWait> fishingWait;
     private final TableHolder<Unstuck> unstuck;
+    private final TableHolder<PersonalSpace> personalSpace;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<FishingData> fishing;
     private final TableHolder<ReplantData> replant;
@@ -145,6 +147,8 @@ public final class DataTables {
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
+        this.personalSpace =
+                single("personal_space", PersonalSpace.RESOURCE, PersonalSpace::parse, PersonalSpace::load);
         this.doors = single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse, DoorTuning::loadDefault);
         this.hunger = single("hunger", HungerRules.RESOURCE, HungerRules::parse, HungerRules::load);
         this.fishing = single("fishing", FishingData.RESOURCE, FishingData::parse, FishingData::load);
@@ -331,6 +335,10 @@ public final class DataTables {
 
     public TableHolder<Unstuck> unstuck() {
         return unstuck;
+    }
+
+    public TableHolder<PersonalSpace> personalSpace() {
+        return personalSpace;
     }
 
     public TableHolder<DoorRules> doors() {
