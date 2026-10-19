@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit) {
     public static final String RESOURCE = "data/theminespirit/intellect/outside.json";
@@ -86,7 +87,8 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
         return List.copyOf(kit);
     }
 
-    public record Need(List<String> match, String category, int count) {
+    public record Need(
+            @Nullable List<String> match, @Nullable String category, int count) {
         public Need {
             if ((match == null) == (category == null)) {
                 throw new IllegalArgumentException("У нужды набора задан не ровно один из match и category: "
@@ -116,7 +118,12 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
             if (category != null) {
                 return values.categoryOf(item).equals(category);
             }
-            return IdFilter.of(match).matches(item);
+            List<String> patterns = match;
+            if (patterns == null) {
+                throw new IllegalStateException("Нужда набора без match и без category: конструктор требует ровно "
+                        + "один способ выбора предмета");
+            }
+            return IdFilter.of(patterns).matches(item);
         }
 
         public String describe() {

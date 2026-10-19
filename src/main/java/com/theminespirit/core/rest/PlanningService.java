@@ -1,6 +1,7 @@
 package com.theminespirit.core.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.PlanValidationException;
@@ -30,13 +31,17 @@ public final class PlanningService {
         try {
             return PlanParser.parse(plan.toString(), catalog, conditions);
         } catch (PlanValidationException rejected) {
-            throw new ApiException(ErrorCode.INVALID_PLAN, rejected.getMessage(), Map.of(), rejected);
+            throw new ApiException(ErrorCode.INVALID_PLAN, ErrorText.of(rejected), Map.of(), rejected);
         }
     }
 
     public TaskNode planGoal(TaskRequest request, WorldObservation observation) {
         Objects.requireNonNull(request, "request не может быть null: у цели есть текст и параметры");
-        return planGoal(request.goal(), request.params(), observation);
+        String goal = request.goal();
+        if (goal == null) {
+            throw new IllegalArgumentException("Запрос без goal планировать нечем: план приходит готовым в поле plan");
+        }
+        return planGoal(goal, request.params(), observation);
     }
 
     public TaskNode planGoal(String goal, Map<String, Object> params, WorldObservation observation) {
@@ -50,7 +55,7 @@ public final class PlanningService {
         try {
             return planner.plan(new Goal(goal, params), observation).plan();
         } catch (UnplannableGoalException | PlanValidationException rejected) {
-            throw new ApiException(ErrorCode.INVALID_PLAN, rejected.getMessage(), Map.of(), rejected);
+            throw new ApiException(ErrorCode.INVALID_PLAN, ErrorText.of(rejected), Map.of(), rejected);
         }
     }
 }

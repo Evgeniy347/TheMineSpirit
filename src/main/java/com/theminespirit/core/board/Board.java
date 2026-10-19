@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Доска заданий поселения: очередь с гейтом по ресурсам и зависимостями.
@@ -363,7 +364,7 @@ public final class Board {
                 || !before.requiredItems().equals(after.requiredItems());
     }
 
-    private UUID holder(BoardTicket ticket) {
+    private @Nullable UUID holder(BoardTicket ticket) {
         return ticket.assignee().orElseGet(() -> claimAssignees.get(ticket.id()));
     }
 
@@ -447,7 +448,8 @@ public final class Board {
         }
         BoardTicket ticket = tickets.get(ticketId);
         BoardStatus status = statuses.get(ticketId);
-        if (status != null
+        if (ticket != null
+                && status != null
                 && status != BoardStatus.DONE
                 && status != BoardStatus.FAILED
                 && status != BoardStatus.CANCELLED) {

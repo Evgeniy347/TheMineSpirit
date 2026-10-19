@@ -1,8 +1,10 @@
 package com.theminespirit.core.observation;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record EntityRef(String type, BlockCoord pos, String id, double distance) {
+public record EntityRef(
+        String type, BlockCoord pos, @Nullable String id, double distance) {
     public EntityRef {
         Objects.requireNonNull(type, "type не может быть null: ссылка на сущность называет её тип");
         Objects.requireNonNull(pos, "pos не может быть null: ссылка на сущность называет её позицию");

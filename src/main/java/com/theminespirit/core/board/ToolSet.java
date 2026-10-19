@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Набор инструментов первых шагов: деревянные кирка, топор и лопата, затем каменные
@@ -44,7 +45,7 @@ public final class ToolSet {
         return STONE;
     }
 
-    public static boolean isTool(BoardCase boardCase) {
+    public static boolean isTool(@Nullable BoardCase boardCase) {
         return boardCase != null && ITEMS.containsKey(boardCase);
     }
 

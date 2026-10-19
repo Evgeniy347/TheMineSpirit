@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class TargetSelector {
     public enum Kind {
@@ -62,7 +63,7 @@ public final class TargetSelector {
                 + "nearest, player:<имя>, spirit:<uuid>");
     }
 
-    private static Kind keywordOf(String text) {
+    private static @Nullable Kind keywordOf(String text) {
         return switch (text.toLowerCase(Locale.ROOT)) {
             case "hostile" -> Kind.HOSTILE;
             case "animal" -> Kind.ANIMAL;

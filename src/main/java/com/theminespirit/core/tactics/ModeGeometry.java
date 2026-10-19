@@ -19,15 +19,22 @@ public record ModeGeometry(Point anchor, double zoneDistance, double leashLeft, 
             engageLeft = first ? engage : Math.max(engageLeft, engage);
             first = false;
         }
-        double zoneDistance = orders.zoneSet() ? self.distanceTo(orders.zoneCenter()) : 0;
+        Point zone = orders.zoneCenter();
+        double zoneDistance = zone != null ? self.distanceTo(zone) : 0;
         return new ModeGeometry(anchor, zoneDistance, leashLeft, engageLeft);
     }
 
     private static Point anchorOf(ModeParams params, Orders orders, Optional<Point> memoryAnchor, Point self) {
         return switch (params.anchor()) {
             case SELF -> memoryAnchor.orElse(self);
-            case ZONE -> orders.zoneSet() ? orders.zoneCenter() : memoryAnchor.orElse(self);
-            case PROTECTED -> orders.wardPresent() ? orders.ward() : memoryAnchor.orElse(self);
+            case ZONE -> {
+                Point zone = orders.zoneCenter();
+                yield zone != null ? zone : memoryAnchor.orElse(self);
+            }
+            case PROTECTED -> {
+                Point ward = orders.ward();
+                yield ward != null ? ward : memoryAnchor.orElse(self);
+            }
         };
     }
 }

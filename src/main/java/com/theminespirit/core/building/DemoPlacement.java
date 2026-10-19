@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Раскладка демо-постройки в мире: куда встанет схема, где сундук с материалами, где появляется дух и какой
@@ -34,7 +35,7 @@ public record DemoPlacement(
     }
 
     public static DemoPlacement compute(
-            Anchor anchor, Look look, int entryX, int entryZ, Size size, BuildRotation explicit) {
+            Anchor anchor, Look look, int entryX, int entryZ, Size size, @Nullable BuildRotation explicit) {
         if (size.x() < 1 || size.y() < 1 || size.z() < 1) {
             throw new IllegalArgumentException("Размер постройки " + size.x() + "×" + size.y() + "×" + size.z()
                     + ": стороны обязаны быть хотя бы 1");
@@ -192,7 +193,7 @@ public record DemoPlacement(
         return cells;
     }
 
-    private static int[] entryNormal(int entryX, int entryZ, int sizeX, int sizeZ) {
+    private static int @Nullable [] entryNormal(int entryX, int entryZ, int sizeX, int sizeZ) {
         if (entryZ == 0) {
             return new int[] {0, -1};
         }

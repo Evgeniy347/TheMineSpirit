@@ -10,6 +10,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class IdempotencyCache {
     public static final int CAPACITY = 1024;
@@ -57,7 +58,7 @@ public final class IdempotencyCache {
                 return new Result.Conflict();
             }
         }
-        return new Result.Replay(entry.response);
+        return new Result.Replay(entry.stored());
     }
 
     public synchronized void remember(String requestId, String fingerprint, String response) {
@@ -88,7 +89,8 @@ public final class IdempotencyCache {
         return entries.size();
     }
 
-    public static String fingerprint(String bot, String goal, String planJson, Map<String, Object> params) {
+    public static String fingerprint(
+            String bot, @Nullable String goal, @Nullable String planJson, Map<String, Object> params) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("bot", bot);
         body.put("goal", goal);
@@ -123,9 +125,9 @@ public final class IdempotencyCache {
 
     private static final class Entry {
         private final String fingerprint;
-        private String response;
+        private @Nullable String response;
 
-        Entry(String fingerprint, String response) {
+        Entry(String fingerprint, @Nullable String response) {
             this.fingerprint = fingerprint;
             this.response = response;
         }
@@ -136,6 +138,15 @@ public final class IdempotencyCache {
 
         boolean inProgress() {
             return response == null;
+        }
+
+        String stored() {
+            String value = response;
+            if (value == null) {
+                throw new IllegalStateException("Повтор запроса читает ответ, которого ещё нет: ждать надо, пока "
+                        + "первый запрос не сохранит ответ (inProgress)");
+            }
+            return value;
         }
 
         void complete(String stored) {

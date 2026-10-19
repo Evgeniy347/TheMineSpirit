@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class BaseKit {
     private static final String RESOURCE_PATH = "data/theminespirit/inventory/base_kit.json";
@@ -263,7 +264,12 @@ public final class BaseKit {
     }
 
     private static KitRule rule(
-            List<String> match, String category, int keep, KitMode mode, String origin, String what) {
+            @Nullable List<String> match,
+            @Nullable String category,
+            int keep,
+            KitMode mode,
+            String origin,
+            String what) {
         try {
             return new KitRule(match, category, keep, mode);
         } catch (IllegalArgumentException error) {
@@ -287,14 +293,14 @@ public final class BaseKit {
         }
     }
 
-    static List<String> optionalStringsField(JsonNode node, String origin, String what) {
+    static @Nullable List<String> optionalStringsField(@Nullable JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return null;
         }
         return JsonResource.strings(node, origin, what);
     }
 
-    static String textField(JsonNode node, String origin, String what) {
+    static @Nullable String textField(@Nullable JsonNode node, String origin, String what) {
         if (node == null) {
             return null;
         }

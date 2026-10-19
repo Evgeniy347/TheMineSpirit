@@ -32,6 +32,8 @@
   Spotless + palantir-java-format, исправление — `./gradlew spotlessApply`.
 - Error Prone — в каждой компиляции (полная ×4: ~21 → ~85 с, инкрементальная ~13 с); выключенные проверки — в
   `build.gradle` с причиной, точечных подавлений нет.
+- В `core` null — только через `@Nullable` (JSpecify), проверяет NullAway; полные таблицы читаются через
+  `Lookup.present`, сообщение исключения — `ErrorText.of`.
 - Версии зависимостей и три конфигурации библиотеки — сторож `DependencyVersionGuardTests`; `src/generated/` —
   только datagen (менять версии — решение пользователя).
 

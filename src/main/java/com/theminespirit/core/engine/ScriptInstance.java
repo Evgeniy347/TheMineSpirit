@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public interface ScriptInstance {
     record Progress(int done, int target) {
@@ -33,7 +34,7 @@ public interface ScriptInstance {
         return PolicyExemptions.empty();
     }
 
-    default String failureReason() {
+    default @Nullable String failureReason() {
         return null;
     }
 

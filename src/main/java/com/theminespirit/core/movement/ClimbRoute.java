@@ -47,7 +47,7 @@ public final class ClimbRoute {
             }
             runStart = i;
         }
-        return Optional.of(best);
+        return Optional.ofNullable(best);
     }
 
     private static boolean closer(Span candidate, Span current, int feetY) {

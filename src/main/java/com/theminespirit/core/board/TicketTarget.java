@@ -6,6 +6,7 @@ import com.theminespirit.core.planner.ResourceKnowledge;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Точка и параметры задания для сборки плана: куда идти, какая схема, какая приманка,
@@ -15,21 +16,21 @@ import java.util.UUID;
  */
 public record TicketTarget(
         BlockCoord target,
-        String schemeFile,
-        String fenceBlock,
-        String lureItem,
-        String supplyItem,
+        @Nullable String schemeFile,
+        @Nullable String fenceBlock,
+        @Nullable String lureItem,
+        @Nullable String supplyItem,
         int supplyCount,
         int craterBlocks,
         int toolCount,
-        Species species,
-        BlockCoord from,
-        BlockCoord to,
-        ResourceKnowledge knowledge,
+        @Nullable Species species,
+        @Nullable BlockCoord from,
+        @Nullable BlockCoord to,
+        @Nullable ResourceKnowledge knowledge,
         List<String> dropItems,
-        UUID transferFrom,
-        UUID transferTo,
-        String craftItem,
+        @Nullable UUID transferFrom,
+        @Nullable UUID transferTo,
+        @Nullable String craftItem,
         int count) {
 
     public TicketTarget {

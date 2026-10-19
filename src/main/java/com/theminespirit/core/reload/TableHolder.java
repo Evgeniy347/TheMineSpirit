@@ -35,12 +35,20 @@ public final class TableHolder<T> {
         return id;
     }
 
+    private Entry<T> entry() {
+        Entry<T> entry = current.get();
+        if (entry == null) {
+            throw new IllegalStateException("Таблица " + id + " без текущей версии: держатель создаётся с начальной");
+        }
+        return entry;
+    }
+
     public T current() {
-        return current.get().value();
+        return entry().value();
     }
 
     public TableStatus status() {
-        return current.get().status();
+        return entry().status();
     }
 
     public void replace(T next, TableStatus.Source source, String origin, String hash, Clock clock) {

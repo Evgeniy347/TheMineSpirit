@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * «Добыть предмет любым способом»: владеет вложенным подпланом — инвентарь, ближние сундуки,
@@ -41,13 +42,13 @@ public final class AcquireScript implements ScriptInstance {
     private final Supplier<ScriptRegistry> registry;
     private final ConditionRegistry conditionRegistry;
 
-    private TaskRunner runner;
+    private @Nullable TaskRunner runner;
     private int attempts;
     private int startInventory;
     private int chestPlanned;
-    private ScriptStatus finalStatus;
-    private String failureReason;
-    private String lastStepFailure;
+    private @Nullable ScriptStatus finalStatus;
+    private @Nullable String failureReason;
+    private @Nullable String lastStepFailure;
     private boolean suspendedBeforeStart;
 
     public AcquireScript(
@@ -170,7 +171,7 @@ public final class AcquireScript implements ScriptInstance {
         return value instanceof Integer integer ? integer : 0;
     }
 
-    private ScriptStatus fail(String detail) {
+    private ScriptStatus fail(@Nullable String detail) {
         finalStatus = ScriptStatus.FAILED;
         int now = supplies.inInventory(item);
         int gathered = Math.max(0, now - startInventory);
@@ -211,7 +212,7 @@ public final class AcquireScript implements ScriptInstance {
     }
 
     @Override
-    public String failureReason() {
+    public @Nullable String failureReason() {
         return failureReason;
     }
 

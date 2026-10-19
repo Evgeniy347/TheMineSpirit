@@ -84,6 +84,11 @@ public final class BoardPriorities {
         if (value != null) {
             return value;
         }
-        return DEFAULT_MODIFIERS.get(modifier);
+        Integer fallback = DEFAULT_MODIFIERS.get(modifier);
+        if (fallback == null) {
+            throw new IllegalArgumentException("Модификатор приоритета '" + modifier + "' неизвестен: его нет ни в "
+                    + "таблице board, ни в умолчаниях — проверьте имя модификатора в правилах доски");
+        }
+        return fallback;
     }
 }

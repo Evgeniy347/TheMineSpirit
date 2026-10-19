@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Какая рыба идёт в ведро: вид сущности → предмет ведра. Список закрыт ванилью:
@@ -15,7 +16,7 @@ public final class FishBuckets {
 
     private FishBuckets() {}
 
-    public static boolean isBucketable(String entityType) {
+    public static boolean isBucketable(@Nullable String entityType) {
         return entityType != null && ENTITY_TO_BUCKET.containsKey(entityType);
     }
 

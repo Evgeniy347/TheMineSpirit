@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record WorldObservation(
         String botId,
@@ -16,10 +17,10 @@ public record WorldObservation(
         List<EntityRef> entities,
         List<ContainerRef> containers,
         int radius,
-        SpiritStatus spirit,
+        @Nullable SpiritStatus spirit,
         List<GroundItem> groundItems,
         List<ContainerContents> containerItems,
-        WorldTime time,
+        @Nullable WorldTime time,
         List<OpenBlock> openBlocks) {
 
     public WorldObservation {

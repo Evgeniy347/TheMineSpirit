@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class PlanValidator {
     private PlanValidator() {}
@@ -223,7 +224,7 @@ public final class PlanValidator {
                 + ", а получено " + describe(actual) + ": сверьте тип со схемой параметров в /v1/capabilities");
     }
 
-    private static String describe(Object value) {
+    private static String describe(@Nullable Object value) {
         if (value == null) {
             return "null";
         }

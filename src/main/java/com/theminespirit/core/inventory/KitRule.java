@@ -3,15 +3,16 @@ package com.theminespirit.core.inventory;
 import com.theminespirit.core.observation.IdFilter;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class KitRule {
     private final List<String> match;
-    private final String category;
-    private final IdFilter filter;
+    private final @Nullable String category;
+    private final @Nullable IdFilter filter;
     private final int keep;
     private final KitMode mode;
 
-    KitRule(List<String> match, String category, int keep, KitMode mode) {
+    KitRule(@Nullable List<String> match, @Nullable String category, int keep, KitMode mode) {
         Objects.requireNonNull(
                 mode,
                 "Режим правила набора не может быть null: по режиму решают, "
@@ -47,7 +48,7 @@ public final class KitRule {
         return match;
     }
 
-    public String category() {
+    public @Nullable String category() {
         return category;
     }
 
@@ -65,6 +66,11 @@ public final class KitRule {
         if (category != null) {
             return values.categoryOf(item).equals(category);
         }
-        return filter.matches(item);
+        IdFilter patterns = filter;
+        if (patterns == null) {
+            throw new IllegalStateException("Правило набора без match и без category: конструктор требует ровно один "
+                    + "способ выбора предмета");
+        }
+        return patterns.matches(item);
     }
 }

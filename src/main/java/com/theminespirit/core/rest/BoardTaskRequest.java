@@ -17,8 +17,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Тело POST /v1/board/tasks: кейс доски, владелец, гейт, зависимости, уровень и причина.
@@ -101,12 +103,12 @@ public record BoardTaskRequest(
                             + "постоянное задание задают причиной always",
                     Map.of("field", CAUSE));
         }
-        assignee = assignee == null ? Optional.empty() : assignee;
+        Objects.requireNonNull(assignee, "assignee не может быть null: без владельца задают Optional.empty()");
         requiredItems = Map.copyOf(requiredItems == null ? Map.of() : requiredItems);
         dependsOn = List.copyOf(dependsOn == null ? List.of() : dependsOn);
-        building = building == null ? Optional.empty() : building;
-        from = from == null ? Optional.empty() : from;
-        to = to == null ? Optional.empty() : to;
+        Objects.requireNonNull(building, "building не может быть null: без постройки задают Optional.empty()");
+        Objects.requireNonNull(from, "from не может быть null: без точки задают Optional.empty()");
+        Objects.requireNonNull(to, "to не может быть null: без точки задают Optional.empty()");
         if (boardCase == BoardCase.TRANSFER_ITEM) {
             throw invalid(
                     "Кейс TRANSFER_ITEM ставит доска по нехватке ингредиентов у крафтера: "
@@ -143,7 +145,8 @@ public record BoardTaskRequest(
             throw new ApiException(
                     ErrorCode.INVALID_REQUEST,
                     422,
-                    rejected.getMessage(),
+                    Objects.requireNonNullElse(
+                            rejected.getMessage(), "Постройка " + building.orElseThrow() + " не переносится"),
                     Map.of("building", building.orElseThrow().name(), "immovable", RelocatePlan.immovableNames()));
         }
     }
@@ -211,7 +214,7 @@ public record BoardTaskRequest(
         }
     }
 
-    private static Optional<UUID> assignee(JsonNode node) {
+    private static Optional<UUID> assignee(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return Optional.empty();
         }
@@ -231,7 +234,7 @@ public record BoardTaskRequest(
         }
     }
 
-    private static Map<String, Integer> items(JsonNode node) {
+    private static Map<String, Integer> items(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return Map.of();
         }
@@ -261,7 +264,7 @@ public record BoardTaskRequest(
         return Map.copyOf(items);
     }
 
-    private static List<String> dependsOn(JsonNode node) {
+    private static List<String> dependsOn(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return List.of();
         }
@@ -283,7 +286,7 @@ public record BoardTaskRequest(
         return List.copyOf(ids);
     }
 
-    private static int level(JsonNode node) {
+    private static int level(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return 1;
         }
@@ -301,7 +304,7 @@ public record BoardTaskRequest(
         return level;
     }
 
-    private static Optional<BoardCase> building(JsonNode node) {
+    private static Optional<BoardCase> building(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return Optional.empty();
         }
@@ -319,7 +322,7 @@ public record BoardTaskRequest(
         }
     }
 
-    private static Optional<BlockCoord> point(JsonNode node, String field) {
+    private static Optional<BlockCoord> point(@Nullable JsonNode node, String field) {
         if (node == null || node.isNull()) {
             return Optional.empty();
         }
@@ -347,7 +350,7 @@ public record BoardTaskRequest(
         }
     }
 
-    private static String cause(JsonNode node) {
+    private static String cause(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return "always";
         }

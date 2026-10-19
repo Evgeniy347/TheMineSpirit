@@ -2,6 +2,7 @@ package com.theminespirit.core.observation;
 
 import java.util.Comparator;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Отбор ближайших открытых важных блоков для наблюдения: руды, камень и брёвна.
@@ -14,7 +15,7 @@ public final class OpenBlocks {
 
     private OpenBlocks() {}
 
-    public static boolean isImportant(String blockId) {
+    public static boolean isImportant(@Nullable String blockId) {
         if (blockId == null) {
             return false;
         }

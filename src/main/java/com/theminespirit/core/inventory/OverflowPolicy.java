@@ -3,6 +3,7 @@ package com.theminespirit.core.inventory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class OverflowPolicy {
     public static final int INVENTORY_SLOTS = 36;
@@ -145,7 +146,8 @@ public final class OverflowPolicy {
         REFUSE
     }
 
-    public record Decision(Action action, int slot, int count, String reason) {
+    public record Decision(
+            Action action, int slot, int count, @Nullable String reason) {
         public Decision {
             Objects.requireNonNull(
                     action,

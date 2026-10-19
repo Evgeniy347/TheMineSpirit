@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Тело POST /v1/policy/unprotect: куб мира, причина, кто попросил и срок жизни.
@@ -147,7 +148,7 @@ public record UnprotectRequest(
         return node.textValue();
     }
 
-    private static long ttl(JsonNode node) {
+    private static long ttl(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return 0;
         }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.planner;
 
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.PlanValidationException;
@@ -40,7 +41,7 @@ public final class LlmPlanner implements Planner {
         } catch (LlmException | PlanValidationException error) {
             try {
                 PlanResult fallbackResult = fallback.plan(goal, observation);
-                return new PlanResult(fallbackResult.plan(), PlanSource.FALLBACK, Optional.of(error.getMessage()));
+                return new PlanResult(fallbackResult.plan(), PlanSource.FALLBACK, Optional.of(ErrorText.of(error)));
             } catch (UnplannableGoalException | PlanValidationException fallbackError) {
                 fallbackError.addSuppressed(error);
                 throw fallbackError;

@@ -4,12 +4,13 @@ import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class ConditionExecutor extends SingleChildExecutor {
     private final String check;
     private final Map<String, Object> params;
-    private final TaskNode thenStep;
-    private final TaskNode elseStep;
+    private final @Nullable TaskNode thenStep;
+    private final @Nullable TaskNode elseStep;
     private final ConditionRegistry conditions;
     private TaskProgress.ConditionBranch branch = TaskProgress.ConditionBranch.UNRESOLVED;
 
@@ -44,9 +45,9 @@ final class ConditionExecutor extends SingleChildExecutor {
             }
             current(spawn(chosen));
         }
-        ScriptStatus child = current().tick();
+        ScriptStatus child = running().tick();
         if (child == ScriptStatus.FAILED) {
-            failFrom(current());
+            failFrom(running());
             return ScriptStatus.FAILED;
         }
         if (child == ScriptStatus.CANCELLED) {
@@ -60,18 +61,16 @@ final class ConditionExecutor extends SingleChildExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.ConditionAt(
-                branch, current() == null ? null : current().snapshot());
+        return new TaskProgress.ConditionAt(branch, childProgress());
     }
 
     @Override
     void applyRestore(TaskProgress progress) {
         TaskProgress.ConditionAt at = (TaskProgress.ConditionAt) progress;
         branch = at.branch();
-        if (at.child() != null) {
-            TaskNode chosen = branch == TaskProgress.ConditionBranch.THEN ? thenStep : elseStep;
-            current(spawn(chosen));
-            current().restore(at.child());
+        TaskProgress child = at.child();
+        if (child != null) {
+            restoreChild(branch == TaskProgress.ConditionBranch.THEN ? thenStep : elseStep, child);
         }
     }
 }

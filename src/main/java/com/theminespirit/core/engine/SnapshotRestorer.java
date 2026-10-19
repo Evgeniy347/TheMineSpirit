@@ -17,8 +17,8 @@ public final class SnapshotRestorer {
         if (!snapshot.running()) {
             return snapshot;
         }
-        TaskNode validated = PlanValidator.validate(snapshot.plan(), scripts, conditions);
+        TaskNode validated = PlanValidator.validate(snapshot.runningPlan(), scripts, conditions);
         return new TaskSnapshot(
-                snapshot.version(), RunStatus.RUNNING, snapshot.reason(), validated, snapshot.progress());
+                snapshot.version(), RunStatus.RUNNING, snapshot.reason(), validated, snapshot.runningProgress());
     }
 }

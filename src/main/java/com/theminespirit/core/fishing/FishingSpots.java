@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class FishingSpots {
     public record Spot(BlockCoord stand, BlockCoord water) {
@@ -77,7 +78,7 @@ public final class FishingSpots {
         return true;
     }
 
-    private static Spot spotFor(Column anchor, int width, BlockCoord origin, WaterView view) {
+    private static @Nullable Spot spotFor(Column anchor, int width, BlockCoord origin, WaterView view) {
         BlockCoord bestStand = null;
         long bestDistance = Long.MAX_VALUE;
         for (int dx = -1; dx <= width; dx++) {
@@ -109,13 +110,13 @@ public final class FishingSpots {
     }
 
     private static BlockCoord nearestWater(Column anchor, int width, BlockCoord stand) {
-        BlockCoord best = null;
-        long bestDistance = Long.MAX_VALUE;
+        BlockCoord best = new BlockCoord(anchor.x(), anchor.surfaceY(), anchor.z());
+        long bestDistance = distanceSquared(stand, best);
         for (int dx = 0; dx < width; dx++) {
             for (int dz = 0; dz < width; dz++) {
                 BlockCoord cell = new BlockCoord(anchor.x() + dx, anchor.surfaceY(), anchor.z() + dz);
                 long distance = distanceSquared(stand, cell);
-                if (best == null || distance < bestDistance || (distance == bestDistance && cell.compareTo(best) < 0)) {
+                if (distance < bestDistance || (distance == bestDistance && cell.compareTo(best) < 0)) {
                     best = cell;
                     bestDistance = distance;
                 }

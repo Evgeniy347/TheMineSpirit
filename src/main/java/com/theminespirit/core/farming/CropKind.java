@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public enum CropKind {
     ANY(),
@@ -33,13 +34,13 @@ public enum CropKind {
             .map(kind -> kind.name().toLowerCase(Locale.ROOT))
             .toList();
 
-    private final String blockId;
+    private final @Nullable String blockId;
     private final int maxAge;
-    private final String plantItem;
-    private final String produceItem;
+    private final @Nullable String plantItem;
+    private final @Nullable String produceItem;
     private final HarvestMethod harvestMethod;
-    private final String fruitBlockId;
-    private final String supportBlockId;
+    private final @Nullable String fruitBlockId;
+    private final @Nullable String supportBlockId;
 
     CropKind() {
         this(null, -1, null, null, HarvestMethod.BREAK, null, null);
@@ -60,13 +61,13 @@ public enum CropKind {
     }
 
     CropKind(
-            String blockId,
+            @Nullable String blockId,
             int maxAge,
-            String plantItem,
-            String produceItem,
+            @Nullable String plantItem,
+            @Nullable String produceItem,
             HarvestMethod harvestMethod,
-            String fruitBlockId,
-            String supportBlockId) {
+            @Nullable String fruitBlockId,
+            @Nullable String supportBlockId) {
         this.blockId = blockId;
         this.maxAge = maxAge;
         this.plantItem = plantItem;
@@ -93,7 +94,7 @@ public enum CropKind {
             throw new IllegalArgumentException(
                     "У any нет блока посева: any означает «любой вид», а не конкретный блок грядки");
         }
-        return blockId;
+        return Objects.requireNonNull(blockId, "Вид культуры без блока посева: таблица CropKind неполна");
     }
 
     public int maxAge() {
@@ -109,7 +110,7 @@ public enum CropKind {
             throw new IllegalArgumentException(
                     "У any нет посадочного предмета: any означает «любой вид», сажают конкретный вид");
         }
-        return plantItem;
+        return Objects.requireNonNull(plantItem, "Вид культуры без посадочного предмета: таблица CropKind неполна");
     }
 
     public String produceItem() {
@@ -117,7 +118,7 @@ public enum CropKind {
             throw new IllegalArgumentException(
                     "У any нет урожая: any означает «любой вид», урожай даёт конкретный вид");
         }
-        return produceItem;
+        return Objects.requireNonNull(produceItem, "Вид культуры без урожая: таблица CropKind неполна");
     }
 
     public HarvestMethod harvestMethod() {
@@ -179,7 +180,7 @@ public enum CropKind {
         Objects.requireNonNull(blockId, "id блока не может быть null: по нему ищется вид культуры");
         String canonical = canonicalId(blockId);
         for (CropKind kind : values()) {
-            if (kind != ANY && kind.blockId.equals(canonical)) {
+            if (kind != ANY && canonical.equals(kind.blockId)) {
                 return Optional.of(kind);
             }
         }

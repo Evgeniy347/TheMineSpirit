@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.task.TaskJson;
 import com.theminespirit.core.task.TaskRecord;
@@ -74,6 +75,15 @@ public final class TaskRoutes {
         return RestResponse.json(202, response);
     }
 
+    private static String goalOf(TaskRequest parsed) {
+        String goal = parsed.goal();
+        if (goal == null) {
+            throw new IllegalStateException(
+                    "Запрос без plan обязан нести goal: TaskRequest.parse требует одно из двух");
+        }
+        return goal;
+    }
+
     private String startTask(String bot, TaskRequest parsed) {
         TaskNode plan = parsed.plan() == null ? null : planning.validatePlan(parsed.plan());
         String taskId;
@@ -81,12 +91,12 @@ public final class TaskRoutes {
             taskId = registry.reserve(bot, parsed.goal());
         } catch (TaskRegistry.BusyException busy) {
             throw new ApiException(
-                    ErrorCode.CONFLICT, busy.getMessage(), Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
+                    ErrorCode.CONFLICT, ErrorText.of(busy), Map.of("bot", busy.bot(), "task_id", busy.activeTaskId()));
         }
         long generation;
         try {
             generation =
-                    plan != null ? gateway.start(bot, plan) : gateway.startGoal(bot, parsed.goal(), parsed.params());
+                    plan != null ? gateway.start(bot, plan) : gateway.startGoal(bot, goalOf(parsed), parsed.params());
         } catch (RuntimeException failure) {
             registry.discard(taskId);
             throw failure;

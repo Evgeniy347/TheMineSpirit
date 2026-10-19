@@ -1,6 +1,7 @@
 package com.theminespirit.core.tactics;
 
 import java.util.EnumMap;
+import org.jspecify.annotations.Nullable;
 
 public final class FactMap {
     private final EnumMap<FactName, Object> values = new EnumMap<>(FactName.class);
@@ -24,18 +25,27 @@ public final class FactMap {
     }
 
     public double number(FactName name) {
-        return (Double) get(name, FactType.NUM);
+        return (Double) present(name, FactType.NUM);
     }
 
     public boolean bool(FactName name) {
-        return (Boolean) get(name, FactType.BOOL);
+        return (Boolean) present(name, FactType.BOOL);
     }
 
-    public String text(FactName name) {
+    public @Nullable String text(FactName name) {
         return (String) get(name, FactType.ENUM);
     }
 
-    private Object get(FactName name, FactType expected) {
+    private Object present(FactName name, FactType expected) {
+        Object value = get(name, expected);
+        if (value == null) {
+            throw new IllegalStateException("Факт " + name.key() + " не заполнен: FactMap.from обязан записать каждый "
+                    + "числовой и булев факт");
+        }
+        return value;
+    }
+
+    private @Nullable Object get(FactName name, FactType expected) {
         if (name.type() != expected) {
             throw new IllegalArgumentException("Факт " + name.key() + " имеет тип " + name.type() + ", а запрошен "
                     + expected + ": проверьте тип значения в условии");

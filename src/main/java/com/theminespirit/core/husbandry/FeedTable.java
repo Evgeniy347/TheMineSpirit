@@ -1,5 +1,7 @@
 package com.theminespirit.core.husbandry;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,7 +104,7 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public List<String> feedForInstance(Species species) {
         Objects.requireNonNull(species, "Вид животного не может быть null: без него неизвестно, чем кормить стадо");
-        return feeds().get(species);
+        return present(feeds(), species, "Таблица кормов");
     }
 
     private static String canonicalId(String food) {

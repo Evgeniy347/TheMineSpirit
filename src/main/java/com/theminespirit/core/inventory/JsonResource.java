@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class JsonResource {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -79,7 +80,7 @@ public final class JsonResource {
         return values;
     }
 
-    public static List<String> optionalStrings(JsonNode node, String origin, String what) {
+    public static List<String> optionalStrings(@Nullable JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return List.of();
         }

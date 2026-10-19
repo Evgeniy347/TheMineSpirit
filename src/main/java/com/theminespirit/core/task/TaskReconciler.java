@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskReconciler {
     public static final int ABSENT_GRACE_TICKS = 100;
@@ -74,7 +75,7 @@ public final class TaskReconciler {
                 && reading.generation() != expected;
     }
 
-    private void running(TaskRecord record, RunProgress progress) {
+    private void running(TaskRecord record, @Nullable RunProgress progress) {
         boolean namesScript = progress != null && progress.currentScript() != null;
         RunProgress next = namesScript ? progress : record.progress();
         if (record.state() == TaskState.RUNNING && Objects.equals(next, record.progress())) {
@@ -83,7 +84,7 @@ public final class TaskReconciler {
         registry.observeIfActive(record.taskId(), TaskState.RUNNING, next, null);
     }
 
-    private void finish(TaskRecord record, TaskState state, String error, Object result) {
+    private void finish(TaskRecord record, TaskState state, @Nullable String error, @Nullable Object result) {
         absentTicks.remove(record.taskId());
         registry.observeIfActive(record.taskId(), state, record.progress(), result, error);
     }

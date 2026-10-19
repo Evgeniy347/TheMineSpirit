@@ -3,6 +3,7 @@ package com.theminespirit.core.night;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class NightLeash {
     public static final String OUTSIDE_SETTLEMENT_REASON = "ночь: за границу поселения не выходим";
@@ -43,7 +44,7 @@ public final class NightLeash {
         return state.evening() && (state.armed() || state.insideSettlement());
     }
 
-    public Decision checkTarget(BlockCoord target, BlockCoord home, int radius, TargetState state) {
+    public Decision checkTarget(BlockCoord target, @Nullable BlockCoord home, int radius, TargetState state) {
         Objects.requireNonNull(target, "Цель не может быть null: проверяется, лежит ли она в поселении");
         if (!state.evening() || !state.insideSinceEvening() || state.followingPlayer() || home == null) {
             return new Allowed();

@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Разбор текстового файла постройки (формат слоёв с легендой). Формат — строгое подмножество YAML:
@@ -50,9 +51,9 @@ public final class SchematicTextParser {
     private Optional<Integer> stage = Optional.empty();
     private int level = Preset.LEVEL_NONE;
     private Optional<String> requires = Optional.empty();
-    private int[] size;
+    private int @Nullable [] size;
     private int sizeLine;
-    private String entrance;
+    private @Nullable String entrance;
     private int entranceLine;
     private final Map<Character, LegendEntry> legend = new LinkedHashMap<>();
     private final List<SchematicDocument.Exemption> exemptions = new ArrayList<>();

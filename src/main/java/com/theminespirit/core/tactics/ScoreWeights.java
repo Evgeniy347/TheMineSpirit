@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,6 @@ public record ScoreWeights(
     }
 
     public double weight(Factor factor, TacticalOption option) {
-        return matrix.get(factor).get(option);
+        return present(present(matrix, factor, "Матрица весов тактики"), option, "Строка весов фактора");
     }
 }

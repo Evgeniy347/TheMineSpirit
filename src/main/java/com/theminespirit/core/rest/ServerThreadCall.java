@@ -96,7 +96,8 @@ public final class ServerThreadCall {
         try {
             return future.get();
         } catch (ExecutionException e) {
-            throw failure(e.getCause());
+            Throwable cause = e.getCause();
+            throw failure(cause != null ? cause : e);
         } catch (CancellationException e) {
             throw new ApiException(
                     ErrorCode.INTERNAL, "Задача на серверном потоке отменена до выполнения", Map.of(), e);

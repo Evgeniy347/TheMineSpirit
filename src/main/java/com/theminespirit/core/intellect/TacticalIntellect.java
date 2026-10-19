@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class TacticalIntellect {
     private final ActivityCatalog catalog;
@@ -21,7 +22,7 @@ public final class TacticalIntellect {
     private final ExpeditionPlanner expeditions = new ExpeditionPlanner();
     private final OutsideGate outsideGate = OutsideGate.withDefaults();
     private List<EnemyFact> enemies = List.of();
-    private Point vein;
+    private @Nullable Point vein;
     private boolean weaponStock;
     private boolean playerEscort;
 

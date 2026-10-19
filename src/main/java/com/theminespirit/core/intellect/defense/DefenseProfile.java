@@ -1,5 +1,7 @@
 package com.theminespirit.core.intellect.defense;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.tactics.EnemyProfile;
@@ -9,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public record DefenseProfile(
         Map<String, TargetClass> classes,
@@ -61,7 +64,7 @@ public record DefenseProfile(
         return classes.getOrDefault(type, fallback);
     }
 
-    public TargetClass classify(String type, EnemyProfile profile) {
+    public TargetClass classify(String type, @Nullable EnemyProfile profile) {
         if (type == null) {
             throw new IllegalArgumentException(
                     "type не может быть null: класс цели считается по типу врага, без него только fallback");
@@ -90,9 +93,9 @@ public record DefenseProfile(
             throw new IllegalArgumentException("role не может быть null: порядок целей разный у лучника и мечника");
         }
         if (role == DefenderRole.MELEE && !archerPresent) {
-            return priorityWithoutArcher.get(DefenderRole.MELEE);
+            return present(priorityWithoutArcher, DefenderRole.MELEE, "Порядок целей без лучника");
         }
-        return priority.get(role);
+        return present(priority, role, "Порядок целей защитника");
     }
 
     private static Map<DefenderRole, List<TargetClass>> checkedOrders(

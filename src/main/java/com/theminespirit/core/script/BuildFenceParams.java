@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record BuildFenceParams(String block, String gate, List<BlockCoord> points) {
+public record BuildFenceParams(String block, @Nullable String gate, List<BlockCoord> points) {
     public BuildFenceParams {
         if (block == null || block.isBlank()) {
             throw new IllegalArgumentException("Не задан блок забора: без него неизвестно, чем городить");

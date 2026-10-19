@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Запись журнала заданий: событие доски и состояние задания на момент перехода.
@@ -18,7 +19,7 @@ public record BoardLogEntry(
         int basePriority,
         int effectivePriority,
         List<String> modifiers,
-        String spirit,
+        @Nullable String spirit,
         String configHash,
         long worldTime) {
 

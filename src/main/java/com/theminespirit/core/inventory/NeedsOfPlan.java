@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class NeedsOfPlan {
     public static final int MAX_DEPTH = 8;
@@ -86,7 +87,7 @@ public final class NeedsOfPlan {
         path.remove(item);
     }
 
-    private static String text(ScriptCall call, String name) {
+    private static @Nullable String text(ScriptCall call, String name) {
         Object value = call.params().get(name);
         return value instanceof String text ? text : null;
     }

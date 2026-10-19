@@ -34,7 +34,8 @@ class DependencyVersionGuardTests {
             "annotationProcessor",
             "testImplementation",
             "testRuntimeOnly",
-            "errorprone");
+            "errorprone",
+            "testCompileOnly");
     private static final Pattern DEPENDENCIES_BLOCK = Pattern.compile("\\bdependencies\\s*\\{");
     private static final Pattern DECLARATION =
             Pattern.compile("(?m)^\\s*(\\w+)\\s*(?:\\(\\s*)?(?:platform\\s*\\(\\s*)?[\"']([^\"']+)[\"']");

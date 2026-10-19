@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record DescentStairsPlan(
         BlockCoord entry,
@@ -110,7 +111,7 @@ public record DescentStairsPlan(
                 dangerReason == null ? "" : dangerReason);
     }
 
-    private static String stairsDangerAt(
+    private static @Nullable String stairsDangerAt(
             SafetyView view, DescentStep base, List<BlockCoord> stairCells, List<BlockCoord> railCells) {
         for (BlockCoord stair : stairCells) {
             BlockCoord floor = new BlockCoord(stair.x(), base.floor(), stair.z());

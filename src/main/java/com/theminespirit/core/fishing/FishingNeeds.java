@@ -7,6 +7,7 @@ import com.theminespirit.core.intellect.NutritionTable;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.processing.CookableFoods;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Гейты рыболовства: когда доска заказывает коптильню и когда дух идёт на рабочую точку.
@@ -68,7 +69,7 @@ public final class FishingNeeds {
         return deficit.share();
     }
 
-    private static String normalize(String item) {
+    private static String normalize(@Nullable String item) {
         if (item == null || item.isBlank()) {
             return "";
         }

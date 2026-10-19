@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 
 public final class CampfireMaterials {
     public static final int STICKS = 3;
@@ -55,7 +56,7 @@ public final class CampfireMaterials {
         return Optional.of(new Cost(consumed));
     }
 
-    public static boolean isLog(String item) {
+    public static boolean isLog(@Nullable String item) {
         if (item == null || item.isBlank()) {
             return false;
         }

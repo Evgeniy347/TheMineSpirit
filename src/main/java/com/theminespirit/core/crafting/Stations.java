@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class Stations {
     public static final String CRAFTING_TABLE = "crafting_table";
@@ -23,7 +24,7 @@ public final class Stations {
         return recipe.needsTable() ? Optional.of(CRAFTING_TABLE) : Optional.empty();
     }
 
-    public static boolean isFoodProduct(String product) {
+    public static boolean isFoodProduct(@Nullable String product) {
         if (product == null) {
             return false;
         }
@@ -42,7 +43,7 @@ public final class Stations {
         return List.of(FURNACE);
     }
 
-    public static Optional<String> preferredSmeltingStation(String product, Collection<String> available) {
+    public static Optional<String> preferredSmeltingStation(String product, @Nullable Collection<String> available) {
         Set<String> set = available == null ? Set.of() : new HashSet<>(available);
         return smeltingCandidates(product).stream().filter(set::contains).findFirst();
     }

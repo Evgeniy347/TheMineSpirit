@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Журнал выполненных заданий на диске: одна строка JSONL на событие. Ядро даёт чистые
@@ -145,7 +146,7 @@ public final class BoardLog {
         return node.textValue();
     }
 
-    private static String optionalText(JsonNode root, String field, int lineNumber) {
+    private static @Nullable String optionalText(JsonNode root, String field, int lineNumber) {
         JsonNode node = root.get(field);
         if (node == null || node.isNull()) {
             return null;

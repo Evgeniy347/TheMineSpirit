@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Категории склада: порядок задаёт и раскладку по сундукам, и надпись на табличке. Последняя категория
@@ -120,7 +121,7 @@ public final class WarehouseCategories {
         return "";
     }
 
-    public boolean known(String name) {
+    public boolean known(@Nullable String name) {
         return name != null && byName.containsKey(name);
     }
 

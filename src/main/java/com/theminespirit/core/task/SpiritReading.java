@@ -2,16 +2,17 @@ package com.theminespirit.core.task;
 
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
+import org.jspecify.annotations.Nullable;
 
 public record SpiritReading(
         boolean present,
         boolean alive,
-        RunStatus status,
-        RunProgress progress,
-        String failureReason,
-        RunProgress failedAt,
+        @Nullable RunStatus status,
+        @Nullable RunProgress progress,
+        @Nullable String failureReason,
+        @Nullable RunProgress failedAt,
         long generation,
-        Object result) {
+        @Nullable Object result) {
     public static final long UNKNOWN_GENERATION = 0;
 
     private static final SpiritReading ABSENT =
@@ -31,7 +32,8 @@ public record SpiritReading(
         return living(status, progress, failureReason, null);
     }
 
-    public static SpiritReading living(RunStatus status, RunProgress progress, String failureReason, Object result) {
+    public static SpiritReading living(
+            RunStatus status, RunProgress progress, String failureReason, @Nullable Object result) {
         return new SpiritReading(true, true, status, progress, failureReason, null, UNKNOWN_GENERATION, result);
     }
 

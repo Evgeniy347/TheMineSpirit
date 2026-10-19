@@ -1,6 +1,7 @@
 package com.theminespirit.core.mining;
 
 import com.theminespirit.core.observation.BlockCoord;
+import org.jspecify.annotations.Nullable;
 
 final class DescentDanger {
     private DescentDanger() {}
@@ -22,7 +23,7 @@ final class DescentDanger {
         return "(" + cell.x() + ", " + cell.y() + ", " + cell.z() + ")";
     }
 
-    static String solidFloor(SafetyView view, BlockCoord cell, String role, int stepIndex) {
+    static @Nullable String solidFloor(SafetyView view, BlockCoord cell, String role, int stepIndex) {
         Cell value = view.cellAt(cell);
         if (value == Cell.SOLID || value == Cell.FALLING) {
             return null;
@@ -30,7 +31,7 @@ final class DescentDanger {
         return "опасность: " + label(value) + " вместо " + role + "а в клетке " + coords(cell) + " шага " + stepIndex;
     }
 
-    static String fluidPassage(SafetyView view, BlockCoord cell, String role, BlockCoord passageCell) {
+    static @Nullable String fluidPassage(SafetyView view, BlockCoord cell, String role, BlockCoord passageCell) {
         Cell value = view.cellAt(cell);
         if (value != Cell.LAVA && value != Cell.WATER) {
             return null;
@@ -39,7 +40,7 @@ final class DescentDanger {
                 + coords(passageCell) + ")";
     }
 
-    static String fluidCell(SafetyView view, BlockCoord cell, String role) {
+    static @Nullable String fluidCell(SafetyView view, BlockCoord cell, String role) {
         Cell value = view.cellAt(cell);
         if (value != Cell.LAVA && value != Cell.WATER) {
             return null;

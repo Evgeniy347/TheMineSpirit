@@ -5,6 +5,7 @@ import com.theminespirit.core.pickup.OverflowMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record CollectDropsParams(int radius, IdFilter items, OverflowMode overflow) {
     public CollectDropsParams {
@@ -24,7 +25,7 @@ public record CollectDropsParams(int radius, IdFilter items, OverflowMode overfl
                 overflowOf(params.get("overflow")));
     }
 
-    private static OverflowMode overflowOf(Object value) {
+    private static OverflowMode overflowOf(@Nullable Object value) {
         if (value == null) {
             return OverflowMode.BY_VALUE;
         }

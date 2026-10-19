@@ -162,6 +162,10 @@ dependencies {
     testImplementation "net.jqwik:jqwik:${jqwik_version}"
 
     errorprone "com.google.errorprone:error_prone_core:${errorprone_version}"
+    errorprone "com.uber.nullaway:nullaway:${nullaway_version}"
+    // Аннотации null — только на компиляции: в игре они не нужны (tasks/46 п.3)
+    compileOnly "org.jspecify:jspecify:${jspecify_version}"
+    testCompileOnly "org.jspecify:jspecify:${jspecify_version}"
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -237,6 +241,19 @@ tasks.withType(JavaCompile).configureEach {
         // неизменяемые синглтоны реестра Minecraft без аннотаций; проверка давала бы только ложные срабатывания.
         disable('ImmutableEnumChecker')
     }
+}
+
+// NullAway (tasks/46 п.3) — только production-ядро: тесты намеренно передают null, а адаптеры к Minecraft
+// живут в чужой модели null. В core тип без @Nullable (JSpecify) — не null.
+tasks.named('compileJava', JavaCompile) {
+    options.errorprone {
+        check('NullAway', net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+        option('NullAway:AnnotatedPackages', 'com.theminespirit.core')
+    }
+}
+
+tasks.named('compileTestJava', JavaCompile) {
+    options.errorprone.disable('NullAway')
 }
 
 // Строгие анализаторы (tasks/46-static-analyzers.md): нарушение роняет сборку, временных списков нет.

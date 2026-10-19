@@ -1,5 +1,7 @@
 package com.theminespirit.core.building;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +38,7 @@ final class SchematicGrid {
                         air.add(new Schematic.Cell(x, y, z));
                         continue;
                     }
-                    SchematicTextParser.LegendEntry entry = legend.get(symbol);
+                    SchematicTextParser.LegendEntry entry = present(legend, symbol, "Легенда схемы");
                     if (SchematicBlocks.isDoor(entry.block())) {
                         door(surface, entry, symbol, x, y, z);
                     } else if (SchematicBlocks.isBed(entry.block())) {
@@ -69,7 +71,7 @@ final class SchematicGrid {
     private static void bed(Surface surface, SchematicTextParser.LegendEntry entry, char symbol, int x, int y, int z) {
         char[][][] grid = surface.grid();
         boolean[][][] done = surface.done();
-        String facing = entry.state().get("facing");
+        String facing = present(entry.state(), "facing", "Состояние кровати в легенде");
         int dx = switch (facing) {
             case "east" -> 1;
             case "west" -> -1;

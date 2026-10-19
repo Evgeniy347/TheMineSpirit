@@ -4,11 +4,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public final class QueryString {
     private QueryString() {}
 
-    public static Map<String, String> parse(String raw) {
+    public static Map<String, String> parse(@Nullable String raw) {
         Map<String, String> query = new LinkedHashMap<>();
         if (raw == null || raw.isEmpty()) {
             return query;

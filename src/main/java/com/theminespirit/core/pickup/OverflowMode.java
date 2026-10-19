@@ -1,5 +1,7 @@
 package com.theminespirit.core.pickup;
 
+import org.jspecify.annotations.Nullable;
+
 public enum OverflowMode {
     FAIL,
     BY_VALUE,
@@ -9,7 +11,7 @@ public enum OverflowMode {
         return followsPlayer ? BY_VALUE : RETURN_TO_BASE;
     }
 
-    public static OverflowMode parse(String text) {
+    public static OverflowMode parse(@Nullable String text) {
         if (text == null) {
             return BY_VALUE;
         }

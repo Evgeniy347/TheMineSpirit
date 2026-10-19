@@ -1,5 +1,7 @@
 package com.theminespirit.core.intellect;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
@@ -91,7 +93,7 @@ public record InventoryNormTable(
 
     public int releaseFreeSlots(ActivityId activity) {
         Objects.requireNonNull(activity, "Деятельность не может быть null: порог ищут по id");
-        return releaseFreeSlots.get(activity);
+        return present(releaseFreeSlots, activity, "Пороги свободных слотов");
     }
 
     private static List<CurvePoint> parseCurve(JsonNode node, String origin, String what) {

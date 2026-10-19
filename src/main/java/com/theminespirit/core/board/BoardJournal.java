@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Журнал заданий на диске: append-only JSONL, одна запись на строку. Запись идёт через
@@ -198,7 +199,12 @@ public final class BoardJournal {
         }
     }
 
-    public record LoadResult(int lines, int restored, int failedLine, String error, boolean truncated) {
+    public record LoadResult(
+            int lines,
+            int restored,
+            int failedLine,
+            @Nullable String error,
+            boolean truncated) {
         public LoadResult {
             if (lines < 0 || restored < 0) {
                 throw new IllegalArgumentException(

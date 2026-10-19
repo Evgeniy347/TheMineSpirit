@@ -1,5 +1,7 @@
 package com.theminespirit.core.intellect;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.activity.ChopActivity;
 import com.theminespirit.core.intellect.activity.CraftActivity;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class ActivityAssigner {
     private final ActivityCatalog catalog;
@@ -84,7 +87,8 @@ public final class ActivityAssigner {
             long since = current.isPresent() && current.get().activity() == chosen
                     ? current.get().since()
                     : now;
-            assignments.add(new ActivityAssignment(spirit.id(), chosen, since, demandById.get(chosen)));
+            assignments.add(new ActivityAssignment(
+                    spirit.id(), chosen, since, present(demandById, chosen, "Спрос деятельностей")));
             taken.merge(chosen, 1, Integer::sum);
             if (chosen == ActivityId.DEFEND) {
                 defenders++;
@@ -93,7 +97,8 @@ public final class ActivityAssigner {
         return new ActivityPlan(assignments, dropped);
     }
 
-    private ActivityId choose(SpiritSnapshot spirit, SettlementView view, ChoiceContext context, int defenders) {
+    private @Nullable ActivityId choose(
+            SpiritSnapshot spirit, SettlementView view, ChoiceContext context, int defenders) {
         List<ActivityDemand> demands = context.demands();
         Map<ActivityId, Double> demandById = context.demandById();
         Map<ActivityId, Integer> taken = context.taken();
@@ -134,12 +139,12 @@ public final class ActivityAssigner {
         return best;
     }
 
-    private ActivityId bestScored(
+    private @Nullable ActivityId bestScored(
             SpiritSnapshot spirit,
             SettlementView view,
             List<ActivityDemand> demands,
             Map<ActivityId, Integer> taken,
-            ActivityId excluded) {
+            @Nullable ActivityId excluded) {
         IntellectTuning tuning = IntellectTuning.loadDefault();
         ActivityId best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
@@ -159,7 +164,8 @@ public final class ActivityAssigner {
     }
 
     private double scored(ActivityId id, Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken) {
-        return demandById.get(id) - IntellectTuning.loadDefault().crowdPenalty() * taken.getOrDefault(id, 0);
+        return present(demandById, id, "Спрос деятельностей")
+                - IntellectTuning.loadDefault().crowdPenalty() * taken.getOrDefault(id, 0);
     }
 
     private boolean eligible(ActivityId id, SpiritSnapshot spirit, SettlementView view) {

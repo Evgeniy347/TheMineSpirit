@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record DescentWidenPlan(
         BlockCoord entry,
@@ -92,7 +93,7 @@ public record DescentWidenPlan(
                 dangerReason == null ? "" : dangerReason);
     }
 
-    private static String widenDangerAt(
+    private static @Nullable String widenDangerAt(
             SafetyView view, DescentStep base, int width, int sideX, int sideZ, List<BlockCoord> cells) {
         int half = width / 2;
         for (int lane = -half; lane <= half; lane++) {

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 public final class ConfigNode {
     private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder()
@@ -22,9 +23,9 @@ public final class ConfigNode {
 
     private final String file;
     private final String path;
-    private final JsonNode node;
+    private final @Nullable JsonNode node;
 
-    private ConfigNode(String file, String path, JsonNode node) {
+    private ConfigNode(String file, String path, @Nullable JsonNode node) {
         this.file = file;
         this.path = path;
         this.node = node;
@@ -55,7 +56,7 @@ public final class ConfigNode {
     }
 
     public ConfigNode fields(String[] required, String... optional) {
-        if (!node.isObject()) {
+        if (node == null || !node.isObject()) {
             throw fail("ожидался объект, получено " + describe(), "в этом месте файла должен стоять объект { ... }");
         }
         Set<String> allowed = new TreeSet<>(Arrays.asList(required));
@@ -79,18 +80,18 @@ public final class ConfigNode {
     }
 
     public boolean has(String name) {
-        return node.has(name);
+        return node != null && node.has(name);
     }
 
     public ConfigNode get(String name) {
-        if (!node.has(name)) {
+        if (node == null || !node.has(name)) {
             throw child(name).fail("нет поля '" + name + "'", "добавьте поле");
         }
         return child(name);
     }
 
     public Map<String, ConfigNode> entries() {
-        if (!node.isObject()) {
+        if (node == null || !node.isObject()) {
             throw fail("ожидался объект, получено " + describe(), "в этом месте файла должен стоять объект { ... }");
         }
         Map<String, ConfigNode> result = new LinkedHashMap<>();
@@ -102,7 +103,7 @@ public final class ConfigNode {
     }
 
     public List<ConfigNode> items() {
-        if (!node.isArray()) {
+        if (node == null || !node.isArray()) {
             throw fail("ожидался массив, получено " + describe(), "в этом месте файла должен стоять массив [ ... ]");
         }
         List<ConfigNode> result = new ArrayList<>();
@@ -121,14 +122,14 @@ public final class ConfigNode {
     }
 
     public String text() {
-        if (!node.isTextual()) {
+        if (node == null || !node.isTextual()) {
             throw fail("ожидалась строка, получено " + describe(), "значение берётся в кавычки");
         }
         return node.asText();
     }
 
     public boolean bool() {
-        if (!node.isBoolean()) {
+        if (node == null || !node.isBoolean()) {
             throw fail("ожидалось true или false, получено " + describe(), "булево значение пишется без кавычек");
         }
         return node.asBoolean();
@@ -145,14 +146,14 @@ public final class ConfigNode {
     }
 
     public double number() {
-        if (!node.isNumber()) {
+        if (node == null || !node.isNumber()) {
             throw fail("ожидалось число, получено " + describe(), "число пишется без кавычек");
         }
         return node.asDouble();
     }
 
     public int integer() {
-        if (!node.isIntegralNumber() || !node.canConvertToInt()) {
+        if (node == null || !node.isIntegralNumber() || !node.canConvertToInt()) {
             throw fail(
                     "ожидалось целое число, получено " + describe(),
                     "приоритеты и тики — целые числа без дробной части");
@@ -219,7 +220,7 @@ public final class ConfigNode {
 
     private ConfigNode child(String name) {
         String childPath = path.isEmpty() ? name : path + "." + name;
-        return new ConfigNode(file, childPath, node.get(name));
+        return new ConfigNode(file, childPath, node == null ? null : node.get(name));
     }
 
     private String describe() {

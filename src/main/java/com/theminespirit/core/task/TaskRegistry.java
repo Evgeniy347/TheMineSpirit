@@ -1,5 +1,7 @@
 package com.theminespirit.core.task;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.engine.RunProgress;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskRegistry {
     public static final int MAX_COMPLETED = 256;
@@ -14,7 +17,7 @@ public final class TaskRegistry {
     private final Map<String, Entry> tasks = new LinkedHashMap<>();
     private long nextId;
 
-    public synchronized String reserve(String bot, String goal) {
+    public synchronized String reserve(String bot, @Nullable String goal) {
         Objects.requireNonNull(bot, "bot не может быть null: задача всегда привязана к духу");
         TaskRecord active = activeForBot(bot).orElse(null);
         if (active != null) {
@@ -89,12 +92,17 @@ public final class TaskRegistry {
         return entry.log;
     }
 
-    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress, String error) {
+    public synchronized List<TaskEvent> observe(
+            String taskId, TaskState state, @Nullable RunProgress progress, @Nullable String error) {
         return observe(taskId, state, progress, null, error);
     }
 
     public synchronized List<TaskEvent> observe(
-            String taskId, TaskState state, RunProgress progress, Object result, String error) {
+            String taskId,
+            TaskState state,
+            @Nullable RunProgress progress,
+            @Nullable Object result,
+            @Nullable String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
             throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: обновлять нечего");
@@ -118,12 +126,17 @@ public final class TaskRegistry {
         return events;
     }
 
-    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, String error) {
+    public synchronized boolean observeIfActive(
+            String taskId, TaskState state, @Nullable RunProgress progress, @Nullable String error) {
         return observeIfActive(taskId, state, progress, null, error);
     }
 
     public synchronized boolean observeIfActive(
-            String taskId, TaskState state, RunProgress progress, Object result, String error) {
+            String taskId,
+            TaskState state,
+            @Nullable RunProgress progress,
+            @Nullable Object result,
+            @Nullable String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null || !entry.record.active()) {
             return false;
@@ -186,7 +199,8 @@ public final class TaskRegistry {
         }
         int excess = completed - MAX_COMPLETED;
         for (int i = 0; i < excess; i++) {
-            Entry removed = tasks.remove(finished.get(i));
+            Entry removed = present(tasks, finished.get(i), "Задачи реестра");
+            tasks.remove(finished.get(i));
             removed.log.close();
         }
     }

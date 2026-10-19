@@ -3,6 +3,7 @@ package com.theminespirit.core.perception;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record HazardFacts(List<HazardRef> hazards) {
     public static final int MAX_REPORTED = 64;
@@ -27,7 +28,7 @@ public record HazardFacts(List<HazardRef> hazards) {
         return has(HazardType.DROP);
     }
 
-    public HazardRef nearest() {
+    public @Nullable HazardRef nearest() {
         return hazards.stream().min(BY_PROXIMITY).orElse(null);
     }
 

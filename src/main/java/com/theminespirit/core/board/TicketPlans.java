@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * План задания по кейсу: чистая функция «кейс + точка → TaskNode» из скриптов
@@ -522,16 +523,27 @@ public final class TicketPlans {
     }
 
     private static TaskNode warehouseRelocate(TicketTarget target) {
-        int level = Integer.parseInt(target.schemeFile().substring("storage_v".length()));
+        String scheme = relocation(target.schemeFile(), "schemeFile");
+        BlockCoord from = relocation(target.from(), "from");
+        BlockCoord to = relocation(target.to(), "to");
+        int level = Integer.parseInt(scheme.substring("storage_v".length()));
         int radius = warehouseRadius(level);
         return new SequenceNode(List.of(
-                gotoPoint(target.from()),
-                demolishBox(target.from(), radius),
+                gotoPoint(from),
+                demolishBox(from, radius),
                 new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX)),
-                gotoPoint(target.to()),
+                gotoPoint(to),
                 new ScriptCall(
                         "unload",
                         Map.of("container", "auto", "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
+    }
+
+    private static <T> T relocation(@Nullable T value, String field) {
+        if (value == null) {
+            throw new IllegalStateException("Цель переноса склада без поля " + field
+                    + ": кейс RELOCATE_BUILDING собирает цель с постройкой, откуда и куда — проверьте TicketTargets");
+        }
+        return value;
     }
 
     private static int warehouseRadius(int level) {

@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public final class ObservationHash {
     private static final char FIELD_SEPARATOR = '\u001f';
@@ -46,7 +47,7 @@ public final class ObservationHash {
         return builder.toString();
     }
 
-    private static void appendSpirit(StringBuilder builder, SpiritStatus spirit) {
+    private static void appendSpirit(StringBuilder builder, @Nullable SpiritStatus spirit) {
         if (spirit == null) {
             return;
         }
@@ -81,7 +82,7 @@ public final class ObservationHash {
         }
     }
 
-    private static void appendTime(StringBuilder builder, WorldTime time) {
+    private static void appendTime(StringBuilder builder, @Nullable WorldTime time) {
         if (time != null) {
             builder.append(time.day());
         }

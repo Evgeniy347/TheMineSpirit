@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class PlanParser {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -136,7 +137,7 @@ public final class PlanParser {
         return parsed;
     }
 
-    private static Map<String, Object> toPlainObject(JsonNode node, String owner) {
+    private static Map<String, Object> toPlainObject(@Nullable JsonNode node, String owner) {
         Map<String, Object> result = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return result;
@@ -155,7 +156,7 @@ public final class PlanParser {
         return result;
     }
 
-    private static Object toPlainValue(JsonNode node) {
+    private static @Nullable Object toPlainValue(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return null;
         }

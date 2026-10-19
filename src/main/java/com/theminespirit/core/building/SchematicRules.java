@@ -1,5 +1,7 @@
 package com.theminespirit.core.building;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -9,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Правила качества схем: стены, вход, крыша, высота, окна, дверь, опора, сундук и свет. Чистая проверка
@@ -194,7 +197,7 @@ public final class SchematicRules {
         }
     }
 
-    private static int[] outwardNormal(BlockCoord entry, Schematic schematic) {
+    private static int @Nullable [] outwardNormal(BlockCoord entry, Schematic schematic) {
         if (entry.z() == 0) {
             return new int[] {0, -1};
         }
@@ -215,7 +218,7 @@ public final class SchematicRules {
         for (int x = 1; x < schematic.sizeX() - 1; x++) {
             for (int z = 1; z < schematic.sizeZ() - 1; z++) {
                 int top = highestBlock(grid, x, schematic.sizeY(), z);
-                if (top >= 2 && covers(grid.get(new BlockCoord(x, top, z)))) {
+                if (top >= 2 && covers(present(grid, new BlockCoord(x, top, z), "Сетка схемы"))) {
                     continue;
                 }
                 violations.add(new Violation(
@@ -372,7 +375,7 @@ public final class SchematicRules {
         }
     }
 
-    private static BlockCoord mountOf(Schematic.Entry entry, BlockCoord cell) {
+    private static @Nullable BlockCoord mountOf(Schematic.Entry entry, BlockCoord cell) {
         if (SchematicBlocks.isWallMounted(entry.block())) {
             return switch (entry.state().getOrDefault("facing", "")) {
                 case "north" -> new BlockCoord(cell.x(), cell.y(), cell.z() + 1);

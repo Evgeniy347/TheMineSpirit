@@ -1,6 +1,13 @@
 package com.theminespirit.core.engine;
 
-public record RunProgress(int step, int totalSteps, String currentScript, Integer done, Integer target) {
+import org.jspecify.annotations.Nullable;
+
+public record RunProgress(
+        int step,
+        int totalSteps,
+        @Nullable String currentScript,
+        @Nullable Integer done,
+        @Nullable Integer target) {
     public RunProgress {
         if (step < 1) {
             throw new IllegalArgumentException("Шаг задачи " + step + " меньше 1: шаги нумеруются с 1");

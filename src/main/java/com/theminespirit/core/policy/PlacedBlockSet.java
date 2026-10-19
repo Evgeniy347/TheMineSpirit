@@ -1,5 +1,7 @@
 package com.theminespirit.core.policy;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -130,7 +132,7 @@ public final class PlacedBlockSet {
         }
         for (Map.Entry<Long, Chunk> entry : chunks.entrySet()) {
             Chunk mine = entry.getValue();
-            Chunk theirs = that.chunks.get(entry.getKey());
+            Chunk theirs = present(that.chunks, entry.getKey(), "Чанки набора");
             if (mine.overflowed != theirs.overflowed
                     || !mine.positions.stream()
                             .toList()

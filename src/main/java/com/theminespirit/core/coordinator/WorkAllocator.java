@@ -1,5 +1,7 @@
 package com.theminespirit.core.coordinator;
 
+import static com.theminespirit.core.Lookup.present;
+
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.Point;
@@ -39,7 +41,7 @@ public final class WorkAllocator {
         Map<WorkTarget, Long> assigned = new HashMap<>();
         List<Planned> planned = new ArrayList<>();
         for (UUID spiritId : byId.keySet().stream().sorted().toList()) {
-            SpiritSnapshot spirit = byId.get(spiritId);
+            SpiritSnapshot spirit = present(byId, spiritId, "Свободные духи");
             WorkTarget best = null;
             double bestScore = Double.POSITIVE_INFINITY;
             for (WorkTarget target : freeTargets) {

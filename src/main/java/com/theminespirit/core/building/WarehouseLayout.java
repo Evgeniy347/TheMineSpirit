@@ -179,11 +179,12 @@ public record WarehouseLayout(
         List<Sign> signs = new ArrayList<>();
         for (Schematic.Entry entry : schematic.blocks()) {
             if (isSign(entry.block())) {
-                if (entry.text().isBlank()) {
+                String text = entry.text();
+                if (text == null || text.isBlank()) {
                     throw new IllegalStateException("Табличка в [" + entry.dx() + "," + entry.dy() + "," + entry.dz()
                             + "] без категории: табличка склада обязана называть категорию");
                 }
-                signs.add(new Sign(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.text()));
+                signs.add(new Sign(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), text));
             }
         }
         signs.sort(Comparator.comparingInt((Sign sign) -> sign.pos().y())

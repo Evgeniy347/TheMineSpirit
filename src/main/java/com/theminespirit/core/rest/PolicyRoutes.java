@@ -1,5 +1,6 @@
 package com.theminespirit.core.rest;
 
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.policy.UnprotectArea;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public final class PolicyRoutes {
             response = grantedJson(grant(parsed), requestId);
         } catch (IllegalArgumentException refused) {
             idempotency.release(requestId);
-            throw new ApiException(ErrorCode.INVALID_REQUEST, refused.getMessage(), Map.of("field", "area"), refused);
+            throw new ApiException(ErrorCode.INVALID_REQUEST, ErrorText.of(refused), Map.of("field", "area"), refused);
         } catch (RuntimeException failure) {
             idempotency.release(requestId);
             throw failure;

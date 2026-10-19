@@ -14,8 +14,9 @@ public final class TaskEventDiff {
         Objects.requireNonNull(previous, "previous не может быть null: дифф считают между двумя кадрами задачи");
         Objects.requireNonNull(current, "current не может быть null: дифф считают между двумя кадрами задачи");
         List<TaskEvent> events = new ArrayList<>(2);
-        if (progressChanged(previous.progress(), current.progress())) {
-            events.add(new TaskEvent(0, TaskEvent.TYPE_PROGRESS, progressData(current.progress())));
+        RunProgress now = current.progress();
+        if (now != null && !now.equals(previous.progress())) {
+            events.add(new TaskEvent(0, TaskEvent.TYPE_PROGRESS, progressData(now)));
         }
         if (current.state() == TaskState.FAILED && previous.state() != TaskState.FAILED) {
             Map<String, Object> data = new LinkedHashMap<>();
@@ -33,13 +34,6 @@ public final class TaskEventDiff {
             events.add(new TaskEvent(0, TaskEvent.TYPE_STATE, data));
         }
         return List.copyOf(events);
-    }
-
-    private static boolean progressChanged(RunProgress previous, RunProgress current) {
-        if (current == null) {
-            return false;
-        }
-        return !current.equals(previous);
     }
 
     private static Map<String, Object> progressData(RunProgress progress) {

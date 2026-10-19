@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Библиотека готовых построек (пресетов): метаданные из индекса плюс тела схем, прочитанные заранее.
@@ -192,7 +193,7 @@ public final class PresetLibrary {
                 + ": пресет обязан назвать себя, тип, этап и вход, иначе стратегу не из чего выбирать");
     }
 
-    private static Optional<String> optionalText(JsonNode node, String origin, String what) {
+    private static Optional<String> optionalText(@Nullable JsonNode node, String origin, String what) {
         if (node == null || node.isNull()) {
             return Optional.empty();
         }
@@ -228,7 +229,7 @@ public final class PresetLibrary {
         return false;
     }
 
-    private static String blockAt(Schematic schematic, BlockCoord at) {
+    private static @Nullable String blockAt(Schematic schematic, BlockCoord at) {
         for (Schematic.Entry entry : schematic.blocks()) {
             if (entry.dx() == at.x() && entry.dy() == at.y() && entry.dz() == at.z()) {
                 return entry.block();

@@ -6,11 +6,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, List<Cell> air) {
     public record Cell(int dx, int dy, int dz) {}
 
-    public record Entry(int dx, int dy, int dz, String block, Map<String, String> state, String text) {
+    public record Entry(
+            int dx,
+            int dy,
+            int dz,
+            String block,
+            Map<String, String> state,
+            @Nullable String text) {
         public Entry(int dx, int dy, int dz, String block) {
             this(dx, dy, dz, block, Map.of(), "");
         }
@@ -90,7 +97,11 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, Lis
         return path.equals("chest") || path.equals("trapped_chest") || path.endsWith("_chest") ? 1 : 0;
     }
 
-    public record PlacedEntry(BlockCoord pos, String block, Map<String, String> state, String text) {
+    public record PlacedEntry(
+            BlockCoord pos,
+            String block,
+            Map<String, String> state,
+            @Nullable String text) {
         public PlacedEntry(BlockCoord pos, String block) {
             this(pos, block, Map.of(), "");
         }

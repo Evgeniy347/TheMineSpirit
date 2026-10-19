@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class DoorWatch {
     private final DoorTuning.DoorRules rules;
@@ -81,7 +82,7 @@ public final class DoorWatch {
         return false;
     }
 
-    private static SpiritRef nearestFreeSpirit(BlockCoord door, List<SpiritRef> spirits, Set<UUID> busy) {
+    private static @Nullable SpiritRef nearestFreeSpirit(BlockCoord door, List<SpiritRef> spirits, Set<UUID> busy) {
         SpiritRef best = null;
         double bestDistance = Double.POSITIVE_INFINITY;
         for (SpiritRef spirit : spirits) {

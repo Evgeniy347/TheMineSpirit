@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskEventLog {
     public static final int CAPACITY = 256;
@@ -17,7 +18,7 @@ public final class TaskEventLog {
         CLOSED
     }
 
-    public record ReadResult(Kind kind, TaskEvent event) {
+    public record ReadResult(Kind kind, @Nullable TaskEvent event) {
         public static ReadResult event(TaskEvent event) {
             return new ReadResult(Kind.EVENT, event);
         }

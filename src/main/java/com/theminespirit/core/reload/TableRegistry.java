@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Единственный реестр держателей таблиц: одно место регистрации (адаптер добавляет определения один раз),
@@ -84,7 +85,7 @@ public final class TableRegistry {
         private final TableStatus.Source seedSource;
         private final String seedOrigin;
         private final Clock clock;
-        private volatile TableHolder<T> holder;
+        private volatile @Nullable TableHolder<T> holder;
 
         Registered(
                 TableDefinition<T> definition,
@@ -156,7 +157,8 @@ public final class TableRegistry {
     }
 
     /** Итог перезагрузки одной таблицы: обновлена ли версия и текст ошибки, если загрузка не удалась. */
-    public record Report(String id, boolean updated, String error) {
+    public record Report(
+            String id, boolean updated, @Nullable String error) {
         public boolean failed() {
             return error != null;
         }

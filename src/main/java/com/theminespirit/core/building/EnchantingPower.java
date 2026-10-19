@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Уровень чарования стола по ванильному правилу. Полка работает, если стоит на периметре 5×5 вокруг стола
@@ -36,8 +37,9 @@ public final class EnchantingPower {
                     if (Math.abs(dx) != SHELF_DISTANCE && Math.abs(dz) != SHELF_DISTANCE) {
                         continue;
                     }
-                    if (!path(BOOKSHELF)
-                            .equals(path(blockAt(schematic, table.x() + dx, table.y() + dy, table.z() + dz)))) {
+                    if (!Objects.equals(
+                            path(BOOKSHELF),
+                            path(blockAt(schematic, table.x() + dx, table.y() + dy, table.z() + dz)))) {
                         continue;
                     }
                     if (!isAir(schematic, table.x() + dx / 2, table.y() + dy, table.z() + dz / 2)) {
@@ -58,7 +60,7 @@ public final class EnchantingPower {
         Objects.requireNonNull(schematic, "Схема не может быть null: в ней ищут столы чарования");
         List<BlockCoord> tables = new ArrayList<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            if (path(ENCHANTING_TABLE).equals(path(entry.block()))) {
+            if (Objects.equals(path(ENCHANTING_TABLE), path(entry.block()))) {
                 tables.add(new BlockCoord(entry.dx(), entry.dy(), entry.dz()));
             }
         }
@@ -70,7 +72,7 @@ public final class EnchantingPower {
         return block == null || AIR.contains(block);
     }
 
-    private static String blockAt(Schematic schematic, int x, int y, int z) {
+    private static @Nullable String blockAt(Schematic schematic, int x, int y, int z) {
         for (Schematic.Entry entry : schematic.blocks()) {
             if (entry.dx() == x && entry.dy() == y && entry.dz() == z) {
                 return entry.block();
@@ -79,7 +81,7 @@ public final class EnchantingPower {
         return null;
     }
 
-    private static String path(String blockId) {
+    private static @Nullable String path(@Nullable String blockId) {
         if (blockId == null) {
             return null;
         }

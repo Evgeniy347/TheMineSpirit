@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -18,6 +20,6 @@ public record Modes(Map<CombatMode, ModeParams> params, double returnTolerance) 
     }
 
     public ModeParams of(CombatMode mode) {
-        return params.get(mode);
+        return present(params, mode, "Параметры режимов боя");
     }
 }

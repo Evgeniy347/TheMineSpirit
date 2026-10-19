@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,15 +20,15 @@ public record Scores(
     }
 
     public double total(TacticalOption option) {
-        return totals.get(option);
+        return present(totals, option, "Итоги оценки тактики");
     }
 
     public double factor(Factor factor) {
-        return factors.get(factor);
+        return present(factors, factor, "Факторы оценки тактики");
     }
 
     public double contribution(TacticalOption option, Factor factor) {
-        return contributions.get(option).get(factor);
+        return present(present(contributions, option, "Вклады оценки тактики"), factor, "Вклады варианта");
     }
 
     public TacticalOption best(Set<TacticalOption> candidates, ScoreWeights weights) {
@@ -60,7 +62,7 @@ public record Scores(
             Map<Factor, Double> row = new EnumMap<>(Factor.class);
             double sum = 0;
             for (Factor factor : Factor.values()) {
-                double part = weights.weight(factor, option) * values.get(factor);
+                double part = weights.weight(factor, option) * present(values, factor, "Значения факторов");
                 row.put(factor, part);
                 sum += part;
             }

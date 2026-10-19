@@ -1,6 +1,13 @@
 package com.theminespirit.core.observation;
 
-public record SpiritStatus(HeldItem held, Double health, Double maxHealth, Double food, BoardTaskRef boardTask) {
+import org.jspecify.annotations.Nullable;
+
+public record SpiritStatus(
+        @Nullable HeldItem held,
+        @Nullable Double health,
+        @Nullable Double maxHealth,
+        @Nullable Double food,
+        @Nullable BoardTaskRef boardTask) {
     public SpiritStatus {
         if (health != null && health < 0) {
             throw new IllegalArgumentException(

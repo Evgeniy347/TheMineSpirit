@@ -5,8 +5,10 @@ import com.theminespirit.core.plan.ParallelNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class ParallelExecutor extends NodeExecutor {
     private static final String STEP_FAILED = "Шаг параллельного узла провалился";
@@ -16,16 +18,20 @@ final class ParallelExecutor extends NodeExecutor {
     private final List<TaskNode> steps;
     private final ScriptRegistry scripts;
     private final ConditionRegistry conditions;
-    private NodeExecutor[] children;
-    private ScriptStatus[] results;
-    private String[] reasons;
-    private Throwable[] causes;
+    private final List<NodeExecutor> children = new ArrayList<>();
+    private final ScriptStatus[] results;
+    private final @Nullable String[] reasons;
+    private final @Nullable Throwable[] causes;
 
     ParallelExecutor(ParallelNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         this.mode = node.mode();
         this.steps = node.steps();
         this.scripts = scripts;
         this.conditions = conditions;
+        this.results = new ScriptStatus[steps.size()];
+        this.reasons = new String[steps.size()];
+        this.causes = new Throwable[steps.size()];
+        Arrays.fill(results, ScriptStatus.RUNNING);
     }
 
     @Override
@@ -36,26 +42,21 @@ final class ParallelExecutor extends NodeExecutor {
     }
 
     private void createChildren() {
-        if (children != null) {
+        if (!children.isEmpty()) {
             return;
         }
-        children = new NodeExecutor[steps.size()];
-        results = new ScriptStatus[steps.size()];
-        reasons = new String[steps.size()];
-        causes = new Throwable[steps.size()];
-        for (int i = 0; i < steps.size(); i++) {
-            children[i] = NodeExecutor.create(steps.get(i), scripts, conditions);
-            results[i] = ScriptStatus.RUNNING;
+        for (TaskNode step : steps) {
+            children.add(NodeExecutor.create(step, scripts, conditions));
         }
     }
 
     private void tickRunningChildren() {
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                results[i] = children[i].tick();
+                results[i] = children.get(i).tick();
                 if (results[i] == ScriptStatus.FAILED) {
-                    reasons[i] = children[i].failureReason();
-                    causes[i] = children[i].failureCause().orElse(null);
+                    reasons[i] = children.get(i).failureReason();
+                    causes[i] = children.get(i).failureCause().orElse(null);
                 }
             }
         }
@@ -69,7 +70,7 @@ final class ParallelExecutor extends NodeExecutor {
     }
 
     private ScriptStatus evaluateAll() {
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.FAILED) {
                 cancelAll();
                 fail(reasons[i] != null ? reasons[i] : STEP_FAILED, causes[i]);
@@ -120,7 +121,7 @@ final class ParallelExecutor extends NodeExecutor {
     }
 
     private void cancelAll() {
-        if (children == null) {
+        if (children.isEmpty()) {
             return;
         }
         for (NodeExecutor child : children) {
@@ -135,18 +136,18 @@ final class ParallelExecutor extends NodeExecutor {
 
     @Override
     void suspend() {
-        for (int i = 0; children != null && i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                children[i].suspend();
+                children.get(i).suspend();
             }
         }
     }
 
     @Override
     void resume() {
-        for (int i = 0; children != null && i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                children[i].resume();
+                children.get(i).resume();
             }
         }
     }
@@ -154,9 +155,9 @@ final class ParallelExecutor extends NodeExecutor {
     @Override
     PolicyExemptions exemptions() {
         PolicyExemptions union = PolicyExemptions.empty();
-        for (int i = 0; children != null && i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                union = union.union(children[i].exemptions());
+                union = union.union(children.get(i).exemptions());
             }
         }
         return union;
@@ -164,16 +165,17 @@ final class ParallelExecutor extends NodeExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        if (children == null) {
+        if (children.isEmpty()) {
             List<TaskProgress.ParallelChild> pending = new ArrayList<>(steps.size());
             for (int i = 0; i < steps.size(); i++) {
                 pending.add(new TaskProgress.ParallelChild(ScriptStatus.RUNNING, null, null));
             }
             return new TaskProgress.ParallelAt(pending);
         }
-        List<TaskProgress.ParallelChild> listed = new ArrayList<>(children.length);
-        for (int i = 0; i < children.length; i++) {
-            TaskProgress child = results[i] == ScriptStatus.RUNNING ? children[i].snapshot() : null;
+        List<TaskProgress.ParallelChild> listed = new ArrayList<>(children.size());
+        for (int i = 0; i < children.size(); i++) {
+            TaskProgress child =
+                    results[i] == ScriptStatus.RUNNING ? children.get(i).snapshot() : null;
             listed.add(new TaskProgress.ParallelChild(results[i], reasons[i], child));
         }
         return new TaskProgress.ParallelAt(listed);
@@ -183,14 +185,14 @@ final class ParallelExecutor extends NodeExecutor {
     void applyRestore(TaskProgress progress) {
         TaskProgress.ParallelAt at = (TaskProgress.ParallelAt) progress;
         createChildren();
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             TaskProgress.ParallelChild child = at.children().get(i);
             if (child.status() == ScriptStatus.RUNNING) {
                 if (child.child() != null) {
-                    children[i].restore(child.child());
+                    children.get(i).restore(child.child());
                 }
             } else {
-                children[i].forceTerminal(child.status(), child.reason());
+                children.get(i).forceTerminal(child.status(), child.reason());
             }
             results[i] = child.status();
             reasons[i] = child.reason();
@@ -198,13 +200,14 @@ final class ParallelExecutor extends NodeExecutor {
     }
 
     @Override
+    @Nullable
     String currentScript() {
-        if (children == null) {
+        if (children.isEmpty()) {
             return null;
         }
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                String script = children[i].currentScript();
+                String script = children.get(i).currentScript();
                 if (script != null) {
                     return script;
                 }
@@ -215,12 +218,12 @@ final class ParallelExecutor extends NodeExecutor {
 
     @Override
     Optional<ScriptInstance.Progress> scriptProgress() {
-        if (children == null) {
+        if (children.isEmpty()) {
             return Optional.empty();
         }
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                Optional<ScriptInstance.Progress> progress = children[i].scriptProgress();
+                Optional<ScriptInstance.Progress> progress = children.get(i).scriptProgress();
                 if (progress.isPresent()) {
                     return progress;
                 }
@@ -231,13 +234,13 @@ final class ParallelExecutor extends NodeExecutor {
 
     @Override
     boolean observesWhileTacticsOwns() {
-        if (children == null) {
+        if (children.isEmpty()) {
             return false;
         }
         boolean observes = false;
-        for (int i = 0; i < children.length; i++) {
+        for (int i = 0; i < children.size(); i++) {
             if (results[i] == ScriptStatus.RUNNING) {
-                if (!children[i].observesWhileTacticsOwns()) {
+                if (!children.get(i).observesWhileTacticsOwns()) {
                     return false;
                 }
                 observes = true;

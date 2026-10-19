@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Отметки «постройка стоит»: какой кейс какого уровня выполнен. Живые DONE-задания
@@ -27,7 +28,7 @@ public final class BoardLedger {
         return PREFIX + boardCase.name() + ":" + level;
     }
 
-    public static Optional<BuildingMark> parse(String dependency) {
+    public static Optional<BuildingMark> parse(@Nullable String dependency) {
         if (dependency == null || !dependency.startsWith(PREFIX)) {
             return Optional.empty();
         }

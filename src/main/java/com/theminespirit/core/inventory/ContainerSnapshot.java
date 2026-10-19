@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record ContainerSnapshot(BlockCoord pos, List<Stack> slots, String category) {
+public record ContainerSnapshot(
+        BlockCoord pos, List<Stack> slots, @Nullable String category) {
     public ContainerSnapshot {
         Objects.requireNonNull(pos, "Позиция контейнера не может быть null: по ней выбирают ближайший");
         Objects.requireNonNull(

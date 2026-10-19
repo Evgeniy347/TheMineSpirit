@@ -43,7 +43,7 @@ Spotless 8.10.3 + palantir-java-format 2.102.0 (отступ 4, как у нас
    с ревью диффа (~200); руками — ReferenceEquality через `stack.is(item)`/`state.is(block)`, StringSplitter через
    `split(regex, -1)`, EnumOrdinal, ReturnValueIgnored (`BoardConfig.java:256`) и прочие (~60). Временный список —
    `-Xep:<Check>:OFF` по ещё не исправленным, до пустого.
-3. [ ] NullAway в `core`: `@Nullable` (JSpecify) там, где null реально бывает, иначе убрать null; 3–4 блока по подпакетам
+3. [x] NullAway в `core`: `@Nullable` (JSpecify) там, где null реально бывает, иначе убрать null; 3–4 блока по подпакетам
    (engine+script; task+board; observation+tactics+intellect; rest и прочее).
 4. [ ] Checkstyle минимальный: DeclarationOrder 200 (перестановка), MissingSwitchDefault 49, ParameterNumber 35
    (объект-параметр, согласовать с MethodShapeGuard), MethodLength — порог ближе к ~40 строк CONVENTIONS (решить по замеру).

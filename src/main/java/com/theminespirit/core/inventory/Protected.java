@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class Protected {
     private final List<String> patterns;
-    private final IdFilter filter;
+    private final @Nullable IdFilter filter;
     private final List<Stack> inventory;
     private final int[] giveAway;
 

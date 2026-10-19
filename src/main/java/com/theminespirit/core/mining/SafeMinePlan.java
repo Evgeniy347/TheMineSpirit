@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * План безопасной шахты: спуск лесенкой до заданного этажа или штольня заданной длины.
@@ -112,7 +113,7 @@ public record SafeMinePlan(
             DescentDirection direction,
             int torchInterval,
             List<SafeMineStep> steps,
-            String dangerReason) {
+            @Nullable String dangerReason) {
         DescentStop stop = dangerReason == null ? DescentStop.TARGET_Y : DescentStop.DANGER;
         return new SafeMinePlan(
                 entry, mode, direction, torchInterval, steps, stop, dangerReason == null ? "" : dangerReason);
@@ -165,7 +166,8 @@ public record SafeMinePlan(
         return new Step(new SafeMineStep(index, floor, stand, passage, List.copyOf(fill), fallingAbove, torch));
     }
 
-    private static String floorHazard(SafetyView view, int index, BlockCoord column, int floor, Set<BlockCoord> fill) {
+    private static @Nullable String floorHazard(
+            SafetyView view, int index, BlockCoord column, int floor, Set<BlockCoord> fill) {
         BlockCoord floorCell = new BlockCoord(column.x(), floor, column.z());
         Cell cell = view.cellAt(floorCell);
         if (cell == Cell.SOLID || cell == Cell.FALLING) {

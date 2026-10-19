@@ -1,10 +1,12 @@
 package com.theminespirit.core.intellect;
 
+import org.jspecify.annotations.Nullable;
+
 public final class Invitation {
     private boolean opened;
     private long openedAt;
     private long deadline;
-    private InvitationStage stage;
+    private @Nullable InvitationStage stage;
     private boolean goWithout;
     private int extendsUsed;
 

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class TaskSnapshotCodec {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -45,8 +46,8 @@ public final class TaskSnapshotCodec {
             root.put("reason", snapshot.reason());
         }
         if (snapshot.running()) {
-            root.set("plan", planToJson(snapshot.plan()));
-            root.set("progress", progressToJson(snapshot.progress()));
+            root.set("plan", planToJson(snapshot.runningPlan()));
+            root.set("progress", progressToJson(snapshot.runningProgress()));
         }
         try {
             return MAPPER.writeValueAsString(root);
@@ -197,12 +198,12 @@ public final class TaskSnapshotCodec {
         };
     }
 
-    private static TaskProgress optionalChild(JsonNode node) {
+    private static @Nullable TaskProgress optionalChild(JsonNode node) {
         JsonNode child = node.get("child");
         return child == null || child.isNull() ? null : parseProgress(child);
     }
 
-    private static String optionalText(JsonNode node, String field) {
+    private static @Nullable String optionalText(JsonNode node, String field) {
         JsonNode value = node.get(field);
         return value == null || value.isNull() ? null : value.asText();
     }
@@ -229,7 +230,7 @@ public final class TaskSnapshotCodec {
         return value.textValue();
     }
 
-    private static Map<String, Object> parseState(JsonNode node) {
+    private static Map<String, Object> parseState(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return Map.of();
         }
@@ -299,7 +300,8 @@ public final class TaskSnapshotCodec {
         checkStepIndex(owner, at.index(), size, at.child(), steps);
     }
 
-    private static void checkStepIndex(String owner, int index, int size, TaskProgress child, List<TaskNode> steps) {
+    private static void checkStepIndex(
+            String owner, int index, int size, @Nullable TaskProgress child, List<TaskNode> steps) {
         if (index > size) {
             throw outOfRange(owner, index, size);
         }
@@ -369,16 +371,17 @@ public final class TaskSnapshotCodec {
             }
             case THEN -> requireBranchChild("then", condition.thenStep(), at.child());
             case ELSE -> {
-                if (condition.elseStep() == null) {
+                TaskNode elseStep = condition.elseStep();
+                if (elseStep == null) {
                     throw new SnapshotFormatException("Прогресс condition с веткой else, но у плана нет ветки else: "
                             + "снимок повреждён или собран другой версией плана");
                 }
-                requireBranchChild("else", condition.elseStep(), at.child());
+                requireBranchChild("else", elseStep, at.child());
             }
         }
     }
 
-    private static void requireBranchChild(String branch, TaskNode step, TaskProgress child) {
+    private static void requireBranchChild(String branch, TaskNode step, @Nullable TaskProgress child) {
         if (child == null) {
             throw new SnapshotFormatException("Прогресс condition с веткой " + branch + " без child: выбранная ветка "
                     + "обязана нести потомка, иначе восстановление не знает, что продолжать");
@@ -422,7 +425,7 @@ public final class TaskSnapshotCodec {
         };
     }
 
-    private static ObjectNode indexedToJson(String type, int index, TaskProgress child) {
+    private static ObjectNode indexedToJson(String type, int index, @Nullable TaskProgress child) {
         ObjectNode node = MAPPER.createObjectNode();
         node.put("type", type);
         node.put("index", index);
@@ -536,5 +539,5 @@ public final class TaskSnapshotCodec {
         }
     }
 
-    public record SaveEncoded(String json, String failureReason) {}
+    public record SaveEncoded(String json, @Nullable String failureReason) {}
 }

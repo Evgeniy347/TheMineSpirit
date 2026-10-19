@@ -1,5 +1,7 @@
 package com.theminespirit.core.coordinator;
 
+import static com.theminespirit.core.Lookup.present;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -104,7 +106,8 @@ public final class WorkReservations {
                 .map(Map.Entry::getKey)
                 .toList();
         for (WorkTarget target : expired) {
-            Lease lease = leases.remove(target);
+            Lease lease = present(leases, target, "Аренды работ");
+            leases.remove(target);
             forget(target, lease.owner());
         }
         return expired.size();
@@ -119,7 +122,7 @@ public final class WorkReservations {
     }
 
     private void forget(WorkTarget target, UUID spirit) {
-        Set<WorkTarget> owned = byOwner.get(spirit);
+        Set<WorkTarget> owned = present(byOwner, spirit, "Работы духа");
         owned.remove(target);
         if (owned.isEmpty()) {
             byOwner.remove(spirit);

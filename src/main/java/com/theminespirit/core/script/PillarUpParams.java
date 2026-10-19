@@ -2,8 +2,9 @@ package com.theminespirit.core.script;
 
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public record PillarUpParams(int height, String block, boolean down) {
+public record PillarUpParams(int height, @Nullable String block, boolean down) {
     public PillarUpParams {
         if (height < 1) {
             throw new IllegalArgumentException("Высота столба " + height + " меньше 1: строить нечего");

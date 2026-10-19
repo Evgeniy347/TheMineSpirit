@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public record ProcessingStock(
         int charcoal,
@@ -51,7 +52,7 @@ public record ProcessingStock(
         return bestLogItem().flatMap(ProcessingStock::planksOf);
     }
 
-    public static Optional<String> planksOf(String logId) {
+    public static Optional<String> planksOf(@Nullable String logId) {
         if (logId == null || logId.isBlank()) {
             return Optional.empty();
         }

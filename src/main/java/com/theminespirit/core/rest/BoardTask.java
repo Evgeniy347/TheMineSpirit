@@ -3,6 +3,7 @@ package com.theminespirit.core.rest;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Задание доски глазами наблюдателя REST: кейс, приоритет, владелец, статус, гейт и зависимости.
@@ -13,7 +14,7 @@ public record BoardTask(
         String id,
         String boardCase,
         int priority,
-        String assignee,
+        @Nullable String assignee,
         String status,
         Map<String, Integer> requiredItems,
         Map<String, Integer> missing,

@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public record DescentPlan(
         BlockCoord entry,
@@ -86,7 +87,7 @@ public record DescentPlan(
                 entry, direction, targetY, torchInterval, steps, stop, dangerReason == null ? "" : dangerReason);
     }
 
-    public static String dangerAt(SafetyView view, DescentStep step, DescentDirection direction) {
+    public static @Nullable String dangerAt(SafetyView view, DescentStep step, DescentDirection direction) {
         Objects.requireNonNull(view, "Вид мира не может быть null: без него не проверить безопасность шага");
         Objects.requireNonNull(step, "Шаг спуска не может быть null: опасность проверяется у конкретного шага");
         Objects.requireNonNull(direction, "Направление спуска не может быть null: от него зависят боковые клетки");

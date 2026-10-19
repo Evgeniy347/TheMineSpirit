@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * План освещения территории факелами: по карте блочного света выбирает клетки под факелы так, чтобы на земле
@@ -100,7 +101,7 @@ public final class LightPlan {
         return hit;
     }
 
-    private static LightCell placeableFor(int gx, int gz, Map<Long, LightCell> byColumn) {
+    private static @Nullable LightCell placeableFor(int gx, int gz, Map<Long, LightCell> byColumn) {
         LightCell exact = byColumn.get(key(gx, gz));
         if (exact != null && exact.placeable()) {
             return exact;
@@ -126,7 +127,7 @@ public final class LightPlan {
         return best;
     }
 
-    private static boolean isEarlier(BlockCoord candidate, LightCell current) {
+    private static boolean isEarlier(BlockCoord candidate, @Nullable LightCell current) {
         return current == null || candidate.compareTo(current.coord()) < 0;
     }
 

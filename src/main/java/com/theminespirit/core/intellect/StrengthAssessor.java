@@ -158,12 +158,11 @@ public final class StrengthAssessor {
     }
 
     private static EnemyFact nearest(SpiritSnapshot spirit, List<EnemyFact> enemies) {
-        EnemyFact nearest = null;
-        double nearestDistance = Double.POSITIVE_INFINITY;
+        EnemyFact nearest = enemies.get(0);
+        double nearestDistance = nearest.pos().distanceTo(spirit.pos());
         for (EnemyFact enemy : enemies) {
             double distance = enemy.pos().distanceTo(spirit.pos());
-            if (nearest == null
-                    || distance < nearestDistance
+            if (distance < nearestDistance
                     || (distance == nearestDistance && enemy.id().compareTo(nearest.id()) < 0)) {
                 nearest = enemy;
                 nearestDistance = distance;

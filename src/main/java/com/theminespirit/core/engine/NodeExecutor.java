@@ -9,11 +9,12 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 abstract class NodeExecutor {
     private ScriptStatus status = ScriptStatus.RUNNING;
-    private String reason;
-    private Throwable cause;
+    private @Nullable String reason;
+    private @Nullable Throwable cause;
 
     static NodeExecutor create(TaskNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         EngineCounters.executorCreations++;
@@ -40,7 +41,7 @@ abstract class NodeExecutor {
 
     abstract void applyRestore(TaskProgress progress);
 
-    final void forceTerminal(ScriptStatus terminal, String reason) {
+    final void forceTerminal(ScriptStatus terminal, @Nullable String reason) {
         status = terminal;
         this.reason = reason;
         this.cause = null;
@@ -59,7 +60,7 @@ abstract class NodeExecutor {
 
     abstract ScriptStatus advance();
 
-    final String failureReason() {
+    final @Nullable String failureReason() {
         return reason;
     }
 
@@ -71,14 +72,19 @@ abstract class NodeExecutor {
         fail(message, null);
     }
 
-    final void fail(String message, Throwable cause) {
+    final void fail(String message, @Nullable Throwable cause) {
         status = ScriptStatus.FAILED;
         reason = message;
         this.cause = cause;
     }
 
     final void failFrom(NodeExecutor child) {
-        fail(child.reason, child.cause);
+        String why = child.reason;
+        if (why == null) {
+            throw new IllegalStateException("Шаг " + child.getClass().getSimpleName() + " провалился без причины: "
+                    + "провал всегда несёт причину через fail(…), иначе журнал задачи пуст");
+        }
+        fail(why, child.cause);
     }
 
     static String describe(Throwable error) {
@@ -87,7 +93,7 @@ abstract class NodeExecutor {
         return message == null || message.isBlank() ? type : type + ": " + message;
     }
 
-    abstract String currentScript();
+    abstract @Nullable String currentScript();
 
     boolean observesWhileTacticsOwns() {
         return false;

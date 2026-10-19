@@ -13,8 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
-public record TaskRequest(UUID requestId, String goal, JsonNode plan, Map<String, Object> params) {
+public record TaskRequest(
+        UUID requestId, @Nullable String goal, @Nullable JsonNode plan, Map<String, Object> params) {
     public static final int MAX_GOAL_LENGTH = 500;
 
     private static final String REQUEST_ID = "request_id";
@@ -57,12 +59,12 @@ public record TaskRequest(UUID requestId, String goal, JsonNode plan, Map<String
         return new TaskRequest(requestId, goal, plan, params);
     }
 
-    private static String textOrNull(JsonNode root, String field) {
+    private static @Nullable String textOrNull(JsonNode root, String field) {
         JsonNode node = root.get(field);
         return node == null || node.isNull() ? null : goal(node);
     }
 
-    private static JsonNode objectOrNull(JsonNode root, String field) {
+    private static @Nullable JsonNode objectOrNull(JsonNode root, String field) {
         JsonNode node = root.get(field);
         return node == null || node.isNull() ? null : plan(node);
     }

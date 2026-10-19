@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Живые числа доски: приоритеты кейсов, модификаторы приоритета и интервалы. Читается из
@@ -120,7 +121,7 @@ public record BoardConfig(
     }
 
     private static Map<String, Integer> integers(
-            JsonNode node, String origin, String field, Consumer<String> known, boolean allowNegative) {
+            @Nullable JsonNode node, String origin, String field, Consumer<String> known, boolean allowNegative) {
         Map<String, Integer> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -151,7 +152,8 @@ public record BoardConfig(
         return values;
     }
 
-    private static Map<String, Long> longs(JsonNode node, String origin, String field, Consumer<String> known) {
+    private static Map<String, Long> longs(
+            @Nullable JsonNode node, String origin, String field, Consumer<String> known) {
         Map<String, Long> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;
@@ -181,7 +183,7 @@ public record BoardConfig(
         return values;
     }
 
-    private static List<String> caseList(JsonNode node, String origin, String field) {
+    private static List<String> caseList(@Nullable JsonNode node, String origin, String field) {
         List<String> values = new ArrayList<>();
         if (node == null || node.isNull()) {
             return values;
@@ -209,7 +211,7 @@ public record BoardConfig(
         return List.copyOf(values);
     }
 
-    private static Map<String, Map<String, Integer>> productMap(JsonNode node, String origin, String field) {
+    private static Map<String, Map<String, Integer>> productMap(@Nullable JsonNode node, String origin, String field) {
         Map<String, Map<String, Integer>> values = new LinkedHashMap<>();
         if (node == null || node.isNull()) {
             return values;

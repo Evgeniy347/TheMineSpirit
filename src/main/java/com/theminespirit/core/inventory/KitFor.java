@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class KitFor {
     private static final Set<String> ROOT_FIELDS = Set.of("activities", "child");
@@ -94,7 +95,7 @@ public final class KitFor {
         return load().kit(activity, isChild);
     }
 
-    public BaseKit kit(String activity, boolean isChild) {
+    public BaseKit kit(@Nullable String activity, boolean isChild) {
         if (isChild) {
             return BaseKit.of(childRules, childNeverGiveAway);
         }
@@ -174,7 +175,7 @@ public final class KitFor {
         return Optional.empty();
     }
 
-    private Activity find(String activity) {
+    private @Nullable Activity find(String activity) {
         for (Activity candidate : activities) {
             if (candidate.name().equals(activity)) {
                 return candidate;
@@ -193,7 +194,7 @@ public final class KitFor {
         return node;
     }
 
-    private static List<KitRule> parseRules(JsonNode node, String origin, String activity) {
+    private static List<KitRule> parseRules(@Nullable JsonNode node, String origin, String activity) {
         if (node == null || node.isNull()) {
             return List.of();
         }
@@ -223,7 +224,12 @@ public final class KitFor {
     }
 
     private static KitRule rule(
-            List<String> match, String category, int keep, KitMode mode, String origin, String what) {
+            @Nullable List<String> match,
+            @Nullable String category,
+            int keep,
+            KitMode mode,
+            String origin,
+            String what) {
         try {
             return new KitRule(match, category, keep, mode);
         } catch (IllegalArgumentException error) {
