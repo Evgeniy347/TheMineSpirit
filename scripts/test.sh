@@ -5,7 +5,7 @@
 #   scripts/test.sh unit [--tests <фильтр gradle>]…
 #   scripts/test.sh gametest [имя пачки или теста…]
 # Пределы времени (переменные окружения, секунды):
-#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 180), THEMINESPIRIT_UNIT_STOP_SECONDS (360)
+#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 300), THEMINESPIRIT_UNIT_STOP_SECONDS (900; холодная сборка с анализаторами на 4 ядрах — до ~6 мин)
 #   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (1500)
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
 # Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
@@ -22,8 +22,8 @@ LOG_DIR="TestResults/logs"
 mkdir -p "$LOG_DIR"
 
 # Пределы времени (секунды)
-UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-180}"
-UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-360}"
+UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-300}"
+UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-900}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-300}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-1500}"
 
@@ -72,8 +72,8 @@ usage() {
 
 Переменные окружения:
   THEMINESPIRIT_GRADLEW              команда запуска gradle (по умолчанию ./gradlew)
-  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 180)
-  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 360)
+  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 300)
+  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 900)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение gametest (по умолчанию 300)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 1500)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
