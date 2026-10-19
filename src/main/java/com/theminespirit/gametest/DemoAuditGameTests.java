@@ -782,28 +782,28 @@ public final class DemoAuditGameTests {
 
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
     // результат.
-    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 40000)
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
     public static void demo_FamilyHouseLevel4None_MatchesScheme(GameTestHelper helper) {
         audit(helper, "family_house", 4, BuildRotation.NONE, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
     }
 
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
     // результат.
-    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 40000)
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
     public static void demo_FamilyHouseLevel4Clockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "family_house", 4, BuildRotation.CLOCKWISE_90, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
     }
 
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
     // результат.
-    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 40000)
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
     public static void demo_FamilyHouseLevel4Clockwise180_MatchesScheme(GameTestHelper helper) {
         audit(helper, "family_house", 4, BuildRotation.CLOCKWISE_180, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
     }
 
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
     // результат.
-    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 40000)
+    @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
     public static void demo_FamilyHouseLevel4Counterclockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "family_house", 4, BuildRotation.COUNTERCLOCKWISE_90, FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS);
     }

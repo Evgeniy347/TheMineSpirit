@@ -29,6 +29,8 @@ final class BuildSupplyTrip {
     // Заходов на одну стройку: дом уровня 4 — ~100 стопок на 36 слотов; больше — стройка не продвигается.
     static final int MAX_TRIPS = 32;
     private static final int SEARCH_SLICES = 8;
+    // Площадка демо шире постройки на 5 (сундук стоит на ней); дальше — чужие сундуки соседних строек.
+    private static final int SEARCH_MARGIN = 6;
 
     private BuildSupplyTrip() {}
 
@@ -120,7 +122,7 @@ final class BuildSupplyTrip {
         return free;
     }
 
-    // Сундуки у площадки: от середины постройки на полразмера плюс обычный радиус поиска контейнера (8).
+    // Сундуки у площадки: от середины постройки на полразмера и ещё SEARCH_MARGIN.
     private static List<BlockPos> containers(SpiritEntity spirit, SchematicSite site) {
         int minX = Integer.MAX_VALUE;
         int minZ = Integer.MAX_VALUE;
@@ -138,7 +140,7 @@ final class BuildSupplyTrip {
             return List.of();
         }
         BlockPos centre = new BlockPos((minX + maxX) / 2, y, (minZ + maxZ) / 2);
-        int radius = (Math.max(maxX - minX, maxZ - minZ) + 1) / 2 + CatalogLimits.CONTAINER_RADIUS_DEFAULT;
+        int radius = (Math.max(maxX - minX, maxZ - minZ) + 1) / 2 + SEARCH_MARGIN;
         BlockLocator.Search search =
                 BlockLocator.search(spirit.level(), centre, radius, ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();
