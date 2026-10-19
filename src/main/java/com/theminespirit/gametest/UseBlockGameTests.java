@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.state.properties.AttachFace;
@@ -67,6 +68,37 @@ public final class UseBlockGameTests {
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(6, 2, 5)).getValue(RedstoneLampBlock.LIT),
                     "лампа рядом с включённым рычагом обязана загореться: нажатие передаёт питание соседям");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // mc: калитка открывается по взгляду нажавшего (player.getDirection()) — без игрока use_block падал на null.
+    @GameTest(template = "arena", batch = "useblock_gate", timeoutTicks = 200)
+    public static void useBlock_ClosedFenceGate_OpensGate(GameTestHelper helper) {
+        MovementScene.prepare(helper);
+        GameTestFixtures.holdDayTime(helper, NOON);
+        BlockPos gate = new BlockPos(5, 1, 5);
+        helper.setBlock(
+                gate,
+                Blocks.OAK_FENCE_GATE
+                        .defaultBlockState()
+                        .setValue(FenceGateBlock.FACING, Direction.NORTH)
+                        .setValue(BlockStateProperties.OPEN, false));
+
+        SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 7));
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "use_block", gate), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "use_block обязан открыть закрытую калитку: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    helper.getBlockState(gate).getValue(BlockStateProperties.OPEN),
+                    "калитка после нажатия обязана стоять открытой");
             GameTestFixtures.finish(helper);
         });
     }
