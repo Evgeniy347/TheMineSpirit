@@ -115,6 +115,54 @@
     "inner_height",
     "light"
    ]
+  },
+  {
+   "file": "valid_house_level2"
+  },
+  {
+   "file": "level_ceiling_low",
+   "expect": [
+    "level_ceiling"
+   ]
+  },
+  {
+   "file": "window_size_small",
+   "expect": [
+    "window_size"
+   ]
+  },
+  {
+   "file": "decor_poor",
+   "expect": [
+    "decor"
+   ]
+  },
+  {
+   "file": "barrel_walled_off",
+   "expect": [
+    "reachable"
+   ]
+  },
+  {
+   "file": "stairs_ladder",
+   "expect": [
+    "stairs"
+   ]
+  },
+  {
+   "file": "valid_stairs_wide"
+  },
+  {
+   "file": "stairs_narrow",
+   "expect": [
+    "stairs"
+   ]
+  },
+  {
+   "file": "hanging_lantern_air",
+   "expect": [
+    "support"
+   ]
   }
  ]
 }

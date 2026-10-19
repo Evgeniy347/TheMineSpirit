@@ -91,7 +91,8 @@ class SchematicRulesTests {
                 fixture.file(),
                 document.header().type().orElseThrow(),
                 document.schematic(),
-                document.header().entrance().orElseThrow());
+                document.header().entrance().orElseThrow(),
+                document.header().level());
     }
 
     private static List<Fixture> fixtures() {

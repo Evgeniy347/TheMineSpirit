@@ -52,13 +52,13 @@ class PresetLibraryTests {
     }
 
     @Test
-    void parse_RealIndex_LoadsAllSixteenPresets() {
+    void parse_RealIndex_LoadsAllNineteenPresets() {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                16,
+                19,
                 library.size(),
-                "Библиотека обязана прочитать все шестнадцать пресетов, включая два уровня чаровальни, "
+                "Библиотека обязана прочитать все девятнадцать пресетов, включая три уровня дома семьи, два уровня чаровальни, "
                         + "четыре уровня склада и загоны трёх уровней: без них стратегу не из чего "
                         + "составлять планировку поселения");
         assertEquals(
@@ -78,7 +78,10 @@ class PresetLibraryTests {
                         "storage_v1",
                         "storage_v2",
                         "storage_v3",
-                        "storage_v4"),
+                        "storage_v4",
+                        "family_house_1",
+                        "family_house_2",
+                        "family_house_3"),
                 library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
@@ -269,9 +272,9 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                16,
+                19,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из шестнадцати пресетов: пропуск тела оставил бы пресет без схемы");
+                "Индекс обязан назвать по телу на каждый из девятнадцати пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",
                 paths.get(2),

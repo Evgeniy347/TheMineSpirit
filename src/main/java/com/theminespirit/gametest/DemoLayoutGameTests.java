@@ -29,7 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /**
  * Раскладка демо-стройки, увиденная из мира: площадка вокруг дома расчищена и выровнена до стройки,
  * вход без явного поворота смотрит на игрока в любую сторону, а после стройки на площадке нет ни одного
- * блока мимо схемы и сундука. Проверяется на доме семьи: у него есть крыша, окна и мебель.
+ * блока мимо схемы, сундука и таблички с названием. Проверяется на каменном доме: у него есть крыша, окна и мебель.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -57,7 +57,7 @@ public final class DemoLayoutGameTests {
 
     private static DemoPlacement placement(BlockPos anchor, int lookDx, int lookDz) {
         Preset family =
-                DataTables.INSTANCE.presets().current().byId("family_house").orElseThrow();
+                DataTables.INSTANCE.presets().current().byId("stone_house").orElseThrow();
         return DemoPlacement.compute(
                 new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
                 new DemoPlacement.Look(lookDx, lookDz),
@@ -71,6 +71,12 @@ public final class DemoLayoutGameTests {
         for (BlockCoord cell : placement.platform().cells()) {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             boolean isChest = cell.equals(chest);
+            if (cell.equals(new BlockCoord(chest.x() + 1, chest.y(), chest.z()))) {
+                helper.assertTrue(
+                        helper.getLevel().getBlockState(pos).is(Blocks.OAK_SIGN),
+                        "Рядом с сундуком обязана стоять табличка с названием постройки (владелец 19.10): " + cell);
+                continue;
+            }
             if (isChest) {
                 helper.assertTrue(
                         helper.getLevel().getBlockState(pos).is(Blocks.CHEST),
@@ -78,14 +84,15 @@ public final class DemoLayoutGameTests {
             } else {
                 helper.assertTrue(
                         helper.getLevel().getBlockState(pos).isAir(),
-                        "До стройки на площадке не должно быть блоков, кроме сундука, а в " + cell + " стоит "
+                        "До стройки на площадке не должно быть блоков, кроме сундука и таблички с названием постройки, а в "
+                                + cell + " стоит "
                                 + helper.getLevel().getBlockState(pos).getBlock());
             }
         }
     }
 
     private static void assertBuiltMatchesSchema(GameTestHelper helper, DemoPlacement placement) {
-        Schematic schematic = SchematicResources.load("family_house");
+        Schematic schematic = SchematicResources.load("stone_house");
         List<Schematic.PlacedEntry> expected = schematic.entries(placement.origin(), placement.rotation());
         Map<BlockCoord, String> schema = new HashMap<>();
         for (Schematic.PlacedEntry entry : expected) {
@@ -94,6 +101,10 @@ public final class DemoLayoutGameTests {
         for (BlockCoord cell : placement.platform().cells()) {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             var state = helper.getLevel().getBlockState(pos);
+            BlockCoord chest = placement.chest();
+            if (cell.equals(new BlockCoord(chest.x() + 1, chest.y(), chest.z())) && state.is(Blocks.OAK_SIGN)) {
+                continue;
+            }
             if (cell.equals(placement.chest())) {
                 helper.assertTrue(state.is(Blocks.CHEST), "Сундук обязан остаться на площадке после стройки: " + cell);
                 continue;
@@ -122,7 +133,7 @@ public final class DemoLayoutGameTests {
 
         int accepted = dispatcher(helper)
                 .execute(
-                        "spirit demo family_house " + anchor.getX() + " " + anchor.getY() + " " + anchor.getZ(),
+                        "spirit demo stone_house " + anchor.getX() + " " + anchor.getY() + " " + anchor.getZ(),
                         source(player));
         helper.assertTrue(accepted == 1, "Демо-стройка без явного поворота обязана начаться: результат=" + accepted);
 

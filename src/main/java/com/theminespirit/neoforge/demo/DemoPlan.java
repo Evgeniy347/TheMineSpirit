@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.demo;
 
 import com.theminespirit.core.building.DemoPlacement;
+import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,8 @@ record DemoPlan(
         String scheme,
         DemoPlacement placement,
         Map<String, Integer> materials,
-        List<Placement> preplaced) {
+        List<Placement> preplaced,
+        List<Schematic.PlacedEntry> entries) {
     record Placement(BlockCoord pos, String block) {
         Placement {
             Objects.requireNonNull(pos, "Позиция блока не может быть null: без неё блок не поставить");
@@ -26,5 +28,6 @@ record DemoPlan(
         Objects.requireNonNull(placement, "Раскладка не может быть null: без неё неизвестно, где строить");
         materials = Map.copyOf(materials);
         preplaced = List.copyOf(preplaced);
+        entries = List.copyOf(entries);
     }
 }

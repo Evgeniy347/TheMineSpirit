@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BlockSupport;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,6 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -184,6 +187,9 @@ public final class BlockPlacer {
         if (upperHalfOnLower(level, target, state)) {
             return true;
         }
+        if (hanging(state) || onPost(level, target, state)) {
+            return state.canSurvive(level, target);
+        }
         return BlockSupport.hasSupport(
                         (x, y, z, face) -> {
                             BlockPos pos = new BlockPos(x, y, z);
@@ -195,9 +201,25 @@ public final class BlockPlacer {
                 && state.canSurvive(level, target);
     }
 
+    private static boolean onPost(Level level, BlockPos target, BlockState state) {
+        String block = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+        String below = BuiltInRegistries.BLOCK
+                .getKey(level.getBlockState(target.below()).getBlock())
+                .toString();
+        return SchematicBlocks.standsOnCenter(block) && SchematicBlocks.isCenterPost(below);
+    }
+
+    private static boolean hanging(BlockState state) {
+        if (state.hasProperty(BlockStateProperties.HANGING)) {
+            return state.getValue(BlockStateProperties.HANGING);
+        }
+        return state.getBlock() instanceof ChainBlock;
+    }
+
     private static Direction direction(BlockSupport.Face face) {
         return switch (face) {
             case UP -> Direction.UP;
+            case DOWN -> Direction.DOWN;
             case NORTH -> Direction.NORTH;
             case SOUTH -> Direction.SOUTH;
             case EAST -> Direction.EAST;

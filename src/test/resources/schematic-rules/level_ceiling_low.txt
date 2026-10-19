@@ -1,0 +1,62 @@
+# фикстура сторожа схем: level_ceiling_low
+type: housing
+level: 2
+size: 7x5x8   # Ш×В×Д
+entrance: 3,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door
+  'G': glass_pane
+  '~': white_carpet
+  'f': oak_fence
+  'q': oak_pressure_plate
+  'h': oak_stairs[facing=north,half=bottom]
+  'P': potted_poppy
+  'L': lantern[hanging=true]
+  'p': oak_stairs[facing=south,half=bottom]
+layers:
+  - y0: |
+         p
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+  - y1: |
+         .
+      ###D###
+      #.~~~P#
+      #.~~~.#
+      #.~~~.#
+      #.~~~f#
+      #P...h#
+      #######
+  - y2: |
+         .
+      ###D###
+      #.....#
+      #.....#
+      G.....G
+      #....q#
+      #.....#
+      #######
+  - y3: |
+         .
+      #######
+      #.....#
+      #.....#
+      G..L..G
+      #.....#
+      #.....#
+      #######
+  - y4: |
+         .
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######

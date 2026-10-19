@@ -1,0 +1,46 @@
+# фикстура сторожа схем: barrel_walled_off
+type: storage
+size: 5x5x6   # Ш×В×Д
+entrance: 2,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door
+  'T': torch
+  'p': oak_stairs[facing=south,half=bottom]
+  'b': barrel
+layers:
+  - y0: |
+        p
+      #####
+      #####
+      #####
+      #####
+      #####
+  - y1: |
+        .
+      ##D##
+      #T..#
+      #####
+      #b.T#
+      #####
+  - y2: |
+        .
+      ##D##
+      #...#
+      #####
+      #...#
+      #####
+  - y3: |
+        .
+      #####
+      #...#
+      #####
+      #...#
+      #####
+  - y4: |
+        .
+      #####
+      #####
+      #####
+      #####
+      #####

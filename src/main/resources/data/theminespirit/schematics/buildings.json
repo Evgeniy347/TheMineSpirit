@@ -1,0 +1,24 @@
+{
+ "buildings": [
+  {"id": "family_house", "name": "Дом семьи", "type": "housing", "levels": [
+   {"level": 1, "scheme": "family_house_1"}, {"level": 2, "scheme": "family_house_2"},
+   {"level": 3, "scheme": "family_house_3"}]},
+  {"id": "lamp", "name": "Светильник", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "torch_post"}]},
+  {"id": "stone_house", "name": "Каменный дом", "type": "housing", "levels": [{"level": 0, "scheme": "stone_house"}]},
+  {"id": "storage_hut", "name": "Склад-хижина", "type": "storage", "levels": [{"level": 0, "scheme": "storage_hut"}]},
+  {"id": "storage", "name": "Склад", "type": "storage", "levels": [
+   {"level": 1, "scheme": "storage_v1"}, {"level": 2, "scheme": "storage_v2"},
+   {"level": 3, "scheme": "storage_v3"}, {"level": 4, "scheme": "storage_v4"}]},
+  {"id": "well", "name": "Колодец", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "well"}]},
+  {"id": "palisade_section", "name": "Палисад-секция", "type": "defense", "levels": [
+   {"level": 0, "scheme": "palisade_section"}]},
+  {"id": "pen", "name": "Загон", "type": "farm", "levels": [
+   {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
+  {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [
+   {"level": 1, "scheme": "enchant_room_v1"}, {"level": 2, "scheme": "enchant_room_v2"}]},
+  {"id": "mine_entrance", "name": "Вход в шахту", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "mine_entrance_v1"}]}
+ ]
+}

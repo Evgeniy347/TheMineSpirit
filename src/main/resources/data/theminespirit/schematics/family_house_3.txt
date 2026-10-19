@@ -1,0 +1,406 @@
+# family_house_3 — дом семьи, уровень 3 «двухэтажный дом» (tasks/47-settlement, эскиз sketches-house.md).
+# Тот же участок и та же дверь-якорь. Низ — камень (булыжник, углы и цоколь из каменного кирпича), потолок 5;
+# пояс из тёмного дуба, верх — фахверк (берёзовые доски в тёмно-дубовом каркасе). Двойная дверь под балконом,
+# окна 2×2 со ставнями, камин, кухня и столовая, парадная лестница шириной 2 на второй этаж: спальня родителей,
+# детская, кабинет. Крыша из тёмного дуба со свесом и карнизом, окна во фронтонах.
+name: "Дом семьи, уровень 3 (двухэтажный)"
+type: housing
+stage: 2
+level: 3
+requires: family_house_2
+size: 16x18x18   # Ш×В×Д
+entrance: 7,1,1
+legend:
+  'S': stone_bricks
+  'c': cobblestone
+  '$': spruce_planks
+  '#': dark_oak_planks
+  'h': birch_planks
+  'L': dark_oak_log[axis=y]
+  'X': stripped_dark_oak_log[axis=x]
+  'Z': stripped_dark_oak_log[axis=z]
+  'G': glass_pane
+  'D': oak_door[facing=south,hinge=left]
+  'E': oak_door[facing=south,hinge=right]
+  'j': oak_door[facing=south,hinge=left]
+  'R': spruce_stairs[facing=south,half=bottom]
+  'Q': bricks
+  'f': campfire[lit=true]
+  'g': spruce_stairs[facing=east,half=bottom]
+  'a': spruce_stairs[facing=west,half=bottom]
+  't': oak_fence
+  'q': oak_pressure_plate
+  '~': red_carpet
+  'm': white_carpet
+  'y': yellow_carpet
+  'B': red_bed[facing=south]
+  'b': barrel[facing=up]
+  'F': furnace[facing=east]
+  'k': smoker[facing=east]
+  'u': water_cauldron[level=3]
+  'T': crafting_table
+  'V': chest[facing=north,type=right]
+  'W': chest[facing=north,type=left]
+  'Y': bookshelf
+  'l': lectern[facing=north]
+  'P': potted_poppy
+  'O': potted_dandelion
+  'A': potted_azure_bluet
+  'H': lantern[hanging=true]
+  'N': wall_torch[facing=north]
+  's': wall_torch[facing=south]
+  'x': wall_torch[facing=east]
+  'z': wall_torch[facing=west]
+  'd': dark_oak_trapdoor[facing=north,half=bottom,open=true]
+  'v': dark_oak_trapdoor[facing=west,half=bottom,open=true]
+  'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
+  'n': dark_oak_trapdoor[facing=south,half=bottom,open=true]
+  'U': dark_oak_stairs[facing=east,half=top]
+  'I': dark_oak_stairs[facing=west,half=top]
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  '_': dark_oak_slab[type=bottom]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+layers:
+  - y0 цоколь и пол: |
+        P P  pp  P P
+       SSSSSSSSSSSSSS
+      AS$$$$$$$$$$$$SO
+      OS$$$$$$$$$$$$SA
+       S$$$$$$$$$$$$S
+       S$$$$$$$$$$$$S
+      OS$$$$$$$$$$$$SA
+       S$$$$$$$$$$$$S
+      AS$$$$$$$$$$$$SO
+       S$$$$$$$$$$$$S
+      AS$$$$$$$$$$$$SO
+      OS$$$$$$$$$$$$SA
+       S$$$$$$$$$$$$S
+       S$$$$$$$$$$$$S
+      OS$$$$$$$$$$$$SA
+      AS$$$$$$$$$$$$SO
+       SSSSSSSSSSSSSS
+        P P P  P P P
+  - y1 первый этаж: |
+      
+       ScccccDEcccccS
+       cP       A   c
+       c   ~~~~~~ RRc
+       cQ g~~~~~~ ccc
+       f   ~~~~~~ ccc
+       cQ g~~~~~~ ccc
+       c   ~~~~~~ ccc
+       cO       Ybccc
+       Sc..cccc..cccS
+       c     c mmmmOc
+       cFmmmmc gtta c
+       ckmmmm. gtta c
+       ckmmmm. gtta c
+       cummmmc mmmm c
+       cbT bbcP   WVc
+       SccjcccccccccS
+              .
+  - y2: |
+        d  d    d  d
+       ScGGccDEccGGcS
+       c            c
+      vc            cr
+       GQ         RRG
+       Q          ccG
+      vcQ         cccr
+       c          ccc
+       c        Y ccc
+       Sc..cccc..cccS
+      vc     c      cr
+       G     c  qq  G
+       G     .  qq  G
+      vc     .  qq  cr
+       c     c      c
+       c     c      c
+       SccjcccccGGccS
+              .
+  - y3: |
+        d  d    d  d
+       ScGGccccccGGcS
+       c            c
+      vc            cr
+       GQ           G
+       Q          RRG
+      vcQ         cccr
+       c          ccc
+       c          ccc
+       Sc..cccc..cccS
+      vc     c      cr
+       G     c      G
+       G     .      G
+      vc     .      cr
+       c     c      c
+       c     c      c
+       SccccccccGGccS
+              .
+  - y4: |
+      
+       SccccccccccccS
+       c            c
+       c            c
+       c            c
+       Q            c
+       c          RRc
+       c          ccc
+       c          ccc
+       Sc..cccc..cccS
+       c     c      c
+       c     c      c
+       c     .      c
+       c     .      c
+       c     c      c
+       c     c      c
+       SccccccccccccS
+              .
+  - y5: |
+            H  H
+       SccccccccccccS
+       c            c
+       c     H      c
+       c   H  H     c
+       Q            c
+       c        H   c
+       c   H      RRc
+       c          ccc
+       Sc..cccc..cccS
+       c     c      c
+       c     c      c
+       c  H  .  H   c
+       c     .      c
+       c     c      c
+       c     c      c
+       SccccccccccccS
+              .
+  - y6 перекрытие: |
+           ######
+       LXXXXXXXXXXXXL
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$..Z
+       Z$$$$$$$$$$..Z
+       Z$$$$$$$$$$..Z
+       Z$$$$$$$$$$..Z
+       Z$$$$$$$$$$..Z
+       Z$$$$$$$$$$RRZ
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
+       LXXXXXXXXXXXXL
+              .
+  - y7 второй этаж: |
+        d  dttttd  d
+       LhGGLhDEhLGGhL
+       hP       Oh  h
+      vh yyyyyy  h  hr
+       G yyyyyy  h  G
+       G yyyyyy  h  G
+      vh         h  hr
+       h BB     bh  h
+       h BB  WV     h
+       Lhhh.hhhhh   L
+       h    Ah    ~~h
+      vh mmm h    ~~hr
+       G mmm hla  ~~G
+       G     hY   ~~G
+      vh B   hY   ~~hr
+       h B WVhYYY  Ph
+       LhGGLhhhhLGGhL
+        n  n    n  n
+  - y8: |
+        d  d    d  d
+       LhGGLhDEhLGGhL
+       h         h sh
+      vh         h  hr
+       G        zh  G
+       G         h  G
+      vhx        h  hr
+       h         h  h
+       h            h
+       Lhhh.hhhhh   L
+       hx    h s   zh
+      vh     h      hr
+       G     h      G
+       G     hY     G
+      vh     hY     hr
+       h     hYYY   h
+       LhGGLhhhhLGGhL
+        n  n    n  n
+  - y9: |
+      
+      ULhhhLhhhhLhhhLI
+      Uh         h  hI
+      Uh         h  hI
+      Uh         h  hI
+      Uh         h  hI
+      Uh         h  hI
+      Uh         h  hI
+      Uh            hI
+      ULhhhhhhhhh   LI
+      Uh     h      hI
+      Uh     h      hI
+      Uh     h      hI
+      Uh     h      hI
+      Uh     h      hI
+      Uh     hYYY   hI
+      ULhhhLhhhhLhhhLI
+              .
+  - y10 обвязка: |
+      e#            #w
+      eLXXXXXXXXXXXXLw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eZ            Zw
+      eLXXXXXXXXXXXXLw
+      e#            #w
+  - y11: |
+       e#          #w
+       e############w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e#          #w
+       e############w
+       e#          #w
+  - y12: |
+        e#        #w
+        e####GG####w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e#        #w
+        e####GG####w
+        e#        #w
+  - y13: |
+         e#      #w
+         e###GG###w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e#      #w
+         e###GG###w
+         e#      #w
+  - y14: |
+          e#    #w
+          e######w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e#    #w
+          e######w
+          e#    #w
+  - y15: |
+           e#  #w
+           e####w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e#  #w
+           e####w
+           e#  #w
+  - y16: |
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+            e##w
+  - y17: |
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew
+             ew

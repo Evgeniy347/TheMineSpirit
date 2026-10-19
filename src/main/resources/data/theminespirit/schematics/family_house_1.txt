@@ -1,0 +1,181 @@
+# family_house_1 — дом семьи, уровень 1 «хижина» (tasks/47-settlement, эскиз sketches-house.md).
+# Булыжный цоколь, еловый каркас, дубовые доски, двускатная крыша из еловых ступенек со свесом 1 на все стороны,
+# окна высотой 2, ставней нет (уровень 1 — скромно). Внутри: кухонный угол, стол со стульями, ковёр, 3 кровати,
+# двойной сундук; у ступени — цветы в горшках. Якорь всех уровней — дверь (x=5).
+name: "Дом семьи, уровень 1 (хижина на 3)"
+type: housing
+stage: 1
+level: 1
+size: 11x10x13   # Ш×В×Д
+entrance: 5,1,1
+legend:
+  'c': cobblestone
+  '$': spruce_planks
+  '#': oak_planks
+  'L': spruce_log[axis=y]
+  '=': stripped_spruce_log[axis=y]
+  'X': stripped_spruce_log[axis=x]
+  'Z': stripped_spruce_log[axis=z]
+  'G': glass_pane
+  'D': oak_door[facing=south,hinge=left]
+  'F': furnace[facing=south]
+  'b': barrel[facing=up]
+  'T': crafting_table
+  'h': spruce_stairs[facing=west,half=bottom]
+  'j': spruce_stairs[facing=south,half=bottom]
+  't': oak_fence
+  'q': oak_pressure_plate
+  '~': red_carpet
+  'B': red_bed[facing=south]
+  'C': chest[facing=west,type=right]
+  'K': chest[facing=west,type=left]
+  'S': wall_torch[facing=south]
+  'N': wall_torch[facing=north]
+  'E': wall_torch[facing=east]
+  'W': wall_torch[facing=west]
+  'e': spruce_stairs[facing=east,half=bottom]
+  'w': spruce_stairs[facing=west,half=bottom]
+  '_': spruce_slab[type=bottom]
+  'P': potted_poppy
+  'p': cobblestone_stairs[facing=south,half=bottom]
+layers:
+  - y0 цоколь и пол: |
+         P p P
+       ccccccccc
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       c$$$$$$$c
+       ccccccccc
+           .
+  - y1 мебель: |
+           .
+       L##=D=##L
+       #FbT..ht#
+       #......j#
+       #.......#
+       #..~~~..#
+       L..~~~..L
+       #..~~~..#
+       #.......#
+       #B.B.B.C#
+       #B.B.B.K#
+       L###L###L
+           .
+  - y2 окна и свет: |
+           .
+       L#G=D=G#L
+       #..S.S.q#
+       G.......G
+       #.......#
+       #.......#
+       LE.....WL
+       #.......#
+       G.......G
+       #.......#
+       #..N.N..#
+       L#G#L#G#L
+           .
+  - y3 окна высотой 2: |
+           .
+       L#G###G#L
+       #.......#
+       G.......G
+       #.......#
+       #.......#
+       L.......L
+       #.......#
+       G.......G
+       #.......#
+       #.......#
+       L#G#L#G#L
+           .
+  - y4 обвязка и свес: |
+      e#       #w
+      eLXXXXXXXLw
+      eZ.......Zw
+      eZ.......Zw
+      eZ.......Zw
+      eZ.......Zw
+      eL.......Lw
+      eZ.......Zw
+      eZ.......Zw
+      eZ.......Zw
+      eZ.......Zw
+      eLXXXXXXXLw
+      e#       #w
+  - y5 скат: |
+       e#     #w
+       e#######w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#.....#w
+       e#######w
+       e#     #w
+  - y6 скат, окно во фронтоне: |
+        e#   #w
+        e##G##w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e#...#w
+        e##G##w
+        e#   #w
+  - y7 скат: |
+         e# #w
+         e###w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e#.#w
+         e###w
+         e# #w
+  - y8 скат: |
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+          e#w
+  - y9 конёк: |
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _
+           _

@@ -9,6 +9,7 @@ import java.util.Objects;
 public final class BlockSupport {
     public enum Face {
         UP,
+        DOWN,
         NORTH,
         SOUTH,
         EAST,
@@ -37,5 +38,10 @@ public final class BlockSupport {
             return true;
         }
         return world.sturdy(x + 1, y, z, Face.WEST);
+    }
+
+    public static boolean hasHangingSupport(World world, int x, int y, int z) {
+        Objects.requireNonNull(world, "Мир не может быть null: без него неизвестно, на чём висит блок");
+        return world.sturdy(x, y + 1, z, Face.DOWN);
     }
 }

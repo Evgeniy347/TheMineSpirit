@@ -42,7 +42,8 @@ final class DemoPlanner {
                 new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
                 rotation);
         List<DemoPlan.Placement> preplaced = new ArrayList<>();
-        for (Schematic.PlacedEntry placed : schematic.entries(placement.origin(), placement.rotation())) {
+        List<Schematic.PlacedEntry> entries = schematic.entries(placement.origin(), placement.rotation());
+        for (Schematic.PlacedEntry placed : entries) {
             if (!BlockItems.hasBlockItem(placed.block())) {
                 preplaced.add(new DemoPlan.Placement(placed.pos(), placed.block()));
             }
@@ -53,6 +54,6 @@ final class DemoPlanner {
                 bag.merge(material.getKey(), material.getValue(), Integer::sum);
             }
         }
-        return new DemoPlan(name, chosen.scheme(), placement, bag, preplaced);
+        return new DemoPlan(name, chosen.scheme(), placement, bag, preplaced, entries);
     }
 }
