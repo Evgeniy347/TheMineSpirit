@@ -115,9 +115,6 @@ public final class PlacedBlocksData extends SavedData {
         return spiritSet.contains(toCoord(pos));
     }
 
-    public int spiritPlacementCount(BlockPos pos) {
-        return spiritPlacements.getOrDefault(toCoord(pos), 0);
-    }
 
     public Map<BlockCoord, Integer> spiritPlacementCounts(BlockCoord min, BlockCoord max) {
         Map<BlockCoord, Integer> counts = new HashMap<>();

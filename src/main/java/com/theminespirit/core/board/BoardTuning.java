@@ -55,7 +55,6 @@ public final class BoardTuning {
     public static final int TICKET_FAIL_LIMIT = 5;
 
     /** Обзор периметра на дыры в заборе, которые не видит BreakEvent, — раз в 1000 тиков. */
-    public static final long FENCE_PATROL_INTERVAL = 1000;
 
     /** Радиус от дома/духа, в котором сломанный забор считается своим, а не природным. */
     public static final int FENCE_WATCH_RADIUS = 32;
@@ -147,9 +146,6 @@ public final class BoardTuning {
         return (int) interval("ticketFailLimit", TICKET_FAIL_LIMIT);
     }
 
-    public static long fencePatrolInterval() {
-        return interval("fencePatrolInterval", FENCE_PATROL_INTERVAL);
-    }
 
     public static long enchantCheckInterval() {
         return interval("enchantCheckInterval", ENCHANT_CHECK_INTERVAL);

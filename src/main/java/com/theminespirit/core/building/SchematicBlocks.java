@@ -95,9 +95,6 @@ public final class SchematicBlocks {
         return path(blockId).endsWith("_bed");
     }
 
-    public static boolean isTwoPart(String blockId) {
-        return isDoor(blockId) || isBed(blockId);
-    }
 
     public static boolean isSecondaryPart(String blockId, Map<String, String> state) {
         Objects.requireNonNull(state, "Состояние блока не может быть null: пустое задаётся пустой картой");

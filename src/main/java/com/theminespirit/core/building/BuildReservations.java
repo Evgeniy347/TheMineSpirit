@@ -27,11 +27,6 @@ public final class BuildReservations {
         return leases.reserve(target(cell), spirit, 0, PERMANENT_LEASE) != WorkReservations.Outcome.TAKEN_BY_OTHER;
     }
 
-    public boolean heldBy(BlockCoord cell, UUID spirit) {
-        Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, чью бронь проверять");
-        Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чья бронь");
-        return leases.owner(target(cell)).map(spirit::equals).orElse(false);
-    }
 
     public boolean foreign(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, чья бронь мешает");

@@ -34,7 +34,4 @@ public final class InventoryTables {
         return DataTables.INSTANCE.kitSeeds();
     }
 
-    public static int armorLoads() {
-        return DataTables.INSTANCE.armorSeeds();
-    }
 }

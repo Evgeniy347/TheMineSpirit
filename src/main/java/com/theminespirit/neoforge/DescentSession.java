@@ -334,9 +334,6 @@ public final class DescentSession {
         return plan.steps().get(stepIndex);
     }
 
-    private BlockCoord currentCell() {
-        return currentStep().passage().get(cellCursor);
-    }
 
     private static BlockPos toPos(BlockCoord coord) {
         return new BlockPos(coord.x(), coord.y(), coord.z());

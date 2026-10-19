@@ -41,7 +41,4 @@ public final class SchematicResources {
         return parsed;
     }
 
-    static void clearCache() {
-        CACHE.clear();
-    }
 }

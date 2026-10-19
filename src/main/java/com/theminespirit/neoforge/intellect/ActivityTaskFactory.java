@@ -31,20 +31,4 @@ public final class ActivityTaskFactory {
         return Optional.of(new ScriptCall(script, params));
     }
 
-    public static Optional<String> scriptOf(ActivityId activity) {
-        if (activity == null) {
-            throw new IllegalArgumentException("Скрипт без деятельности не опознать: id входит в план духа");
-        }
-        return switch (activity) {
-            case CHOP -> Optional.of("chop_tree");
-            case FARM -> Optional.of("harvest_crop");
-            case FORAGE -> Optional.empty();
-            case MINE -> Optional.of("mine_vein");
-            case REST -> Optional.of("wait");
-            case DEFEND -> Optional.empty();
-            case SMELT -> Optional.of("smelt");
-            case CRAFT -> Optional.of("craft");
-            case UNLOAD -> Optional.of("unload");
-        };
-    }
 }

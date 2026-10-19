@@ -95,9 +95,6 @@ public final class GotoBlockSession {
         return search.maxSlicesPerTick();
     }
 
-    public int foundBlocks() {
-        return found.size();
-    }
 
     private void find() {
         for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {

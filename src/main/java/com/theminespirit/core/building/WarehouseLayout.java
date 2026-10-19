@@ -20,13 +20,7 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         int doubleChests, int interiorHeight) {
 
     public record ChestStack(int minX, int maxX, int minZ, int maxZ, int minY, int maxY) {
-        public int rightX() {
-            return maxX;
-        }
 
-        public int rightZ() {
-            return maxZ;
-        }
     }
 
     public record Sign(BlockCoord pos, String text) {

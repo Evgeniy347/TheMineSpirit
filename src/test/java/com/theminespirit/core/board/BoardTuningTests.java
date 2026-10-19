@@ -173,7 +173,6 @@ class BoardTuningTests {
                 BoardTuning.CASE_FAIL_PAUSE_CAP_TICKS,
                 (long) BoardTuning.CASE_FAIL_LIMIT,
                 (long) BoardTuning.TICKET_FAIL_LIMIT,
-                BoardTuning.FENCE_PATROL_INTERVAL,
                 (long) BoardTuning.FENCE_WATCH_RADIUS,
                 BoardTuning.ENCHANT_CHECK_INTERVAL,
                 (long) BoardTuning.ENCHANT_SHELVES_MIN);
